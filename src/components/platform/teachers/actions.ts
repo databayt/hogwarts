@@ -764,6 +764,96 @@ export async function getTeachersCSV(
 }
 
 /**
+ * Get all subjects for teacher expertise selection
+ * Groups subjects by department for better organization
+ * @returns Action response with subjects grouped by department
+ */
+export async function getSubjectsForExpertise(): Promise<ActionResponse<{
+  subjects: Array<{
+    id: string;
+    name: string;
+    nameAr: string | null;
+    departmentId: string;
+    departmentName: string;
+    departmentNameAr: string | null;
+  }>;
+  byDepartment: Record<string, Array<{
+    id: string;
+    name: string;
+    nameAr: string | null;
+  }>>;
+}>> {
+  try {
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Check if subject model exists
+    if (!(db as any).subject) {
+      return { success: true, data: { subjects: [], byDepartment: {} } };
+    }
+
+    // Fetch all subjects with their departments
+    const subjects = await (db as any).subject.findMany({
+      where: { schoolId },
+      include: {
+        department: {
+          select: {
+            id: true,
+            departmentName: true,
+            departmentNameAr: true,
+          },
+        },
+      },
+      orderBy: [
+        { department: { departmentName: "asc" } },
+        { subjectName: "asc" },
+      ],
+    });
+
+    // Map subjects to a flat list
+    const mappedSubjects = subjects.map((s: any) => ({
+      id: s.id,
+      name: s.subjectName,
+      nameAr: s.subjectNameAr || null,
+      departmentId: s.departmentId,
+      departmentName: s.department?.departmentName || "Unknown",
+      departmentNameAr: s.department?.departmentNameAr || null,
+    }));
+
+    // Group subjects by department name
+    const byDepartment: Record<string, Array<{ id: string; name: string; nameAr: string | null }>> = {};
+    for (const subject of mappedSubjects) {
+      const deptName = subject.departmentName;
+      if (!byDepartment[deptName]) {
+        byDepartment[deptName] = [];
+      }
+      byDepartment[deptName].push({
+        id: subject.id,
+        name: subject.name,
+        nameAr: subject.nameAr,
+      });
+    }
+
+    return {
+      success: true,
+      data: {
+        subjects: mappedSubjects,
+        byDepartment,
+      },
+    };
+  } catch (error) {
+    console.error("[getSubjectsForExpertise] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch subjects",
+    };
+  }
+}
+
+/**
  * Get teachers data for export (used by File Block ExportButton)
  * Returns raw data for client-side export generation
  * @param input - Query parameters

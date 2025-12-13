@@ -4,7 +4,15 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { parentCreateSchema, parentUpdateSchema, getParentsSchema } from "@/components/platform/parents/validation";
+import {
+  parentCreateSchema,
+  parentUpdateSchema,
+  getParentsSchema,
+  linkGuardianSchema,
+  createGuardianAndLinkSchema,
+  updateGuardianLinkSchema,
+  unlinkGuardianSchema,
+} from "@/components/platform/parents/validation";
 
 // ============================================================================
 // Types
@@ -438,6 +446,453 @@ export async function getParentsCSV(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to generate CSV"
+    };
+  }
+}
+
+// ============================================================================
+// Guardian Linking (StudentGuardian relationship management)
+// ============================================================================
+
+/**
+ * Helper to get or create guardian type
+ */
+async function getOrCreateGuardianType(schoolId: string, typeName: string) {
+  let guardianType = await (db as any).guardianType.findFirst({
+    where: { schoolId, name: typeName },
+  });
+
+  if (!guardianType) {
+    guardianType = await (db as any).guardianType.create({
+      data: { schoolId, name: typeName },
+    });
+  }
+
+  return guardianType;
+}
+
+/**
+ * Link an existing guardian to a student
+ */
+export async function linkGuardian(
+  input: z.infer<typeof linkGuardianSchema>
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = linkGuardianSchema.parse(input);
+
+    // Verify guardian exists in this school
+    const guardian = await (db as any).guardian.findFirst({
+      where: { id: parsed.guardianId, schoolId },
+    });
+
+    if (!guardian) {
+      return { success: false, error: "Guardian not found" };
+    }
+
+    // Verify student exists in this school
+    const student = await (db as any).student.findFirst({
+      where: { id: parsed.studentId, schoolId },
+    });
+
+    if (!student) {
+      return { success: false, error: "Student not found" };
+    }
+
+    // Check if relationship already exists
+    const existing = await (db as any).studentGuardian.findFirst({
+      where: {
+        schoolId,
+        studentId: parsed.studentId,
+        guardianId: parsed.guardianId,
+      },
+    });
+
+    if (existing) {
+      return { success: false, error: "Guardian is already linked to this student" };
+    }
+
+    // If setting as primary, unset other primaries
+    if (parsed.isPrimary) {
+      await (db as any).studentGuardian.updateMany({
+        where: { schoolId, studentId: parsed.studentId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+
+    // Create the relationship
+    const studentGuardian = await (db as any).studentGuardian.create({
+      data: {
+        schoolId,
+        studentId: parsed.studentId,
+        guardianId: parsed.guardianId,
+        guardianTypeId: parsed.guardianTypeId,
+        isPrimary: parsed.isPrimary,
+        occupation: parsed.occupation || null,
+        workplace: parsed.workplace || null,
+        notes: parsed.notes || null,
+      },
+    });
+
+    revalidatePath(`/students/${parsed.studentId}`);
+
+    return { success: true, data: { id: studentGuardian.id } };
+  } catch (error) {
+    console.error("[linkGuardian] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to link guardian",
+    };
+  }
+}
+
+/**
+ * Create a new guardian and link to student in one operation
+ */
+export async function createGuardianAndLink(
+  input: z.infer<typeof createGuardianAndLinkSchema>
+): Promise<ActionResponse<{ guardianId: string; studentGuardianId: string }>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = createGuardianAndLinkSchema.parse(input);
+
+    // Verify student exists
+    const student = await (db as any).student.findFirst({
+      where: { id: parsed.studentId, schoolId },
+    });
+
+    if (!student) {
+      return { success: false, error: "Student not found" };
+    }
+
+    // Get or create guardian type
+    const guardianType = await getOrCreateGuardianType(schoolId, parsed.guardianType);
+
+    // Check if guardian already exists by email (if provided)
+    let guardian = null;
+    if (parsed.emailAddress) {
+      guardian = await (db as any).guardian.findFirst({
+        where: { schoolId, emailAddress: parsed.emailAddress },
+      });
+    }
+
+    // Create guardian if not found
+    if (!guardian) {
+      guardian = await (db as any).guardian.create({
+        data: {
+          schoolId,
+          givenName: parsed.givenName,
+          surname: parsed.surname,
+          emailAddress: parsed.emailAddress || null,
+        },
+      });
+
+      // Add phone number if provided
+      if (parsed.phoneNumber) {
+        await (db as any).guardianPhoneNumber.create({
+          data: {
+            schoolId,
+            guardianId: guardian.id,
+            phoneNumber: parsed.phoneNumber,
+            phoneType: "mobile",
+            isPrimary: true,
+          },
+        });
+      }
+    }
+
+    // Check if relationship already exists
+    const existingLink = await (db as any).studentGuardian.findFirst({
+      where: {
+        schoolId,
+        studentId: parsed.studentId,
+        guardianId: guardian.id,
+      },
+    });
+
+    if (existingLink) {
+      return { success: false, error: "Guardian is already linked to this student" };
+    }
+
+    // If setting as primary, unset other primaries
+    if (parsed.isPrimary) {
+      await (db as any).studentGuardian.updateMany({
+        where: { schoolId, studentId: parsed.studentId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+
+    // Create the relationship
+    const studentGuardian = await (db as any).studentGuardian.create({
+      data: {
+        schoolId,
+        studentId: parsed.studentId,
+        guardianId: guardian.id,
+        guardianTypeId: guardianType.id,
+        isPrimary: parsed.isPrimary,
+        occupation: parsed.occupation || null,
+        workplace: parsed.workplace || null,
+        notes: parsed.notes || null,
+      },
+    });
+
+    revalidatePath(`/students/${parsed.studentId}`);
+
+    return {
+      success: true,
+      data: {
+        guardianId: guardian.id,
+        studentGuardianId: studentGuardian.id,
+      },
+    };
+  } catch (error) {
+    console.error("[createGuardianAndLink] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create and link guardian",
+    };
+  }
+}
+
+/**
+ * Update a guardian-student relationship
+ */
+export async function updateGuardianLink(
+  input: z.infer<typeof updateGuardianLinkSchema>
+): Promise<ActionResponse<void>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = updateGuardianLinkSchema.parse(input);
+
+    // Verify relationship exists
+    const existing = await (db as any).studentGuardian.findFirst({
+      where: { id: parsed.studentGuardianId, schoolId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Guardian relationship not found" };
+    }
+
+    // If setting as primary, unset other primaries
+    if (parsed.isPrimary) {
+      await (db as any).studentGuardian.updateMany({
+        where: {
+          schoolId,
+          studentId: existing.studentId,
+          isPrimary: true,
+          NOT: { id: parsed.studentGuardianId },
+        },
+        data: { isPrimary: false },
+      });
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+    if (typeof parsed.guardianTypeId !== "undefined") updateData.guardianTypeId = parsed.guardianTypeId;
+    if (typeof parsed.isPrimary !== "undefined") updateData.isPrimary = parsed.isPrimary;
+    if (typeof parsed.occupation !== "undefined") updateData.occupation = parsed.occupation || null;
+    if (typeof parsed.workplace !== "undefined") updateData.workplace = parsed.workplace || null;
+    if (typeof parsed.notes !== "undefined") updateData.notes = parsed.notes || null;
+
+    await (db as any).studentGuardian.update({
+      where: { id: parsed.studentGuardianId },
+      data: updateData,
+    });
+
+    revalidatePath(`/students/${existing.studentId}`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("[updateGuardianLink] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update guardian link",
+    };
+  }
+}
+
+/**
+ * Remove a guardian-student relationship
+ */
+export async function unlinkGuardian(
+  input: z.infer<typeof unlinkGuardianSchema>
+): Promise<ActionResponse<void>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = unlinkGuardianSchema.parse(input);
+
+    // Verify relationship exists and get student ID for revalidation
+    const existing = await (db as any).studentGuardian.findFirst({
+      where: { id: parsed.studentGuardianId, schoolId },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Guardian relationship not found" };
+    }
+
+    // Delete the relationship
+    await (db as any).studentGuardian.delete({
+      where: { id: parsed.studentGuardianId },
+    });
+
+    revalidatePath(`/students/${existing.studentId}`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("[unlinkGuardian] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to unlink guardian",
+    };
+  }
+}
+
+/**
+ * Get guardian types for a school
+ */
+export async function getGuardianTypes(): Promise<ActionResponse<Array<{ id: string; name: string }>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const types = await (db as any).guardianType.findMany({
+      where: { schoolId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    // If no types exist, create default ones
+    if (types.length === 0) {
+      const defaultTypes = ["father", "mother", "guardian", "other"];
+      for (const typeName of defaultTypes) {
+        await (db as any).guardianType.create({
+          data: { schoolId, name: typeName },
+        });
+      }
+
+      const newTypes = await (db as any).guardianType.findMany({
+        where: { schoolId },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      });
+
+      return { success: true, data: newTypes };
+    }
+
+    return { success: true, data: types };
+  } catch (error) {
+    console.error("[getGuardianTypes] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch guardian types",
+    };
+  }
+}
+
+/**
+ * Search for existing guardians to link
+ */
+export async function searchGuardians(
+  query: string
+): Promise<ActionResponse<Array<{
+  id: string;
+  givenName: string;
+  surname: string;
+  emailAddress: string | null;
+  phoneNumber: string | null;
+}>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    if (!query || query.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    const guardians = await (db as any).guardian.findMany({
+      where: {
+        schoolId,
+        OR: [
+          { givenName: { contains: query, mode: "insensitive" } },
+          { surname: { contains: query, mode: "insensitive" } },
+          { emailAddress: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        phoneNumbers: {
+          where: { isPrimary: true },
+          take: 1,
+        },
+      },
+      take: 10,
+    });
+
+    const mapped = guardians.map((g: any) => ({
+      id: g.id,
+      givenName: g.givenName,
+      surname: g.surname,
+      emailAddress: g.emailAddress,
+      phoneNumber: g.phoneNumbers?.[0]?.phoneNumber || null,
+    }));
+
+    return { success: true, data: mapped };
+  } catch (error) {
+    console.error("[searchGuardians] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to search guardians",
     };
   }
 }

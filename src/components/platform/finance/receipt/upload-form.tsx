@@ -12,7 +12,7 @@ import { uploadReceipt } from './actions'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Upload, LoaderCircle } from "lucide-react"
-import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file-upload/enhanced/file-uploader'
+import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file'
 
 interface UploadFormProps {
   locale?: string

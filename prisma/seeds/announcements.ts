@@ -130,6 +130,234 @@ We wish all families blessed celebrations.`,
       scope: AnnouncementScope.school,
       published: true,
     },
+    // Health & Safety
+    {
+      titleEn: "Health Guidelines Update",
+      titleAr: "تحديث الإرشادات الصحية",
+      bodyEn: `Please ensure your children follow basic health guidelines:
+- Wash hands frequently
+- Bring personal water bottles
+- Report any illness to the nurse's office
+
+Contact the health office for any concerns.`,
+      bodyAr: `يرجى التأكد من اتباع أبنائكم للإرشادات الصحية الأساسية:
+- غسل اليدين بانتظام
+- إحضار زجاجة ماء شخصية
+- الإبلاغ عن أي مرض لمكتب الممرضة
+
+للاستفسارات، تواصلوا مع المكتب الصحي.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Academic Excellence
+    {
+      titleEn: "Congratulations to Honor Roll Students",
+      titleAr: "تهنئة للطلاب المتفوقين",
+      bodyEn: `We are proud to announce the first term Honor Roll students. Their dedication to academic excellence exemplifies the Comboni tradition.
+
+Special recognition assembly will be held next week. Parents are invited to attend.
+
+"العلم نور والجهل ظلام"`,
+      bodyAr: `يسرنا الإعلان عن الطلاب المتفوقين في الفصل الدراسي الأول. تفانيهم يجسد تقاليد التميز في مدارس كمبوني.
+
+سيقام حفل تكريم خاص الأسبوع القادم. ندعو أولياء الأمور للحضور.
+
+"العلم نور والجهل ظلام"`,
+      scope: AnnouncementScope.school,
+      published: true,
+      pinned: true,
+    },
+    // Uniform Reminder
+    {
+      titleEn: "School Uniform Reminder",
+      titleAr: "تذكير بالزي المدرسي",
+      bodyEn: `All students must adhere to the school uniform policy:
+- White shirt and navy trousers/skirt
+- School tie (grades 7-12)
+- Black shoes (no sports shoes)
+- Hair must be neat and tidy
+
+Non-compliance will result in a note to parents.`,
+      bodyAr: `على جميع الطلاب الالتزام بسياسة الزي المدرسي:
+- قميص أبيض وبنطلون/تنورة كحلي
+- ربطة عنق المدرسة (الصفوف 7-12)
+- حذاء أسود (ممنوع الأحذية الرياضية)
+- الشعر يجب أن يكون مرتباً ونظيفاً
+
+عدم الالتزام سيؤدي إلى إرسال ملاحظة لولي الأمر.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Transportation
+    {
+      titleEn: "School Bus Routes Updated",
+      titleAr: "تحديث مسارات الحافلات المدرسية",
+      bodyEn: `New bus routes have been updated for this semester. Please check the transportation office for your child's route and timing.
+
+Routes cover: Riyadh, Amarat, Khartoum 2, Burri, and surrounding areas.`,
+      bodyAr: `تم تحديث مسارات الحافلات المدرسية لهذا الفصل. يرجى مراجعة مكتب النقل لمعرفة مسار ووقت طفلكم.
+
+تغطي المسارات: الرياض، الأمارات، الخرطوم 2، بري، والمناطق المجاورة.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Quran Competition
+    {
+      titleEn: "Quran Memorization Competition Registration",
+      titleAr: "التسجيل في مسابقة حفظ القرآن الكريم",
+      bodyEn: `Registration is now open for the annual Quran Memorization Competition.
+
+Categories:
+- 5 Juz Memorization
+- 10 Juz Memorization
+- Full Quran Memorization
+
+Register at the Islamic Studies Department by end of month.
+
+"خيركم من تعلم القرآن وعلمه"`,
+      bodyAr: `التسجيل مفتوح الآن لمسابقة حفظ القرآن الكريم السنوية.
+
+الفئات:
+- حفظ 5 أجزاء
+- حفظ 10 أجزاء
+- حفظ القرآن كاملاً
+
+سجل في قسم الدراسات الإسلامية قبل نهاية الشهر.
+
+"خيركم من تعلم القرآن وعلمه"`,
+      scope: AnnouncementScope.school,
+      published: true,
+      featured: true,
+    },
+    // Fee Payment
+    {
+      titleEn: "Second Installment Payment Due",
+      titleAr: "موعد سداد القسط الثاني",
+      bodyEn: `Reminder: The second fee installment is due by the 15th of this month.
+
+Payment methods:
+- Bank transfer (details in the fees section)
+- Payment at the school finance office
+
+Late payment will incur additional charges.`,
+      bodyAr: `تذكير: موعد سداد القسط الثاني بحلول الخامس عشر من هذا الشهر.
+
+طرق الدفع:
+- تحويل بنكي (التفاصيل في قسم الرسوم)
+- الدفع في مكتب الشؤون المالية
+
+التأخير في السداد سيترتب عليه رسوم إضافية.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Extracurricular Activities
+    {
+      titleEn: "After-School Activities Registration",
+      titleAr: "التسجيل في الأنشطة اللاصفية",
+      bodyEn: `Registration for after-school activities is now open:
+
+- Football Club (Mon & Wed)
+- Basketball Club (Tue & Thu)
+- Art Club (Monday)
+- Science Club (Wednesday)
+- Arabic Calligraphy (Thursday)
+- Quran Circle (Sunday)
+
+Limited spots available. Register at the Student Affairs office.`,
+      bodyAr: `التسجيل مفتوح الآن للأنشطة اللاصفية:
+
+- نادي كرة القدم (الاثنين والأربعاء)
+- نادي كرة السلة (الثلاثاء والخميس)
+- نادي الفنون (الاثنين)
+- نادي العلوم (الأربعاء)
+- ورشة الخط العربي (الخميس)
+- حلقة القرآن (الأحد)
+
+الأماكن محدودة. سجل في مكتب شؤون الطلاب.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Exam Preparation
+    {
+      titleEn: "Final Exam Preparation Tips",
+      titleAr: "نصائح للاستعداد للامتحانات النهائية",
+      bodyEn: `As we approach final exams, here are some tips:
+
+1. Create a study schedule
+2. Review class notes daily
+3. Practice past exam papers
+4. Get adequate sleep
+5. Stay calm and focused
+
+The library will have extended hours during exam period.
+
+"من جد وجد، ومن زرع حصد"`,
+      bodyAr: `مع اقتراب الامتحانات النهائية، إليكم بعض النصائح:
+
+1. أعد جدولاً للمذاكرة
+2. راجع ملاحظات الحصص يومياً
+3. حل امتحانات السنوات السابقة
+4. احصل على قسط كافٍ من النوم
+5. كن هادئاً ومركزاً
+
+ستكون المكتبة مفتوحة لساعات إضافية خلال فترة الامتحانات.
+
+"من جد وجد، ومن زرع حصد"`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Summer Program
+    {
+      titleEn: "Summer Program Announcement",
+      titleAr: "إعلان البرنامج الصيفي",
+      bodyEn: `Registration for the summer program will open next month.
+
+Programs available:
+- Academic reinforcement
+- Quran memorization camp
+- Sports camp
+- Art & craft workshops
+- Computer skills training
+
+Details and fees will be announced soon.`,
+      bodyAr: `سيفتح التسجيل للبرنامج الصيفي الشهر القادم.
+
+البرامج المتاحة:
+- الدعم الأكاديمي
+- معسكر حفظ القرآن
+- المعسكر الرياضي
+- ورش الفنون والحرف
+- التدريب على مهارات الحاسوب
+
+سيتم الإعلان عن التفاصيل والرسوم قريباً.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    // Safety Drill
+    {
+      titleEn: "Fire Drill Scheduled",
+      titleAr: "تمرين إخلاء مبنى",
+      bodyEn: `A fire drill will be conducted tomorrow during the second period.
+
+All students and staff should:
+- Follow teacher instructions
+- Leave belongings behind
+- Walk calmly to assembly points
+- Wait for the all-clear signal
+
+Safety is everyone's responsibility.`,
+      bodyAr: `سيقام تمرين إخلاء غداً خلال الحصة الثانية.
+
+على جميع الطلاب والموظفين:
+- اتباع تعليمات المعلمين
+- ترك الممتلكات
+- المشي بهدوء نحو نقاط التجمع
+- الانتظار حتى إشارة الأمان
+
+السلامة مسؤولية الجميع.`,
+      scope: AnnouncementScope.school,
+      published: true,
+    },
     // Draft announcement (unpublished) - only English
     {
       titleEn: "Upcoming School Renovation",

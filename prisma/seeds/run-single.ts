@@ -38,21 +38,24 @@ import { seedAuth } from "./auth";
 import { seedAcademic } from "./academic";
 import { seedDepartments } from "./departments";
 import { seedClassrooms } from "./classrooms";
-import { seedPeople } from "./people";
+import { seedPeople, seedTeacherQualifications } from "./people";
 import { seedClasses } from "./classes";
-import { seedLibrary } from "./library";
+import { seedLibrary, seedBorrowRecords } from "./library";
 import { seedAnnouncements } from "./announcements";
 import { seedEvents } from "./events";
 import { seedFees } from "./fees";
 import { seedExams } from "./exams";
 import { seedGrades } from "./grades";
 import { seedTimetable } from "./timetable";
-import { seedStream } from "./stream";
+import { seedStream, seedCourseProgress } from "./stream";
 import { seedLessons } from "./lessons";
 import { seedReports } from "./reports";
-import { seedAdmission } from "./admission";
+import { seedAdmission, seedAdmissionExtended } from "./admission";
 import { seedFinance } from "./finance";
-import { seedAttendance } from "./attendance";
+import { seedAttendance, seedAdvancedAttendance } from "./attendance";
+import { seedMessaging } from "./messaging";
+import { seedHealth } from "./health";
+import { seedDocuments } from "./documents";
 import type { SeedPrisma } from "./types";
 
 const prisma = new PrismaClient() as SeedPrisma;
@@ -290,30 +293,101 @@ async function runPhase(phase: string) {
         break;
       }
 
+      // ============== NEW COMPREHENSIVE PHASES ==============
+
+      case "borrows": {
+        const school = await getSchool();
+        await seedBorrowRecords(prisma, school.id);
+        console.log("✅ Library borrow records created");
+        break;
+      }
+
+      case "qualifications": {
+        const school = await getSchool();
+        await seedTeacherQualifications(prisma, school.id);
+        console.log("✅ Teacher qualifications created");
+        break;
+      }
+
+      case "messaging": {
+        const school = await getSchool();
+        await seedMessaging(prisma, school.id);
+        console.log("✅ Parent-teacher messaging created");
+        break;
+      }
+
+      case "health": {
+        const school = await getSchool();
+        await seedHealth(prisma, school.id);
+        console.log("✅ Health records & achievements created");
+        break;
+      }
+
+      case "documents": {
+        const school = await getSchool();
+        await seedDocuments(prisma, school.id);
+        console.log("✅ Student documents created");
+        break;
+      }
+
+      case "progress": {
+        const school = await getSchool();
+        await seedCourseProgress(prisma, school.id);
+        console.log("✅ Course progress & certificates created");
+        break;
+      }
+
+      case "admission-extended": {
+        const school = await getSchool();
+        const { users } = await getCoreData(school.id);
+        const admin = users.find(u => u.role === "ADMIN");
+        if (!admin) throw new Error("❌ Run 'auth' phase first");
+        await seedAdmissionExtended(prisma, school.id, admin);
+        console.log("✅ Extended admission data created (inquiries, tours)");
+        break;
+      }
+
+      case "attendance-advanced": {
+        const school = await getSchool();
+        const { students } = await getCoreData(school.id);
+        await seedAdvancedAttendance(prisma, school.id, students);
+        console.log("✅ Advanced attendance created (devices, cards, biometrics)");
+        break;
+      }
+
       default:
         console.log(`❌ Unknown phase: ${phase}`);
         console.log("\n🌱 All phases are SAFE - data is preserved, duplicates are skipped.");
         console.log("\nAvailable phases:");
-        console.log("  1. school       - Demo school");
-        console.log("  2. auth         - Admin users");
-        console.log("  3. academic     - Year, terms, levels, periods");
-        console.log("  4. departments  - Departments + subjects");
-        console.log("  5. classrooms   - Physical rooms");
-        console.log("  6. people       - Teachers, students, guardians");
-        console.log("  7. classes      - Class sections");
-        console.log("  8. library      - Books");
+        console.log("  1. school             - Demo school");
+        console.log("  2. auth               - Admin users");
+        console.log("  3. academic           - Year, terms, levels, periods");
+        console.log("  4. departments        - Departments + subjects");
+        console.log("  5. classrooms         - Physical rooms");
+        console.log("  6. people             - Teachers, students, guardians");
+        console.log("  7. classes            - Class sections");
+        console.log("  8. library            - Books");
         console.log("  9. announcements");
         console.log(" 10. events");
         console.log(" 11. fees");
-        console.log(" 12. finance");
+        console.log(" 12. finance            - Accounts, payroll, ledger");
         console.log(" 13. exams");
         console.log(" 14. grades");
         console.log(" 15. timetable");
-        console.log(" 16. stream       - LMS");
+        console.log(" 16. stream             - LMS courses");
         console.log(" 17. lessons");
         console.log(" 18. reports");
         console.log(" 19. attendance");
         console.log(" 20. admission");
+        console.log("\n🆕 Comprehensive Data (NEW):");
+        console.log(" 21. borrows            - Library circulation records");
+        console.log(" 22. qualifications     - Teacher degrees, certifications");
+        console.log(" 23. messaging          - Parent-teacher conversations");
+        console.log(" 24. health             - Health records, achievements");
+        console.log(" 25. documents          - Student documents");
+        console.log(" 26. progress           - Course progress, certificates");
+        console.log(" 27. admission-extended - Inquiries, tours, bookings");
+        console.log(" 28. attendance-advanced - Devices, cards, biometrics");
         process.exit(1);
     }
 

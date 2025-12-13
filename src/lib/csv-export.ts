@@ -1,7 +1,7 @@
 /**
  * CSV Export Utility - DEPRECATED
  *
- * @deprecated Use @/components/platform/file exports instead.
+ * @deprecated Use @/components/file exports instead.
  *
  * @example
  * ```tsx
@@ -14,7 +14,7 @@
  *   generateExportFilename,
  *   downloadBlob,
  *   type ExportColumn
- * } from "@/components/platform/file"
+ * } from "@/components/file"
  *
  * const columns: ExportColumn<YourType>[] = [
  *   { key: "name", header: "Name", headerAr: "الاسم" },
@@ -30,7 +30,7 @@
 import {
   generateExportFilename as newGenerateExportFilename,
   downloadBlob,
-} from "@/components/platform/file";
+} from "@/components/file";
 
 // ============================================================================
 // Legacy Types
@@ -47,7 +47,7 @@ export interface LegacyColumn<T = Record<string, unknown>> {
 
 /**
  * Convert array of objects to CSV string
- * @deprecated Use generateCsvContent from @/components/platform/file instead
+ * @deprecated Use generateCsvContent from @/components/file instead
  */
 export function arrayToCSV<T extends Record<string, unknown>>(
   data: T[],
@@ -139,7 +139,7 @@ function formatValue(value: unknown): string {
 
 /**
  * Generate filename with timestamp
- * @deprecated Use generateExportFilename from @/components/platform/file instead
+ * @deprecated Use generateExportFilename from @/components/file instead
  */
 export function generateCSVFilename(
   prefix: string,
@@ -161,7 +161,7 @@ export function generateCSVFilename(
 
 /**
  * Create CSV download from data
- * @deprecated Use downloadBlob from @/components/platform/file instead
+ * @deprecated Use downloadBlob from @/components/file instead
  */
 export function downloadCSV(
   data: Record<string, unknown>[],
@@ -175,7 +175,7 @@ export function downloadCSV(
 
 /**
  * Common column definitions for standard entities
- * @deprecated Define columns using ExportColumn<T> from @/components/platform/file
+ * @deprecated Define columns using ExportColumn<T> from @/components/file
  */
 export const COMMON_COLUMNS = {
   student: [
@@ -264,7 +264,7 @@ export {
   downloadBlob,
   generateCsvContent,
   type ExportColumn,
-} from "@/components/platform/file";
+} from "@/components/file";
 
 // Map legacy function to new one
 export { newGenerateExportFilename as generateFilename };

@@ -57,7 +57,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
   const currentStepIndex = getCurrentStepFromPath();
   const currentStepSlug = APPLY_STEPS[currentStepIndex] || APPLY_STEPS[0];
-  const campaignId = params.campaignId as string;
+  const id = params.id as string;
   const subdomain = params.subdomain as string;
 
   // Determine which step group we're in
@@ -81,7 +81,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
     if (currentStepIndex > 0) {
       const prevStep = APPLY_STEPS[currentStepIndex - 1];
-      router.push(`/${locale}/apply/${campaignId}/${prevStep}`);
+      router.push(`/${locale}/s/${subdomain}/apply/${id}/${prevStep}`);
     }
   };
 
@@ -99,7 +99,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
     if (currentStepIndex < APPLY_STEPS.length - 1) {
       const nextStep = APPLY_STEPS[currentStepIndex + 1];
-      router.push(`/${locale}/apply/${campaignId}/${nextStep}`);
+      router.push(`/${locale}/s/${subdomain}/apply/${id}/${nextStep}`);
     }
   };
 

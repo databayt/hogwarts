@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
+import { VideoPlayer } from "@/components/stream/shared/video-player";
 import { markLessonComplete, markLessonIncomplete } from "./actions";
 import type { LessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress";
 
@@ -72,6 +73,28 @@ export function StreamLessonContent({
     });
   };
 
+  // Auto-mark complete when video finishes
+  const handleVideoComplete = useCallback(() => {
+    if (isCompleted) return; // Already completed, don't mark again
+
+    startTransition(async () => {
+      try {
+        const result = await markLessonComplete(
+          lesson.id,
+          lesson.chapter.course.slug
+        );
+        if (result.status === "error") {
+          toast.error(result.message);
+          return;
+        }
+        setIsCompleted(true);
+        toast.success("Lesson completed!");
+      } catch {
+        toast.error("Failed to mark lesson as complete");
+      }
+    });
+  }, [isCompleted, lesson.id, lesson.chapter.course.slug]);
+
   const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`;
 
   return (
@@ -115,13 +138,12 @@ export function StreamLessonContent({
                   allowFullScreen
                 />
               ) : (
-                <video
+                <VideoPlayer
+                  url={lesson.videoUrl}
+                  title={lesson.title}
+                  onComplete={handleVideoComplete}
                   className="w-full h-full rounded-t-lg"
-                  controls
-                  src={lesson.videoUrl}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                />
               )}
             </div>
           ) : (

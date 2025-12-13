@@ -757,3 +757,92 @@ export const CLASSROOMS_LEGACY = CLASSROOMS.map(c => ({
 export const MALE_NAMES_LEGACY = MALE_NAMES.givenEn;
 export const FEMALE_NAMES_LEGACY = FEMALE_NAMES.givenEn;
 export const SURNAMES_LEGACY = SURNAMES.en;
+
+// ============================================================================
+// GRADE SCALES (Bilingual) - Sudanese/Arabic Education System
+// ============================================================================
+
+export interface GradeScaleData {
+  grade: string;
+  ar: string;
+  en: string;
+  minPercentage: number;
+  maxPercentage: number;
+  gpa: number;
+  descriptionAr: string;
+  descriptionEn: string;
+}
+
+/**
+ * Sudanese/Arabic Education System Grade Scale
+ * Bilingual grade labels with Arabic and English equivalents
+ */
+export const GRADE_SCALE: GradeScaleData[] = [
+  { grade: "A+", ar: "ممتاز مرتفع", en: "Excellent High", minPercentage: 95, maxPercentage: 100, gpa: 4.0, descriptionAr: "أداء استثنائي", descriptionEn: "Exceptional performance" },
+  { grade: "A", ar: "ممتاز", en: "Excellent", minPercentage: 90, maxPercentage: 94, gpa: 4.0, descriptionAr: "أداء متميز", descriptionEn: "Outstanding performance" },
+  { grade: "A-", ar: "ممتاز منخفض", en: "Excellent Low", minPercentage: 85, maxPercentage: 89, gpa: 3.7, descriptionAr: "أداء ممتاز", descriptionEn: "Excellent performance" },
+  { grade: "B+", ar: "جيد جداً مرتفع", en: "Very Good High", minPercentage: 80, maxPercentage: 84, gpa: 3.3, descriptionAr: "أداء جيد جداً", descriptionEn: "Very good performance" },
+  { grade: "B", ar: "جيد جداً", en: "Very Good", minPercentage: 75, maxPercentage: 79, gpa: 3.0, descriptionAr: "أداء جيد جداً", descriptionEn: "Very good performance" },
+  { grade: "B-", ar: "جيد جداً منخفض", en: "Very Good Low", minPercentage: 70, maxPercentage: 74, gpa: 2.7, descriptionAr: "أداء جيد", descriptionEn: "Good performance" },
+  { grade: "C+", ar: "جيد مرتفع", en: "Good High", minPercentage: 65, maxPercentage: 69, gpa: 2.3, descriptionAr: "أداء جيد", descriptionEn: "Good performance" },
+  { grade: "C", ar: "جيد", en: "Good", minPercentage: 60, maxPercentage: 64, gpa: 2.0, descriptionAr: "أداء مقبول", descriptionEn: "Acceptable performance" },
+  { grade: "C-", ar: "جيد منخفض", en: "Good Low", minPercentage: 55, maxPercentage: 59, gpa: 1.7, descriptionAr: "أداء أقل من الجيد", descriptionEn: "Below good performance" },
+  { grade: "D+", ar: "مقبول مرتفع", en: "Pass High", minPercentage: 50, maxPercentage: 54, gpa: 1.3, descriptionAr: "أداء مقبول", descriptionEn: "Passing performance" },
+  { grade: "D", ar: "مقبول", en: "Pass", minPercentage: 45, maxPercentage: 49, gpa: 1.0, descriptionAr: "أداء ضعيف ولكن ناجح", descriptionEn: "Weak but passing performance" },
+  { grade: "F", ar: "راسب", en: "Fail", minPercentage: 0, maxPercentage: 44, gpa: 0.0, descriptionAr: "لم يحقق الحد الأدنى", descriptionEn: "Did not meet minimum requirements" },
+];
+
+/**
+ * Get bilingual grade info from percentage
+ */
+export function getGradeInfo(percentage: number): GradeScaleData | undefined {
+  return GRADE_SCALE.find(g => percentage >= g.minPercentage && percentage <= g.maxPercentage);
+}
+
+/**
+ * Get grade letter from percentage
+ */
+export function calculateGrade(percentage: number): string {
+  const info = getGradeInfo(percentage);
+  return info?.grade || "F";
+}
+
+/**
+ * Get bilingual grade label
+ */
+export function getGradeLabel(percentage: number, locale: "ar" | "en"): string {
+  const info = getGradeInfo(percentage);
+  return locale === "ar" ? (info?.ar || "راسب") : (info?.en || "Fail");
+}
+
+// ============================================================================
+// REPORT CARD CONSTANTS (Bilingual)
+// ============================================================================
+
+export interface ReportTermData {
+  termNumber: number;
+  ar: string;
+  en: string;
+  months: string[];
+}
+
+export const REPORT_TERMS: ReportTermData[] = [
+  { termNumber: 1, ar: "الفصل الدراسي الأول", en: "First Semester", months: ["Sep", "Oct", "Nov", "Dec"] },
+  { termNumber: 2, ar: "الفصل الدراسي الثاني", en: "Second Semester", months: ["Jan", "Feb", "Mar", "Apr", "May"] },
+];
+
+export const REPORT_CATEGORIES = {
+  academic: { ar: "الأداء الأكاديمي", en: "Academic Performance" },
+  behavior: { ar: "السلوك والانضباط", en: "Behavior & Discipline" },
+  attendance: { ar: "الحضور والمواظبة", en: "Attendance" },
+  extracurricular: { ar: "الأنشطة اللاصفية", en: "Extracurricular Activities" },
+  skills: { ar: "المهارات الشخصية", en: "Personal Skills" },
+};
+
+export const BEHAVIOR_RATINGS = [
+  { value: 5, ar: "ممتاز", en: "Excellent" },
+  { value: 4, ar: "جيد جداً", en: "Very Good" },
+  { value: 3, ar: "جيد", en: "Good" },
+  { value: 2, ar: "مقبول", en: "Satisfactory" },
+  { value: 1, ar: "يحتاج تحسين", en: "Needs Improvement" },
+];

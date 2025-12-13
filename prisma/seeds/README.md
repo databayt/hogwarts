@@ -2,6 +2,18 @@
 
 > **ZERO-DELETE ARCHITECTURE**: Data is preserved and increased, NEVER decreased.
 
+## Table of Contents
+
+- [Philosophy](#philosophy)
+- [Quick Start](#quick-start)
+- [Safe Patterns](#how-it-works)
+- [Module Reference](#module-reference)
+- [Bilingual Content](#bilingual-content)
+- [Auto-Translation](#auto-translation)
+- [Cultural Events](#cultural-events)
+- [Pre-Commit Safety](#pre-commit-safety)
+- [Architecture](#architecture)
+
 ## Philosophy
 
 This seed system follows an **additive-only** pattern:
@@ -238,34 +250,277 @@ npx prisma migrate reset --force
 
 This is intentionally NOT available as a seed command.
 
+## Bilingual Content
+
+All seed data supports Arabic (AR) and English (EN) content using field suffixes:
+
+### Field Pattern
+
+```typescript
+// Database schema
+model Announcement {
+  titleEn  String?
+  titleAr  String?
+  bodyEn   String?
+  bodyAr   String?
+}
+
+// Seed data
+{
+  titleEn: "Welcome Back to School",
+  titleAr: "أهلاً بعودتكم إلى المدرسة",
+  bodyEn: "We are excited to welcome all students...",
+  bodyAr: "يسعدنا أن نرحب بجميع الطلاب...",
+}
+```
+
+### Bilingual Grade Scales
+
+Located in `constants.ts`, grades support Sudanese/Arabic education:
+
+| Grade | Arabic | English | Min % | GPA |
+|-------|--------|---------|-------|-----|
+| A+ | ممتاز مرتفع | Excellent High | 95 | 4.0 |
+| A | ممتاز | Excellent | 90 | 4.0 |
+| B+ | جيد جداً مرتفع | Very Good High | 85 | 3.5 |
+| B | جيد جداً | Very Good | 80 | 3.0 |
+| C+ | جيد مرتفع | Good High | 75 | 2.5 |
+| C | جيد | Good | 70 | 2.0 |
+| D+ | مقبول مرتفع | Pass High | 60 | 1.5 |
+| D | مقبول | Pass | 50 | 1.0 |
+| F | راسب | Fail | 0 | 0.0 |
+
+### Report Categories
+
+```typescript
+{
+  academic: { ar: "الأداء الأكاديمي", en: "Academic Performance" },
+  behavior: { ar: "السلوك والانضباط", en: "Behavior & Discipline" },
+  attendance: { ar: "الحضور والالتزام", en: "Attendance & Commitment" },
+  extracurricular: { ar: "الأنشطة اللامنهجية", en: "Extracurricular Activities" },
+  social: { ar: "المهارات الاجتماعية", en: "Social Skills" },
+}
+```
+
+## Auto-Translation
+
+When creating entities at runtime (not seeds), use the auto-translate wrapper for automatic bilingual content.
+
+### Wrapper Location
+
+`src/lib/auto-translate.ts`
+
+### Usage in Server Actions
+
+```typescript
+import { withAutoTranslation } from "@/lib/auto-translate";
+
+export async function createAnnouncement(input: {
+  title: string;
+  body: string;
+  sourceLanguage: "en" | "ar";
+}) {
+  // Auto-translate to other language
+  const translated = await withAutoTranslation(
+    { title: input.title, body: input.body },
+    ["title", "body"],
+    input.sourceLanguage
+  );
+
+  // Create with both languages
+  const announcement = await db.announcement.create({
+    data: {
+      titleEn: translated.data.titleEn,
+      titleAr: translated.data.titleAr,
+      bodyEn: translated.data.bodyEn,
+      bodyAr: translated.data.bodyAr,
+      schoolId,
+    },
+  });
+
+  return announcement;
+}
+```
+
+### Display Logic
+
+```typescript
+import { getLocalizedField } from "@/lib/auto-translate";
+
+// In components
+const title = getLocalizedField(announcement, "title", locale);
+const body = getLocalizedField(announcement, "body", locale);
+
+// Returns localized version with fallback
+// e.g., titleAr if locale="ar", otherwise titleEn
+```
+
+### Supported Entities
+
+| Entity | Translatable Fields |
+|--------|---------------------|
+| Announcement | title, body |
+| Event | name, description |
+| Assignment | title, description |
+| Lesson | title, objectives |
+| Exam | name, instructions |
+| Book | title, description |
+| Course | name, description |
+
+## Cultural Events
+
+Seeds include Islamic/Sudanese cultural events in `events.ts`:
+
+| Event | Arabic | Type |
+|-------|--------|------|
+| Eid al-Fitr | عيد الفطر المبارك | CELEBRATION |
+| Eid al-Adha | عيد الأضحى المبارك | CELEBRATION |
+| Mawlid an-Nabi | المولد النبوي الشريف | CELEBRATION |
+| Islamic New Year | رأس السنة الهجرية | CELEBRATION |
+| Arabic Language Day | اليوم العالمي للغة العربية | CELEBRATION |
+| Teachers' Day | يوم المعلم | CELEBRATION |
+| Mother's Day | عيد الأم | CELEBRATION |
+| Children's Day | يوم الطفل | CELEBRATION |
+| Quran Competition | مسابقة حفظ القرآن الكريم | COMPETITION |
+
+### Adding New Cultural Events
+
+```typescript
+// In prisma/seeds/events.ts
+{
+  title: "عنوان الحدث | Event Title",
+  description: `
+    الوصف بالعربية...
+
+    Description in English...
+  `,
+  eventType: EventType.CELEBRATION,
+  startDate: new Date("2025-MM-DD"),
+  // Islamic dates: use libraries like hijri-date for accuracy
+}
+```
+
+## Pre-Commit Safety
+
+**CRITICAL**: A pre-commit hook prevents destructive operations in seed files.
+
+### Protected Operations
+
+The following are **FORBIDDEN** in seed files:
+
+| Pattern | Risk | Alternative |
+|---------|------|-------------|
+| `deleteMany()` | Data loss | `upsert()` with update |
+| `.delete()` | Record deletion | `findFirst()` + conditional create |
+| `TRUNCATE` | Table wipe | Never needed in seeds |
+| `DROP` | Table/schema destruction | Never needed |
+
+### How It Works
+
+When committing changes to `prisma/seeds/*.ts` or `prisma/generator/*.ts`:
+
+```bash
+# Pre-commit hook checks for destructive patterns
+if git diff --cached | grep -E "deleteMany|\.delete\(|TRUNCATE|DROP"; then
+  echo "❌ CRITICAL: Destructive operations detected in seed files!"
+  exit 1
+fi
+```
+
+### Safe Alternatives
+
+```typescript
+// ❌ FORBIDDEN - Deletes data
+await prisma.student.deleteMany({ where: { schoolId } });
+await prisma.student.delete({ where: { id } });
+
+// ✅ SAFE - Upsert (create or update)
+await prisma.student.upsert({
+  where: { schoolId_email: { schoolId, email } },
+  create: { schoolId, email, name },
+  update: { name },  // Update if exists
+});
+
+// ✅ SAFE - Conditional create
+const existing = await prisma.student.findFirst({ where: { email, schoolId } });
+if (!existing) {
+  await prisma.student.create({ data: { email, schoolId, name } });
+}
+
+// ✅ SAFE - Skip duplicates
+await prisma.student.createMany({
+  data: students,
+  skipDuplicates: true,
+});
+```
+
+### Emergency Override
+
+If you absolutely need destructive operations (rare, discuss with team first):
+
+```bash
+git commit --no-verify -m "message"
+```
+
+**WARNING**: This bypasses all safety checks. Use only when:
+- Team has approved the destructive operation
+- You have a backup of the data
+- This is a controlled development environment
+
 ## Architecture
 
 ```
 prisma/seeds/
 ├── index.ts          # Main orchestrator (runs all phases)
+├── ensure-demo.ts    # Auto-recovery (runs on build)
 ├── run-single.ts     # Single module runner
-├── constants.ts      # Bilingual demo data configuration
+├── constants.ts      # Bilingual demo data (names, grades, config)
 ├── types.ts          # TypeScript types
-├── school.ts         # Phase 1: School
-├── auth.ts           # Phase 1: Admin users
-├── academic.ts       # Phase 2: Academic structure
-├── departments.ts    # Phase 2: Departments + subjects
-├── classrooms.ts     # Phase 2: Physical rooms
-├── people.ts         # Phase 3: Teachers, students, guardians
-├── classes.ts        # Phase 4: Class sections
-├── library.ts        # Phase 5: Books
-├── announcements.ts  # Phase 5: Announcements
-├── events.ts         # Phase 5: Calendar events
-├── fees.ts           # Phase 6: Fee structures
-├── finance.ts        # Phase 6: Full finance module
-├── exams.ts          # Phase 7: Exam system
-├── grades.ts         # Phase 7: Academic results
-├── timetable.ts      # Phase 8: Schedules
-├── stream.ts         # Phase 9: LMS courses
-├── lessons.ts        # Phase 9: Lesson plans
-├── reports.ts        # Phase 9: Report cards
-├── attendance.ts     # Phase 10: Attendance
-└── admission.ts      # Phase 11: Admissions
+│
+├── # TIER 1: Core Setup
+├── school.ts         # School + branding
+├── auth.ts           # Admin users
+│
+├── # TIER 2: Academic Foundation
+├── academic.ts       # Year, terms, periods, levels
+├── departments.ts    # Departments + subjects
+├── classrooms.ts     # Physical rooms
+│
+├── # TIER 3: People
+├── people.ts         # Teachers, students, guardians
+├── classes.ts        # Class sections + enrollments
+│
+├── # TIER 4: Operations
+├── library.ts        # Books (AR/EN)
+├── covers.ts         # Book cover URL updates (utility)
+├── announcements.ts  # Announcements (bilingual)
+├── events.ts         # Calendar events + cultural holidays
+├── fees.ts           # Fee structures
+├── finance.ts        # Accounting system
+│
+├── # TIER 5: Assessment
+├── exams.ts          # Exams + questions
+├── grades.ts         # Student grades
+├── reports.ts        # Report cards
+├── timetable.ts      # Schedules
+│
+├── # TIER 6: Learning
+├── stream.ts         # LMS courses
+├── lessons.ts        # Lesson plans
+├── attendance.ts     # Attendance records
+│
+├── # TIER 7: Admission
+└── admission.ts      # Admission campaigns
+```
+
+### Related Files
+
+```
+prisma/generator/
+└── verify-qbank.ts   # Read-only verification utility (kept)
+
+src/lib/
+└── auto-translate.ts # Runtime auto-translation wrapper
 ```
 
 ## Demo School Details

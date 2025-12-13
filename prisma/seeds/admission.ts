@@ -247,3 +247,278 @@ export async function seedAdmission(
   console.log(`   ✅ Created: ${appCreatedCount} applications${appSkippedCount > 0 ? ` (${appSkippedCount} existing skipped)` : ""}`);
   console.log(`   ✅ Created: ${commCreatedCount} communications\n`);
 }
+
+// ============================================================================
+// EXTENDED ADMISSION SEEDING
+// ============================================================================
+
+import { InquiryStatus, SlotType, BookingStatus } from "@prisma/client";
+
+// Inquiry sources and messages
+const INQUIRY_SOURCES = ["website", "social_media", "referral", "advertisement", "walk_in"];
+const INQUIRY_MESSAGES = {
+  en: [
+    "I would like to know more about your school's curriculum and admission requirements.",
+    "What are the tuition fees for next academic year? Do you offer scholarships?",
+    "Can you provide information about extracurricular activities and sports programs?",
+    "I am interested in enrolling my child. What documents are required for admission?",
+    "What is the teacher-to-student ratio in your classrooms?",
+    "Do you offer transportation services? What areas do you cover?",
+    "What makes your school different from others in the area?",
+    "Is there a waiting list for certain grade levels?",
+  ],
+  ar: [
+    "أرغب في معرفة المزيد عن منهج مدرستكم ومتطلبات القبول.",
+    "ما هي الرسوم الدراسية للعام الدراسي القادم؟ هل تقدمون منحاً دراسية؟",
+    "هل يمكنكم تقديم معلومات عن الأنشطة اللامنهجية والبرامج الرياضية؟",
+    "أرغب في تسجيل طفلي. ما هي الوثائق المطلوبة للقبول؟",
+    "ما هي نسبة المعلمين إلى الطلاب في الفصول الدراسية؟",
+    "هل تقدمون خدمات النقل؟ ما هي المناطق التي تغطونها؟",
+    "ما الذي يميز مدرستكم عن المدارس الأخرى في المنطقة؟",
+    "هل توجد قائمة انتظار لمستويات صفية معينة؟",
+  ],
+};
+
+/**
+ * Seeds extended admission data:
+ * - 50 inquiries
+ * - 20 time slots (tours + interviews)
+ * - 30 tour bookings
+ */
+export async function seedAdmissionExtended(
+  prisma: SeedPrisma,
+  schoolId: string,
+  adminUser: UserRef
+): Promise<void> {
+  console.log("🔔 Creating extended admission data (inquiries, tours)...");
+
+  // Check existing counts
+  const existingInquiries = await prisma.admissionInquiry.count({ where: { schoolId } });
+  const existingSlots = await prisma.admissionTimeSlot.count({ where: { schoolId } });
+  const existingBookings = await prisma.tourBooking.count({ where: { schoolId } });
+
+  if (existingInquiries >= 30 && existingSlots >= 10) {
+    console.log(`   ✅ Extended data already exists (${existingInquiries} inquiries, ${existingSlots} slots), skipping\n`);
+    return;
+  }
+
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  const threeMonthsFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+  // Get active campaign
+  const activeCampaign = await prisma.admissionCampaign.findFirst({
+    where: { schoolId, status: AdmissionStatus.OPEN },
+  });
+
+  const grades = ["KG1", "KG2", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
+                  "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
+
+  // ============================================
+  // 1. Create Inquiries (50)
+  // ============================================
+  let inquiryCount = 0;
+
+  for (let i = 0; i < 50; i++) {
+    const gender = Math.random() > 0.5 ? "M" : "F";
+    const parentName = getRandomName(gender, i + 5000);
+    const childName = getRandomName(Math.random() > 0.5 ? "M" : "F", i + 6000);
+    const useArabic = Math.random() > 0.5;
+
+    // Random status distribution
+    const statusRoll = Math.random();
+    let status: InquiryStatus;
+    if (statusRoll < 0.2) status = InquiryStatus.NEW;
+    else if (statusRoll < 0.5) status = InquiryStatus.CONTACTED;
+    else if (statusRoll < 0.7) status = InquiryStatus.QUALIFIED;
+    else if (statusRoll < 0.85) status = InquiryStatus.CONVERTED;
+    else status = InquiryStatus.UNQUALIFIED;
+
+    const email = `inquiry.${parentName.givenNameEn.toLowerCase()}${i}@demo.org`;
+
+    // Check if inquiry exists
+    const existingInquiry = await prisma.admissionInquiry.findFirst({
+      where: { schoolId, email },
+    });
+
+    if (!existingInquiry) {
+      const messages = useArabic ? INQUIRY_MESSAGES.ar : INQUIRY_MESSAGES.en;
+
+      await prisma.admissionInquiry.create({
+        data: {
+          schoolId,
+          parentName: `${parentName.givenNameEn} ${parentName.surnameEn}`,
+          email,
+          phone: `+249-9${faker.string.numeric(8)}`,
+          studentName: `${childName.givenNameEn} ${childName.surnameEn}`,
+          studentDOB: faker.date.birthdate({ min: 4, max: 18, mode: "age" }),
+          interestedGrade: grades[Math.floor(Math.random() * grades.length)],
+          source: INQUIRY_SOURCES[Math.floor(Math.random() * INQUIRY_SOURCES.length)],
+          message: messages[Math.floor(Math.random() * messages.length)],
+          status,
+          followUpDate: status === InquiryStatus.NEW || status === InquiryStatus.CONTACTED
+            ? new Date(now.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000)
+            : null,
+          assignedTo: Math.random() > 0.3 ? adminUser.id : null,
+          subscribeNewsletter: Math.random() > 0.4,
+          createdAt: new Date(
+            sixMonthsAgo.getTime() + Math.random() * (now.getTime() - sixMonthsAgo.getTime())
+          ),
+        },
+      });
+      inquiryCount++;
+    }
+  }
+
+  // ============================================
+  // 2. Create Time Slots (20)
+  // ============================================
+  let slotCount = 0;
+  const createdSlots: { id: string; type: SlotType }[] = [];
+
+  // Tour slots (10)
+  for (let i = 0; i < 10; i++) {
+    const slotDate = new Date(now.getTime() + (i * 7 + Math.floor(Math.random() * 3)) * 24 * 60 * 60 * 1000);
+    // Normalize to just date
+    slotDate.setHours(0, 0, 0, 0);
+
+    const startHour = 9 + Math.floor(Math.random() * 4); // 9am-12pm
+    const startTime = new Date(slotDate);
+    startTime.setHours(startHour, 0, 0, 0);
+    const endTime = new Date(startTime);
+    endTime.setHours(startHour + 1, 30, 0, 0);
+
+    // Check if similar slot exists
+    const existingSlot = await prisma.admissionTimeSlot.findFirst({
+      where: {
+        schoolId,
+        slotType: SlotType.TOUR,
+        date: slotDate,
+      },
+    });
+
+    if (!existingSlot) {
+      const slot = await prisma.admissionTimeSlot.create({
+        data: {
+          schoolId,
+          campaignId: activeCampaign?.id || null,
+          slotType: SlotType.TOUR,
+          date: slotDate,
+          startTime,
+          endTime,
+          maxCapacity: 10 + Math.floor(Math.random() * 10),
+          currentBookings: 0,
+          isActive: true,
+          location: "Main Campus - Administration Building",
+          conductedBy: adminUser.id,
+          notes: "School tour including classrooms, library, sports facilities, and cafeteria.",
+        },
+      });
+      createdSlots.push({ id: slot.id, type: SlotType.TOUR });
+      slotCount++;
+    }
+  }
+
+  // Interview slots (10)
+  for (let i = 0; i < 10; i++) {
+    const slotDate = new Date(now.getTime() + (i * 5 + Math.floor(Math.random() * 3) + 14) * 24 * 60 * 60 * 1000);
+    slotDate.setHours(0, 0, 0, 0);
+
+    const startHour = 10 + Math.floor(Math.random() * 4); // 10am-1pm
+    const startTime = new Date(slotDate);
+    startTime.setHours(startHour, 0, 0, 0);
+    const endTime = new Date(startTime);
+    endTime.setHours(startHour, 30, 0, 0);
+
+    const existingSlot = await prisma.admissionTimeSlot.findFirst({
+      where: {
+        schoolId,
+        slotType: SlotType.INTERVIEW,
+        date: slotDate,
+      },
+    });
+
+    if (!existingSlot) {
+      const slot = await prisma.admissionTimeSlot.create({
+        data: {
+          schoolId,
+          campaignId: activeCampaign?.id || null,
+          slotType: SlotType.INTERVIEW,
+          date: slotDate,
+          startTime,
+          endTime,
+          maxCapacity: 5,
+          currentBookings: 0,
+          isActive: true,
+          location: "Interview Room A",
+          conductedBy: adminUser.id,
+          notes: "Parent and student interview with admission committee.",
+        },
+      });
+      createdSlots.push({ id: slot.id, type: SlotType.INTERVIEW });
+      slotCount++;
+    }
+  }
+
+  // ============================================
+  // 3. Create Tour Bookings (30)
+  // ============================================
+  let bookingCount = 0;
+  const tourSlots = createdSlots.filter(s => s.type === SlotType.TOUR);
+
+  if (tourSlots.length > 0) {
+    for (let i = 0; i < 30; i++) {
+      const slot = tourSlots[i % tourSlots.length];
+      const gender = Math.random() > 0.5 ? "M" : "F";
+      const parentName = getRandomName(gender, i + 7000);
+      const childName = getRandomName(Math.random() > 0.5 ? "M" : "F", i + 8000);
+      const email = `tour.${parentName.givenNameEn.toLowerCase()}${i}@demo.org`;
+      const bookingNumber = `TOUR-${String(i + 1).padStart(5, "0")}`;
+
+      // Check if booking exists
+      const existingBooking = await prisma.tourBooking.findFirst({
+        where: { bookingNumber },
+      });
+
+      if (!existingBooking) {
+        // Random status
+        const statusRoll = Math.random();
+        let status: BookingStatus;
+        if (statusRoll < 0.6) status = BookingStatus.CONFIRMED;
+        else if (statusRoll < 0.75) status = BookingStatus.COMPLETED;
+        else if (statusRoll < 0.9) status = BookingStatus.PENDING;
+        else status = BookingStatus.CANCELLED;
+
+        await prisma.tourBooking.create({
+          data: {
+            schoolId,
+            slotId: slot.id,
+            bookingNumber,
+            parentName: `${parentName.givenNameEn} ${parentName.surnameEn}`,
+            email,
+            phone: `+249-9${faker.string.numeric(8)}`,
+            studentName: `${childName.givenNameEn} ${childName.surnameEn}`,
+            interestedGrade: grades[Math.floor(Math.random() * grades.length)],
+            status,
+            attendedAt: status === BookingStatus.COMPLETED ? new Date() : null,
+            numberOfAttendees: 1 + Math.floor(Math.random() * 3),
+            reminderSent: status === BookingStatus.CONFIRMED || status === BookingStatus.COMPLETED,
+            reminderSentAt: status === BookingStatus.CONFIRMED ? new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) : null,
+          },
+        });
+        bookingCount++;
+
+        // Update slot booking count
+        await prisma.admissionTimeSlot.update({
+          where: { id: slot.id },
+          data: { currentBookings: { increment: 1 } },
+        });
+      }
+    }
+  }
+
+  console.log(`   ✅ Extended admission data created:`);
+  console.log(`      - ${inquiryCount} admission inquiries`);
+  console.log(`      - ${slotCount} time slots (tours + interviews)`);
+  console.log(`      - ${bookingCount} tour bookings\n`);
+}

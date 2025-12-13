@@ -683,3 +683,199 @@ export async function seedStream(
   console.log(`      - Humanities: 1 course`);
   console.log(`      - Total: ${courseCount} courses, ${chapterCount} chapters, ${lessonCount} lessons\n`);
 }
+
+// ============================================================================
+// COMPREHENSIVE COURSE PROGRESS SEEDING
+// ============================================================================
+
+/**
+ * Seeds comprehensive course progress data:
+ * - 500+ enrollments (50% of students)
+ * - 2,000+ lesson progress records
+ * - Certificates for completed courses
+ */
+export async function seedCourseProgress(
+  prisma: SeedPrisma,
+  schoolId: string
+): Promise<void> {
+  console.log("📊 Creating comprehensive course progress data...");
+
+  // Check existing counts
+  const existingEnrollments = await prisma.streamEnrollment.count({ where: { schoolId } });
+  const existingProgress = await prisma.streamLessonProgress.count();
+  const existingCerts = await prisma.streamCertificate.count({ where: { schoolId } });
+
+  if (existingEnrollments >= 300 && existingProgress >= 1000) {
+    console.log(`   ✅ Progress data already exists (${existingEnrollments} enrollments, ${existingProgress} progress), skipping\n`);
+    return;
+  }
+
+  // Get students with user accounts
+  const students = await prisma.student.findMany({
+    where: { schoolId, userId: { not: null } },
+    select: { id: true, userId: true, givenName: true },
+    take: 500, // Target 500 students
+  });
+
+  // Get all courses
+  const courses = await prisma.streamCourse.findMany({
+    where: { schoolId },
+    select: { id: true, title: true, slug: true },
+  });
+
+  // Get all lessons for progress tracking
+  const lessons = await prisma.streamLesson.findMany({
+    where: {
+      chapter: {
+        course: { schoolId },
+      },
+    },
+    include: {
+      chapter: {
+        select: { courseId: true },
+      },
+    },
+  });
+
+  if (students.length === 0 || courses.length === 0) {
+    console.log("   ⚠️  No students or courses found, skipping progress seeding\n");
+    return;
+  }
+
+  const now = new Date();
+  const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+  let enrollmentCount = 0;
+  let progressCount = 0;
+  let certificateCount = 0;
+
+  // Group lessons by course for easier lookup
+  const lessonsByCourse = new Map<string, typeof lessons>();
+  for (const lesson of lessons) {
+    const courseId = lesson.chapter.courseId;
+    if (!lessonsByCourse.has(courseId)) {
+      lessonsByCourse.set(courseId, []);
+    }
+    lessonsByCourse.get(courseId)!.push(lesson);
+  }
+
+  // Enroll 50% of students in 2-4 courses each
+  const enrolledStudents = students.slice(0, Math.ceil(students.length * 0.5));
+
+  for (const [studentIndex, student] of enrolledStudents.entries()) {
+    if (!student.userId) continue;
+
+    // Each student enrolls in 2-4 random courses
+    const numCourses = 2 + Math.floor(Math.random() * 3);
+    const selectedCourses = courses
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numCourses);
+
+    for (const course of selectedCourses) {
+      // Check if enrollment exists
+      const existingEnrollment = await prisma.streamEnrollment.findFirst({
+        where: {
+          schoolId,
+          userId: student.userId,
+          courseId: course.id,
+        },
+      });
+
+      if (!existingEnrollment) {
+        // Create enrollment with random status
+        const status = Math.random() < 0.8 ? "ACTIVE" : Math.random() < 0.5 ? "PENDING" : "COMPLETED";
+
+        await prisma.streamEnrollment.create({
+          data: {
+            schoolId,
+            userId: student.userId,
+            courseId: course.id,
+            status: status as "ACTIVE" | "PENDING" | "COMPLETED",
+            isActive: status !== "PENDING",
+            createdAt: new Date(
+              threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+            ),
+          },
+        });
+        enrollmentCount++;
+      }
+
+      // Create lesson progress for this course
+      const courseLessons = lessonsByCourse.get(course.id) || [];
+      if (courseLessons.length === 0) continue;
+
+      // Completion rate: 20-100% of lessons
+      const completionRate = 0.2 + Math.random() * 0.8;
+      const lessonsToComplete = Math.floor(courseLessons.length * completionRate);
+
+      // Sort lessons by position and complete in order
+      const sortedLessons = [...courseLessons].sort((a, b) => a.position - b.position);
+      const completedLessons = sortedLessons.slice(0, lessonsToComplete);
+
+      for (const lesson of completedLessons) {
+        // Check if progress exists
+        const existingProgressRecord = await prisma.streamLessonProgress.findFirst({
+          where: {
+            userId: student.userId,
+            lessonId: lesson.id,
+          },
+        });
+
+        if (!existingProgressRecord) {
+          await prisma.streamLessonProgress.create({
+            data: {
+              userId: student.userId,
+              lessonId: lesson.id,
+              isCompleted: true,
+              createdAt: new Date(
+                threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+              ),
+            },
+          });
+          progressCount++;
+        }
+      }
+
+      // Award certificate if course is 100% completed (10% of enrollments)
+      if (completionRate >= 0.95 && Math.random() < 0.3) {
+        const existingCert = await prisma.streamCertificate.findFirst({
+          where: {
+            schoolId,
+            userId: student.userId,
+            courseId: course.id,
+          },
+        });
+
+        if (!existingCert) {
+          const certNumber = `CERT-${schoolId.slice(0, 4).toUpperCase()}-${String(certificateCount + 1).padStart(5, "0")}`;
+          const completedDate = new Date(
+            threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+          );
+
+          await prisma.streamCertificate.create({
+            data: {
+              schoolId,
+              userId: student.userId,
+              courseId: course.id,
+              courseTitle: course.title,
+              certificateNumber: certNumber,
+              completedAt: completedDate,
+              issuedAt: new Date(completedDate.getTime() + 24 * 60 * 60 * 1000), // Issued next day
+            },
+          });
+          certificateCount++;
+        }
+      }
+    }
+
+    // Progress indicator
+    if ((studentIndex + 1) % 100 === 0) {
+      console.log(`   ... processed ${studentIndex + 1}/${enrolledStudents.length} students`);
+    }
+  }
+
+  console.log(`   ✅ Course progress data created:`);
+  console.log(`      - ${enrollmentCount} new enrollments (${enrolledStudents.length} students)`);
+  console.log(`      - ${progressCount} lesson progress records`);
+  console.log(`      - ${certificateCount} completion certificates\n`);
+}

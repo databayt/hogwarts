@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -16,13 +18,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Label } from '@/components/ui/label'
 import {
   Building,
@@ -33,9 +37,19 @@ import {
   Edit,
   Trash2,
   ChevronRight,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
+import {
+  getDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+} from './actions'
 
 // ============================================================================
 // Types
@@ -65,12 +79,8 @@ interface Department {
 }
 
 interface Props {
-  departments: Department[]
   dictionary?: Dictionary['school']
   lang: Locale
-  onCreateDepartment?: (data: { departmentName: string; departmentNameAr?: string }) => Promise<void>
-  onUpdateDepartment?: (id: string, data: { departmentName: string; departmentNameAr?: string }) => Promise<void>
-  onDeleteDepartment?: (id: string) => Promise<void>
 }
 
 // ============================================================================
@@ -86,19 +96,55 @@ function getInitials(givenName: string, surname: string): string {
 // ============================================================================
 
 export function DepartmentsContent({
-  departments,
   dictionary,
   lang,
-  onCreateDepartment,
-  onUpdateDepartment,
-  onDeleteDepartment,
 }: Props) {
+  // Data states
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // UI states
   const [searchTerm, setSearchTerm] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
   const [newDepartmentName, setNewDepartmentName] = useState('')
   const [newDepartmentNameAr, setNewDepartmentNameAr] = useState('')
   const [expandedDepartment, setExpandedDepartment] = useState<string | null>(null)
+
+  // Delete confirmation state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    id: string
+    name: string
+  }>({ open: false, id: '', name: '' })
+
+  // Action states
+  const [isPending, startTransition] = useTransition()
+
+  // Fetch departments on mount
+  useEffect(() => {
+    fetchDepartments()
+  }, [])
+
+  const fetchDepartments = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await getDepartments()
+      if (result.success && result.data?.departments) {
+        setDepartments(result.data.departments as unknown as Department[])
+      } else if (!result.success) {
+        setError(result.message || 'Failed to load departments')
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load departments'
+      console.error('Failed to fetch departments:', err)
+      setError(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const t = {
     title: lang === 'ar' ? 'إدارة الأقسام' : 'Department Management',
@@ -139,27 +185,64 @@ export function DepartmentsContent({
   }
 
   const handleCreateDepartment = async () => {
-    if (onCreateDepartment && newDepartmentName) {
-      await onCreateDepartment({
-        departmentName: newDepartmentName,
-        departmentNameAr: newDepartmentNameAr || undefined,
-      })
-      setNewDepartmentName('')
-      setNewDepartmentNameAr('')
-      setIsCreateDialogOpen(false)
-    }
+    if (!newDepartmentName) return
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('departmentName', newDepartmentName)
+      if (newDepartmentNameAr) {
+        formData.append('departmentNameAr', newDepartmentNameAr)
+      }
+
+      const result = await createDepartment(formData)
+      if (result.success) {
+        toast.success(result.message || 'Department created successfully')
+        setNewDepartmentName('')
+        setNewDepartmentNameAr('')
+        setIsCreateDialogOpen(false)
+        fetchDepartments()
+      } else {
+        toast.error(result.message || 'Failed to create department')
+      }
+    })
   }
 
   const handleUpdateDepartment = async () => {
-    if (onUpdateDepartment && editingDepartment) {
-      await onUpdateDepartment(editingDepartment.id, {
-        departmentName: newDepartmentName,
-        departmentNameAr: newDepartmentNameAr || undefined,
-      })
-      setEditingDepartment(null)
-      setNewDepartmentName('')
-      setNewDepartmentNameAr('')
-    }
+    if (!editingDepartment || !newDepartmentName) return
+
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('id', editingDepartment.id)
+      formData.append('departmentName', newDepartmentName)
+      formData.append('departmentNameAr', newDepartmentNameAr || '')
+
+      const result = await updateDepartment(formData)
+      if (result.success) {
+        toast.success(result.message || 'Department updated successfully')
+        setEditingDepartment(null)
+        setNewDepartmentName('')
+        setNewDepartmentNameAr('')
+        fetchDepartments()
+      } else {
+        toast.error(result.message || 'Failed to update department')
+      }
+    })
+  }
+
+  const handleDeleteDepartment = async () => {
+    startTransition(async () => {
+      const formData = new FormData()
+      formData.append('id', deleteDialog.id)
+
+      const result = await deleteDepartment(formData)
+      if (result.success) {
+        toast.success(result.message || 'Department deleted successfully')
+        fetchDepartments()
+      } else {
+        toast.error(result.message || 'Failed to delete department')
+      }
+      setDeleteDialog({ ...deleteDialog, open: false })
+    })
   }
 
   const openEditDialog = (dept: Department) => {
@@ -168,8 +251,84 @@ export function DepartmentsContent({
     setNewDepartmentNameAr(dept.departmentNameAr || '')
   }
 
+  const openDeleteDialog = (dept: Department) => {
+    const name = lang === 'ar' ? (dept.departmentNameAr || dept.departmentName) : dept.departmentName
+    setDeleteDialog({ open: true, id: dept.id, name })
+  }
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6" role="status" aria-label="Loading departments">
+        {/* Header skeleton */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-8 w-12" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* List skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <Skeleton className="h-6 w-32" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <span className="sr-only">Loading departments...</span>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Error State with Retry */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchDepartments}
+              className="ms-4"
+            >
+              <RefreshCw className="h-4 w-4 me-2" aria-hidden="true" />
+              {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -212,10 +371,11 @@ export function DepartmentsContent({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isPending}>
                 {t.cancel}
               </Button>
-              <Button onClick={handleCreateDepartment} disabled={!newDepartmentName}>
+              <Button onClick={handleCreateDepartment} disabled={!newDepartmentName || isPending}>
+                {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
                 {t.save}
               </Button>
             </DialogFooter>
@@ -301,19 +461,19 @@ export function DepartmentsContent({
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => openEditDialog(dept)}
+                      aria-label={`${t.editDepartment} ${dept.departmentName}`}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    {onDeleteDepartment && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => onDeleteDepartment(dept.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => openDeleteDialog(dept)}
+                      aria-label={`${t.deleteDepartment} ${dept.departmentName}`}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -472,15 +632,49 @@ export function DepartmentsContent({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingDepartment(null)}>
+            <Button variant="outline" onClick={() => setEditingDepartment(null)} disabled={isPending}>
               {t.cancel}
             </Button>
-            <Button onClick={handleUpdateDepartment} disabled={!newDepartmentName}>
+            <Button onClick={handleUpdateDepartment} disabled={!newDepartmentName || isPending}>
+              {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
               {t.save}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              {t.deleteDepartment}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {lang === 'ar'
+                ? `هل أنت متأكد أنك تريد حذف "${deleteDialog.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
+                : `Are you sure you want to delete "${deleteDialog.name}"? This action cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>
+              {t.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteDepartment}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isPending}
+            >
+              {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
+              {lang === 'ar' ? 'حذف' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

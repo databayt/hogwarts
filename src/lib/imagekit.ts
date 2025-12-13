@@ -25,6 +25,7 @@ export const IMAGEKIT_FOLDERS = {
   LIBRARY_AUTHORS: "hogwarts/library/authors",
   AVATARS: "hogwarts/avatars",
   BANNERS: "hogwarts/banners",
+  EXCUSE_ATTACHMENTS: "hogwarts/attendance/excuses",
 } as const;
 
 // ============================================================================

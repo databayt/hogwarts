@@ -1,10 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { i18n, type Locale } from "@/components/internationalization/config";
+import { isRouteAllowedForRole, type Role } from "@/routes";
 
 /**
  * Optimized middleware for Edge Function (<1MB requirement)
  * - Auth check via cookie (no heavy NextAuth import)
- * - Inlined routes (no routes.ts import)
+ * - Role-based route protection via JWT decode
  * - Locale detection and routing
  * - Subdomain detection and rewriting
  */
@@ -44,6 +45,34 @@ function getLocale(request: NextRequest): Locale {
 // Check if user is authenticated via session cookie
 function isAuthenticated(request: NextRequest): boolean {
   return !!request.cookies.get('authjs.session-token')?.value;
+}
+
+/**
+ * Extract user role from JWT session cookie (lightweight - no NextAuth import)
+ * JWT structure: header.payload.signature (base64url encoded)
+ * Decodes payload to get role without cryptographic verification
+ * (Full verification happens in auth() calls within server actions)
+ */
+function getRoleFromCookie(request: NextRequest): Role | null {
+  const sessionCookie = request.cookies.get('authjs.session-token')?.value;
+  if (!sessionCookie) return null;
+
+  try {
+    // JWT is base64url encoded: header.payload.signature
+    const payload = sessionCookie.split('.')[1];
+    if (!payload) return null;
+
+    // Convert base64url to base64 and decode
+    const decoded = JSON.parse(
+      atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    );
+
+    // Role is stored in the JWT payload by NextAuth callbacks
+    return (decoded.role as Role) || null;
+  } catch {
+    // Invalid JWT format or decode error - fail gracefully
+    return null;
+  }
 }
 
 export function proxy(req: NextRequest) {
@@ -130,6 +159,26 @@ export function proxy(req: NextRequest) {
     const loginUrl = new URL(`/${locale}/login`, req.url);
     loginUrl.searchParams.set('callbackUrl', callbackUrl);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Role-based access control for authenticated users on protected routes
+  // Check if user's role is allowed to access this route
+  if (!isPublic && !isPublicSiteRoute && !isAuth && authenticated) {
+    const role = getRoleFromCookie(req);
+
+    // If role is available, check route permissions
+    // If role is null (JWT decode failed), allow through - auth() in actions will verify
+    if (role && !isRouteAllowedForRole(pathForRouteCheck, role)) {
+      // Redirect to unauthorized page with context
+      const unauthorizedUrl = subdomain
+        ? `/${locale}/s/${subdomain}/unauthorized`
+        : `/${locale}/unauthorized`;
+      const response = NextResponse.redirect(new URL(unauthorizedUrl, req.url));
+      // Set header for debugging/logging
+      response.headers.set('x-blocked-role', role);
+      response.headers.set('x-blocked-route', pathForRouteCheck);
+      return response;
+    }
   }
 
   // Main domain handling

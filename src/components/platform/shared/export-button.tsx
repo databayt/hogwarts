@@ -2,12 +2,12 @@
 
 /**
  * Legacy Export Button - DEPRECATED
- * This component is deprecated. Use ExportButton from @/components/platform/file instead.
+ * This component is deprecated. Use ExportButton from @/components/file instead.
  *
  * @example
  * ```tsx
  * // New way (recommended)
- * import { ExportButton, type ExportColumn } from "@/components/platform/file"
+ * import { ExportButton, type ExportColumn } from "@/components/file"
  *
  * const columns: ExportColumn<YourType>[] = [
  *   { key: "name", header: "Name", headerAr: "الاسم" },
@@ -21,7 +21,7 @@
  * />
  * ```
  *
- * @deprecated Use ExportButton from @/components/platform/file instead
+ * @deprecated Use ExportButton from @/components/file instead
  */
 
 import * as React from "react";
@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { generateExportFilename, downloadBlob, generateCsvContent } from "@/components/platform/file";
+import { generateExportFilename, downloadBlob, generateCsvContent } from "@/components/file";
 
 export type ExportFormat = "csv" | "excel" | "pdf";
 
@@ -61,7 +61,7 @@ interface ExportButtonProps {
 }
 
 /**
- * @deprecated Use ExportButton from @/components/platform/file instead
+ * @deprecated Use ExportButton from @/components/file instead
  */
 export function ExportButton({
   getCSV,
@@ -172,4 +172,4 @@ export function ExportButton({
 /**
  * Re-export the new ExportButton from File module for migration
  */
-export { ExportButton as NewExportButton, SimpleExportButton } from "@/components/platform/file";
+export { ExportButton as NewExportButton, SimpleExportButton } from "@/components/file";

@@ -5,7 +5,7 @@ import { X, File, Video, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { FileUploader, ACCEPT_VIDEOS, ACCEPT_DOCUMENTS, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_VIDEOS, ACCEPT_DOCUMENTS, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file";
 
 interface FileUploadProps {
   value?: string;

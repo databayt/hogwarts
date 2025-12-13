@@ -534,5 +534,133 @@ export async function seedFinance(
     }
   }
 
-  console.log(`   ✅ Created: Chart of accounts, Payroll (5 months), Banking, Budgets, Expenses, Invoices\n`);
+  // ===== JOURNAL ENTRIES & LEDGER (Double-Entry Bookkeeping) =====
+  const existingJournals = await prisma.journalEntry.count({ where: { schoolId } });
+  if (existingJournals < 50) {
+    console.log("   📒 Creating double-entry bookkeeping ledger...");
+
+    // Get account IDs for ledger entries
+    const accountMap = new Map<string, string>();
+    for (const acc of createdAccounts) {
+      accountMap.set(acc.code, acc.id);
+    }
+
+    // Journal entry templates for school transactions
+    const journalTemplates = [
+      {
+        description: "تحصيل رسوم دراسية | Tuition Fee Collection",
+        sourceModule: "fees",
+        entries: [
+          { accountCode: "1100", debit: true },  // Bank Account - Main (Debit)
+          { accountCode: "4000", debit: false }, // Tuition Revenue (Credit)
+        ],
+        minAmount: 300000,
+        maxAmount: 1500000,
+      },
+      {
+        description: "دفع رواتب المعلمين | Teacher Salary Payment",
+        sourceModule: "payroll",
+        entries: [
+          { accountCode: "5000", debit: true },  // Salaries Expense (Debit)
+          { accountCode: "1100", debit: false }, // Bank Account - Main (Credit)
+        ],
+        minAmount: 180000,
+        maxAmount: 600000,
+      },
+      {
+        description: "دفع فواتير الخدمات | Utility Bills Payment",
+        sourceModule: "expenses",
+        entries: [
+          { accountCode: "5100", debit: true },  // Utilities Expense (Debit)
+          { accountCode: "1000", debit: false }, // Cash (Credit)
+        ],
+        minAmount: 30000,
+        maxAmount: 150000,
+      },
+      {
+        description: "شراء مستلزمات مكتبية | Office Supplies Purchase",
+        sourceModule: "expenses",
+        entries: [
+          { accountCode: "5200", debit: true },  // Office Supplies (Debit)
+          { accountCode: "2000", debit: false }, // Accounts Payable (Credit)
+        ],
+        minAmount: 15000,
+        maxAmount: 90000,
+      },
+      {
+        description: "استلام نقدي من أولياء الأمور | Cash Receipt from Parents",
+        sourceModule: "fees",
+        entries: [
+          { accountCode: "1000", debit: true },  // Cash (Debit)
+          { accountCode: "1200", debit: false }, // Accounts Receivable (Credit)
+        ],
+        minAmount: 60000,
+        maxAmount: 300000,
+      },
+      {
+        description: "دفع مستحقات الموردين | Vendor Payment",
+        sourceModule: "expenses",
+        entries: [
+          { accountCode: "2000", debit: true },  // Accounts Payable (Debit)
+          { accountCode: "1100", debit: false }, // Bank Account - Main (Credit)
+        ],
+        minAmount: 45000,
+        maxAmount: 450000,
+      },
+    ];
+
+    let journalCount = 0;
+    let ledgerCount = 0;
+
+    // Create 100 journal entries over the fiscal year
+    for (let i = 0; i < 100; i++) {
+      const template = journalTemplates[i % journalTemplates.length];
+      const entryDate = faker.date.between({ from: "2025-07-01", to: new Date() });
+      const amount = faker.number.float({
+        min: template.minAmount,
+        max: template.maxAmount,
+        multipleOf: 0.01,
+      });
+
+      const journalEntry = await prisma.journalEntry.create({
+        data: {
+          schoolId,
+          entryNumber: `JE-2025-${String(i + 1).padStart(5, "0")}`,
+          entryDate,
+          description: template.description,
+          reference: `REF-${faker.string.alphanumeric(8).toUpperCase()}`,
+          sourceModule: template.sourceModule,
+          isPosted: true,
+          postedAt: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000), // Posted next day
+          postedBy: accountantUser.id,
+          fiscalYearId: fiscalYear.id,
+          createdBy: accountantUser.id,
+        },
+      });
+
+      journalCount++;
+
+      // Create ledger entries (double-entry: debits = credits)
+      for (const entry of template.entries) {
+        const accountId = accountMap.get(entry.accountCode);
+        if (accountId) {
+          await prisma.ledgerEntry.create({
+            data: {
+              schoolId,
+              journalEntryId: journalEntry.id,
+              accountId,
+              debit: entry.debit ? amount : 0,
+              credit: entry.debit ? 0 : amount,
+              description: template.description,
+            },
+          });
+          ledgerCount++;
+        }
+      }
+    }
+
+    console.log(`   ✅ Created ${journalCount} journal entries with ${ledgerCount} ledger entries`);
+  }
+
+  console.log(`   ✅ Created: Chart of accounts, Payroll (5 months), Banking, Budgets, Expenses, Invoices, Ledger\n`);
 }

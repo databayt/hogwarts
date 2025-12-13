@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file";
 import { toast } from "sonner";
 import { Upload, Trash2 } from "lucide-react";
 

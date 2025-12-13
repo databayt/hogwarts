@@ -28,7 +28,7 @@ export default function CampaignSelectorContent({
   const isRTL = lang === 'ar';
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
   const handleStartNew = (campaignId: string) => {
-    router.push(`/${lang}/apply/${campaignId}`);
+    router.push(`/${lang}/s/${subdomain}/apply/overview?id=${campaignId}`);
   };
 
   const activeCampaign = campaigns.find(c => c.availableSeats > 0) || campaigns[0];
@@ -115,7 +115,7 @@ export default function CampaignSelectorContent({
 
           {/* Import from profile/documents */}
           <button
-            onClick={() => activeCampaign && router.push(`/${lang}/apply/${activeCampaign.id}?import=true`)}
+            onClick={() => activeCampaign && router.push(`/${lang}/s/${subdomain}/apply/overview?id=${activeCampaign.id}&import=true`)}
             disabled={!activeCampaign || activeCampaign.availableSeats === 0}
             className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px] disabled:opacity-50"
           >

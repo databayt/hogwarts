@@ -22,21 +22,24 @@ import { seedAuth } from "./auth";
 import { seedAcademic } from "./academic";
 import { seedDepartments } from "./departments";
 import { seedClassrooms } from "./classrooms";
-import { seedPeople } from "./people";
+import { seedPeople, seedTeacherQualifications } from "./people";
 import { seedClasses } from "./classes";
-import { seedLibrary } from "./library";
+import { seedLibrary, seedBorrowRecords } from "./library";
 import { seedAnnouncements } from "./announcements";
 import { seedEvents } from "./events";
 import { seedFees } from "./fees";
 import { seedExams } from "./exams";
 import { seedGrades } from "./grades";
 import { seedTimetable } from "./timetable";
-import { seedStream } from "./stream";
+import { seedStream, seedCourseProgress } from "./stream";
 import { seedLessons } from "./lessons";
 import { seedReports } from "./reports";
-import { seedAdmission } from "./admission";
+import { seedAdmission, seedAdmissionExtended } from "./admission";
 import { seedFinance } from "./finance";
-import { seedAttendance } from "./attendance";
+import { seedAttendance, seedAdvancedAttendance } from "./attendance";
+import { seedMessaging } from "./messaging";
+import { seedHealth } from "./health";
+import { seedDocuments } from "./documents";
 import type { SeedPrisma } from "./types";
 
 const prisma = new PrismaClient() as SeedPrisma;
@@ -101,6 +104,9 @@ async function main() {
       schoolYear
     );
 
+    // Teacher qualifications (degrees, certifications, experience)
+    await seedTeacherQualifications(prisma, schoolId);
+
     // Phase 4: Classes & Enrollments
     console.log("\nPHASE 4: CLASSES & ENROLLMENTS");
     console.log("-".repeat(40));
@@ -121,6 +127,7 @@ async function main() {
     console.log("-".repeat(40));
 
     await seedLibrary(prisma, schoolId);
+    await seedBorrowRecords(prisma, schoolId);
     await seedAnnouncements(prisma, schoolId, classes);
     await seedEvents(prisma, schoolId);
 
@@ -155,7 +162,8 @@ async function main() {
     console.log("\nPHASE 9: LEARNING MANAGEMENT");
     console.log("-".repeat(40));
 
-    await seedStream(prisma, schoolId, teachers);
+    await seedStream(prisma, schoolId, teachers, students);
+    await seedCourseProgress(prisma, schoolId);
     await seedLessons(prisma, schoolId, classes);
     await seedReports(prisma, schoolId, terms[0].id, students, subjects);
 
@@ -164,12 +172,22 @@ async function main() {
     console.log("-".repeat(40));
 
     await seedAttendance(prisma, schoolId, classes, students);
+    await seedAdvancedAttendance(prisma, schoolId, students);
 
     // Phase 11: Admissions
     console.log("\nPHASE 11: ADMISSIONS");
     console.log("-".repeat(40));
 
     await seedAdmission(prisma, schoolId, schoolName, adminUser);
+    await seedAdmissionExtended(prisma, schoolId, adminUser);
+
+    // Phase 12: Communication & Records
+    console.log("\nPHASE 12: COMMUNICATION & RECORDS");
+    console.log("-".repeat(40));
+
+    await seedMessaging(prisma, schoolId);
+    await seedHealth(prisma, schoolId);
+    await seedDocuments(prisma, schoolId);
 
     // Summary
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);

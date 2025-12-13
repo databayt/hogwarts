@@ -44,10 +44,12 @@ export default function ReviewContent({ dictionary }: Props) {
     }
   }, []);
 
+  const id = params.id as string;
+
   const handleSuccess = useCallback((applicationNumber: string) => {
     // Navigate to success page with application number
-    router.push(`/${locale}/apply/success?applicationNumber=${applicationNumber}`);
-  }, [locale, subdomain, router]);
+    router.push(`/${locale}/s/${subdomain}/apply/${id}/success?number=${applicationNumber}`);
+  }, [locale, subdomain, id, router]);
 
   useEffect(() => {
     // Check if all required steps are filled

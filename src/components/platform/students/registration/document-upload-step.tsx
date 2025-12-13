@@ -12,7 +12,7 @@ import { useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from "@/components/file";
 import { toast } from "sonner";
 
 interface DocumentUploadStepProps {

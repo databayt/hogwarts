@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { X, Upload, Image as ImageIcon, FileText, Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { useImageKitUpload, IMAGEKIT_FOLDERS } from "@/components/file-upload/hooks/use-imagekit-upload";
+import { useImageKitUpload, IMAGEKIT_FOLDERS } from "@/components/file";
 
 // ============================================================================
 // Types

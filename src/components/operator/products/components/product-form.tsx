@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUploader } from '@/components/file-upload/file-uploader/file-uploader';
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from '@/components/file';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -32,26 +32,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-const MAX_FILE_SIZE = 5000000;
-const ACCEPTED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp'
-];
-
 const formSchema = z.object({
-  image: z
-    .any()
-    .refine((files) => files?.length == 1, 'Image is required.')
-    .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
-      `Max file size is 5MB.`
-    )
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      '.jpg, .jpeg, .png and .webp files are accepted.'
-    ),
+  image: z.string().min(1, 'Image is required.'),
   name: z.string().min(2, {
     message: 'Product name must be at least 2 characters.'
   }),
@@ -70,7 +52,7 @@ export default function ProductForm({
   pageTitle: string;
 }) {
   const defaultValues = {
-    image: undefined as unknown as FileList,
+    image: initialData?.image || '',
     name: initialData?.name || '',
     category: initialData?.category || '',
     price: initialData?.price || 0,
@@ -81,6 +63,12 @@ export default function ProductForm({
     resolver: zodResolver(formSchema),
     values: defaultValues
   });
+
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      form.setValue('image', files[0].url);
+    }
+  };
 
   function onSubmit(_: z.infer<typeof formSchema>) {}
 
@@ -97,21 +85,16 @@ export default function ProductForm({
             <FormField
               control={form.control}
               name='image'
-              render={({ field }) => (
+              render={() => (
                 <div className='space-y-6'>
                   <FormItem className='w-full'>
                     <FormLabel>Images</FormLabel>
                     <FormControl>
                       <FileUploader
-                        value={field.value}
-                        onValueChange={field.onChange}
+                        accept={ACCEPT_IMAGES}
                         maxFiles={4}
                         maxSize={4 * 1024 * 1024}
-                        // disabled={loading}
-                        // progresses={progresses}
-                        // pass the onUpload function here for direct upload
-                        // onUpload={uploadFiles}
-                        // disabled={isUploading}
+                        onUploadComplete={handleUploadComplete}
                       />
                     </FormControl>
                     <FormMessage />

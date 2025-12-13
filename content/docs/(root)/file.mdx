@@ -9,7 +9,7 @@ Centralized file operations for upload, download, export, import, print, and doc
 
 ## Overview
 
-The **File** module consolidates all file-related functionality into a single, cohesive module at `@/components/platform/file`. It provides:
+The **File** module consolidates all file-related functionality into a single, cohesive module at `@/components/file`. It provides:
 
 - **Upload** - Cloud-based file uploads with progress tracking
 - **Browser** - File manager with grid/list views
@@ -85,7 +85,7 @@ import {
   useUpload,
   useExport,
   useGenerate,
-} from "@/components/platform/file"
+} from "@/components/file"
 
 // Upload files
 <Uploader
@@ -126,7 +126,7 @@ import {
 The main upload component with drag-and-drop support:
 
 ```tsx
-import { Uploader } from "@/components/platform/file"
+import { Uploader } from "@/components/file"
 
 <Uploader
   folder="avatars"
@@ -149,7 +149,7 @@ import {
   LogoUpload,
   DocumentUpload,
   AssignmentUpload,
-} from "@/components/platform/file"
+} from "@/components/file"
 
 // Profile avatar (circular, 2MB max)
 <AvatarUpload
@@ -182,7 +182,7 @@ import {
 For custom upload implementations:
 
 ```tsx
-import { useUpload } from "@/components/platform/file"
+import { useUpload } from "@/components/file"
 
 function CustomUploader() {
   const {
@@ -227,7 +227,7 @@ function CustomUploader() {
 Direct server action usage:
 
 ```tsx
-import { uploadFile, uploadFiles, deleteFile, getFiles } from "@/components/platform/file"
+import { uploadFile, uploadFiles, deleteFile, getFiles } from "@/components/file"
 
 // Upload single file
 const result = await uploadFile(formData, {
@@ -260,7 +260,7 @@ const { files, total } = await getFiles({
 Multi-format export with column selection:
 
 ```tsx
-import { ExportButton, type ExportColumn } from "@/components/platform/file"
+import { ExportButton, type ExportColumn } from "@/components/file"
 
 const columns: ExportColumn<Student>[] = [
   { key: "name", header: "Name", headerAr: "الاسم" },
@@ -298,7 +298,7 @@ const columns: ExportColumn<Student>[] = [
 Single-format export without column selection:
 
 ```tsx
-import { SimpleExportButton } from "@/components/platform/file"
+import { SimpleExportButton } from "@/components/file"
 
 <SimpleExportButton
   data={attendance}
@@ -312,7 +312,7 @@ import { SimpleExportButton } from "@/components/platform/file"
 For programmatic exports:
 
 ```tsx
-import { useExport } from "@/components/platform/file"
+import { useExport } from "@/components/file"
 
 function ReportPage() {
   const { exportData, isExporting, error } = useExport()
@@ -345,7 +345,7 @@ function ReportPage() {
 Built-in helpers for common data types:
 
 ```tsx
-import { createColumnHelpers } from "@/components/platform/file"
+import { createColumnHelpers } from "@/components/file"
 
 const { text, number, currency, date, boolean, percentage, custom } =
   createColumnHelpers<Invoice>()
@@ -386,7 +386,7 @@ import { EXAM_EXPORT_COLUMNS } from "@/components/platform/exams/manage/columns/
 
 ```tsx
 // src/components/platform/students/columns/export.ts
-import { createColumnHelpers, type ExportColumn } from "@/components/platform/file"
+import { createColumnHelpers, type ExportColumn } from "@/components/file"
 
 export interface StudentExportData {
   id: string
@@ -445,7 +445,7 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
 // src/components/platform/students/export-button.tsx
 "use client"
 
-import { ExportButton as UnifiedExportButton } from "@/components/platform/file"
+import { ExportButton as UnifiedExportButton } from "@/components/file"
 import { STUDENT_EXPORT_COLUMNS, type StudentExportData } from "./columns/export"
 import { getStudentsExportData } from "./actions"
 
@@ -480,7 +480,7 @@ export function ExportButton({ filters, locale = "en" }) {
 Multi-step import wizard:
 
 ```tsx
-import { Importer, type ImportColumn } from "@/components/platform/file"
+import { Importer, type ImportColumn } from "@/components/file"
 
 const columns: ImportColumn<Student>[] = [
   {
@@ -544,7 +544,7 @@ const columns: ImportColumn<Student>[] = [
 For custom import flows:
 
 ```tsx
-import { useImport } from "@/components/platform/file"
+import { useImport } from "@/components/file"
 
 function CustomImporter() {
   const {
@@ -582,7 +582,7 @@ function CustomImporter() {
 Common validators for import columns:
 
 ```tsx
-import { commonValidators, commonSchemas } from "@/components/platform/file"
+import { commonValidators, commonSchemas } from "@/components/file"
 
 const columns: ImportColumn<Student>[] = [
   {
@@ -617,7 +617,7 @@ const studentSchema = commonSchemas.object({
 Simple print trigger:
 
 ```tsx
-import { PrintButton, PrintArea, NoPrint, PageBreak } from "@/components/platform/file"
+import { PrintButton, PrintArea, NoPrint, PageBreak } from "@/components/file"
 
 function ReportPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -649,7 +649,7 @@ function ReportPage() {
 For programmatic printing:
 
 ```tsx
-import { usePrint } from "@/components/platform/file"
+import { usePrint } from "@/components/file"
 
 function InvoicePage({ invoice }) {
   const { print, printById, printHtml, isPrinting } = usePrint()
@@ -684,7 +684,7 @@ function InvoicePage({ invoice }) {
 Generate professional PDF documents:
 
 ```tsx
-import { useGenerate } from "@/components/platform/file"
+import { useGenerate } from "@/components/file"
 
 function InvoicePage({ invoice }) {
   const { generateInvoice, isGenerating } = useGenerate()
@@ -916,7 +916,7 @@ await generateReportCard({
 Full-featured file manager:
 
 ```tsx
-import { FileBrowser } from "@/components/platform/file"
+import { FileBrowser } from "@/components/file"
 
 <FileBrowser
   rootFolder="/school/documents"
@@ -942,7 +942,7 @@ import { FileBrowser } from "@/components/platform/file"
 For custom file browser implementations:
 
 ```tsx
-import { useBrowser } from "@/components/platform/file"
+import { useBrowser } from "@/components/file"
 
 function CustomFileBrowser() {
   const {
@@ -1141,7 +1141,7 @@ const columns: ImportColumn<Student>[] = [
 ## Error Handling
 
 ```tsx
-import { useUpload } from "@/components/platform/file"
+import { useUpload } from "@/components/file"
 
 function Uploader() {
   const { error, upload } = useUpload({
@@ -1176,7 +1176,7 @@ import type {
   UploadOptions,
   ExportConfig,
   ImportConfig,
-} from "@/components/platform/file"
+} from "@/components/file"
 
 // Typed export columns
 const columns: ExportColumn<Student>[] = [
@@ -1195,9 +1195,9 @@ The following legacy files are deprecated and re-export from the File module for
 
 | Legacy Path | Status | Migration |
 |-------------|--------|-----------|
-| `src/lib/csv-export.ts` | Deprecated | Use `@/components/platform/file` |
+| `src/lib/csv-export.ts` | Deprecated | Use `@/components/file` |
 | `src/lib/csv-import.ts` | Domain-specific | Use for bulk student/teacher DB imports |
-| `src/components/file-upload/` | Deprecated | Use `@/components/platform/file` |
+| `src/components/file-upload/` | Deprecated | Use `@/components/file` |
 | `src/components/platform/shared/export-button.tsx` | Deprecated | Use `ExportButton` from File module |
 
 ### Migration Example
@@ -1205,7 +1205,7 @@ The following legacy files are deprecated and re-export from the File module for
 ```tsx
 // OLD (deprecated)
 import { arrayToCSV, generateCSVFilename } from "@/lib/csv-export"
-import { FileUploader } from "@/components/file-upload"
+import { FileUploader } from "@/components/file"
 
 // NEW (recommended)
 import {
@@ -1214,7 +1214,7 @@ import {
   Uploader,
   ExportButton,
   type ExportColumn,
-} from "@/components/platform/file"
+} from "@/components/file"
 ```
 
 ## Best Practices

@@ -253,3 +253,253 @@ export async function seedAttendance(
   console.log(`   ✅ Created: ${identifiers.length} student identifiers`);
   console.log(`   ✅ Created: ${sessions.length} QR code sessions\n`);
 }
+
+// ============================================================================
+// ADVANCED ATTENDANCE FEATURES
+// ============================================================================
+
+import type { DeviceType, BiometricType, CardType } from "@prisma/client";
+
+// Device templates
+const DEVICE_TEMPLATES = [
+  { type: "RFID_READER" as DeviceType, name: "Main Gate RFID Reader", location: "Main Entrance Gate", model: "ACR122U NFC Reader" },
+  { type: "FINGERPRINT_SCANNER" as DeviceType, name: "Admin Office Scanner", location: "Administration Building", model: "ZKTeco F18" },
+  { type: "FACE_CAMERA" as DeviceType, name: "Classroom Block Entry", location: "Building A Entrance", model: "Hikvision DS-K1T671M" },
+  { type: "TABLET_KIOSK" as DeviceType, name: "Student Check-in Kiosk 1", location: "Main Hall", model: "Samsung Galaxy Tab A8" },
+  { type: "TABLET_KIOSK" as DeviceType, name: "Student Check-in Kiosk 2", location: "Cafeteria Entrance", model: "Samsung Galaxy Tab A8" },
+  { type: "WEB_CAMERA" as DeviceType, name: "Library Entry Camera", location: "Library Entrance", model: "Logitech C920" },
+  { type: "SMART_GATE" as DeviceType, name: "Vehicle Entry Gate", location: "Parking Area Gate", model: "CAME BX-74" },
+  { type: "NFC_READER" as DeviceType, name: "Sports Hall Reader", location: "Sports Complex", model: "PN532 NFC Module" },
+];
+
+// Card types for students
+const CARD_TYPES: CardType[] = ["RFID_125KHZ", "RFID_13_56MHZ", "NFC_MIFARE", "BARCODE"];
+
+/**
+ * Seeds advanced attendance features:
+ * - 8 attendance devices
+ * - Access cards for students/teachers
+ * - Biometric templates (fingerprint/face)
+ */
+export async function seedAdvancedAttendance(
+  prisma: SeedPrisma,
+  schoolId: string,
+  students: StudentRef[]
+): Promise<void> {
+  console.log("🔒 Creating advanced attendance infrastructure...");
+
+  // Check existing counts
+  const existingDevices = await prisma.attendanceDevice.count({ where: { schoolId } });
+  const existingCards = await prisma.accessCard.count({ where: { schoolId } });
+
+  if (existingDevices >= 5 && existingCards >= 100) {
+    console.log(`   ✅ Advanced attendance already exists (${existingDevices} devices, ${existingCards} cards), skipping\n`);
+    return;
+  }
+
+  // Get admin user for installedBy/issuedBy
+  const adminUser = await prisma.user.findFirst({
+    where: { schoolId, role: 'ADMIN' },
+    select: { id: true },
+  });
+
+  // Get teachers for access cards
+  const teachers = await prisma.teacher.findMany({
+    where: { schoolId },
+    select: { id: true, givenName: true },
+    take: 50,
+  });
+
+  let deviceCount = 0;
+  let cardCount = 0;
+  let biometricCount = 0;
+
+  // ============================================
+  // 1. Create Attendance Devices (8)
+  // ============================================
+  for (const template of DEVICE_TEMPLATES) {
+    const deviceId = `DEV-${schoolId.slice(0, 4)}-${String(deviceCount + 1).padStart(3, "0")}`;
+
+    const existingDevice = await prisma.attendanceDevice.findFirst({
+      where: { schoolId, deviceId },
+    });
+
+    if (!existingDevice) {
+      // Generate IP and MAC addresses
+      const ipOctet = 100 + deviceCount;
+      const macSuffix = Math.random().toString(16).slice(2, 14).toUpperCase();
+
+      await prisma.attendanceDevice.create({
+        data: {
+          schoolId,
+          deviceId,
+          name: template.name,
+          type: template.type,
+          model: template.model,
+          location: template.location,
+          ipAddress: `192.168.1.${ipOctet}`,
+          macAddress: `AA:BB:CC:${macSuffix.slice(0, 2)}:${macSuffix.slice(2, 4)}:${macSuffix.slice(4, 6)}`,
+          isActive: true,
+          isOnline: Math.random() > 0.2, // 80% online
+          lastPing: Math.random() > 0.2 ? new Date() : null,
+          configuration: JSON.stringify({
+            timeout: 30,
+            retryAttempts: 3,
+            syncInterval: 300,
+          }),
+          installedAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+          installedBy: adminUser?.id || null,
+        },
+      });
+      deviceCount++;
+    }
+  }
+
+  // ============================================
+  // 2. Create Access Cards for Students (200)
+  // ============================================
+  const studentsForCards = students.slice(0, 200);
+
+  for (const [index, student] of studentsForCards.entries()) {
+    const cardNumber = `CARD-${schoolId.slice(0, 4)}-${String(index + 1).padStart(5, "0")}`;
+
+    const existingCard = await prisma.accessCard.findFirst({
+      where: { cardNumber },
+    });
+
+    if (!existingCard) {
+      const cardType = CARD_TYPES[index % CARD_TYPES.length];
+      const issuedDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000);
+
+      await prisma.accessCard.create({
+        data: {
+          schoolId,
+          cardNumber,
+          cardType,
+          studentId: student.id,
+          isActive: Math.random() > 0.05, // 95% active
+          isPrimary: true,
+          issuedAt: issuedDate,
+          issuedBy: adminUser?.id || null,
+          activatedAt: new Date(issuedDate.getTime() + 24 * 60 * 60 * 1000),
+          expiresAt: new Date(issuedDate.getTime() + 3 * 365 * 24 * 60 * 60 * 1000), // 3 years
+          lastUsedAt: Math.random() > 0.3 ? new Date() : null,
+          usageCount: Math.floor(Math.random() * 200),
+          accessLevel: "STUDENT",
+        },
+      });
+      cardCount++;
+    }
+  }
+
+  // ============================================
+  // 3. Create Access Cards for Teachers (50)
+  // ============================================
+  for (const [index, teacher] of teachers.entries()) {
+    const cardNumber = `CARD-TCH-${schoolId.slice(0, 4)}-${String(index + 1).padStart(4, "0")}`;
+
+    const existingCard = await prisma.accessCard.findFirst({
+      where: { cardNumber },
+    });
+
+    if (!existingCard) {
+      const cardType = CARD_TYPES[index % CARD_TYPES.length];
+      const issuedDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000);
+
+      await prisma.accessCard.create({
+        data: {
+          schoolId,
+          cardNumber,
+          cardType,
+          teacherId: teacher.id,
+          isActive: true,
+          isPrimary: true,
+          issuedAt: issuedDate,
+          issuedBy: adminUser?.id || null,
+          activatedAt: issuedDate,
+          expiresAt: new Date(issuedDate.getTime() + 5 * 365 * 24 * 60 * 60 * 1000), // 5 years
+          lastUsedAt: new Date(),
+          usageCount: Math.floor(Math.random() * 500) + 100,
+          accessLevel: "TEACHER",
+        },
+      });
+      cardCount++;
+    }
+  }
+
+  // ============================================
+  // 4. Create Biometric Templates (100 students)
+  // ============================================
+  const studentsForBiometrics = students.slice(0, 100);
+
+  for (const [index, student] of studentsForBiometrics.entries()) {
+    // Fingerprint template
+    const existingFingerprint = await prisma.biometricTemplate.findFirst({
+      where: {
+        schoolId,
+        studentId: student.id,
+        type: "FINGERPRINT" as BiometricType,
+      },
+    });
+
+    if (!existingFingerprint) {
+      // Generate a fake encrypted template (in reality this would be from a scanner)
+      const fakeTemplate = Buffer.from(Math.random().toString(36).repeat(100)).toString('base64');
+
+      await prisma.biometricTemplate.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          type: "FINGERPRINT",
+          template: fakeTemplate,
+          quality: 0.75 + Math.random() * 0.25, // 75-100% quality
+          isActive: true,
+          isPrimary: true,
+          enrolledAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+          enrolledBy: adminUser?.id || null,
+          lastMatchedAt: Math.random() > 0.3 ? new Date() : null,
+          matchCount: Math.floor(Math.random() * 100),
+          failureCount: Math.floor(Math.random() * 5),
+        },
+      });
+      biometricCount++;
+    }
+
+    // Face template for 50% of students
+    if (index % 2 === 0) {
+      const existingFace = await prisma.biometricTemplate.findFirst({
+        where: {
+          schoolId,
+          studentId: student.id,
+          type: "FACE" as BiometricType,
+        },
+      });
+
+      if (!existingFace) {
+        const fakeTemplate = Buffer.from(Math.random().toString(36).repeat(150)).toString('base64');
+
+        await prisma.biometricTemplate.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            type: "FACE",
+            template: fakeTemplate,
+            quality: 0.80 + Math.random() * 0.20,
+            isActive: true,
+            isPrimary: false,
+            enrolledAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+            enrolledBy: adminUser?.id || null,
+            matchCount: Math.floor(Math.random() * 50),
+            failureCount: Math.floor(Math.random() * 3),
+          },
+        });
+        biometricCount++;
+      }
+    }
+  }
+
+  console.log(`   ✅ Advanced attendance infrastructure created:`);
+  console.log(`      - ${deviceCount} attendance devices`);
+  console.log(`      - ${cardCount} access cards (students + teachers)`);
+  console.log(`      - ${biometricCount} biometric templates\n`);
+}

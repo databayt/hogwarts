@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/stream/shared/rich-text-editor";
 import { useTransition } from "react";
 import { tryCatch } from "@/hooks/try-catch";
 import { toast } from "sonner";
@@ -128,11 +128,11 @@ export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: P
                   <FormItem className="w-full">
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Course description"
-                        className="min-h-[120px]"
-                        {...field}
+                      <RichTextEditor
                         value={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder="Course description"
+                        disabled={pending}
                       />
                     </FormControl>
                     <FormMessage />

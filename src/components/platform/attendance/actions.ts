@@ -3023,6 +3023,183 @@ export async function getActiveInterventions(input?: {
 }
 
 /**
+ * Get all interventions with filtering and pagination
+ */
+export async function getAllInterventions(input?: {
+  status?: InterventionStatusVal | InterventionStatusVal[]
+  type?: InterventionTypeVal
+  studentId?: string
+  assignedTo?: string
+  dateFrom?: string
+  dateTo?: string
+  search?: string
+  page?: number
+  limit?: number
+}): Promise<ActionResponse<{
+  interventions: Array<{
+    id: string
+    studentId: string
+    studentName: string
+    className: string | null
+    type: string
+    title: string
+    description: string | null
+    status: string
+    priority: number
+    scheduledDate: string | null
+    completedDate: string | null
+    assigneeName: string | null
+    outcome: string | null
+    createdAt: string
+    riskLevel: AttendanceRiskLevel
+  }>
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
+
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: 'Authentication required' }
+    }
+
+    // Only staff can view interventions
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF' && session.user.role !== 'DEVELOPER') {
+      return { success: false, error: 'Only staff members can view interventions' }
+    }
+
+    const page = input?.page ?? 1
+    const limit = input?.limit ?? 20
+    const skip = (page - 1) * limit
+
+    // Build where clause
+    const where: Prisma.AttendanceInterventionWhereInput = {
+      schoolId,
+      ...(input?.status && {
+        status: Array.isArray(input.status) ? { in: input.status } : input.status
+      }),
+      ...(input?.type && { type: input.type }),
+      ...(input?.studentId && { studentId: input.studentId }),
+      ...(input?.assignedTo && { assignedTo: input.assignedTo }),
+      ...(input?.dateFrom && {
+        createdAt: { gte: new Date(input.dateFrom) }
+      }),
+      ...(input?.dateTo && {
+        createdAt: { lte: new Date(input.dateTo) }
+      }),
+      ...(input?.search && {
+        OR: [
+          { title: { contains: input.search, mode: 'insensitive' } },
+          { description: { contains: input.search, mode: 'insensitive' } },
+          {
+            student: {
+              OR: [
+                { givenName: { contains: input.search, mode: 'insensitive' } },
+                { surname: { contains: input.search, mode: 'insensitive' } },
+              ]
+            }
+          }
+        ]
+      }),
+    }
+
+    // Get total count for pagination
+    const total = await db.attendanceIntervention.count({ where })
+
+    const interventions = await db.attendanceIntervention.findMany({
+      where,
+      include: {
+        student: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            studentClasses: {
+              include: {
+                class: { select: { name: true } }
+              },
+              take: 1
+            },
+            attendances: {
+              where: {
+                date: {
+                  gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+                }
+              },
+              select: { status: true }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { createdAt: 'desc' },
+      ],
+      skip,
+      take: limit,
+    })
+
+    // Get assignee names
+    const assigneeIds = [...new Set(interventions.filter(i => i.assignedTo).map(i => i.assignedTo as string))]
+    const users = await db.user.findMany({
+      where: { id: { in: assigneeIds } },
+      select: { id: true, username: true, email: true }
+    })
+    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+
+    return {
+      success: true,
+      data: {
+        interventions: interventions.map(intervention => {
+          // Calculate risk level from attendance
+          const totalDays = intervention.student.attendances.length
+          const presentDays = intervention.student.attendances.filter((a: { status: string }) => a.status === 'PRESENT' || a.status === 'LATE').length
+          const rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 100
+          const riskLevel = calculateRiskLevel(rate)
+
+          return {
+            id: intervention.id,
+            studentId: intervention.studentId,
+            studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
+            className: intervention.student.studentClasses[0]?.class.name || null,
+            type: intervention.type,
+            title: intervention.title,
+            description: intervention.description,
+            status: intervention.status,
+            priority: intervention.priority,
+            scheduledDate: intervention.scheduledDate?.toISOString() || null,
+            completedDate: intervention.completedDate?.toISOString() || null,
+            assigneeName: intervention.assignedTo ? userMap.get(intervention.assignedTo) || null : null,
+            outcome: intervention.outcome,
+            createdAt: intervention.createdAt.toISOString(),
+            riskLevel,
+          }
+        }),
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[getAllInterventions] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get interventions'
+    }
+  }
+}
+
+/**
  * Get intervention statistics for reporting
  */
 export async function getInterventionStats(): Promise<ActionResponse<{

@@ -21,7 +21,7 @@ export default function GuardianContent({ dictionary }: Props) {
   const { locale } = useLocale();
   const isRTL = locale === 'ar';
   const subdomain = params.subdomain as string;
-  const campaignId = params.campaignId as string;
+  const id = params.id as string;
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation();
   const { session, getStepData } = useApplication();
@@ -33,12 +33,12 @@ export default function GuardianContent({ dictionary }: Props) {
     if (guardianFormRef.current) {
       try {
         await guardianFormRef.current.saveAndNext();
-        router.push(`/${locale}/apply/${campaignId}/academic`);
+        router.push(`/${locale}/s/${subdomain}/apply/${id}/academic`);
       } catch (error) {
         console.error('Error saving guardian step:', error);
       }
     }
-  }, [locale, subdomain, campaignId, router]);
+  }, [locale, subdomain, id, router]);
 
   useEffect(() => {
     const guardianData = session.formData.guardian;

@@ -16,6 +16,7 @@ import {
   validateAnnouncementScope
 } from "@/components/platform/announcements/authorization";
 import { Prisma } from "@prisma/client";
+import { withAutoTranslation } from "@/lib/auto-translate";
 
 // ============================================================================
 // Types
@@ -151,6 +152,114 @@ export async function createAnnouncement(
         error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create announcement"
+    };
+  }
+}
+
+/**
+ * Create announcement with automatic translation
+ * When user enters content in one language, automatically translates to the other
+ * @param input - Announcement data with source language
+ * @returns Action response with announcement ID
+ */
+export async function createAnnouncementWithTranslation(
+  input: {
+    title: string;
+    body: string;
+    sourceLanguage: "en" | "ar";
+    scope: "school" | "class" | "role";
+    classId?: string | null;
+    role?: string | null;
+    published?: boolean;
+    priority?: "low" | "normal" | "high" | "urgent";
+    scheduledFor?: string | null;
+    expiresAt?: string | null;
+    pinned?: boolean;
+    featured?: boolean;
+  }
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    // Get authentication context
+    const session = await auth();
+    const authContext = getAuthContext(session);
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Validate scope permissions
+    try {
+      validateAnnouncementScope(authContext, input.scope);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Invalid scope for your role"
+      };
+    }
+
+    // Check create permission
+    try {
+      assertAnnouncementPermission(authContext, 'create', { scope: input.scope });
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthorized to create announcements"
+      };
+    }
+
+    // Auto-translate content
+    const translatedData = await withAutoTranslation(
+      { title: input.title, body: input.body },
+      ["title", "body"],
+      input.sourceLanguage
+    );
+
+    // Create announcement with bilingual content
+    const row = await db.announcement.create({
+      data: {
+        schoolId,
+        titleEn: translatedData.data.titleEn || null,
+        titleAr: translatedData.data.titleAr || null,
+        bodyEn: translatedData.data.bodyEn || null,
+        bodyAr: translatedData.data.bodyAr || null,
+        scope: input.scope,
+        classId: input.classId || null,
+        role: (input.role as any) || null,
+        published: input.published ?? false,
+        priority: input.priority || "normal",
+        scheduledFor: input.scheduledFor ? new Date(input.scheduledFor) : null,
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+        pinned: input.pinned || false,
+        featured: input.featured || false,
+        publishedAt: input.published ? new Date() : null,
+      },
+    });
+
+    // Revalidate cache
+    revalidatePath(ANNOUNCEMENTS_PATH);
+    revalidateTag(`announcements-${schoolId}`, "max");
+
+    return {
+      success: true,
+      data: {
+        id: row.id,
+        ...(translatedData.translatedFields ? { translated: true } : {}),
+      } as { id: string }
+    };
+  } catch (error) {
+    console.error("[createAnnouncementWithTranslation] Error:", error, {
+      input,
+      timestamp: new Date().toISOString(),
+    });
 
     return {
       success: false,

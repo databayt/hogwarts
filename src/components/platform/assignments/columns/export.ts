@@ -3,7 +3,7 @@
  * Used with unified File Block ExportButton
  */
 
-import { createColumnHelpers, type ExportColumn } from "@/components/platform/file";
+import { createColumnHelpers, type ExportColumn } from "@/components/file";
 
 // ============================================================================
 // Export Data Type

@@ -469,3 +469,285 @@ export async function seedPeople(
     guardianTypes: { gtFather: { id: gtFather.id }, gtMother: { id: gtMother.id } },
   };
 }
+
+// ============================================
+// Teacher Qualifications, Experience & Expertise
+// ============================================
+
+// Qualification templates (bilingual)
+const QUALIFICATION_TEMPLATES = {
+  degrees: [
+    { type: "DEGREE", nameEn: "Bachelor of Education", nameAr: "بكالوريوس التربية", majors: ["Primary Education", "Secondary Education", "Special Education"] },
+    { type: "DEGREE", nameEn: "Bachelor of Science", nameAr: "بكالوريوس العلوم", majors: ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science"] },
+    { type: "DEGREE", nameEn: "Bachelor of Arts", nameAr: "بكالوريوس الآداب", majors: ["English", "Arabic", "History", "Geography", "Islamic Studies"] },
+    { type: "DEGREE", nameEn: "Master of Education", nameAr: "ماجستير التربية", majors: ["Curriculum & Instruction", "Educational Leadership", "Educational Psychology"] },
+    { type: "DEGREE", nameEn: "Master of Science", nameAr: "ماجستير العلوم", majors: ["Applied Mathematics", "Physics", "Chemistry"] },
+    { type: "DEGREE", nameEn: "PhD in Education", nameAr: "دكتوراه في التربية", majors: ["Educational Research", "Higher Education"] },
+  ],
+  certifications: [
+    { type: "CERTIFICATION", nameEn: "Teaching License", nameAr: "رخصة التدريس", hasExpiry: true },
+    { type: "CERTIFICATION", nameEn: "TEFL Certificate", nameAr: "شهادة تدريس اللغة الإنجليزية", hasExpiry: false },
+    { type: "CERTIFICATION", nameEn: "First Aid Certification", nameAr: "شهادة الإسعافات الأولية", hasExpiry: true },
+    { type: "CERTIFICATION", nameEn: "Child Protection Training", nameAr: "تدريب حماية الطفل", hasExpiry: true },
+    { type: "CERTIFICATION", nameEn: "Special Education Certificate", nameAr: "شهادة التربية الخاصة", hasExpiry: false },
+    { type: "CERTIFICATION", nameEn: "Cambridge Teaching Certificate", nameAr: "شهادة كامبريدج للتدريس", hasExpiry: false },
+    { type: "CERTIFICATION", nameEn: "ICT in Education Certificate", nameAr: "شهادة تقنية المعلومات في التعليم", hasExpiry: false },
+    { type: "CERTIFICATION", nameEn: "Educational Assessment Certificate", nameAr: "شهادة التقييم التربوي", hasExpiry: false },
+  ],
+  licenses: [
+    { type: "LICENSE", nameEn: "National Teaching License", nameAr: "رخصة التدريس الوطنية", hasExpiry: true },
+    { type: "LICENSE", nameEn: "Subject Teaching License", nameAr: "رخصة تدريس المادة", hasExpiry: true },
+  ],
+};
+
+// Universities (bilingual)
+const UNIVERSITIES = [
+  { en: "University of Khartoum", ar: "جامعة الخرطوم" },
+  { en: "Sudan University of Science and Technology", ar: "جامعة السودان للعلوم والتكنولوجيا" },
+  { en: "Omdurman Islamic University", ar: "جامعة أم درمان الإسلامية" },
+  { en: "Al-Neelain University", ar: "جامعة النيلين" },
+  { en: "Ahfad University for Women", ar: "جامعة الأحفاد للبنات" },
+  { en: "University of Gezira", ar: "جامعة الجزيرة" },
+  { en: "Red Sea University", ar: "جامعة البحر الأحمر" },
+  { en: "Nile Valley University", ar: "جامعة وادي النيل" },
+];
+
+// Previous schools for experience
+const PREVIOUS_SCHOOLS = [
+  { en: "Khartoum International School", ar: "مدرسة الخرطوم الدولية" },
+  { en: "Al-Amjad National School", ar: "مدرسة الأمجاد الوطنية" },
+  { en: "Unity High School", ar: "مدرسة الوحدة الثانوية" },
+  { en: "Al-Nahda Secondary School", ar: "مدرسة النهضة الثانوية" },
+  { en: "Al-Fajr Private School", ar: "مدرسة الفجر الخاصة" },
+  { en: "Comboni School", ar: "مدرسة كمبوني" },
+  { en: "Al-Riyadh Model School", ar: "مدرسة الرياض النموذجية" },
+  { en: "Al-Iman Islamic School", ar: "مدرسة الإيمان الإسلامية" },
+];
+
+// Position titles
+const POSITIONS = [
+  { en: "Teacher", ar: "معلم" },
+  { en: "Senior Teacher", ar: "معلم أول" },
+  { en: "Department Head", ar: "رئيس قسم" },
+  { en: "Classroom Teacher", ar: "معلم فصل" },
+  { en: "Subject Teacher", ar: "معلم مادة" },
+  { en: "Assistant Teacher", ar: "معلم مساعد" },
+];
+
+export async function seedTeacherQualifications(
+  prisma: SeedPrisma,
+  schoolId: string
+): Promise<void> {
+  console.log("📜 Creating teacher qualifications & experience...");
+
+  // Get all teachers
+  const teachers = await prisma.teacher.findMany({
+    where: { schoolId },
+    select: { id: true, givenName: true, surname: true },
+  });
+
+  if (teachers.length === 0) {
+    console.log("   ⚠️  No teachers found, skipping qualifications\n");
+    return;
+  }
+
+  // Check existing counts
+  const existingQuals = await prisma.teacherQualification.count({ where: { schoolId } });
+  const existingExp = await prisma.teacherExperience.count({ where: { schoolId } });
+
+  if (existingQuals >= 100 && existingExp >= 50) {
+    console.log(`   ✅ Qualifications already exist (${existingQuals} quals, ${existingExp} exp), skipping\n`);
+    return;
+  }
+
+  const now = new Date();
+  let qualCount = 0;
+  let expCount = 0;
+  let expertiseCount = 0;
+
+  // Get subjects for expertise mapping
+  const subjects = await prisma.subject.findMany({
+    where: { schoolId },
+    select: { id: true, subjectName: true },
+  });
+
+  for (const [index, teacher] of teachers.entries()) {
+    // ============================================
+    // 1. Qualifications (2-3 per teacher)
+    // ============================================
+
+    // Primary degree (everyone has one)
+    const degreeTemplate = QUALIFICATION_TEMPLATES.degrees[index % QUALIFICATION_TEMPLATES.degrees.length];
+    const university = UNIVERSITIES[index % UNIVERSITIES.length];
+    const major = degreeTemplate.majors[index % degreeTemplate.majors.length];
+    const yearsAgo = 10 + Math.floor(Math.random() * 15); // 10-25 years ago
+
+    await prisma.teacherQualification.upsert({
+      where: {
+        schoolId_teacherId_qualificationType_name: {
+          schoolId,
+          teacherId: teacher.id,
+          qualificationType: degreeTemplate.type,
+          name: degreeTemplate.nameEn,
+        },
+      },
+      update: {},
+      create: {
+        schoolId,
+        teacherId: teacher.id,
+        qualificationType: degreeTemplate.type,
+        name: degreeTemplate.nameEn,
+        institution: university.en,
+        major,
+        dateObtained: new Date(now.getFullYear() - yearsAgo, Math.floor(Math.random() * 12), 15),
+      },
+    });
+    qualCount++;
+
+    // Teaching certification (80% have one)
+    if (Math.random() < 0.8) {
+      const certTemplate = QUALIFICATION_TEMPLATES.certifications[index % QUALIFICATION_TEMPLATES.certifications.length];
+      const certYearsAgo = Math.floor(Math.random() * 10);
+      const certDate = new Date(now.getFullYear() - certYearsAgo, Math.floor(Math.random() * 12), 15);
+
+      await prisma.teacherQualification.upsert({
+        where: {
+          schoolId_teacherId_qualificationType_name: {
+            schoolId,
+            teacherId: teacher.id,
+            qualificationType: certTemplate.type,
+            name: certTemplate.nameEn,
+          },
+        },
+        update: {},
+        create: {
+          schoolId,
+          teacherId: teacher.id,
+          qualificationType: certTemplate.type,
+          name: certTemplate.nameEn,
+          institution: "Ministry of Education",
+          dateObtained: certDate,
+          expiryDate: certTemplate.hasExpiry
+            ? new Date(certDate.getFullYear() + 5, certDate.getMonth(), certDate.getDate())
+            : null,
+          licenseNumber: certTemplate.hasExpiry ? `LIC-${String(index + 1).padStart(5, "0")}` : null,
+        },
+      });
+      qualCount++;
+    }
+
+    // Advanced degree (30% have masters/PhD)
+    if (Math.random() < 0.3) {
+      const advancedDegree = QUALIFICATION_TEMPLATES.degrees.find(d =>
+        d.nameEn.includes("Master") || d.nameEn.includes("PhD")
+      );
+      if (advancedDegree) {
+        const advYearsAgo = 5 + Math.floor(Math.random() * 10);
+        const advUniversity = UNIVERSITIES[(index + 3) % UNIVERSITIES.length];
+        const advMajor = advancedDegree.majors[index % advancedDegree.majors.length];
+
+        await prisma.teacherQualification.upsert({
+          where: {
+            schoolId_teacherId_qualificationType_name: {
+              schoolId,
+              teacherId: teacher.id,
+              qualificationType: advancedDegree.type,
+              name: advancedDegree.nameEn,
+            },
+          },
+          update: {},
+          create: {
+            schoolId,
+            teacherId: teacher.id,
+            qualificationType: advancedDegree.type,
+            name: advancedDegree.nameEn,
+            institution: advUniversity.en,
+            major: advMajor,
+            dateObtained: new Date(now.getFullYear() - advYearsAgo, Math.floor(Math.random() * 12), 15),
+          },
+        });
+        qualCount++;
+      }
+    }
+
+    // ============================================
+    // 2. Experience (1-3 previous positions per teacher)
+    // ============================================
+
+    const expCount_teacher = 1 + Math.floor(Math.random() * 3);
+    let expEndDate = new Date(now.getFullYear() - 1, 8, 1); // Start from last year
+
+    for (let e = 0; e < expCount_teacher; e++) {
+      const school = PREVIOUS_SCHOOLS[(index + e) % PREVIOUS_SCHOOLS.length];
+      const position = POSITIONS[e % POSITIONS.length];
+      const duration = 2 + Math.floor(Math.random() * 5); // 2-6 years
+      const startDate = new Date(expEndDate.getFullYear() - duration, 8, 1);
+
+      // Check if this exact record exists
+      const existingRecord = await prisma.teacherExperience.findFirst({
+        where: {
+          schoolId,
+          teacherId: teacher.id,
+          institution: school.en,
+          position: position.en,
+        },
+      });
+
+      if (!existingRecord) {
+        await prisma.teacherExperience.create({
+          data: {
+            schoolId,
+            teacherId: teacher.id,
+            institution: school.en,
+            position: position.en,
+            startDate,
+            endDate: expEndDate,
+            isCurrent: false,
+            description: `Taught classes and contributed to curriculum development at ${school.en}.`,
+          },
+        });
+        expCount++;
+      }
+
+      expEndDate = new Date(startDate.getFullYear() - 1, 8, 1); // Gap before previous job
+    }
+
+    // ============================================
+    // 3. Subject Expertise (1-2 subjects per teacher)
+    // ============================================
+
+    if (subjects.length > 0) {
+      const numSubjects = 1 + Math.floor(Math.random() * 2);
+      const teacherSubjects = subjects
+        .sort(() => Math.random() - 0.5)
+        .slice(0, numSubjects);
+
+      for (const [si, subject] of teacherSubjects.entries()) {
+        const expertiseLevel = si === 0 ? "PRIMARY" : "SECONDARY";
+
+        await prisma.teacherSubjectExpertise.upsert({
+          where: {
+            schoolId_teacherId_subjectId: {
+              schoolId,
+              teacherId: teacher.id,
+              subjectId: subject.id,
+            },
+          },
+          update: { expertiseLevel },
+          create: {
+            schoolId,
+            teacherId: teacher.id,
+            subjectId: subject.id,
+            expertiseLevel,
+          },
+        });
+        expertiseCount++;
+      }
+    }
+  }
+
+  console.log(`   ✅ Created teacher professional data:`);
+  console.log(`      - ${qualCount} qualifications (degrees, certifications)`);
+  console.log(`      - ${expCount} experience records (previous positions)`);
+  console.log(`      - ${expertiseCount} subject expertise mappings\n`);
+}

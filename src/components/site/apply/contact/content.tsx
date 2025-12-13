@@ -21,7 +21,7 @@ export default function ContactContent({ dictionary }: Props) {
   const { locale } = useLocale();
   const isRTL = locale === 'ar';
   const subdomain = params.subdomain as string;
-  const campaignId = params.campaignId as string;
+  const id = params.id as string;
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation();
   const { session, getStepData } = useApplication();
@@ -33,12 +33,12 @@ export default function ContactContent({ dictionary }: Props) {
     if (contactFormRef.current) {
       try {
         await contactFormRef.current.saveAndNext();
-        router.push(`/${locale}/apply/${campaignId}/guardian`);
+        router.push(`/${locale}/s/${subdomain}/apply/${id}/guardian`);
       } catch (error) {
         console.error('Error saving contact step:', error);
       }
     }
-  }, [locale, subdomain, campaignId, router]);
+  }, [locale, subdomain, id, router]);
 
   useEffect(() => {
     const contactData = session.formData.contact;

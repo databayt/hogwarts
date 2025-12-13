@@ -117,13 +117,62 @@ export async function deleteSubject(
     // Verify subject exists
     const existing = await (db as any).subject.findFirst({
       where: { id, schoolId },
-      select: { id: true },
+      select: { id: true, subjectName: true },
     });
 
     if (!existing) {
       return { success: false, error: "Subject not found" };
     }
 
+    // ============================================================================
+    // CASCADE VALIDATION - Check for dependencies before deletion
+    // ============================================================================
+
+    // 1. Check if any teachers have expertise in this subject
+    const teacherExpertiseCount = await (db as any).teacherSubjectExpertise.count({
+      where: { subjectId: id, schoolId },
+    });
+    if (teacherExpertiseCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete "${existing.subjectName}": ${teacherExpertiseCount} teacher(s) have expertise in this subject. Remove their expertise first.`,
+      };
+    }
+
+    // 2. Check if any classes are teaching this subject
+    const classCount = await (db as any).class.count({
+      where: { subjectId: id, schoolId },
+    });
+    if (classCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete "${existing.subjectName}": ${classCount} class(es) are teaching this subject. Delete or reassign those classes first.`,
+      };
+    }
+
+    // 3. Check if any exams are associated with this subject
+    const examCount = await (db as any).exam.count({
+      where: { subjectId: id, schoolId },
+    });
+    if (examCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete "${existing.subjectName}": ${examCount} exam(s) are associated with this subject. Delete those exams first.`,
+      };
+    }
+
+    // 4. Check if any question banks are associated with this subject
+    const questionBankCount = await (db as any).questionBank.count({
+      where: { subjectId: id, schoolId },
+    });
+    if (questionBankCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete "${existing.subjectName}": ${questionBankCount} question bank(s) are associated with this subject. Delete those question banks first.`,
+      };
+    }
+
+    // All checks passed - safe to delete
     await (db as any).subject.deleteMany({ where: { id, schoolId } });
 
     revalidatePath("/subjects");

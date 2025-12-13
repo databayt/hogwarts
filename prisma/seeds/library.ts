@@ -9,6 +9,7 @@
  */
 
 import type { SeedPrisma } from "./types";
+import { BorrowStatus } from "@prisma/client";
 
 // Arabic Books - with Arabic metadata and ISBN-based Open Library covers
 const ARABIC_BOOKS = [
@@ -558,4 +559,130 @@ export async function seedLibrary(
   console.log(`      - Arabic books: ${ARABIC_BOOKS.length} (Sudanese, Egyptian, Classical Arabic, Islamic)`);
   console.log(`      - English books: ${ENGLISH_BOOKS.length} (Literature, Science, Young Adult)`);
   console.log(`      - Featured: Harry Potter and the Philosopher's Stone\n`);
+}
+
+/**
+ * Seed Borrow Records - Library circulation history
+ * Creates realistic borrow/return patterns over last 6 months
+ */
+export async function seedBorrowRecords(
+  prisma: SeedPrisma,
+  schoolId: string
+): Promise<void> {
+  console.log("📖 Creating library borrow records...");
+
+  // Get existing books and students with user accounts
+  const books = await prisma.book.findMany({
+    where: { schoolId },
+    select: { id: true, title: true, availableCopies: true },
+  });
+
+  const studentsWithUsers = await prisma.student.findMany({
+    where: { schoolId, userId: { not: null } },
+    select: { id: true, userId: true, givenName: true, surname: true },
+    take: 200, // Limit to 200 active borrowers
+  });
+
+  if (books.length === 0 || studentsWithUsers.length === 0) {
+    console.log("   ⚠️  No books or students found, skipping borrow records\n");
+    return;
+  }
+
+  // Check for existing borrow records
+  const existingCount = await prisma.borrowRecord.count({
+    where: { schoolId },
+  });
+
+  if (existingCount >= 100) {
+    console.log(`   ✅ Borrow records already exist (${existingCount}), skipping\n`);
+    return;
+  }
+
+  let createdCount = 0;
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+  // Generate 500 borrow records
+  const borrowRecords: Array<{
+    userId: string;
+    bookId: string;
+    schoolId: string;
+    borrowDate: Date;
+    dueDate: Date;
+    returnDate: Date | null;
+    status: BorrowStatus;
+  }> = [];
+
+  for (let i = 0; i < 500; i++) {
+    // Random student and book
+    const student = studentsWithUsers[Math.floor(Math.random() * studentsWithUsers.length)];
+    const book = books[Math.floor(Math.random() * books.length)];
+
+    if (!student.userId) continue;
+
+    // Random borrow date within last 6 months
+    const borrowDate = new Date(
+      sixMonthsAgo.getTime() + Math.random() * (now.getTime() - sixMonthsAgo.getTime())
+    );
+
+    // Due date: 14 days after borrow
+    const dueDate = new Date(borrowDate.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    // Determine status and return date
+    let status: BorrowStatus;
+    let returnDate: Date | null = null;
+
+    const random = Math.random();
+    if (random < 0.70) {
+      // 70% returned on time
+      status = BorrowStatus.RETURNED;
+      // Return between borrow and due date
+      returnDate = new Date(
+        borrowDate.getTime() + Math.random() * (dueDate.getTime() - borrowDate.getTime())
+      );
+    } else if (random < 0.90) {
+      // 20% still active/borrowed
+      if (dueDate < now) {
+        status = BorrowStatus.OVERDUE;
+      } else {
+        status = BorrowStatus.BORROWED;
+      }
+      returnDate = null;
+    } else {
+      // 10% returned late (overdue then returned)
+      status = BorrowStatus.RETURNED;
+      // Return 1-30 days after due date
+      returnDate = new Date(
+        dueDate.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000
+      );
+    }
+
+    borrowRecords.push({
+      userId: student.userId,
+      bookId: book.id,
+      schoolId,
+      borrowDate,
+      dueDate,
+      returnDate,
+      status,
+    });
+  }
+
+  // Use createMany with skipDuplicates for efficiency
+  const result = await prisma.borrowRecord.createMany({
+    data: borrowRecords,
+    skipDuplicates: true,
+  });
+
+  createdCount = result.count;
+
+  // Count by status
+  const returnedCount = borrowRecords.filter(r => r.status === BorrowStatus.RETURNED).length;
+  const borrowedCount = borrowRecords.filter(r => r.status === BorrowStatus.BORROWED).length;
+  const overdueCount = borrowRecords.filter(r => r.status === BorrowStatus.OVERDUE).length;
+
+  console.log(`   ✅ Created ${createdCount} borrow records:`);
+  console.log(`      - Returned: ${returnedCount} (${Math.round(returnedCount/borrowRecords.length*100)}%)`);
+  console.log(`      - Active: ${borrowedCount} (${Math.round(borrowedCount/borrowRecords.length*100)}%)`);
+  console.log(`      - Overdue: ${overdueCount} (${Math.round(overdueCount/borrowRecords.length*100)}%)\n`);
 }

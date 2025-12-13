@@ -23,7 +23,9 @@ import {
   Calendar,
   User,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -498,9 +500,20 @@ export function InterventionTracker({ studentId, locale = 'en' }: InterventionTr
             </TabsContent>
 
             <TabsContent value="all">
-              <p className="text-center text-muted-foreground py-8">
-                {isArabic ? 'عرض كل التدخلات (قريباً)' : 'View all interventions (coming soon)'}
-              </p>
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                <p className="text-muted-foreground mb-4">
+                  {isArabic
+                    ? 'عرض جميع التدخلات مع خيارات التصفية والبحث'
+                    : 'View all interventions with filtering and search options'}
+                </p>
+                <Button asChild>
+                  <Link href="/attendance/interventions">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {isArabic ? 'عرض كل التدخلات' : 'View All Interventions'}
+                  </Link>
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -73,6 +73,32 @@ if [ $? -eq 0 ]; then
 fi
 ```
 
+### 9. Seed Safety Check (CRITICAL)
+```bash
+# Check for destructive operations in seed files
+# Prevents accidental data loss from deleteMany/delete operations
+if git diff --cached --name-only | grep -qE "prisma/(seeds?|generator)/.*\.ts$"; then
+  if git diff --cached -- 'prisma/seeds/*.ts' 'prisma/generator/*.ts' 2>/dev/null | grep -E "deleteMany|\.delete\(|TRUNCATE|DROP" | grep -v "^-"; then
+    echo "❌ CRITICAL: Destructive operations detected in seed files!"
+    echo ""
+    echo "Found one or more of the following forbidden patterns:"
+    echo "  - deleteMany()  - Deletes multiple records"
+    echo "  - .delete()     - Deletes single record"
+    echo "  - TRUNCATE      - Removes all data from table"
+    echo "  - DROP          - Drops entire table"
+    echo ""
+    echo "Seed files must be ADDITIVE ONLY. Use these safe patterns instead:"
+    echo "  ✅ prisma.entity.upsert({ where: {...}, create: {...}, update: {...} })"
+    echo "  ✅ prisma.entity.createMany({ data: [...], skipDuplicates: true })"
+    echo "  ✅ prisma.entity.findFirst({ where: {...} }).then(e => !e && prisma.entity.create({...}))"
+    echo ""
+    echo "If you absolutely need destructive operations, discuss with the team first."
+    exit 1
+  fi
+  echo "✅ Seed files: No destructive operations detected"
+fi
+```
+
 ### 9. Build Verification (main branch only)
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)

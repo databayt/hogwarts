@@ -7,7 +7,7 @@
 
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
-import { ExportButton as UnifiedExportButton } from "@/components/platform/file";
+import { ExportButton as UnifiedExportButton } from "@/components/file";
 import { ASSIGNMENT_EXPORT_COLUMNS, type AssignmentExportData } from "./columns/export";
 import { getAssignmentsExportData } from "./actions";
 import type { Locale } from "@/components/internationalization/config";

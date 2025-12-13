@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader"
+import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file"
 
 export interface MessageInputProps {
   conversationId: string

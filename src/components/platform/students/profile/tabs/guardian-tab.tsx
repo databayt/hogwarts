@@ -1,16 +1,73 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, User, Briefcase, Plus, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Phone, Mail, User, Briefcase, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Student } from "../../registration/types";
+import {
+  createGuardianAndLink,
+  updateGuardianLink,
+  unlinkGuardian,
+} from "@/components/platform/parents/actions";
 
 interface GuardianTabProps {
   student: Student;
 }
 
+const GUARDIAN_TYPES = [
+  { value: "father", label: "Father", labelAr: "الأب" },
+  { value: "mother", label: "Mother", labelAr: "الأم" },
+  { value: "guardian", label: "Guardian", labelAr: "ولي الأمر" },
+  { value: "other", label: "Other", labelAr: "آخر" },
+];
+
 export function GuardianTab({ student }: GuardianTabProps) {
-  // Use real guardian data from database
+  const [isPending, startTransition] = useTransition();
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedGuardian, setSelectedGuardian] = useState<any>(null);
+
+  // Form state for adding guardian
+  const [formData, setFormData] = useState({
+    givenName: "",
+    surname: "",
+    emailAddress: "",
+    phoneNumber: "",
+    guardianType: "",
+    isPrimary: false,
+    occupation: "",
+    workplace: "",
+    notes: "",
+  });
+
   const guardians = student.studentGuardians || [];
 
   const getInitials = (givenName: string, surname: string) => {
@@ -27,11 +84,112 @@ export function GuardianTab({ student }: GuardianTabProps) {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      givenName: "",
+      surname: "",
+      emailAddress: "",
+      phoneNumber: "",
+      guardianType: "",
+      isPrimary: false,
+      occupation: "",
+      workplace: "",
+      notes: "",
+    });
+  };
+
+  const handleAddGuardian = () => {
+    startTransition(async () => {
+      const result = await createGuardianAndLink({
+        studentId: student.id,
+        givenName: formData.givenName,
+        surname: formData.surname,
+        emailAddress: formData.emailAddress || undefined,
+        phoneNumber: formData.phoneNumber || undefined,
+        guardianType: formData.guardianType,
+        isPrimary: formData.isPrimary,
+        occupation: formData.occupation || undefined,
+        workplace: formData.workplace || undefined,
+        notes: formData.notes || undefined,
+      });
+
+      if (result.success) {
+        toast.success("Guardian added successfully");
+        setIsAddOpen(false);
+        resetForm();
+      } else {
+        toast.error(result.error);
+      }
+    });
+  };
+
+  const handleEditGuardian = () => {
+    if (!selectedGuardian) return;
+
+    startTransition(async () => {
+      const result = await updateGuardianLink({
+        studentGuardianId: selectedGuardian.id,
+        isPrimary: formData.isPrimary,
+        occupation: formData.occupation || undefined,
+        workplace: formData.workplace || undefined,
+        notes: formData.notes || undefined,
+      });
+
+      if (result.success) {
+        toast.success("Guardian updated successfully");
+        setIsEditOpen(false);
+        setSelectedGuardian(null);
+        resetForm();
+      } else {
+        toast.error(result.error);
+      }
+    });
+  };
+
+  const handleDeleteGuardian = () => {
+    if (!selectedGuardian) return;
+
+    startTransition(async () => {
+      const result = await unlinkGuardian({
+        studentGuardianId: selectedGuardian.id,
+      });
+
+      if (result.success) {
+        toast.success("Guardian removed successfully");
+        setIsDeleteOpen(false);
+        setSelectedGuardian(null);
+      } else {
+        toast.error(result.error);
+      }
+    });
+  };
+
+  const openEditDialog = (guardianRel: any) => {
+    setSelectedGuardian(guardianRel);
+    setFormData({
+      givenName: guardianRel.guardian.givenName || "",
+      surname: guardianRel.guardian.surname || "",
+      emailAddress: guardianRel.guardian.emailAddress || "",
+      phoneNumber: guardianRel.guardian.phoneNumbers?.[0]?.phoneNumber || "",
+      guardianType: guardianRel.guardianType?.name || "",
+      isPrimary: guardianRel.isPrimary || false,
+      occupation: guardianRel.occupation || "",
+      workplace: guardianRel.workplace || "",
+      notes: guardianRel.notes || "",
+    });
+    setIsEditOpen(true);
+  };
+
+  const openDeleteDialog = (guardianRel: any) => {
+    setSelectedGuardian(guardianRel);
+    setIsDeleteOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Add Guardian Button */}
       <div className="flex justify-end">
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Guardian
         </Button>
@@ -72,9 +230,19 @@ export function GuardianTab({ student }: GuardianTabProps) {
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm">
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(guardianRel)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => openDeleteDialog(guardianRel)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
@@ -133,7 +301,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {/* Permissions & Access */}
               <div className="space-y-2">
                 <h4 className="font-medium">Permissions</h4>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant="outline" className="text-xs">Can Pick Up</Badge>
                   <Badge variant="outline" className="text-xs">Receives Reports</Badge>
                   <Badge variant="outline" className="text-xs">Emergency Contact</Badge>
@@ -158,7 +326,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <User className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No guardians registered</p>
-            <Button variant="outline" className="mt-4">
+            <Button variant="outline" className="mt-4" onClick={() => setIsAddOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Guardian
             </Button>
@@ -166,28 +334,234 @@ export function GuardianTab({ student }: GuardianTabProps) {
         </Card>
       )}
 
-      {/* Guardian Access Log */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Guardian Access History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>John Doe accessed student portal</span>
-              <span className="text-muted-foreground">2 hours ago</span>
+      {/* Add Guardian Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Guardian</DialogTitle>
+            <DialogDescription>
+              Add a parent or guardian for this student.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="givenName">First Name *</Label>
+                <Input
+                  id="givenName"
+                  value={formData.givenName}
+                  onChange={(e) => setFormData({ ...formData, givenName: e.target.value })}
+                  placeholder="Enter first name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="surname">Last Name *</Label>
+                <Input
+                  id="surname"
+                  value={formData.surname}
+                  onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                  placeholder="Enter last name"
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span>Jane Doe viewed progress report</span>
-              <span className="text-muted-foreground">Yesterday</span>
+
+            <div className="space-y-2">
+              <Label htmlFor="guardianType">Relationship *</Label>
+              <Select
+                value={formData.guardianType}
+                onValueChange={(value) => setFormData({ ...formData, guardianType: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select relationship" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GUARDIAN_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span>John Doe paid school fees</span>
-              <span className="text-muted-foreground">3 days ago</span>
+
+            <div className="space-y-2">
+              <Label htmlFor="emailAddress">Email</Label>
+              <Input
+                id="emailAddress"
+                type="email"
+                value={formData.emailAddress}
+                onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
+                placeholder="guardian@email.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="occupation">Occupation</Label>
+                <Input
+                  id="occupation"
+                  value={formData.occupation}
+                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                  placeholder="e.g., Engineer"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="workplace">Workplace</Label>
+                <Input
+                  id="workplace"
+                  value={formData.workplace}
+                  onChange={(e) => setFormData({ ...formData, workplace: e.target.value })}
+                  placeholder="e.g., Tech Corp"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isPrimary"
+                checked={formData.isPrimary}
+                onCheckedChange={(checked) => setFormData({ ...formData, isPrimary: !!checked })}
+              />
+              <Label htmlFor="isPrimary" className="text-sm font-normal">
+                Set as primary guardian
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional notes..."
+                rows={2}
+              />
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsAddOpen(false); resetForm(); }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddGuardian}
+              disabled={isPending || !formData.givenName || !formData.surname || !formData.guardianType}
+            >
+              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Add Guardian
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Guardian Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Guardian</DialogTitle>
+            <DialogDescription>
+              Update guardian relationship details.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="font-medium">{formData.givenName} {formData.surname}</p>
+              <p className="text-sm text-muted-foreground">{formData.emailAddress || "No email"}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editOccupation">Occupation</Label>
+                <Input
+                  id="editOccupation"
+                  value={formData.occupation}
+                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                  placeholder="e.g., Engineer"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editWorkplace">Workplace</Label>
+                <Input
+                  id="editWorkplace"
+                  value={formData.workplace}
+                  onChange={(e) => setFormData({ ...formData, workplace: e.target.value })}
+                  placeholder="e.g., Tech Corp"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="editIsPrimary"
+                checked={formData.isPrimary}
+                onCheckedChange={(checked) => setFormData({ ...formData, isPrimary: !!checked })}
+              />
+              <Label htmlFor="editIsPrimary" className="text-sm font-normal">
+                Set as primary guardian
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editNotes">Notes</Label>
+              <Textarea
+                id="editNotes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional notes..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsEditOpen(false); setSelectedGuardian(null); resetForm(); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditGuardian} disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Guardian</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove{" "}
+              <strong>{selectedGuardian?.guardian?.givenName} {selectedGuardian?.guardian?.surname}</strong>{" "}
+              as a guardian for this student? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedGuardian(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGuardian}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isPending}
+            >
+              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

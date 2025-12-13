@@ -21,7 +21,7 @@ export default function DocumentsContent({ dictionary }: Props) {
   const { locale } = useLocale();
   const isRTL = locale === 'ar';
   const subdomain = params.subdomain as string;
-  const campaignId = params.campaignId as string;
+  const id = params.id as string;
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation();
   const { session, getStepData } = useApplication();
@@ -33,12 +33,12 @@ export default function DocumentsContent({ dictionary }: Props) {
     if (documentsFormRef.current) {
       try {
         await documentsFormRef.current.saveAndNext();
-        router.push(`/${locale}/apply/${campaignId}/review`);
+        router.push(`/${locale}/s/${subdomain}/apply/${id}/review`);
       } catch (error) {
         console.error('Error saving documents step:', error);
       }
     }
-  }, [locale, subdomain, campaignId, router]);
+  }, [locale, subdomain, id, router]);
 
   useEffect(() => {
     // Documents step is optional, always enable next

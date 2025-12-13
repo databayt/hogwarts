@@ -228,12 +228,19 @@ Topics:
       status: EventStatus.PLANNED,
     },
 
-    // Celebrations
+    // Celebrations & Islamic Holidays
     {
-      title: "Eid al-Fitr Celebration",
-      description: `School celebration to mark Eid al-Fitr. Join us for special prayers, festivities, and community gathering.
+      title: "عيد الفطر المبارك | Eid al-Fitr Celebration",
+      description: `احتفال المدرسة بعيد الفطر المبارك. نتمنى لجميع طلابنا وعائلاتهم عيداً سعيداً ومباركاً.
 
-"كل عام وأنتم بخير"
+School celebration to mark Eid al-Fitr. Join us for special prayers, festivities, and community gathering.
+
+البرنامج | Program:
+- صلاة العيد | Eid Prayer: 7:00 AM
+- احتفال مدرسي | School Celebration: 9:00 AM
+- توزيع الحلويات | Sweet Distribution: 10:00 AM
+
+"كل عام وأنتم بخير - تقبل الله منا ومنكم"
 Eid Mubarak to all!`,
       eventType: EventType.CELEBRATION,
       eventDate: daysFromNow(90),
@@ -245,6 +252,196 @@ Eid Mubarak to all!`,
       maxAttendees: 1000,
       isPublic: true,
       registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "عيد الأضحى المبارك | Eid al-Adha Celebration",
+      description: `احتفال المدرسة بعيد الأضحى المبارك. نتذكر تضحية سيدنا إبراهيم عليه السلام ونحتفل معاً كأسرة مدرسية واحدة.
+
+Commemorating Eid al-Adha with our school community. Remembering the sacrifice of Prophet Ibrahim (AS).
+
+البرنامج | Program:
+- صلاة العيد | Eid Prayer: 7:00 AM
+- درس ديني | Religious Lesson: 9:00 AM
+- احتفال واستقبال | Celebration & Reception: 10:00 AM
+
+"عيد مبارك - تقبل الله منا ومنكم صالح الأعمال"`,
+      eventType: EventType.CELEBRATION,
+      eventDate: daysFromNow(180),
+      startTime: "08:00",
+      endTime: "12:00",
+      location: "School Grounds",
+      organizer: "Religious Studies Department",
+      targetAudience: "All School Community",
+      maxAttendees: 1000,
+      isPublic: true,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "المولد النبوي الشريف | Prophet's Birthday (Mawlid)",
+      description: `احتفال بذكرى المولد النبوي الشريف. فعاليات تذكرنا بسيرة النبي محمد ﷺ وأخلاقه العظيمة.
+
+Celebrating the birthday of Prophet Muhammad (PBUH). Events reminding us of his noble character and teachings.
+
+البرنامج | Program:
+- تلاوة القرآن الكريم | Quran Recitation: 8:00 AM
+- المديح النبوي | Prophetic Praise: 9:00 AM
+- محاضرة في السيرة | Seerah Lecture: 10:00 AM
+- إنشاد ديني | Religious Songs: 11:00 AM
+
+"اللهم صل وسلم على سيدنا محمد"`,
+      eventType: EventType.CELEBRATION,
+      eventDate: daysFromNow(150),
+      startTime: "08:00",
+      endTime: "13:00",
+      location: "Main Assembly Hall",
+      organizer: "Religious Studies Department",
+      targetAudience: "All School Community",
+      maxAttendees: 500,
+      isPublic: true,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "رأس السنة الهجرية | Islamic New Year",
+      description: `الاحتفال ببداية السنة الهجرية الجديدة. فرصة للتأمل والتخطيط للعام الجديد.
+
+Celebrating the beginning of the new Hijri year. A time for reflection and planning for the year ahead.
+
+البرنامج | Program:
+- إذاعة صباحية خاصة | Special Morning Assembly
+- درس عن الهجرة النبوية | Lesson on Prophet's Migration
+- مسابقات ثقافية | Cultural Competitions`,
+      eventType: EventType.CULTURAL,
+      eventDate: daysFromNow(200),
+      startTime: "08:00",
+      endTime: "11:00",
+      location: "Main Assembly Hall",
+      organizer: "Religious Studies Department",
+      targetAudience: "All Students",
+      maxAttendees: 500,
+      isPublic: false,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "اليوم العالمي للغة العربية | Arabic Language Day",
+      description: `الاحتفال باليوم العالمي للغة العربية (18 ديسمبر). فعاليات تحتفي بلغة الضاد.
+
+Celebrating World Arabic Language Day (December 18). Events honoring the language of the Quran.
+
+الفعاليات | Activities:
+- مسابقة الخطابة | Public Speaking Competition
+- ورشة الخط العربي | Calligraphy Workshop
+- مسابقة الشعر | Poetry Competition
+- عرض مسرحي | Theater Performance`,
+      eventType: EventType.CULTURAL,
+      eventDate: daysFromNow(70),
+      startTime: "09:00",
+      endTime: "14:00",
+      location: "Main Hall & Classrooms",
+      organizer: "Languages Department",
+      targetAudience: "All Students",
+      maxAttendees: 500,
+      isPublic: false,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "يوم المعلم | Teachers' Day Celebration",
+      description: `الاحتفال بيوم المعلم وتقدير جهود معلمينا الأفاضل الذين يبذلون الغالي والنفيس في سبيل تربية أبنائنا.
+
+Celebrating Teachers' Day and honoring our dedicated educators who shape the future of our students.
+
+"من علمني حرفاً صرت له عبداً"
+
+البرنامج | Program:
+- كلمات الشكر والتقدير | Words of Appreciation
+- تكريم المعلمين المتميزين | Honoring Outstanding Teachers
+- عروض طلابية | Student Performances
+- حفل شاي | Tea Reception`,
+      eventType: EventType.CELEBRATION,
+      eventDate: daysFromNow(25),
+      startTime: "10:00",
+      endTime: "13:00",
+      location: "Main Hall",
+      organizer: "Student Council",
+      targetAudience: "All Students, Teachers",
+      maxAttendees: 500,
+      isPublic: false,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "يوم الأم | Mother's Day Celebration",
+      description: `الاحتفال بيوم الأم العربي (21 مارس). تقدير لأمهاتنا الفاضلات.
+
+Celebrating Arab Mother's Day (March 21). Honoring our beloved mothers.
+
+"الجنة تحت أقدام الأمهات"
+
+البرنامج | Program:
+- كلمات التقدير | Words of Appreciation
+- عروض فنية | Artistic Performances
+- معرض أعمال يدوية | Handicraft Exhibition
+- توزيع الهدايا | Gift Distribution`,
+      eventType: EventType.CELEBRATION,
+      eventDate: daysFromNow(100),
+      startTime: "10:00",
+      endTime: "12:00",
+      location: "Main Hall",
+      organizer: "Student Activities Committee",
+      targetAudience: "Students, Mothers",
+      maxAttendees: 400,
+      isPublic: false,
+      registrationRequired: true,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "يوم الطفل العالمي | International Children's Day",
+      description: `الاحتفال بيوم الطفل العالمي. يوم ترفيهي للأطفال في المرحلة الابتدائية.
+
+Celebrating International Children's Day. A fun day for our primary school students.
+
+الفعاليات | Activities:
+- ألعاب ومسابقات | Games & Competitions
+- عروض مسرحية | Theater Shows
+- رسم وتلوين | Drawing & Painting
+- حفل توزيع جوائز | Prize Distribution`,
+      eventType: EventType.CELEBRATION,
+      eventDate: daysFromNow(55),
+      startTime: "08:00",
+      endTime: "13:00",
+      location: "School Grounds",
+      organizer: "Primary Section",
+      targetAudience: "KG & Primary Students",
+      maxAttendees: 400,
+      isPublic: false,
+      registrationRequired: false,
+      status: EventStatus.PLANNED,
+    },
+    {
+      title: "مسابقة القرآن الكريم | Quran Recitation Competition",
+      description: `مسابقة سنوية في تلاوة وحفظ القرآن الكريم. تشجيع الطلاب على التنافس في حفظ كتاب الله.
+
+Annual Quran recitation and memorization competition. Encouraging students to excel in preserving the Holy Quran.
+
+الفئات | Categories:
+- حفظ خمسة أجزاء | 5 Juz Memorization
+- حفظ عشرة أجزاء | 10 Juz Memorization
+- التلاوة المجودة | Tajweed Recitation
+- أفضل صوت | Best Voice`,
+      eventType: EventType.ACADEMIC,
+      eventDate: daysFromNow(40),
+      startTime: "09:00",
+      endTime: "14:00",
+      location: "Main Hall",
+      organizer: "Religious Studies Department",
+      targetAudience: "All Students",
+      maxAttendees: 200,
+      isPublic: false,
+      registrationRequired: true,
       status: EventStatus.PLANNED,
     },
     {

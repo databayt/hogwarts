@@ -37,16 +37,16 @@ Migration should be done **incrementally** by feature area. The unified module p
 ## Phase 1: Core Utilities (High Priority)
 
 ### CSV/Excel Export Utilities
-- [ ] `/src/lib/csv-export.ts` → Use `@/components/platform/file` export module
+- [ ] `/src/lib/csv-export.ts` → Use `@/components/file` export module
 - [ ] `/src/components/export/export-utils.ts` → Merge into unified export module
 - [ ] `/src/components/table/lib/export.ts` → Use unified export utilities
 
 ### CSV/Excel Import Utilities
-- [ ] `/src/lib/csv-import.ts` → Use `@/components/platform/file` import module
+- [ ] `/src/lib/csv-import.ts` → Use `@/components/file` import module
 - [ ] `/src/lib/import-parser.ts` → Merge parsing logic into unified module
 
 ### Upload Utilities
-- [ ] `/src/lib/file-upload.ts` → Use `@/components/platform/file` upload module
+- [ ] `/src/lib/file-upload.ts` → Use `@/components/file` upload module
 
 ---
 
@@ -163,7 +163,7 @@ import { convertToCSV, downloadFile } from "@/components/export/export-utils"
 
 **After:**
 ```tsx
-import { ExportButton } from "@/components/platform/file"
+import { ExportButton } from "@/components/file"
 
 <ExportButton
   data={students}
@@ -183,7 +183,7 @@ import { useFileUpload } from "@/components/file-upload/hooks/use-file-upload"
 
 **After:**
 ```tsx
-import { FileUploader, useUpload } from "@/components/platform/file"
+import { FileUploader, useUpload } from "@/components/file"
 ```
 
 ### Replacing Import Components
@@ -196,7 +196,7 @@ import { importStudents } from "@/lib/csv-import"
 
 **After:**
 ```tsx
-import { FileImporter, useImport } from "@/components/platform/file"
+import { FileImporter, useImport } from "@/components/file"
 ```
 
 ---

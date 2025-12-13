@@ -926,6 +926,36 @@ export async function registerStudent(
 
     // Enroll in class/batch if provided
     if (input.classId) {
+      // Capacity validation - check if class has available spots
+      const classData = await (db as any).class.findFirst({
+        where: { id: input.classId, schoolId },
+        select: {
+          id: true,
+          name: true,
+          maxCapacity: true,
+          _count: {
+            select: { studentClasses: true }
+          }
+        }
+      });
+
+      if (!classData) {
+        return {
+          success: false,
+          error: "Selected class not found"
+        };
+      }
+
+      const maxCapacity = classData.maxCapacity || 50; // Default to 50 if not set
+      const currentEnrollment = classData._count.studentClasses;
+
+      if (currentEnrollment >= maxCapacity) {
+        return {
+          success: false,
+          error: `Cannot enroll in "${classData.name}": Class is at full capacity (${currentEnrollment}/${maxCapacity} students)`
+        };
+      }
+
       await (db as any).studentClass.create({
         data: {
           schoolId,

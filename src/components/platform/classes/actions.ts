@@ -208,6 +208,256 @@ export async function deleteClass(
 }
 
 // ============================================================================
+// Student Enrollment with Capacity Validation
+// ============================================================================
+
+/**
+ * Enroll a student in a class with capacity validation
+ * @param input - classId and studentId
+ * @returns Action response
+ */
+export async function enrollStudentInClass(
+  input: { classId: string; studentId: string }
+): Promise<ActionResponse<{
+  currentEnrollment: number;
+  maxCapacity: number;
+  remainingSpots: number;
+}>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { classId, studentId } = z.object({
+      classId: z.string().min(1, "Class ID is required"),
+      studentId: z.string().min(1, "Student ID is required"),
+    }).parse(input);
+
+    // Get class with capacity info and current enrollment count
+    const classData = await db.class.findFirst({
+      where: { id: classId, schoolId },
+      select: {
+        id: true,
+        name: true,
+        maxCapacity: true,
+        _count: {
+          select: { studentClasses: true }
+        }
+      }
+    });
+
+    if (!classData) {
+      return { success: false, error: "Class not found" };
+    }
+
+    // Verify student exists in school
+    const student = await (db as any).student.findFirst({
+      where: { id: studentId, schoolId },
+      select: { id: true, givenName: true, surname: true }
+    });
+
+    if (!student) {
+      return { success: false, error: "Student not found" };
+    }
+
+    // Check if student is already enrolled
+    const existingEnrollment = await (db as any).studentClass.findFirst({
+      where: { classId, studentId, schoolId }
+    });
+
+    if (existingEnrollment) {
+      return {
+        success: false,
+        error: `${student.givenName} ${student.surname} is already enrolled in "${classData.name}"`
+      };
+    }
+
+    // Capacity validation
+    const maxCapacity = classData.maxCapacity || 50;
+    const currentEnrollment = classData._count.studentClasses;
+
+    if (currentEnrollment >= maxCapacity) {
+      return {
+        success: false,
+        error: `Cannot enroll student: "${classData.name}" is at full capacity (${currentEnrollment}/${maxCapacity} students)`
+      };
+    }
+
+    // Create enrollment
+    await (db as any).studentClass.create({
+      data: {
+        schoolId,
+        studentId,
+        classId,
+      }
+    });
+
+    revalidatePath(CLASSES_PATH);
+    revalidatePath("/students");
+
+    return {
+      success: true,
+      data: {
+        currentEnrollment: currentEnrollment + 1,
+        maxCapacity,
+        remainingSpots: maxCapacity - currentEnrollment - 1
+      }
+    };
+  } catch (error) {
+    console.error("[enrollStudentInClass] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to enroll student"
+    };
+  }
+}
+
+/**
+ * Remove a student from a class
+ * @param input - classId and studentId
+ * @returns Action response
+ */
+export async function unenrollStudentFromClass(
+  input: { classId: string; studentId: string }
+): Promise<ActionResponse<void>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { classId, studentId } = z.object({
+      classId: z.string().min(1, "Class ID is required"),
+      studentId: z.string().min(1, "Student ID is required"),
+    }).parse(input);
+
+    // Verify enrollment exists
+    const enrollment = await (db as any).studentClass.findFirst({
+      where: { classId, studentId, schoolId }
+    });
+
+    if (!enrollment) {
+      return { success: false, error: "Student is not enrolled in this class" };
+    }
+
+    // Delete enrollment
+    await (db as any).studentClass.deleteMany({
+      where: { classId, studentId, schoolId }
+    });
+
+    revalidatePath(CLASSES_PATH);
+    revalidatePath("/students");
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("[unenrollStudentFromClass] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to unenroll student"
+    };
+  }
+}
+
+/**
+ * Get class capacity status
+ * @param input - classId
+ * @returns Capacity info including current enrollment and availability
+ */
+export async function getClassCapacityStatus(
+  input: { classId: string }
+): Promise<ActionResponse<{
+  className: string;
+  currentEnrollment: number;
+  minCapacity: number;
+  maxCapacity: number;
+  remainingSpots: number;
+  isFull: boolean;
+  isUnderCapacity: boolean;
+  percentageFull: number;
+}>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { classId } = z.object({
+      classId: z.string().min(1, "Class ID is required"),
+    }).parse(input);
+
+    const classData = await db.class.findFirst({
+      where: { id: classId, schoolId },
+      select: {
+        id: true,
+        name: true,
+        minCapacity: true,
+        maxCapacity: true,
+        _count: {
+          select: { studentClasses: true }
+        }
+      }
+    });
+
+    if (!classData) {
+      return { success: false, error: "Class not found" };
+    }
+
+    const minCapacity = classData.minCapacity || 10;
+    const maxCapacity = classData.maxCapacity || 50;
+    const currentEnrollment = classData._count.studentClasses;
+    const remainingSpots = Math.max(0, maxCapacity - currentEnrollment);
+    const isFull = currentEnrollment >= maxCapacity;
+    const isUnderCapacity = currentEnrollment < minCapacity;
+    const percentageFull = Math.round((currentEnrollment / maxCapacity) * 100);
+
+    return {
+      success: true,
+      data: {
+        className: classData.name,
+        currentEnrollment,
+        minCapacity,
+        maxCapacity,
+        remainingSpots,
+        isFull,
+        isUnderCapacity,
+        percentageFull,
+      }
+    };
+  } catch (error) {
+    console.error("[getClassCapacityStatus] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch capacity status"
+    };
+  }
+}
+
+// ============================================================================
 // Queries
 // ============================================================================
 
@@ -616,6 +866,130 @@ export async function getClassesCSV(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to export classes"
+    };
+  }
+}
+
+// ============================================================================
+// Capacity Analytics
+// ============================================================================
+
+export type ClassCapacityAnalytics = {
+  id: string;
+  name: string;
+  subjectName: string;
+  teacherName: string;
+  currentEnrollment: number;
+  minCapacity: number;
+  maxCapacity: number;
+  availableSpots: number;
+  percentageFull: number;
+  status: 'under' | 'optimal' | 'near-full' | 'full';
+};
+
+export type CapacityOverview = {
+  totalClasses: number;
+  totalCapacity: number;
+  totalEnrolled: number;
+  averageUtilization: number;
+  classesUnderCapacity: number;
+  classesOptimal: number;
+  classesNearFull: number;
+  classesFull: number;
+  classes: ClassCapacityAnalytics[];
+};
+
+/**
+ * Get all classes capacity analytics for the capacity dashboard
+ * @returns Capacity overview with all classes data
+ */
+export async function getAllClassesCapacity(): Promise<ActionResponse<CapacityOverview>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const classes = await db.class.findMany({
+      where: { schoolId },
+      include: {
+        subject: {
+          select: { subjectName: true }
+        },
+        teacher: {
+          select: { givenName: true, surname: true }
+        },
+        _count: {
+          select: { studentClasses: true }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    const classesAnalytics: ClassCapacityAnalytics[] = (classes as Array<any>).map((c) => {
+      const minCapacity = c.minCapacity || 10;
+      const maxCapacity = c.maxCapacity || 50;
+      const currentEnrollment = c._count.studentClasses;
+      const availableSpots = Math.max(0, maxCapacity - currentEnrollment);
+      const percentageFull = Math.round((currentEnrollment / maxCapacity) * 100);
+
+      // Determine status
+      let status: 'under' | 'optimal' | 'near-full' | 'full';
+      if (currentEnrollment >= maxCapacity) {
+        status = 'full';
+      } else if (percentageFull >= 85) {
+        status = 'near-full';
+      } else if (currentEnrollment < minCapacity) {
+        status = 'under';
+      } else {
+        status = 'optimal';
+      }
+
+      return {
+        id: c.id,
+        name: c.name,
+        subjectName: c.subject?.subjectName || 'Unknown',
+        teacherName: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : 'Unassigned',
+        currentEnrollment,
+        minCapacity,
+        maxCapacity,
+        availableSpots,
+        percentageFull,
+        status,
+      };
+    });
+
+    // Calculate overview stats
+    const totalClasses = classesAnalytics.length;
+    const totalCapacity = classesAnalytics.reduce((sum, c) => sum + c.maxCapacity, 0);
+    const totalEnrolled = classesAnalytics.reduce((sum, c) => sum + c.currentEnrollment, 0);
+    const averageUtilization = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
+
+    const classesUnderCapacity = classesAnalytics.filter(c => c.status === 'under').length;
+    const classesOptimal = classesAnalytics.filter(c => c.status === 'optimal').length;
+    const classesNearFull = classesAnalytics.filter(c => c.status === 'near-full').length;
+    const classesFull = classesAnalytics.filter(c => c.status === 'full').length;
+
+    return {
+      success: true,
+      data: {
+        totalClasses,
+        totalCapacity,
+        totalEnrolled,
+        averageUtilization,
+        classesUnderCapacity,
+        classesOptimal,
+        classesNearFull,
+        classesFull,
+        classes: classesAnalytics,
+      }
+    };
+  } catch (error) {
+    console.error("[getAllClassesCapacity] Error:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch capacity analytics"
     };
   }
 }

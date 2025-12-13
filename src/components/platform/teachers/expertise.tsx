@@ -1,34 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash, BookOpen, Award, Star, GraduationCap } from "lucide-react";
+import { Plus, Trash, BookOpen, Award, Star, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { TeacherFormStepProps } from "./types";
 import { EXPERTISE_LEVEL_OPTIONS } from "./config";
+import { getSubjectsForExpertise } from "./actions";
 
-// Mock subjects data - in production, this would come from the database
-const AVAILABLE_SUBJECTS = [
-  { id: "sub1", name: "Mathematics", category: "Sciences" },
-  { id: "sub2", name: "Physics", category: "Sciences" },
-  { id: "sub3", name: "Chemistry", category: "Sciences" },
-  { id: "sub4", name: "Biology", category: "Sciences" },
-  { id: "sub5", name: "English", category: "Languages" },
-  { id: "sub6", name: "Arabic", category: "Languages" },
-  { id: "sub7", name: "French", category: "Languages" },
-  { id: "sub8", name: "History", category: "Humanities" },
-  { id: "sub9", name: "Geography", category: "Humanities" },
-  { id: "sub10", name: "Computer Science", category: "Technology" },
-  { id: "sub11", name: "Physical Education", category: "Others" },
-  { id: "sub12", name: "Art", category: "Arts" },
-  { id: "sub13", name: "Music", category: "Arts" },
-];
+// Subject type for the fetched data
+type Subject = {
+  id: string;
+  name: string;
+  nameAr: string | null;
+};
 
 export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
   const { fields, append, remove } = useFieldArray({
@@ -36,18 +27,23 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
     name: "subjectExpertise"
   });
 
-  const [subjectsByCategory, setSubjectsByCategory] = useState<Record<string, typeof AVAILABLE_SUBJECTS>>({});
+  const [isPending, startTransition] = useTransition();
+  const [subjects, setSubjects] = useState<Array<{ id: string; name: string; nameAr: string | null }>>([]);
+  const [subjectsByDepartment, setSubjectsByDepartment] = useState<Record<string, Subject[]>>({});
+  const [error, setError] = useState<string | null>(null);
 
+  // Fetch subjects from database on mount
   useEffect(() => {
-    // Group subjects by category
-    const grouped = AVAILABLE_SUBJECTS.reduce((acc, subject) => {
-      if (!acc[subject.category]) {
-        acc[subject.category] = [];
+    startTransition(async () => {
+      const result = await getSubjectsForExpertise();
+      if (result.success) {
+        setSubjects(result.data.subjects);
+        setSubjectsByDepartment(result.data.byDepartment);
+        setError(null);
+      } else {
+        setError(result.error);
       }
-      acc[subject.category].push(subject);
-      return acc;
-    }, {} as Record<string, typeof AVAILABLE_SUBJECTS>);
-    setSubjectsByCategory(grouped);
+    });
   }, []);
 
   const addSubjectExpertise = () => {
@@ -91,12 +87,69 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
     return !getSelectedSubjectIds().includes(subjectId);
   };
 
+  // Find subject by ID from the fetched list
+  const findSubject = (subjectId: string) => {
+    return subjects.find(s => s.id === subjectId);
+  };
+
+  // Get department name for a subject
+  const getDepartmentForSubject = (subjectId: string): string | null => {
+    for (const [deptName, deptSubjects] of Object.entries(subjectsByDepartment)) {
+      if (deptSubjects.some(s => s.id === subjectId)) {
+        return deptName;
+      }
+    }
+    return null;
+  };
+
   // Group expertise by level
   const expertiseByLevel = {
     PRIMARY: fields.filter((_, index) => form.watch(`subjectExpertise.${index}.expertiseLevel`) === "PRIMARY"),
     CERTIFIED: fields.filter((_, index) => form.watch(`subjectExpertise.${index}.expertiseLevel`) === "CERTIFIED"),
     SECONDARY: fields.filter((_, index) => form.watch(`subjectExpertise.${index}.expertiseLevel`) === "SECONDARY"),
   };
+
+  // Loading state
+  if (isPending && subjects.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Loading subjects...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+        <div className="rounded-full bg-destructive/10 p-4">
+          <GraduationCap className="h-8 w-8 text-destructive" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="font-semibold text-destructive">Failed to Load Subjects</h3>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No subjects in database
+  if (subjects.length === 0 && !isPending) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4 py-12">
+        <div className="rounded-full bg-muted p-4">
+          <GraduationCap className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="font-semibold">No Subjects Available</h3>
+          <p className="text-sm text-muted-foreground">
+            Please add subjects to the school first before assigning expertise.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (fields.length === 0 && !isView) {
     return (
@@ -132,7 +185,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
             Specify teaching subjects and expertise levels
           </p>
         </div>
-        {!isView && fields.length < AVAILABLE_SUBJECTS.length && (
+        {!isView && fields.length < subjects.length && (
           <Button
             type="button"
             variant="outline"
@@ -173,8 +226,9 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
       <div className="space-y-3 max-h-[450px] overflow-y-auto pe-2">
         {fields.map((field, index) => {
           const subjectId = form.watch(`subjectExpertise.${index}.subjectId`);
-          const selectedSubject = AVAILABLE_SUBJECTS.find(s => s.id === subjectId);
+          const selectedSubject = findSubject(subjectId);
           const expertiseLevel = form.watch(`subjectExpertise.${index}.expertiseLevel`);
+          const departmentName = getDepartmentForSubject(subjectId);
 
           return (
             <Card
@@ -199,12 +253,12 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Object.entries(subjectsByCategory).map(([category, subjects]) => (
-                                  <div key={category}>
+                                {Object.entries(subjectsByDepartment).map(([department, deptSubjects]) => (
+                                  <div key={department}>
                                     <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                                      {category}
+                                      {department}
                                     </div>
-                                    {subjects.map(subject => (
+                                    {deptSubjects.map(subject => (
                                       <SelectItem
                                         key={subject.id}
                                         value={subject.id}
@@ -268,10 +322,10 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
                   )}
                 </div>
 
-                {selectedSubject && (
+                {selectedSubject && departmentName && (
                   <div className="mt-3 ps-7">
                     <Badge variant="secondary" className="text-xs">
-                      {selectedSubject.category}
+                      {departmentName}
                     </Badge>
                   </div>
                 )}
@@ -281,7 +335,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
         })}
       </div>
 
-      {!isView && fields.length > 0 && fields.length < AVAILABLE_SUBJECTS.length && (
+      {!isView && fields.length > 0 && fields.length < subjects.length && (
         <Button
           type="button"
           variant="outline"
@@ -293,7 +347,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
         </Button>
       )}
 
-      {fields.length >= AVAILABLE_SUBJECTS.length && (
+      {fields.length >= subjects.length && subjects.length > 0 && (
         <p className="text-sm text-muted-foreground text-center py-2">
           All available subjects have been added
         </p>

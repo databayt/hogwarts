@@ -47,7 +47,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file";
 
 interface User {
   id: string;

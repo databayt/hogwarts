@@ -21,7 +21,7 @@ export default function AcademicContent({ dictionary }: Props) {
   const { locale } = useLocale();
   const isRTL = locale === 'ar';
   const subdomain = params.subdomain as string;
-  const campaignId = params.campaignId as string;
+  const id = params.id as string;
 
   const { enableNext, disableNext, setCustomNavigation } = useApplyValidation();
   const { session, getStepData } = useApplication();
@@ -33,12 +33,12 @@ export default function AcademicContent({ dictionary }: Props) {
     if (academicFormRef.current) {
       try {
         await academicFormRef.current.saveAndNext();
-        router.push(`/${locale}/apply/${campaignId}/documents`);
+        router.push(`/${locale}/s/${subdomain}/apply/${id}/documents`);
       } catch (error) {
         console.error('Error saving academic step:', error);
       }
     }
-  }, [locale, subdomain, campaignId, router]);
+  }, [locale, subdomain, id, router]);
 
   useEffect(() => {
     const academicData = session.formData.academic;

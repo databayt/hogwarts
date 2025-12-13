@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/stream/shared/rich-text-editor";
 import {
   Form,
   FormControl,
@@ -80,11 +80,11 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Enter course description"
-                  className="min-h-[120px]"
-                  {...field}
+                <RichTextEditor
                   value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Enter course description"
+                  disabled={isPending}
                 />
               </FormControl>
               <FormMessage />

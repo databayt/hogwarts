@@ -7,7 +7,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 import { uploadReceipt } from "@/components/operator/billing/receipts/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
-import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file";
 import type { Locale } from "@/components/internationalization/config";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useListing } from '@/components/onboarding/use-listing';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from "@/components/ui/button";
-import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file";
 import { Upload, X } from 'lucide-react';
 
 interface Props {

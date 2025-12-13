@@ -18,16 +18,15 @@ interface UseVideoScrollControlReturn {
   videoRef: React.RefObject<HTMLVideoElement | null>
   isInView: boolean
   isMuted: boolean
-  toggleMute: () => void
 }
 
 /**
- * Video scroll control with click-to-unmute.
+ * Video scroll control with automatic sound based on visibility.
  *
- * - Auto-plays (muted) when in view
+ * - Auto-plays when in view
  * - Auto-pauses when out of view
- * - Click video to toggle sound
- * - Smooth volume transitions
+ * - Auto-unmutes with fade-in when in view (after user interaction)
+ * - Auto-mutes with fade-out when out of view
  */
 export function useVideoScrollControl(
   options: UseVideoScrollControlOptions = {}
@@ -42,6 +41,7 @@ export function useVideoScrollControl(
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const animationRef = useRef<number | null>(null)
+  const hasUserInteracted = useRef(false)
 
   const [isInView, setIsInView] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
@@ -84,25 +84,31 @@ export function useVideoScrollControl(
     [cancelAnimation]
   )
 
-  // Toggle mute - must be called from user gesture (click)
-  const toggleMute = useCallback(() => {
-    const video = videoRef.current
-    if (!video || targetVolume === 0) return
-
-    if (video.muted) {
-      // Unmute with fade-in
-      video.muted = false
-      video.volume = 0
-      setIsMuted(false)
-      animateVolume(video, 0, targetVolume, fadeInDuration)
-    } else {
-      // Mute with fade-out
-      animateVolume(video, video.volume, 0, fadeOutDuration, () => {
-        video.muted = true
-        setIsMuted(true)
-      })
+  // Track user interaction (required for autoplay with sound)
+  useEffect(() => {
+    const handleInteraction = () => {
+      hasUserInteracted.current = true
+      // Try to unmute if video is in view
+      const video = videoRef.current
+      if (video && isInView && video.muted && targetVolume > 0) {
+        video.muted = false
+        video.volume = 0
+        setIsMuted(false)
+        animateVolume(video, 0, targetVolume, fadeInDuration)
+      }
     }
-  }, [targetVolume, fadeInDuration, fadeOutDuration, animateVolume])
+
+    // Listen for any user interaction
+    window.addEventListener("click", handleInteraction, { once: true })
+    window.addEventListener("scroll", handleInteraction, { once: true })
+    window.addEventListener("touchstart", handleInteraction, { once: true })
+
+    return () => {
+      window.removeEventListener("click", handleInteraction)
+      window.removeEventListener("scroll", handleInteraction)
+      window.removeEventListener("touchstart", handleInteraction)
+    }
+  }, [isInView, targetVolume, fadeInDuration, animateVolume])
 
   // Intersection Observer
   useEffect(() => {
@@ -124,16 +130,24 @@ export function useVideoScrollControl(
     }
   }, [threshold, cancelAnimation])
 
-  // Handle play/pause based on visibility
+  // Handle play/pause and sound based on visibility
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
     if (isInView) {
-      // Video is in view - play (muted by default, user clicks to unmute)
+      // Video is in view - play and unmute (if user has interacted)
       video.play().catch(() => {
         // Autoplay blocked
       })
+
+      // Auto-unmute with fade-in if user has interacted
+      if (hasUserInteracted.current && video.muted && targetVolume > 0) {
+        video.muted = false
+        video.volume = 0
+        setIsMuted(false)
+        animateVolume(video, 0, targetVolume, fadeInDuration)
+      }
     } else {
       // Video is out of view - mute and pause
       if (!video.muted && targetVolume > 0) {
@@ -147,7 +161,7 @@ export function useVideoScrollControl(
         video.pause()
       }
     }
-  }, [isInView, targetVolume, fadeOutDuration, animateVolume])
+  }, [isInView, targetVolume, fadeInDuration, fadeOutDuration, animateVolume])
 
   // Cleanup
   useEffect(() => {
@@ -159,6 +173,5 @@ export function useVideoScrollControl(
     videoRef,
     isInView,
     isMuted,
-    toggleMute,
   }
 }
