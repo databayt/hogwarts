@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format } from "date-fns"
-import { getQuickLookData } from "./actions"
+import { getQuickLookData, getPrincipalDashboardData } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -104,73 +104,27 @@ export async function PrincipalDashboard({
       console.error("[PrincipalDashboard] Error fetching school data:", error)
     }
 
-    // Mock data for demo (would be replaced with real queries)
-    const mockPerformanceScorecard = {
-      overall: 87.5,
-      academic: 85,
-      attendance: 92,
-      discipline: 88,
-      parentSatisfaction: 85,
+    // Fetch principal dashboard data from centralized server action
+    let principalData
+    try {
+      principalData = await getPrincipalDashboardData()
+    } catch (error) {
+      console.error("[PrincipalDashboard] Error fetching principal data:", error)
     }
 
-    const mockCriticalAlerts = [
-      { type: "Low Attendance", message: "Grade 11 attendance below 85%", severity: "high", action: "Review required" },
-      { type: "Budget Alert", message: "Q4 budget 90% utilized", severity: "medium", action: "Monitor spending" },
-    ]
-
-    const mockTodaysPriorities = [
-      { priority: "Staff meeting at 9:00 AM", time: "9:00 AM", status: "scheduled" },
-      { priority: "Parent committee review", time: "11:00 AM", status: "scheduled" },
-      { priority: "Budget review with finance", time: "2:00 PM", status: "pending" },
-      { priority: "Teacher evaluation due", time: "4:00 PM", status: "pending" },
-    ]
-
-    const mockAcademicTrends = [
-      { subject: "Mathematics", currentAvg: 78, trend: "up", improvement: "+3%" },
-      { subject: "Science", currentAvg: 82, trend: "up", improvement: "+5%" },
-      { subject: "English", currentAvg: 75, trend: "down", improvement: "-2%" },
-      { subject: "History", currentAvg: 80, trend: "stable", improvement: "+1%" },
-    ]
-
-    const mockDisciplinarySummary = {
-      totalIncidents: 12,
-      resolved: 9,
-      pending: 3,
-      topIssues: ["Tardiness", "Uniform", "Conduct"],
-    }
-
-    const mockStaffEvaluations = [
-      { teacher: "Mr. Johnson", department: "Mathematics", status: "in-progress", dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
-      { teacher: "Ms. Williams", department: "Science", status: "pending", dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
-      { teacher: "Mr. Davis", department: "English", status: "pending", dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000) },
-    ]
-
-    const mockBudgetStatus = {
-      allocated: 1500000,
-      spent: 1125000,
-      remaining: 375000,
-      utilization: 75,
-      projections: "On Track",
-    }
-
-    const mockParentFeedback = {
-      satisfaction: 85,
-      communication: 82,
-      academicQuality: 88,
-      facilities: 78,
-      overall: 83,
-    }
-
-    const mockGoalProgress = [
-      { goal: "Improve Math Scores", target: "85%", current: "78%", progress: 92 },
-      { goal: "Reduce Absenteeism", target: "95%", current: "92%", progress: 97 },
-      { goal: "Staff Training Hours", target: "40 hrs", current: "32 hrs", progress: 80 },
-    ]
-
-    const mockBoardMeetings = [
-      { topic: "Annual Budget Review", date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), status: "confirmed", attendees: 8 },
-      { topic: "Academic Performance Report", date: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), status: "pending", attendees: 12 },
-    ]
+    // Destructure with defaults for error handling
+    const {
+      performanceScorecard: mockPerformanceScorecard = { overall: 0, academic: 0, attendance: 0, discipline: 0, parentSatisfaction: 0 },
+      criticalAlerts: mockCriticalAlerts = [],
+      todaysPriorities: mockTodaysPriorities = [],
+      academicTrends: mockAcademicTrends = [],
+      disciplinarySummary: mockDisciplinarySummary = { totalIncidents: 0, resolved: 0, pending: 0, topIssues: [] },
+      staffEvaluations: mockStaffEvaluations = [],
+      budgetStatus: mockBudgetStatus = { allocated: 0, spent: 0, remaining: 0, utilization: 0, projections: "On track" },
+      parentFeedback: mockParentFeedback = { overall: 0, satisfaction: 0, communication: 0, academicQuality: 0, facilities: 0 },
+      goalProgress: mockGoalProgress = [],
+      boardMeetings: mockBoardMeetings = [],
+    } = principalData || {}
 
     const weeklyAttendance = [
       { day: "Mon", value: 94 },

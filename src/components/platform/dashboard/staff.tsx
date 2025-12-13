@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format } from "date-fns"
-import { getQuickLookData } from "./actions"
+import { getQuickLookData, getStaffDashboardData } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -73,90 +73,33 @@ export async function StaffDashboard({
       console.error("[StaffDashboard] Error fetching school domain:", error)
     }
 
-    // Fetch real announcements from database with error handling
-    let announcements: { id: string; titleEn: string | null; createdAt: Date }[] = []
+    // Fetch staff dashboard data from centralized server action
+    let staffData
     try {
-      if (user.schoolId) {
-        const { db } = await import("@/lib/db")
-        announcements = await db.announcement.findMany({
-          where: {
-            schoolId: user.schoolId,
-            published: true,
-          },
-          take: 5,
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            id: true,
-            titleEn: true,
-            createdAt: true,
-          },
-        })
-      }
+      staffData = await getStaffDashboardData()
     } catch (error) {
-      console.error("[StaffDashboard] Error fetching announcements:", error)
+      console.error("[StaffDashboard] Error fetching staff data:", error)
     }
 
-    // Mock data for demo (would be replaced with real queries in production)
-    const mockTodayTasks = [
-      { id: "1", task: "Process student registrations", priority: "high", status: "in-progress", dueTime: "10:00 AM" },
-      { id: "2", task: "Update attendance records", priority: "medium", status: "pending", dueTime: "12:00 PM" },
-      { id: "3", task: "Prepare monthly reports", priority: "low", status: "completed", dueTime: "3:00 PM" },
-      { id: "4", task: "Schedule parent meetings", priority: "medium", status: "pending", dueTime: "5:00 PM" },
-    ]
-
-    const mockPendingRequests = [
-      { id: "1", type: "Student Transfer", requester: "John Smith", urgency: "high", daysOpen: 2, department: "Registrar" },
-      { id: "2", type: "Document Request", requester: "Sarah Johnson", urgency: "medium", daysOpen: 5, department: "Admin" },
-      { id: "3", type: "Schedule Change", requester: "Mike Brown", urgency: "low", daysOpen: 1, department: "Academic" },
-      { id: "4", type: "Certificate Issue", requester: "Emma Wilson", urgency: "high", daysOpen: 3, department: "Registrar" },
-    ]
-
-    const mockPendingApprovals = [
-      { id: "1", item: "Field Trip Request", requester: "Science Dept", status: "pending", daysLeft: 3 },
-      { id: "2", item: "Budget Approval", requester: "Math Dept", status: "pending", daysLeft: 7 },
-      { id: "3", item: "Equipment Purchase", requester: "IT Dept", status: "pending", daysLeft: 1 },
-    ]
-
-    const mockMaintenanceRequests = [
-      { id: "1", issue: "Broken projector in Room 101", priority: "high", assignedTo: "IT Team", status: "in-progress" },
-      { id: "2", issue: "HVAC maintenance Block B", priority: "medium", assignedTo: "Facilities", status: "scheduled" },
-      { id: "3", issue: "Plumbing repair - Staff room", priority: "high", assignedTo: "Maintenance", status: "pending" },
-    ]
-
-    const mockInventoryAlerts = [
-      { id: "1", item: "Textbooks - Grade 10", status: "Low stock", quantity: 15, threshold: 20 },
-      { id: "2", item: "Lab Equipment", status: "Out of stock", quantity: 0, threshold: 5 },
-      { id: "3", item: "Office Supplies", status: "Low stock", quantity: 8, threshold: 15 },
-    ]
-
-    const mockVisitorLog = [
-      { id: "1", visitor: "Mrs. Johnson (Parent)", purpose: "Parent meeting", time: "9:00 AM", status: "checked-in" },
-      { id: "2", visitor: "Office Supplies Inc.", purpose: "Delivery", time: "10:30 AM", status: "checked-out" },
-      { id: "3", visitor: "Mr. Davis (Parent)", purpose: "Document pickup", time: "11:45 AM", status: "checked-in" },
-    ]
-
-    const mockWorkflowStatus = {
-      inQueue: 8,
-      completedToday: 12,
-      overdue: 3,
-      totalTasks: 23,
-    }
-
-    const weeklyTaskCompletion = [
-      { day: "Mon", value: 15 },
-      { day: "Tue", value: 18 },
-      { day: "Wed", value: 12 },
-      { day: "Thu", value: 20 },
-      { day: "Fri", value: 14 },
-    ]
+    // Destructure with defaults for error handling
+    const {
+      tasks: mockTodayTasks = [],
+      requests: mockPendingRequests = [],
+      approvals: mockPendingApprovals = [],
+      maintenance: mockMaintenanceRequests = [],
+      inventory: mockInventoryAlerts = [],
+      visitors: mockVisitorLog = [],
+      workflow: mockWorkflowStatus = { inQueue: 0, completedToday: 0, overdue: 0, totalTasks: 0 },
+      weeklyTaskCompletion = [],
+    } = staffData || {}
 
     // Activity rings for staff productivity
     const productivityRings = [
       {
         label: "Tasks",
-        value: (mockWorkflowStatus.completedToday / mockWorkflowStatus.totalTasks) * 100,
+        value: mockWorkflowStatus.totalTasks > 0
+          ? (mockWorkflowStatus.completedToday / mockWorkflowStatus.totalTasks) * 100
+          : 0,
         color: "#22c55e",
         current: mockWorkflowStatus.completedToday,
         target: mockWorkflowStatus.totalTasks,
@@ -172,7 +115,9 @@ export async function StaffDashboard({
       },
       {
         label: "Queue",
-        value: Math.max(0, 100 - (mockWorkflowStatus.overdue / mockWorkflowStatus.inQueue) * 100),
+        value: mockWorkflowStatus.inQueue > 0
+          ? Math.max(0, 100 - (mockWorkflowStatus.overdue / mockWorkflowStatus.inQueue) * 100)
+          : 100,
         color: mockWorkflowStatus.overdue > 2 ? "#ef4444" : "#f59e0b",
         current: mockWorkflowStatus.overdue,
         target: 0,

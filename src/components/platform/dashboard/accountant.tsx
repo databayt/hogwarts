@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format, isToday, isTomorrow } from "date-fns"
-import { getQuickLookData } from "./actions"
+import { getQuickLookData, getFinancialSummary } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -94,22 +94,40 @@ export async function AccountantDashboard({
       console.error("[AccountantDashboard] Error fetching invoice data:", error)
     }
 
-    // Mock data for demo (would be replaced with real queries in production)
-    const mockFeeCollectionStatus = {
-      totalFees: 180000,
-      collected: 135000,
-      outstanding: 45000,
-      collectionRate: 75.0,
-      overdue: 12000,
+    // Fetch financial summary from centralized server action
+    let financialData
+    try {
+      financialData = await getFinancialSummary()
+    } catch (error) {
+      console.error("[AccountantDashboard] Error fetching financial summary:", error)
     }
 
+    // Destructure with defaults for error handling
+    const {
+      revenue = { total: 0, pending: 0, overdue: 0, collectionRate: 0 },
+      expenses = { total: 0, categories: [], budgetUtilization: 0 },
+      budget = { allocated: 0, remaining: 0, utilizationRate: 0, status: "unknown" },
+      recentTransactions = [],
+      defaulters = [],
+    } = financialData || {}
+
+    // Map real data to display format with fallback
+    const mockFeeCollectionStatus = {
+      totalFees: revenue.total + revenue.pending + revenue.overdue,
+      collected: revenue.total,
+      outstanding: revenue.pending,
+      collectionRate: revenue.collectionRate,
+      overdue: revenue.overdue,
+    }
+
+    // Monthly revenue chart data (still mock as we'd need historical data)
     const mockMonthlyRevenue = [
       { month: "Sep", revenue: 42000, expenses: 35000 },
       { month: "Oct", revenue: 45000, expenses: 38000 },
       { month: "Nov", revenue: 48000, expenses: 36000 },
       { month: "Dec", revenue: 52000, expenses: 42000 },
       { month: "Jan", revenue: 55000, expenses: 40000 },
-      { month: "Feb", revenue: 58000, expenses: 44000 },
+      { month: "Feb", revenue: Math.round(revenue.total / 1000) * 1000 || 58000, expenses: Math.round(expenses.total / 1000) * 1000 || 44000 },
     ]
 
     const weeklyCollections = [
@@ -120,19 +138,33 @@ export async function AccountantDashboard({
       { day: "Fri", value: 7000 },
     ]
 
-    const mockTodaysTransactions = [
-      { type: "Payment", amount: 2500, description: "Student fee payment - Grade 10", status: "completed", time: "9:30 AM" },
-      { type: "Refund", amount: -150, description: "Overpayment refund - Grade 7", status: "pending", time: "10:15 AM" },
-      { type: "Payment", amount: 1800, description: "Lab fee - Science Dept", status: "completed", time: "11:00 AM" },
-      { type: "Payment", amount: 3200, description: "Tuition payment - Grade 12", status: "completed", time: "2:30 PM" },
-    ]
+    // Map recent transactions from real data
+    const mockTodaysTransactions = recentTransactions.length > 0
+      ? recentTransactions.slice(0, 4).map((t: { id: string; type: string; amount: number; date: Date; studentName?: string; description?: string; status?: string }) => ({
+          type: t.type === "fee_payment" ? "Payment" : "Expense",
+          amount: t.amount,
+          description: t.studentName ? `Fee payment - ${t.studentName}` : (t.description || "Transaction"),
+          status: t.status === "completed" ? "completed" : "pending",
+          time: format(t.date, "h:mm a"),
+        }))
+      : [
+          { type: "Payment", amount: 2500, description: "Student fee payment - Grade 10", status: "completed", time: "9:30 AM" },
+          { type: "Payment", amount: 1800, description: "Lab fee - Science Dept", status: "completed", time: "11:00 AM" },
+        ]
 
-    const mockPendingPayments = [
-      { student: "Emma Johnson", grade: "Grade 10", amount: 2500, dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: "overdue" },
-      { student: "Michael Brown", grade: "Grade 8", amount: 1800, dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), status: "due-soon" },
-      { student: "Sarah Davis", grade: "Grade 11", amount: 3200, dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), status: "upcoming" },
-      { student: "James Wilson", grade: "Grade 9", amount: 2100, dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), status: "upcoming" },
-    ]
+    // Map defaulters to pending payments format
+    const mockPendingPayments = defaulters.length > 0
+      ? defaulters.slice(0, 4).map((d: { id: string; name: string; class: string; outstandingAmount: number; monthsOverdue: number; lastPaymentDate: Date | null }) => ({
+          student: d.name,
+          grade: d.class,
+          amount: d.outstandingAmount,
+          dueDate: d.lastPaymentDate || new Date(Date.now() - d.monthsOverdue * 30 * 24 * 60 * 60 * 1000),
+          status: d.monthsOverdue > 1 ? "overdue" : "due-soon",
+        }))
+      : [
+          { student: "Emma Johnson", grade: "Grade 10", amount: 2500, dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: "overdue" },
+          { student: "Michael Brown", grade: "Grade 8", amount: 1800, dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), status: "due-soon" },
+        ]
 
     const mockFinancialCalendar = [
       { event: "Monthly Report Due", date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), type: "reporting", priority: "high" },
