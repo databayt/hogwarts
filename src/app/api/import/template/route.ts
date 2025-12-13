@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
       try {
         const buffer = await generateExcelTemplate(dataType);
 
-        return new NextResponse(buffer, {
+        // Convert Buffer to Uint8Array for NextResponse compatibility
+        const uint8Array = new Uint8Array(buffer);
+
+        return new NextResponse(uint8Array, {
           status: 200,
           headers: {
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
