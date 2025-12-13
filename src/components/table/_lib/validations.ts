@@ -4,6 +4,8 @@ import {
   parseAsInteger,
   parseAsString,
   parseAsStringEnum,
+  parseAsStringLiteral,
+  parseAsFloat,
 } from "nuqs/server";
 import * as z from "zod";
 import { flagConfig } from "@/components/table/config/flag";
@@ -12,6 +14,10 @@ import {
   getFiltersStateParser,
   getSortingStateParser,
 } from "@/components/table/utils";
+
+// Create string literal parsers for enum values
+const statusLiterals = ["todo", "in_progress", "done", "canceled"] as const;
+const priorityLiterals = ["low", "medium", "high"] as const;
 
 export const searchParamsCache = createSearchParamsCache({
   filterFlag: parseAsStringEnum(
@@ -24,11 +30,13 @@ export const searchParamsCache = createSearchParamsCache({
   ]),
   title: parseAsString.withDefault(""),
   status: parseAsArrayOf(
-    z.enum(["todo", "in_progress", "done", "canceled"])
+    parseAsStringLiteral(statusLiterals)
   ).withDefault([]),
-  priority: parseAsArrayOf(z.enum(["low", "medium", "high"])).withDefault([]),
-  estimatedHours: parseAsArrayOf(z.coerce.number()).withDefault([]),
-  createdAt: parseAsArrayOf(z.coerce.number()).withDefault([]),
+  priority: parseAsArrayOf(
+    parseAsStringLiteral(priorityLiterals)
+  ).withDefault([]),
+  estimatedHours: parseAsArrayOf(parseAsFloat).withDefault([]),
+  createdAt: parseAsArrayOf(parseAsFloat).withDefault([]),
   // advanced filter
   filters: getFiltersStateParser().withDefault([]),
   joinOperator: parseAsStringEnum(["and", "or"]).withDefault("and"),
