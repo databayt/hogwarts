@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
@@ -18,7 +18,21 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
+export interface AreaChartStackedData {
+  label: string;
+  primary: number;
+  secondary: number;
+}
+
+export interface AreaChartStackedProps {
+  data?: AreaChartStackedData[];
+  primaryLabel?: string;
+  secondaryLabel?: string;
+  trend?: number;
+  trendLabel?: string;
+}
+
+const defaultChartData = [
   { month: "January", desktop: 186, mobile: 80 },
   { month: "February", desktop: 305, mobile: 200 },
   { month: "March", desktop: 237, mobile: 120 },
@@ -27,25 +41,40 @@ const chartData = [
   { month: "June", desktop: 214, mobile: 140 },
 ];
 
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
+export function AreaChartStacked({
+  data,
+  primaryLabel = "Desktop",
+  secondaryLabel = "Mobile",
+  trend = 5.2,
+  trendLabel = "January - June 2024",
+}: AreaChartStackedProps) {
+  // Transform custom data to use primary/secondary keys if provided
+  const chartData = data
+    ? data.map(d => ({
+        label: d.label,
+        primary: d.primary,
+        secondary: d.secondary,
+      }))
+    : defaultChartData.map(d => ({
+        label: d.month,
+        primary: d.desktop,
+        secondary: d.mobile,
+      }));
 
-export function AreaChartStacked() {
+  const chartConfig = {
+    primary: {
+      label: primaryLabel,
+      color: "hsl(var(--chart-1))",
+    },
+    secondary: {
+      label: secondaryLabel,
+      color: "hsl(var(--chart-2))",
+    },
+  } satisfies ChartConfig;
+
   return (
     <Card className="flex flex-col border-none shadow-none bg-muted">
       <CardHeader>
-        {/* <CardTitle>Area Chart - Stacked</CardTitle>
-        <CardDescription>
-          Showing total visitors for the last 6 months
-        </CardDescription> */}
       </CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig}>
@@ -59,7 +88,7 @@ export function AreaChartStacked() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="label"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -70,19 +99,19 @@ export function AreaChartStacked() {
               content={<ChartTooltipContent indicator="dot" />}
             />
             <Area
-              dataKey="mobile"
+              dataKey="secondary"
               type="natural"
-              fill="var(--color-mobile)"
+              fill="var(--color-secondary)"
               fillOpacity={0.4}
-              stroke="var(--color-mobile)"
+              stroke="var(--color-secondary)"
               stackId="a"
             />
             <Area
-              dataKey="desktop"
+              dataKey="primary"
               type="natural"
-              fill="var(--color-desktop)"
+              fill="var(--color-primary)"
               fillOpacity={0.4}
-              stroke="var(--color-desktop)"
+              stroke="var(--color-primary)"
               stackId="a"
             />
           </AreaChart>
@@ -90,10 +119,18 @@ export function AreaChartStacked() {
       </CardContent>
       <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
         <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="size-4" />
+          {trend >= 0 ? (
+            <>
+              Trending up by {trend}% this month <TrendingUp className="size-4" />
+            </>
+          ) : (
+            <>
+              Trending down by {Math.abs(trend)}% this month <TrendingDown className="size-4" />
+            </>
+          )}
         </div>
         <div className="leading-none text-muted-foreground">
-          January - June 2024
+          {trendLabel}
         </div>
       </CardFooter>
     </Card>

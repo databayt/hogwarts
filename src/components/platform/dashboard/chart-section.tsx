@@ -2,34 +2,10 @@
 
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { SectionHeading } from "./section-heading"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Area,
-  AreaChart,
-  Line,
-  LineChart,
-  RadialBarChart,
-  RadialBar,
-  PolarGrid,
-  PolarRadiusAxis,
-  Label,
-  Pie,
-  PieChart,
-  Cell,
-} from "recharts"
+import { InteractiveBarChart, type InteractiveBarChartData } from "./chart-interactive-bar"
+import { RadialTextChart } from "./chart-radial-text"
+import { AreaChartStacked, type AreaChartStackedData } from "./chart-area-stacked"
 import { getChartDataByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
 
@@ -42,42 +18,28 @@ export interface ChartSectionProps {
   className?: string
 }
 
-export interface ChartDataPoint {
-  label: string
-  value: number
-  previousValue?: number
-}
-
-export interface TrendChartData {
-  labels: string[]
-  current: number[]
-  previous?: number[]
-}
-
-export interface GaugeData {
-  value: number
-  label: string
-  trend?: number
-}
-
-export interface DistributionData {
-  name: string
-  value: number
-  color?: string
-}
-
 export interface RoleChartData {
   sectionTitle: string
-  trendChart?: {
+  barChart: {
     title: string
-    data: TrendChartData
-    type: "line" | "bar" | "area"
+    description: string
+    primaryLabel: string
+    secondaryLabel: string
+    data: InteractiveBarChartData[]
   }
-  gaugeChart?: GaugeData
-  distributionChart?: {
-    title: string
-    data: DistributionData[]
-    type: "bar" | "pie"
+  radialChart: {
+    value: number
+    label: string
+    trend: number
+    trendLabel: string
+    maxValue: number
+  }
+  areaChart: {
+    primaryLabel: string
+    secondaryLabel: string
+    trend: number
+    trendLabel: string
+    data: AreaChartStackedData[]
   }
 }
 
@@ -109,501 +71,285 @@ function getChartSectionTitle(role: DashboardRole): string {
 }
 
 // ============================================================================
-// CHART CONFIGS
+// HELPER: Generate date-based bar chart data
 // ============================================================================
 
-const lineChartConfig = {
-  current: {
-    label: "Current",
-    color: "hsl(var(--chart-1))",
-  },
-  previous: {
-    label: "Previous",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig
+function generateBarChartData(months: number = 3): InteractiveBarChartData[] {
+  const data: InteractiveBarChartData[] = []
+  const now = new Date()
 
-const barChartConfig = {
-  value: {
-    label: "Value",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig
-
-const areaChartConfig = {
-  value: {
-    label: "Value",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig
-
-const pieColors = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-]
+  for (let i = months * 30; i >= 0; i--) {
+    const date = new Date(now)
+    date.setDate(date.getDate() - i)
+    data.push({
+      date: date.toISOString().split('T')[0],
+      primary: Math.floor(Math.random() * 400) + 100,
+      secondary: Math.floor(Math.random() * 300) + 80,
+    })
+  }
+  return data
+}
 
 // ============================================================================
 // DEFAULT DATA BY ROLE
 // ============================================================================
 
 const defaultDataByRole: Record<DashboardRole, RoleChartData> = {
-  // Student: Grade trends, attendance, subject performance
   STUDENT: {
     sectionTitle: "Academic Performance",
-    trendChart: {
-      title: "Grade Trend",
-      type: "line",
-      data: {
-        labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"],
-        current: [78, 82, 79, 85, 88, 86],
-        previous: [72, 75, 74, 78, 80, 82],
-      },
+    barChart: {
+      title: "Study Hours",
+      description: "Daily study hours over the past 3 months",
+      primaryLabel: "Subjects",
+      secondaryLabel: "Assignments",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 86,
       label: "Attendance",
       trend: 3.2,
+      trendLabel: "Overall attendance rate this semester",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Subject Grades",
-      type: "bar",
+    areaChart: {
+      primaryLabel: "Grades",
+      secondaryLabel: "Class Average",
+      trend: 5.2,
+      trendLabel: "Academic performance trend",
       data: [
-        { name: "Math", value: 85 },
-        { name: "Science", value: 78 },
-        { name: "English", value: 92 },
-        { name: "Arabic", value: 88 },
-        { name: "History", value: 75 },
+        { label: "September", primary: 78, secondary: 72 },
+        { label: "October", primary: 82, secondary: 74 },
+        { label: "November", primary: 79, secondary: 75 },
+        { label: "December", primary: 85, secondary: 76 },
+        { label: "January", primary: 88, secondary: 77 },
+        { label: "February", primary: 86, secondary: 78 },
       ],
     },
   },
 
-  // Teacher: Class performance, grading progress, lessons
   TEACHER: {
     sectionTitle: "Teaching Analytics",
-    trendChart: {
-      title: "Weekly Lessons",
-      type: "area",
-      data: {
-        labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-        current: [18, 22, 20, 24],
-      },
+    barChart: {
+      title: "Lessons & Grading",
+      description: "Teaching activity over the past 3 months",
+      primaryLabel: "Lessons",
+      secondaryLabel: "Graded",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 72,
       label: "Grading Progress",
       trend: -5.0,
+      trendLabel: "Assignments graded this period",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Class Performance",
-      type: "bar",
+    areaChart: {
+      primaryLabel: "Student Performance",
+      secondaryLabel: "Attendance",
+      trend: 2.1,
+      trendLabel: "Class performance over time",
       data: [
-        { name: "Grade 10A", value: 82 },
-        { name: "Grade 10B", value: 78 },
-        { name: "Grade 11A", value: 85 },
-        { name: "Grade 11B", value: 80 },
+        { label: "Week 1", primary: 82, secondary: 95 },
+        { label: "Week 2", primary: 78, secondary: 92 },
+        { label: "Week 3", primary: 85, secondary: 88 },
+        { label: "Week 4", primary: 80, secondary: 94 },
+        { label: "Week 5", primary: 84, secondary: 91 },
+        { label: "Week 6", primary: 87, secondary: 96 },
       ],
     },
   },
 
-  // Guardian: Children comparison, attendance, grades
   GUARDIAN: {
     sectionTitle: "Children's Progress",
-    trendChart: {
-      title: "Attendance Trend",
-      type: "line",
-      data: {
-        labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"],
-        current: [95, 90, 100, 85, 95, 100],
-        previous: [90, 85, 95, 80, 90, 95],
-      },
+    barChart: {
+      title: "Activity Overview",
+      description: "Children's school activities",
+      primaryLabel: "Attendance",
+      secondaryLabel: "Assignments",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 88,
       label: "Avg Grade",
       trend: 4.5,
+      trendLabel: "Average grade across all children",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Grade Distribution",
-      type: "pie",
+    areaChart: {
+      primaryLabel: "Grades",
+      secondaryLabel: "Attendance",
+      trend: 3.8,
+      trendLabel: "Performance trend this semester",
       data: [
-        { name: "A+", value: 3 },
-        { name: "A", value: 5 },
-        { name: "B+", value: 4 },
-        { name: "B", value: 2 },
-        { name: "C+", value: 1 },
+        { label: "Week 1", primary: 85, secondary: 95 },
+        { label: "Week 2", primary: 82, secondary: 90 },
+        { label: "Week 3", primary: 88, secondary: 100 },
+        { label: "Week 4", primary: 84, secondary: 85 },
+        { label: "Week 5", primary: 90, secondary: 95 },
+        { label: "Week 6", primary: 92, secondary: 100 },
       ],
     },
   },
 
-  // Staff: Task completion, request processing, workload
   STAFF: {
     sectionTitle: "Work Analytics",
-    trendChart: {
-      title: "Weekly Tasks",
-      type: "bar",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-        current: [8, 12, 10, 15, 9],
-      },
+    barChart: {
+      title: "Task Management",
+      description: "Tasks completed over the past 3 months",
+      primaryLabel: "Completed",
+      secondaryLabel: "Pending",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 88,
       label: "Efficiency",
       trend: 2.1,
+      trendLabel: "Work efficiency rate",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Task Categories",
-      type: "pie",
+    areaChart: {
+      primaryLabel: "Tasks",
+      secondaryLabel: "Requests",
+      trend: 4.2,
+      trendLabel: "Workload distribution over time",
       data: [
-        { name: "Admin", value: 35 },
-        { name: "Support", value: 25 },
-        { name: "Maintenance", value: 20 },
-        { name: "Events", value: 20 },
+        { label: "Monday", primary: 8, secondary: 5 },
+        { label: "Tuesday", primary: 12, secondary: 7 },
+        { label: "Wednesday", primary: 10, secondary: 6 },
+        { label: "Thursday", primary: 15, secondary: 9 },
+        { label: "Friday", primary: 9, secondary: 4 },
+        { label: "Saturday", primary: 3, secondary: 1 },
       ],
     },
   },
 
-  // Accountant: Revenue, expenses, cash flow
   ACCOUNTANT: {
     sectionTitle: "Financial Analytics",
-    trendChart: {
+    barChart: {
       title: "Revenue vs Expenses",
-      type: "area",
-      data: {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        current: [120000, 135000, 128000, 142000, 155000, 148000],
-        previous: [95000, 88000, 92000, 98000, 105000, 110000],
-      },
+      description: "Financial overview for the last 3 months",
+      primaryLabel: "Revenue",
+      secondaryLabel: "Expenses",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 87,
       label: "Collection Rate",
       trend: 5.2,
+      trendLabel: "Fee collection efficiency",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Expense Categories",
-      type: "pie",
+    areaChart: {
+      primaryLabel: "Income",
+      secondaryLabel: "Expenses",
+      trend: 8.5,
+      trendLabel: "Financial performance trend",
       data: [
-        { name: "Salaries", value: 45 },
-        { name: "Operations", value: 25 },
-        { name: "Utilities", value: 15 },
-        { name: "Supplies", value: 10 },
-        { name: "Other", value: 5 },
+        { label: "January", primary: 120000, secondary: 95000 },
+        { label: "February", primary: 135000, secondary: 88000 },
+        { label: "March", primary: 128000, secondary: 92000 },
+        { label: "April", primary: 142000, secondary: 98000 },
+        { label: "May", primary: 155000, secondary: 105000 },
+        { label: "June", primary: 148000, secondary: 110000 },
       ],
     },
   },
 
-  // Principal: School performance, attendance, enrollment
   PRINCIPAL: {
     sectionTitle: "School Analytics",
-    trendChart: {
-      title: "Academic Performance",
-      type: "line",
-      data: {
-        labels: ["Term 1", "Term 2", "Term 3", "Term 4"],
-        current: [78, 82, 80, 85],
-        previous: [75, 78, 77, 80],
-      },
+    barChart: {
+      title: "School Performance",
+      description: "Overall school metrics",
+      primaryLabel: "Enrollment",
+      secondaryLabel: "Attendance",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 92,
       label: "Attendance Rate",
       trend: 1.5,
+      trendLabel: "School-wide attendance",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Grade Level Distribution",
-      type: "bar",
+    areaChart: {
+      primaryLabel: "Performance",
+      secondaryLabel: "Previous Year",
+      trend: 3.2,
+      trendLabel: "Academic performance comparison",
       data: [
-        { name: "Grade 7", value: 120 },
-        { name: "Grade 8", value: 115 },
-        { name: "Grade 9", value: 108 },
-        { name: "Grade 10", value: 95 },
-        { name: "Grade 11", value: 88 },
-        { name: "Grade 12", value: 82 },
+        { label: "Term 1", primary: 78, secondary: 75 },
+        { label: "Term 2", primary: 82, secondary: 78 },
+        { label: "Term 3", primary: 80, secondary: 77 },
+        { label: "Term 4", primary: 85, secondary: 80 },
+        { label: "Term 5", primary: 87, secondary: 82 },
+        { label: "Term 6", primary: 89, secondary: 84 },
       ],
     },
   },
 
-  // Admin: User activity, system usage
   ADMIN: {
     sectionTitle: "System Analytics",
-    trendChart: {
+    barChart: {
       title: "User Activity",
-      type: "area",
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        current: [245, 312, 298, 356, 289, 145, 98],
-      },
+      description: "System usage over the past 3 months",
+      primaryLabel: "Active Users",
+      secondaryLabel: "Sessions",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
+    radialChart: {
       value: 98,
       label: "System Health",
       trend: 0.5,
+      trendLabel: "Platform stability index",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Module Usage",
-      type: "bar",
+    areaChart: {
+      primaryLabel: "Logins",
+      secondaryLabel: "API Calls",
+      trend: 12.5,
+      trendLabel: "System activity trend",
       data: [
-        { name: "Students", value: 35 },
-        { name: "Teachers", value: 25 },
-        { name: "Finance", value: 20 },
-        { name: "Exams", value: 15 },
-        { name: "Reports", value: 5 },
+        { label: "Monday", primary: 245, secondary: 1200 },
+        { label: "Tuesday", primary: 312, secondary: 1450 },
+        { label: "Wednesday", primary: 298, secondary: 1380 },
+        { label: "Thursday", primary: 356, secondary: 1620 },
+        { label: "Friday", primary: 289, secondary: 1280 },
+        { label: "Saturday", primary: 145, secondary: 680 },
       ],
     },
   },
 
-  // Developer: Platform growth, school distribution
   DEVELOPER: {
     sectionTitle: "Platform Analytics",
-    trendChart: {
+    barChart: {
       title: "Platform Growth",
-      type: "line",
-      data: {
-        labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        current: [35, 38, 42, 45, 48, 52],
-        previous: [12000, 15000, 18000, 22000, 25000, 28000],
-      },
+      description: "Platform metrics over the past 3 months",
+      primaryLabel: "Schools",
+      secondaryLabel: "Users",
+      data: generateBarChartData(3),
     },
-    gaugeChart: {
-      value: 99.9,
+    radialChart: {
+      value: 99,
       label: "Uptime",
       trend: 0.1,
+      trendLabel: "Platform availability",
+      maxValue: 100,
     },
-    distributionChart: {
-      title: "Subscription Tiers",
-      type: "pie",
+    areaChart: {
+      primaryLabel: "New Schools",
+      secondaryLabel: "New Users",
+      trend: 15.2,
+      trendLabel: "Growth trend over time",
       data: [
-        { name: "Enterprise", value: 35 },
-        { name: "Pro", value: 45 },
-        { name: "Starter", value: 20 },
+        { label: "July", primary: 35, secondary: 12000 },
+        { label: "August", primary: 38, secondary: 15000 },
+        { label: "September", primary: 42, secondary: 18000 },
+        { label: "October", primary: 45, secondary: 22000 },
+        { label: "November", primary: 48, secondary: 25000 },
+        { label: "December", primary: 52, secondary: 28000 },
       ],
     },
   },
-}
-
-// ============================================================================
-// TREND CHART COMPONENT
-// ============================================================================
-
-function TrendChart({ title, data, type }: { title: string; data: TrendChartData; type: "line" | "bar" | "area" }) {
-  // Transform data for recharts
-  const chartData = data.labels.map((label, i) => ({
-    label,
-    current: data.current[i],
-    previous: data.previous?.[i],
-  }))
-
-  const config = type === "line" ? lineChartConfig : type === "bar" ? barChartConfig : areaChartConfig
-
-  return (
-    <Card className="border-none shadow-none bg-muted">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} className="aspect-auto h-[200px] w-full">
-          {type === "line" ? (
-            <LineChart data={chartData} margin={{ left: 12, right: 12 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Line
-                type="monotone"
-                dataKey="current"
-                stroke="var(--color-current)"
-                strokeWidth={2}
-                dot={false}
-              />
-              {data.previous && (
-                <Line
-                  type="monotone"
-                  dataKey="previous"
-                  stroke="var(--color-previous)"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                />
-              )}
-            </LineChart>
-          ) : type === "bar" ? (
-            <BarChart data={chartData} margin={{ left: 12, right: 12 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="current" fill="var(--color-value)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          ) : (
-            <AreaChart data={chartData} margin={{ left: 12, right: 12 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Area
-                type="monotone"
-                dataKey="current"
-                fill="var(--color-value)"
-                fillOpacity={0.4}
-                stroke="var(--color-value)"
-              />
-            </AreaChart>
-          )}
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  )
-}
-
-// ============================================================================
-// GAUGE CHART COMPONENT
-// ============================================================================
-
-function GaugeChart({ value, label, trend }: GaugeData) {
-  const gaugeData = [{ value, fill: "hsl(var(--chart-1))" }]
-
-  const gaugeConfig = {
-    value: {
-      label: label,
-      color: "hsl(var(--chart-1))",
-    },
-  } satisfies ChartConfig
-
-  return (
-    <Card className="flex flex-col border-none shadow-none bg-muted">
-      <CardContent className="flex-1 pb-0">
-        <ChartContainer config={gaugeConfig} className="mx-auto aspect-square max-h-[200px]">
-          <RadialBarChart
-            data={gaugeData}
-            startAngle={180}
-            endAngle={180 - (value / 100) * 180}
-            innerRadius={70}
-            outerRadius={100}
-          >
-            <PolarGrid
-              gridType="circle"
-              radialLines={false}
-              stroke="none"
-              className="first:fill-muted last:fill-background"
-              polarRadius={[76, 64]}
-            />
-            <RadialBar dataKey="value" background cornerRadius={10} />
-            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="fill-foreground text-3xl font-bold"
-                        >
-                          {value}%
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 20}
-                          className="fill-muted-foreground text-sm"
-                        >
-                          {label}
-                        </tspan>
-                      </text>
-                    )
-                  }
-                }}
-              />
-            </PolarRadiusAxis>
-          </RadialBarChart>
-        </ChartContainer>
-      </CardContent>
-      {trend !== undefined && (
-        <CardFooter className="flex-col gap-1 text-sm pb-4">
-          <div className="flex items-center gap-1 font-medium leading-none">
-            {trend >= 0 ? (
-              <>
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
-                <span className="text-emerald-500">+{trend}%</span>
-              </>
-            ) : (
-              <>
-                <TrendingDown className="h-4 w-4 text-red-500" />
-                <span className="text-red-500">{trend}%</span>
-              </>
-            )}
-            <span className="text-muted-foreground">vs last period</span>
-          </div>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-
-// ============================================================================
-// DISTRIBUTION CHART COMPONENT
-// ============================================================================
-
-function DistributionChart({ title, data, type }: { title: string; data: DistributionData[]; type: "bar" | "pie" }) {
-  const config = data.reduce((acc, item, i) => {
-    acc[item.name] = {
-      label: item.name,
-      color: pieColors[i % pieColors.length],
-    }
-    return acc
-  }, {} as ChartConfig)
-
-  return (
-    <Card className="border-none shadow-none bg-muted">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={config} className="aspect-auto h-[200px] w-full">
-          {type === "bar" ? (
-            <BarChart data={data} layout="vertical" margin={{ left: 0, right: 12 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis type="number" tickLine={false} axisLine={false} />
-              <YAxis
-                dataKey="name"
-                type="category"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={4}
-                width={60}
-                tick={{ fontSize: 12 }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="value" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          ) : (
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
-                paddingAngle={2}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </PieChart>
-          )}
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  )
 }
 
 // ============================================================================
@@ -612,7 +358,8 @@ function DistributionChart({ title, data, type }: { title: string; data: Distrib
 
 /**
  * Role-specific chart section for dashboards.
- * Displays 2-3 practical charts relevant to each role.
+ * Uses finance page layout: InteractiveBarChart (full width) +
+ * RadialTextChart & AreaChartStacked (2-column grid).
  */
 export function ChartSection({ role, className }: ChartSectionProps) {
   const [data, setData] = useState<RoleChartData>(
@@ -644,36 +391,32 @@ export function ChartSection({ role, className }: ChartSectionProps) {
     <section className={className}>
       <SectionHeading title={sectionTitle} />
       <div className="space-y-4">
-        {/* Top row: Trend chart (2/3) + Gauge (1/3) */}
-        <div className="grid gap-4 md:grid-cols-3">
-          {data.trendChart && (
-            <div className="md:col-span-2">
-              <TrendChart
-                title={data.trendChart.title}
-                data={data.trendChart.data}
-                type={data.trendChart.type}
-              />
-            </div>
-          )}
-          {data.gaugeChart && (
-            <div className="md:col-span-1">
-              <GaugeChart
-                value={data.gaugeChart.value}
-                label={data.gaugeChart.label}
-                trend={data.gaugeChart.trend}
-              />
-            </div>
-          )}
-        </div>
+        {/* Full width bar chart (like finance page) */}
+        <InteractiveBarChart
+          data={data.barChart.data}
+          title={data.barChart.title}
+          description={data.barChart.description}
+          primaryLabel={data.barChart.primaryLabel}
+          secondaryLabel={data.barChart.secondaryLabel}
+        />
 
-        {/* Bottom row: Distribution chart (full width or partial) */}
-        {data.distributionChart && (
-          <DistributionChart
-            title={data.distributionChart.title}
-            data={data.distributionChart.data}
-            type={data.distributionChart.type}
+        {/* 2-column grid: Radial + Area (like finance page) */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <RadialTextChart
+            value={data.radialChart.value}
+            label={data.radialChart.label}
+            trend={data.radialChart.trend}
+            trendLabel={data.radialChart.trendLabel}
+            maxValue={data.radialChart.maxValue}
           />
-        )}
+          <AreaChartStacked
+            data={data.areaChart.data}
+            primaryLabel={data.areaChart.primaryLabel}
+            secondaryLabel={data.areaChart.secondaryLabel}
+            trend={data.areaChart.trend}
+            trendLabel={data.areaChart.trendLabel}
+          />
+        </div>
       </div>
     </section>
   )
@@ -700,33 +443,32 @@ export function StaticChartSection({ role, data, className }: StaticChartSection
     <section className={className}>
       <SectionHeading title={sectionTitle} />
       <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
-          {chartData.trendChart && (
-            <div className="md:col-span-2">
-              <TrendChart
-                title={chartData.trendChart.title}
-                data={chartData.trendChart.data}
-                type={chartData.trendChart.type}
-              />
-            </div>
-          )}
-          {chartData.gaugeChart && (
-            <div className="md:col-span-1">
-              <GaugeChart
-                value={chartData.gaugeChart.value}
-                label={chartData.gaugeChart.label}
-                trend={chartData.gaugeChart.trend}
-              />
-            </div>
-          )}
-        </div>
-        {chartData.distributionChart && (
-          <DistributionChart
-            title={chartData.distributionChart.title}
-            data={chartData.distributionChart.data}
-            type={chartData.distributionChart.type}
+        {/* Full width bar chart (like finance page) */}
+        <InteractiveBarChart
+          data={chartData.barChart.data}
+          title={chartData.barChart.title}
+          description={chartData.barChart.description}
+          primaryLabel={chartData.barChart.primaryLabel}
+          secondaryLabel={chartData.barChart.secondaryLabel}
+        />
+
+        {/* 2-column grid: Radial + Area (like finance page) */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <RadialTextChart
+            value={chartData.radialChart.value}
+            label={chartData.radialChart.label}
+            trend={chartData.radialChart.trend}
+            trendLabel={chartData.radialChart.trendLabel}
+            maxValue={chartData.radialChart.maxValue}
           />
-        )}
+          <AreaChartStacked
+            data={chartData.areaChart.data}
+            primaryLabel={chartData.areaChart.primaryLabel}
+            secondaryLabel={chartData.areaChart.secondaryLabel}
+            trend={chartData.areaChart.trend}
+            trendLabel={chartData.areaChart.trendLabel}
+          />
+        </div>
       </div>
     </section>
   )

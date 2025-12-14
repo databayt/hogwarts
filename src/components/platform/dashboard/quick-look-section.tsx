@@ -72,7 +72,7 @@ export function QuickLookSection({ locale, subdomain, data }: QuickLookSectionPr
           const hasNew = item.data.newCount > 0
 
           return (
-            <Card key={item.label} className="p-4 transition-shadow hover:shadow-md">
+            <Card key={item.label} className="p-4">
               <CardContent className="p-0 space-y-3">
                 <div className="flex items-center gap-3">
                   <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>

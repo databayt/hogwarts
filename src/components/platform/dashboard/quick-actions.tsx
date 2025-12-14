@@ -104,9 +104,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
 
             const content = (
               <div className={cn(
-                "flex items-center gap-4 p-4 rounded-lg transition-all",
-                "hover:opacity-90 hover:shadow-md hover:scale-[1.02]",
-                "active:scale-[0.98]",
+                "flex items-center gap-4 p-4 rounded-lg",
                 color.bg
               )}>
                 <Icon className={cn("h-6 w-6 flex-shrink-0", color.text)} aria-hidden={true} />

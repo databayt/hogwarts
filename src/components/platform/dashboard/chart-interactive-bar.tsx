@@ -17,7 +17,21 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
+export interface InteractiveBarChartData {
+  date: string;
+  primary: number;
+  secondary: number;
+}
+
+export interface InteractiveBarChartProps {
+  data?: InteractiveBarChartData[];
+  title?: string;
+  description?: string;
+  primaryLabel?: string;
+  secondaryLabel?: string;
+}
+
+const defaultChartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
   { date: "2024-04-03", desktop: 167, mobile: 120 },
@@ -111,7 +125,7 @@ const chartData = [
   { date: "2024-06-30", desktop: 446, mobile: 400 },
 ];
 
-const chartConfig = {
+const defaultChartConfig = {
   views: {
     label: "Page Views",
   },
@@ -125,42 +139,75 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function InteractiveBarChart() {
+export function InteractiveBarChart({
+  data,
+  title = "Bar Chart - Interactive",
+  description = "Showing total visitors for the last 3 months",
+  primaryLabel = "Desktop",
+  secondaryLabel = "Mobile",
+}: InteractiveBarChartProps) {
+  // Transform custom data to use primary/secondary keys if provided
+  const chartData = React.useMemo(() => {
+    if (data) {
+      return data.map(d => ({
+        date: d.date,
+        primary: d.primary,
+        secondary: d.secondary,
+      }));
+    }
+    return defaultChartData.map(d => ({
+      date: d.date,
+      primary: d.desktop,
+      secondary: d.mobile,
+    }));
+  }, [data]);
+
+  const chartConfig = React.useMemo(() => ({
+    views: {
+      label: "Total",
+    },
+    primary: {
+      label: primaryLabel,
+      color: "hsl(var(--chart-1))",
+    },
+    secondary: {
+      label: secondaryLabel,
+      color: "hsl(var(--chart-2))",
+    },
+  }) satisfies ChartConfig, [primaryLabel, secondaryLabel]);
+
   const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("desktop");
+    React.useState<"primary" | "secondary">("primary");
 
   const total = React.useMemo(
     () => ({
-      desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
+      primary: chartData.reduce((acc, curr) => acc + curr.primary, 0),
+      secondary: chartData.reduce((acc, curr) => acc + curr.secondary, 0),
     }),
-    [],
+    [chartData],
   );
 
   return (
     <Card className="border-none shadow-none bg-muted">
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-          <CardTitle>Bar Chart - Interactive</CardTitle>
-          <CardDescription>
-            Showing total visitors for the last 3 months
-          </CardDescription>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </div>
         <div className="flex">
-          {["desktop", "mobile"].map((key) => {
-            const chart = key as keyof typeof chartConfig;
+          {(["primary", "secondary"] as const).map((key) => {
             return (
               <button
-                key={chart}
-                data-active={activeChart === chart}
+                key={key}
+                data-active={activeChart === key}
                 className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-                onClick={() => setActiveChart(chart)}
+                onClick={() => setActiveChart(key)}
               >
                 <span className="text-xs text-muted-foreground">
-                  {chartConfig[chart].label}
+                  {chartConfig[key].label}
                 </span>
                 <span className="text-lg font-bold leading-none sm:text-3xl">
-                  {total[key as keyof typeof total].toLocaleString()}
+                  {total[key].toLocaleString()}
                 </span>
               </button>
             );
