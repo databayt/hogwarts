@@ -8,8 +8,11 @@
  * Consider adding authentication or removing in production if not needed.
  *
  * Usage:
- *   curl https://ed.databayt.org/api/auth/debug
- *   curl http://localhost:3000/api/auth/debug
+ *   curl https://ed.databayt.org/api/debug-auth
+ *   curl http://localhost:3000/api/debug-auth
+ *
+ * NOTE: This endpoint is at /api/debug-auth (not /api/auth/debug) to avoid
+ * conflicts with NextAuth's [...nextauth] catch-all route.
  */
 
 import { cookies } from "next/headers"
@@ -24,7 +27,7 @@ import { authLogger } from "@/lib/auth-logger"
 export const dynamic = "force-dynamic"
 
 export async function GET() {
-  authLogger.api("GET", "/api/auth/debug", { action: "debug" })
+  authLogger.api("GET", "/api/debug-auth", { action: "debug" })
 
   try {
     // Get current session
