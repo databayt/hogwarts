@@ -37,7 +37,7 @@ interface DataTableSliderFilterProps<TData> {
   title?: string
 }
 
-export function DataTableSliderFilter<TData>({
+function DataTableSliderFilterInner<TData>({
   column,
   title,
 }: DataTableSliderFilterProps<TData>) {
@@ -238,3 +238,7 @@ export function DataTableSliderFilter<TData>({
     </Popover>
   )
 }
+
+export const DataTableSliderFilter = React.memo(
+  DataTableSliderFilterInner
+) as typeof DataTableSliderFilterInner

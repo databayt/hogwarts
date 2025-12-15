@@ -21,7 +21,7 @@ interface DataTableSkeletonProps extends React.ComponentProps<"div"> {
   shrinkZero?: boolean
 }
 
-export function DataTableSkeleton({
+function DataTableSkeletonInner({
   columnCount,
   rowCount = 10,
   filterCount = 0,
@@ -115,3 +115,5 @@ export function DataTableSkeleton({
     </div>
   )
 }
+
+export const DataTableSkeleton = React.memo(DataTableSkeletonInner)

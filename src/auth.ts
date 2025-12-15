@@ -98,30 +98,43 @@ export const {
   trustHost: true, // Required for OAuth in production (Vercel proxies)
   logger: {
     error(code, ...message: unknown[]) {
-      console.error("[AUTH ERROR]", code, message)
-      // Deep log the error cause for CallbackRouteError debugging
+      console.error("[AUTH ERROR]", code)
+      // Deep log the error and its cause chain for debugging
       if (message && message.length > 0) {
-        const err = message[0] as Record<string, unknown> | undefined
-        if (err && typeof err === "object") {
-          if ("cause" in err && err.cause) {
-            console.error(
-              "[AUTH ERROR CAUSE]",
-              JSON.stringify(err.cause, null, 2)
-            )
-            // If cause is an Error object, log its details
-            const cause = err.cause as Error | Record<string, unknown>
-            if (cause instanceof Error) {
-              console.error("[AUTH ERROR CAUSE DETAILS]", {
-                name: cause.name,
-                message: cause.message,
-                stack: cause.stack,
-              })
-            }
+        const err = message[0]
+        // Log the full error object
+        console.error("[AUTH ERROR FULL]", err)
+
+        // Try to extract and log the cause chain
+        const extractCause = (obj: unknown, depth = 0): void => {
+          if (depth > 5) return // Prevent infinite loops
+          if (!obj || typeof obj !== "object") return
+
+          const errObj = obj as Record<string, unknown>
+
+          // Log error type if available
+          if (errObj.type) {
+            console.error(`[AUTH ERROR TYPE (depth ${depth})]`, errObj.type)
           }
-          if ("type" in err) {
-            console.error("[AUTH ERROR TYPE]", err.type)
+
+          // Log error name and message if it's an Error-like object
+          if (errObj.name || errObj.message) {
+            console.error(`[AUTH ERROR DETAILS (depth ${depth})]`, {
+              name: errObj.name,
+              message: errObj.message,
+              code: errObj.code,
+              meta: errObj.meta,
+            })
+          }
+
+          // Recurse into cause if present
+          if (errObj.cause) {
+            console.error(`[AUTH ERROR CAUSE (depth ${depth})]`, errObj.cause)
+            extractCause(errObj.cause, depth + 1)
           }
         }
+
+        extractCause(err, 0)
       }
     },
     warn(code, ...message: unknown[]) {

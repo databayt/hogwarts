@@ -25,7 +25,7 @@ interface DataTableViewOptionsProps<TData> {
   table: Table<TData>
 }
 
-export function DataTableViewOptions<TData>({
+function DataTableViewOptionsInner<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
   const columns = React.useMemo(
@@ -107,3 +107,7 @@ export function DataTableViewOptions<TData>({
     </Popover>
   )
 }
+
+export const DataTableViewOptions = React.memo(
+  DataTableViewOptionsInner
+) as typeof DataTableViewOptionsInner

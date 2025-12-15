@@ -45,7 +45,7 @@ interface DataTableSortListProps<TData> extends React.ComponentProps<
   table: Table<TData>
 }
 
-export function DataTableSortList<TData>({
+function DataTableSortListInner<TData>({
   table,
   ...props
 }: DataTableSortListProps<TData>) {
@@ -394,3 +394,7 @@ function DataTableSortItem({
     </SortableItem>
   )
 }
+
+export const DataTableSortList = React.memo(
+  DataTableSortListInner
+) as typeof DataTableSortListInner

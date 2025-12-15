@@ -16,7 +16,7 @@ interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
   table: Table<TData>
 }
 
-export function DataTableToolbar<TData>({
+function DataTableToolbarInner<TData>({
   table,
   children,
   className,
@@ -147,3 +147,7 @@ function DataTableToolbarFilter<TData>({
     return onFilterRender()
   }
 }
+
+export const DataTableToolbar = React.memo(
+  DataTableToolbarInner
+) as typeof DataTableToolbarInner

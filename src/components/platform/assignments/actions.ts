@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -62,7 +63,8 @@ export async function createAssignment(
 
     const parsed = assignmentCreateSchema.parse(input)
 
-    const row = await (db as any).assignment.create({
+    const assignmentModel = getModelOrThrow("assignment")
+    const row = await assignmentModel.create({
       data: {
         schoolId,
         title: parsed.title,
@@ -110,7 +112,8 @@ export async function updateAssignment(
     const { id, ...rest } = parsed
 
     // Verify assignment exists
-    const existing = await (db as any).assignment.findFirst({
+    const assignmentModel = getModelOrThrow("assignment")
+    const existing = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: { id: true },
     })
@@ -132,7 +135,7 @@ export async function updateAssignment(
     if (typeof rest.instructions !== "undefined")
       data.instructions = rest.instructions || null
 
-    await (db as any).assignment.updateMany({ where: { id, schoolId }, data })
+    await assignmentModel.updateMany({ where: { id, schoolId }, data })
 
     revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: undefined }
@@ -166,7 +169,8 @@ export async function deleteAssignment(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Verify assignment exists
-    const existing = await (db as any).assignment.findFirst({
+    const assignmentModel = getModelOrThrow("assignment")
+    const existing = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: { id: true },
     })
@@ -175,7 +179,7 @@ export async function deleteAssignment(input: {
       return { success: false, error: "Assignment not found" }
     }
 
-    await (db as any).assignment.deleteMany({ where: { id, schoolId } })
+    await assignmentModel.deleteMany({ where: { id, schoolId } })
 
     revalidatePath(ASSIGNMENTS_PATH)
     return { success: true, data: undefined }
@@ -212,11 +216,8 @@ export async function getAssignment(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    if (!(db as any).assignment) {
-      return { success: true, data: null }
-    }
-
-    const assignment = await (db as any).assignment.findFirst({
+    const assignmentModel = getModelOrThrow("assignment")
+    const assignment = await assignmentModel.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
@@ -265,10 +266,7 @@ export async function getAssignments(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    if (!(db as any).assignment) {
-      return { success: true, data: { rows: [], total: 0 } }
-    }
-
+    const assignmentModel = getModelOrThrow("assignment")
     const where: any = {
       schoolId,
       ...(sp.title
@@ -286,7 +284,7 @@ export async function getAssignments(
         : [{ createdAt: "desc" }]
 
     const [rows, count] = await Promise.all([
-      (db as any).assignment.findMany({
+      assignmentModel.findMany({
         where,
         orderBy,
         skip,
@@ -299,7 +297,7 @@ export async function getAssignments(
           },
         },
       }),
-      (db as any).assignment.count({ where }),
+      assignmentModel.count({ where }),
     ])
 
     const mapped: AssignmentListResult[] = (rows as Array<any>).map((a) => ({
@@ -344,10 +342,7 @@ export async function getAssignmentsCSV(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    if (!(db as any).assignment) {
-      return { success: true, data: "" }
-    }
-
+    const assignmentModel = getModelOrThrow("assignment")
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -359,7 +354,7 @@ export async function getAssignmentsCSV(
     }
 
     // Fetch ALL assignments matching filters (no pagination for export)
-    const assignments = await (db as any).assignment.findMany({
+    const assignments = await assignmentModel.findMany({
       where,
       include: {
         class: {
@@ -460,10 +455,7 @@ export async function getAssignmentsExportData(
 
     const sp = getAssignmentsSchema.parse(input ?? {})
 
-    if (!(db as any).assignment) {
-      return { success: true, data: [] }
-    }
-
+    const assignmentModel = getModelOrThrow("assignment")
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -475,7 +467,7 @@ export async function getAssignmentsExportData(
     }
 
     // Fetch ALL assignments matching filters (no pagination for export)
-    const assignments = await (db as any).assignment.findMany({
+    const assignments = await assignmentModel.findMany({
       where,
       include: {
         class: {

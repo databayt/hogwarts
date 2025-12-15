@@ -1,4 +1,4 @@
-import type * as React from "react"
+import * as React from "react"
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
 
 import "@/components/table/types" // Import type augmentation for ColumnMeta.align
@@ -25,7 +25,7 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   onLoadMore?: () => void
 }
 
-export function DataTable<TData>({
+function DataTableInner<TData>({
   table,
   actionBar,
   children,
@@ -140,3 +140,5 @@ export function DataTable<TData>({
     </div>
   )
 }
+
+export const DataTable = React.memo(DataTableInner) as typeof DataTableInner

@@ -598,14 +598,14 @@ export async function linkGuardian(
 
     // If setting as primary, unset other primaries
     if (parsed.isPrimary) {
-      await (db as any).studentGuardian.updateMany({
+      await studentGuardianModel.updateMany({
         where: { schoolId, studentId: parsed.studentId, isPrimary: true },
         data: { isPrimary: false },
       })
     }
 
     // Create the relationship
-    const studentGuardian = await (db as any).studentGuardian.create({
+    const studentGuardian = await studentGuardianModel.create({
       data: {
         schoolId,
         studentId: parsed.studentId,
@@ -786,7 +786,8 @@ export async function updateGuardianLink(
     const parsed = updateGuardianLinkSchema.parse(input)
 
     // Verify relationship exists
-    const existing = await (db as any).studentGuardian.findFirst({
+    const studentGuardianModel = getModelOrThrow("studentGuardian")
+    const existing = await studentGuardianModel.findFirst({
       where: { id: parsed.studentGuardianId, schoolId },
     })
 
@@ -796,7 +797,7 @@ export async function updateGuardianLink(
 
     // If setting as primary, unset other primaries
     if (parsed.isPrimary) {
-      await (db as any).studentGuardian.updateMany({
+      await studentGuardianModel.updateMany({
         where: {
           schoolId,
           studentId: existing.studentId,
@@ -820,7 +821,7 @@ export async function updateGuardianLink(
     if (typeof parsed.notes !== "undefined")
       updateData.notes = parsed.notes || null
 
-    await (db as any).studentGuardian.update({
+    await studentGuardianModel.update({
       where: { id: parsed.studentGuardianId },
       data: updateData,
     })
@@ -863,7 +864,8 @@ export async function unlinkGuardian(
     const parsed = unlinkGuardianSchema.parse(input)
 
     // Verify relationship exists and get student ID for revalidation
-    const existing = await (db as any).studentGuardian.findFirst({
+    const studentGuardianModel = getModelOrThrow("studentGuardian")
+    const existing = await studentGuardianModel.findFirst({
       where: { id: parsed.studentGuardianId, schoolId },
     })
 
@@ -872,7 +874,7 @@ export async function unlinkGuardian(
     }
 
     // Delete the relationship
-    await (db as any).studentGuardian.delete({
+    await studentGuardianModel.delete({
       where: { id: parsed.studentGuardianId },
     })
 
@@ -909,7 +911,8 @@ export async function getGuardianTypes(): Promise<
       return { success: false, error: "Missing school context" }
     }
 
-    const types = await (db as any).guardianType.findMany({
+    const guardianTypeModel = getModelOrThrow("guardianType")
+    const types = await guardianTypeModel.findMany({
       where: { schoolId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
@@ -919,12 +922,12 @@ export async function getGuardianTypes(): Promise<
     if (types.length === 0) {
       const defaultTypes = ["father", "mother", "guardian", "other"]
       for (const typeName of defaultTypes) {
-        await (db as any).guardianType.create({
+        await guardianTypeModel.create({
           data: { schoolId, name: typeName },
         })
       }
 
-      const newTypes = await (db as any).guardianType.findMany({
+      const newTypes = await guardianTypeModel.findMany({
         where: { schoolId },
         select: { id: true, name: true },
         orderBy: { name: "asc" },
@@ -970,7 +973,8 @@ export async function searchGuardians(query: string): Promise<
       return { success: true, data: [] }
     }
 
-    const guardians = await (db as any).guardian.findMany({
+    const guardianModel = getModelOrThrow("guardian")
+    const guardians = await guardianModel.findMany({
       where: {
         schoolId,
         OR: [

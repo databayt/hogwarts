@@ -64,6 +64,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -334,7 +335,8 @@ export async function enrollStudentInClass(input: {
     }
 
     // Verify student exists in school
-    const student = await (db as any).student.findFirst({
+    const studentModel = getModelOrThrow("student")
+    const student = await studentModel.findFirst({
       where: { id: studentId, schoolId },
       select: { id: true, givenName: true, surname: true },
     })
@@ -344,7 +346,8 @@ export async function enrollStudentInClass(input: {
     }
 
     // Check if student is already enrolled
-    const existingEnrollment = await (db as any).studentClass.findFirst({
+    const studentClassModel = getModelOrThrow("studentClass")
+    const existingEnrollment = await studentClassModel.findFirst({
       where: { classId, studentId, schoolId },
     })
 
@@ -367,7 +370,7 @@ export async function enrollStudentInClass(input: {
     }
 
     // Create enrollment
-    await (db as any).studentClass.create({
+    await studentClassModel.create({
       data: {
         schoolId,
         studentId,
@@ -427,7 +430,8 @@ export async function unenrollStudentFromClass(input: {
       .parse(input)
 
     // Verify enrollment exists
-    const enrollment = await (db as any).studentClass.findFirst({
+    const studentClassModel = getModelOrThrow("studentClass")
+    const enrollment = await studentClassModel.findFirst({
       where: { classId, studentId, schoolId },
     })
 
@@ -436,7 +440,7 @@ export async function unenrollStudentFromClass(input: {
     }
 
     // Delete enrollment
-    await (db as any).studentClass.deleteMany({
+    await studentClassModel.deleteMany({
       where: { classId, studentId, schoolId },
     })
 
@@ -667,7 +671,8 @@ export async function getClassById(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    const classItem = await (db as any).class.findFirst({
+    const classModel = getModelOrThrow("class")
+    const classItem = await classModel.findFirst({
       where: { id, schoolId },
       include: {
         subject: {
@@ -1266,7 +1271,8 @@ export async function assignSubjectTeacher(
     }
 
     // Verify teacher exists and belongs to school
-    const teacher = await (db as any).teacher.findFirst({
+    const teacherModel = getModelOrThrow("teacher")
+    const teacher = await teacherModel.findFirst({
       where: { id: parsed.teacherId, schoolId },
       select: { id: true, givenName: true, surname: true },
     })
@@ -1276,7 +1282,8 @@ export async function assignSubjectTeacher(
     }
 
     // Check for duplicate assignment
-    const existing = await (db as any).classTeacher.findFirst({
+    const classTeacherModel = getModelOrThrow("classTeacher")
+    const existing = await classTeacherModel.findFirst({
       where: {
         classId: parsed.classId,
         teacherId: parsed.teacherId,
@@ -1292,7 +1299,7 @@ export async function assignSubjectTeacher(
     }
 
     // Create assignment
-    const assignment = await (db as any).classTeacher.create({
+    const assignment = await classTeacherModel.create({
       data: {
         schoolId,
         classId: parsed.classId,
@@ -1339,7 +1346,8 @@ export async function updateSubjectTeacher(input: {
     const parsed = classTeacherUpdateSchema.parse(input)
 
     // Verify assignment exists
-    const existing = await (db as any).classTeacher.findFirst({
+    const classTeacherModel = getModelOrThrow("classTeacher")
+    const existing = await classTeacherModel.findFirst({
       where: { id: parsed.id, schoolId },
       select: { id: true, classId: true },
     })
@@ -1348,7 +1356,7 @@ export async function updateSubjectTeacher(input: {
       return { success: false, error: "Assignment not found" }
     }
 
-    await (db as any).classTeacher.update({
+    await classTeacherModel.update({
       where: { id: parsed.id },
       data: { role: parsed.role },
     })
@@ -1390,7 +1398,8 @@ export async function removeSubjectTeacher(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Verify assignment exists
-    const existing = await (db as any).classTeacher.findFirst({
+    const classTeacherModel = getModelOrThrow("classTeacher")
+    const existing = await classTeacherModel.findFirst({
       where: { id, schoolId },
       select: { id: true, classId: true },
     })
@@ -1399,7 +1408,7 @@ export async function removeSubjectTeacher(input: {
       return { success: false, error: "Assignment not found" }
     }
 
-    await (db as any).classTeacher.delete({
+    await classTeacherModel.delete({
       where: { id },
     })
 
@@ -1449,7 +1458,8 @@ export async function getClassSubjectTeachers(input: {
       return { success: false, error: "Class not found" }
     }
 
-    const assignments = await (db as any).classTeacher.findMany({
+    const classTeacherModel = getModelOrThrow("classTeacher")
+    const assignments = await classTeacherModel.findMany({
       where: { classId, schoolId },
       include: {
         teacher: {
@@ -1512,7 +1522,8 @@ export async function getAvailableTeachersForClass(input: {
     const { classId } = z.object({ classId: z.string().min(1) }).parse(input)
 
     // Get already assigned teacher IDs
-    const assignedTeachers = await (db as any).classTeacher.findMany({
+    const classTeacherModel = getModelOrThrow("classTeacher")
+    const assignedTeachers = await classTeacherModel.findMany({
       where: { classId, schoolId },
       select: { teacherId: true },
     })
@@ -1520,7 +1531,8 @@ export async function getAvailableTeachersForClass(input: {
     const assignedIds = assignedTeachers.map((t: any) => t.teacherId)
 
     // Get all teachers not in assignedIds
-    const teachers = await (db as any).teacher.findMany({
+    const teacherModel = getModelOrThrow("teacher")
+    const teachers = await teacherModel.findMany({
       where: {
         schoolId,
         id: { notIn: assignedIds.length > 0 ? assignedIds : undefined },

@@ -68,6 +68,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -113,7 +114,7 @@ export async function createTeacher(
     const parsed = teacherCreateSchema.parse(input)
 
     // Use transaction to ensure all related data is created atomically
-    const result = await (db as any).$transaction(async (tx: any) => {
+    const result = await db.$transaction(async (tx: any) => {
       // Create teacher with all basic + employment fields
       const teacher = await tx.teacher.create({
         data: {
@@ -261,7 +262,7 @@ export async function updateTeacher(
       data.contractEndDate = rest.contractEndDate
 
     // Use transaction for atomic updates
-    await (db as any).$transaction(async (tx: any) => {
+    await db.$transaction(async (tx: any) => {
       // Update teacher basic info
       await tx.teacher.updateMany({ where: { id, schoolId }, data })
 
