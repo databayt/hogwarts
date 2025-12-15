@@ -29,7 +29,7 @@ export const DEMO_PASSWORD = "1234";
 export const DEMO_SCHOOL = {
   // Identity
   domain: "demo",
-  nameAr: "مدرسة دار بايت التجريبية",
+  nameAr: "مدرسة تجريبية",
   nameEn: "Demo School",
 
   // Contact
@@ -444,31 +444,119 @@ export interface ClassroomData {
 }
 
 export const CLASSROOMS: ClassroomData[] = [
-  // KG Classrooms
+  // ============================================================================
+  // KG SECTION (Ground Floor) - 4 Rooms
+  // ============================================================================
   { nameAr: "غرفة الروضة ١", nameEn: "KG Room 1", typeAr: "فصل روضة", typeEn: "KG Classroom", capacity: 20, floor: 0 },
   { nameAr: "غرفة الروضة ٢", nameEn: "KG Room 2", typeAr: "فصل روضة", typeEn: "KG Classroom", capacity: 20, floor: 0 },
+  { nameAr: "غرفة الروضة ٣", nameEn: "KG Room 3", typeAr: "فصل روضة", typeEn: "KG Classroom", capacity: 20, floor: 0 },
+  { nameAr: "غرفة الروضة ٤", nameEn: "KG Room 4", typeAr: "فصل روضة", typeEn: "KG Classroom", capacity: 20, floor: 0 },
 
-  // Primary Classrooms (Ground Floor)
+  // ============================================================================
+  // PRIMARY SECTION (First Floor) - 18 Rooms (6 grades × 3 sections)
+  // ============================================================================
   { nameAr: "الفصل ١٠١", nameEn: "Room 101", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
   { nameAr: "الفصل ١٠٢", nameEn: "Room 102", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
   { nameAr: "الفصل ١٠٣", nameEn: "Room 103", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
   { nameAr: "الفصل ١٠٤", nameEn: "Room 104", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
   { nameAr: "الفصل ١٠٥", nameEn: "Room 105", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
   { nameAr: "الفصل ١٠٦", nameEn: "Room 106", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١٠٧", nameEn: "Room 107", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١٠٨", nameEn: "Room 108", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١٠٩", nameEn: "Room 109", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٠", nameEn: "Room 110", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١١", nameEn: "Room 111", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٢", nameEn: "Room 112", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٣", nameEn: "Room 113", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٤", nameEn: "Room 114", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٥", nameEn: "Room 115", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٦", nameEn: "Room 116", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٧", nameEn: "Room 117", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
+  { nameAr: "الفصل ١١٨", nameEn: "Room 118", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 25, floor: 1 },
 
-  // Intermediate & Secondary Classrooms (Second Floor)
+  // ============================================================================
+  // INTERMEDIATE & SECONDARY SECTION (Second Floor) - 18 Rooms (6 grades × 3 sections)
+  // ============================================================================
   { nameAr: "الفصل ٢٠١", nameEn: "Room 201", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
   { nameAr: "الفصل ٢٠٢", nameEn: "Room 202", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
   { nameAr: "الفصل ٢٠٣", nameEn: "Room 203", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
   { nameAr: "الفصل ٢٠٤", nameEn: "Room 204", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢٠٥", nameEn: "Room 205", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢٠٦", nameEn: "Room 206", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢٠٧", nameEn: "Room 207", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢٠٨", nameEn: "Room 208", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢٠٩", nameEn: "Room 209", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٠", nameEn: "Room 210", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١١", nameEn: "Room 211", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٢", nameEn: "Room 212", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٣", nameEn: "Room 213", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٤", nameEn: "Room 214", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٥", nameEn: "Room 215", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٦", nameEn: "Room 216", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٧", nameEn: "Room 217", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
+  { nameAr: "الفصل ٢١٨", nameEn: "Room 218", typeAr: "فصل دراسي", typeEn: "Standard Classroom", capacity: 30, floor: 2 },
 
-  // Specialized Rooms
-  { nameAr: "معمل العلوم", nameEn: "Science Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 25, floor: 1 },
-  { nameAr: "معمل الحاسوب", nameEn: "Computer Lab", typeAr: "معمل حاسوب", typeEn: "Computer Lab", capacity: 25, floor: 2 },
-  { nameAr: "المكتبة", nameEn: "Library", typeAr: "مكتبة", typeEn: "Library", capacity: 40, floor: 0 },
-  { nameAr: "غرفة الفنون", nameEn: "Art Room", typeAr: "غرفة فنون", typeEn: "Art Room", capacity: 20, floor: 1 },
+  // ============================================================================
+  // SPECIALIZED SCIENCE LABS (Ground & First Floor) - 5 Labs
+  // ============================================================================
+  { nameAr: "معمل العلوم العام", nameEn: "General Science Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 25, floor: 1 },
+  { nameAr: "معمل الفيزياء", nameEn: "Physics Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 25, floor: 2 },
+  { nameAr: "معمل الكيمياء", nameEn: "Chemistry Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 25, floor: 2 },
+  { nameAr: "معمل الأحياء", nameEn: "Biology Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 25, floor: 2 },
+  { nameAr: "معمل العلوم للابتدائي", nameEn: "Primary Science Lab", typeAr: "معمل", typeEn: "Laboratory", capacity: 20, floor: 1 },
+
+  // ============================================================================
+  // COMPUTER LABS - 3 Labs
+  // ============================================================================
+  { nameAr: "معمل الحاسوب ١", nameEn: "Computer Lab 1", typeAr: "معمل حاسوب", typeEn: "Computer Lab", capacity: 30, floor: 2 },
+  { nameAr: "معمل الحاسوب ٢", nameEn: "Computer Lab 2", typeAr: "معمل حاسوب", typeEn: "Computer Lab", capacity: 30, floor: 2 },
+  { nameAr: "معمل الحاسوب للابتدائي", nameEn: "Primary Computer Lab", typeAr: "معمل حاسوب", typeEn: "Computer Lab", capacity: 20, floor: 1 },
+
+  // ============================================================================
+  // ARTS & SPECIAL ROOMS - 4 Rooms
+  // ============================================================================
+  { nameAr: "غرفة الفنون", nameEn: "Art Room", typeAr: "غرفة فنون", typeEn: "Art Room", capacity: 25, floor: 1 },
+  { nameAr: "غرفة الموسيقى", nameEn: "Music Room", typeAr: "غرفة موسيقى", typeEn: "Music Room", capacity: 30, floor: 1 },
+  { nameAr: "قاعة الأنشطة", nameEn: "Activity Hall", typeAr: "قاعة أنشطة", typeEn: "Activity Hall", capacity: 50, floor: 0 },
+  { nameAr: "غرفة المصادر", nameEn: "Resource Room", typeAr: "غرفة مصادر", typeEn: "Resource Room", capacity: 15, floor: 1 },
+
+  // ============================================================================
+  // LIBRARY & READING ROOMS - 2 Rooms
+  // ============================================================================
+  { nameAr: "المكتبة الرئيسية", nameEn: "Main Library", typeAr: "مكتبة", typeEn: "Library", capacity: 60, floor: 0 },
+  { nameAr: "غرفة المطالعة", nameEn: "Reading Room", typeAr: "غرفة مطالعة", typeEn: "Reading Room", capacity: 30, floor: 0 },
+
+  // ============================================================================
+  // SPORTS & PHYSICAL EDUCATION - 3 Areas
+  // ============================================================================
   { nameAr: "الصالة الرياضية", nameEn: "Sports Hall", typeAr: "صالة رياضية", typeEn: "Sports Hall", capacity: 100, floor: 0 },
-];
+  { nameAr: "الملعب الخارجي", nameEn: "Outdoor Field", typeAr: "ملعب", typeEn: "Sports Field", capacity: 200, floor: 0 },
+  { nameAr: "غرفة اللياقة", nameEn: "Fitness Room", typeAr: "غرفة لياقة", typeEn: "Fitness Room", capacity: 20, floor: 0 },
+
+  // ============================================================================
+  // ADMINISTRATION OFFICES - 5 Rooms
+  // ============================================================================
+  { nameAr: "مكتب المدير", nameEn: "Principal Office", typeAr: "مكتب إداري", typeEn: "Administrative Office", capacity: 10, floor: 0 },
+  { nameAr: "مكتب نائب المدير", nameEn: "Vice Principal Office", typeAr: "مكتب إداري", typeEn: "Administrative Office", capacity: 8, floor: 0 },
+  { nameAr: "مكتب الشؤون الطلابية", nameEn: "Student Affairs Office", typeAr: "مكتب إداري", typeEn: "Administrative Office", capacity: 15, floor: 0 },
+  { nameAr: "مكتب الإرشاد", nameEn: "Counseling Office", typeAr: "مكتب إداري", typeEn: "Administrative Office", capacity: 6, floor: 0 },
+  { nameAr: "مكتب التسجيل", nameEn: "Registration Office", typeAr: "مكتب إداري", typeEn: "Administrative Office", capacity: 10, floor: 0 },
+
+  // ============================================================================
+  // TEACHER WORKROOMS - 3 Rooms
+  // ============================================================================
+  { nameAr: "غرفة المعلمين الرئيسية", nameEn: "Main Staff Room", typeAr: "غرفة معلمين", typeEn: "Staff Room", capacity: 40, floor: 1 },
+  { nameAr: "غرفة معلمي الثانوي", nameEn: "Secondary Staff Room", typeAr: "غرفة معلمين", typeEn: "Staff Room", capacity: 25, floor: 2 },
+  { nameAr: "غرفة معلمي الابتدائي", nameEn: "Primary Staff Room", typeAr: "غرفة معلمين", typeEn: "Staff Room", capacity: 25, floor: 1 },
+
+  // ============================================================================
+  // SUPPORT FACILITIES - 4 Rooms
+  // ============================================================================
+  { nameAr: "العيادة الصحية", nameEn: "Health Clinic", typeAr: "عيادة", typeEn: "Clinic", capacity: 10, floor: 0 },
+  { nameAr: "المقصف", nameEn: "Cafeteria", typeAr: "مقصف", typeEn: "Cafeteria", capacity: 100, floor: 0 },
+  { nameAr: "قاعة الاجتماعات", nameEn: "Meeting Hall", typeAr: "قاعة اجتماعات", typeEn: "Meeting Room", capacity: 50, floor: 0 },
+  { nameAr: "القاعة الكبرى", nameEn: "Assembly Hall", typeAr: "قاعة كبرى", typeEn: "Assembly Hall", capacity: 300, floor: 0 },
+]; // Total: 55 Rooms
 
 // ============================================================================
 // PERIODS (Bilingual) - Sudanese School Day

@@ -4,6 +4,17 @@
 
 The Attendance feature empowers school administrators and teachers to track student presence, manage absences, generate reports, and ensure compliance with attendance regulations through comprehensive daily and period-by-period tracking.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/attendance` | Mark Attendance | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/attendance/history` | Attendance History | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/attendance/reports` | Reports & Export | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/attendance/analytics` | Analytics Dashboard | 🚧 In Progress |
+| `/[lang]/s/[subdomain]/(platform)/attendance/qr` | QR Code Attendance | 🚧 In Progress |
+| `/[lang]/s/[subdomain]/(platform)/attendance/geofence` | Geofence Attendance | ⏸️ Planned |
+
 ### What Admins Can Do
 
 **Core Capabilities:**

@@ -192,6 +192,9 @@ model StudentGuardian {
   guardianId     String
   guardianTypeId String
   isPrimary      Boolean @default(false)
+  occupation     String? // Guardian's job title
+  workplace      String? // Guardian's employer
+  notes          String? @db.Text // Additional notes about the relationship
 
   school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)

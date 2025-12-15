@@ -1,6 +1,5 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -8,9 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { FileText, Receipt, Building2, CreditCard, DollarSign, Users, Clock, Wallet, TrendingUp, BookOpen, CircleAlert } from "lucide-react"
+import { FileText, CreditCard, Users, TrendingUp, CircleAlert, ChevronRight, FileBarChart, DollarSign } from "lucide-react"
 import Image from 'next/image'
-import { PieChart, FileBarChart } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -115,16 +113,6 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.finance
 
-  // Secondary pages for quick access section (hidden from main nav)
-  const secondaryPages = [
-    { name: d?.navigation?.receipt || 'Receipt', href: `/${lang}/finance/receipt` },
-    { name: d?.navigation?.timesheet || 'Timesheet', href: `/${lang}/finance/timesheet` },
-    { name: d?.navigation?.wallet || 'Wallet', href: `/${lang}/finance/wallet` },
-    { name: d?.navigation?.budget || 'Budget', href: `/${lang}/finance/budget` },
-    { name: d?.navigation?.expenses || 'Expenses', href: `/${lang}/finance/expenses` },
-    { name: d?.navigation?.accounts || 'Accounts', href: `/${lang}/finance/accounts` },
-  ]
-
   return (
     <div className="space-y-6">
       {/* Overview Stats - Financial Health */}
@@ -220,528 +208,183 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         </div>
       </div>
 
-      {/* More Features - Secondary Navigation Links */}
-      <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {d?.moreFeatures || 'More Features'}
-            </CardTitle>
-            <CardDescription>
-              {d?.moreFeaturesDescription || 'Additional finance management tools and utilities'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {secondaryPages.map((page) => {
-                const getDescription = (pageName: string) => {
-                  if (pageName === (d?.navigation?.receipt || 'Receipt')) return d?.quickAccess?.receipt || 'Expense receipts & scanning'
-                  if (pageName === (d?.navigation?.timesheet || 'Timesheet')) return d?.quickAccess?.timesheet || 'Staff time tracking'
-                  if (pageName === (d?.navigation?.wallet || 'Wallet')) return d?.quickAccess?.wallet || 'School & parent wallets'
-                  if (pageName === (d?.navigation?.budget || 'Budget')) return d?.quickAccess?.budget || 'Budget planning & variance'
-                  if (pageName === (d?.navigation?.expenses || 'Expenses')) return d?.quickAccess?.expenses || 'Expense approval workflow'
-                  if (pageName === (d?.navigation?.accounts || 'Accounts')) return d?.quickAccess?.accounts || 'Chart of accounts & ledger'
-                  return ''
-                }
-
-                return (
-                  <Button
-                    key={page.href}
-                    asChild
-                    variant="outline"
-                    className="justify-start h-auto py-3"
-                  >
-                    <Link href={page.href}>
-                      {page.name === (d?.navigation?.receipt || 'Receipt') && <Receipt className="mr-2 h-4 w-4" />}
-                      {page.name === (d?.navigation?.timesheet || 'Timesheet') && <Clock className="mr-2 h-4 w-4" />}
-                      {page.name === (d?.navigation?.wallet || 'Wallet') && <Wallet className="mr-2 h-4 w-4" />}
-                      {page.name === (d?.navigation?.budget || 'Budget') && <PieChart className="mr-2 h-4 w-4" />}
-                      {page.name === (d?.navigation?.expenses || 'Expenses') && <TrendingUp className="mr-2 h-4 w-4" />}
-                      {page.name === (d?.navigation?.accounts || 'Accounts') && <BookOpen className="mr-2 h-4 w-4" />}
-                      <span className="flex flex-col items-start">
-                        <span className="font-medium">{page.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {getDescription(page.name)}
-                        </span>
-                      </span>
-                    </Link>
-                  </Button>
-                )
-              })}
-            </div>
-          </CardContent>
-      </Card>
-
-      {/* Finance Sub-Blocks Navigation */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Invoice Block */}
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+      {/* Finance Quick Look */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {/* Invoicing */}
+        <Card className="p-4">
+          <CardContent className="p-0 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
                 <FileText className="h-5 w-5 text-primary" />
-                {d?.cards?.invoicing?.title || 'Invoicing'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.invoicing?.description || 'Client invoicing and billing management'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.invoicing?.details || 'Create professional invoices, track payments, and manage client billing.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild>
-                  <Link href={`/${lang}/finance/invoice`}>
-                    <FileText className="mr-2 h-4 w-4" />
-                    {d?.cards?.invoicing?.viewAll || 'View All Invoices'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/invoice/new`}>
-                    {d?.cards?.invoicing?.create || 'Create Invoice'}
-                  </Link>
-                </Button>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{d?.cards?.invoicing?.title || 'Invoicing'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">{invoicesCount}</p>
+                  {unpaidInvoices > 0 && (
+                    <span className="text-[10px] px-1.5 py-0 rounded bg-destructive/10 text-destructive">
+                      {unpaidInvoices} unpaid
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Link
+              href={`/${lang}/finance/invoice`}
+              className="inline-flex items-center text-xs text-primary hover:underline"
+            >
+              {d?.cards?.invoicing?.viewAll || 'View All'} <ChevronRight className="ml-1 h-3 w-3" />
+            </Link>
+          </CardContent>
+        </Card>
 
-          {/* Receipt Block */}
-          <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-blue-500" />
-                {d?.cards?.receipts?.title || 'Receipts'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.receipts?.description || 'Receipt generation and expense tracking'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.receipts?.details || 'Generate receipts, scan expenses with AI OCR, and track all transactions.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/receipt`}>
-                    <Receipt className="mr-2 h-4 w-4" />
-                    {d?.cards?.receipts?.viewAll || 'View All Receipts'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/receipt/upload`}>
-                    {d?.cards?.receipts?.upload || 'Upload Receipt'}
-                  </Link>
-                </Button>
+        {/* Fee Collection */}
+        <Card className="p-4">
+          <CardContent className="p-0 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
+                <CreditCard className="h-5 w-5 text-emerald-500" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{d?.cards?.fees?.title || 'Fee Collection'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">{studentsWithFeesCount}</p>
+                  <span className="text-[10px] px-1.5 py-0 rounded bg-muted text-muted-foreground">
+                    students
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Link
+              href={`/${lang}/finance/fees`}
+              className="inline-flex items-center text-xs text-primary hover:underline"
+            >
+              {d?.cards?.fees?.viewStructures || 'View Fees'} <ChevronRight className="ml-1 h-3 w-3" />
+            </Link>
+          </CardContent>
+        </Card>
 
-          {/* Banking Block */}
-          <Card className="border-green-500/20 hover:border-green-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-green-500" />
-                {d?.cards?.banking?.title || 'Banking'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.banking?.description || 'Bank accounts and transaction management'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.banking?.details || 'Connect bank accounts, track transactions, manage transfers, and reconcile.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/banking`}>
-                    <Building2 className="mr-2 h-4 w-4" />
-                    {d?.cards?.banking?.viewAccounts || 'View Accounts'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/banking/connect`}>
-                    {d?.cards?.banking?.connect || 'Connect Bank'}
-                  </Link>
-                </Button>
+        {/* Payroll */}
+        <Card className="p-4">
+          <CardContent className="p-0 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/15">
+                <Users className="h-5 w-5 text-orange-500" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{d?.cards?.payroll?.title || 'Payroll'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">{teachersWithSalaryCount}</p>
+                  {pendingPayrollCount > 0 && (
+                    <span className="text-[10px] px-1.5 py-0 rounded bg-amber-500/10 text-amber-600">
+                      {pendingPayrollCount} pending
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Link
+              href={`/${lang}/finance/payroll`}
+              className="inline-flex items-center text-xs text-primary hover:underline"
+            >
+              {d?.cards?.payroll?.viewRuns || 'View Payroll'} <ChevronRight className="ml-1 h-3 w-3" />
+            </Link>
+          </CardContent>
+        </Card>
 
-          {/* Fees Block */}
-          <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-purple-500" />
-                {d?.cards?.fees?.title || 'Student Fees'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.fees?.description || 'Fee structures and student payment tracking'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.fees?.details || 'Manage fee structures, track student payments, handle scholarships and fines.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/fees`}>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    {d?.cards?.fees?.viewStructures || 'View Fee Structures'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/fees/payments`}>
-                    {d?.cards?.fees?.trackPayments || 'Track Payments'}
-                  </Link>
-                </Button>
+        {/* Reports */}
+        <Card className="p-4">
+          <CardContent className="p-0 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15">
+                <FileBarChart className="h-5 w-5 text-blue-500" />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Salary Block */}
-          <Card className="border-orange-500/20 hover:border-orange-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-orange-500" />
-                {d?.cards?.salary?.title || 'Salary Management'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.salary?.description || 'Staff salary structures and calculations'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.salary?.details || 'Define salary structures, manage allowances and deductions, calculate pay.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/salary`}>
-                    <DollarSign className="mr-2 h-4 w-4" />
-                    {d?.cards?.salary?.viewStructures || 'View Structures'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/salary/calculator`}>
-                    {d?.cards?.salary?.calculator || 'Salary Calculator'}
-                  </Link>
-                </Button>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">{d?.cards?.reports?.title || 'Reports'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-semibold">{reportsCount}</p>
+                  <span className="text-[10px] px-1.5 py-0 rounded bg-muted text-muted-foreground">
+                    generated
+                  </span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Payroll Block */}
-          <Card className="border-red-500/20 hover:border-red-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-red-500" />
-                {d?.cards?.payroll?.title || 'Payroll Processing'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.payroll?.description || 'Payroll runs and salary slip generation'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.payroll?.details || 'Process payroll, generate salary slips, calculate taxes, and handle disbursements.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/payroll`}>
-                    <Users className="mr-2 h-4 w-4" />
-                    {d?.cards?.payroll?.viewRuns || 'View Payroll Runs'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/payroll/process`}>
-                    {d?.cards?.payroll?.process || 'Process Payroll'} (
-                    {pendingPayrollCount})
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Timesheet Block */}
-          <Card className="border-cyan-500/20 hover:border-cyan-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-cyan-500" />
-                {d?.cards?.timesheet?.title || 'Timesheets'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.timesheet?.description || 'Staff timesheet tracking and approval'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.timesheet?.details || 'Track staff hours, approve timesheets, calculate overtime, and integrate with payroll.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/timesheet`}>
-                    <Clock className="mr-2 h-4 w-4" />
-                    {d?.cards?.timesheet?.viewAll || 'View Timesheets'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/timesheet/approve`}>
-                    {d?.cards?.timesheet?.approvePending || 'Approve Pending'} (
-                    {pendingTimesheetsCount})
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Wallet Block */}
-          <Card className="border-indigo-500/20 hover:border-indigo-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-indigo-500" />
-                {d?.cards?.wallet?.title || 'Wallet Management'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.wallet?.description || 'School and parent wallet system'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.wallet?.details || 'Manage school wallet, track parent wallet balances, and handle top-ups.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/wallet`}>
-                    <Wallet className="mr-2 h-4 w-4" />
-                    {d?.cards?.wallet?.viewWallets || 'View Wallets'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/wallet/transactions`}>
-                    {d?.cards?.wallet?.viewTransactions || 'View Transactions'}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Budget Block */}
-          <Card className="border-pink-500/20 hover:border-pink-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-pink-500" />
-                {d?.cards?.budget?.title || 'Budget Planning'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.budget?.description || 'Budget allocation and variance tracking'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.budget?.details || 'Create budgets, allocate funds by department, track spending, and analyze variance.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/budget`}>
-                    <PieChart className="mr-2 h-4 w-4" />
-                    {d?.cards?.budget?.viewBudgets || 'View Budgets'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/budget/variance`}>
-                    {d?.cards?.budget?.varianceReport || 'Variance Report'}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Expenses Block */}
-          <Card className="border-amber-500/20 hover:border-amber-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-amber-500" />
-                {d?.cards?.expenses?.title || 'Expense Management'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.expenses?.description || 'Expense tracking and approval workflow'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.expenses?.details || 'Submit expenses, manage approval workflow, track reimbursements, and categorize.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/expenses`}>
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    {d?.cards?.expenses?.viewExpenses || 'View Expenses'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/expenses/approve`}>
-                    {d?.cards?.expenses?.approvePending || 'Approve Pending'} (
-                    {pendingExpensesCount})
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Accounts Block */}
-          <Card className="border-slate-500/20 hover:border-slate-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-slate-500" />
-                {d?.cards?.accounts?.title || 'Accounting System'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.accounts?.description || 'Double-entry bookkeeping and ledger'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.accounts?.details || 'Manage chart of accounts, journal entries, general ledger, and period closing.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/accounts`}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    {d?.cards?.accounts?.chartOfAccounts || 'Chart of Accounts'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/accounts/journal`}>
-                    {d?.cards?.accounts?.journalEntries || 'Journal Entries'}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Reports Block */}
-          <Card className="border-emerald-500/20 hover:border-emerald-500/40 transition-colors">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileBarChart className="h-5 w-5 text-emerald-500" />
-                {d?.cards?.reports?.title || 'Financial Reports'}
-              </CardTitle>
-              <CardDescription>
-                {d?.cards?.reports?.description || 'Comprehensive financial reporting'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {d?.cards?.reports?.details || 'Generate P&L, Balance Sheet, Cash Flow, Trial Balance, and custom reports.'}
-              </p>
-              <div className="flex flex-col gap-2">
-                <Button asChild variant="secondary">
-                  <Link href={`/${lang}/finance/reports`}>
-                    <FileBarChart className="mr-2 h-4 w-4" />
-                    {d?.cards?.reports?.viewReports || 'View Reports'}
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/finance/reports/generate`}>
-                    {d?.cards?.reports?.generate || 'Generate Report'}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <Link
+              href={`/${lang}/finance/reports`}
+              className="inline-flex items-center text-xs text-primary hover:underline"
+            >
+              {d?.cards?.reports?.viewReports || 'View Reports'} <ChevronRight className="ml-1 h-3 w-3" />
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Finance Workflow Guide */}
-      <Card>
-          <CardHeader>
-            <CardTitle>
-              {d?.workflow?.title || 'Finance Workflow Guide'}
-            </CardTitle>
-            <CardDescription>
-              {d?.workflow?.description || 'Step-by-step guide to managing school finances'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-4">
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  1
+      {/* Quick Actions */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href={`/${lang}/finance/invoice/new`}>
+          <Card className="group p-4 transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg p-2 bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                  <FileText className="h-4 w-4" />
                 </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['1']?.title || 'Set Up Accounting System'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['1']?.description || 'Configure your chart of accounts, fiscal year, and connect bank accounts.'}
-                  </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{d?.cards?.invoicing?.create || 'Create Invoice'}</p>
+                  <p className="text-xs text-muted-foreground">Bill clients & students</p>
                 </div>
-              </li>
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  2
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href={`/${lang}/finance/payroll/process`}>
+          <Card className="group p-4 transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg p-2 bg-orange-500/10 text-orange-500 group-hover:bg-orange-500/20 transition-colors">
+                  <Users className="h-4 w-4" />
                 </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['2']?.title || 'Configure Fee Structures'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['2']?.description || 'Define student fee structures, payment plans, scholarships, and fines.'}
-                  </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{d?.cards?.payroll?.process || 'Process Payroll'}</p>
+                  <p className="text-xs text-muted-foreground">Run monthly payroll</p>
                 </div>
-              </li>
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  3
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href={`/${lang}/finance/expenses`}>
+          <Card className="group p-4 transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg p-2 bg-amber-500/10 text-amber-500 group-hover:bg-amber-500/20 transition-colors">
+                  <TrendingUp className="h-4 w-4" />
                 </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['3']?.title || 'Set Up Staff Salary'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['3']?.description || 'Create salary structures with allowances and deductions for all staff members.'}
-                  </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{d?.cards?.expenses?.title || 'Track Expenses'}</p>
+                  <p className="text-xs text-muted-foreground">Approve & categorize</p>
                 </div>
-              </li>
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  4
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href={`/${lang}/finance/reports/generate`}>
+          <Card className="group p-4 transition-all duration-300 hover:shadow-md hover:border-primary/30 cursor-pointer">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg p-2 bg-blue-500/10 text-blue-500 group-hover:bg-blue-500/20 transition-colors">
+                  <FileBarChart className="h-4 w-4" />
                 </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['4']?.title || 'Track Revenue & Expenses'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['4']?.description || 'Monitor student payments, process invoices, approve expenses, and reconcile banks.'}
-                  </p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{d?.cards?.reports?.generate || 'Generate Report'}</p>
+                  <p className="text-xs text-muted-foreground">P&L, Balance Sheet</p>
                 </div>
-              </li>
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  5
-                </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['5']?.title || 'Process Payroll Monthly'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['5']?.description || 'Review timesheets, calculate salaries, generate slips, and process disbursements.'}
-                  </p>
-                </div>
-              </li>
-              <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  6
-                </div>
-                <div>
-                  <h3 className="font-medium">
-                    {d?.workflow?.steps?.['6']?.title || 'Generate Financial Reports'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.steps?.['6']?.description || 'Create P&L statements, balance sheets, cash flow reports, and analyze performance.'}
-                  </p>
-                </div>
-              </li>
-            </ol>
-          </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
     </div>
   )
 }

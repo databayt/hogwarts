@@ -4,7 +4,14 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { classCreateSchema, classUpdateSchema, getClassesSchema } from "@/components/platform/classes/validation";
+import {
+  classCreateSchema,
+  classUpdateSchema,
+  getClassesSchema,
+  classTeacherCreateSchema,
+  classTeacherUpdateSchema,
+  type ClassTeacherCreateInput,
+} from "@/components/platform/classes/validation";
 import { arrayToCSV } from "@/components/file";
 
 // ============================================================================
@@ -1092,6 +1099,324 @@ export async function getClassesExportData(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch export data"
+    };
+  }
+}
+
+// ============================================================================
+// ClassTeacher (Subject Teacher Assignment) Operations
+// ============================================================================
+
+export type ClassTeacherRow = {
+  id: string;
+  classId: string;
+  teacherId: string;
+  role: string;
+  teacherName: string;
+  teacherEmail: string | null;
+  createdAt: string;
+};
+
+/**
+ * Assign a teacher to a class as a subject teacher
+ */
+export async function assignSubjectTeacher(
+  input: ClassTeacherCreateInput
+): Promise<ActionResponse<{ id: string }>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = classTeacherCreateSchema.parse(input);
+
+    // Verify class exists and belongs to school
+    const existingClass = await db.class.findFirst({
+      where: { id: parsed.classId, schoolId },
+      select: { id: true, name: true },
+    });
+
+    if (!existingClass) {
+      return { success: false, error: "Class not found" };
+    }
+
+    // Verify teacher exists and belongs to school
+    const teacher = await (db as any).teacher.findFirst({
+      where: { id: parsed.teacherId, schoolId },
+      select: { id: true, givenName: true, surname: true },
+    });
+
+    if (!teacher) {
+      return { success: false, error: "Teacher not found" };
+    }
+
+    // Check for duplicate assignment
+    const existing = await (db as any).classTeacher.findFirst({
+      where: {
+        classId: parsed.classId,
+        teacherId: parsed.teacherId,
+        schoolId,
+      },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        error: `${teacher.givenName} ${teacher.surname} is already assigned to this class`,
+      };
+    }
+
+    // Create assignment
+    const assignment = await (db as any).classTeacher.create({
+      data: {
+        schoolId,
+        classId: parsed.classId,
+        teacherId: parsed.teacherId,
+        role: parsed.role || "ASSISTANT",
+      },
+    });
+
+    revalidatePath(CLASSES_PATH);
+    revalidatePath(`/classes/${parsed.classId}`);
+
+    return { success: true, data: { id: assignment.id } };
+  } catch (error) {
+    console.error("[assignSubjectTeacher] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to assign teacher",
+    };
+  }
+}
+
+/**
+ * Update a subject teacher assignment (e.g., change role)
+ */
+export async function updateSubjectTeacher(
+  input: { id: string; role?: string }
+): Promise<ActionResponse<void>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const parsed = classTeacherUpdateSchema.parse(input);
+
+    // Verify assignment exists
+    const existing = await (db as any).classTeacher.findFirst({
+      where: { id: parsed.id, schoolId },
+      select: { id: true, classId: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Assignment not found" };
+    }
+
+    await (db as any).classTeacher.update({
+      where: { id: parsed.id },
+      data: { role: parsed.role },
+    });
+
+    revalidatePath(CLASSES_PATH);
+    revalidatePath(`/classes/${existing.classId}`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("[updateSubjectTeacher] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update assignment",
+    };
+  }
+}
+
+/**
+ * Remove a subject teacher from a class
+ */
+export async function removeSubjectTeacher(
+  input: { id: string }
+): Promise<ActionResponse<void>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+
+    // Verify assignment exists
+    const existing = await (db as any).classTeacher.findFirst({
+      where: { id, schoolId },
+      select: { id: true, classId: true },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Assignment not found" };
+    }
+
+    await (db as any).classTeacher.delete({
+      where: { id },
+    });
+
+    revalidatePath(CLASSES_PATH);
+    revalidatePath(`/classes/${existing.classId}`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("[removeSubjectTeacher] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to remove teacher",
+    };
+  }
+}
+
+/**
+ * Get all subject teachers for a class
+ */
+export async function getClassSubjectTeachers(
+  input: { classId: string }
+): Promise<ActionResponse<ClassTeacherRow[]>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { classId } = z.object({ classId: z.string().min(1) }).parse(input);
+
+    // Verify class exists
+    const existingClass = await db.class.findFirst({
+      where: { id: classId, schoolId },
+      select: { id: true },
+    });
+
+    if (!existingClass) {
+      return { success: false, error: "Class not found" };
+    }
+
+    const assignments = await (db as any).classTeacher.findMany({
+      where: { classId, schoolId },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            emailAddress: true,
+          },
+        },
+      },
+      orderBy: [
+        { role: "asc" as const },
+        { createdAt: "asc" as const },
+      ],
+    });
+
+    const rows: ClassTeacherRow[] = assignments.map((a: any) => ({
+      id: a.id,
+      classId: a.classId,
+      teacherId: a.teacherId,
+      role: a.role,
+      teacherName: `${a.teacher.givenName} ${a.teacher.surname}`,
+      teacherEmail: a.teacher.emailAddress || null,
+      createdAt: a.createdAt.toISOString(),
+    }));
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error("[getClassSubjectTeachers] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch subject teachers",
+    };
+  }
+}
+
+/**
+ * Get available teachers for assignment (teachers not already assigned to class)
+ */
+export async function getAvailableTeachersForClass(
+  input: { classId: string }
+): Promise<ActionResponse<Array<{ id: string; name: string; email: string | null }>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { classId } = z.object({ classId: z.string().min(1) }).parse(input);
+
+    // Get already assigned teacher IDs
+    const assignedTeachers = await (db as any).classTeacher.findMany({
+      where: { classId, schoolId },
+      select: { teacherId: true },
+    });
+
+    const assignedIds = assignedTeachers.map((t: any) => t.teacherId);
+
+    // Get all teachers not in assignedIds
+    const teachers = await (db as any).teacher.findMany({
+      where: {
+        schoolId,
+        id: { notIn: assignedIds.length > 0 ? assignedIds : undefined },
+      },
+      select: {
+        id: true,
+        givenName: true,
+        surname: true,
+        emailAddress: true,
+      },
+      orderBy: [{ surname: "asc" }, { givenName: "asc" }],
+    });
+
+    const result = teachers.map((t: any) => ({
+      id: t.id,
+      name: `${t.givenName} ${t.surname}`,
+      email: t.emailAddress || null,
+    }));
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("[getAvailableTeachersForClass] Error:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch available teachers",
     };
   }
 }

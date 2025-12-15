@@ -4,7 +4,18 @@
 
 The Timetable feature empowers school administrators to create, manage, and print weekly schedules for classes and teachers with intelligent conflict detection and flexible configuration.
 
-> **📌 Status Update (2025-10-21):** Timetable fixed and production-ready! Server actions implementation complete. See [TIMETABLE_REVIEW.md](../../../TIMETABLE_REVIEW.md) for comprehensive analysis and optimization plan.
+> **📌 Status Update (2025-12-14):** Timetable fixed and production-ready! Server actions implementation complete. See [TIMETABLE_REVIEW.md](../../../TIMETABLE_REVIEW.md) for comprehensive analysis and optimization plan.
+
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/timetable` | Schedule Builder | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/timetable/class/[id]` | Class View | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/timetable/teacher/[id]` | Teacher View | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/timetable/print` | Print View | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/timetable/conflicts` | Conflict Resolution | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/timetable/settings` | Schedule Config | ✅ Ready |
 
 ### What Admins Can Do
 

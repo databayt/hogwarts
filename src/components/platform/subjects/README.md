@@ -4,6 +4,18 @@
 
 The Subjects feature manages the school's subject catalog, assigns teachers to subjects, tracks curriculum standards, and organizes academic content.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/subjects` | Subject List | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/new` | Create Subject | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/[id]` | Subject Detail | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/[id]/edit` | Edit Subject | ✅ Ready |
+
+**Status:** ✅ Production-Ready MVP (85%)
+**Last Updated:** 2025-12-14
+
 ### What Admins Can Do
 
 **Core Capabilities:**

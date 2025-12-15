@@ -45,3 +45,24 @@ export const getClassesSchema = z.object({
   termId: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
 })
+
+// ============================================================================
+// ClassTeacher (Subject Teacher Assignment) Schemas
+// ============================================================================
+
+export const classTeacherRoles = ["PRIMARY", "CO_TEACHER", "ASSISTANT"] as const
+export type ClassTeacherRole = typeof classTeacherRoles[number]
+
+export const classTeacherCreateSchema = z.object({
+  classId: z.string().min(1, "Class is required"),
+  teacherId: z.string().min(1, "Teacher is required"),
+  role: z.enum(classTeacherRoles).default("ASSISTANT"),
+})
+
+export const classTeacherUpdateSchema = z.object({
+  id: z.string().min(1, "ID is required"),
+  role: z.enum(classTeacherRoles).optional(),
+})
+
+export type ClassTeacherCreateInput = z.infer<typeof classTeacherCreateSchema>
+export type ClassTeacherUpdateInput = z.infer<typeof classTeacherUpdateSchema>

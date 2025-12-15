@@ -4,6 +4,18 @@
 
 The Teachers feature empowers school administrators to manage teaching staff from hiring to assignment, with comprehensive record-keeping, bulk operations, and class/subject assignments.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/teachers` | Teacher List | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/new` | Create Teacher | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]` | Teacher Detail | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/edit` | Edit Teacher | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/schedule` | Teaching Schedule | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/classes` | Assigned Classes | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/documents` | Documents | ⏸️ Planned |
+
 ### What Admins Can Do
 
 **Core Capabilities:**

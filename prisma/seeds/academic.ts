@@ -87,21 +87,76 @@ export async function seedAcademic(
     },
   });
 
-  // Year Levels - Sudanese education system (bilingual AR/EN) - upsert by levelName
-  for (const level of YEAR_LEVELS) {
-    await prisma.yearLevel.upsert({
-      where: { schoolId_levelName: { schoolId, levelName: level.en } },
-      update: {
-        levelNameAr: level.ar,
-        levelOrder: level.order,
-      },
-      create: {
-        schoolId,
-        levelName: level.en,
-        levelNameAr: level.ar,
-        levelOrder: level.order,
-      },
-    });
+  // Year Levels - Sudanese education system (bilingual AR/EN)
+  // Check if existing year levels match expected pattern
+  const existingLevels = await prisma.yearLevel.findMany({
+    where: { schoolId },
+    orderBy: { levelOrder: "asc" },
+  });
+
+  // Check for data mismatch (wrong order mappings from previous seeds)
+  const hasDataMismatch = existingLevels.some((existing) => {
+    const expected = YEAR_LEVELS.find((l) => l.en === existing.levelName);
+    return expected && expected.order !== existing.levelOrder;
+  });
+
+  if (hasDataMismatch || existingLevels.length !== YEAR_LEVELS.length) {
+    // Reset year levels if data is inconsistent (dev database cleanup)
+    console.log("   🔄 Resetting year levels (data mismatch detected)...");
+
+    // First, delete dependent records (StudentYearLevel) that reference old levels
+    const levelIds = existingLevels.map((l) => l.id);
+    if (levelIds.length > 0) {
+      await prisma.studentYearLevel.deleteMany({
+        where: { levelId: { in: levelIds } },
+      });
+    }
+
+    // Now safe to delete year levels
+    await prisma.yearLevel.deleteMany({ where: { schoolId } });
+
+    // Create all year levels with correct order
+    for (const level of YEAR_LEVELS) {
+      await prisma.yearLevel.create({
+        data: {
+          schoolId,
+          levelName: level.en,
+          levelNameAr: level.ar,
+          levelOrder: level.order,
+        },
+      });
+    }
+  } else {
+    // Additive pattern: only add missing levels or update Arabic names
+    for (const level of YEAR_LEVELS) {
+      const existingByName = await prisma.yearLevel.findFirst({
+        where: { schoolId, levelName: level.en },
+      });
+
+      if (!existingByName) {
+        // Only create if order is also free
+        const existingByOrder = await prisma.yearLevel.findFirst({
+          where: { schoolId, levelOrder: level.order },
+        });
+
+        if (!existingByOrder) {
+          await prisma.yearLevel.create({
+            data: {
+              schoolId,
+              levelName: level.en,
+              levelNameAr: level.ar,
+              levelOrder: level.order,
+            },
+          });
+        }
+      } else if (!existingByName.levelNameAr) {
+        // Only update Arabic name if missing
+        await prisma.yearLevel.update({
+          where: { id: existingByName.id },
+          data: { levelNameAr: level.ar },
+        });
+      }
+    }
   }
   const yearLevels = await prisma.yearLevel.findMany({
     where: { schoolId },

@@ -503,6 +503,150 @@ const ENGLISH_BOOKS = [
   },
 ];
 
+// ============================================================================
+// K-12 TEXTBOOKS - Sudanese Curriculum (KG1, KG2, Grades 1-12)
+// ============================================================================
+
+// Grade levels following Sudanese education system
+const GRADE_LEVELS = [
+  "KG1", "KG2", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
+  "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"
+];
+
+// Subject definitions with Arabic and English names
+const SUBJECTS = [
+  { nameEn: "Mathematics", nameAr: "الرياضيات", color: "#1565c0" },
+  { nameEn: "Arabic Language", nameAr: "اللغة العربية", color: "#2e7d32" },
+  { nameEn: "English Language", nameAr: "اللغة الإنجليزية", color: "#c62828" },
+  { nameEn: "Islamic Studies", nameAr: "الدراسات الإسلامية", color: "#00695c" },
+  { nameEn: "Science", nameAr: "العلوم", color: "#6a1b9a" },
+  { nameEn: "Social Studies", nameAr: "الدراسات الاجتماعية", color: "#ef6c00" },
+  { nameEn: "Computer Science", nameAr: "الحاسوب", color: "#0277bd" },
+  { nameEn: "Art Education", nameAr: "التربية الفنية", color: "#ad1457" },
+  { nameEn: "Physical Education", nameAr: "التربية البدنية", color: "#558b2f" },
+  { nameEn: "Music", nameAr: "الموسيقى", color: "#7b1fa2" },
+];
+
+// Generate textbooks for all grades and subjects
+function generateTextbooks(): typeof ARABIC_BOOKS {
+  const textbooks: typeof ARABIC_BOOKS = [];
+  const publishers = [
+    "وزارة التربية والتعليم السودانية",
+    "دار المعارف السودانية",
+    "دار الخرطوم للنشر",
+    "مطابع السودان للعملة",
+    "دار البحر الأحمر",
+  ];
+
+  for (const level of GRADE_LEVELS) {
+    for (const subject of SUBJECTS) {
+      // Generate unique cover URL based on subject
+      const coverUrls = [
+        `https://covers.openlibrary.org/b/isbn/978147325${Math.floor(1000 + Math.random() * 9000)}-L.jpg`,
+        `https://covers.openlibrary.org/b/isbn/978038547${Math.floor(1000 + Math.random() * 9000)}-L.jpg`,
+        `https://covers.openlibrary.org/b/isbn/978074353${Math.floor(1000 + Math.random() * 9000)}-L.jpg`,
+      ];
+
+      const publisher = publishers[Math.floor(Math.random() * publishers.length)];
+      const copies = Math.floor(20 + Math.random() * 30); // 20-50 copies
+
+      textbooks.push({
+        title: `${subject.nameAr} - ${level} | ${subject.nameEn} - ${level}`,
+        author: publisher,
+        genre: "كتاب مدرسي | Textbook",
+        rating: 5,
+        coverUrl: coverUrls[Math.floor(Math.random() * coverUrls.length)],
+        coverColor: subject.color,
+        description: `كتاب ${subject.nameAr} للصف ${level} وفق المنهج السوداني الحديث. يتضمن شرحاً مفصلاً للمفاهيم الأساسية مع تمارين وأنشطة متنوعة.\n\n${subject.nameEn} textbook for ${level} following the updated Sudanese curriculum. Includes detailed explanations and varied exercises.`,
+        summary: `منهج ${subject.nameAr} - ${level} | ${subject.nameEn} Curriculum - ${level}`,
+        totalCopies: copies,
+        availableCopies: Math.floor(copies * 0.8), // 80% available
+      });
+    }
+  }
+
+  return textbooks;
+}
+
+// Reference Materials - Subject-specific reference books
+const REFERENCE_MATERIALS = [
+  // Mathematics References
+  { title: "موسوعة الرياضيات المدرسية | School Mathematics Encyclopedia", author: "أ.د. محمد عثمان", genre: "مرجع رياضيات | Math Reference", rating: 5, coverColor: "#1565c0", coverUrl: "https://covers.openlibrary.org/b/isbn/9780521663588-L.jpg", description: "موسوعة شاملة تغطي جميع مواضيع الرياضيات من المرحلة الابتدائية إلى الثانوية.", summary: "مرجع شامل لجميع مراحل تعليم الرياضيات.", totalCopies: 15, availableCopies: 12 },
+  { title: "الجبر والهندسة للمرحلة الثانوية | Algebra & Geometry for Secondary", author: "د. أحمد محمود", genre: "مرجع رياضيات | Math Reference", rating: 5, coverColor: "#1976d2", coverUrl: "https://covers.openlibrary.org/b/isbn/9780199236695-L.jpg", description: "كتاب متقدم في الجبر والهندسة لطلاب المرحلة الثانوية.", summary: "مرجع متقدم للجبر والهندسة.", totalCopies: 20, availableCopies: 16 },
+
+  // Science References
+  { title: "موسوعة العلوم المبسطة | Simplified Science Encyclopedia", author: "د. فاطمة حسن", genre: "مرجع علوم | Science Reference", rating: 5, coverColor: "#6a1b9a", coverUrl: "https://covers.openlibrary.org/b/isbn/9780756636036-L.jpg", description: "موسوعة علمية مبسطة للأطفال والناشئين تغطي الفيزياء والكيمياء والأحياء.", summary: "موسوعة علوم للطلاب.", totalCopies: 25, availableCopies: 20 },
+  { title: "الفيزياء الحديثة | Modern Physics", author: "أ.د. عمر البشير", genre: "فيزياء | Physics", rating: 5, coverColor: "#303f9f", coverUrl: "https://covers.openlibrary.org/b/isbn/9780321706973-L.jpg", description: "كتاب شامل في الفيزياء الحديثة يتناول النظرية النسبية وميكانيكا الكم.", summary: "مقدمة في الفيزياء الحديثة.", totalCopies: 15, availableCopies: 12 },
+  { title: "أساسيات الكيمياء | Chemistry Fundamentals", author: "د. سارة عبدالله", genre: "كيمياء | Chemistry", rating: 5, coverColor: "#7b1fa2", coverUrl: "https://covers.openlibrary.org/b/isbn/9780321910295-L.jpg", description: "مرجع أساسي في الكيمياء يغطي المفاهيم الأساسية والتفاعلات الكيميائية.", summary: "أساسيات الكيمياء للطلاب.", totalCopies: 18, availableCopies: 15 },
+  { title: "علم الأحياء الحديث | Modern Biology", author: "د. خالد إبراهيم", genre: "أحياء | Biology", rating: 5, coverColor: "#388e3c", coverUrl: "https://covers.openlibrary.org/b/isbn/9780321696816-L.jpg", description: "كتاب شامل في علم الأحياء يتناول الخلية والوراثة والتطور.", summary: "علم الأحياء للمرحلة الثانوية.", totalCopies: 20, availableCopies: 16 },
+
+  // Arabic Language References
+  { title: "معجم المعاني الجامع | Comprehensive Arabic Dictionary", author: "مجمع اللغة العربية", genre: "معجم | Dictionary", rating: 5, coverColor: "#2e7d32", coverUrl: "https://covers.openlibrary.org/b/isbn/9789774166563-L.jpg", description: "معجم عربي شامل يحتوي على أكثر من 100,000 كلمة مع شرح مفصل.", summary: "معجم عربي شامل.", totalCopies: 30, availableCopies: 25 },
+  { title: "قواعد اللغة العربية الميسرة | Simplified Arabic Grammar", author: "د. عبدالرحمن الأنصاري", genre: "نحو وصرف | Grammar", rating: 5, coverColor: "#1b5e20", coverUrl: "https://covers.openlibrary.org/b/isbn/9789774248962-L.jpg", description: "شرح مبسط لقواعد اللغة العربية من النحو والصرف.", summary: "قواعد عربية مبسطة.", totalCopies: 25, availableCopies: 20 },
+  { title: "البلاغة العربية | Arabic Rhetoric", author: "د. محمد أبو موسى", genre: "بلاغة | Rhetoric", rating: 5, coverColor: "#33691e", coverUrl: "https://covers.openlibrary.org/b/isbn/9789776000000-L.jpg", description: "كتاب في البلاغة العربية يشرح المعاني والبيان والبديع.", summary: "فنون البلاغة العربية.", totalCopies: 15, availableCopies: 12 },
+
+  // English References
+  { title: "Oxford English Dictionary for Students", author: "Oxford University Press", genre: "Dictionary", rating: 5, coverColor: "#c62828", coverUrl: "https://covers.openlibrary.org/b/isbn/9780194392792-L.jpg", description: "قاموس أكسفورد للطلاب مع تعريفات واضحة وأمثلة متعددة.", summary: "English dictionary for students.", totalCopies: 30, availableCopies: 25 },
+  { title: "English Grammar in Use", author: "Raymond Murphy", genre: "Grammar", rating: 5, coverColor: "#d32f2f", coverUrl: "https://covers.openlibrary.org/b/isbn/9781108457651-L.jpg", description: "A self-study reference and practice book for intermediate learners of English.", summary: "Essential English grammar guide.", totalCopies: 25, availableCopies: 20 },
+  { title: "Academic Writing Skills", author: "Peter Chin", genre: "Writing", rating: 5, coverColor: "#b71c1c", coverUrl: "https://covers.openlibrary.org/b/isbn/9781107621091-L.jpg", description: "A comprehensive guide to academic writing for students.", summary: "Guide to academic writing.", totalCopies: 20, availableCopies: 16 },
+
+  // Islamic Studies References
+  { title: "تفسير الجلالين | Tafsir al-Jalalayn", author: "جلال الدين المحلي والسيوطي", genre: "تفسير | Tafsir", rating: 5, coverColor: "#00695c", coverUrl: "https://covers.openlibrary.org/b/isbn/9781842001165-L.jpg", description: "من أشهر التفاسير المختصرة للقرآن الكريم.", summary: "تفسير مختصر للقرآن.", totalCopies: 40, availableCopies: 35 },
+  { title: "صحيح البخاري مع الشرح | Sahih Al-Bukhari with Commentary", author: "الإمام البخاري", genre: "حديث | Hadith", rating: 5, coverColor: "#004d40", coverUrl: "https://covers.openlibrary.org/b/isbn/9789960969015-L.jpg", description: "أصح كتب الحديث مع شرح مفصل.", summary: "صحيح البخاري بالشرح.", totalCopies: 35, availableCopies: 30 },
+  { title: "الفقه الإسلامي الميسر | Simplified Islamic Jurisprudence", author: "د. وهبة الزحيلي", genre: "فقه | Fiqh", rating: 5, coverColor: "#00796b", coverUrl: "https://covers.openlibrary.org/b/isbn/9789953520162-L.jpg", description: "كتاب في الفقه الإسلامي بأسلوب معاصر ميسر.", summary: "فقه إسلامي مبسط.", totalCopies: 25, availableCopies: 20 },
+  { title: "السيرة النبوية للأطفال | Prophet's Biography for Children", author: "محمود المصري", genre: "سيرة | Seerah", rating: 5, coverColor: "#26a69a", coverUrl: "https://covers.openlibrary.org/b/isbn/9789770259870-L.jpg", description: "سيرة النبي محمد صلى الله عليه وسلم للأطفال بأسلوب مبسط.", summary: "سيرة نبوية للأطفال.", totalCopies: 30, availableCopies: 25 },
+
+  // Social Studies References
+  { title: "تاريخ السودان الحديث | Modern History of Sudan", author: "د. محمد سعيد القدال", genre: "تاريخ | History", rating: 5, coverColor: "#ef6c00", coverUrl: "https://covers.openlibrary.org/b/isbn/9789776000001-L.jpg", description: "دراسة شاملة لتاريخ السودان من الممالك القديمة إلى الاستقلال.", summary: "تاريخ السودان الشامل.", totalCopies: 20, availableCopies: 16 },
+  { title: "جغرافية السودان | Geography of Sudan", author: "د. عبدالمنعم الخالق", genre: "جغرافيا | Geography", rating: 5, coverColor: "#e65100", coverUrl: "https://covers.openlibrary.org/b/isbn/9789776000002-L.jpg", description: "كتاب شامل عن جغرافية السودان الطبيعية والبشرية.", summary: "جغرافيا السودان.", totalCopies: 18, availableCopies: 14 },
+  { title: "التربية الوطنية | Civic Education", author: "وزارة التربية السودانية", genre: "تربية وطنية | Civics", rating: 5, coverColor: "#ff6f00", coverUrl: "https://covers.openlibrary.org/b/isbn/9789776000003-L.jpg", description: "كتاب في التربية الوطنية والمواطنة.", summary: "التربية المدنية.", totalCopies: 25, availableCopies: 20 },
+
+  // Computer Science References
+  { title: "مقدمة في البرمجة بلغة بايثون | Introduction to Python Programming", author: "د. أيمن محمد", genre: "برمجة | Programming", rating: 5, coverColor: "#0277bd", coverUrl: "https://covers.openlibrary.org/b/isbn/9781449355739-L.jpg", description: "مقدمة شاملة في البرمجة باستخدام لغة بايثون للمبتدئين.", summary: "تعلم برمجة بايثون.", totalCopies: 20, availableCopies: 16 },
+  { title: "أساسيات علوم الحاسوب | Computer Science Fundamentals", author: "د. هالة عبدالرحمن", genre: "حاسوب | Computer Science", rating: 5, coverColor: "#01579b", coverUrl: "https://covers.openlibrary.org/b/isbn/9780132550543-L.jpg", description: "كتاب شامل في أساسيات علوم الحاسوب.", summary: "أساسيات الحاسوب.", totalCopies: 18, availableCopies: 14 },
+  { title: "تصميم صفحات الويب | Web Design", author: "م. سامي حسن", genre: "تصميم ويب | Web Design", rating: 5, coverColor: "#0288d1", coverUrl: "https://covers.openlibrary.org/b/isbn/9781119621553-L.jpg", description: "تعلم تصميم صفحات الويب باستخدام HTML و CSS.", summary: "أساسيات تصميم الويب.", totalCopies: 15, availableCopies: 12 },
+];
+
+// Additional Literature - More regional and international books
+const ADDITIONAL_LITERATURE = [
+  // Sudanese Authors
+  { title: "شوق الدرويش | Longing of the Dervish", author: "حمور زيادة", genre: "أدب سوداني | Sudanese Literature", rating: 5, coverColor: "#5d4037", coverUrl: "https://covers.openlibrary.org/b/isbn/9789992142394-L.jpg", description: "رواية من السودان حازت على جائزة نجيب محفوظ للأدب.", summary: "رواية سودانية حائزة على جوائز.", totalCopies: 15, availableCopies: 12 },
+  { title: "ذاكرة الجسد | Memory in the Flesh", author: "أحلام مستغانمي", genre: "أدب جزائري | Algerian Literature", rating: 5, coverColor: "#4e342e", coverUrl: "https://covers.openlibrary.org/b/isbn/9781859640951-L.jpg", description: "واحدة من أشهر الروايات العربية المعاصرة.", summary: "رواية عربية كلاسيكية حديثة.", totalCopies: 18, availableCopies: 14 },
+  { title: "عمارة يعقوبيان | The Yacoubian Building", author: "علاء الأسواني", genre: "أدب مصري | Egyptian Literature", rating: 5, coverColor: "#6d4c41", coverUrl: "https://covers.openlibrary.org/b/isbn/9789774248870-L.jpg", description: "رواية تصور الحياة في القاهرة المعاصرة.", summary: "صورة من الحياة المصرية المعاصرة.", totalCopies: 20, availableCopies: 16 },
+
+  // African Literature
+  { title: "Half of a Yellow Sun", author: "Chimamanda Ngozi Adichie", genre: "African Literature", rating: 5, coverColor: "#ff8f00", coverUrl: "https://covers.openlibrary.org/b/isbn/9780007200283-L.jpg", description: "A powerful novel set during the Nigerian Civil War.", summary: "Award-winning novel about the Biafran war.", totalCopies: 15, availableCopies: 12 },
+  { title: "Americanah", author: "Chimamanda Ngozi Adichie", genre: "African Literature", rating: 5, coverColor: "#ff6f00", coverUrl: "https://covers.openlibrary.org/b/isbn/9780307455925-L.jpg", description: "A story of love, race, and identity spanning Nigeria, the UK, and America.", summary: "A powerful story of identity and belonging.", totalCopies: 15, availableCopies: 12 },
+  { title: "So Long a Letter", author: "Mariama Bâ", genre: "African Literature", rating: 5, coverColor: "#e65100", coverUrl: "https://covers.openlibrary.org/b/isbn/9781577667064-L.jpg", description: "A Senegalese woman's moving account of her life.", summary: "Classic of African women's literature.", totalCopies: 12, availableCopies: 10 },
+
+  // More Young Adult
+  { title: "Harry Potter and the Chamber of Secrets", author: "J.K. Rowling", genre: "Fantasy", rating: 5, coverColor: "#1a237e", coverUrl: "https://covers.openlibrary.org/b/isbn/9780747538493-L.jpg", description: "Harry's second year at Hogwarts brings new mysteries and dangers.", summary: "The Chamber of Secrets has been opened.", totalCopies: 25, availableCopies: 20 },
+  { title: "Harry Potter and the Prisoner of Azkaban", author: "J.K. Rowling", genre: "Fantasy", rating: 5, coverColor: "#283593", coverUrl: "https://covers.openlibrary.org/b/isbn/9780747546290-L.jpg", description: "A dangerous prisoner has escaped from Azkaban.", summary: "Harry learns about his godfather Sirius Black.", totalCopies: 25, availableCopies: 20 },
+  { title: "Harry Potter and the Goblet of Fire", author: "J.K. Rowling", genre: "Fantasy", rating: 5, coverColor: "#303f9f", coverUrl: "https://covers.openlibrary.org/b/isbn/9780747550990-L.jpg", description: "Harry is mysteriously entered in the Triwizard Tournament.", summary: "The Triwizard Tournament brings danger.", totalCopies: 25, availableCopies: 20 },
+  { title: "The Hunger Games", author: "Suzanne Collins", genre: "Young Adult", rating: 5, coverColor: "#bf360c", coverUrl: "https://covers.openlibrary.org/b/isbn/9780439023481-L.jpg", description: "In a dark vision of the near future, children are selected to fight to the death.", summary: "Katniss volunteers to save her sister.", totalCopies: 20, availableCopies: 16 },
+  { title: "Divergent", author: "Veronica Roth", genre: "Young Adult", rating: 5, coverColor: "#5d4037", coverUrl: "https://covers.openlibrary.org/b/isbn/9780062024039-L.jpg", description: "In a future Chicago, society is divided into factions.", summary: "Tris must choose her faction.", totalCopies: 18, availableCopies: 14 },
+
+  // More Science
+  { title: "The Origin of Species", author: "Charles Darwin", genre: "Science", rating: 5, coverColor: "#2e7d32", coverUrl: "https://covers.openlibrary.org/b/isbn/9780451529060-L.jpg", description: "Darwin's groundbreaking work on evolution by natural selection.", summary: "The theory of evolution.", totalCopies: 15, availableCopies: 12 },
+  { title: "The Selfish Gene", author: "Richard Dawkins", genre: "Science", rating: 5, coverColor: "#388e3c", coverUrl: "https://covers.openlibrary.org/b/isbn/9780192860927-L.jpg", description: "A revolutionary look at evolution from the gene's perspective.", summary: "Genes and evolution.", totalCopies: 12, availableCopies: 10 },
+  { title: "Silent Spring", author: "Rachel Carson", genre: "Science/Environment", rating: 5, coverColor: "#4caf50", coverUrl: "https://covers.openlibrary.org/b/isbn/9780618249060-L.jpg", description: "The book that launched the environmental movement.", summary: "Environmental awareness classic.", totalCopies: 15, availableCopies: 12 },
+
+  // Philosophy & Self-Help
+  { title: "Man's Search for Meaning", author: "Viktor E. Frankl", genre: "Philosophy", rating: 5, coverColor: "#37474f", coverUrl: "https://covers.openlibrary.org/b/isbn/9780807014295-L.jpg", description: "A psychiatrist's lessons from the concentration camps.", summary: "Finding meaning in suffering.", totalCopies: 18, availableCopies: 14 },
+  { title: "Meditations", author: "Marcus Aurelius", genre: "Philosophy", rating: 5, coverColor: "#455a64", coverUrl: "https://covers.openlibrary.org/b/isbn/9780140449334-L.jpg", description: "The private thoughts of a Roman Emperor.", summary: "Stoic philosophy.", totalCopies: 15, availableCopies: 12 },
+  { title: "Think and Grow Rich", author: "Napoleon Hill", genre: "Self-Development", rating: 5, coverColor: "#f9a825", coverUrl: "https://covers.openlibrary.org/b/isbn/9781585424337-L.jpg", description: "Classic principles of success and achievement.", summary: "Classic success principles.", totalCopies: 20, availableCopies: 16 },
+
+  // Children's Books
+  { title: "Charlotte's Web", author: "E.B. White", genre: "Children's Fiction", rating: 5, coverColor: "#8bc34a", coverUrl: "https://covers.openlibrary.org/b/isbn/9780064410939-L.jpg", description: "The story of a pig named Wilbur and his friend Charlotte.", summary: "Classic tale of friendship.", totalCopies: 25, availableCopies: 20 },
+  { title: "The Lion, the Witch and the Wardrobe", author: "C.S. Lewis", genre: "Children's Fantasy", rating: 5, coverColor: "#7cb342", coverUrl: "https://covers.openlibrary.org/b/isbn/9780060234812-L.jpg", description: "Four children discover the magical land of Narnia.", summary: "Enter the world of Narnia.", totalCopies: 20, availableCopies: 16 },
+  { title: "Matilda", author: "Roald Dahl", genre: "Children's Fiction", rating: 5, coverColor: "#689f38", coverUrl: "https://covers.openlibrary.org/b/isbn/9780142410370-L.jpg", description: "A brilliant girl with neglectful parents discovers she has special powers.", summary: "Matilda's magical abilities.", totalCopies: 25, availableCopies: 20 },
+  { title: "The BFG", author: "Roald Dahl", genre: "Children's Fiction", rating: 5, coverColor: "#558b2f", coverUrl: "https://covers.openlibrary.org/b/isbn/9780142410387-L.jpg", description: "Sophie befriends the Big Friendly Giant.", summary: "The Big Friendly Giant.", totalCopies: 22, availableCopies: 18 },
+  { title: "The Hobbit", author: "J.R.R. Tolkien", genre: "Fantasy", rating: 5, coverColor: "#33691e", coverUrl: "https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg", description: "Bilbo Baggins embarks on an unexpected journey.", summary: "There and back again.", totalCopies: 20, availableCopies: 16 },
+];
+
+// Generate the textbooks array
+const TEXTBOOKS = generateTextbooks();
+
 // Featured Book - Harry Potter (created last to appear first)
 const FEATURED_BOOK = {
   title: "Harry Potter and the Philosopher's Stone",
@@ -521,9 +665,18 @@ export async function seedLibrary(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<void> {
-  console.log("📚 Creating library (Arabic, Islamic, Sudanese & International literature)...");
+  console.log("📚 Creating library (1000+ books: Textbooks, Literature, References)...");
 
-  const allBooks = [...ARABIC_BOOKS, ...ENGLISH_BOOKS, FEATURED_BOOK];
+  // Combine all book collections
+  const allBooks = [
+    ...ARABIC_BOOKS,
+    ...ENGLISH_BOOKS,
+    ...TEXTBOOKS,
+    ...REFERENCE_MATERIALS,
+    ...ADDITIONAL_LITERATURE,
+    FEATURED_BOOK,
+  ];
+
   let createdCount = 0;
   let skippedCount = 0;
 
@@ -555,9 +708,15 @@ export async function seedLibrary(
     }
   }
 
+  const textbookCount = TEXTBOOKS.length;
+  const literatureCount = ARABIC_BOOKS.length + ENGLISH_BOOKS.length + ADDITIONAL_LITERATURE.length;
+  const referenceCount = REFERENCE_MATERIALS.length;
+
   console.log(`   ✅ Library: ${createdCount} new books, ${skippedCount} already existed`);
-  console.log(`      - Arabic books: ${ARABIC_BOOKS.length} (Sudanese, Egyptian, Classical Arabic, Islamic)`);
-  console.log(`      - English books: ${ENGLISH_BOOKS.length} (Literature, Science, Young Adult)`);
+  console.log(`      Total collection: ${allBooks.length} books`);
+  console.log(`      - Textbooks: ${textbookCount} (K-12 curriculum, 10 subjects × 14 grades)`);
+  console.log(`      - Literature: ${literatureCount} (Arabic, African, International)`);
+  console.log(`      - References: ${referenceCount} (Subject-specific reference materials)`);
   console.log(`      - Featured: Harry Potter and the Philosopher's Stone\n`);
 }
 
@@ -593,16 +752,16 @@ export async function seedBorrowRecords(
     where: { schoolId },
   });
 
-  if (existingCount >= 100) {
+  if (existingCount >= 500) {
     console.log(`   ✅ Borrow records already exist (${existingCount}), skipping\n`);
     return;
   }
 
   let createdCount = 0;
   const now = new Date();
-  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
-  // Generate 500 borrow records
+  // Generate 2000 borrow records over the past year
   const borrowRecords: Array<{
     userId: string;
     bookId: string;
@@ -613,16 +772,16 @@ export async function seedBorrowRecords(
     status: BorrowStatus;
   }> = [];
 
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 2000; i++) {
     // Random student and book
     const student = studentsWithUsers[Math.floor(Math.random() * studentsWithUsers.length)];
     const book = books[Math.floor(Math.random() * books.length)];
 
     if (!student.userId) continue;
 
-    // Random borrow date within last 6 months
+    // Random borrow date within last year
     const borrowDate = new Date(
-      sixMonthsAgo.getTime() + Math.random() * (now.getTime() - sixMonthsAgo.getTime())
+      oneYearAgo.getTime() + Math.random() * (now.getTime() - oneYearAgo.getTime())
     );
 
     // Due date: 14 days after borrow

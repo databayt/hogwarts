@@ -4,6 +4,18 @@
 
 The Announcements feature enables administrators to broadcast important messages to the entire school, specific classes, or role-based groups with targeted communication and notification management.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/announcements` | Announcements List | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/new` | Create Announcement | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/[id]` | View Announcement | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/[id]/edit` | Edit Announcement | ✅ Ready |
+
+**Status:** ✅ Production-Ready MVP (85%)
+**Last Updated:** 2025-12-14
+
 ### What Admins Can Do
 
 **Core Capabilities:**

@@ -4,6 +4,25 @@
 
 The Exam Management System is a comprehensive, production-ready solution for educational assessments. It provides a complete workflow from question creation through exam administration to result analysis, with enterprise-grade features for security, performance, and scalability.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/exams` | Exam Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/manage` | Exam Management | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/manage/[id]` | Exam Detail | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/qbank` | Question Bank | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/generate` | Auto-Generate | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Exam Templates | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/mark` | Auto-Mark | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]` | Grade Exam | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results` | Results Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results/[examId]` | Exam Results | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results/analytics` | Analytics | ✅ Ready |
+
+**Status:** ✅ Production-Ready (95% Complete)
+**Last Updated:** 2025-12-14
+
 ## 📦 Architecture Overview
 
 ### Sub-Block Structure

@@ -4,25 +4,71 @@
 
 The Settings feature enables administrators to configure school-wide preferences, academic year setup, grading scales, and system customization.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/school` | School Settings | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/school/academic` | Academic Year | **🔴 BLOCKED** |
+| `/[lang]/s/[subdomain]/(platform)/school/branding` | Branding | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/school/domain` | Custom Domain | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/school/members` | Team Members | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/school/notifications` | Notifications | ⏸️ Planned |
+| `/[lang]/s/[subdomain]/(platform)/school/billing` | Billing | ⏸️ Planned |
+| `/[lang]/s/[subdomain]/(platform)/school/danger` | Danger Zone | ✅ Ready |
+
 ### What Admins Can Do
 
 **Core Capabilities:**
 - 🏫 Configure school profile (name, logo)
-- 📅 Manage academic years and terms
+- 📅 Manage academic years and terms **← BLOCKED**
 - 🌍 Set locale (Arabic/English)
 - ⏰ Configure timezone
 - 🎨 Customize branding
 - 🔐 Manage subdomain
 
 ### Current Implementation Status
-**✅ Production-Ready MVP**
+**🔴 BLOCKED - Academic Year Setup Incomplete**
+**Completion:** 60%
+
+---
+
+## Critical Blocker: Academic Year Setup
+
+| Property | Value |
+|----------|-------|
+| **URL** | `/school/academic` |
+| **Current State** | Models exist, CRUD UI/actions incomplete |
+| **Impact** | Cannot set active academic year for timetable, exams, results |
+
+**Missing Implementation:**
+- `createAcademicYear` server action (partial)
+- `updateAcademicYear` server action (missing)
+- `deleteAcademicYear` server action (missing)
+- `setActiveYear` server action (missing)
+- Term management CRUD (missing)
+- Period definitions (missing)
+
+**Prisma Models (Exist ✅):**
+- `SchoolYear` - Academic year model
+- `Term` - Terms within year
+- `Period` - Class periods
+
+**Files to Create/Modify:**
+- `src/components/platform/settings/academic-year/actions.ts`
+- `src/components/platform/settings/academic-year/form.tsx`
+
+---
 
 **Completed:**
 - ✅ School profile management
-- ✅ Academic year configuration
 - ✅ Locale selection (ar/en)
 - ✅ Timezone configuration
 - ✅ Subdomain management
+- ✅ Branding/logo
+
+**Blocked:**
+- 🔴 **Academic year configuration** ← Critical MVP blocker
 
 **Planned:**
 - ⏸️ Grading scale configuration

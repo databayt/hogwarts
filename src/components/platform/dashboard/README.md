@@ -4,6 +4,21 @@
 
 The Dashboard provides role-specific landing pages with relevant widgets, quick actions, and key metrics tailored to admins, teachers, students, and parents.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/dashboard` | Dashboard (redirect) | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/admin` | Admin Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/teacher` | Teacher Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/student` | Student Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/parent` | Parent Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/accountant` | Accountant Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/dashboard/staff` | Staff Dashboard | ✅ Ready |
+
+**Status:** ✅ Production-Ready MVP (80%)
+**Last Updated:** 2025-12-14
+
 ### What Each Role Sees
 
 **Admin Dashboard:**

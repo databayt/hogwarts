@@ -1,6 +1,12 @@
 /**
- * Finance Seed Module
- * Creates comprehensive financial data: accounts, payroll, banking, budgets, expenses
+ * Finance Seed Module - Bilingual (AR/EN)
+ * Creates comprehensive financial data for full fiscal year:
+ * - 12 months of payroll (30 teachers)
+ * - 12 months of timesheets
+ * - 200+ bank transactions
+ * - Full year expense tracking
+ * - Double-entry bookkeeping ledger
+ *
  * Currency: SDG (Sudanese Pound) - Comboni School Port Sudan
  */
 
@@ -36,7 +42,7 @@ export async function seedFinance(
   teachers: TeacherRef[],
   students: StudentRef[]
 ): Promise<void> {
-  console.log("💰 Creating finance module (SDG - Sudanese Pound)...");
+  console.log("💰 Creating finance module (12 months, SDG - Bilingual AR/EN)...");
 
   const adminUser = users.find(u => u.email.includes("admin"));
   const accountantUser = users.find(u => u.email.includes("accountant"));
@@ -156,8 +162,8 @@ export async function seedFinance(
     }
   }
 
-  // ===== TIMESHEET PERIODS (6 months) =====
-  for (let month = 0; month < 6; month++) {
+  // ===== TIMESHEET PERIODS (12 months - Full Fiscal Year) =====
+  for (let month = 0; month < 12; month++) {
     const startDate = new Date(2025, 6 + month, 1);
     const endDate = new Date(2025, 7 + month, 0);
     const periodName = `${startDate.toLocaleString('default', { month: 'long' })} ${startDate.getFullYear()}`;
@@ -167,6 +173,12 @@ export async function seedFinance(
       where: { schoolId, name: periodName },
     });
 
+    // Determine period status based on current date
+    const now = new Date();
+    const isFuture = startDate > now;
+    const isCurrent = startDate <= now && endDate >= now;
+    const isPast = endDate < now;
+
     if (!period) {
       period = await prisma.timesheetPeriod.create({
         data: {
@@ -174,48 +186,60 @@ export async function seedFinance(
           name: periodName,
           startDate,
           endDate,
-          status: month < 5 ? PeriodStatus.CLOSED : PeriodStatus.OPEN,
-          closedBy: month < 5 ? accountantUser.id : null,
-          closedAt: month < 5 ? new Date(2025, 7 + month, 5) : null,
+          status: isFuture ? PeriodStatus.OPEN : isPast ? PeriodStatus.CLOSED : PeriodStatus.OPEN,
+          closedBy: isPast ? accountantUser.id : null,
+          closedAt: isPast ? new Date(endDate.getTime() + 5 * 24 * 60 * 60 * 1000) : null,
         },
       });
 
-      // Timesheet entries for first 10 teachers
-      const entries = [];
-      for (const { teacher } of salaryStructures.slice(0, 10)) {
-        for (let day = 1; day <= 3; day++) {
-          const entryDate = new Date(startDate.getFullYear(), startDate.getMonth(), day);
-          if (entryDate <= new Date()) {
-            entries.push({
-              schoolId,
-              periodId: period.id,
-              teacherId: teacher.id,
-              entryDate,
-              hoursWorked: 8,
-              overtimeHours: 0,
-              leaveHours: 0,
-              status: EntryStatus.APPROVED,
-              submittedBy: teacher.id,
-              submittedAt: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000),
-              approvedBy: adminUser.id,
-              approvedAt: new Date(entryDate.getTime() + 2 * 24 * 60 * 60 * 1000),
-            });
+      // Timesheet entries for all teachers (only for past/current periods)
+      if (!isFuture) {
+        const entries = [];
+        for (const { teacher } of salaryStructures) {
+          // Create entries for working days (Mon-Thu, each week)
+          for (let week = 0; week < 4; week++) {
+            for (let day = 0; day < 4; day++) { // Mon-Thu (Sudan work week)
+              const entryDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1 + (week * 7) + day + 1);
+              if (entryDate <= now && entryDate.getMonth() === startDate.getMonth()) {
+                // Some variation in hours and occasional leave
+                const hasOvertime = Math.random() < 0.15;
+                const hasLeave = Math.random() < 0.05;
+                entries.push({
+                  schoolId,
+                  periodId: period.id,
+                  teacherId: teacher.id,
+                  entryDate,
+                  hoursWorked: hasLeave ? 0 : 8,
+                  overtimeHours: hasOvertime ? faker.number.int({ min: 1, max: 3 }) : 0,
+                  leaveHours: hasLeave ? 8 : 0,
+                  status: EntryStatus.APPROVED,
+                  submittedBy: teacher.id,
+                  submittedAt: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000),
+                  approvedBy: adminUser.id,
+                  approvedAt: new Date(entryDate.getTime() + 2 * 24 * 60 * 60 * 1000),
+                });
+              }
+            }
           }
         }
-      }
 
-      if (entries.length > 0) {
-        await prisma.timesheetEntry.createMany({ data: entries, skipDuplicates: true });
+        if (entries.length > 0) {
+          await prisma.timesheetEntry.createMany({ data: entries, skipDuplicates: true });
+        }
       }
     }
   }
 
-  // ===== PAYROLL RUNS (5 months) =====
-  for (let month = 0; month < 5; month++) {
+  // ===== PAYROLL RUNS (12 months - Full Fiscal Year) =====
+  const currentDate = new Date();
+  for (let month = 0; month < 12; month++) {
     const payPeriodStart = new Date(2025, 6 + month, 1);
     const payPeriodEnd = new Date(2025, 7 + month, 0);
     const payDate = new Date(2025, 7 + month, 1);
     const runNumber = `PR-2025-${String(month + 1).padStart(3, "0")}`;
+
+    // Skip future months
+    if (payPeriodStart > currentDate) continue;
 
     // Check if payroll run already exists
     const existingRun = await prisma.payrollRun.findFirst({
@@ -223,6 +247,10 @@ export async function seedFinance(
     });
 
     if (!existingRun) {
+      // Determine status based on date
+      const isPaid = payDate <= currentDate;
+      const isProcessing = !isPaid && payPeriodEnd <= currentDate;
+
       const run = await prisma.payrollRun.create({
         data: {
           schoolId,
@@ -230,26 +258,41 @@ export async function seedFinance(
           payPeriodStart,
           payPeriodEnd,
           payDate,
-          status: PayrollStatus.PAID,
+          status: isPaid ? PayrollStatus.PAID : isProcessing ? PayrollStatus.PROCESSING : PayrollStatus.DRAFT,
           totalGross: 0,
           totalDeductions: 0,
           totalNet: 0,
-          processedBy: accountantUser.id,
-          processedAt: new Date(payDate.getTime() - 5 * 24 * 60 * 60 * 1000),
-          approvedBy: adminUser.id,
-          approvedAt: new Date(payDate.getTime() - 2 * 24 * 60 * 60 * 1000),
+          processedBy: isPaid || isProcessing ? accountantUser.id : null,
+          processedAt: isPaid ? new Date(payDate.getTime() - 5 * 24 * 60 * 60 * 1000) : null,
+          approvedBy: isPaid ? adminUser.id : null,
+          approvedAt: isPaid ? new Date(payDate.getTime() - 2 * 24 * 60 * 60 * 1000) : null,
         },
       });
 
       let totalGross = 0, totalDeductions = 0, totalNet = 0;
 
       for (const { id: structureId, baseSalary, teacher } of salaryStructures) {
-        const allowanceAmount = baseSalary * 0.35;
-        const grossSalary = baseSalary + allowanceAmount;
-        const taxAmount = baseSalary * 0.15;
-        const pension = baseSalary * 0.08;
-        const deductions = taxAmount + pension;
+        // Add some variation: annual increments, bonuses
+        const yearlyIncrement = month >= 6 ? baseSalary * 0.05 : 0; // 5% increment after 6 months
+        const eidBonus = (month === 2 || month === 9) ? baseSalary * 0.5 : 0; // Eid bonuses
+        const adjustedBase = baseSalary + yearlyIncrement;
+
+        const housingAllowance = adjustedBase * 0.25;
+        const transportAllowance = adjustedBase * 0.10;
+        const allowanceAmount = housingAllowance + transportAllowance;
+        const grossSalary = adjustedBase + allowanceAmount + eidBonus;
+
+        const taxAmount = adjustedBase * 0.15;
+        const pension = adjustedBase * 0.08;
+        const healthInsurance = adjustedBase * 0.02;
+        const deductions = taxAmount + pension + healthInsurance;
         const netSalary = grossSalary - deductions;
+
+        // Realistic attendance variation
+        const daysInMonth = new Date(payPeriodEnd.getFullYear(), payPeriodEnd.getMonth() + 1, 0).getDate();
+        const workDays = Math.floor(daysInMonth * 4 / 7); // ~4 work days per week in Sudan
+        const daysAbsent = faker.number.int({ min: 0, max: 2 });
+        const daysPresent = workDays - daysAbsent;
 
         await prisma.salarySlip.create({
           data: {
@@ -261,23 +304,27 @@ export async function seedFinance(
             payPeriodStart,
             payPeriodEnd,
             payDate,
-            baseSalary,
-            allowances: [{ name: "Housing", amount: baseSalary * 0.25 }, { name: "Transport", amount: baseSalary * 0.10 }],
-            overtime: 0,
-            bonus: 0,
+            baseSalary: adjustedBase,
+            allowances: [
+              { name: "بدل سكن | Housing", amount: housingAllowance },
+              { name: "بدل مواصلات | Transport", amount: transportAllowance },
+              ...(eidBonus > 0 ? [{ name: "مكافأة العيد | Eid Bonus", amount: eidBonus }] : []),
+            ],
+            overtime: faker.number.int({ min: 0, max: 8 }) * (adjustedBase / 176), // Occasional overtime
+            bonus: eidBonus,
             grossSalary,
             taxAmount,
-            insurance: 0,
+            insurance: healthInsurance,
             loanDeduction: 0,
             otherDeductions: [],
             totalDeductions: deductions,
             netSalary,
-            daysWorked: 22,
-            daysPresent: 22,
-            daysAbsent: 0,
-            hoursWorked: 176,
-            status: SlipStatus.PAID,
-            paidAt: payDate,
+            daysWorked: workDays,
+            daysPresent,
+            daysAbsent,
+            hoursWorked: daysPresent * 8,
+            status: isPaid ? SlipStatus.PAID : isProcessing ? SlipStatus.REVIEWED : SlipStatus.GENERATED,
+            paidAt: isPaid ? payDate : null,
           },
         });
 
@@ -319,26 +366,65 @@ export async function seedFinance(
     });
   }
 
-  // Bank transactions (50) in SDG
-  for (let i = 0; i < 50; i++) {
-    const isCredit = i % 3 === 0;
-    const amount = faker.number.float({ min: 60000, max: 3000000, multipleOf: 0.01 });  // SDG amounts
+  // Bank transactions (200+) in SDG - Full year of banking activity
+  const existingTxCount = await prisma.transaction.count({ where: { schoolId, bankAccountId: mainBank.id } });
+  if (existingTxCount < 200) {
+    // Transaction categories with bilingual descriptions
+    const transactionTypes = [
+      // Income transactions
+      { type: "credit", category: "Tuition", names: ["دفع رسوم دراسية | Tuition Payment", "قسط فصلي | Term Installment", "تسديد رسوم | Fee Settlement"] },
+      { type: "credit", category: "Registration", names: ["رسوم تسجيل | Registration Fee", "رسوم قبول | Admission Fee"] },
+      { type: "credit", category: "Transport", names: ["رسوم النقل | Transport Fee", "اشتراك الباص | Bus Subscription"] },
+      { type: "credit", category: "Activities", names: ["رسوم الأنشطة | Activity Fee", "رسوم الرحلات | Trip Fee"] },
+      // Expense transactions
+      { type: "debit", category: "Salaries", names: ["رواتب المعلمين | Teacher Salaries", "رواتب الموظفين | Staff Salaries"] },
+      { type: "debit", category: "Utilities", names: ["فاتورة الكهرباء | Electricity Bill", "فاتورة المياه | Water Bill", "فاتورة الإنترنت | Internet Bill"] },
+      { type: "debit", category: "Supplies", names: ["مستلزمات مكتبية | Office Supplies", "مستلزمات تنظيف | Cleaning Supplies", "مستلزمات صحية | Health Supplies"] },
+      { type: "debit", category: "Maintenance", names: ["صيانة المباني | Building Maintenance", "صيانة الأجهزة | Equipment Maintenance"] },
+      { type: "debit", category: "Educational", names: ["كتب مدرسية | Textbooks", "معدات معملية | Lab Equipment", "وسائل تعليمية | Teaching Aids"] },
+      { type: "debit", category: "Vendor", names: ["دفع لمورد | Vendor Payment", "مستحقات متعهد | Contractor Payment"] },
+    ];
 
-    await prisma.transaction.create({
-      data: {
-        schoolId,
-        accountId: mainBank.accountId,
-        bankAccountId: mainBank.id,
-        name: isCredit ? "دفع رسوم | Fee Payment" : "دفع مصاريف | Expense Payment",
-        amount: isCredit ? amount : -amount,
-        date: faker.date.between({ from: "2025-07-01", to: new Date() }),
-        paymentChannel: "online",
-        category: isCredit ? "Income" : "Expense",
-        type: isCredit ? "credit" : "debit",
-        pending: false,
-        isoCurrencyCode: "SDG",
-      },
-    });
+    for (let i = 0; i < 200; i++) {
+      const txType = transactionTypes[i % transactionTypes.length];
+      const isCredit = txType.type === "credit";
+
+      // Vary amounts based on category
+      let minAmount: number, maxAmount: number;
+      switch (txType.category) {
+        case "Tuition":
+          minAmount = 300000; maxAmount = 1800000; break;
+        case "Salaries":
+          minAmount = 600000; maxAmount = 2000000; break;
+        case "Utilities":
+          minAmount = 50000; maxAmount = 300000; break;
+        case "Supplies":
+          minAmount = 30000; maxAmount = 150000; break;
+        default:
+          minAmount = 60000; maxAmount = 600000;
+      }
+
+      const amount = faker.number.float({ min: minAmount, max: maxAmount, multipleOf: 0.01 });
+      const txDate = faker.date.between({ from: "2025-07-01", to: new Date() });
+      const txName = faker.helpers.arrayElement(txType.names);
+
+      await prisma.transaction.create({
+        data: {
+          schoolId,
+          accountId: mainBank.accountId,
+          bankAccountId: mainBank.id,
+          name: txName,
+          amount: isCredit ? amount : -amount,
+          date: txDate,
+          paymentChannel: faker.helpers.arrayElement(["online", "bank_transfer", "cash", "cheque"]),
+          category: txType.category,
+          type: isCredit ? "credit" : "debit",
+          pending: txDate > new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Last 3 days pending
+          isoCurrencyCode: "SDG",
+        },
+      });
+    }
+    console.log(`   ✅ Created: 200 bank transactions`);
   }
 
   // ===== WALLET (findFirst + create) =====
@@ -662,5 +748,5 @@ export async function seedFinance(
     console.log(`   ✅ Created ${journalCount} journal entries with ${ledgerCount} ledger entries`);
   }
 
-  console.log(`   ✅ Created: Chart of accounts, Payroll (5 months), Banking, Budgets, Expenses, Invoices, Ledger\n`);
+  console.log(`   ✅ Created: Chart of accounts, Payroll (12 months), Banking (200+ tx), Budgets, Expenses, Invoices, Ledger\n`);
 }

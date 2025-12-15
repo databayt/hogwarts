@@ -4,12 +4,24 @@
 
 The Classes feature empowers school administrators to organize students into grade sections, assign teachers and subjects, manage class schedules, and track enrollment with comprehensive class management tools.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/classes` | Class List | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/new` | Create Class | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]` | Class Detail | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/edit` | Edit Class | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/roster` | Student Roster | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/teachers` | Subject Teachers | **🔴 BLOCKED** |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/schedule` | Timetable | ✅ Ready |
+
 ### What Admins Can Do
 
 **Core Capabilities:**
 - 📚 Create classes (grade sections like Grade 1A, Grade 2B)
 - 👥 Assign students to classes (many-to-many enrollment)
-- 👨‍🏫 Assign teachers to classes (homeroom and subject teachers)
+- 👨‍🏫 Assign teachers to classes **← PARTIAL** (homeroom works, subject teachers incomplete)
 - 🎯 Link classes to subjects
 - 📅 Set class schedules (term, periods, classroom)
 - 🏫 Manage classroom assignments
@@ -41,11 +53,39 @@ The Classes feature empowers school administrators to organize students into gra
 - ❌ Cannot view full class roster (privacy)
 
 ### Current Implementation Status
-**Production-Ready MVP ✅**
+**🔴 BLOCKED - Subject Teacher Assignment Incomplete**
+**Completion:** 85%
+
+---
+
+## Critical Blocker: Teacher-Class Assignment
+
+| Property | Value |
+|----------|-------|
+| **URL** | `/classes/[id]/teachers` |
+| **Current State** | Homeroom teacher works, subject teachers incomplete |
+| **Impact** | Cannot assign specific subject teachers to classes |
+
+**What Works:**
+- Homeroom teacher assignment via `teacherId` field
+- Teacher dropdown in class form
+
+**What's Missing:**
+- `assignSubjectTeacher(classId, subjectId, teacherId)` server action
+- `removeSubjectTeacher(classId, subjectId)` server action
+- Teacher availability validation (conflict detection)
+- Subject teacher management UI
+- Multiple teachers per subject (co-teaching)
+
+**Files to Create/Modify:**
+- `src/components/platform/classes/subject-teachers.tsx` - UI component
+- `src/components/platform/classes/actions.ts` - Add subject teacher actions
+
+---
 
 **Completed:**
 - ✅ CRUD operations with validation
-- ✅ Teacher assignment (homeroom and subject teachers)
+- ✅ Homeroom teacher assignment
 - ✅ Student enrollment (many-to-many via StudentClass)
 - ✅ Subject linking
 - ✅ Capacity limits configuration
@@ -53,6 +93,10 @@ The Classes feature empowers school administrators to organize students into gra
 - ✅ Multi-tenant isolation (schoolId scoping)
 - ✅ Multi-step form (information → schedule)
 - ✅ Timetable integration
+
+**Blocked:**
+- 🔴 **Subject teacher assignment** ← MVP blocker (homeroom only, not subject teachers)
+- 🔴 Teacher availability validation
 
 **In Progress:**
 - 🚧 Class performance analytics

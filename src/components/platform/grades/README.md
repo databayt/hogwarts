@@ -4,6 +4,16 @@
 
 The Results feature provides a comprehensive gradebook where teachers and administrators track student performance, calculate GPAs, generate report cards, and analyze academic trends across assignments and exams.
 
+### URLs Handled by This Block
+
+| URL | Page | Status |
+|-----|------|--------|
+| `/[lang]/s/[subdomain]/(platform)/grades` | Gradebook | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/grades/report-cards` | Report Cards | 🚧 In Progress |
+
+**Status:** ✅ Production-Ready MVP (75%)
+**Last Updated:** 2025-12-14
+
 ### What Admins Can Do
 
 **Core Capabilities:**

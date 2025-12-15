@@ -1,5 +1,5 @@
 import { ClassDetailContent } from "@/components/platform/classes/detail"
-import { getClassById } from "@/components/platform/classes/actions"
+import { getClassById, getClassSubjectTeachers } from "@/components/platform/classes/actions"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
 
@@ -13,15 +13,18 @@ export default async function Page({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
 
-  // Fetch class data
-  const result = await getClassById({ id })
+  // Fetch class data and subject teachers in parallel
+  const [classResult, teachersResult] = await Promise.all([
+    getClassById({ id }),
+    getClassSubjectTeachers({ classId: id }),
+  ])
 
   // Handle errors
-  if (!result.success) {
+  if (!classResult.success) {
     return (
       <ClassDetailContent
         classData={null}
-        error={result.error}
+        error={classResult.error}
         dictionary={dictionary}
         lang={lang}
       />
@@ -31,9 +34,10 @@ export default async function Page({ params }: Props) {
   // Render class detail with data
   return (
     <ClassDetailContent
-      classData={result.data ?? null}
+      classData={classResult.data ?? null}
       dictionary={dictionary}
       lang={lang}
+      initialSubjectTeachers={teachersResult.success ? teachersResult.data : []}
     />
   )
 }

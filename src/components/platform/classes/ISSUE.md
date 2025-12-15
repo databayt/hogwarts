@@ -2,16 +2,47 @@
 
 Track production readiness and enhancements for the Classes feature.
 
-**Status:** ✅ Production-Ready MVP
-**Last Updated:** 2025-10-10
+**Status:** 🔴 BLOCKED - Subject Teacher Assignment Incomplete
+**Completion:** 85%
+**Last Updated:** 2025-12-14
+
+---
+
+## Critical Blocker
+
+### Teacher-Class Assignment (INCOMPLETE)
+
+| Property | Value |
+|----------|-------|
+| **URL** | `/[lang]/s/[subdomain]/(platform)/classes/[id]/teachers` |
+| **Current State** | Homeroom teacher works, subject teachers missing |
+| **Impact** | Cannot assign specific teachers to teach specific subjects in a class |
+
+**What Works:**
+- Homeroom teacher assignment via `teacherId` field on Class model
+- Basic teacher selection in class creation form
+
+**Missing Implementation:**
+- `assignSubjectTeacher(classId, subjectId, teacherId)` server action
+- `removeSubjectTeacher(classId, subjectId)` server action
+- `getClassSubjectTeachers(classId)` query
+- Subject teacher assignment UI component
+- Teacher availability validation (prevent double-booking)
+- `ClassSubjectTeacher` junction model (or equivalent)
+
+**Files to Create/Modify:**
+- `src/components/platform/classes/subject-teachers.tsx` - Assignment UI
+- `src/components/platform/classes/actions.ts` - Add subject teacher actions
+- `prisma/models/class.prisma` - Consider adding `ClassSubjectTeacher` model
 
 ---
 
 ## Current Status
 
-**Production-Ready MVP Features ✅**
+**MVP Features Status**
 - [x] CRUD operations with Zod validation
-- [x] Teacher assignment (homeroom and subject teachers)
+- [x] Homeroom teacher assignment
+- [ ] **Subject teacher assignment** ← BLOCKED
 - [x] Student enrollment (many-to-many via StudentClass)
 - [x] Subject linking per class
 - [x] Capacity limits configuration
@@ -29,7 +60,7 @@ Track production readiness and enhancements for the Classes feature.
 ### Core Features
 - [x] Create classes with multi-step form
 - [x] Assign homeroom teacher to class
-- [x] Assign subject teachers to class
+- [ ] **Assign subject teachers to class** ← BLOCKED (actions missing)
 - [x] Enroll students in classes (many-to-many)
 - [x] Set class capacity limits
 - [x] Assign physical classroom
@@ -395,7 +426,8 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started
-- ❌ Blocked or has critical issues
+- 🔴 BLOCKED - Critical blocker preventing MVP completion
 
-**Last Review:** 2025-10-10
-**Next Review:** After completing class performance analytics and attendance summary
+**Last Review:** 2025-12-14
+**Current Blocker:** Subject Teacher Assignment (homeroom works, subject teachers missing)
+**Next Review:** After resolving subject teacher assignment blocker

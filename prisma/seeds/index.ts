@@ -23,6 +23,7 @@ import { seedAcademic } from "./academic";
 import { seedDepartments } from "./departments";
 import { seedClassrooms } from "./classrooms";
 import { seedPeople, seedTeacherQualifications } from "./people";
+import { seedStaff } from "./staff";
 import { seedClasses } from "./classes";
 import { seedLibrary, seedBorrowRecords } from "./library";
 import { seedAnnouncements } from "./announcements";
@@ -40,6 +41,7 @@ import { seedAttendance, seedAdvancedAttendance } from "./attendance";
 import { seedMessaging } from "./messaging";
 import { seedHealth } from "./health";
 import { seedDocuments } from "./documents";
+import { seedMissingData } from "./missing";
 import type { SeedPrisma } from "./types";
 
 const prisma = new PrismaClient() as SeedPrisma;
@@ -48,7 +50,7 @@ async function main() {
   console.log("\n" + "=".repeat(60));
   console.log("  🌱 ADDITIVE SEED MODE - Data is preserved");
   console.log("  🏫 BILINGUAL K-12 SCHOOL SEED (AR/EN)");
-  console.log("  📍 demo.databayt.org | مدرسة دار بايت التجريبية");
+  console.log("  📍 demo.databayt.org | مدرسة تجريبية");
   console.log("  🇸🇩 Sudanese Education System | النظام التعليمي السوداني");
   console.log("=".repeat(60) + "\n");
 
@@ -106,6 +108,9 @@ async function main() {
 
     // Teacher qualifications (degrees, certifications, experience)
     await seedTeacherQualifications(prisma, schoolId);
+
+    // Non-teaching staff (50+ members: admin, security, maintenance, etc.)
+    await seedStaff(prisma, schoolId);
 
     // Phase 4: Classes & Enrollments
     console.log("\nPHASE 4: CLASSES & ENROLLMENTS");
@@ -188,6 +193,12 @@ async function main() {
     await seedMessaging(prisma, schoolId);
     await seedHealth(prisma, schoolId);
     await seedDocuments(prisma, schoolId);
+
+    // Phase 13: Missing Data (invoices, notifications, tasks, etc.)
+    console.log("\nPHASE 13: MISSING DATA");
+    console.log("-".repeat(40));
+
+    await seedMissingData(prisma, schoolId);
 
     // Summary
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);

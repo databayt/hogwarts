@@ -2,18 +2,52 @@
 
 Track production readiness and enhancements for the Students feature.
 
-**Status:** ✅ Production-Ready MVP
-**Last Updated:** 2025-10-10
+**Status:** 🔴 BLOCKED - Guardian Linking Not Functional
+**Completion:** 75%
+**Last Updated:** 2025-12-14
+
+---
+
+## Critical Blocker
+
+### Guardian Linking (NOT FUNCTIONAL)
+
+| Property | Value |
+|----------|-------|
+| **URLs Affected** | `/students/guardians`, `/students/[id]` (Guardian tab) |
+| **Current State** | UI exists, no server actions implemented |
+| **Impact** | Schools cannot link parents to students |
+
+**Missing Implementation:**
+- `linkGuardian(studentId, guardianId)` server action
+- `unlinkGuardian(studentId, guardianId)` server action
+- `getStudentGuardians(studentId)` query
+- Guardian tab UI wiring to actions
+
+**Files to Create/Modify:**
+- `src/components/platform/students/actions.ts` - Add guardian actions
+- `src/components/platform/students/guardian-tab/` - Wire UI to actions
+
+**Prisma Models (Exist ✅):**
+```prisma
+model StudentGuardian {
+  studentId   String
+  guardianId  String
+  relation    GuardianRelation
+  isPrimary   Boolean @default(false)
+  // ... relations exist
+}
+```
 
 ---
 
 ## Current Status
 
-**Production-Ready MVP Features ✅**
+**MVP Features Status**
 - [x] CRUD operations with Zod validation
 - [x] CSV bulk import with error reporting
 - [x] Class enrollment management (many-to-many via StudentClass)
-- [x] Guardian relationships (StudentGuardian linking)
+- [ ] **Guardian relationships (StudentGuardian linking)** ← BLOCKED
 - [x] Search and filtering (name, status, class)
 - [x] Export student data to CSV
 - [x] Multi-tenant isolation (schoolId scoping)
@@ -34,7 +68,7 @@ Track production readiness and enhancements for the Students feature.
 - [x] Filter by status (active/inactive)
 - [x] Filter by class assignment
 - [x] Update student information
-- [x] Link students to guardian accounts
+- [ ] **Link students to guardian accounts** ← BLOCKED (no server actions)
 - [x] Track enrollment status changes
 - [x] Export student data to CSV
 - [x] Delete student records with confirmation
@@ -52,7 +86,7 @@ Track production readiness and enhancements for the Students feature.
 - [x] Validation on all inputs (client + server)
 - [x] Referential integrity (foreign keys)
 - [x] Class enrollment many-to-many relationship
-- [x] Guardian relationships properly linked
+- [ ] **Guardian relationships properly linked** ← BLOCKED (model exists, actions missing)
 
 ---
 
@@ -95,7 +129,8 @@ Track production readiness and enhancements for the Students feature.
 - [ ] Multi-class enrollment (for electives)
 - [ ] Automated class assignment based on grade level
 
-### Guardian Management
+### Guardian Management (Requires Blocker Fix First)
+- [ ] **Basic guardian linking** ← MVP BLOCKER
 - [ ] Multiple guardians per student
 - [ ] Primary/secondary guardian designation
 - [ ] Emergency contact prioritization
@@ -405,7 +440,8 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started
-- ❌ Blocked or has critical issues
+- 🔴 BLOCKED - Critical blocker preventing MVP completion
 
-**Last Review:** 2025-10-10
-**Next Review:** After completing photo upload and document attachments
+**Last Review:** 2025-12-14
+**Current Blocker:** Guardian Linking (no server actions)
+**Next Review:** After resolving guardian linking blocker

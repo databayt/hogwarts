@@ -4,14 +4,10 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const domain = process.env.NEXT_PUBLIC_APP_URL;
-
-// Debugging: Log the domain value to ensure it's correctly set
-console.log("Domain used for email links:", domain);
+const isDev = process.env.NODE_ENV === "development";
 
 export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
-  // Debugging: Log the input values
-  console.log("Sending 2FA email to:", email);
-  console.log("2FA Token:", token);
+  if (isDev) console.log("Sending 2FA email to:", email);
 
   try {
     const response = await resend.emails.send({
@@ -21,20 +17,18 @@ export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
       html: `<p>Your 2FA code: ${token}</p>`,
       text: `Your 2FA code: ${token}`
     });
-    
-    // Debugging: Log the response from Resend API
-    console.log("2FA email sent successfully, response:", response);
+
+    if (isDev) console.log("2FA email sent successfully, response:", response);
   } catch (error) {
-    // Debugging: Log the error if sending email fails
     console.error("Error sending 2FA email:", error);
   }
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-  const resetLink = `${domain}/new-password?token=${token}`;
+  // Include locale in the reset link - routes require /[lang]/ prefix
+  const resetLink = `${domain}/en/new-password?token=${token}`;
 
-  // Debugging: Log the reset link to ensure it's correctly built
-  console.log("Password reset link:", resetLink);
+  if (isDev) console.log("Password reset link:", resetLink);
 
   try {
     const response = await resend.emails.send({
@@ -45,19 +39,17 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
       text: `Click the following link to reset your password: ${resetLink}`
     });
 
-    // Debugging: Log the response from Resend API
-    console.log("Password reset email sent successfully, response:", response);
+    if (isDev) console.log("Password reset email sent successfully, response:", response);
   } catch (error) {
-    // Debugging: Log the error if sending email fails
     console.error("Error sending password reset email:", error);
   }
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const confirmLink = `${domain}/new-verification?token=${token}`;
+  // Include locale in the verification link - routes require /[lang]/ prefix
+  const confirmLink = `${domain}/en/new-verification?token=${token}`;
 
-  // Debugging: Log the confirmation link to ensure it's correctly built
-  console.log("Email confirmation link:", confirmLink);
+  if (isDev) console.log("Email confirmation link:", confirmLink);
 
   try {
     const response = await resend.emails.send({
@@ -68,10 +60,8 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       text: `Click the following link to confirm your email: ${confirmLink}`
     });
 
-    // Debugging: Log the response from Resend API
-    console.log("Verification email sent successfully, response:", response);
+    if (isDev) console.log("Verification email sent successfully, response:", response);
   } catch (error) {
-    // Debugging: Log the error if sending email fails
     console.error("Error sending verification email:", error);
   }
 };

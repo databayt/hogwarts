@@ -1353,6 +1353,17 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 
 - **Platform**: Hogwarts - School automation platform
 - **License**: MIT
-- **Test Coverage**: 234 test files
-- **MVP Status**: 100% complete, production-ready
+- **Test Coverage**: ~15 test files (target: 50+)
+- **MVP Status**: ~75% functional (4 critical blockers remaining)
 - **AI Automation**: 33 agents, 22 commands, 7 skills
+
+### Critical Blockers (MVP)
+
+| Blocker | Status | Impact |
+|---------|--------|--------|
+| Password Reset | BUG | Cannot reset passwords |
+| Guardian Linking | NOT FUNCTIONAL | Cannot link parents to students |
+| Academic Year Setup | 15% complete | Cannot configure school calendar |
+| Subject Teacher Assignment | INCOMPLETE | Only homeroom teachers, not subject teachers |
+
+See [roadmap.mdx](/content/docs/(root)/roadmap.mdx) for detailed URL-by-URL readiness assessment.

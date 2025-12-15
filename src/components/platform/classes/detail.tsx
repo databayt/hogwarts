@@ -21,16 +21,19 @@ import {
   Clock,
   User,
   School,
+  UserCog,
 } from "lucide-react"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { ClassDetailResult } from "./actions"
+import type { ClassDetailResult, ClassTeacherRow } from "./actions"
+import { SubjectTeachers } from "./subject-teachers"
 
 interface ClassDetailContentProps {
   classData: ClassDetailResult | null
   error?: string | null
   dictionary: Dictionary
   lang: Locale
+  initialSubjectTeachers?: ClassTeacherRow[]
 }
 
 export function ClassDetailContent({
@@ -38,6 +41,7 @@ export function ClassDetailContent({
   error,
   dictionary,
   lang,
+  initialSubjectTeachers = [],
 }: ClassDetailContentProps) {
   const router = useRouter()
   const isRTL = lang === "ar"
@@ -67,6 +71,7 @@ export function ClassDetailContent({
     errorLoading: isRTL ? "فشل تحميل بيانات الفصل" : "Failed to load class data",
     notFound: isRTL ? "الفصل غير موجود" : "Class not found",
     enrolledAt: isRTL ? "تاريخ التسجيل" : "Enrolled",
+    subjectTeachers: isRTL ? "معلمو المادة" : "Subject Teachers",
   }
 
   // Error state
@@ -128,6 +133,10 @@ export function ClassDetailContent({
           <TabsTrigger value="overview">{t.overview}</TabsTrigger>
           <TabsTrigger value="students">
             {t.students} ({classData._count.studentClasses})
+          </TabsTrigger>
+          <TabsTrigger value="subject-teachers">
+            <UserCog className="mr-1 h-4 w-4" />
+            {t.subjectTeachers}
           </TabsTrigger>
         </TabsList>
 
@@ -331,6 +340,15 @@ export function ClassDetailContent({
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Subject Teachers Tab */}
+        <TabsContent value="subject-teachers" className="space-y-4">
+          <SubjectTeachers
+            classId={classData.id}
+            lang={lang}
+            initialTeachers={initialSubjectTeachers}
+          />
         </TabsContent>
       </Tabs>
     </div>
