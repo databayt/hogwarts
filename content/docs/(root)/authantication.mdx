@@ -154,14 +154,17 @@ Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
 
 ### Core Files
 
-| File                        | Purpose                                                   |
-| --------------------------- | --------------------------------------------------------- |
-| `src/auth.ts`               | NextAuth configuration, JWT callbacks, session management |
-| `src/auth.config.ts`        | OAuth provider configurations                             |
-| `src/middleware.ts`         | Route protection, subdomain detection                     |
-| `src/routes.ts`             | Public/protected route definitions                        |
-| `src/lib/tenant-context.ts` | School context retrieval                                  |
-| `src/lib/school-access.ts`  | School ownership and access control                       |
+| File                               | Purpose                                                   |
+| ---------------------------------- | --------------------------------------------------------- |
+| `src/auth.ts`                      | NextAuth configuration, JWT callbacks, session management |
+| `src/auth.config.ts`               | OAuth provider configurations with profile logging        |
+| `src/middleware.ts`                | Route protection, subdomain detection                     |
+| `src/routes.ts`                    | Public/protected route definitions                        |
+| `src/lib/tenant-context.ts`        | School context retrieval                                  |
+| `src/lib/school-access.ts`         | School ownership and access control                       |
+| `src/lib/auth-logger.ts`           | Centralized auth logging utility                          |
+| `src/lib/auth-config-validator.ts` | Environment configuration validation                      |
+| `src/app/api/debug-auth/route.ts`  | Debug endpoint for checking auth state                    |
 
 ### Component Structure
 
@@ -365,6 +368,91 @@ if (role !== "ADMIN" && role !== "DEVELOPER") {
 }
 ```
 
+## Debugging & Logging
+
+### Debug Endpoint
+
+Check authentication state and configuration at `/api/debug-auth`:
+
+```bash
+curl https://ed.databayt.org/api/debug-auth
+```
+
+Returns JSON with:
+
+- Session info (userId, email, role, schoolId)
+- Configuration validation status
+- Auth-related cookies
+- Provider status (Google, Facebook)
+- Callback URLs
+- Debugging hints
+
+**Note**: This endpoint is at `/api/debug-auth` (not `/api/auth/debug`) to avoid conflicts with NextAuth's catch-all route.
+
+### Centralized Logging
+
+All auth operations are logged through `src/lib/auth-logger.ts`:
+
+```typescript
+import { authLogger } from "@/lib/auth-logger"
+
+// Logging methods
+authLogger.info("Message", { data }) // General info
+authLogger.warn("Message", { data }) // Warnings
+authLogger.error("Message", { data }) // Errors
+authLogger.oauth("google", "step", data) // OAuth flow
+authLogger.callback("signIn", { data }) // Callbacks
+authLogger.session("action", { data }) // Session ops
+authLogger.api("GET", "/path", { data }) // API requests
+authLogger.exception("msg", error) // Exceptions with stack
+authLogger.redirect(from, to, reason) // Redirects
+```
+
+### Configuration Validation
+
+Environment variables are validated at startup via `src/lib/auth-config-validator.ts`:
+
+```typescript
+import { validateAuthConfig } from "@/lib/auth-config-validator"
+
+const result = validateAuthConfig()
+// Returns: { valid: boolean, issues: string[], warnings: string[], config: {...} }
+```
+
+Validates:
+
+- `AUTH_SECRET` (required, min 32 chars)
+- `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`
+- `FACEBOOK_CLIENT_ID` & `FACEBOOK_CLIENT_SECRET`
+- `NEXTAUTH_URL`
+- `DATABASE_URL`
+
+### Viewing Logs
+
+**Local Development**:
+
+```bash
+pnpm dev 2>&1 | grep -E '\[AUTH|\[OAUTH'
+```
+
+**Vercel Production**:
+
+```bash
+vercel logs https://ed.databayt.org --output=short
+```
+
+### Log Format
+
+```
+[AUTH:INFO] Configuration validation PASSED
+[OAUTH:GOOGLE] Profile callback received @ 2025-12-15T10:30:00.000Z
+  { sub: "123...", email: "user@...", emailVerified: true }
+[AUTH:CALLBACK:SIGNIN] @ 2025-12-15T10:30:05.000Z
+  { provider: "google", userId: "xxx", hasProfile: true }
+[AUTH:API] GET /api/auth/callback/google
+  { action: "callback/google", status: 302 }
+```
+
 ## Troubleshooting
 
 ### OAuth Issues
@@ -378,6 +466,18 @@ if (role !== "ADMIN" && role !== "DEVELOPER") {
 
 - Check OAuth consent screen
 - Verify required scopes
+
+**Configuration error**: Check the debug endpoint first
+
+```bash
+curl https://ed.databayt.org/api/debug-auth | jq '.config'
+```
+
+Common causes:
+
+- Missing `AUTH_SECRET` or too short (< 32 chars)
+- Missing OAuth credentials
+- Invalid `NEXTAUTH_URL`
 
 ### Session Issues
 
@@ -400,18 +500,21 @@ if (role !== "ADMIN" && role !== "DEVELOPER") {
 
 ## Roadmap
 
-### Immediate (P0)
+### Completed
 
-1. **Remove debug logging** - Clean up console.log statements in production
+1. ~~**Remove debug logging**~~ - Replaced with centralized `authLogger` utility
+2. **Debug endpoint** - `/api/debug-auth` for checking auth state
+3. **Configuration validation** - Environment vars validated at startup
+4. **OAuth profile logging** - Google & Facebook callbacks log profile data
 
 ### Short-term (P1)
 
-2. **Invitation system** - Schools invite users with pre-assigned roles
-3. **School join codes** - Simple codes like "HOGWARTS-2024" for easy joining
+5. **Invitation system** - Schools invite users with pre-assigned roles
+6. **School join codes** - Simple codes like "HOGWARTS-2024" for easy joining
 
-### Medium-term (P1)
+### Medium-term (P2)
 
-4. **Bulk user creation** - CSV import for students/teachers
+7. **Bulk user creation** - CSV import for students/teachers
 
 ## Testing
 
