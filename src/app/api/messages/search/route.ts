@@ -1,15 +1,51 @@
+/**
+ * Message Search API
+ *
+ * Full-text search within messaging conversations.
+ *
+ * PARAMETERS:
+ * - conversationId (required): Conversation to search in
+ * - q (required): Search query string
+ * - limit (optional, default: 50, max: 100): Result limit
+ *
+ * SECURITY MODEL:
+ * - User must be conversation participant
+ * - WHY: Prevents searching others' private messages
+ * - Checked via isConversationParticipant() before query
+ *
+ * MULTI-TENANT SAFETY:
+ * - schoolId from session context
+ * - Cannot search across schools
+ *
+ * SEARCH BEHAVIOR:
+ * - Case-insensitive matching
+ * - Searches message content only (not metadata)
+ * - Empty query returns empty results (no error)
+ * - Min query length: 1 character
+ *
+ * WHY LIMIT CAPPED AT 100:
+ * - Prevents memory exhaustion on large result sets
+ * - Forces pagination for better UX
+ * - Reduces database load
+ *
+ * WHY force-dynamic:
+ * - Messages change constantly
+ * - Search results must be fresh
+ *
+ * RESPONSE FORMAT:
+ * - messages: Array with id, content, sender, createdAt
+ * - total: Total matching count (for pagination)
+ *
+ * @see /components/platform/messaging/queries.ts
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import { isConversationParticipant, searchMessages } from "@/components/platform/messaging/queries"
 
+// WHY: Messages change constantly
 export const dynamic = "force-dynamic"
-
-/**
- * Search messages within a conversation
- *
- * GET /api/messages/search?conversationId=<id>&q=<query>&limit=<number>
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()

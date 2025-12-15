@@ -1,7 +1,47 @@
 /**
- * API Route: POST /api/geo/location
- * Submit student location for geofence tracking
- * Rate limited: 20 requests per 10 seconds per student
+ * GPS Location Submission API - Geofence Attendance
+ *
+ * Receives student device location for automatic attendance tracking.
+ *
+ * USE CASES:
+ * - Automatic check-in when student enters school geofence
+ * - Bus route tracking during pickup/dropoff
+ * - Field trip location monitoring
+ * - Verify student is on campus during school hours
+ *
+ * RATE LIMITING:
+ * - 20 requests per 10 seconds per student
+ * - WHY: Balance real-time updates vs server load
+ * - GPS typically updates every 1-5 seconds
+ * - 20 req/10s allows burst without abuse
+ *
+ * LOCATION DATA:
+ * - latitude, longitude: GPS coordinates
+ * - accuracy: Horizontal accuracy in meters
+ * - timestamp: Device time (for offline sync)
+ *
+ * MULTI-TENANT SAFETY:
+ * - schoolId from session (not request body)
+ * - Location stored scoped to school
+ * - Cannot submit for another school
+ *
+ * WHY force-dynamic:
+ * - Location data is real-time
+ * - Cannot be cached or precomputed
+ * - Each submission must hit database
+ *
+ * PRIVACY CONSIDERATIONS:
+ * - Requires guardian consent
+ * - Data retention policy per school
+ * - Not accessible to students/parents
+ *
+ * GOTCHAS:
+ * - GPS accuracy varies (5m-100m typical)
+ * - Indoor locations unreliable
+ * - Battery saver mode reduces updates
+ * - VPN/proxy affects accuracy
+ *
+ * @see /components/platform/attendance/geofencee/actions.ts
  */
 
 import { NextRequest, NextResponse } from 'next/server'

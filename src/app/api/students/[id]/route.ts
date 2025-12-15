@@ -1,3 +1,37 @@
+/**
+ * Student Name Lookup API
+ *
+ * Returns formatted name for a specific student ID.
+ *
+ * USE CASES:
+ * - Display student name from ID reference
+ * - Autocomplete/select component label lookup
+ * - Form field population from foreign key
+ *
+ * RATE LIMITING:
+ * - API tier limits applied
+ * - WHY: Prevents enumeration attacks
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - schoolId from tenant context
+ * - Student must belong to user's school
+ * - Cannot look up students from other schools
+ *
+ * NAME FORMAT:
+ * - Concatenates: givenName + middleName + surname
+ * - Filters out null/empty parts
+ * - Arabic names may have 3-4 parts
+ *
+ * WHY MINIMAL SELECT:
+ * - Only fetches name fields (not full student)
+ * - Reduces data transfer
+ * - Protects sensitive info (DOB, contact, etc.)
+ *
+ * RESPONSE:
+ * - { name: "Ahmed Mohamed Ali" }
+ * - 404 if not found or wrong school
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";

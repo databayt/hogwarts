@@ -1,3 +1,39 @@
+/**
+ * Subdomain Auth Debug API - Environment Correlation
+ *
+ * Shows subdomain detection + auth environment configuration together.
+ *
+ * WHY THIS EXISTS:
+ * - Subdomain detection and auth config must align
+ * - NEXTAUTH_URL must match the domain structure
+ * - Mismatches cause OAuth redirect failures
+ *
+ * DETECTION ALGORITHM:
+ * Three environments with different subdomain patterns:
+ *
+ * 1. PRODUCTION: *.databayt.org (except ed.databayt.org)
+ *    - school.databayt.org → subdomain: "school"
+ *    - ed.databayt.org → subdomain: null (main app)
+ *
+ * 2. DEVELOPMENT: *.localhost
+ *    - school.localhost:3000 → subdomain: "school"
+ *    - localhost:3000 → subdomain: null (main app)
+ *
+ * 3. VERCEL PREVIEW: tenant---branch.vercel.app
+ *    - school---main.vercel.app → subdomain: "school"
+ *    - Uses --- separator (not dots)
+ *
+ * WHY DETAILED HOST PARSING:
+ * - Shows each step of subdomain extraction
+ * - Helps identify why detection fails
+ * - Documents the algorithm for debugging
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - Environment vars filtered (no secrets)
+ * - User agent truncated (potential injection)
+ */
+
 import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 

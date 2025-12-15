@@ -1,3 +1,44 @@
+/**
+ * Blob Deletion API - Safe File Removal
+ *
+ * Deletes files from Vercel Blob with comprehensive safety checks.
+ *
+ * SECURITY LAYERS:
+ * 1. Authentication: Session required
+ * 2. Authorization: TEACHER, ADMIN, or DEVELOPER only
+ * 3. Tenant isolation: File must belong to user's school
+ * 4. Reference check: Cannot delete files still in use
+ *
+ * WHY REFERENCE CHECK:
+ * - Prevents broken videos in courses
+ * - Courses may share attachments
+ * - Orphaned URLs cause user confusion
+ * - Returns 409 Conflict if file is referenced
+ *
+ * MULTI-TENANT VALIDATION:
+ * - Pathname must start with `stream/{schoolId}/`
+ * - DEVELOPER can delete any file (platform admin)
+ * - School users can only delete their school's files
+ *
+ * WHY PATHNAME CHECK (not DB lookup):
+ * - Faster than database query
+ * - Filesystem structure enforces isolation
+ * - Works even if DB record was deleted
+ *
+ * REFERENCE LOCATIONS CHECKED:
+ * - StreamLesson.videoUrl
+ * - StreamAttachment.url
+ * - StreamChapter.videoUrl
+ *
+ * GOTCHAS:
+ * - Only works for Vercel Blob URLs
+ * - S3 files need separate endpoint
+ * - Deletion is permanent (no soft delete)
+ * - No bulk delete (one URL per request)
+ *
+ * @see /blob/upload for the inverse operation
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
@@ -5,17 +46,6 @@ import { del } from "@vercel/blob";
 import { logger } from "@/lib/logger";
 import { db } from "@/lib/db";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
-
-/**
- * Vercel Blob Delete API
- * Handles deletion of videos and materials from Vercel Blob storage
- *
- * Security:
- * - Verifies user is authenticated
- * - Verifies user has permission (teacher/admin)
- * - Verifies file belongs to user's school (multi-tenant)
- * - Checks if file is referenced in database before deletion
- */
 
 export async function DELETE(request: NextRequest) {
   // Rate limiting

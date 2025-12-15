@@ -1,6 +1,40 @@
+/**
+ * Academic Terms Selection API
+ *
+ * Returns list of academic terms for dropdown selection.
+ *
+ * USE CASES:
+ * - Timetable: Select term to view/edit
+ * - Reports: Filter by academic term
+ * - Attendance: Choose term for records
+ *
+ * PUBLIC ACCESS:
+ * - Primary: Uses session for authenticated users
+ * - Fallback: Accepts domain param for public pages
+ *
+ * WHY DOMAIN FALLBACK:
+ * - Public school timetable pages have no session
+ * - domain param identifies school without auth
+ * - Returns empty array if school not found (graceful)
+ *
+ * RESPONSE FORMAT:
+ * { terms: [{ id, label: "Term 1" }, ...] }
+ *
+ * WHY force-dynamic:
+ * - Terms created during academic year setup
+ * - Must return current data
+ *
+ * ERROR HANDLING:
+ * - Returns empty terms array instead of errors
+ * - WHY: Dropdowns should render (empty) not crash
+ *
+ * @see /components/platform/timetable/actions.ts
+ */
+
 import { getTermsForSelection } from "@/components/platform/timetable/actions"
 import { db } from "@/lib/db"
 
+// WHY: Terms list changes during setup
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {

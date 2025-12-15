@@ -1,3 +1,46 @@
+/**
+ * Session Debug API - Auth State Inspector
+ *
+ * Comprehensive debugging for NextAuth session and cookie state.
+ *
+ * WHY THIS EXISTS:
+ * - OAuth flows across subdomains are notoriously hard to debug
+ * - Cookie domain issues (subdomain vs root) cause silent failures
+ * - PKCE state can get lost in cross-domain redirects
+ * - Session exists in one context but not another
+ *
+ * WHAT IT INSPECTS:
+ * 1. All cookies (total count + auth-specific)
+ * 2. Specific auth cookies:
+ *    - authjs.session-token: JWT session
+ *    - authjs.pkce.code_verifier: OAuth PKCE protection
+ *    - authjs.csrf-token: CSRF protection
+ *    - authjs.callback-url: Post-login redirect
+ * 3. Session state (from auth() call)
+ * 4. Subdomain detection (3 environment types)
+ * 5. Environment configuration
+ *
+ * SUBDOMAIN DETECTION TYPES:
+ * - production: school.databayt.org
+ * - development: school.localhost:3000
+ * - vercel: tenant---branch.vercel.app
+ *
+ * WHY TRUNCATE COOKIE VALUES:
+ * - JWTs are long (1000+ chars)
+ * - First 20 chars enough to verify cookie exists
+ * - Prevents log bloat and potential exposure
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - Sensitive data sanitized before logging
+ * - Only platform operators can access
+ *
+ * COMMON ISSUES DEBUGGED:
+ * - Cookie not set on subdomain (domain config issue)
+ * - Session null but cookie exists (JWT parsing failure)
+ * - PKCE missing (cookie domain mismatch)
+ */
+
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { secureDebugEndpoint, createDebugResponse, sanitizeDebugData } from '@/lib/debug-security';

@@ -1,3 +1,25 @@
+/**
+ * Settings API - Stub Endpoint
+ *
+ * Currently returns { ok: true } as a placeholder.
+ *
+ * HISTORICAL NOTE:
+ * Previously connected to MongoDB for user settings.
+ * Migration to Prisma made this obsolete.
+ * Legacy code preserved in comments for reference.
+ *
+ * INTENDED FUNCTIONALITY:
+ * - GET: Retrieve user settings
+ * - POST: Create/update settings
+ *
+ * SETTINGS STORED:
+ * - invoiceLogo: Custom logo for invoices
+ * - signature: Digital signature image
+ *
+ * TODO: Implement with Prisma or remove if unused
+ * @see School model for current school-level settings
+ */
+
 import { NextResponse } from "next/server";
 
 export async function GET() {

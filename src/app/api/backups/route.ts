@@ -1,3 +1,46 @@
+/**
+ * Backup Management API - Read/Write Operations
+ *
+ * Full backup lifecycle management for platform administrators.
+ *
+ * ACCESS CONTROL:
+ * - DEVELOPER role only
+ * - WHY: Backups contain all schools' data (cross-tenant)
+ * - Restore is destructive operation
+ *
+ * GET ACTIONS:
+ * - history: List recent backups with metadata
+ * - verify: Check backup integrity before restore
+ *
+ * POST ACTIONS:
+ * - create: Generate new backup (manual trigger)
+ * - restore: Restore database from backup ID
+ *
+ * WHY SEPARATE FROM /api/backup:
+ * - /backup: Single-action operations (PLATFORM_ADMIN)
+ * - /backups: Full CRUD operations (DEVELOPER only)
+ * - Different role requirements
+ *
+ * WHY DEVELOPER vs PLATFORM_ADMIN:
+ * - DEVELOPER is platform operator (engineering team)
+ * - PLATFORM_ADMIN may be support staff
+ * - Restore should be engineering-only
+ *
+ * BACKUP METADATA:
+ * - id: Unique backup identifier
+ * - type: 'manual' | 'scheduled'
+ * - createdAt: Timestamp
+ * - size: Backup size in bytes
+ * - tables: List of backed up tables
+ *
+ * GOTCHAS:
+ * - Restore is destructive (overwrites current data)
+ * - Verify before restore recommended
+ * - Large backups may timeout on Vercel
+ *
+ * @see /lib/backup-service.ts for implementation
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logger } from '@/lib/logger';

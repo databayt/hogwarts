@@ -1,3 +1,43 @@
+/**
+ * Import Template Download API - CSV/Excel Template Generator
+ *
+ * Generates downloadable templates for bulk data import.
+ *
+ * USE CASES:
+ * - Download empty template with correct headers
+ * - Fill template with data in Excel/Google Sheets
+ * - Upload completed template via /api/import
+ *
+ * SUPPORTED FORMATS:
+ * - CSV (default): Universal compatibility, smaller
+ * - Excel (xlsx): Better for complex data, multi-sheet
+ *
+ * SUPPORTED DATA TYPES:
+ * - students: Student roster import
+ * - teachers: Teacher records import
+ * - classes: Class/section setup
+ *
+ * WHY EXCEL FALLBACK TO CSV:
+ * - Excel generation uses xlsx library (memory intensive)
+ * - If Excel fails, CSV fallback ensures download works
+ * - CSV is simpler and more reliable
+ *
+ * TEMPLATE CONTENTS:
+ * - Header row with all required/optional fields
+ * - Example data row (commented or sample)
+ * - Field validation notes
+ *
+ * WHY NO SCHOOLID IN TEMPLATE:
+ * - schoolId injected during import (from session)
+ * - Prevents users from importing to wrong school
+ * - Multi-tenant safety through server-side injection
+ *
+ * RESPONSE HEADERS:
+ * - Content-Type: text/csv or xlsx MIME type
+ * - Content-Disposition: attachment with filename
+ *   (triggers browser download vs display)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { generateCsvTemplate, generateExcelTemplate } from '@/lib/import-parser';

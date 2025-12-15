@@ -1,6 +1,35 @@
+/**
+ * Schedule Configuration API
+ *
+ * Returns school schedule settings (week structure, periods, etc.)
+ *
+ * USE CASES:
+ * - Timetable editor: Know available days/periods
+ * - Public timetable: Display grid structure
+ * - Reports: Understand schedule constraints
+ *
+ * PARAMETERS:
+ * - termId (required): Academic term context
+ *
+ * RESPONSE INCLUDES:
+ * - weekDays: Which days school operates (Sun-Thu vs Mon-Fri)
+ * - periods: Time slots with start/end times
+ * - breakPeriods: Which slots are breaks (non-schedulable)
+ *
+ * WHY TERM-BASED:
+ * - Schedule may vary by term (exam period, Ramadan, etc.)
+ * - Different academic years may have different structures
+ *
+ * WHY force-dynamic:
+ * - Schedule config changes during setup
+ *
+ * @see /components/platform/timetable/actions.ts
+ */
+
 import { NextRequest } from "next/server"
 import { getScheduleConfig } from "@/components/platform/timetable/actions"
 
+// WHY: Schedule config changes during setup
 export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {

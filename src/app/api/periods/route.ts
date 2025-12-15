@@ -1,8 +1,47 @@
+/**
+ * School Periods API
+ *
+ * Returns class periods (time slots) for a specific term.
+ *
+ * USE CASES:
+ * - Timetable: Available slots for scheduling
+ * - Attendance: Which period to record
+ * - Reports: Filter by period
+ *
+ * PARAMETERS:
+ * - termId (required): Academic term context
+ *
+ * DATA MODEL:
+ * - Period belongs to AcademicYear (via yearId)
+ * - Term references AcademicYear
+ * - Query: termId → term.yearId → periods
+ *
+ * WHY TERM-BASED LOOKUP:
+ * - Different years may have different period structures
+ * - (e.g., Year 2024: 8 periods, Year 2025: 7 periods)
+ * - Term provides the year context
+ *
+ * MULTI-TENANT SAFETY:
+ * - schoolId from tenant context
+ * - Periods scoped to school + year
+ *
+ * RESPONSE FORMAT:
+ * - periods: Array of { id, name } ordered by startTime
+ *
+ * WHY force-dynamic:
+ * - Periods may change during year setup
+ *
+ * GRACEFUL DEGRADATION:
+ * - No schoolId → empty periods (not error)
+ * - Invalid termId → empty periods
+ */
+
 import { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/components/operator/lib/tenant"
 import { createErrorResponse } from "@/lib/auth-security"
 
+// WHY: Period definitions change during setup
 export const dynamic = "force-dynamic"
 
 export async function GET(req: NextRequest) {

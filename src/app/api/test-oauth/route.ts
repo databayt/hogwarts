@@ -1,3 +1,39 @@
+/**
+ * OAuth Configuration Test API - Provider Status Check
+ *
+ * Verifies OAuth provider configuration without triggering actual OAuth flow.
+ *
+ * WHY THIS EXISTS:
+ * - OAuth errors are cryptic ("Invalid redirect URI")
+ * - Need to verify config before debugging complex flows
+ * - Confirm callback URLs match provider console settings
+ *
+ * WHAT IT CHECKS:
+ * - Facebook: CLIENT_ID and CLIENT_SECRET configured
+ * - Google: CLIENT_ID and CLIENT_SECRET configured
+ * - Callback URL construction (based on NEXTAUTH_URL)
+ *
+ * WHY NOT EXPOSE ACTUAL VALUES:
+ * - CLIENT_SECRET is sensitive (compromises OAuth)
+ * - Only show boolean "configured" status
+ * - Callback URLs are safe to show (needed for provider setup)
+ *
+ * CALLBACK URL FORMAT:
+ * - {NEXTAUTH_URL}/api/auth/callback/{provider}
+ * - Must exactly match provider console
+ * - Common issue: trailing slash mismatch
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - No secrets exposed
+ * - Only shows configuration status
+ *
+ * USE CASE:
+ * - Before debugging OAuth, verify env vars are set
+ * - Copy callback URLs to provider console
+ * - Confirm NEXTAUTH_URL matches current environment
+ */
+
 import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 

@@ -1,15 +1,57 @@
+/**
+ * User Search API
+ *
+ * Searches users within the same school for mentions/assignments.
+ *
+ * USE CASES:
+ * - Messaging: Find recipient for new conversation
+ * - Assignments: Assign task to specific user
+ * - Mentions: @mention in announcements/messages
+ *
+ * PARAMETERS:
+ * - q (required, min 2 chars): Search query
+ * - limit (optional, default: 10, max: 50): Result limit
+ *
+ * SEARCH FIELDS:
+ * - username: Case-insensitive contains
+ * - email: Case-insensitive contains
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - schoolId from session context
+ * - Users can ONLY search within their school
+ * - Prevents discovering users from other schools
+ *
+ * WHY EXCLUDE CURRENT USER:
+ * - Can't message yourself
+ * - Can't assign task to yourself (usually)
+ * - Reduces noise in results
+ *
+ * WHY MIN 2 CHARS:
+ * - Prevents broad searches (performance)
+ * - Single char returns too many results
+ *
+ * WHY LIMIT CAPPED AT 50:
+ * - Dropdown UX doesn't need more
+ * - Reduces database load
+ * - Forces specific queries
+ *
+ * WHY force-dynamic:
+ * - User data changes (new users, name changes)
+ * - Must return current data
+ *
+ * RESPONSE FORMAT:
+ * - users: Array with id, username, email, image, role
+ *
+ * @see /components/platform/messaging for usage
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import { db } from "@/lib/db"
 
+// WHY: User data changes constantly
 export const dynamic = "force-dynamic"
-
-/**
- * Search users within the same school
- *
- * GET /api/users/search?q=<query>&limit=<number>
- */
 export async function GET(request: NextRequest) {
   try {
     const session = await auth()

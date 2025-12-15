@@ -1,3 +1,28 @@
+/**
+ * Invoice Email API - Stub Endpoint
+ *
+ * Currently returns { ok: true } as a placeholder.
+ *
+ * HISTORICAL NOTE:
+ * Previously sent invoice emails via custom email config.
+ * Migration to Prisma broke the MongoDB connection.
+ * Legacy code preserved in comments for reference.
+ *
+ * INTENDED FUNCTIONALITY:
+ * - POST: Send invoice email to recipient
+ * - Includes invoice PDF link
+ * - Customizable subject line
+ *
+ * EMAIL TEMPLATE:
+ * - Invoice number
+ * - Due date
+ * - Total amount with currency
+ * - Link to view/pay invoice
+ *
+ * TODO: Implement with Resend/SendGrid and Prisma
+ * @see /components/template/SendInvoiceEmail for template
+ */
+
 import { NextResponse } from "next/server";
 
 export async function POST() {

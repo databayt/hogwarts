@@ -1,3 +1,35 @@
+/**
+ * Subdomain Debug API - Detailed Extraction Analysis
+ *
+ * Shows step-by-step subdomain extraction for debugging routing issues.
+ *
+ * WHY THIS EXISTS:
+ * - Middleware subdomain logic is complex (3 environments)
+ * - Need to replicate logic in API for isolated testing
+ * - Debug "wrong tenant" issues in production
+ *
+ * EXTRACTION LOGIC (MIRRORS MIDDLEWARE):
+ * 1. Parse full URL and host header
+ * 2. Check for localhost pattern: http://tenant.localhost
+ * 3. Extract subdomain before .localhost
+ *
+ * WHY URL REGEX:
+ * - Host header may not include port
+ * - Full URL captures http://tenant.localhost:3000
+ * - Regex groups extract tenant reliably
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - Logs marked as AUTHORIZED (security audit trail)
+ * - Only accessible to platform operators
+ *
+ * DEBUG OUTPUT:
+ * - Full request details (url, host, pathname)
+ * - Extracted subdomain (or null if none)
+ * - User agent and referer for context
+ * - Timestamp for correlation with logs
+ */
+
 import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse } from '@/lib/debug-security';
 

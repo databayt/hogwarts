@@ -1,9 +1,44 @@
 /**
- * ImageKit Upload API Route
+ * ImageKit Upload API - CDN File Storage
  *
- * Handles file uploads to ImageKit CDN for the Hogwarts library.
- * Provides both authentication parameters for client-side uploads
- * and server-side upload handling.
+ * Provides two upload modes for ImageKit CDN.
+ *
+ * GET: Client-Side Upload Authentication
+ * - Returns time-limited auth tokens (valid ~30 min)
+ * - Client uploads directly to ImageKit (faster, less server load)
+ * - Tokens: { token, expire, signature, publicKey, urlEndpoint }
+ *
+ * POST: Server-Side Upload Processing
+ * - Accepts base64-encoded file in request body
+ * - Server handles upload to ImageKit
+ * - Use when client-side upload isn't suitable
+ *
+ * WHY IMAGEKIT (vs Vercel Blob/S3):
+ * - Built-in image optimization (resize, compress)
+ * - Global CDN for fast delivery
+ * - Automatic format conversion (WebP, AVIF)
+ * - Better for library/book cover images
+ *
+ * USE CASES:
+ * - Library: Book covers and documents
+ * - Profile: User avatars (via client upload)
+ * - Content: Course materials
+ *
+ * FILE LIMITS:
+ * - Max size: 10MB
+ * - Supported: images, PDFs, documents
+ *
+ * METADATA TRACKING:
+ * - uploadedBy: User ID who uploaded
+ * - uploadedAt: Timestamp
+ * - Custom tags for organization
+ *
+ * FOLDER STRUCTURE:
+ * - /library/books: Book covers
+ * - /avatars: User profile images
+ * - Custom folders via request
+ *
+ * @see /components/file/index.ts for ImageKit utilities
  */
 
 import { NextRequest, NextResponse } from "next/server";

@@ -1,3 +1,41 @@
+/**
+ * Grade Display Name API
+ *
+ * Returns formatted display name for a grade/result ID.
+ *
+ * USE CASES:
+ * - Display grade reference in tables
+ * - Breadcrumb navigation labels
+ * - Report headers
+ *
+ * RATE LIMITING:
+ * - API tier limits applied
+ *
+ * MULTI-TENANT SAFETY:
+ * - schoolId from tenant context
+ * - Result must belong to user's school
+ *
+ * NAME FORMAT:
+ * - "Student Name - Assessment Title"
+ * - Assessment: assignment OR exam OR standalone title
+ * - Example: "Ahmed Ali - Math Quiz 1"
+ *
+ * WHY COMPLEX JOIN:
+ * - Result can be for assignment OR exam
+ * - Student name requires join
+ * - Title from whichever assessment type exists
+ *
+ * FALLBACK LOGIC:
+ * 1. assignment.title (if assignment grade)
+ * 2. exam.title (if exam grade)
+ * 3. result.title (standalone grade)
+ * 4. "Grade" (default)
+ *
+ * RESPONSE:
+ * - { name: "Ahmed Ali - Midterm Exam" }
+ * - 404 if not found
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";

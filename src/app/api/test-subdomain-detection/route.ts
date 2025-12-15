@@ -1,6 +1,57 @@
+/**
+ * Subdomain Detection Test API - Algorithm Verification
+ *
+ * Replicates middleware subdomain extraction logic for isolated testing.
+ *
+ * WHY THIS EXISTS:
+ * - Middleware runs in Edge Runtime (hard to debug)
+ * - This replicates the exact algorithm in Node.js
+ * - Allows testing without full request flow
+ *
+ * ALGORITHM DOCUMENTATION:
+ *
+ * 1. LOCAL DEVELOPMENT (localhost/127.0.0.1):
+ *    - Pattern: http://tenant.localhost:3000
+ *    - Extract: first part before .localhost
+ *    - Example: school.localhost → "school"
+ *
+ * 2. PRODUCTION (ed.databayt.org structure):
+ *    - Main app: ed.databayt.org → null (no subdomain)
+ *    - Schools: school.databayt.org → "school"
+ *    - Note: ed.databayt.org is special (platform root)
+ *
+ * 3. OTHER DOMAINS (configurable root):
+ *    - Uses NEXT_PUBLIC_ROOT_DOMAIN
+ *    - Checks hostname ends with .${rootDomain}
+ *    - Excludes www.${rootDomain}
+ *
+ * WHY "ed.databayt.org" SPECIAL CASE:
+ * - Platform lives at ed.databayt.org (not schools.databayt.org)
+ * - school.databayt.org is a tenant subdomain
+ * - ed.databayt.org itself is NOT a tenant
+ *
+ * RESPONSE INCLUDES:
+ * - Detected subdomain (or null)
+ * - Detection steps for debugging
+ * - Environment context
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - Root domain value hidden (shows [CONFIGURED])
+ * - Query params stripped from logged URL
+ */
+
 import { NextRequest } from 'next/server'
 import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 
+/**
+ * Extract subdomain from request using middleware-equivalent logic.
+ *
+ * WHY DUPLICATE MIDDLEWARE LOGIC:
+ * - Middleware runs in Edge Runtime (limited debugging)
+ * - This function replicates logic for testing
+ * - Allows isolated verification without full request flow
+ */
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
   const host = request.headers.get('host') || '';

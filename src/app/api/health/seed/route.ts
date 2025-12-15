@@ -1,20 +1,41 @@
+/**
+ * Demo School Health Check API
+ *
+ * Verifies the demo school exists and has expected seed data.
+ *
+ * USE CASES:
+ * - CI/CD: Verify seed script ran successfully
+ * - Monitoring: Alert if demo school is missing
+ * - Debugging: Check demo environment state
+ *
+ * WHY DEMO SCHOOL SPECIFIC:
+ * - Demo school is critical for onboarding/testing
+ * - Other schools created via onboarding flow
+ * - Demo needs seed data (students, teachers, etc.)
+ *
+ * STATUS CODES:
+ * - 200: Demo school exists and is healthy
+ * - 503: Demo school missing (trigger alert/reseed)
+ *
+ * RESPONSE INCLUDES:
+ * - school: Basic info (id, name, domain, isActive)
+ * - counts: Entity counts (students, teachers, users)
+ * - timestamp: When check was performed
+ *
+ * WHY NO AUTH:
+ * - Health checks are typically unauthenticated
+ * - Load balancers need to check without credentials
+ * - No sensitive data exposed (just counts)
+ *
+ * DOMAIN CHECK:
+ * - Looks for school with domain="demo"
+ * - This is the canonical demo school identifier
+ *
+ * @see prisma/seeds/ensure-demo.ts for seeding script
+ */
+
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-
-/**
- * Health check endpoint for demo school seed status
- *
- * GET /api/health/seed
- *
- * Returns:
- * - 200: Demo school exists and is healthy
- * - 503: Demo school is missing (needs seeding)
- *
- * This endpoint is useful for:
- * - Monitoring demo environment health
- * - Triggering alerts if seed data is lost
- * - Vercel health checks
- */
 export async function GET() {
   try {
     const demoSchool = await db.school.findUnique({

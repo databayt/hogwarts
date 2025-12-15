@@ -1,3 +1,27 @@
+/**
+ * Invoice API - Stub Endpoint
+ *
+ * Currently returns { ok: true } as a placeholder.
+ *
+ * HISTORICAL NOTE:
+ * Previously connected to MongoDB for invoice CRUD.
+ * Migration to Prisma/PostgreSQL made this obsolete.
+ * Legacy code preserved in comments for reference.
+ *
+ * INTENDED FUNCTIONALITY:
+ * - GET: List all invoices with pagination
+ * - POST: Create new invoice
+ * - PUT: Update existing invoice
+ *
+ * WHY KEEP THIS STUB:
+ * - Prevents 404 if client code still calls it
+ * - Documents intended endpoints
+ * - Easy to reactivate with Prisma queries
+ *
+ * TODO: Implement with Prisma Invoice model or remove if unused
+ * @see /components/platform/finance/invoice for current implementation
+ */
+
 import { NextResponse } from "next/server";
 
 export async function GET() {

@@ -1,3 +1,41 @@
+/**
+ * OAuth Subdomain Test API - Cross-Domain Flow Debugging
+ *
+ * Tests OAuth URL construction from subdomain context.
+ *
+ * WHY THIS EXISTS:
+ * - OAuth happens on main domain (localhost:3000)
+ * - User starts on subdomain (school.localhost:3000)
+ * - Callback URL must preserve subdomain context
+ *
+ * THE PROBLEM:
+ * 1. User on school.localhost:3000 clicks "Login with Google"
+ * 2. Redirects to Google on accounts.google.com
+ * 3. Google redirects back to callback URL
+ * 4. Callback URL must be localhost:3000 (registered)
+ * 5. But user expects to return to school.localhost:3000
+ *
+ * THE SOLUTION:
+ * - callbackUrl parameter encodes the subdomain URL
+ * - OAuth flow preserves this in state
+ * - After auth, redirect to original subdomain
+ *
+ * WHY LOCALHOST:3000 FOR SIGNIN:
+ * - OAuth providers require registered callback URLs
+ * - Can't register *.localhost (wildcard)
+ * - Main domain handles OAuth, then redirects to subdomain
+ *
+ * SECURITY:
+ * - Protected by secureDebugEndpoint
+ * - Shows constructed URLs (safe to expose)
+ * - Helps verify correct OAuth flow setup
+ *
+ * DEBUG OUTPUT:
+ * - Current request context (host, subdomain)
+ * - Constructed OAuth URLs with encoded callbacks
+ * - Timestamp for log correlation
+ */
+
 import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse } from '@/lib/debug-security';
 

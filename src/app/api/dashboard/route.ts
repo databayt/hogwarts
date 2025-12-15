@@ -1,3 +1,26 @@
+/**
+ * Dashboard API - Stub Endpoint
+ *
+ * Currently returns { ok: true } as a placeholder.
+ *
+ * HISTORICAL NOTE:
+ * Previously connected to MongoDB for invoice aggregation.
+ * Migration to Prisma/PostgreSQL made this obsolete.
+ * Legacy code preserved in comments for reference.
+ *
+ * INTENDED USE:
+ * - Dashboard widget data aggregation
+ * - Real-time stats (invoices, revenue, etc.)
+ * - Chart data for analytics
+ *
+ * WHY KEEP THIS STUB:
+ * - Prevents 404 if dashboard still calls it
+ * - Documents intended functionality
+ * - Easy to reactivate with Prisma queries
+ *
+ * TODO: Implement with Prisma or remove if unused
+ */
+
 import { NextResponse } from "next/server";
 
 export async function GET() {

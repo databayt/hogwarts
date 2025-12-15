@@ -1,3 +1,31 @@
+/**
+ * Invoice PDF Generation API - Stub Endpoint
+ *
+ * Currently returns { ok: true } as a placeholder.
+ *
+ * HISTORICAL NOTE:
+ * Previously generated PDF invoices using jsPDF.
+ * Migration to Prisma broke the MongoDB connection.
+ * Legacy code preserved in comments for reference.
+ *
+ * INTENDED FUNCTIONALITY:
+ * - Generate PDF from invoice data
+ * - Include company logo and signature
+ * - Return as inline PDF (viewable in browser)
+ *
+ * PDF STRUCTURE (from legacy):
+ * - Header: Logo + "INVOICE" title
+ * - Company details (from user)
+ * - Bill To (client details)
+ * - Items table with quantity/price/total
+ * - Subtotal, discount, tax calculation
+ * - Digital signature
+ * - Notes section
+ *
+ * TODO: Implement with Prisma + jsPDF or
+ * use a PDF service like Puppeteer/React-PDF
+ */
+
 import { NextResponse } from "next/server";
 
 export async function GET() {

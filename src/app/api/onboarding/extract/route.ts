@@ -1,7 +1,45 @@
 /**
- * Document Extraction API Route
- * POST /api/onboarding/extract
- * Handles AI-powered document extraction for onboarding
+ * Document Extraction API - AI-Powered Form Filling
+ *
+ * Extracts structured data from uploaded documents using AI/OCR.
+ *
+ * USE CASES:
+ * - School registration: Extract info from license documents
+ * - Student import: Parse enrollment forms
+ * - Legal setup: Extract terms from contracts
+ *
+ * SUPPORTED STEPS:
+ * - title: School name from letterhead
+ * - description: About text from brochures
+ * - location: Address from official documents
+ * - capacity: Student/staff counts from reports
+ * - branding: Colors/logos from marketing materials
+ * - import: Student/teacher data from rosters
+ * - price: Fee structures from pricing sheets
+ * - legal: Terms from legal documents
+ *
+ * WHY AI EXTRACTION:
+ * - Reduces manual data entry (tedious, error-prone)
+ * - Supports Arabic documents (OCR + translation)
+ * - Handles various document formats
+ *
+ * FILE LIMITS:
+ * - Max size: 10MB
+ * - Formats: JPEG, PNG, WebP, PDF
+ *
+ * RESPONSE FORMAT:
+ * - success: boolean
+ * - data.fields: Extracted key-value pairs
+ * - data.confidence: AI confidence score (0-1)
+ * - processingTime: Milliseconds for extraction
+ *
+ * GOTCHAS:
+ * - PDF extraction slower than images
+ * - Handwritten text has lower accuracy
+ * - Arabic requires RTL-aware processing
+ * - Large PDFs may timeout (process pages separately)
+ *
+ * @see /lib/document-extraction.ts for AI implementation
  */
 
 import { NextRequest, NextResponse } from 'next/server'

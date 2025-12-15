@@ -1,9 +1,42 @@
+/**
+ * Classrooms Selection API
+ *
+ * Returns list of physical rooms for dropdown selection.
+ *
+ * USE CASES:
+ * - Timetable: Assign room to lesson
+ * - Events: Book room for meeting
+ * - Exams: Allocate exam venues
+ *
+ * RATE LIMITING:
+ * - API tier rate limits applied
+ * - WHY: Prevents enumeration attacks on room list
+ *
+ * MULTI-TENANT SAFETY:
+ * - schoolId from tenant context
+ * - Can only see own school's rooms
+ *
+ * RESPONSE FORMAT:
+ * - classrooms: Array of { id, roomName }
+ *
+ * WHY MINIMAL DATA:
+ * - Dropdown only needs id and display name
+ * - Capacity/features queried separately if needed
+ *
+ * WHY force-dynamic:
+ * - Rooms may be added/removed
+ *
+ * GRACEFUL DEGRADATION:
+ * - No schoolId → empty classrooms (not error)
+ */
+
 import { NextRequest } from "next/server"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/components/operator/lib/tenant"
 import { createErrorResponse } from "@/lib/auth-security"
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
+// WHY: Room list changes
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
