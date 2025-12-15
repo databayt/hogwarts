@@ -1,3 +1,26 @@
+/**
+ * useDataTable Hook - Server-Side Data Table with URL Params
+ *
+ * Enhanced TanStack Table integration with:
+ * - URL-synced pagination (page, perPage)
+ * - URL-synced sorting (multi-column)
+ * - URL-synced filtering (per-column)
+ * - Debounced filter updates (300ms)
+ * - Throttled URL updates (50ms)
+ * - Server-side processing (parent fetches data)
+ *
+ * KEY PATTERNS:
+ * - MANUAL EVERYTHING: manualPagination/manualSorting/manualFiltering all true
+ * - ZERO-BASED INDEX: nuqs uses page 1-based, TanStack uses pageIndex 0-based
+ * - DEBOUNCED FILTERS: Waits 300ms after filter change before updating URL
+ * - SHALLOW HISTORY: Doesn't add to browser history (replace mode)
+ *
+ * GOTCHAS:
+ * - pageIndex to page conversion: URL page (1-based) = pageIndex (0-based) + 1
+ * - Advanced filter UI disables column filters (use server-side filtering instead)
+ * - Filter values processed to handle special characters (e.g., "john smith" → ["john", "smith"])
+ */
+
 'use client';
 
 import {

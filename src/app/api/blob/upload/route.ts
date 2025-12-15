@@ -1,3 +1,39 @@
+/**
+ * Blob Upload API - Multi-Provider File Storage
+ *
+ * Handles file uploads with automatic provider selection based on file size.
+ *
+ * STORAGE STRATEGY:
+ *
+ * | File Size       | Provider      | Max Size | Use Case           |
+ * |-----------------|---------------|----------|---------------------|
+ * | < 500MB         | Vercel Blob   | 500MB    | Images, documents   |
+ * | 500MB - 5GB     | AWS S3 / R2   | 5GB      | Videos, large files |
+ *
+ * WHY DUAL PROVIDERS:
+ * - Vercel Blob: Simple, no config needed, but 500MB limit
+ * - S3/R2: Higher limits for video courses (40-min 1080p = ~2.4GB)
+ *
+ * MULTI-TENANT ISOLATION:
+ * Files are stored with schoolId prefix: `{schoolId}/{category}/{filename}`
+ * This enables per-school quotas and easy cleanup on school deletion.
+ *
+ * RATE LIMITING:
+ * - 10 uploads/minute per user (prevents abuse)
+ * - Uses sliding window algorithm
+ *
+ * SECURITY:
+ * - Auth required (session check)
+ * - File type whitelist (no executables)
+ * - Size limits per category
+ * - Content-Type validation against actual bytes (not just header)
+ *
+ * GOTCHAS:
+ * - S3 client is lazy-initialized (only created if env vars present)
+ * - Vercel Blob has no progress tracking (instant or fail)
+ * - Large uploads may timeout - use chunked upload for >100MB
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
@@ -7,7 +43,8 @@ import { logger } from "@/lib/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { STORAGE_CONFIG, SIZE_LABELS } from "@/components/file";
 
-// S3 client for large file uploads (lazy initialized)
+// WHY LAZY INIT: S3 client only needed for large files
+// Avoids SDK initialization cost for most uploads
 let s3Client: S3Client | null = null;
 
 function getS3Client(): S3Client | null {

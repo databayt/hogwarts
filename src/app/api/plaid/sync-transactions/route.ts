@@ -1,8 +1,43 @@
+/**
+ * Plaid Transaction Sync API
+ *
+ * Fetches new transactions from Plaid and syncs to local database.
+ *
+ * SYNC STRATEGY:
+ * 1. Find last synced transaction date (cursor-based incremental sync)
+ * 2. Fetch only transactions since that date from Plaid
+ * 3. De-duplicate against existing transaction IDs
+ * 4. Insert only new transactions in batch
+ * 5. Update account balances from Plaid
+ *
+ * WHY INCREMENTAL SYNC:
+ * - Plaid charges per API call, not per transaction
+ * - Reduces API response size and processing time
+ * - Avoids duplicate transaction handling
+ *
+ * WHY ABS() FOR AMOUNTS:
+ * Plaid uses positive = debit (outflow), negative = credit (inflow)
+ * We store absolute value with separate type field for clarity
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - Bank account must belong to current user AND current school
+ * - Transaction schoolId enforced on every insert
+ * - Prevents cross-tenant data access
+ *
+ * GOTCHAS:
+ * - Plaid dates are strings (YYYY-MM-DD), must convert to Date
+ * - Transaction IDs are Plaid's, stored in accountId field (legacy naming)
+ * - Pending transactions may change - sync updates don't handle this yet
+ * - Rate limits: 250 requests/minute, batch processing recommended
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
 
+// Initialize Plaid client with environment-specific configuration
+// Uses PLAID_ENV to switch between sandbox/development/production
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
   baseOptions: {
@@ -53,7 +88,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get latest transactions
+    // Get latest transactions - use last transaction date as cursor
+    // WHY: Incremental sync reduces Plaid API calls and processing time
+    // Falls back to 1 month ago if no previous transactions (first sync)
     const now = new Date()
     const startDate = bankAccount.transactions[0]?.date ||
       new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
@@ -64,7 +101,8 @@ export async function POST(request: NextRequest) {
       end_date: now.toISOString().split('T')[0],
     })
 
-    // Filter out existing transactions
+    // Filter out existing transactions to prevent duplicates
+    // WHY: Plaid may return overlapping transactions on date boundaries
     const existingTransactionIds = await db.transaction.findMany({
       where: {
         bankAccountId: bankAccount.id,

@@ -1,5 +1,43 @@
 "use client";
 
+/**
+ * Attendance Hooks - Browser API Integration Suite
+ *
+ * A collection of 10+ specialized hooks for attendance management,
+ * integrating with various browser APIs and real-time patterns.
+ *
+ * HOOK CATALOG:
+ *
+ * 1. useAttendance() - Core state management, auto-calculates stats
+ * 2. useCamera() - QR code scanning via getUserMedia API
+ * 3. useGeolocation() - Location tracking (single fetch or watch mode)
+ * 4. useAutoSave() - Debounced auto-save with timestamp tracking
+ * 5. useRealTimeAttendance() - Polling vs WebSocket data sync
+ * 6. useAttendanceShortcuts() - Keyboard shortcuts (Ctrl+S, P, A, L)
+ * 7. useCountdown() - Timer for QR code expiration
+ * 8. useOfflineQueue() - Queues actions when offline, syncs on reconnect
+ *
+ * KEY PATTERNS:
+ *
+ * CAMERA:
+ * - Uses `facingMode: 'environment'` for back camera (QR scanning)
+ * - Must attach stream to video ref: videoRef.current.srcObject = stream
+ *
+ * GEOLOCATION:
+ * - requestLocation() = one-time fetch
+ * - watchLocation() = continuous tracking (updates on movement)
+ * - CRITICAL: Clear watch ID on unmount to prevent memory leak
+ *
+ * OFFLINE SUPPORT:
+ * - Detects navigator.onLine status
+ * - Queues failed requests in local storage
+ * - Processes queue when connection restored
+ *
+ * KEYBOARD SHORTCUTS:
+ * - Checks if input is focused before triggering (prevents conflict)
+ * - Uses Ctrl/Cmd modifiers for cross-platform support
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
@@ -14,7 +52,8 @@ import type {
 import { calculateAttendanceStats, checkDeviceSupport } from './utils';
 
 /**
- * Hook for managing attendance state and operations
+ * Core attendance state management hook
+ * Auto-calculates stats when attendance array changes
  */
 export function useAttendance() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);

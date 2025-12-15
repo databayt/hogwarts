@@ -1,6 +1,26 @@
 /**
- * Unified File Block - Browser Hook
- * Client-side hook for file browser operations
+ * useBrowser Hook - File Browser State Management
+ *
+ * Manages complete file browser functionality including:
+ * - File/folder navigation with history (back/forward support)
+ * - Multi-select with ctrl+click support
+ * - Sorting by name/date/size
+ * - Search filtering
+ * - Category filtering
+ * - Pagination across loaded files
+ * - Delete/download operations
+ *
+ * KEY PATTERNS:
+ * - LAZY LOADING: fetchFiles() called on init and whenever path/filter/sort/page changes
+ * - OPTIMISTIC UPDATES: Selection changes immediately, delete refetches after success
+ * - HISTORY TRACKING: Maintains browser-like navigation history for back/forward
+ * - CONFIGURATION: All features can be disabled via config (deletable, downloadable, etc.)
+ *
+ * GOTCHAS:
+ * - Search is client-side only - filters loaded files (not server-side search)
+ * - Folder extraction is simplified - assumes flat folder structure in file paths
+ * - moveSelected is a stub - requires backend API implementation
+ * - Download uses DOM methods - won't work with CORS-protected files
  */
 
 "use client";
@@ -68,7 +88,8 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
     error: null,
   });
 
-  // Navigation history
+  // Navigation history for back/forward support (like browser navigation)
+  // history[historyIndex] = current path, history[historyIndex+1] = forward available
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
@@ -325,14 +346,16 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
   const downloadSelected = useCallback(() => {
     if (!mergedConfig.downloadable) return;
 
-    // Download each selected file
+    // Download each selected file via DOM anchor element
+    // Browser triggers download if Content-Disposition: attachment header is set
+    // Falls back to opening in new tab if header is missing (viewer mode)
     filteredFiles
       .filter((f) => state.selectedIds.has(f.id))
       .forEach((f) => {
         const link = document.createElement("a");
         link.href = f.url;
-        link.download = f.originalName;
-        link.target = "_blank";
+        link.download = f.originalName;  // Triggers download if allowed by CORS
+        link.target = "_blank";  // Fallback: open in new tab
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

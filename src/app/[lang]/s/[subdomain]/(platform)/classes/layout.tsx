@@ -13,10 +13,9 @@ export default async function ClassesLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.classes
 
-  // Define classes page navigation
+  // Classes page navigation (5 links - Create merged into All)
   const classesPages: PageNavItem[] = [
     { name: d?.navigation?.all || 'All', href: `/${lang}/classes` },
-    { name: d?.navigation?.create || 'Create', href: `/${lang}/classes/create` },
     { name: d?.navigation?.subjects || 'Subjects', href: `/${lang}/classes/subjects` },
     { name: d?.navigation?.schedule || 'Schedule', href: `/${lang}/classes/schedule` },
     { name: d?.navigation?.capacity || 'Capacity', href: `/${lang}/classes/capacity` },

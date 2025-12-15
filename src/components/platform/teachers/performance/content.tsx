@@ -1,3 +1,20 @@
+/**
+ * Teacher Performance Analytics Content
+ *
+ * Displays comprehensive teacher performance metrics and rankings with multi-dimensional analysis:
+ * - Summary stats: total count, average performance score, workload distribution
+ * - Three interactive views: Overview (charts), Ranking (sortable table), Metrics (grid cards)
+ * - Filters: search by name/email, employment status, performance level
+ * - Workload assessment: categorizes teachers as UNDERUTILIZED, NORMAL, or OVERLOAD
+ *
+ * Client component strategy:
+ * - Server passes pre-fetched teacher data (list with computed scores)
+ * - Client handles filtering, sorting, and UI state
+ * - Avoids re-queries unless data refresh is triggered
+ *
+ * Multi-tenant: Data is pre-filtered on server by schoolId before reaching component
+ * i18n: Fully bilingual with dynamic string interpolation for Arabic/English
+ */
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -141,7 +158,8 @@ export default function TeacherPerformanceContent({
     })
   }, [teachers, searchQuery, statusFilter, performanceFilter])
 
-  // Calculate summary statistics
+  // Calculate summary statistics across all teachers
+  // Includes performance bands, workload distribution, and aggregates
   const stats = useMemo(() => {
     if (teachers.length === 0) {
       return {
@@ -159,12 +177,15 @@ export default function TeacherPerformanceContent({
     }
 
     const total = teachers.length
+    // Average performance score (0-100) rounded to nearest integer for dashboard display
     const avgPerformance = Math.round(
       teachers.reduce((sum, t) => sum + t.performanceScore, 0) / total
     )
+    // Average workload percentage across all teachers, rounded for UI consistency
     const avgWorkload = Math.round(
       teachers.reduce((sum, t) => sum + t.workloadPercentage, 0) / total
     )
+    // Total attendance marking events across all teachers (for volume metrics)
     const totalAttendance = teachers.reduce((sum, t) => sum + t.attendanceMarked, 0)
 
     return {

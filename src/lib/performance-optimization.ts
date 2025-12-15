@@ -1,6 +1,45 @@
 /**
- * Performance Optimization for 3G Networks
- * Implements strategies for low-bandwidth environments
+ * Performance Optimization Layer - Adaptive Loading Strategy
+ *
+ * PURPOSE: Dynamically adjusts application behavior based on network conditions
+ * Enables smooth experience on 2G/3G networks without degrading 4G performance.
+ *
+ * KEY INSIGHT: Modern browser Navigation API detects network quality in real-time
+ * This service reads connection info and applies four optimization strategies:
+ * - 2G/slow-2g: Aggressive optimization (lazy load, low quality, no prefetch)
+ * - 3G: Moderate optimization (selective lazy load, medium quality)
+ * - 4G: Minimal optimization (high quality, prefetch enabled)
+ * - Data Saver mode: Override to conservative settings (respects user preference)
+ *
+ * ARCHITECTURE:
+ * - Singleton pattern: Shared across all components
+ * - Observer pattern: Detects network changes in real-time
+ * - Strategy pattern: Four optimization profiles based on effectiveType
+ * - Lazy loading: Uses IntersectionObserver with dynamic rootMargin
+ *
+ * KEY ALGORITHMS:
+ * - getOptimizedImageUrl(): Transforms image URLs for Cloudinary/ImageKit
+ *   Quality scaling: low=40%, medium=70%, high=90% JPEG
+ * - getCacheTTL(): Adjusts cache duration (aggressive x4, minimal x0.5)
+ * - debounce/throttle: Increase delays on slow connections
+ *
+ * INTEGRATION POINTS:
+ * - Cloudinary: /upload/{transforms}/ URL rewriting
+ * - ImageKit: ?tr={transforms} query string format
+ * - Next/Image: Must use optimizedImageUrl outside Next/Image
+ * - SWR: Should use getCacheTTL() for stale-while-revalidate
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - Navigation API not available on SSR (check window !== undefined)
+ * - Network changes trigger updateStrategy() - debounce if needed
+ * - rootMargin for IntersectionObserver: 50px (slow), 200px (fast)
+ *   Decreases on slow connections to load fewer images
+ * - Can't use in server components (requires window object)
+ *
+ * LIMITATIONS:
+ * - Browser-only detection (no server-side network info available)
+ * - Network quality fluctuates - strategy should be rechecked periodically
+ * - Image optimization requires Cloudinary/ImageKit integration
  */
 
 import { logger } from '@/lib/logger';
@@ -72,6 +111,8 @@ class PerformanceOptimizer {
 
   /**
    * Update optimization strategy based on network
+   * WHY: Adjusts ALL optimization parameters together for consistency
+   * e.g., 3G with data saver mode uses low image quality AND disables prefetch
    */
   private updateStrategy() {
     if (!this.networkQuality) {
@@ -81,6 +122,7 @@ class PerformanceOptimizer {
 
     const { effectiveType, saveData } = this.networkQuality;
 
+    // Network quality determines optimization aggressiveness
     switch (effectiveType) {
       case 'slow-2g':
       case '2g':

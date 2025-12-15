@@ -1,3 +1,29 @@
+/**
+ * Bulk Attendance Upload Content
+ *
+ * CSV-based bulk attendance import with validation and preview:
+ * - Handles CSV parsing with field extraction (Student ID, Name, Date, Status, Times, Notes)
+ * - Validates status values (PRESENT, ABSENT, LATE, EXCUSED, SICK)
+ * - Shows parse errors inline before upload (row-level feedback)
+ * - Displays upload history (recent uploads with success/failure counts)
+ * - Requires class selection and date before processing
+ * - Optional check-in/check-out times and notes fields
+ *
+ * Client-side responsibilities:
+ * - CSV parsing and validation (fast feedback without server roundtrip)
+ * - Form state for class/date selection
+ * - Upload result handling and display
+ * - Recent uploads history from server
+ *
+ * Server-side (bulkUploadAttendance action):
+ * - Re-validates each record with fresh student/class data
+ * - Checks schoolId scoping and student enrollment
+ * - Batch creates AttendanceRecord rows atomically
+ * - Returns summary: total, successful, failed with error details
+ *
+ * Multi-tenant: Implicitly scoped by auth context in server action
+ * Design rationale: Parse client-side for UX speed, validate server-side for security
+ */
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
@@ -87,25 +113,29 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     fetchData();
   }, []);
 
-  // Parse CSV content
+  // Parse CSV content client-side with row-level validation
+  // Fast feedback without server roundtrip - improves perceived performance
+  // Uses regex to handle quoted fields properly (e.g., "Smith, Jr." doesn't break parsing)
   const parseCSV = useCallback((content: string): { records: ParsedRecord[]; errors: string[] } => {
     const lines = content.trim().split('\n');
     const records: ParsedRecord[] = [];
     const errors: string[] = [];
 
-    // Skip header row
+    // Skip header row (i = 1)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
 
-      // Handle CSV with quoted fields
+      // Regex handles quoted fields: "Last, First" is a single field, not split by comma
       const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/^"|"$/g, '').trim()) || [];
 
+      // Minimum fields: Student ID, Name, Date, Status
       if (values.length < 4) {
         errors.push(`Row ${i + 1}: Missing required fields (expected: Student ID, Student Name, Date, Status)`);
         continue;
       }
 
+      // Destructure with optional fields (checkInTime, checkOutTime, notes)
       const [studentId, , , statusRaw, checkInTime, checkOutTime, notes] = values;
 
       if (!studentId) {
@@ -116,6 +146,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       const statusUpper = statusRaw?.toUpperCase() || 'PRESENT';
       const validStatuses = ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED', 'SICK'];
 
+      // Validate status against allowed enum values
       if (!validStatuses.includes(statusUpper)) {
         errors.push(`Row ${i + 1}: Invalid status "${statusRaw}" (valid: ${validStatuses.join(', ')})`);
         continue;

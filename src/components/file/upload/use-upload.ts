@@ -1,6 +1,23 @@
 /**
- * Unified File Block - Upload Hook
- * Client-side file upload with progress tracking and validation
+ * useUpload Hook - Single & Batch File Upload with Validation
+ *
+ * Manages file upload lifecycle:
+ * - Client-side validation (type, size, quantity)
+ * - Progress tracking (percentage and raw bytes)
+ * - Server-side upload via FormData
+ * - Error handling and state management
+ * - Support for single and multiple file uploads
+ *
+ * KEY PATTERNS:
+ * - VALIDATION TWICE: Client (UX) and server action (security)
+ * - SIMULATED PROGRESS: Client-side progress simulation (10% increments) since FormData doesn't expose events
+ * - SERVER ACTIONS: Uses "use server" actions for secure upload handling
+ * - ERROR RECOVERY: Single file error doesn't block remaining files in batch
+ *
+ * GOTCHAS:
+ * - Progress is simulated (not real) because FormData upload doesn't expose progress events
+ * - AbortController is created but not actively used (placeholder for future pause/cancel)
+ * - No chunking - only handles single-request uploads (use useChunkedUpload for large files)
  */
 
 "use client";
@@ -140,7 +157,9 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         const formData = new FormData();
         formData.set("file", file);
 
-        // Simulate progress (actual progress tracking requires different approach)
+        // Simulate progress by incrementing 10% every 200ms until server responds
+        // Real progress would require XMLHttpRequest upload events (not available with FormData)
+        // Stops at 90% to leave room for server processing
         const progressInterval = setInterval(() => {
           setProgress((prev) => {
             if (!prev || (prev.percentage ?? prev.progress) >= 90) return prev;

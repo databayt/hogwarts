@@ -1,16 +1,42 @@
 import { NextRequest } from 'next/server';
 
 /**
- * Rate limiting utilities for API endpoints
- * Uses in-memory storage for simplicity - consider Redis for production scaling
+ * Rate Limiting Utilities - In-Memory Request Throttling
+ *
+ * Prevents abuse by limiting request frequency per IP + User-Agent.
+ *
+ * CRITICAL LIMITATIONS:
+ *
+ * 1. PER-PROCESS STORAGE:
+ *    - Uses Map() which is NOT shared across processes
+ *    - In horizontal scaling (3 Next.js instances) = 3x effective rate limit
+ *    - For production: Replace with Redis for shared state
+ *
+ * 2. COMPOSITE KEY (IP + User-Agent):
+ *    - IP alone insufficient - shared corporate IPs would hit limits unfairly
+ *    - User-Agent truncated to 50 chars to prevent memory bloat
+ *    - Spoofable, but adds friction for basic attacks
+ *
+ * 3. SLIDING WINDOW:
+ *    - Each key has reset time; first request in new window resets count
+ *    - Cleanup runs periodically to prevent memory leaks
+ *
+ * USAGE:
+ * ```typescript
+ * const result = checkRateLimit(request, RATE_LIMITS.AUTH, 'login');
+ * if (!result.allowed) {
+ *   return Response.json({ error: 'Rate limited' }, { status: 429 });
+ * }
+ * ```
  */
 
 interface RateLimitConfig {
-  windowMs: number;  // Time window in milliseconds
+  windowMs: number;     // Time window in milliseconds
   maxRequests: number;  // Max requests per window
 }
 
-// In-memory storage for rate limiting (consider Redis for production)
+// In-memory storage for rate limiting
+// GOTCHA: Not shared across processes - use Redis for horizontal scaling
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 // Predefined rate limit configurations

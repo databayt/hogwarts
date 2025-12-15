@@ -1,3 +1,39 @@
+/**
+ * Authentication Validation Schemas
+ *
+ * Comprehensive validation for user authentication and account management:
+ * - Login: Email + password (+ optional 2FA code)
+ * - Registration: Email + password + username
+ * - Settings: Name, email, role, 2FA toggle, password change (coupled validation)
+ * - Password reset: Email address confirmation
+ * - Password change: Current password required before setting new
+ * - 2FA: Optional second factor (SMS, authenticator app, etc.)
+ * - Roles: ADMIN vs USER (with permission-based access control)
+ *
+ * Key validation rules:
+ * - Password: Min 6 chars (longer is configurable per school)
+ * - Email: Standard email format, normalized to lowercase
+ * - Username: Required on registration (human-readable identifier)
+ * - 2FA code: Optional on login (when 2FA enabled)
+ * - Coupled validation: Can't set newPassword without currentPassword (security)
+ * - Coupled validation: Can't provide password without newPassword (UX)
+ *
+ * Why coupled validation:
+ * - Password change: Prevents accidental "update password" without new value
+ * - Security: Requires old password to prevent hijacked session from changing password
+ * - UX: Form shows error before submit (immediate feedback)
+ *
+ * Why i18n factory functions:
+ * - Messages in dictionary: "Password must be 6+ characters" (translated)
+ * - Backward compatibility: Legacy schemas without i18n still work
+ * - Pattern: factory(dictionary) → schema with translated messages
+ *
+ * TODO: Implement password strength requirements
+ * - Uppercase, lowercase, numbers, special chars
+ * - Zxcvbn library for cracking time estimation
+ * - Prevent common passwords (password123, qwerty, etc.)
+ */
+
 import * as z from "zod";
 import { UserRole } from "@prisma/client";
 import { getValidationMessages } from "@/components/internationalization/helpers";
@@ -19,6 +55,8 @@ export function createSettingsSchema(dictionary: Dictionary) {
     newPassword: z.optional(z.string().min(6)),
   })
     .refine((data) => {
+      // Coupled validation: newPassword requires current password
+      // Why: Can't change password without proving you know old one (security)
       if (data.password && !data.newPassword) {
         return false;
       }
@@ -28,6 +66,8 @@ export function createSettingsSchema(dictionary: Dictionary) {
       path: ["newPassword"]
     })
     .refine((data) => {
+      // Coupled validation: newPassword requires current password
+      // Why: If you have newPassword, must provide current to verify identity
       if (data.newPassword && !data.password) {
         return false;
       }

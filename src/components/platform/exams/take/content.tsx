@@ -1,3 +1,28 @@
+/**
+ * Exam Taking Experience - Client Component
+ *
+ * Interactive exam-taking interface with:
+ * - Question navigation: sidebar grid + Previous/Next buttons
+ * - Multiple question types: MCQ (single/multi), True/False, Fill Blank, Short Answer, Essay
+ * - Real-time timer: countdown display with 5-minute warning dialog
+ * - Progress tracking: answered count, visual progress bar, answered question indicators
+ * - Auto-submit: submits when time expires (cannot be prevented)
+ * - Answer persistence: loads existing answers on mount, persists in local state
+ * - Submit confirmation: warns if questions left unanswered
+ *
+ * Client-side design rationale:
+ * - Uses Map<questionId, answer> for O(1) lookup and update efficiency
+ * - useMemo for progress calculation to avoid recalculation on every keystroke
+ * - useCallback for answer changes to maintain referential stability
+ * - Validates exam status to prevent interaction if exam not IN_PROGRESS
+ *
+ * Security considerations:
+ * - Submission sent to server action (submitExamAnswers) which re-validates exam status
+ * - Timer is client-side only; server should enforce exam deadline
+ * - Never trusts client answer count or exam duration for grading
+ *
+ * i18n: Exam title, instructions passed from server; timer/UI labels are hardcoded English
+ */
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -92,7 +117,8 @@ export function ExamTakingContent({
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize answers from existing answers
+  // Initialize answers from existing answers (previously saved responses)
+  // Uses Map for O(1) lookups when rendering question inputs
   useEffect(() => {
     const initialAnswers = new Map<
       string,
@@ -107,18 +133,21 @@ export function ExamTakingContent({
     setAnswers(initialAnswers);
   }, [existingAnswers]);
 
-  // Timer
+  // Countdown timer with auto-submission on expiration
+  // SECURITY: Server should re-validate exam deadline; client-side timer is UX only
+  // Exits early if exam is not IN_PROGRESS (prevents timer interference)
   useEffect(() => {
     if (exam.status !== "IN_PROGRESS") return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
+        // Auto-submit when time reaches zero - no way for student to prevent this
         if (prev <= 1) {
           clearInterval(timer);
           handleSubmit();
           return 0;
         }
-        // Show warning at 5 minutes
+        // Trigger warning dialog at 5 minutes remaining
         if (prev === 300) {
           setShowTimeWarning(true);
         }
@@ -142,7 +171,11 @@ export function ExamTakingContent({
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
 
-  // Progress calculation
+  // Calculate answered question count for progress bar and UI feedback
+  // Memoized to avoid recalculation on every keystroke/state change
+  // A question is considered answered if:
+  // - answerText is provided and non-empty, OR
+  // - selectedOptionIds array has at least one selection
   const answeredCount = useMemo(() => {
     return questions.filter((q) => {
       const answer = answers.get(q.questionId);
@@ -153,6 +186,7 @@ export function ExamTakingContent({
     }).length;
   }, [answers, questions]);
 
+  // Progress percentage for visual progress bar (0-100)
   const progress = (answeredCount / totalQuestions) * 100;
 
   const handleAnswerChange = useCallback(

@@ -1,3 +1,43 @@
+/**
+ * System Metrics API - Platform Admin Dashboard
+ *
+ * Provides real-time system health and application statistics.
+ *
+ * METRICS COLLECTED:
+ * 1. System: Process uptime, memory usage (heap, RSS, external)
+ * 2. Database: Connection status, response time, pool stats
+ * 3. Application: Total schools, users, recent activity
+ * 4. Performance: Response times, requests/minute (requires integration)
+ *
+ * ACCESS CONTROL:
+ * - DEVELOPER role only (platform admins)
+ * - Returns 403 for non-developers
+ * - Logged for audit trail
+ *
+ * WHY DEVELOPER-ONLY:
+ * - Contains sensitive operational data
+ * - Could expose infrastructure details
+ * - Not relevant to school admins/teachers
+ *
+ * MEMORY THRESHOLDS:
+ * - heapUsagePercent > 75%: Warning (consider scaling)
+ * - heapUsagePercent > 90%: Critical (possible OOM)
+ *
+ * CACHE HEADERS:
+ * - no-cache, no-store: Metrics must be fresh
+ * - Prevents stale data in monitoring dashboards
+ *
+ * INTEGRATION POINTS:
+ * - Uptime monitoring: Pingdom, UptimeRobot, Vercel Analytics
+ * - APM: Sentry performance, Datadog, New Relic
+ * - Alerting: PagerDuty webhook on threshold breach
+ *
+ * LIMITATIONS:
+ * - Performance metrics (requests/minute) not yet implemented
+ * - activeUsers24h requires additional query (commented out)
+ * - errorRate24h requires Sentry API integration
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';

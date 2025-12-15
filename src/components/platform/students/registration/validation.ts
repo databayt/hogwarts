@@ -1,3 +1,47 @@
+/**
+ * Student Registration Validation
+ *
+ * Multi-step student enrollment form with comprehensive data collection:
+ * - 7 form steps: Personal → Contact → Emergency → Guardians → Previous Education → Health → Documents
+ * - Student types: Regular (domestic), Transfer (from other school), International, Exchange (study abroad)
+ * - Health tracking: Blood type, medical conditions, allergies, vaccinations, insurance
+ * - Guardian management: Multiple guardians with relationships, occupations, contact info
+ * - Document upload: Birth cert, transfer cert, health records, profile photo
+ * - Age validation: 3-25 years (preschool to university)
+ * - Nationality: Default Saudi Arabia (configurable per school)
+ * - Previous education: Track prior school, transfer cert, academic record
+ *
+ * Key validation rules:
+ * - Names: 2+ chars (prevents single-letter names)
+ * - DOB: Must be 3-25 years old (prevents data entry errors like "1900")
+ * - Gender: Enum (Male, Female, Other)
+ * - Phone: E.164 format, min 10 digits (international support)
+ * - Email: Standard email format (no validation on ownership yet)
+ * - Address: Min 10 chars (ensures meaningful address, not "xyz")
+ * - Guardians: At least 1 required, can be multiple (both parents + guardian)
+ * - Documents: Optional file uploads (birth cert, transfer cert, medical records)
+ * - Permanent address: Optional or same-as-current
+ *
+ * Why step-based:
+ * - Incremental validation: Catch errors early, not after form completion
+ * - UX: Long forms feel shorter in steps
+ * - Compliance: Each step can map to a permission/consent (FERPA)
+ *
+ * Why multiple guardians:
+ * - Both parents may enroll student (both share responsibility)
+ * - Divorced parents need both contacts
+ * - One marked isPrimary (emergency contact first)
+ * - One marked isEmergencyContact (if different from primary)
+ *
+ * Why health tracking:
+ * - Medical conditions: Asthma, diabetes, epilepsy (staff awareness)
+ * - Allergies: Food allergies (critical for school meals/field trips)
+ * - Medications: Required on campus (nurse supervision)
+ * - Vaccinations: Legal requirement (truancy enforcement)
+ * - Insurance: Parent policy (emergency billing)
+ * - Special needs: Physical, learning disabilities (accommodation planning)
+ */
+
 import { z } from "zod";
 
 // Enums matching Prisma model

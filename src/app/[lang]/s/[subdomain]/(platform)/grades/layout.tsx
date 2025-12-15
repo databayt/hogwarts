@@ -13,12 +13,13 @@ export default async function GradesLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.grades
 
-  // Define grades page navigation with i18n
-  // Using useful production pages (not filter duplicates - filters are in table columns)
+  // Grades page navigation (5 links)
   const gradesPages: PageNavItem[] = [
     { name: d?.navAll || 'All', href: `/${lang}/grades` },
-    { name: d?.navAnalytics || 'Analytics', href: `/${lang}/grades/analytics` },
+    { name: 'Generate', href: `/${lang}/grades/generate` },
     { name: d?.navReports || 'Reports', href: `/${lang}/grades/reports` },
+    { name: d?.navAnalytics || 'Analytics', href: `/${lang}/grades/analytics` },
+    { name: 'Settings', href: `/${lang}/grades/settings` },
   ]
 
   return (

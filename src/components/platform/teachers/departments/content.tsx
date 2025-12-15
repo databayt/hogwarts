@@ -1,3 +1,21 @@
+/**
+ * Department Management Content
+ *
+ * Manages school organizational structure with departments, teachers, and subjects:
+ * - CRUD operations for departments with bilingual naming (English + Arabic)
+ * - Shows associated teachers (with primary/secondary designations) and subjects
+ * - Expandable cards reveal full teacher and subject lists
+ * - Real-time stats: total departments, unique teacher count, unique subject count
+ *
+ * Client component for:
+ * - Modal dialogs (create/edit/delete) with form state management
+ * - Optimistic UI updates (loading states, disabled buttons during submission)
+ * - Expansion/collapse state for detailed views
+ * - Search filtering across both English and Arabic names
+ *
+ * Multi-tenant: All data scoped by schoolId via server actions
+ * Async operations use useTransition for progressive submission without full page refresh
+ */
 "use client"
 
 import { useState, useEffect, useTransition } from 'react'
@@ -177,10 +195,13 @@ export function DepartmentsContent({
     return name.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Calculate stats
+  // Calculate aggregated stats across all departments
+  // Uses Set deduplication because a teacher/subject can belong to multiple departments
   const stats = {
     totalDepartments: departments.length,
+    // Deduplicate teachers across all departments (a teacher may have multiple roles)
     totalTeachers: new Set(departments.flatMap(d => d.teachers.map(t => t.id))).size,
+    // Deduplicate subjects across all departments (a subject may be taught across multiple depts)
     totalSubjects: new Set(departments.flatMap(d => d.subjects.map(s => s.id))).size,
   }
 

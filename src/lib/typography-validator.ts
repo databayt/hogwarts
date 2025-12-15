@@ -1,6 +1,53 @@
 /**
- * Typography Validator
- * Validates that components follow the typography pattern defined in the style guide
+ * Typography Validator - Semantic HTML Enforcement
+ *
+ * PURPOSE: Detects hardcoded typography that violates design system
+ * Ensures consistent semantic HTML and theme-aware colors
+ *
+ * VIOLATIONS DETECTED (6 types):
+ * 1. hardcoded-typography: text-sm, text-xl, font-bold (should use semantic tags)
+ * 2. non-semantic-text: div/span with text content (should be p, h1-h6, small)
+ * 3. hardcoded-color: text-gray-500, text-blue-600 (should use theme colors)
+ * 4. hardcoded-direction: text-left, text-right (should use text-start for RTL)
+ * 5. heading-hierarchy: Skipped heading levels (h1 → h3 invalid, must be h2)
+ * 6. multiple-h1: Page has multiple h1 elements (only one per page allowed)
+ *
+ * SEMANTIC MAPPINGS (typography.ts reference):
+ * - text-4xl + font-extrabold → use <h1>
+ * - text-3xl + font-bold → use <h2>
+ * - text-2xl + font-semibold → use <h3>
+ * - text-xl + font-semibold → use <h4>
+ * - text-sm + text-muted-foreground → use <p className="muted">
+ * - text-xl + text-muted-foreground → use <p className="lead">
+ *
+ * THEME COLORS (semantic tokens):
+ * - text-foreground: Primary text (respects light/dark mode)
+ * - text-muted-foreground: Secondary text
+ * - text-primary, text-secondary, text-destructive, text-accent
+ *
+ * ARCHITECTURE:
+ * - parseElements(): Extracts tags, classes, content from HTML
+ * - hasHardcodedTypography(): Detects Tailwind text/font classes
+ * - hasHardcodedColors(): Detects color utilities (not theme colors)
+ * - checkHeadingHierarchy(): Validates heading level progression
+ * - suggestSemanticElement(): Maps violations to recommended HTML element
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - Only validates HTML-like strings (JSX strings, not compiled components)
+ * - Doesn't detect inline styles or CSS-in-JS violations
+ * - Regex-based parsing (won't catch complex nested structures)
+ * - Self-closing tags not supported (<img/>, <br/>)
+ * - Theme colors are whitelisted (anything else is flagged as hardcoded)
+ *
+ * PERFORMANCE:
+ * - Linear scan through HTML (O(n) string length)
+ * - Multiple regex passes (one per violation type)
+ * - Consider caching validation results for large files
+ *
+ * INTEGRATION:
+ * - CI/CD: Pre-commit hooks can run this validator
+ * - Editor: ESLint plugin could use this validation
+ * - Build: Warn or fail on typography violations
  */
 
 export interface TypographyViolation {

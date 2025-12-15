@@ -4,6 +4,28 @@ import React, { createContext, useContext, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ListingFormData, createListing, updateListing, getListing } from './actions'
 
+/**
+ * useListing Hook - School Listing Management with Context
+ *
+ * Manages school (listing) state during onboarding with:
+ * - Draft/published school creation
+ * - Cross-tenant access retry logic (exponential backoff)
+ * - School loading with error handling
+ * - School data updates (partial updates)
+ *
+ * KEY PATTERNS:
+ * - CONTEXT-BASED: Uses React Context to share state across onboarding pages
+ * - EXPONENTIAL BACKOFF: Retries access denied errors up to 3x (1s, 2s, 4s delays)
+ * - ERROR DETECTION: Checks for access denied vs other errors separately
+ * - PROVIDER PATTERN: Must wrap pages with <ListingProvider> to use hooks
+ *
+ * GOTCHAS:
+ * - Access denied retry logic checks for 'Access denied' OR 'CROSS_TENANT_ACCESS_DENIED' strings
+ * - If final retry fails, shows specific message about schoolId mismatch
+ * - loadListing called with empty object result may incorrectly report access denied
+ * - Navigation hooks (useHostNavigation) require <ListingProvider> parent
+ */
+
 // Types
 export interface Listing {
   id?: string
@@ -108,11 +130,12 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
   }, [])
 
   const loadListing = useCallback(async (id: string, retryCount = 0) => {
-
     setIsLoading(true)
     setError(null)
 
-    // Helper function to wait for a delay
+    // Exponential backoff helper for access denied errors during onboarding
+    // Access denied during school loading often means schoolId mismatch (user created school with different ID)
+    // Retry with delays: 1s, 2s, 4s (database replication may need time)
     const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
     try {

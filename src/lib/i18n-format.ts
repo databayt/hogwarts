@@ -1,3 +1,37 @@
+/**
+ * Internationalization Format Utilities
+ *
+ * Provides locale-aware formatting for Arabic (ar) and English (en).
+ *
+ * KEY BEHAVIORS:
+ *
+ * 1. ARABIC NUMERAL SYSTEM:
+ *    - Arabic locale uses Eastern Arabic numerals (٠١٢٣٤٥٦٧٨٩)
+ *    - Intl.NumberFormat handles this automatically
+ *    - No manual conversion needed
+ *
+ * 2. CURRENCY MAPPING:
+ *    - 'en' → USD (United States Dollar)
+ *    - 'ar' → SAR (Saudi Riyal)
+ *    - Defined in localeConfig
+ *
+ * 3. DATE FORMAT DIFFERENCES:
+ *    - English: MM/DD/YYYY (US format)
+ *    - Arabic: DD/MM/YYYY (Day-first)
+ *    - Both respect RTL/LTR directionality
+ *
+ * GOTCHAS:
+ *
+ * - formatDateRange uses Intl.DateTimeFormat.formatRange()
+ *   which isn't supported in all browsers. Falls back to manual formatting.
+ *
+ * - formatDuration has hardcoded Arabic strings for units
+ *   because Intl doesn't have a duration formatter.
+ *
+ * - formatFileSize uses Arabic unit names (بايت, كيلوبايت)
+ *   because Intl.NumberFormat doesn't handle file size units.
+ */
+
 import { Locale, localeConfig } from '@/components/internationalization/config';
 
 /**
@@ -244,10 +278,13 @@ export function formatDateRange(
   };
 
   try {
+    // WHY @ts-ignore: formatRange exists in modern browsers but TypeScript
+    // lib.dom.d.ts doesn't include it yet. Will be resolved in future TS versions.
     // @ts-ignore - formatRange is available but TypeScript might not recognize it
     return new Intl.DateTimeFormat(locale, options || defaultOptions).formatRange(start, end);
   } catch {
-    // Fallback for environments that don't support formatRange
+    // GOTCHA: formatRange not supported in Safari < 14.1, Node < 16.7
+    // Fallback concatenates individual dates with en-dash separator
     const formattedStart = formatDate(start, locale, options);
     const formattedEnd = formatDate(end, locale, options);
     return `${formattedStart} – ${formattedEnd}`;
@@ -256,6 +293,11 @@ export function formatDateRange(
 
 /**
  * Formats a file size in bytes to a human-readable string
+ *
+ * WHY HARDCODED ARABIC STRINGS:
+ * Intl.NumberFormat doesn't support file size units. We manually provide
+ * Arabic translations for unit names (بايت = Bytes, كيلوبايت = KB, etc.)
+ *
  * @param bytes - The file size in bytes
  * @param locale - The locale to use for formatting
  * @param decimals - Number of decimal places to show (default: 2)
@@ -273,8 +315,10 @@ export function formatFileSize(
     return locale === 'ar' ? '٠ بايت' : '0 Bytes';
   }
 
-  const k = 1024;
+  const k = 1024; // Binary prefix (KiB = 1024, not 1000)
   const dm = decimals < 0 ? 0 : decimals;
+  // WHY NOT Intl: No standard API for file size units
+  // Manual translations maintained here
   const sizes = locale === 'ar'
     ? ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت', 'تيرابايت']
     : ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -316,6 +360,17 @@ export function formatCompactNumber(
 
 /**
  * Formats a duration in milliseconds to a human-readable string
+ *
+ * WHY MANUAL IMPLEMENTATION:
+ * Intl.DurationFormat is still in proposal stage (Stage 3 as of 2024).
+ * Until browser support improves, we manually construct duration strings.
+ *
+ * ARABIC GRAMMAR NOTES:
+ * - Singular: يوم (day), ساعة (hour), دقيقة (minute), ثانية (second)
+ * - Plural: أيام (days), ساعات (hours), دقائق (minutes), ثوان (seconds)
+ * - Arabic uses singular for 1, different plurals for 2-10, 11+
+ *   Simplified here to singular (1) vs plural (>1)
+ *
  * @param milliseconds - The duration in milliseconds
  * @param locale - The locale to use for formatting
  * @returns Formatted duration string

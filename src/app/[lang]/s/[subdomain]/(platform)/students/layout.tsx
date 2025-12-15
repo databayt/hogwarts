@@ -13,12 +13,10 @@ export default async function StudentsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.students
 
-  // Define students page navigation
+  // Define students page navigation (5 links)
   const studentsPages: PageNavItem[] = [
     { name: d?.navigation?.all || 'All', href: `/${lang}/students` },
     { name: d?.navigation?.enroll || 'Enroll', href: `/${lang}/students/enroll` },
-    { name: d?.navigation?.yearLevels || 'Year Levels', href: `/${lang}/students/year-levels` },
-    { name: d?.navigation?.guardians || 'Guardians', href: `/${lang}/students/guardians` },
     { name: d?.navigation?.performance || 'Performance', href: `/${lang}/students/performance` },
     { name: d?.navigation?.reports || 'Reports', href: `/${lang}/students/reports` },
     { name: d?.navigation?.settings || 'Settings', href: `/${lang}/students/settings` },

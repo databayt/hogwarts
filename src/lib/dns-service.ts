@@ -1,7 +1,42 @@
 /**
  * DNS Configuration Service
- * Handles custom subdomain setup and DNS verification
- * Supports Cloudflare, Route53, and Vercel DNS providers
+ *
+ * Handles custom subdomain setup and DNS verification for multi-tenant schools.
+ *
+ * WHY MULTI-PROVIDER SUPPORT:
+ * Schools may have existing DNS infrastructure. Supporting multiple providers
+ * reduces friction during onboarding and allows enterprise deployments.
+ *
+ * PROVIDER CAPABILITIES:
+ *
+ * | Provider   | Auto-Setup | SSL | Verification |
+ * |------------|------------|-----|--------------|
+ * | Cloudflare | Yes        | Yes | DNS lookup   |
+ * | Route53    | Yes        | Yes | DNS lookup   |
+ * | Vercel     | Yes        | Yes | Auto         |
+ * | Manual     | No         | No  | DNS lookup   |
+ *
+ * SUBDOMAIN FLOW:
+ * 1. Check availability (not reserved, not taken)
+ * 2. Create DNS record (CNAME → schools.vercel.app)
+ * 3. Wait for propagation (TTL-dependent)
+ * 4. Verify DNS resolves correctly
+ * 5. Issue SSL certificate (via provider or Let's Encrypt)
+ *
+ * RESERVED SUBDOMAINS:
+ * Certain names are blocked: www, api, admin, mail, ftp, etc.
+ * Also blocks profanity and trademark terms.
+ *
+ * GOTCHAS:
+ * - DNS propagation can take 24-48 hours (show user warning)
+ * - Cloudflare proxy mode (orange cloud) requires different verification
+ * - Route53 needs hosted zone access (IAM permissions)
+ * - Vercel auto-configures but only for *.vercel.app subdomains
+ *
+ * VERIFICATION STRATEGY:
+ * - TXT record for ownership verification
+ * - CNAME/A record for routing verification
+ * - Multiple DNS lookups with retry (propagation delay)
  */
 
 import { logger } from '@/lib/logger';

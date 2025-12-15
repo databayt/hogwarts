@@ -1,4 +1,42 @@
-// OpenAI Integration for Auto-Marking System
+/**
+ * OpenAI Integration for Auto-Marking System
+ *
+ * Provides AI-powered essay grading and OCR for handwritten answers.
+ *
+ * MODEL SELECTION:
+ * - gpt-4o: Optimized for structured output (grading JSON)
+ * - gpt-4o (vision): OCR for handwritten/scanned answer sheets
+ *
+ * WHY GPT-4o:
+ * - Better JSON compliance than GPT-3.5
+ * - More consistent grading across similar answers
+ * - Vision capability for handwriting recognition
+ *
+ * TEMPERATURE 0.3:
+ * Lower temperature = more deterministic grading.
+ * Prevents same answer getting different grades on re-submission.
+ *
+ * COST STRUCTURE (2025):
+ * - Input: $0.005 per 1K tokens
+ * - Output: $0.015 per 1K tokens
+ * - Vision: Additional cost for image processing
+ *
+ * RATE LIMITING:
+ * Uses aiRateLimiter to prevent API quota exhaustion during
+ * batch grading operations (e.g., grading entire class).
+ *
+ * GRADING FLOW:
+ * 1. Build prompt with question, rubric, and student answer
+ * 2. Request structured JSON response
+ * 3. Parse scores per rubric criterion
+ * 4. Return total score + confidence + feedback
+ *
+ * GOTCHAS:
+ * - API key must be set in OPENAI_API_KEY env var
+ * - JSON parsing can fail - always wrap in try-catch
+ * - Long answers may exceed token limits
+ * - Rubric quality directly affects grading accuracy
+ */
 
 import OpenAI from "openai"
 import type { RubricWithCriteria, AIGradeResult, OCRProcessResult } from "@/components/platform/exams/mark/types"

@@ -19,6 +19,24 @@ import {
 import { validateStep } from './validation';
 import { ONBOARDING_STEPS, STEP_ORDER } from "./config";
 
+/**
+ * useOnboarding Hook - School Setup Progress Tracking
+ *
+ * Manages onboarding flow with:
+ * - School data loading (name, address, etc.)
+ * - Progress tracking (completed steps %, nextStep)
+ * - Step validation (must complete required fields before proceeding)
+ * - Step accessibility (some steps require dependencies)
+ * - Navigation between steps
+ *
+ * KEY PATTERNS:
+ * - PARALLEL LOADING: Fetches school data + status simultaneously
+ * - PROGRESS GATES: Can't proceed until 80% complete
+ * - STEP DEPENDENCIES: Some steps locked until others are complete
+ * - VALIDATION BEFORE SAVE: Validates step data before updateSchool
+ * - AUTO-REFRESH: loadSchoolData() called after each update
+ */
+
 // Main onboarding hook
 export function useOnboarding(schoolId?: string) {
   const router = useRouter();

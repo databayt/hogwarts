@@ -1,7 +1,32 @@
 /**
- * Validation Schemas for Geofence Feature
- * Zod schemas for location tracking and geofence management
- * Part of the Hogwarts School Management System
+ * Geofence Validation Schemas
+ *
+ * GPS-based location tracking and geofence boundary management for:
+ * - Live student location monitoring (max 5 min age, latitude/longitude)
+ * - Boundary detection (ENTER/EXIT/INSIDE events with timestamps)
+ * - Geofence types: School grounds, classrooms, bus routes, playgrounds
+ * - Formats: Circular (radius 10-5000m) or polygon (GeoJSON, min 4 points)
+ * - Consent tracking: Guardian approval required before tracking
+ *
+ * Key validation rules:
+ * - Location: Accurate GPS (±20m typical), battery%, device ID
+ * - Geofence names: 3-100 chars, alphanumeric + hyphen/underscore (no spaces)
+ * - Circular: Center lat/lon + radius (prevents 0-radius or 5km+ issues)
+ * - Polygon: Valid GeoJSON Polygon (closed ring, min 4 points for triangle area)
+ * - Color: Hex codes for map visualization (must be 6-digit hex)
+ * - Consent: boolean + date (audit trail for FERPA compliance)
+ *
+ * Why consent matters:
+ * - FERPA/GDPR: Students' location is personally identifiable information
+ * - Legal: Schools need documented guardian consent before location tracking
+ * - Parental: Parents can revoke consent at any time
+ * - Audit: Timestamp proves when consent was given (defense against claims)
+ *
+ * Why geofence types:
+ * - School grounds: Detect if student on campus
+ * - Bus route: Track bus movement, detect off-route
+ * - Classroom: Verify student in correct room (smaller radius, more accurate)
+ * - Playground: Social/recess monitoring
  */
 
 import { z } from 'zod'
@@ -13,6 +38,7 @@ import { z } from 'zod'
 /**
  * Schema for location submission from student devices
  * Validates GPS coordinates, accuracy, and device metadata
+ * Sent frequently (every 30-60s) via mobile app, battery-optimized
  */
 export const locationSchema = z.object({
   // Required coordinates
@@ -155,6 +181,11 @@ export const polygonGeofenceSchema = z.object({
   ),
 
   // Polygon geofence field (GeoJSON string)
+  // Why GeoJSON Polygon:
+  // - Irregular boundaries (parking lots, bus routes aren't circles)
+  // - Min 4 points = triangle with closure (first point repeated)
+  // - Validates: type="Polygon", coordinates array exists, closed ring
+  // - Max 50KB: Prevents massive polygons (limits render complexity on maps)
   polygonGeoJSON: z
     .string()
     .min(50, 'Polygon GeoJSON too short')

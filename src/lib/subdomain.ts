@@ -1,5 +1,18 @@
 /**
- * Utility functions for subdomain detection and handling
+ * Subdomain Utilities - Multi-Tenant Domain Resolution
+ *
+ * Handles subdomain detection, validation, and generation for the multi-tenant platform.
+ *
+ * DOMAIN STRUCTURE:
+ * - ed.databayt.org → Marketing site (NOT a tenant subdomain)
+ * - school.databayt.org → Tenant "school"
+ * - localhost:3000 → Development (no subdomain)
+ * - subdomain.localhost:3000 → Development subdomain
+ *
+ * SPECIAL CASES:
+ * - "ed" subdomain → Marketing site, not a school
+ * - "www" → Strip and treat as root domain
+ * - Vercel preview → tenant---branch.vercel.app
  */
 
 export interface SubdomainResult {
@@ -10,6 +23,8 @@ export interface SubdomainResult {
 
 /**
  * Extracts subdomain from hostname, handling special cases
+ *
+ * CRITICAL: "ed" is special-cased - it's the marketing site, not a school tenant
  */
 export function extractSubdomain(host: string, rootDomain?: string): SubdomainResult {
   // Handle edge cases
@@ -26,19 +41,20 @@ export function extractSubdomain(host: string, rootDomain?: string): SubdomainRe
   if (host.endsWith("." + rootDomain)) {
     const dotRootDomain = "." + rootDomain
     const subdomainEndIndex = host.lastIndexOf(dotRootDomain)
-    
+
     if (subdomainEndIndex > 0) {
       const subdomain = host.substring(0, subdomainEndIndex)
-      
-      // Special case: ed.databayt.org should show marketing, not be treated as subdomain
+
+      // SPECIAL CASE: ed.databayt.org is the marketing site, NOT a tenant
+      // Without this check, users would see 404 or wrong tenant
       if (subdomain === 'ed') {
-        return { 
-          subdomain: null, 
-          isSpecialCase: true, 
-          reason: 'ed.databayt.org - using marketing route' 
+        return {
+          subdomain: null,
+          isSpecialCase: true,
+          reason: 'ed.databayt.org - using marketing route'
         }
       }
-      
+
       return { subdomain, isSpecialCase: false }
     }
   }

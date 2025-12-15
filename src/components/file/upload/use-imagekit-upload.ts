@@ -1,8 +1,25 @@
 /**
- * ImageKit Upload Hook
+ * useImageKitUpload Hook - Direct CDN Upload with Signed Authentication
  *
- * Client-side hook for uploading files directly to ImageKit CDN.
- * Supports progress tracking, error handling, and authenticated uploads.
+ * Manages ImageKit file upload with two strategies:
+ * 1. CLIENT-SIDE: Direct upload to ImageKit with signed auth tokens (faster)
+ * 2. SERVER-SIDE: Proxy upload through API (more control, additional processing)
+ *
+ * KEY PATTERNS:
+ * - SIGNED AUTHENTICATION: Server provides time-limited tokens for direct upload
+ * - XHR PROGRESS TRACKING: Uses XMLHttpRequest for real upload progress events
+ * - DUAL STRATEGY: Choose client-side for speed, server-side for validation
+ * - BASE64 ENCODING: File converted to data URI for server upload
+ *
+ * BROWSER APIS:
+ * - XMLHttpRequest with upload.addEventListener('progress') for real-time tracking
+ * - FileReader for converting File → base64 string
+ *
+ * GOTCHAS:
+ * - Client-side upload requires CORS setup on ImageKit
+ * - Auth tokens expire (use fresh tokens before upload)
+ * - Server upload converts file to data URI (memory overhead for large files)
+ * - Folder param is baked into request (set at hook initialization)
  */
 
 "use client";
@@ -86,6 +103,7 @@ export function useImageKitUpload(
 
   /**
    * Get authentication parameters from the server
+   * Server generates time-limited tokens for signed upload authentication
    */
   const getAuthParams = useCallback(async (): Promise<ImageKitAuthParams | null> => {
     try {
@@ -148,10 +166,13 @@ export function useImageKitUpload(
         formData.append("token", authParams.token);
         formData.append("useUniqueFileName", "true");
 
-        // Upload with progress tracking
+        // Upload with progress tracking via XMLHttpRequest
+        // FormData + fetch() doesn't expose upload progress - must use XHR
         const result = await new Promise<UploadResult>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
 
+          // Real-time progress events - fired as bytes upload
+          // lengthComputable is false if Content-Length header missing
           xhr.upload.addEventListener("progress", (event) => {
             if (event.lengthComputable) {
               const percentage = Math.round((event.loaded / event.total) * 100);

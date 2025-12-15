@@ -1,6 +1,26 @@
 /**
- * Custom hook for managing lead state and operations
- * Provides a centralized way to interact with lead data
+ * useLeads Hook - Lead Management with Real-Time Updates
+ *
+ * Centralized lead data management with:
+ * - Debounced search (300ms) to prevent excessive API calls
+ * - Filter & pagination state synced to URL via nuqs
+ * - Lead selection for bulk actions
+ * - AI-powered text extraction to create leads from free-form text
+ * - Lead analytics (total, by status, etc.)
+ * - Auto-refresh capability with configurable interval
+ *
+ * KEY PATTERNS:
+ * - DEBOUNCED SEARCH: Waits 300ms after user stops typing before fetching
+ * - AUTO-REFRESH: Optional 30s polling for real-time updates (disabled by default)
+ * - OPTIMISTIC SELECTION: Selection state doesn't depend on API
+ * - FILTER RESET: Clears selection & resets to page 1 when filters change
+ * - AI EXTRACTION: Refreshes both leads and analytics after batch creation
+ *
+ * GOTCHAS:
+ * - Search parameter doesn't sync to URL (only used internally)
+ * - Selection clears when filters change (expected behavior)
+ * - Analytics requires separate API call (not included in leads fetch)
+ * - autoRefresh should be disabled in edit/detail views (prevents data loss)
  */
 
 'use client';
@@ -82,7 +102,8 @@ export function useLeads(options: UseLeadsOptions = {}): UseLeadsReturn {
   const [total, setTotal] = useState(initialLeads.length);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
-  // Debounce search filter
+  // Debounce search filter - waits 300ms after user stops typing before refetching
+  // Prevents API spam when user types quickly (e.g., "john smith" = 10 requests without debounce)
   const debouncedSearch = useDebounce(filters.search, 300);
 
   // Computed values
@@ -202,7 +223,8 @@ export function useLeads(options: UseLeadsOptions = {}): UseLeadsReturn {
     fetchLeads();
   }, [page, pageSize, debouncedSearch]);
 
-  // Auto-refresh
+  // Auto-refresh with configurable polling interval
+  // Disabled by default (autoRefresh = false) to prevent state thrashing during edit
   useEffect(() => {
     if (!autoRefresh) return;
 
@@ -213,12 +235,12 @@ export function useLeads(options: UseLeadsOptions = {}): UseLeadsReturn {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, refreshLeads]);
 
-  // Clear selection when filters change
+  // Clear selection when filters change - selected leads may not exist in filtered dataset
   useEffect(() => {
     clearSelection();
   }, [filters, clearSelection]);
 
-  // Reset page when filters change
+  // Reset page to 1 when filters change - prevents showing empty page after new filter reduces results
   useEffect(() => {
     setPage(1);
   }, [filters]);

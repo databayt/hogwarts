@@ -1,5 +1,37 @@
 "use server";
 
+/**
+ * Exam Generation Server Actions
+ *
+ * This module handles the question bank CRUD operations and exam generation algorithm.
+ *
+ * KEY CONCEPTS:
+ *
+ * 1. QUESTION BANK:
+ *    - Questions stored with metadata (type, difficulty, Bloom level, subject, tags)
+ *    - Each question has paired QuestionAnalytics record for usage tracking
+ *    - Source field distinguishes MANUAL vs IMPORTED questions
+ *
+ * 2. EXAM TEMPLATES:
+ *    - Define distribution of questions (e.g., 10 easy MCQ, 5 medium short answer)
+ *    - Can be reused across multiple exam generations
+ *    - Store points per question type/difficulty combo
+ *
+ * 3. EXAM GENERATION ALGORITHM:
+ *    - Takes template or custom distribution
+ *    - Selects questions matching constraints (subject, type, difficulty, Bloom)
+ *    - Applies randomization (optional seeding for reproducibility)
+ *    - Validates enough questions exist before generating
+ *    - See: ./utils.ts generateExamQuestions() for algorithm details
+ *
+ * 4. ANALYTICS TRACKING:
+ *    - Updates question usage statistics after generation
+ *    - Tracks average scores, pass rates, discrimination index
+ *    - Used to improve question selection over time
+ *
+ * MULTI-TENANT: All operations scoped by schoolId from session
+ */
+
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";

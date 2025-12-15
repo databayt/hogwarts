@@ -1,6 +1,55 @@
 /**
- * Timezone utilities for the Hogwarts platform
- * Handles timezone conversions, formatting, and display
+ * Timezone Utilities - School-Aware Time Handling
+ *
+ * PURPOSE: Converts between UTC and school timezone for accurate scheduling
+ * Schools operate on local time (timetables, attendance, events)
+ * Database stores all times in UTC, converts on display
+ *
+ * KEY INSIGHT: All times in database are UTC (ISO format)
+ * Converting to school timezone for UI - converting to UTC for storage
+ *
+ * METHODS:
+ * - formatInTimezone: Format Date as local string in target timezone
+ * - convertUtcToSchoolTime: UTC Date → formatted school time
+ * - getSchoolTime: Current time in school timezone
+ * - getSchoolDayStart: Midnight in school timezone (as UTC Date)
+ * - isWithinSchoolHours: Check if current time in school hours
+ * - createSchoolDateTime: Create UTC Date from school-local datetime
+ *
+ * ARCHITECTURE:
+ * - Static class: Stateless timezone utilities
+ * - getTimezoneOffset: Hardcoded offsets (DST not handled - use Intl API)
+ * - Intl.DateTimeFormat: Recommended for accurate conversions
+ * - SupportedTimezones: Whitelist validates timezone strings
+ *
+ * SUPPORTED TIMEZONES (25 total):
+ * - Middle East (Sudan, Egypt, Saudi, UAE, Kuwait, Qatar, Bahrain, Iraq, Syria, Lebanon, Jordan)
+ * - North Africa (Morocco, Tunisia, Algeria)
+ * - Europe (London, Paris, Berlin)
+ * - Americas (New York, Los Angeles)
+ * - UTC
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - CRITICAL: getTimezoneOffset() doesn't handle DST properly
+ *   Use Intl.DateTimeFormat for accurate conversions (it handles DST)
+ * - Hardcoded offsets are base time only (e.g., London = 0, but BST = +1)
+ * - createSchoolDateTime is approximate (DST issues possible)
+ * - isWithinSchoolHours is GMT-based, may be off during DST transitions
+ * - getSupportedTimezones() calculates currentTime on each call (expensive)
+ *
+ * BEST PRACTICES:
+ * - Always store times in UTC in database
+ * - Use formatInTimezone() for display (handles DST via Intl)
+ * - Use getSchoolTime() for current time (respects school timezone)
+ * - Validate timezone with isSupportedTimezone() before use
+ * - Add 'timeZone' to all Intl.DateTimeFormat options
+ *
+ * EXAMPLE:
+ * ```ts
+ * const utcNow = new Date(); // Database time (always UTC)
+ * const schoolTime = convertUtcToSchoolTime(utcNow, "Africa/Cairo");
+ * // Shows: "Thu, Nov 27, 2025 02:15 PM" (Cairo time)
+ * ```
  */
 
 import { supportedTimezones, type SupportedTimezone } from '@/components/platform/settings/validation';

@@ -3,11 +3,29 @@ import { i18n, type Locale } from "@/components/internationalization/config";
 import { isRouteAllowedForRole, type Role } from "@/routes";
 
 /**
- * Optimized middleware for Edge Function (<1MB requirement)
- * - Auth check via cookie (no heavy NextAuth import)
- * - Role-based route protection via JWT decode
- * - Locale detection and routing
- * - Subdomain detection and rewriting
+ * Edge Function Middleware - Multi-Tenant URL Rewriting
+ *
+ * CRITICAL: This runs on EVERY request. Must stay <1MB (Edge Function limit).
+ * Uses lightweight patterns instead of importing NextAuth (too heavy).
+ *
+ * REQUEST FLOW:
+ * 1. Skip static files and API auth routes (fast path)
+ * 2. Detect locale from cookie or Accept-Language header
+ * 3. Detect subdomain from host:
+ *    - Production: school.databayt.org → "school"
+ *    - Preview: tenant---branch.vercel.app → "tenant"
+ *    - Development: subdomain.localhost:3000 → "subdomain"
+ * 4. Auth check via session cookie (not NextAuth - too heavy)
+ * 5. Role-based route protection via JWT decode (no crypto verification)
+ * 6. URL rewrite: /dashboard → /[lang]/s/[subdomain]/dashboard
+ *
+ * GOTCHAS:
+ * - Auth routes (/login, /join) are NOT rewritten - they exist globally
+ * - ed.databayt.org is the main domain, NOT a subdomain
+ * - JWT decode is lightweight; full verification in server actions
+ * - x-subdomain header passed to downstream components
+ *
+ * See: src/lib/tenant-context.ts for how x-subdomain is consumed
  */
 
 // Inlined route arrays to avoid imports
@@ -106,14 +124,18 @@ export function proxy(req: NextRequest) {
     ? url.pathname.replace(`/${locale}`, '') || '/'
     : url.pathname;
 
-  // Detect subdomain early for auth redirects
+  // Detect subdomain early - needed for auth redirects and URL rewriting
+  // CRITICAL: ed.databayt.org is the main domain (marketing site), NOT a tenant
   let subdomain: string | null = null;
 
   if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+    // Production: school.databayt.org → "school"
     subdomain = host.split(".")[0];
   } else if (host.includes("---") && host.endsWith(".vercel.app")) {
+    // Vercel preview: tenant---branch.vercel.app → "tenant"
     subdomain = host.split("---")[0];
   } else if (host.includes("localhost") && host.includes(".")) {
+    // Development: subdomain.localhost:3000 → "subdomain"
     const parts = host.split(".");
     if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
       subdomain = parts[0];
@@ -211,14 +233,20 @@ export function proxy(req: NextRequest) {
 
     // Don't rewrite auth routes - they exist globally at /[lang]/(auth)/*
     // NOT within subdomain structure /[lang]/s/[subdomain]/(auth)/*
+    // GOTCHA: If you add auth routes to subdomain structure, users see 404
     if (isAuth) {
       return NextResponse.next();
     }
 
-    // Rewrite to tenant path
+    // URL REWRITE: This is the core multi-tenant magic
+    // User sees: school.databayt.org/dashboard
+    // Server sees: school.databayt.org/en/s/school/dashboard
+    // File lives at: src/app/[lang]/s/[subdomain]/(platform)/dashboard/page.tsx
     url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`;
 
     const response = NextResponse.rewrite(url);
+    // Pass subdomain to downstream components via header
+    // Consumed by: src/lib/tenant-context.ts getTenantContext()
     response.headers.set('x-subdomain', subdomain);
     return response;
   }

@@ -1,8 +1,37 @@
 /**
- * Secure Action Wrappers
+ * Secure Action Wrappers - Higher-Order Function Pattern for Permissions
  *
- * Wraps exam actions with permission checks to ensure
- * all operations are properly authorized.
+ * This module provides a composable permission system using HOF pattern.
+ * Instead of adding permission checks to every action, wrap with these helpers.
+ *
+ * PATTERN:
+ * 1. secureAction(permission, action, options) - Wraps action with permission check
+ * 2. secureQuery(permission, resource, action) - Wraps query with permission filters
+ *
+ * HOW IT WORKS:
+ * - Gets permission context from session (role, schoolId, userId)
+ * - Validates base permission (e.g., "exam:read")
+ * - Optionally extracts resourceId for resource-specific checks
+ * - Optionally runs additionalCheck for complex business rules
+ * - Returns error object on failure (doesn't throw)
+ *
+ * USAGE:
+ * ```typescript
+ * // Wrap a simple action
+ * const securedAction = secureAction("exam:read", myAction);
+ *
+ * // Wrap with resource-specific check
+ * const securedAction = secureAction("exam:update", myAction, {
+ *   extractResourceId: (args) => args[0].examId,
+ *   additionalCheck: async (ctx, args) => canModifyExam(ctx, args[0].examId)
+ * });
+ * ```
+ *
+ * WHY HOF PATTERN:
+ * - DRY: Permission logic lives in one place
+ * - Composable: Easy to add new permission types
+ * - Type-safe: TypeScript preserves action signatures
+ * - Testable: Permission logic can be unit tested separately
  */
 
 "use server";
@@ -82,6 +111,17 @@ export function secureAction<T extends (...args: any[]) => Promise<any>>(
 
 /**
  * Wrap a query action with permission filters
+ *
+ * Unlike secureAction, this injects WHERE clause filters into Prisma queries.
+ * This ensures users only see data they're allowed to access, even if they
+ * try to query outside their scope.
+ *
+ * HOW IT WORKS:
+ * 1. Gets permission filters based on context (e.g., { schoolId: "xxx" })
+ * 2. Merges filters into the WHERE clause of the first argument
+ * 3. Executes action with modified query
+ *
+ * CRITICAL: This prevents cross-tenant data leaks at the query level
  */
 export function secureQuery<T extends (...args: any[]) => Promise<any>>(
   permission: Permission,
@@ -109,10 +149,11 @@ export function secureQuery<T extends (...args: any[]) => Promise<any>>(
       };
     }
 
-    // Apply permission filters
+    // Get role-based filters (e.g., { schoolId: "xxx", teacherId: "yyy" })
     const filters = await applyPermissionFilters(context, resource);
 
-    // Modify the query arguments to include filters
+    // Inject filters into WHERE clause of first argument
+    // CRITICAL: This is what prevents cross-tenant data access
     const modifiedArgs = args.map((arg, index) => {
       // If first argument is a query object, merge filters
       if (index === 0 && typeof arg === "object" && arg !== null) {
@@ -120,7 +161,7 @@ export function secureQuery<T extends (...args: any[]) => Promise<any>>(
           ...arg,
           where: {
             ...arg.where,
-            ...filters,
+            ...filters,  // Role-based filters override any user-provided filters
           },
         };
       }

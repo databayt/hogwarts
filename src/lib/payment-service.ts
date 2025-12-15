@@ -1,7 +1,27 @@
 /**
- * Payment Service
- * Handles Stripe integration for school subscriptions and payments
- * Supports subscriptions, one-time payments, and payment methods
+ * Payment Service - Stripe Integration (Placeholder)
+ *
+ * Handles school subscriptions, payments, and billing.
+ *
+ * CURRENT STATUS:
+ * - Stripe initialization is COMMENTED OUT (stripe package not installed)
+ * - All payment calls return error responses until Stripe is enabled
+ * - No errors at module load - only surface when API methods are called
+ *
+ * STRIPE DATA MODEL:
+ * - stripeCustomerId stored in School model
+ * - planType ("starter" | "pro" | "enterprise") stored locally
+ * - Full subscription details only available via Stripe API (not local DB)
+ *
+ * PAYMENT SUCCESS SIDE EFFECT:
+ * - Updates school.isActive = true after successful payment
+ * - This is critical - unpaid schools should be deactivated
+ *
+ * TO ENABLE STRIPE:
+ * 1. Install stripe package: pnpm add stripe
+ * 2. Set STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY env vars
+ * 3. Uncomment Stripe initialization in this file
+ * 4. Set up webhook endpoint for subscription events
  */
 
 import { logger } from '@/lib/logger';

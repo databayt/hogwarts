@@ -1,3 +1,22 @@
+/**
+ * Year Levels Management Content
+ *
+ * Manages academic year/grade levels (e.g., Grade 9, Grade 10, Year 12) with:
+ * - CRUD operations for year levels with bilingual naming
+ * - Ordered display: levelOrder determines progression sequence
+ * - Aggregated stats: total students enrolled, batch assignments per level
+ * - Loading skeleton during data fetch for perceived performance
+ * - Error state with retry button for network resilience
+ *
+ * Client component for:
+ * - Form dialogs (create/edit) with bilingual input fields
+ * - Confirmation dialogs for destructive delete operations
+ * - Loading states during async server action execution
+ * - Real-time search across English and Arabic level names
+ *
+ * Multi-tenant: All CRUD operations scoped by schoolId via server actions
+ * Design pattern: Uses useTransition for non-blocking server mutations
+ */
 "use client"
 
 import { useState, useEffect, useTransition } from 'react'
@@ -156,14 +175,18 @@ export function YearLevelsContent({
     return name.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
-  // Calculate stats
+  // Calculate aggregated statistics across all year levels
+  // Reduces counts from Prisma _count field to total numbers
   const stats = {
     totalLevels: yearLevels.length,
+    // Sum all students across all year levels
     totalStudents: yearLevels.reduce((sum, l) => sum + (l._count?.studentYearLevels || 0), 0),
+    // Sum all batch assignments across all year levels
     totalBatches: yearLevels.reduce((sum, l) => sum + (l._count?.batches || 0), 0),
   }
 
-  // Get next available order
+  // Calculate next available order value for new year level
+  // Ensures sequential numbering and maintains sort order
   const getNextOrder = () => {
     if (yearLevels.length === 0) return 1
     return Math.max(...yearLevels.map(l => l.levelOrder)) + 1

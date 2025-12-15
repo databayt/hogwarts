@@ -1,6 +1,30 @@
 /**
- * Unified File Block - Print Hook
- * Client-side hook for print operations
+ * usePrint Hook - HTML/Element Print to PDF
+ *
+ * Manages browser printing with:
+ * - Element printing (specific component)
+ * - HTML string printing (dynamic content)
+ * - Print styling (margins, orientation, color adjustment)
+ * - RTL support (respects document direction)
+ * - Page break handling (A4, Letter sizes)
+ *
+ * KEY PATTERNS:
+ * - HIDDEN IFRAME: Creates temp iframe to isolate print context
+ * - STYLE INJECTION: Copies all stylesheets to print frame
+ * - RESOURCE LOADING DELAY: Waits 500ms for external resources
+ * - CLEANUP: Removes iframe after 1s delay to allow printing
+ * - GRAYSCALE FALLBACK: Removes color if config.color = false
+ *
+ * BROWSER APIS USED:
+ * - window.print() in iframe context triggers native print dialog
+ * - @page CSS rule controls paper size and margins
+ * - page-break-inside: avoid prevents table rows from breaking
+ *
+ * GOTCHAS:
+ * - Cross-origin stylesheets throw (caught silently, print continues)
+ * - Hidden iframe still uses memory until removed
+ * - print-color-adjust may not work in all browsers
+ * - Tables may still split across pages despite CSS (browser-dependent)
  */
 
 "use client";
@@ -25,12 +49,13 @@ export function usePrint(): UsePrintReturn {
   // ============================================================================
 
   const createPrintFrame = useCallback((): HTMLIFrameElement => {
-    // Remove existing frame if any
+    // Remove existing frame if any - prevents multiple frames accumulating
     if (printFrameRef.current) {
       document.body.removeChild(printFrameRef.current);
     }
 
-    // Create new frame
+    // Create new hidden iframe - isolated context for print styling
+    // Fixed positioning ensures it's off-screen and invisible to user
     const frame = document.createElement("iframe");
     frame.style.position = "fixed";
     frame.style.right = "0";

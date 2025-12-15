@@ -1,6 +1,24 @@
 /**
- * Unified File Block - Import Hook
- * Client-side hook for file import operations
+ * useImport Hook - CSV/Excel Import with Column Mapping & Validation
+ *
+ * Manages multi-step file import workflow:
+ * 1. PARSE: Read file, auto-detect columns, show sample data
+ * 2. MAP: User selects which file columns map to schema fields
+ * 3. VALIDATE: Check data types, required fields, detect duplicates
+ * 4. IMPORT: Batch insert via onSave callback (50 rows at a time)
+ *
+ * KEY PATTERNS:
+ * - AUTO-MATCHING: Uses column name heuristics to suggest mappings
+ * - PROGRESS TRACKING: Multi-stage progress from parse → validate → import
+ * - BATCH PROCESSING: Imports in 50-row batches to avoid request size limits
+ * - STORED REFS: Uses useRef for large data (parsed rows, column mapping)
+ * - ERROR COLLECTION: Tracks per-row errors instead of failing on first error
+ *
+ * GOTCHAS:
+ * - parseFile assumes CSV/Excel format (must support XLS/XLSX separately)
+ * - Column mapping stored in Ref - resets on reset() call
+ * - Required columns validation blocks import (all must be mapped)
+ * - Validation errors are per-row; import still continues if errors exist
  */
 
 "use client";
@@ -32,8 +50,11 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
   const [preview, setPreview] = useState<ImportPreview<T> | null>(null);
   const [result, setResult] = useState<ImportResult<T> | null>(null);
 
-  // Store parsed data for validation/import
+  // Store parsed data for validation/import - large data stored in Ref to avoid re-renders
+  // Raw rows from file parser: [{"name": "John", "email": "john@example.com"}, ...]
   const parsedDataRef = useRef<Array<Record<string, string>>>([]);
+  // Maps file columns to schema columns: {"name" → ImportColumn, "email" → ImportColumn}
+  // Null means unmapped column (ignored during import)
   const columnMappingRef = useRef<Map<string, ImportColumn<T> | null>>(new Map());
 
   // ============================================================================
@@ -244,7 +265,8 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
           return importResult;
         }
 
-        // Process in batches
+        // Process in batches - prevents request timeout and reduces memory pressure
+        // Default 50 rows/batch chosen to stay well below typical request size limits (1MB+)
         const batchSize = config.batchSize || 50;
         const totalBatches = Math.ceil(importResult.data.length / batchSize);
 
@@ -255,12 +277,13 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
 
           setProgress({
             status: "processing",
-            progress: 20 + Math.floor((i / totalBatches) * 70),
+            progress: 20 + Math.floor((i / totalBatches) * 70),  // Spreads 20-90% across batches
             message: `Importing batch ${i + 1} of ${totalBatches}...`,
             currentRow: end,
             totalRows: importResult.data.length,
           });
 
+          // onSave is parent's server action - responsible for database insert and deduplication
           await onSave(batch);
         }
 

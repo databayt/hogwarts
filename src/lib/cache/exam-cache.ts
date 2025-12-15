@@ -1,15 +1,65 @@
 /**
- * Exam System Caching Strategy
+ * Exam System Caching Strategy - LRU Cache Implementation
  *
- * Implements LRU (Least Recently Used) caching for:
- * 1. Grade boundaries (per school)
- * 2. School branding information
- * 3. Question analytics aggregates
+ * PURPOSE: In-memory caching for frequently accessed exam-related data
+ * Reduces database load for read-heavy operations (grade boundaries, school info)
  *
- * Cache invalidation strategies:
- * - TTL-based expiration
- * - Manual invalidation on updates
- * - Automatic cleanup of stale entries
+ * CACHED DATA:
+ * 1. Grade boundaries: School's grading scale (e.g., A=90+, B=80+)
+ *    TTL: 30 minutes (rarely changes, safe to cache)
+ * 2. School branding: Logo, colors, fonts (very stable)
+ *    TTL: 1 hour (almost never changes)
+ * 3. School info: Basic school record
+ *    TTL: 1 hour
+ * 4. Question analytics: Aggregated question performance metrics
+ *    TTL: 10 minutes (changes frequently, shorter cache)
+ *
+ * ALGORITHM: LRU (Least Recently Used)
+ * - When cache is full, evicts oldest-accessed entry
+ * - Recently accessed entries move to front of queue
+ * - get() moves entry to front (marking as recently used)
+ * - set() adds at front (most recently set)
+ *
+ * EXPIRATION STRATEGIES:
+ * 1. TTL-based: Each entry expires after X milliseconds
+ * 2. Manual invalidation: Call invalidate() to remove specific key
+ * 3. Pattern invalidation: Use regex to invalidate by pattern
+ * 4. Periodic cleanup: Auto-cleanup every 5 minutes (server-side only)
+ *
+ * ARCHITECTURE:
+ * - Generic LRUCache<T> class (reusable)
+ * - Specialized instances: gradeBoundaryCache, schoolBrandingCache, etc.
+ * - Singleton per cache type (one per application instance)
+ * - In-memory storage (lost on restart)
+ *
+ * KEY PATTERNS:
+ * - warmCache.preload(): Pre-load frequently accessed data at startup
+ * - withCache(): HOF wrapper for async functions with auto-caching
+ * - cacheKeys: Centralized key generation (format: entity:id)
+ * - invalidateCache.all(): Bulk invalidation for school updates
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - CRITICAL: In-memory only (not shared across processes/servers)
+ *   Don't use in multi-process environment without Redis
+ * - TTL check only on get() (expired entries persist until accessed)
+ * - Manual cleanup() needed to free memory immediately
+ * - Cache poisoning: If DB query fails, don't cache error result
+ * - No cache coherence across replicas (stale data possible)
+ *
+ * GOTCHAS:
+ * - withCache() only caches successful results (result.success check)
+ * - Cleanup runs on interval (can't be manually cancelled)
+ * - Max size limits apply per cache instance, not globally
+ * - Pattern invalidation uses RegExp (escaping needed for special chars)
+ *
+ * PERFORMANCE:
+ * - get/set/invalidate: O(1) average (Map operations)
+ * - Cleanup: O(n) where n = entries in cache
+ * - Pattern invalidation: O(n) (linear scan for regex matching)
+ *
+ * MONITORING:
+ * - getStats(): Returns cache size, max size, age, TTL for each entry
+ * - Use for cache hit rate calculation and optimization
  */
 
 import { GradeBoundary, SchoolBranding, School } from "@prisma/client";

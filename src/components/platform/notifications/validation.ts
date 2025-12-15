@@ -1,3 +1,38 @@
+/**
+ * Notification System Validation
+ *
+ * Multi-channel notification delivery system with:
+ * - 21 notification types: Academic (assignments, grades), operational (fees, class changes), system alerts
+ * - 4 delivery channels: In-app, email, push (mobile), SMS
+ * - 4 priority levels: Low, normal, high, urgent (affects delivery urgency)
+ * - Quiet hours: User-defined do-not-disturb windows (e.g., 9pm-8am)
+ * - Digest mode: Batch notifications daily/weekly (reduces notification fatigue)
+ * - Batch creation: Send to role (all teachers), class, or user list
+ * - Scheduling: Future-dated notifications (e.g., "remind in 2 days")
+ * - Expiration: Auto-delete old notifications (default: keep forever)
+ * - Read status: Track read/unread for important notifications
+ *
+ * Key validation rules:
+ * - Title/body: Required, reasonable length (255/no limit)
+ * - Priority: Low=info (e.g., new document), urgent=security (e.g., login alert)
+ * - Channels: Default in_app, opt-in for email/SMS (prevent spam)
+ * - Quiet hours: Both start+end required together (can't have just start)
+ * - Digest: Only when digestEnabled=true (prevents orphaned frequency)
+ * - Batch: At least one target required (role OR class OR user IDs)
+ * - Date range: startDate < endDate (for filters)
+ * - Expiration: Must be future (don't create already-expired notifications)
+ *
+ * Why these types:
+ * - Academic: Students care about grades, assignments, attendance
+ * - Operational: Fees affect payment, class changes affect schedule
+ * - System: Security alerts (login) and account events (password reset)
+ *
+ * Why batch + scheduling:
+ * - Batch: Send 500 students 1 notification vs 500 separate calls
+ * - Schedule: "Send at 3pm" = coordinated time across timezones
+ * - Target: By role (all admins) or class (period 2 math) enables scalability
+ */
+
 import { z } from "zod"
 
 // Notification type enum validation
@@ -129,7 +164,9 @@ export const notificationPreferenceSchema = z.object({
   digestEnabled: z.boolean().optional().default(false),
   digestFrequency: z.enum(["daily", "weekly"]).optional(),
 }).superRefine((val, ctx) => {
-  // Validate quiet hours
+  // Validate quiet hours - must be paired
+  // Why: If user sets quiet hours, need both start and end to calculate the window
+  // Example: start=9pm, no end = ambiguous (9pm to when?)
   if (val.quietHoursStart !== undefined && val.quietHoursEnd !== undefined) {
     if (val.quietHoursStart === val.quietHoursEnd) {
       ctx.addIssue({
@@ -159,6 +196,7 @@ export const notificationPreferenceSchema = z.object({
   }
 
   // If digest is enabled, frequency must be set
+  // Why: digestEnabled=true but no frequency = system won't know when to send digest
   if (val.digestEnabled && !val.digestFrequency) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,

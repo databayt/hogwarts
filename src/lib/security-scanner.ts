@@ -1,6 +1,43 @@
 /**
  * Security Scanner
- * Automated security testing utilities
+ *
+ * Automated security testing utilities for OWASP Top 10 compliance.
+ *
+ * TEST COVERAGE:
+ *
+ * | Test                    | OWASP Category           | Severity |
+ * |-------------------------|--------------------------|----------|
+ * | Authentication          | A07:2021 Auth Failures   | Critical |
+ * | SQL Injection           | A03:2021 Injection       | Critical |
+ * | XSS Protection          | A03:2021 Injection       | High     |
+ * | CSRF Protection         | A01:2021 Broken Access   | High     |
+ * | Rate Limiting           | A04:2021 Insecure Design | Medium   |
+ * | Data Encryption         | A02:2021 Crypto Failures | High     |
+ * | File Upload             | A01:2021 Broken Access   | High     |
+ * | API Headers             | A05:2021 Misconfig       | Medium   |
+ * | Multi-Tenant Isolation  | A01:2021 Broken Access   | Critical |
+ *
+ * SCORING:
+ * - Score = (passed / total) * 100
+ * - Critical issues block deployment
+ * - High/Medium issues generate warnings
+ *
+ * WHY AUTOMATED SCANNING:
+ * - Catches regressions before deployment
+ * - Enforces security baseline across PRs
+ * - Documents security posture for audits
+ *
+ * GOTCHAS:
+ * - Some tests require live database (can't run in CI without fixtures)
+ * - Rate limiting tests may trigger actual limits
+ * - Multi-tenant test needs multiple school fixtures
+ *
+ * USAGE:
+ * ```ts
+ * const scanner = new SecurityScanner();
+ * const report = await scanner.runFullScan();
+ * if (report.criticalIssues > 0) throw new Error('Security check failed');
+ * ```
  */
 
 import { logger } from '@/lib/logger';

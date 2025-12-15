@@ -1,3 +1,31 @@
+/**
+ * Cookie Debugging API
+ *
+ * Development-only endpoint to inspect server-side cookies.
+ *
+ * USE CASES:
+ * - Debug OAuth callback URL preservation
+ * - Verify NextAuth session cookies exist
+ * - Troubleshoot cross-subdomain cookie issues
+ *
+ * WHY THIS EXISTS:
+ * - Browser DevTools show client-accessible cookies only
+ * - httpOnly cookies are invisible to JavaScript
+ * - This endpoint exposes server's cookie view
+ *
+ * SECURITY NOTE:
+ * - Exposes cookie names/values (truncated)
+ * - Should be disabled or protected in production
+ * - Consider adding DEVELOPER role check
+ *
+ * FILTERED COOKIES:
+ * - oauth_callback_intended: Our custom OAuth return URL
+ * - next-auth.*: NextAuth session/csrf tokens
+ * - auth.*: Legacy auth cookies
+ *
+ * @see /auth/store-callback/route.ts - Sets oauth_callback_intended
+ */
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 

@@ -95,27 +95,36 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
     },
   },
+  /**
+   * Cookie Configuration for Multi-Tenant Cross-Subdomain Auth
+   *
+   * CRITICAL: domain: '.databayt.org' allows cookies to be shared across all subdomains
+   * (school1.databayt.org, school2.databayt.org, ed.databayt.org)
+   *
+   * Without this, users would need to re-authenticate for each subdomain.
+   * In development, domain is undefined (cookies only work on localhost).
+   */
   cookies: {
     pkceCodeVerifier: {
       name: `authjs.pkce.code_verifier`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "lax",       // Required for OAuth redirects
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        maxAge: 900, // 15 minutes
+        maxAge: 900,           // 15 minutes - OAuth flow timeout
         domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
     sessionToken: {
       name: `authjs.session-token`,
       options: {
-        httpOnly: true,
-        sameSite: "lax",
+        httpOnly: true,        // Prevents XSS access to session token
+        sameSite: "lax",       // Allows cross-subdomain cookies
         path: "/",
         secure: process.env.NODE_ENV === "production",
         domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
-        maxAge: 24 * 60 * 60, // 24 hours
+        maxAge: 24 * 60 * 60,  // 24 hours - matches session.maxAge
       },
     },
     callbackUrl: {
@@ -160,6 +169,21 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
+    /**
+     * JWT Callback - Token Population and Refresh
+     *
+     * Triggers:
+     * - signIn: Initial sign-in, populate token with user data
+     * - update: Manual session update (e.g., after onboarding creates school)
+     * - (none): Token refresh on subsequent requests
+     *
+     * Key behaviors:
+     * - Populates role/schoolId from user object on initial sign-in
+     * - Forces DB refresh when schoolId missing (new OAuth users during onboarding)
+     * - Updates cache-busting fields (updatedAt, hash, sessionToken) to force client refresh
+     *
+     * See: src/lib/school-access.ts syncUserSchoolContext() for how refresh is triggered
+     */
     async jwt({ token, user, account, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
@@ -395,6 +419,33 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       return session
     },
+    /**
+     * Redirect Callback - Complex Multi-Tenant Routing
+     *
+     * This callback handles post-authentication redirects with several challenges:
+     *
+     * PROBLEM: OAuth providers redirect to a fixed callback URL, losing the intended destination.
+     * SOLUTION: 5 methods to retrieve the callback URL (first successful wins):
+     *   0. Server-side cookie (oauth_callback_intended) - most reliable
+     *   1. URL searchParams (callbackUrl parameter)
+     *   2. URL regex match (fallback parser)
+     *   3. baseUrl analysis (during OAuth flow)
+     *   4. Client-side cookies (authjs.callback-url, oauth_callback_intended)
+     *   5. Session storage (oauth_callback_intended)
+     *
+     * MULTI-TENANT ROUTING:
+     * - Detects subdomain from host (school.databayt.org → "school")
+     * - Looks up user's schoolId from JWT → fetches school domain from DB
+     * - Constructs school-specific dashboard URL
+     * - Special case: ed.databayt.org is the marketing site, NOT a tenant
+     *
+     * GOTCHAS:
+     * - Facebook OAuth adds #_=_ hash that must be stripped
+     * - Callback URLs must be validated for same-origin security
+     * - DEVELOPERs (platform admins) go to ed.databayt.org, not a school subdomain
+     *
+     * See: src/app/api/auth/store-callback/route.ts for how callback URL is stored
+     */
     async redirect({ url, baseUrl }) {
       const isDev = process.env.NODE_ENV === 'development';
       const log = isDev ? console.log : () => {};

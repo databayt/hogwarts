@@ -1,8 +1,38 @@
 /**
- * Prompt Parser
+ * Prompt Parser - Agent & Command Documentation Generator
  *
- * Parses .claude/agents/ and .claude/commands/ files to extract prompts
- * for the documentation system
+ * PURPOSE: Extracts prompt definitions from .claude/agents/ and .claude/commands/
+ * directories and builds a searchable documentation index.
+ *
+ * USES: Provides context for documentation website and Agent Reference page
+ * Enables developers to search available agents, commands, and examples
+ *
+ * DATA SOURCES:
+ * - Agents: .claude/agents/*.md files (Specialization: metadata in content)
+ * - Commands: .claude/commands/*.md files (YAML frontmatter for metadata)
+ *
+ * KEY PATTERNS:
+ * - categorizePrompt(): Infers category from filename + content keywords
+ * - extractVariables(): Finds <>, [], {}, and $1-$9 placeholders
+ * - extractTags(): Builds tag cloud from technical keywords
+ * - parseFrontmatter(): YAML key:value parsing for commands
+ * - extractUsageExample(): Pulls first code block as example
+ *
+ * CATEGORIZATION (10 categories):
+ * Components, Database, Testing, API, Security, i18n,
+ * Git, Performance, Architecture, General
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - Frontmatter parsing is basic (no nested YAML support)
+ * - Variable extraction uses simple regex (doesn't handle nesting)
+ * - Tags are case-insensitive, category is lowercase
+ * - Files must have .md extension (case-sensitive)
+ * - getAllPrompts() is called on every request (consider caching)
+ *
+ * PERFORMANCE:
+ * - Recursive directory scan only at build time or on demand
+ * - Linear search through all prompts (searchPrompts is O(n))
+ * - Consider caching in production for large prompt libraries
  */
 
 import fs from 'fs';
@@ -21,9 +51,17 @@ const COMMANDS_DIR = path.join(CLAUDE_DIR, 'commands');
 /**
  * Extract variables from prompt content
  * Looks for patterns like <name>, [path], {component}, $1, $2, etc.
+ * WHY: Shows users what parameters each agent/command accepts
+ * Example: /component <name> shows users need to provide name
  */
 function extractVariables(content: string): string[] {
   const variables = new Set<string>();
+
+  // WHY: Support multiple bracket styles for different use cases
+  // <variable> = angle brackets (agent parameters)
+  // [variable] = square brackets (optional params)
+  // {variable} = curly braces (config params)
+  // $N = positional args
 
   // Match <variable>
   const angleBrackets = content.match(/<([a-zA-Z_-]+)>/g);

@@ -1,8 +1,42 @@
+/**
+ * Onboarding Access Validation API
+ *
+ * Verifies user can access a specific onboarding flow.
+ *
+ * USE CASES:
+ * - Pre-flight check before loading onboarding UI
+ * - Redirect user to correct school if URL schoolId doesn't match
+ * - Create school on first visit (auto-provisioning)
+ *
+ * MULTI-TENANT SAFETY:
+ * - User can only access their own school's onboarding
+ * - If schoolId in URL doesn't match, return redirect
+ * - Prevents accessing another school's setup wizard
+ *
+ * WHY getOrCreateSchoolForOnboarding:
+ * - First-time users have no school yet
+ * - Automatically creates one if needed
+ * - Returns existing school if already created
+ * - Idempotent (safe to call multiple times)
+ *
+ * WHY syncUserSchoolContext:
+ * - Ensures user's session has correct schoolId
+ * - Handles edge case of session created before school
+ * - Updates JWT claims for subsequent requests
+ *
+ * REDIRECT LOGIC:
+ * - requestedSchoolId !== actualSchoolId: Return redirect
+ * - This prevents URL manipulation attacks
+ * - Client should follow the redirect suggestion
+ *
+ * @see /lib/school-access.ts for implementation
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { 
+import {
   getOrCreateSchoolForOnboarding,
-  syncUserSchoolContext 
+  syncUserSchoolContext
 } from '@/lib/school-access';
 
 export async function POST(request: NextRequest) {

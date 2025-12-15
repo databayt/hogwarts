@@ -2,7 +2,27 @@ import { z } from 'zod'
 
 /**
  * Timetable Validation Schemas
- * Comprehensive input validation for all timetable operations
+ *
+ * Comprehensive input validation for timetable operations including:
+ * - Weekly schedule slot management (day, period, class, teacher, room)
+ * - Conflict detection (teacher double-booking, room conflicts)
+ * - School week configuration (working days, lunch periods, class durations)
+ * - Import/export (JSON, CSV formats)
+ * - Analytics (utilization rates, conflict counts, teacher workload)
+ *
+ * Key validation rules:
+ * - Days: 0-6 (Sunday-Saturday) for day-of-week, 0-1 for week offset
+ * - CUIDs: Validated format for all ID references (term, class, teacher, room, period)
+ * - Working days: Minimum 1, maximum 7, must be unique (no duplicates)
+ * - Lunch config: After periods 1-10, durations 15-60 minutes
+ * - Conflicts: Teacher can't teach same period/day in different rooms; rooms can't double-book
+ * - Subject distribution: Realistic per-subject limits (Math 5/week, PE 2/week, etc.)
+ * - Teacher travel: Prevents back-to-back classes in different buildings (1 period = 5-10 min travel)
+ *
+ * Why bulk upsert with clearExisting:
+ * - Import entire term at once (teacher schedule may need complete rebuild)
+ * - clearExisting=true → atomic replace (no orphaned slots)
+ * - dryRun in conflict resolution → preview changes without committing
  */
 
 // ============================================================================
@@ -304,6 +324,14 @@ export const validateRoomAvailability = (
 /**
  * Validates subject distribution for a class
  * Ensures balanced distribution of subjects throughout the week
+ *
+ * Why per-subject limits:
+ * - Math/English: 5 periods/week (core subjects, require repetition)
+ * - Science: 4 periods/week (lab time, complex concepts)
+ * - Humanities: 3 periods/week (history, geography can use online resources)
+ * - Electives: 2 periods/week (art, music, PE have flexibility)
+ * - Prevents: Student fatigue from same-subject overload
+ * - Enables: Subject teacher workload balancing (can't assign all periods to one teacher)
  */
 export const validateSubjectDistribution = (
   classId: string,
@@ -340,8 +368,15 @@ export const validateSubjectDistribution = (
 }
 
 /**
- * Validates that a teacher doesn't have back-to-back classes
- * across different physical locations
+ * Validates that a teacher doesn't have back-to-back classes in different rooms
+ * Accounts for campus travel time between buildings
+ *
+ * Why travel time validation:
+ * - Teachers need 5-10 minutes to move between buildings with students
+ * - Back-to-back in different rooms = impossible schedule (teacher late, disrupts next class)
+ * - Same building = OK (same floor = 1 min, different floor = 3-5 min within period)
+ * - Prevents: Burnout, missed classes, student dissatisfaction
+ * - Note: Would require building data for full validation (out of scope here)
  */
 export const validateTeacherTravelTime = (
   teacherId: string,

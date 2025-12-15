@@ -1,9 +1,40 @@
 /**
- * Cron job to auto-publish scheduled announcements
+ * Cron Job: Auto-Publish Scheduled Announcements
  *
- * This endpoint should be called periodically (e.g., every 5 minutes) by:
- * - Vercel Cron (configured in vercel.json)
- * - Or external cron service
+ * Processes announcements scheduled for publication across ALL schools.
+ *
+ * TRIGGER OPTIONS:
+ * - Vercel Cron: Configure in vercel.json with schedule (e.g., every 5 min)
+ * - External service: Uptime Robot, Cronitor, or AWS EventBridge
+ * - Manual: POST /api/cron/publish-announcements with Bearer token
+ *
+ * EXECUTION FLOW:
+ * 1. Verify CRON_SECRET (prevents unauthorized triggers)
+ * 2. Find all unpublished announcements where scheduledFor <= now
+ * 3. Batch update to published=true in single query
+ * 4. Invalidate cache for affected schools
+ * 5. Return execution report with timing
+ *
+ * WHY BEARER TOKEN AUTH:
+ * - Vercel Cron injects CRON_SECRET as Authorization header
+ * - Prevents external abuse (public URL but protected endpoint)
+ * - Must be configured in environment variables
+ *
+ * WHY BATCH UPDATE:
+ * - Single DB query instead of N updates (performance)
+ * - Atomic operation (all or nothing)
+ * - Avoids rate limiting on high-volume schools
+ *
+ * CACHE INVALIDATION:
+ * - Uses revalidateTag() to bust Next.js cache per school
+ * - Tag format: "announcements-{schoolId}"
+ * - Ensures fresh data after publish
+ *
+ * GOTCHAS:
+ * - No user auth (cron runs without session)
+ * - Cross-school operation (not tenant-scoped)
+ * - Time comparison uses server timezone (UTC in production)
+ * - GET and POST both work (GET for Vercel Cron, POST for manual)
  *
  * @see https://vercel.com/docs/cron-jobs
  */

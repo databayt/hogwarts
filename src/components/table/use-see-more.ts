@@ -1,6 +1,22 @@
 /**
- * useSeeMore Hook
- * Custom hook for "see more" pagination pattern with URL state management
+ * useSeeMore Hook - Infinite Scroll "See More" Pagination with URL Persistence
+ *
+ * Manages progressive data loading pattern (not traditional pagination):
+ * - Initial page load: 20 rows
+ * - "See More" click: +20 rows accumulated (not paginated)
+ * - Data persists in URL for bookmark/share support
+ *
+ * KEY PATTERNS:
+ * 1. ACCUMULATED DATA: Keeps all loaded rows in accumulatedData (not replaced)
+ * 2. URL STATE: loadedCount and batchSize sync to URL via nuqs parsers
+ * 3. CLIENT-SIDE PAGINATION: TanStack Table shows all accumulated rows (pageSize = accumulatedData.length)
+ * 4. SERVER-SIDE FILTERING/SORTING: Debounced via nuqs to prevent spam
+ * 5. REFETCH ON CHANGE: When sort/filter changes, resets to first batch
+ *
+ * GOTCHAS:
+ * - Setting manualPagination: false because we handle pagination locally with accumulatedData
+ * - Must reset loadedCount when filters/sort changes to avoid stale data
+ * - Search is debounced 300ms before updating URL (prevents excessive refetches)
  */
 
 "use client";
@@ -153,13 +169,13 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>(initialState?.columnVisibility ?? {});
 
-  // Track loaded count in URL
+  // Track loaded count in URL for bookmarking/sharing (can resume from last loaded position)
   const [loadedCount, setLoadedCount] = useQueryState(
     LOADED_COUNT_KEY,
     parseAsInteger.withOptions(queryStateOptions).withDefault(initialData.length)
   );
 
-  // Track batch size in URL
+  // Track batch size in URL (allows user to customize items per "see more" click)
   const [batchSize, setBatchSize] = useQueryState(
     BATCH_SIZE_KEY,
     parseAsInteger
@@ -167,13 +183,16 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
       .withDefault(paginationConfig.defaultBatchSize)
   );
 
-  // Accumulated data state
+  // Accumulated data state - holds ALL rows loaded so far (not paginated)
+  // When "See More" is clicked, onSeeMore callback fetches next batch and setAccumulatedData appends
   const [accumulatedData, setAccumulatedData] = React.useState<TData[]>(initialData);
 
-  // Loading state for "see more" action
+  // Loading state for "see more" action - prevents duplicate clicks during fetch
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-  // Pagination state for TanStack Table
+  // Pagination state for TanStack Table - shows all accumulated rows at once
+  // pageSize = accumulatedData.length means no actual pagination (all rows visible)
+  // This lets TanStack handle sorting/filtering on client-side once data is loaded
   const pagination: PaginationState = React.useMemo(() => {
     return {
       pageIndex: 0,
@@ -214,7 +233,8 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
       } else {
         setSorting(updaterOrValue as ExtendedColumnSort<TData>[]);
       }
-      // Reset loaded data when sorting changes
+      // Reset loaded data when sorting changes because new sort order means fresh data from server
+      // Don't keep accumulated rows - they'd be in old sort order once parent refetches with new sort
       setLoadedCount(batchSize);
       setAccumulatedData(initialData.slice(0, batchSize));
     },
@@ -254,7 +274,8 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
   const debouncedSetFilterValues = useDebouncedCallback(
     (values: typeof filterValues) => {
       void setFilterValues(values);
-      // Reset loaded data when filters change
+      // Reset loaded data when filters change - debouncing waits for user to finish typing before refetch
+      // Parent component will refetch data based on new filter values from URL
       void setLoadedCount(batchSize);
       setAccumulatedData(initialData.slice(0, batchSize));
     },
@@ -324,6 +345,7 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
   // ============================================================================
 
   const handleSeeMore = React.useCallback(async () => {
+    // Guard: prevent duplicate clicks or refetch if all data loaded
     if (!seeMoreState.hasMore || isLoadingMore) return;
 
     setIsLoadingMore(true);
@@ -331,12 +353,13 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     try {
       const newLoadedCount = loadedCount + batchSize;
 
-      // Call the onSeeMore callback if provided
+      // Parent component's onSeeMore callback fetches new data based on newLoadedCount and batchSize
+      // It's responsible for updating accumulatedData via setAccumulatedData
       if (onSeeMore) {
         await onSeeMore(newLoadedCount, batchSize);
       }
 
-      // Update URL state
+      // Update URL state immediately (parent will fetch fresh data based on new URL)
       void setLoadedCount(newLoadedCount);
     } catch (error) {
       console.error("Error loading more data:", error);

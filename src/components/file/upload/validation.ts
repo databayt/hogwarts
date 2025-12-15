@@ -1,6 +1,43 @@
 /**
- * Unified File Block - Upload Validation
- * Zod schemas for file upload validation
+ * File Upload Validation
+ *
+ * Unified file upload system with multi-provider storage and category-based limits:
+ * - 6 categories: Image (10MB), Video (100MB), Document (50MB), Audio (20MB), Archive (30MB), Other (100MB)
+ * - Multiple providers: Vercel Blob, AWS S3, Cloudflare R2, ImageKit
+ * - Storage tiers: Hot (CDN), Warm (archival), Cold (deleted after 30 days)
+ * - MIME validation: Whitelist per category (prevent executable uploads)
+ * - Dangerous file detection: Block .exe, .bat, .js, .vbs (security)
+ * - Batch validation: Multiple files with cumulative size limit
+ * - Metadata: File name, size, type, last modified (audit trail)
+ *
+ * Key validation rules:
+ * - File name: Required, non-empty after trim
+ * - MIME type: Must match category (image/* for images, video/* for video)
+ * - Size: Hard limits per category (prevents storage abuse)
+ * - Dangerous extensions: Blocked regardless of MIME type
+ * - Batch count: configurable max files per request
+ * - Batch size: configurable max total per request
+ * - Metadata: Optional, stored as key-value pairs
+ * - Access: Public (CDN) or Private (authenticated)
+ *
+ * Why category-based limits:
+ * - Images: Compressed, frequent, small (10MB covers 4K photos)
+ * - Video: Uncompressed, storage-heavy, less frequent (100MB = ~1min 1080p)
+ * - Documents: Variable (PDFs < 1MB, video dumps 50MB+)
+ * - Audio: Small, voice notes or music (20MB = ~4min 128kbps)
+ * - Archive: Zips of documents (30MB = 50+ PDFs)
+ * - Other: Catch-all, liberal limit (should use category)
+ *
+ * Why dangerous file blocking:
+ * - .exe/.bat: Executables (run on user machine if downloaded)
+ * - .js/.vbs: Scripts (XSS, ransomware potential)
+ * - Prevents: Malware distribution through file uploads
+ * - Defense: Whitelist approach (only known-good types)
+ *
+ * Why MIME + extension check:
+ * - MIME alone: Can be spoofed (rename .exe to .pdf.exe)
+ * - Extension alone: Unreliable (doesn't match actual content)
+ * - Together: Strong validation (requires both match category)
  */
 
 import { z } from "zod";
@@ -82,6 +119,7 @@ export const batchUploadRequestSchema = z.object({
 
 /**
  * Validate file before upload
+ * Enforces: size limits, MIME type whitelist, dangerous extension blocking
  */
 export function validateFile(
   file: File,
@@ -92,7 +130,8 @@ export function validateFile(
     allowedTypes?: string[];
   }
 ): { valid: boolean; error?: string } {
-  // Check file size
+  // Check file size - hard limit per category
+  // Why: Prevents storage abuse (e.g., 1000 100MB videos = 100GB cost)
   const maxSize = options.maxSize || getMaxSize(options.type);
   if (file.size > maxSize) {
     const maxSizeMB = Math.round(maxSize / (1024 * 1024));
@@ -103,7 +142,8 @@ export function validateFile(
     };
   }
 
-  // Check file type
+  // Check file type - whitelist by category
+  // Why: Prevents disguised executables (rename .exe to .pdf)
   const allowedTypes = options.allowedTypes || getAllowedMimeTypes(options.category);
   if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
     return {
@@ -112,12 +152,14 @@ export function validateFile(
     };
   }
 
-  // Check file name
+  // Check file name - must not be empty
   if (!file.name || file.name.trim().length === 0) {
     return { valid: false, error: "File name is required" };
   }
 
   // Check for potentially dangerous file extensions
+  // Why: Defense in depth - blocks known executables even if MIME spoofed
+  // Example: .exe file renamed to .pdf + MIME changed to application/pdf still blocked
   const dangerousExtensions = [".exe", ".bat", ".cmd", ".scr", ".pif", ".js", ".vbs"];
   const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
   if (dangerousExtensions.includes(extension)) {

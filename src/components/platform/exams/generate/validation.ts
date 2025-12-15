@@ -1,3 +1,34 @@
+/**
+ * Exam Generation Validation
+ *
+ * Exam paper generation and question selection for assessment creation:
+ * - Template-based generation: Reuse distribution templates across exams
+ * - Custom selection: Pick specific questions or use templates
+ * - Randomization: Shuffle question order + optional seed for reproducibility
+ * - Conflict resolution: 4 strategies for scheduling conflicts
+ *   - prefer_senior_teacher: Assign experienced teachers first
+ *   - prefer_larger_class: Prioritize classes with more students
+ *   - prefer_core_subjects: Math/English over electives
+ *   - distribute_evenly: Balance workload across teachers
+ * - Dry-run mode: Preview changes before applying
+ * - Exam duration: 15-480 minutes (15min quizzes to 8hr exams)
+ * - Total marks: 1-1000 (flexible grading scales)
+ *
+ * Why templates + custom:
+ * - Template: Fast (reuse, consistency) for regular exams
+ * - Custom: Flexibility for supplementary/makeup exams
+ * - Randomization: Prevents cheating (different question order per student)
+ * - Seed: Deterministic shuffle (reconstruct exam if needed)
+ *
+ * Why dry-run:
+ * - Conflict resolution moves 10+ questions
+ * - Preview before applying → catch scheduling impossibilities
+ * - Example: 5 teachers × 1 period = impossible for 20 classes
+ *
+ * Note: Partial update schema commented (discriminated union limitation)
+ * - TODO: Make each question type partially updatable separately
+ */
+
 import { z } from "zod";
 import {
   BloomLevel,

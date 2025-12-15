@@ -13,12 +13,12 @@ export default async function ParentsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.parents
 
-  // Define parents page navigation
+  // Parents page navigation (4 links)
   const parentsPages: PageNavItem[] = [
-    { name: 'All', href: `/${lang}/parents` },
-    // Future navigation items can be added here:
-    // { name: d?.navigation?.active || 'Active', href: `/${lang}/parents/active`, hidden: true },
-    // { name: d?.navigation?.inactive || 'Inactive', href: `/${lang}/parents/inactive`, hidden: true },
+    { name: d?.allParents || 'All', href: `/${lang}/parents` },
+    { name: 'Link', href: `/${lang}/parents/link` },
+    { name: 'Communication', href: `/${lang}/parents/communication` },
+    { name: 'Settings', href: `/${lang}/parents/settings` },
   ]
 
   return (

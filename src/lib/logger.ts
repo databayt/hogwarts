@@ -1,7 +1,34 @@
 /**
- * Production-ready logging utility
- * Provides environment-aware logging with structured output
- * Includes requestId and schoolId for traceability
+ * Production-Ready Logging Utility
+ *
+ * Provides environment-aware, structured logging for multi-tenant SaaS.
+ *
+ * ENVIRONMENT BEHAVIOR:
+ *
+ * | Level | Development | Production                      |
+ * |-------|-------------|----------------------------------|
+ * | debug | console.log | Silent (performance)             |
+ * | info  | console.info| ENABLE_PRODUCTION_LOGS=true only |
+ * | warn  | console.warn| console + Sentry/Vercel          |
+ * | error | console.error| console + Sentry/Vercel         |
+ *
+ * WHY THIS STRATEGY:
+ * - Development: Full visibility for debugging
+ * - Production: Minimal console output, errors routed to external services
+ *
+ * MULTI-TENANT TRACEABILITY:
+ * Every log entry includes:
+ * - requestId: Traces request across services (req:abc12345)
+ * - schoolId: Identifies tenant for filtering (school:school-123)
+ * - userId: Identifies user (user:user-456)
+ *
+ * GOTCHA: env import removed
+ * Server environment variables were accidentally exposed to client-side code.
+ * Now uses process.env directly to prevent leakage.
+ *
+ * EXTERNAL INTEGRATIONS:
+ * - Vercel Analytics: Automatic via structured JSON logging
+ * - Sentry: Client-side via window.Sentry (SSR Sentry commented out)
  */
 
 // Note: env import removed to prevent client-side access to server env vars
@@ -78,13 +105,17 @@ class Logger {
   }
 
   private sendToLoggingService(level: LogLevel, message: string, context?: LogContext): void {
-    // Integration point for external logging services
+    // WHY EXTERNAL LOGGING:
+    // Production console.log is stripped by Next.js. External services
+    // persist logs and provide search/alerting capabilities.
 
     // === VERCEL ANALYTICS INTEGRATION (Built-in) ===
+    // WHY: Vercel automatically captures structured JSON logs
+    // No SDK needed - just console.log with JSON format
     try {
-      // For server-side, we can use structured console logging that Vercel picks up
+      // Server-side only - client logs go through different path
       if (typeof window === 'undefined') {
-        // Server-side structured logging for Vercel
+        // WHY JSON.stringify: Vercel parses JSON logs for structured filtering
         console[level](JSON.stringify({
           timestamp: new Date().toISOString(),
           level: level.toUpperCase(),
@@ -104,9 +135,13 @@ class Logger {
     }
 
     // === SENTRY INTEGRATION (Optional) ===
+    // WHY CLIENT-ONLY:
+    // Server-side Sentry (@sentry/node) requires dynamic require() which
+    // breaks Edge Runtime compatibility. Client-side uses browser bundle.
+    // Server errors are captured via Next.js error boundaries + instrumentation.
     if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
       try {
-        // Client-side Sentry
+        // Client-side Sentry - uses global injected by Sentry script
         if (typeof window !== 'undefined' && (window as any).Sentry) {
           const Sentry = (window as any).Sentry;
           Sentry.withScope((scope: any) => {
@@ -167,12 +202,25 @@ class Logger {
 }
 
 // Utility functions
+
+/**
+ * Generate unique request ID for distributed tracing
+ *
+ * WHY crypto.randomUUID:
+ * - Edge Runtime compatible (unlike node:crypto)
+ * - Standard UUID format works with tracing tools
+ * - No collision risk across distributed systems
+ *
+ * FALLBACK STRATEGY:
+ * timestamp-random provides uniqueness but no standard format.
+ * Used only when crypto.randomUUID unavailable (rare).
+ */
 export function generateRequestId(): string {
-  // Use crypto.randomUUID which is available in Edge Runtime
+  // Prefer crypto.randomUUID (Edge Runtime compatible)
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  // Fallback for environments without crypto
+  // Fallback: timestamp + random (not UUID format but unique)
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 

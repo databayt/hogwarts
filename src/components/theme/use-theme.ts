@@ -1,8 +1,33 @@
 /**
- * Theme React Hooks
+ * Theme Hooks Suite - Theming System with Zustand & Next-Themes
  *
- * Custom hooks for accessing and manipulating theme data.
- * Uses Zustand store following tweakcn pattern.
+ * Manages app theming with:
+ * - Multiple custom theme support (save/load/delete)
+ * - Theme import/export (JSON files)
+ * - Preset themes (built-in templates)
+ * - CSS variable injection (real-time updates)
+ * - Local storage persistence
+ *
+ * KEY HOOKS:
+ * - useUserTheme(): Access theme editor state from Zustand store
+ * - useThemeOperations(): Save/apply/delete themes with server actions
+ * - useUserThemes(): Fetch user's saved themes list
+ * - useThemeBuilder(): UI state for theme editor (tabs, preview mode)
+ * - useThemeImportExport(): JSON import/export with validation
+ * - usePresetThemes(): Load preset themes (registered at app startup)
+ *
+ * KEY PATTERNS:
+ * - ZUSTAND STORE: Global theme state (not React Context)
+ * - CSS VARIABLES: Dynamic injection for real-time theme switching
+ * - LOCAL STORAGE: Fallback if user theme doesn't load
+ * - FORM DATA: Server actions use FormData for type safety
+ * - PRESET PRELOAD: Presets registered once at app startup
+ *
+ * GOTCHAS:
+ * - Presets loaded from store (not re-registered) - register in theme-provider
+ * - Export data URI may fail on very large themes (JSON serialization limit)
+ * - Import validation is minimal (assumes valid theme structure)
+ * - applyThemeToDocument modifies DOM styles (side-effect in hook)
  */
 
 'use client'
@@ -172,11 +197,16 @@ export function useThemeImportExport() {
   const exportTheme = useCallback(async (themeName: string = 'theme') => {
     setIsExporting(true)
     try {
+      // Get current theme state from store
       const { themeState } = useEditorStore.getState()
+      // Serialize with pretty-printing for user readability
       const dataStr = JSON.stringify(themeState, null, 2)
+      // Create data URI for browser download
+      // encodeURIComponent prevents issues with special characters
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
       const exportFileDefaultName = `${themeName}-${Date.now()}.json`
 
+      // Trigger browser download via anchor click
       const linkElement = document.createElement('a')
       linkElement.setAttribute('href', dataUri)
       linkElement.setAttribute('download', exportFileDefaultName)
@@ -244,11 +274,12 @@ export function usePresetThemes() {
   const fetchPresets = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Read presets from store (already registered by theme-provider)
+      // Read presets from store (already registered by theme-provider at app startup)
       const allPresets = presetStore.getAllPresets()
       const presetsArray = Object.values(allPresets)
 
-      // If store is empty, wait briefly for theme-provider initialization
+      // If store is empty, wait briefly for theme-provider initialization (race condition)
+      // Most of the time presets are ready immediately
       if (presetsArray.length === 0) {
         await new Promise(resolve => setTimeout(resolve, 100))
         const retryPresets = Object.values(presetStore.getAllPresets())

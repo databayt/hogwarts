@@ -1,3 +1,45 @@
+/**
+ * OAuth Callback URL Storage API
+ *
+ * Persists the intended destination URL before OAuth redirect.
+ *
+ * THE PROBLEM:
+ * OAuth flow redirects user to provider (Google/Facebook) then back.
+ * Original URL (e.g., /dashboard?tab=settings) is lost during redirect.
+ *
+ * THE SOLUTION:
+ * 1. Client calls this API before initiating OAuth
+ * 2. We store the callback URL in httpOnly cookie
+ * 3. After OAuth success, auth callback reads cookie and redirects
+ *
+ * WHY HTTPONLY COOKIE (not localStorage):
+ * - Survives cross-domain OAuth redirect
+ * - httpOnly prevents XSS attacks reading the URL
+ * - sameSite: 'lax' allows OAuth callback to read it
+ * - Expires after 15 minutes (oauth shouldn't take longer)
+ *
+ * WHY NO DOMAIN IN COOKIE:
+ * - Browser automatically scopes to current domain
+ * - Explicit domain can cause issues with subdomain cookies
+ * - Simplifies dev/prod/preview environment handling
+ *
+ * WHY SECURE ONLY IN PRODUCTION:
+ * - localhost doesn't support HTTPS easily
+ * - Development must use HTTP
+ * - Production always uses HTTPS
+ *
+ * COOKIE NAME: 'oauth_callback_intended'
+ * - Distinguishes from NextAuth's own cookies
+ * - Clear naming prevents confusion
+ *
+ * VERBOSE LOGGING:
+ * - OAuth debugging is notoriously difficult
+ * - Logs help trace where callback URL is lost
+ * - Should be reduced in production (TODO)
+ *
+ * @see /auth.ts - signIn callback reads this cookie
+ */
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 

@@ -1,5 +1,34 @@
 "use client";
 
+/**
+ * useDataTable - URL-Synchronized TanStack Table Hook
+ *
+ * Manages table state (pagination, sorting, filtering) with URL persistence via nuqs.
+ * This enables shareable URLs and browser back/forward navigation.
+ *
+ * KEY CONCEPTS:
+ *
+ * 1. PAGINATION INDEX CONVERSION:
+ *    - URL uses 1-based indexing (page=1, page=2) for user-friendliness
+ *    - TanStack table uses 0-based indexing (pageIndex=0, pageIndex=1) internally
+ *    - Conversion: pageIndex = page - 1; page = pageIndex + 1
+ *
+ * 2. SERVER VS CLIENT FILTERING:
+ *    - enableClientFiltering=false (default): manualFiltering=true, server handles filtering
+ *    - enableClientFiltering=true: manualFiltering=false, client filters data
+ *    - GOTCHA: The flag is inverted! manualFiltering: !enableClientFiltering
+ *
+ * 3. FILTER VALUE PARSING:
+ *    - Columns with `options` property: parsed as array (multi-select)
+ *    - Columns without `options`: parsed as string (text input)
+ *    - Array values split by ARRAY_SEPARATOR (",")
+ *
+ * 4. URL STATE SYNC:
+ *    - Uses nuqs library for URL query string management
+ *    - Debounced to prevent excessive URL updates
+ *    - Supports history: "push" | "replace" modes
+ */
+
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -33,12 +62,13 @@ import { useDebouncedCallback } from "@/components/table/use-debounced-callback"
 import { getSortingStateParser } from "@/components/table/lib/parsers";
 import type { ExtendedColumnSort } from "@/components/table/types/data-table";
 
+// URL query parameter keys
 const PAGE_KEY = "page";
 const PER_PAGE_KEY = "perPage";
 const SORT_KEY = "sort";
-const ARRAY_SEPARATOR = ",";
-const DEBOUNCE_MS = 300;
-const THROTTLE_MS = 50;
+const ARRAY_SEPARATOR = ",";  // Multi-select values joined by comma
+const DEBOUNCE_MS = 300;      // Filter input debounce
+const THROTTLE_MS = 50;       // URL update throttle
 
 interface UseDataTableProps<TData>
   extends Omit<
@@ -123,9 +153,11 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       .withDefault(initialState?.pagination?.pageSize ?? 10)
   );
 
+  // Convert between URL (1-based) and TanStack (0-based) page indices
+  // URL: ?page=1 (human-friendly)  →  TanStack: pageIndex=0 (array index)
   const pagination: PaginationState = React.useMemo(() => {
     return {
-      pageIndex: page - 1, // zero-based index -> one-based index
+      pageIndex: page - 1,  // URL page 1 → index 0, page 2 → index 1
       pageSize: perPage,
     };
   }, [page, perPage]);

@@ -1,6 +1,30 @@
 /**
- * Teacher Profile Content Component
- * Comprehensive GitHub-inspired teacher profile with all features
+ * Teacher Profile Content Component - GitHub-Inspired Layout
+ *
+ * Displays comprehensive teacher profile with activity streams and contribution graphs:
+ * - Profile header: avatar, name, bio, location, online status
+ * - Sidebar: stats (views, connections, posts), settings, social links
+ * - Contribution graph: calendar heatmap of activity over time
+ * - Activity timeline: chronological feed of teaching activities
+ * - Six tabbed sections: Overview, Classes, Schedule, Qualifications, Publications, Reviews
+ * - Responsive layout: sidebar collapses on mobile, tabs stack vertically
+ *
+ * Data flow:
+ * - Server renders teacher data and passes as props
+ * - Client manages tab state and sidebar collapse state
+ * - Uses mock data generator (temporary) until API endpoints ready
+ * - Lazy-loads expensive components (ActivityTimeline, ContributionGraph) via dynamic import
+ *
+ * Client hooks used:
+ * - useProfile() - manages user context (owner vs visitor)
+ * - useProfileActivity() - fetches activity timeline data
+ * - useProfileContributions() - calculates contribution graph data
+ * - useSidebar() - responds to sidebar state changes
+ *
+ * Design rationale:
+ * - GitHub-style layout is familiar to tech-savvy educators and developers
+ * - Activity graph shows engagement patterns (teaching consistency)
+ * - Two-column layout scales responsively without complex logic
  */
 
 "use client"

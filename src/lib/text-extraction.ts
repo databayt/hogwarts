@@ -1,6 +1,74 @@
 /**
- * Text extraction utilities for parsing complex unstructured data
- * Supports Arabic and English text extraction
+ * Text Extraction Utilities - Unstructured Data Parser
+ *
+ * PURPOSE: Extract structured data from unstructured text
+ * Handles contact forms, pasted data, and mixed Arabic/English content
+ *
+ * USE CASE: Lead import from business cards, emails, or user-pasted data
+ * Input: Raw text with name, email, phone mixed → Output: Structured contact info
+ *
+ * EXTRACTION FUNCTIONS:
+ * - extractEmails(): Find all email addresses
+ * - extractPhones(): Find international phone numbers
+ * - extractNames(): Extract full names (Arabic + English)
+ * - extractCompanies(): Find company/organization names
+ * - extractWebsites(): Extract URLs
+ * - extractLeadFromText(): Single lead from single text block
+ * - extractMultipleLeads(): Multiple leads from text with separators
+ *
+ * REGEX PATTERNS:
+ * - Emails: Standard RFC5322 simplified pattern
+ * - Phones: International (+1 234 567 8901), local (123-456-7890)
+ * - Names: English (Title + First Last), Arabic (شرط + أسماء)
+ * - Companies: English suffixes (Inc, LLC, Group), Arabic (شركة, مجموعة)
+ *
+ * BILINGUAL SUPPORT:
+ * - Arabic script: Unicode range U+0600 to U+06FF
+ * - English: A-Z, a-z characters
+ * - Mixed: Company names like "KMCC شركة" supported
+ * - Title recognition: "Eng.", "Engineer", "م.", "مهندس", etc.
+ *
+ * MULTI-LEAD EXTRACTION:
+ * Uses hierarchical separator detection:
+ * 1. Dashes/equals lines: "---" or "===" or "___"
+ * 2. Hash marks: "##"
+ * 3. Asterisks: "***"
+ * 4. Multiple blank lines: 3+ empty lines
+ * 5. Email addresses: Split by email if no clear separators
+ *
+ * ALGORITHM (extractLeadFromText):
+ * 1. Extract all contact info independently
+ * 2. Filter names: Prefer signature context, longer names, valid format
+ * 3. Select best candidate from each category
+ * 4. Clean up extracted strings
+ * 5. Return structured ExtractedLead
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - Greedy name extraction: Picks first valid multi-word pattern
+ *   May match company names as person names
+ * - Phone patterns: Tuned for international formats
+ *   May match partial numbers (e.g., social security formats)
+ * - Company detection: Word count heuristic (avoids single words)
+ * - Signature context: Looks for 50 chars before/after name
+ *   May miss names in middle of text
+ * - Description: Replaces bullet points with hyphens for readability
+ *
+ * QUALITY ISSUES:
+ * - No fuzzy matching (exact substring required)
+ * - No ML/NLP (purely regex-based)
+ * - High false positive rate for names in casual text
+ * - May extract promotional text as "description"
+ *
+ * PERFORMANCE:
+ * - Linear scan with multiple regex passes (O(n))
+ * - extractMultipleLeads: O(n * m) where m = separator patterns
+ * - Can handle up to 10KB text blocks efficiently
+ *
+ * LIMITATIONS:
+ * - Won't extract phone numbers written as words ("five five five")
+ * - Won't recognize email aliases with + sign variants
+ * - Limited company detection for non-standard formats
+ * - Doesn't handle URLs with query parameters well
  */
 
 export interface ExtractedLead {

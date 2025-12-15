@@ -1,14 +1,76 @@
 /**
- * Auto-Translation Wrapper for Bilingual Entity Creation
+ * Auto-Translation Wrapper - Bilingual Field Population
  *
- * Provides automatic translation when creating entities that need
- * both Arabic and English content. Uses Groq AI for fast, free translation.
+ * PURPOSE: Automatically translates form fields and appends language-suffixed versions
+ * Enables single-input forms that populate both Arabic and English database columns
  *
- * Usage:
+ * USE CASE: Creating announcements, lessons, or any bilingual content
+ * User enters title in English → Auto-translates to Arabic → Stores both titleEn + titleAr
+ *
+ * KEY FUNCTIONS:
+ * 1. withAutoTranslation(): Translate specified fields, append to data object
+ * 2. getLocalizedField(): Extract correct language version from bilingual entity
+ * 3. prepareBilingualData(): Format data for Prisma create/update with all variants
+ *
+ * DATA TRANSFORMATION:
+ * Input: { title: "Hello", description: "World", priority: "HIGH" }
+ * Output: {
+ *   title: "Hello",
+ *   description: "World",
+ *   titleEn: "Hello",
+ *   titleAr: "مرحبا",
+ *   descriptionEn: "World",
+ *   descriptionAr: "العالم",
+ *   priority: "HIGH",           // Non-translatable fields unchanged
+ *   sourceLanguage: "en"
+ * }
+ *
+ * ARCHITECTURE:
+ * - Delegates to translateFields() (actual translation service)
+ * - Handles error cases (returns empty strings for target language)
+ * - Preserves source language fields even if translation fails
+ * - Adds metadata (sourceLanguage) for future reference
+ *
+ * TRANSLATION SERVICE:
+ * - Uses Groq AI (free tier available)
+ * - Fallback: Returns untranslated (empty fields) on error
+ * - Network errors don't break form submission
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - CRITICAL: Must pass translatableFields explicitly
+ *   withAutoTranslation() only translates fields you specify
+ * - Empty/whitespace-only fields are skipped (no translation)
+ * - Translation failure doesn't prevent data save (target fields empty)
+ * - sourceLanguage must be "en" or "ar" (determines suffix logic)
+ * - Type safety: Field names must match entity interface keys
+ *
+ * ERROR HANDLING:
+ * - Translation API timeout: Filled with empty strings, success=false
+ * - Network error: Caught and logged, data still returned
+ * - Invalid language: sourceLanguage must be en/ar (no fallback)
+ *
+ * PERFORMANCE:
+ * - One API call per translation (groups all fields in single request)
+ * - Network request adds 1-3 seconds to form submission
+ * - Should show loading state during translation
+ *
+ * INTEGRATION:
  * ```ts
- * const data = { title: "Welcome", body: "Hello everyone" };
- * const translated = await withAutoTranslation(data, ["title", "body"], "en");
- * // Returns: { title: "Welcome", body: "Hello everyone", titleAr: "أهلاً", bodyAr: "مرحباً بالجميع" }
+ * // In server action
+ * const translated = await withAutoTranslation(
+ *   { title: formData.get("title"), body: formData.get("body") },
+ *   ["title", "body"],
+ *   "en"
+ * );
+ *
+ * const dbData = prepareBilingualData(
+ *   translated.data,
+ *   translated.data,
+ *   ["title", "body"],
+ *   "en"
+ * );
+ *
+ * await db.announcement.create({ data: dbData });
  * ```
  */
 

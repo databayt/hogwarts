@@ -389,17 +389,19 @@ export async function validateSchoolOwnership(
       }
     }
 
-    // Check role requirements
+    // Check role requirements using numeric hierarchy
+    // Higher number = more permissions; compare against requiredRole threshold
+    // GOTCHA: This hierarchy must stay in sync with src/routes.ts roleRoutes matrix
     if (requiredRole) {
       const roleHierarchy: Record<UserRole, number> = {
-        USER: 1,
-        STUDENT: 2,
-        GUARDIAN: 3,
-        STAFF: 4,
-        ACCOUNTANT: 5,
-        TEACHER: 6,
-        ADMIN: 7,
-        DEVELOPER: 8,
+        USER: 1,        // Default authenticated user
+        STUDENT: 2,     // Can view own data
+        GUARDIAN: 3,    // Can view linked student data
+        STAFF: 4,       // General school staff
+        ACCOUNTANT: 5,  // Finance access
+        TEACHER: 6,     // Academic data access
+        ADMIN: 7,       // Full school management
+        DEVELOPER: 8,   // Platform admin (bypasses all checks)
       };
 
       if (roleHierarchy[user.role] < roleHierarchy[requiredRole]) {
@@ -416,7 +418,18 @@ export async function validateSchoolOwnership(
 
 /**
  * Sync user session with school context
- * Forces NextAuth to refresh the JWT by updating user.updatedAt
+ *
+ * Forces NextAuth to refresh the JWT by updating user.updatedAt.
+ * This is necessary because NextAuth caches JWT claims - after schoolId
+ * changes (e.g., during onboarding), the client needs fresh session data.
+ *
+ * How it works:
+ * 1. Update user.updatedAt in database
+ * 2. NextAuth JWT callback detects timestamp mismatch
+ * 3. JWT is regenerated with fresh user data
+ * 4. Client receives updated schoolId/role in session
+ *
+ * See: src/auth.ts JWT callback for the refresh logic
  */
 export async function syncUserSchoolContext(userId: string): Promise<void> {
   try {
@@ -430,7 +443,7 @@ export async function syncUserSchoolContext(userId: string): Promise<void> {
     });
 
     if (user) {
-      // Force a session update by updating the user record
+      // Bump updatedAt timestamp - triggers NextAuth JWT refresh on next request
       await db.user.update({
         where: { id: userId },
         data: { updatedAt: new Date() },

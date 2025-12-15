@@ -1,8 +1,45 @@
 /**
- * Workload Calculator Utility
+ * Teacher Workload Calculator - Utilization Analytics
  *
- * Calculates teacher workload metrics based on timetable data and configurable thresholds.
- * Used for workload analytics, overload detection, and resource optimization.
+ * PURPOSE: Analyzes teaching load distribution across school
+ * Identifies overworked and underutilized teachers for resource optimization
+ *
+ * KEY METRICS:
+ * - totalPeriodsPerWeek: Number of teaching periods
+ * - uniqueClassesCount: Number of different classes taught
+ * - uniqueSubjectsCount: Number of different subjects taught
+ * - freePeriodsCount: Available teaching slots (not assigned)
+ * - workloadPercentage: Normalized against maxPeriodsPerWeek
+ * - workloadStatus: UNDERUTILIZED | NORMAL | OVERLOAD
+ *
+ * WORKLOAD THRESHOLDS (default, configurable per school):
+ * - minPeriodsPerWeek: 15 (below = underutilized)
+ * - normalPeriodsPerWeek: 20 (target load)
+ * - maxPeriodsPerWeek: 25 (capacity limit)
+ * - overloadThreshold: 25 (triggers OVERLOAD status)
+ *
+ * CALCULATIONS:
+ * - totalPeriodsPerWeek = COUNT(timetable entries for teacher)
+ * - freePeriodsCount = (periodsPerDay * 5 days) - totalPeriods
+ * - workloadPercentage = (totalPeriods / maxPeriodsPerWeek) * 100
+ * - workloadStatus = UNDERUTILIZED if < min, OVERLOAD if >= threshold, else NORMAL
+ *
+ * SCOPE:
+ * - Only counts ACTIVE teachers (employmentStatus = "ACTIVE")
+ * - Optional per-term analysis (if termId provided)
+ * - Multi-school safe (uses schoolId in queries)
+ *
+ * USE CASES:
+ * - Admin dashboard: Visualize teacher load distribution
+ * - Class assignment: Check if teacher can take additional class
+ * - Resource planning: Identify hiring/reassignment needs
+ * - Analytics: Track workload trends over time
+ *
+ * GOTCHAS:
+ * - Assumes 5-day school week
+ * - Doesn't account for non-teaching duties (meetings, grading)
+ * - Period count depends on timetable accuracy
+ * - Free periods calculated from total available slots
  */
 
 import { db } from "@/lib/db"

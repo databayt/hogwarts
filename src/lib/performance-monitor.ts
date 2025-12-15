@@ -1,6 +1,46 @@
 /**
- * Performance monitoring and observability utilities
- * Tracks application performance metrics and user experience
+ * Performance Monitoring & Observability Service
+ *
+ * PURPOSE: Tracks metrics for application performance analysis
+ * Collects timings, API calls, database queries, and Web Vitals for diagnostics
+ *
+ * USE CASES:
+ * - Monitor slow database queries (threshold: 1 second)
+ * - Track page load performance (Navigation Timing API)
+ * - Measure Web Vitals (LCP, FID, CLS)
+ * - Alert on performance degradation
+ *
+ * KEY PATTERNS:
+ * - startTimer/endTimer: Measure operation duration
+ * - trackQuery/trackApiCall: Specialized wrappers with alerting
+ * - trackPageLoad: Use Navigation Timing API for real load times
+ * - trackWebVitals: Capture Google Web Vitals metrics
+ *
+ * THRESHOLDS (alert if exceeded):
+ * - page_load: 3 seconds
+ * - api_call: 5 seconds
+ * - db_query: 1 second
+ * - LCP: 2.5 seconds (Largest Contentful Paint)
+ * - FID: 100 ms (First Input Delay)
+ * - CLS: 0.1 (Cumulative Layout Shift)
+ *
+ * ARCHITECTURE:
+ * - Singleton per session (one monitor per browser tab)
+ * - Stores metrics in memory with TTL
+ * - Automatic cleanup every 5 minutes (prevents memory leak)
+ * - Max 5 minutes of historical data (300000 ms window)
+ *
+ * INTEGRATIONS:
+ * - Sentry: Export metrics for error correlation
+ * - Analytics: Track user experience metrics
+ * - Logging: Alert on performance issues
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - SSR incompatible (requires performance.now() and window)
+ * - Metrics are in-memory only (lost on page reload)
+ * - Network timing includes all redirects
+ * - Web Vitals API not available in all browsers
+ * - Auto-cleanup runs on interval (can't be cancelled manually)
  */
 
 import { logger } from './logger';

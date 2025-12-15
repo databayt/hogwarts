@@ -1,3 +1,31 @@
+/**
+ * Messaging System Validation
+ *
+ * Comprehensive Zod validation for real-time messaging including:
+ * - 5 conversation types: direct (1:1), group, class, department, announcement
+ * - Participant roles: ADMIN, MODERATOR, MEMBER with different permissions
+ * - Message features: reactions (emoji), pins, drafts, read receipts
+ * - Attachments: Images (10MB), videos (100MB), documents (50MB), audio (20MB)
+ * - Draft management: Auto-save with timestamps
+ * - Invites: Time-bounded (future date only), one-time acceptance
+ * - Quiet hours: Optional, hour range, digest frequency (daily/weekly)
+ *
+ * Key constraints:
+ * - Direct messages: Exactly 2 participants (1 other user), no title
+ * - Groups/Class/Dept: Multiple participants, required title, moderator role
+ * - Announcements: Read-only, ADMIN/MODERATOR only post
+ * - Messages: Max 4000 chars (SMS-like brevity), max 4000 for drafts
+ * - Reactions: 10 char emoji limit (prevents Unicode bomb)
+ * - Files: Strict MIME type checking + size limits per category
+ * - Pinned messages: Max per conversation (prevents spam)
+ *
+ * Why specific type rules:
+ * - Direct: Simplicity (no group management, implicit participant)
+ * - Class: Tied to academic structure, auto-populated, class-wide notifications
+ * - Announcement: Read-only + moderated (prevents student replies, maintains authority)
+ * - Draft: Prevents data loss from browser crashes, survives navigation
+ */
+
 import { z } from "zod"
 import { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
 import { FILE_UPLOAD_CONFIG, DEFAULT_SETTINGS } from "./config"
@@ -14,7 +42,8 @@ export const createConversationSchema = z.object({
   avatar: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   participantIds: z.array(z.string()).min(1, "At least one participant is required"),
 }).superRefine((val, ctx) => {
-  // Direct conversations must have exactly 2 participants
+  // Direct conversations must have exactly 2 participants (1 other user in payload)
+  // Why: Direct messages are 1:1; adding 3rd person creates group, not direct
   if (val.type === "direct" && val.participantIds.length !== 1) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -24,6 +53,7 @@ export const createConversationSchema = z.object({
   }
 
   // Direct conversations cannot have titles
+  // Why: 1:1 conversations are identified by participants, not names
   if (val.type === "direct" && val.title) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -33,6 +63,7 @@ export const createConversationSchema = z.object({
   }
 
   // Group/class/department conversations must have titles
+  // Why: Multiple participants need identifying name; prevents anonymous group chats
   if (["group", "class", "department", "announcement"].includes(val.type) && !val.title) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -118,7 +149,13 @@ export const createAttachmentSchema = z.object({
   thumbnailUrl: z.string().url().optional().or(z.literal("")),
   metadata: z.record(z.string(), z.unknown()).optional(),
 }).superRefine((val, ctx) => {
-  // Validate file size based on type
+  // Validate file size based on MIME type category
+  // Why different limits:
+  // - Images (10MB): Compression friendly, common for student work photos
+  // - Video (100MB): Large due to uncompressed formats, for lesson recordings
+  // - Audio (20MB): Smaller, voice notes, language learning
+  // - Document (50MB): PDFs, word docs, presentations
+  // Prevents: Storage overload, bandwidth issues, accidental resource misuse
   const fileCategory = val.fileType.startsWith("image/")
     ? "image"
     : val.fileType.startsWith("video/")

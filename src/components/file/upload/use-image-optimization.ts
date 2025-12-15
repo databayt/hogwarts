@@ -1,6 +1,29 @@
 /**
- * Image Optimization Hook
- * Client-side image optimization before upload
+ * useImageOptimization Hook - Client-Side Image Processing
+ *
+ * Optimizes images before upload using Canvas API:
+ * - Resize with aspect ratio preservation
+ * - Format conversion (WebP, JPEG, PNG)
+ * - Quality adjustment for lossy formats
+ * - Metadata extraction (dimensions, megapixels)
+ * - Thumbnail generation for previews
+ *
+ * KEY PATTERNS:
+ * - LAZY OPTIMIZATION: Only optimizes if size > 100KB and format is supported
+ * - BITMAP PROCESSING: Uses createImageBitmap + Canvas for efficient memory usage
+ * - CLEANUP: Always calls imageBitmap.close() to release GPU memory
+ * - ERROR RECOVERY: Batch optimization returns original file if optimization fails
+ *
+ * BROWSER APIs USED:
+ * - createImageBitmap: Creates optimized image from Blob (GPU-accelerated)
+ * - Canvas.getContext('2d'): Draws and exports image data
+ * - canvas.toBlob: Converts canvas to Blob with compression
+ *
+ * GOTCHAS:
+ * - imageSmoothingQuality must be set BEFORE drawing (not observable after)
+ * - Canvas.toBlob is async - must wrap in Promise to await
+ * - JPEG/PNG exports lose transparency - consider image content when converting
+ * - estimateOptimizedSize uses rough heuristics - actual size may vary
  */
 
 'use client';
@@ -78,12 +101,13 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           options.maintainAspectRatio ?? defaultOptions.maintainAspectRatio ?? true,
       };
 
-      // Skip optimization for non-images
+      // Skip optimization for non-images - only Canvas can process images
       if (!file.type.startsWith('image/')) {
         return file;
       }
 
-      // Skip optimization for already small files (< 100KB)
+      // Skip optimization for small files already in target format - not worth processing cost
+      // Threshold of 100KB chosen because optimization gains diminish for small images
       if (file.size < 100 * 1024 && file.type === `image/${finalOptions.format}`) {
         return file;
       }
@@ -91,10 +115,11 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
       setIsOptimizing(true);
 
       try {
-        // Create image bitmap for processing
+        // Create image bitmap from file - createImageBitmap is GPU-accelerated image processing
+        // More efficient than manually decoding since browser handles format detection
         const imageBitmap = await createImageBitmap(file);
 
-        // Calculate new dimensions
+        // Calculate new dimensions - maintains aspect ratio if configured
         const { width, height } = calculateDimensions(
           imageBitmap.width,
           imageBitmap.height,
@@ -103,7 +128,7 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           finalOptions.maintainAspectRatio
         );
 
-        // Create canvas for image manipulation
+        // Create canvas for image manipulation - Canvas API allows resize + format conversion
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
@@ -113,14 +138,16 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           throw new Error('Failed to get canvas context');
         }
 
-        // Apply image smoothing for better quality
+        // Apply image smoothing for better quality - must be set BEFORE drawing
+        // High quality uses better filtering algorithms but slower
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        // Draw the image
+        // Draw the image onto canvas at new dimensions - scales down original
         ctx.drawImage(imageBitmap, 0, 0, width, height);
 
-        // Convert to blob with specified format and quality
+        // Convert to blob with specified format and quality - async operation
+        // Quality parameter only affects lossy formats (WebP, JPEG)
         const blob = await new Promise<Blob>((resolve, reject) => {
           canvas.toBlob(
             (blob) => {
@@ -135,7 +162,7 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           );
         });
 
-        // Create new file with optimized content
+        // Create new File object with optimized blob - preserves filename while changing format
         const extension = finalOptions.format;
         const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
         const optimizedFile = new File(
@@ -144,7 +171,7 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           { type: `image/${finalOptions.format}` }
         );
 
-        // Calculate optimization result
+        // Calculate optimization result for UI feedback
         const reduction = ((file.size - optimizedFile.size) / file.size) * 100;
 
         setLastResult({
@@ -155,7 +182,7 @@ export function useImageOptimization(defaultOptions: ImageOptimizationOptions = 
           height,
         });
 
-        // Clean up
+        // Clean up GPU memory - critical for batch processing (prevents OOM)
         imageBitmap.close();
 
         return optimizedFile;

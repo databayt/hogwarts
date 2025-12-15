@@ -1,6 +1,31 @@
 /**
  * Import Parser for CSV and Excel files
- * Provides utilities to parse and validate bulk data imports
+ *
+ * Handles bulk data imports for students, teachers, and classes.
+ *
+ * ARCHITECTURE:
+ * 1. Parse raw CSV/Excel → 2. Validate per row → 3. Return structured result
+ *
+ * WHY VALIDATION PER ROW:
+ * - One bad row shouldn't block entire import
+ * - Users need line-by-line error feedback
+ * - Allows partial imports (valid rows proceed)
+ *
+ * COLUMN MAPPING STRATEGY:
+ * - sourceColumn: Header name in uploaded file (case-insensitive)
+ * - targetField: Internal field name in our schema
+ * - transform: Optional function to normalize data (e.g., trim, lowercase)
+ *
+ * GOTCHAS:
+ * - Excel dates come as serial numbers, not strings
+ * - Phone numbers may have leading zeros (must preserve as string)
+ * - Comma-separated values in cells need special handling
+ * - Different Excel versions use different encodings (UTF-8 BOM issues)
+ *
+ * DATA TYPE HANDLING:
+ * - 'email': Validated against RFC 5322 pattern
+ * - 'phone': Allows digits, spaces, dashes, plus, parens
+ * - 'date': Expects ISO format (YYYY-MM-DD), not localized
  */
 
 import { z } from 'zod';

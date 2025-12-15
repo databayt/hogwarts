@@ -1,10 +1,41 @@
 "use server"
 
+/**
+ * Authorization Helpers - Role-Based Access Control
+ *
+ * Provides helper functions for checking user permissions in server actions.
+ *
+ * KEY PATTERN:
+ * These helpers THROW errors instead of returning null/false.
+ * This is intentional - server actions should fail loudly when permissions are denied.
+ * Callers should wrap in try-catch and return appropriate error responses.
+ *
+ * GOTCHA: Must stay in sync with src/routes.ts roleRoutes matrix.
+ * If routes.ts changes allowed roles, these helpers need updating too.
+ *
+ * USAGE:
+ * ```typescript
+ * "use server"
+ * export async function adminAction() {
+ *   try {
+ *     const { schoolId } = await requireAdminRole()
+ *     // ... admin-only logic
+ *   } catch (error) {
+ *     if (error instanceof AuthorizationError) {
+ *       return { success: false, message: "Insufficient permissions" }
+ *     }
+ *     throw error
+ *   }
+ * }
+ * ```
+ */
+
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Role } from "@/routes"
 
 /**
  * Authorization error for insufficient permissions
+ * Thrown (not returned) to fail server actions loudly
  */
 export class AuthorizationError extends Error {
   constructor(

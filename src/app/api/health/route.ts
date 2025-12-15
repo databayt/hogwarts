@@ -1,3 +1,44 @@
+/**
+ * Health Check API
+ *
+ * Provides system health status for monitoring and load balancers.
+ *
+ * CHECK CATEGORIES:
+ *
+ * 1. DATABASE
+ *    - Simple SELECT 1 query
+ *    - Response time tracking
+ *    - Connection pool status
+ *
+ * 2. MEMORY
+ *    - Heap usage percentage
+ *    - RSS (Resident Set Size)
+ *    - Thresholds: >75% = warn, >90% = fail
+ *
+ * 3. DEPENDENCIES
+ *    - External service connectivity
+ *    - Environment variable presence
+ *
+ * STATUS CODES:
+ * - 200: healthy (all checks pass)
+ * - 200: degraded (some checks warn)
+ * - 503: unhealthy (any check fails)
+ *
+ * WHY 200 FOR DEGRADED:
+ * Load balancers should continue routing traffic to degraded instances.
+ * Only unhealthy instances should be removed from rotation.
+ *
+ * USAGE:
+ * - Vercel: Automatic health checks on /_health
+ * - Kubernetes: livenessProbe and readinessProbe
+ * - Uptime monitors: Pingdom, UptimeRobot
+ *
+ * GOTCHAS:
+ * - Keep checks fast (<5s total) to avoid timeout
+ * - Don't log every health check (spams logs)
+ * - Memory check not available in Edge Runtime
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';

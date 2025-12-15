@@ -4,11 +4,38 @@
  * Advanced utilities for theme manipulation, color conversion,
  * contrast checking, and palette generation.
  *
+ * WHY OKLCH COLOR SPACE:
+ * - Perceptually uniform (unlike HSL/RGB)
+ * - Better for generating accessible color palettes
+ * - CSS Color Level 4 native support
+ * - Consistent lightness across hues
+ *
+ * OKLCH COMPONENTS:
+ * - L (Lightness): 0-1, perceptually linear
+ * - C (Chroma): 0-0.4, saturation intensity
+ * - H (Hue): 0-360, color wheel angle
+ *
+ * WCAG 2.1 COMPLIANCE:
+ * - Contrast ratio calculations for AA (4.5:1) and AAA (7:1)
+ * - Relative luminance per WCAG formula
+ * - Automatic text color selection based on background
+ *
+ * COLOR CONVERSION PIPELINE:
+ * OKLCH → OKLab → Linear sRGB → Gamma-corrected sRGB → Hex
+ *
+ * GOTCHAS:
+ * - OKLCH values can produce out-of-gamut sRGB (clamping required)
+ * - Safari OKLCH support is recent (check browser compatibility)
+ * - Chroma values > 0.4 may produce unexpected results
+ *
  * Based on tweakcn patterns and WCAG 2.1 guidelines.
  */
 
 /**
  * OKLCH Color Parsing and Conversion
+ *
+ * MATH: Uses OKLab as intermediate color space
+ * OKLCH (polar) → OKLab (cartesian) → Linear RGB → sRGB
  */
 
 export interface OKLCHColor {

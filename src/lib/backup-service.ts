@@ -1,6 +1,36 @@
 /**
  * Database Backup Service
- * Manages automated backups, retention policies, and restore procedures
+ *
+ * Manages automated backups, retention policies, and restore procedures.
+ *
+ * WHY ADDITIONAL BACKUPS:
+ * Neon provides automatic point-in-time recovery, but this service adds:
+ * - Custom retention policies per school
+ * - Manual on-demand backups before major operations
+ * - Backup metadata tracking for audit compliance
+ * - Email notifications on backup status
+ *
+ * BACKUP STRATEGY:
+ *
+ * | Schedule | Retention | Use Case                    |
+ * |----------|-----------|------------------------------|
+ * | hourly   | 7 days    | High-frequency data changes  |
+ * | daily    | 30 days   | Standard operations          |
+ * | weekly   | 90 days   | Long-term compliance         |
+ *
+ * NEON INTEGRATION:
+ * - Uses Neon's branch/snapshot API (not pg_dump)
+ * - Snapshots are instant (copy-on-write)
+ * - Restores create new branch from snapshot point
+ *
+ * GOTCHAS:
+ * - Neon API has rate limits (check before batch operations)
+ * - Snapshot size != database size (incremental storage)
+ * - Cross-region restore requires data transfer
+ *
+ * RETENTION CLEANUP:
+ * Automatic cleanup runs after each backup to enforce maxBackups limit.
+ * Oldest backups deleted first (FIFO).
  */
 
 import { createApiClient } from '@neondatabase/api-client';

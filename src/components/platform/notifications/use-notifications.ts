@@ -29,9 +29,26 @@ interface UseNotificationsReturn {
 }
 
 /**
- * Custom hook for real-time notification updates
- * @param options - Configuration options
- * @returns Notification state and methods
+ * useNotifications Hook - Real-Time Notifications via WebSocket
+ *
+ * Manages real-time notifications using Socket.IO:
+ * - Auto-connect/disconnect on mount/unmount
+ * - Dual-channel persistence (Socket.IO + server action)
+ * - Optimistic updates with rollback on failure
+ * - Toast notifications for new messages
+ * - Real-time unread count tracking
+ *
+ * KEY PATTERNS:
+ * - DUAL PERSISTENCE: Updates via Socket.IO AND server action for reliability
+ * - OPTIMISTIC UPDATES: UI updates immediately, reverts if server call fails
+ * - MULTI-EVENT LISTENERS: Subscribes to new/read/deleted/count events
+ * - CLEANUP: Removes listeners on unmount to prevent memory leaks
+ *
+ * GOTCHAS:
+ * - Must call connect() before events are subscribed (check isConnected)
+ * - Toast disabled by default in NotificationBell (UI has own display)
+ * - Unread count may be stale if multiple tabs open (no cross-tab sync)
+ * - Old notifications (>10 recent) are not kept in memory (server has full history)
  */
 export function useNotifications(
   options: UseNotificationsOptions = {}
@@ -79,7 +96,7 @@ export function useNotifications(
   const markAsRead = useCallback(
     async (notificationId: string) => {
       try {
-        // Optimistic update
+        // Optimistic update - updates UI immediately for better UX
         setRecentNotifications((prev) =>
           prev.map((n) =>
             n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n
@@ -87,14 +104,14 @@ export function useNotifications(
         )
         setUnreadCount((prev) => Math.max(0, prev - 1))
 
-        // Send to server via Socket.IO
+        // Send to server via Socket.IO for real-time propagation to other tabs
         socketService.markNotificationRead(notificationId)
 
-        // Also call server action for persistence
+        // Also call server action for persistence - reliability fallback if Socket.IO fails
         const result = await markNotificationAsRead({ notificationId })
         if (!result.success) {
           console.error("Failed to mark notification as read:", result.error)
-          // Revert optimistic update
+          // Revert optimistic update if persistence fails
           setUnreadCount((prev) => prev + 1)
         }
       } catch (error) {

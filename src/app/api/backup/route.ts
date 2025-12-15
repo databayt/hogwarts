@@ -1,3 +1,44 @@
+/**
+ * Backup Management API - Platform Administration
+ *
+ * Provides database backup operations for disaster recovery.
+ *
+ * SUPPORTED ACTIONS:
+ * - create: Generate new backup snapshot
+ * - restore: Restore database from backup ID
+ * - verify: Validate backup integrity
+ * - cleanup: Remove old backups per retention policy
+ *
+ * ACCESS CONTROL:
+ * - PLATFORM_ADMIN only (not school admins)
+ * - WHY: Backup operations affect entire platform, not single tenant
+ * - Destructive operations require highest privilege level
+ *
+ * WHY PLATFORM_ADMIN vs ADMIN:
+ * - School ADMIN can only manage their tenant
+ * - Backups contain ALL schools' data (cross-tenant)
+ * - Restore could overwrite other schools' data
+ * - Only platform operators should have this access
+ *
+ * WHY POST FOR ACTIONS (not GET):
+ * - All backup operations have side effects (create files, modify DB)
+ * - GET would be inappropriate (caching, browser prefetch)
+ * - Action type in body allows single endpoint for multiple ops
+ *
+ * WHY SINGLE ENDPOINT WITH action PARAM:
+ * - Reduces route proliferation (/backup/create, /backup/restore, etc.)
+ * - All operations share same auth logic
+ * - Easier to add new actions without new routes
+ *
+ * GOTCHAS:
+ * - Restore is destructive and cannot be undone
+ * - Cleanup respects retention policy (default: 30 days)
+ * - Large databases may timeout on Vercel (10s limit)
+ * - Consider background job for production backups
+ *
+ * @see /lib/backup-service.ts for implementation details
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { backupService } from '@/lib/backup-service';

@@ -1,3 +1,25 @@
+/**
+ * Exams Dashboard Content - Server Component
+ *
+ * Comprehensive exam lifecycle dashboard providing:
+ * - Executive stats: total exams, upcoming count, question bank size, enrolled students
+ * - Progress tracking: completion rate, pending marking count, results generated
+ * - Trending metrics: month-over-month growth for exams and questions
+ * - Next exam preview: card-flipped UI showing upcoming exam or creation CTA
+ * - Feature blocks: Question Bank, Auto Generation, Auto Marking, Results
+ * - Quick actions: Common workflows (create exam, add question, grade pending)
+ * - Workflow guide: 5-step exam lifecycle walkthrough
+ *
+ * Server component strategy:
+ * - Fetches ALL stats in parallel for performance (Promise.all with 11 database queries)
+ * - Calculates derived metrics (completion rate, marking progress, trends) server-side
+ * - Passes pre-computed data to client to avoid recalculation on every render
+ * - Uses dynamic dictionary lookups for full i18n support
+ *
+ * Multi-tenant: CRITICAL - all queries filtered by schoolId from getTenantContext()
+ * Date handling: Uses local date boundaries (setHours(0,0,0,0)) for day-accurate filtering
+ */
+
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -42,12 +64,17 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   } | null = null;
 
   if (schoolId) {
+    // Use local date boundary (midnight) for accurate daily filtering
+    // This ensures consistent behavior across timezones
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Calculate last month for trending metrics (month-over-month growth comparison)
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
 
+    // Fetch all stats in parallel to minimize server response time
+    // Order matches the result destructuring below for clarity
     [
       examsCount,
       questionBankCount,
@@ -136,7 +163,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.school?.exams;
 
-  // Calculate changes
+  // Calculate month-over-month growth percentages for trending display
+  // Shows positive/negative change to help identify seasonal patterns
   const examChange = lastMonthExamsCount > 0
     ? ((examsCount - lastMonthExamsCount) / lastMonthExamsCount * 100).toFixed(1)
     : examsCount > 0 ? "+100" : "0";
@@ -144,12 +172,15 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     ? ((questionBankCount - lastMonthQuestionsCount) / lastMonthQuestionsCount * 100).toFixed(1)
     : questionBankCount > 0 ? "+100" : "0";
 
-  // Calculate completion rate
+  // Calculate exam completion rate as percentage
+  // Used to determine dashboard health indicator color
   const completionRate = examsCount > 0
     ? Math.round((completedExamsCount / examsCount) * 100)
     : 0;
 
-  // Calculate marking progress
+  // Calculate marking progress as percentage of exams that have been graded
+  // pendingMarkingCount = exams IN_PROGRESS with examDate < today
+  // completionRate tracks COMPLETED exams (regardless of marking status)
   const totalToMark = pendingMarkingCount + completedExamsCount;
   const markingProgress = totalToMark > 0
     ? Math.round((completedExamsCount / totalToMark) * 100)

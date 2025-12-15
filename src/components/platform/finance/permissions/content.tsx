@@ -1,3 +1,17 @@
+/**
+ * Permission Management Content - Finance Module
+ *
+ * Manages granular role-based permissions for finance modules (invoice, receipt, banking, etc).
+ * Client component to enable real-time permission toggling and modal dialogs.
+ *
+ * Key responsibilities:
+ * - Displays users by permission status with granular module/action controls
+ * - Shows modules with all users who have custom permissions for that module
+ * - Supports bulk grant/revoke operations to minimize DB writes
+ * - Compares current vs new permissions to only persist deltas
+ *
+ * Multi-tenant: Uses schoolId from server actions (passed via auth context)
+ */
 "use client"
 
 import { useEffect, useState } from "react"
@@ -506,18 +520,19 @@ function EditPermissionsDialog({
   const handleSave = async () => {
     setSaving(true)
     try {
-      // Calculate permissions to grant and revoke
+      // OPTIMIZATION: Only send the delta (grants and revokes) to avoid unnecessary DB writes
+      // This prevents updating unchanged permissions, reducing transaction load
       const toGrant: Array<{ module: FinanceModule; action: FinanceAction }> = []
       const toRevoke: Array<{ module: FinanceModule; action: FinanceAction }> = []
 
-      // Current permissions
+      // Create a set of current permissions in "module:action" format for easy comparison
       const currentPerms = new Set(
         user.permissions.flatMap((p) =>
           p.actions.map((a) => `${p.module}:${a}`)
         )
       )
 
-      // New permissions
+      // Create a set of new permissions from the UI state
       const newPerms = new Set<string>()
       for (const [module, actions] of selectedPermissions.entries()) {
         for (const action of actions) {
@@ -525,7 +540,8 @@ function EditPermissionsDialog({
         }
       }
 
-      // Find grants (in new but not in current)
+      // Identify additions: permissions in new set but not in current set
+      // These will be granted to the user
       for (const perm of newPerms) {
         if (!currentPerms.has(perm)) {
           const [module, action] = perm.split(":")
@@ -533,7 +549,8 @@ function EditPermissionsDialog({
         }
       }
 
-      // Find revokes (in current but not in new)
+      // Identify removals: permissions in current set but not in new set
+      // These will be revoked from the user
       for (const perm of currentPerms) {
         if (!newPerms.has(perm)) {
           const [module, action] = perm.split(":")

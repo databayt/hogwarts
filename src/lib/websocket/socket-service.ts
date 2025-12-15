@@ -1,5 +1,42 @@
 "use client";
 
+/**
+ * WebSocket Socket.IO Service - Real-time Event Broadcasting
+ *
+ * PURPOSE: Provides bidirectional real-time communication for:
+ * - Live attendance tracking (mark, update, delete, stats)
+ * - Student location updates and geofencing alerts
+ * - Device scanning events (RFID, biometric readers)
+ * - Push notifications (new, read, deleted, count updates)
+ * - Messaging system (send, edit, react, read receipts)
+ * - Typing indicators and conversation updates
+ *
+ * ARCHITECTURE:
+ * - Singleton pattern: One connection per browser session
+ * - Pub/Sub model: Events emitted from server to subscribed clients
+ * - Room-based scoping: Join/leave rooms for targeted delivery
+ *   (e.g., class:classId, user:userId, conversation:conversationId)
+ * - Fallback transports: WebSocket with HTTP polling fallback
+ * - Automatic reconnection: Up to 5 attempts with exponential backoff
+ *
+ * KEY PATTERNS:
+ * - setupEventListeners: Maps socket events to internal listeners
+ * - on(): Subscribe to events, returns unsubscribe function
+ * - send(): Emit event to server only if connected
+ * - joinRoom/leaveRoom: Room-based filtering on server
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - CRITICAL: Cannot be used in server components (marked "use client")
+ * - Manual listener cleanup required if component unmounts
+ * - Events are queued during reconnection, not replayed
+ * - Room subscription must be done AFTER connection established
+ * - Maximum 5 reconnect attempts before failing permanently
+ *
+ * EXTERNAL SERVICE:
+ * - Socket.IO server (configurable via NEXT_PUBLIC_SOCKET_URL env)
+ * - Default: http://localhost:3001 (development)
+ */
+
 import { io, Socket } from 'socket.io-client';
 import type { AttendanceRecord, AttendanceUpdate, AttendanceStats } from '@/components/platform/attendance/shared/types';
 
@@ -84,6 +121,9 @@ class SocketService {
       this.isConnecting = true;
 
       try {
+        // WHY: Pass authentication context to server via query parameters
+        // Server uses these to validate permissions and route events to correct users
+        // Cannot use auth headers (WebSocket handshake limitation)
         this.socket = io(this.url, {
           transports: ['websocket', 'polling'],
           query: {

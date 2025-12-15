@@ -1,6 +1,46 @@
 /**
  * Finance Module Role-Based Access Control (RBAC)
- * Centralized permission management for all finance sub-modules
+ *
+ * Centralized permission management for all finance sub-modules.
+ *
+ * WHY CENTRALIZED PERMISSIONS:
+ * - Finance touches sensitive data (salaries, bank accounts, budgets)
+ * - Each role has different access levels across 15+ sub-modules
+ * - Single source of truth prevents permission drift
+ * - Easier auditing and compliance reporting
+ *
+ * PERMISSION MATRIX DESIGN:
+ *
+ * | Role       | Design Philosophy                          |
+ * |------------|---------------------------------------------|
+ * | DEVELOPER  | Platform admin - sees everything across all schools |
+ * | ADMIN      | School owner - full control within their school |
+ * | ACCOUNTANT | Financial operations - create/edit/process |
+ * | TEACHER    | Limited view - own salary, expenses only   |
+ * | STAFF      | Similar to teacher - own financial data    |
+ * | STUDENT    | Minimal - own fees and wallet only         |
+ * | GUARDIAN   | Child's data - linked student fees/wallet  |
+ *
+ * ACTION HIERARCHY:
+ * - view_own: See only your own records
+ * - view_all: See all records in school
+ * - create/edit/delete: Standard CRUD
+ * - approve: Multi-step approval workflow
+ * - process: Execute financial transactions (e.g., run payroll)
+ * - reconcile: Match bank transactions to invoices
+ * - manage: Configure module settings
+ *
+ * GOTCHAS:
+ * - DEVELOPER role bypasses schoolId filtering (platform admin)
+ * - GUARDIAN permissions are derived from linked student(s)
+ * - 'approve' and 'process' are separate - approve authorizes, process executes
+ * - Changes here must sync with UI component visibility checks
+ *
+ * USAGE:
+ * ```ts
+ * const canApprove = await checkFinancePermission('invoice', 'approve');
+ * if (!canApprove) throw new AuthorizationError();
+ * ```
  */
 
 import { auth } from "@/auth"

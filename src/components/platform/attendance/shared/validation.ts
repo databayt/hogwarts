@@ -1,3 +1,35 @@
+/**
+ * Attendance Validation Schemas
+ *
+ * Multi-method attendance tracking with 10 check-in methods:
+ * - Manual: Teacher marks in app (fallback, requires human entry)
+ * - Geofence: GPS-based location tracking (outdoor, mobile)
+ * - QR/Barcode: Scan-based (scalable, classroom entry points)
+ * - RFID/NFC: Card-based (durable, tamper-resistant)
+ * - Biometric: Fingerprint/Face (accurate, privacy concerns)
+ * - Bluetooth: Beacon-based proximity (indoor, low power)
+ * - Bulk upload: CSV import (end-of-day synchronization)
+ *
+ * Key validation rules:
+ * - Status: 6 states (PRESENT, ABSENT, LATE, EXCUSED, SICK, HOLIDAY)
+ * - Location: Optional GPS (lat -90..90, lon -180..180, accuracy meters)
+ * - Confidence: 0-1 score for biometric/automated (0.85+ threshold typical)
+ * - Excuse reasons: 7 types (medical, emergency, religious, weather, etc.)
+ * - Excuse status: 3 states (PENDING approval, APPROVED, REJECTED)
+ * - Settings: Auto check-out, late threshold (1-60 min), parent notifications
+ *
+ * Why multi-method:
+ * - QR codes: Quick, prevents spoofing with unique codes per day
+ * - Geofence: Doesn't require setup (app-only), works during commute
+ * - Biometric: Most secure, prevents proxy attendance
+ * - Manual: Required backup when tech fails (fire drills, system outages)
+ *
+ * Why excuses matter:
+ * - Parents submit late, school reviews/approves
+ * - Prevents false ABSENT marks (medical, family emergency)
+ * - Compliance: FERPA tracks legitimate absences vs. truancy
+ */
+
 import { z } from 'zod';
 
 // Enum schemas

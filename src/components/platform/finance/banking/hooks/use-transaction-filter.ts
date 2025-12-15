@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 export interface Transaction {
   id: string
   name: string
-  amount: number
+  amount: number       // Positive for credits, negative for debits
   category: string
   date: string
   type: 'credit' | 'debit'
@@ -28,22 +28,35 @@ export interface SortOptions {
 }
 
 /**
- * useTransactionFilter - Optimized hook for filtering and sorting transactions
+ * useTransactionFilter - Multi-Stage Filtering Pipeline with Statistics
  *
- * This hook provides a memoized way to filter and sort transactions based on
- * various criteria. All filtering and sorting logic is memoized to prevent
- * unnecessary recalculations on each render.
+ * Filters and sorts transactions with memoized computation for performance.
  *
- * @param transactions - Array of transactions to filter
- * @param options - Filter options (category, search, dates, amounts, status)
- * @param sortOptions - Sort configuration (field and direction)
+ * KEY CONCEPTS:
  *
- * @example
- * const { filteredTransactions, categories, stats } = useTransactionFilter(
- *   transactions,
- *   { category: 'Food', searchTerm: 'starbucks' },
- *   { field: 'date', direction: 'desc' }
- * )
+ * 1. MULTI-STAGE FILTERING (order matters for performance):
+ *    - Category filter (exact match, fastest)
+ *    - Search filter (case-insensitive, checks name + category + merchant)
+ *    - Date range (>= from, <= to)
+ *    - Amount range (uses Math.abs() for debit/credit comparison)
+ *    - Status filter (pending vs completed)
+ *
+ * 2. DEBIT/CREDIT AMOUNT HANDLING:
+ *    - Debits stored as negative amounts in database
+ *    - Math.abs() used for amount filtering so users see positive values
+ *    - Stats calculations handle sign separately
+ *
+ * 3. LOCALE-AWARE SORTING:
+ *    - Uses localeCompare() for alphabetical sorting
+ *    - Handles Arabic characters correctly
+ *
+ * 4. STATISTICS OUTPUT:
+ *    - totalCredits: Sum of positive transactions
+ *    - totalDebits: Sum of negative transactions (shown as positive)
+ *    - avgCredit/avgDebit: For spending analysis
+ *    - categoryDistribution: Spending by category
+ *
+ * All wrapped in useMemo() to prevent recalculation unless inputs change.
  */
 export function useTransactionFilter(
   transactions: Transaction[],

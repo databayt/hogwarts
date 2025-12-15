@@ -15,27 +15,14 @@ export default async function AttendanceLayout({ children, params }: Props) {
 
   const basePath = `/${lang}/s/${subdomain}/attendance`
 
+  // Attendance page navigation (6 links)
   const attendancePages: PageNavItem[] = [
-    {
-      name: d?.overview || 'Overview',
-      href: basePath,
-    },
-    {
-      name: d?.settings || 'Config',
-      href: `${basePath}/config`,
-    },
-    {
-      name: 'Bulk',
-      href: `${basePath}/bulk`,
-    },
-    {
-      name: d?.reports || 'Report',
-      href: `${basePath}/reports`,
-    },
-    {
-      name: d?.analytics || 'Analysis',
-      href: `${basePath}/analysis`,
-    },
+    { name: d?.manual || 'Mark', href: basePath },
+    { name: 'QR Code', href: `${basePath}/qr-code` },
+    { name: 'Barcode', href: `${basePath}/barcode` },
+    { name: d?.analytics || 'Analytics', href: `${basePath}/analytics` },
+    { name: d?.reports || 'Reports', href: `${basePath}/reports` },
+    { name: d?.settings || 'Settings', href: `${basePath}/settings` },
   ]
 
   return (

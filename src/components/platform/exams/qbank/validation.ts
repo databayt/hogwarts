@@ -1,3 +1,34 @@
+/**
+ * Question Bank Validation (Exam Module)
+ *
+ * Comprehensive question bank for exam management with:
+ * - 5 question types: Multiple choice, T/F, fill-blank, short answer, essay
+ * - Difficulty alignment: Bloom's taxonomy levels (Remember through Create)
+ * - Reusability: Questions stored in bank, referenced across multiple exams
+ * - Bulk import: Up to 100 questions per import (CSV/JSON validation)
+ * - AI generation: Create questions with topic, difficulty, Bloom level
+ * - Templates: Distribute questions by type and difficulty (strategy-based)
+ * - Conflict resolution: Auto-resolve scheduling conflicts with 4 strategies
+ * - Analytics: Update scores and timing for question quality feedback
+ *
+ * Key patterns:
+ * - Discriminated union: Each question type has specific requirements
+ * - Base schema: Common fields (subject, text, difficulty, points, tags)
+ * - Type-specific: MC=options array, essay=rubric, fill-blank=answers array
+ * - Distribution matrix: Record<QuestionType, Record<Difficulty, count>>
+ *   Example: { MULTIPLE_CHOICE: { EASY: 5, MEDIUM: 3 }, T/F: { HARD: 2 } }
+ *
+ * Why templates:
+ * - Consistency: All 10-C history exams follow same difficulty distribution
+ * - Compliance: 20% easy, 50% medium, 30% hard (educational best practice)
+ * - Efficiency: Reuse template 10 times, auto-generate from bank
+ *
+ * Why filters:
+ * - Search: Find questions by subject, type, difficulty, tags
+ * - Export: Select subset of questions for specific exam/class
+ * - Analytics: Track question effectiveness (by difficulty, type, subject)
+ */
+
 import { z } from "zod";
 import {
   BloomLevel,

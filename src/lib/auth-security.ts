@@ -2,7 +2,42 @@ import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
 
 /**
- * Enhanced authentication and authorization utilities for multi-tenant security
+ * Authentication & Authorization Security Layer
+ *
+ * PURPOSE: Enforces tenant isolation and role-based access control (RBAC)
+ * Validates that every operation respects school boundaries (multi-tenant safety).
+ *
+ * KEY CONCEPTS:
+ * - AuthContext: User identity + school assignment + role
+ * - Tenant isolation: CRITICAL - all DB queries must include schoolId
+ * - Role hierarchy: DEVELOPER (platform) > ADMIN (school) > specific roles (TEACHER, STUDENT, etc.)
+ * - Extended session: NextAuth session includes schoolId, role, isPlatformAdmin
+ *
+ * SECURITY PATTERNS:
+ * 1. getAuthContext(): Get user from session (basic auth check)
+ * 2. requireSchoolAccess(schoolId): Verify user belongs to school
+ * 3. requireRole(...roles): Verify user has required role
+ * 4. requireSchoolRole(schoolId, ...roles): Combined check (most common)
+ * 5. validateResourceAccess(resourceSchoolId): Verify resource ownership
+ * 6. createTenantSafeWhere(): Inject schoolId into DB queries
+ *
+ * CRITICAL RULES - MUST FOLLOW:
+ * - DEVELOPER role bypasses school checks (platform admin)
+ * - All non-DEVELOPER users must have schoolId in session
+ * - Every DB query must include schoolId in WHERE clause
+ * - Cross-tenant access throws TenantError (403 Forbidden)
+ * - Missing schoolId throws TenantError (401 Unauthorized)
+ *
+ * ERROR HANDLING:
+ * - AuthError: Authentication failed (401) - bad credentials, missing session
+ * - TenantError: Authorization failed (403) - access denied to school/resource
+ * - Zod validation errors: Parsed into field-level errors
+ *
+ * GOTCHAS:
+ * - Session.user is typed as DefaultSession, cast to 'any' to access schoolId/role
+ * - Null schoolId is VALID for DEVELOPER role only
+ * - onboarding flow allows permissive checks (see requireSchoolOwnership)
+ * - Debug logging uses console.log (remove or silence in production)
  */
 
 export interface AuthContext {
@@ -28,11 +63,14 @@ export class TenantError extends Error {
 
 /**
  * Get authenticated user context with full security validation
+ * WHY: Provides single source of truth for user identity in server actions
+ * Extracts schoolId and role from NextAuth extended session
  */
 export async function getAuthContext(): Promise<AuthContext> {
   const startTime = new Date().toISOString();
   console.log("🔍 [DEBUG] getAuthContext START", { startTime });
-  
+
+  // WHY: Call auth() once - it's async and shouldn't be called multiple times
   console.log("🔍 [DEBUG] Step 1: Calling auth() function...");
   const session = await auth();
   
@@ -49,6 +87,8 @@ export async function getAuthContext(): Promise<AuthContext> {
   });
   
   if (!session?.user?.id) {
+    // WHY: Must have valid session with userId
+    // Prevents unauthenticated access and identifies which user made request
     console.error("❌ [DEBUG] Step 2 - No session or user ID found", {
       hasSession: !!session,
       hasUser: !!session?.user,

@@ -1,7 +1,31 @@
 /**
- * Maps Service
- * Provides geocoding and location services for school addresses
- * Supports Google Maps, Mapbox, and OpenStreetMap
+ * Maps Service - Multi-Provider Geocoding Layer
+ *
+ * PURPOSE: Provides geocoding and location services for school addresses
+ * Abstracts three map providers behind a unified interface, allowing fallback
+ * and provider switching without changing application code.
+ *
+ * ARCHITECTURE:
+ * - Factory pattern: Switch providers at config time
+ * - Three implementations: Google Maps, Mapbox, OpenStreetMap
+ * - OpenStreetMap is free default (no API key required)
+ * - Address confidence scoring for validation accuracy
+ *
+ * KEY ALGORITHMS:
+ * - calculateAddressConfidence: String similarity matching on parsed addresses
+ *   Used to detect if geocoded result matches input (prevents false matches)
+ * - Haversine formula for distance calculation between coordinates
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - OpenStreetMap Nominatim API requires User-Agent header (respect rate limits)
+ * - Google/Mapbox implementations commented out (activate when keys available)
+ * - Confidence threshold: 0.7 (70% string match) = valid address
+ * - All address components are normalized to single format internally
+ *
+ * EXTERNAL SERVICES:
+ * - Google Maps Geocoding API (when enabled)
+ * - Mapbox Geocoding API (when enabled)
+ * - OpenStreetMap Nominatim (always available, free tier)
  */
 
 import { logger } from '@/lib/logger';
@@ -71,9 +95,11 @@ class MapsService {
 
   /**
    * Geocode an address to get coordinates
+   * Delegates to provider-specific implementation (Google, Mapbox, or OSM)
    */
   async geocodeAddress(address: string): Promise<GeocodingResult> {
     try {
+      // Use provider-specific geocoding for address-to-coordinates conversion
       switch (this.provider) {
         case 'google':
           return await this.geocodeWithGoogle(address);
@@ -423,18 +449,22 @@ class MapsService {
   private calculateAddressConfidence(input: string, matched: string): number {
     const inputLower = input.toLowerCase();
     const matchedLower = matched.toLowerCase();
-    
-    // Simple confidence calculation based on string similarity
+
+    // WHY: Calculate confidence by comparing word fragments
+    // Splits both input and geocoded result into words, then checks if each
+    // input word appears in geocoded result. This prevents false positives
+    // when provider returns completely different address.
+    // Example: "123 Main St New York" should match "123 Main Street, New York, NY"
     const inputParts = inputLower.split(/[\s,]+/);
     const matchedParts = matchedLower.split(/[\s,]+/);
-    
+
     let matches = 0;
     for (const part of inputParts) {
       if (matchedParts.some(m => m.includes(part) || part.includes(m))) {
         matches++;
       }
     }
-    
+
     return matches / Math.max(inputParts.length, 1);
   }
 }

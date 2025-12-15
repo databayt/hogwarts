@@ -1,3 +1,48 @@
+/**
+ * File Upload API - Logos & Avatars
+ *
+ * Handles image uploads with type-based permission checks.
+ *
+ * SUPPORTED TYPES:
+ * - logo: School branding image (stored in /logos folder)
+ * - avatar: User profile picture (stored in /avatars folder)
+ *
+ * PERMISSION MODEL:
+ * - Avatar: Any authenticated user can upload their own
+ * - Logo: Only PRINCIPAL or DEVELOPER (school-level branding)
+ *
+ * WHY SEPARATE PERMISSIONS:
+ * - Avatars are personal (user owns their profile)
+ * - Logos are organizational (represents entire school)
+ * - Prevents students/teachers from changing school branding
+ *
+ * WHY PRINCIPAL FOR LOGOS (not ADMIN):
+ * - ADMIN role is school-scoped but may be too broad
+ * - Principal is specifically the school leader role
+ * - DEVELOPER included for platform support/testing
+ *
+ * DATABASE UPDATES:
+ * - Logo: Updates School.logoUrl for tenant branding
+ * - Avatar: Updates User.image for profile display
+ *
+ * STORAGE DELEGATION:
+ * - Uses centralized uploadFile() from file module
+ * - Handles Vercel Blob or S3 based on config
+ * - Returns public URL for database storage
+ *
+ * WHY CORS HEADERS (OPTIONS):
+ * - Allows cross-origin uploads from client apps
+ * - Required for browser FormData submissions
+ * - Permissive (*) since auth is header-based
+ *
+ * GOTCHAS:
+ * - File size limits enforced by uploadFile()
+ * - Image validation (dimensions, format) in file module
+ * - Old images not deleted (consider cleanup job)
+ *
+ * @see /components/file/index.ts for upload implementation
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logger } from '@/lib/logger';

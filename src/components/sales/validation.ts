@@ -1,6 +1,37 @@
 /**
- * Validation schemas for the Sales/Leads feature
- * Zod schemas for runtime validation and type inference
+ * Sales/Leads Management Validation
+ *
+ * Lead lifecycle management for school admissions and sales pipeline:
+ * - 6 lead statuses: NEW, INTERESTED, QUALIFIED, PROPOSAL, NEGOTIATION, CLOSED_WON/LOST
+ * - 5 lead sources: Website form, referral, event, inbound call, manual entry
+ * - 4 lead types: School, organization, individual, partner
+ * - 3 priority levels: Low, medium, high (affects follow-up urgency)
+ * - Lead scoring: 0-100 (custom, based on engagement, firmographic fit)
+ * - Activities: Emails, calls, meetings, notes, status changes (audit trail)
+ * - Bulk operations: Update 100 leads at once, AI extraction from text
+ * - Export: CSV/JSON/XLSX with custom field selection
+ *
+ * Key validation rules:
+ * - Name: Required, 1-100 chars
+ * - Email/phone: Optional but useful (enable contact)
+ * - Score: 0-100 (custom formula based on source, engagement, etc.)
+ * - Date ranges: lastContacted < nextFollowUp (can't follow up before contact)
+ * - Score range filters: min <= max (for dashboard filters)
+ * - Bulk updates: At least 1 field must change (prevent no-op updates)
+ * - Tags: Max 10, max 30 chars each (searchable metadata)
+ * - Notes: Max 5000 chars (detailed context)
+ *
+ * Why AI extraction:
+ * - Bulk lead creation from website inquiries
+ * - Extract: name, email, phone, company from unstructured text
+ * - Duplicate detection: Prevents duplicate leads from same person
+ * - Auto-score: AI assigns initial score based on content analysis
+ *
+ * Why activity tracking:
+ * - Audit trail: Who contacted when, what was discussed
+ * - Follow-up: Ensure timely contact (follow-up overdue alerts)
+ * - Analytics: Time-to-close by source/priority (sales performance)
+ * - Compliance: GDPR audit (can prove consent/no-contact requests)
  */
 
 import { z } from 'zod';
@@ -150,6 +181,8 @@ export const leadFilterSchema = z
     verified: z.boolean().optional(),
   })
   .refine(
+    // Score range validation: ensure min <= max (helps dashboard filter logic)
+    // Why: If user filters 70-50, meaningless (no leads with score in range)
     (data) => {
       if (data.scoreMin !== undefined && data.scoreMax !== undefined) {
         return data.scoreMin <= data.scoreMax;

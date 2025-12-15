@@ -1,11 +1,48 @@
 /**
- * Cron job to auto-unpublish expired announcements
+ * Cron Job: Auto-Expire Announcements
  *
- * This endpoint should be called periodically (e.g., every hour) by:
- * - Vercel Cron (configured in vercel.json)
- * - Or external cron service
+ * Unpublishes announcements that have passed their expiration date.
+ *
+ * TRIGGER OPTIONS:
+ * - Vercel Cron: Configure in vercel.json (e.g., "0 * * * *" = hourly)
+ * - External: Uptime Robot, Cronitor, AWS EventBridge
+ * - Manual: POST with Bearer token
+ *
+ * EXECUTION FLOW:
+ * 1. Verify CRON_SECRET (prevents unauthorized triggers)
+ * 2. Find published announcements where expiresAt <= now
+ * 3. Batch unpublish (set published=false)
+ * 4. Invalidate cache for affected schools
+ * 5. Return execution report
+ *
+ * WHY SEPARATE FROM publish-announcements:
+ * - Different trigger frequencies (publish: every 5 min, expire: hourly)
+ * - Different query logic (scheduledFor vs expiresAt)
+ * - Cleaner separation of concerns
+ *
+ * WHY NOT SOFT DELETE:
+ * - Announcements stay in database (audit trail)
+ * - Just unpublished (published=false)
+ * - Can be republished or extended
+ *
+ * CACHE INVALIDATION:
+ * - Uses revalidateTag() per affected school
+ * - Ensures stale announcements disappear from dashboards
+ * - Tag format: "announcements-{schoolId}"
+ *
+ * CROSS-SCHOOL OPERATION:
+ * - Processes ALL schools in single run
+ * - No session auth (runs as system)
+ * - CRON_SECRET is the only authorization
+ *
+ * GOTCHAS:
+ * - Time comparison uses server timezone (UTC in production)
+ * - Batch update is atomic (all or nothing)
+ * - No notification sent on expiry (silent operation)
+ * - Orphaned expired announcements if cron fails
  *
  * @see https://vercel.com/docs/cron-jobs
+ * @see /publish-announcements for the inverse operation
  */
 
 import { NextRequest, NextResponse } from "next/server";

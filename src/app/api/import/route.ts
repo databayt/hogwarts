@@ -1,3 +1,55 @@
+/**
+ * CSV Import API - Bulk Data Import
+ *
+ * Enables bulk import of students and teachers from CSV files.
+ *
+ * ENDPOINTS:
+ * - POST: Process CSV file and create records
+ * - GET: Download CSV template for correct format
+ *
+ * SUPPORTED TYPES:
+ * - students: Bulk student enrollment
+ * - teachers: Bulk teacher onboarding
+ *
+ * PERMISSION MODEL:
+ * - PRINCIPAL or DEVELOPER only
+ * - WHY: Bulk operations affect many records
+ * - Prevents accidental mass data corruption
+ *
+ * WHY PRINCIPAL (not ADMIN):
+ * - Importing users is a high-impact operation
+ * - Principal is the designated school leader
+ * - Reduces risk of unauthorized bulk changes
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - schoolId from session (not CSV or params)
+ * - All imported records scoped to user's school
+ * - Cannot import into another school
+ *
+ * WHY GET FOR TEMPLATES:
+ * - Templates are read-only resources
+ * - Browser can download directly (no auth in URL)
+ * - Cacheable for performance
+ *
+ * CSV FORMAT:
+ * - Headers required on first row
+ * - UTF-8 encoding (supports Arabic names)
+ * - Templates show expected columns
+ *
+ * ERROR HANDLING:
+ * - Returns imported count and failed rows
+ * - Partial success allowed (imports valid rows)
+ * - Failed rows returned with error details
+ *
+ * GOTCHAS:
+ * - Large files may timeout (consider chunking)
+ * - Duplicate emails handled by import functions
+ * - Date formats must match template spec
+ * - No rollback on partial failure
+ *
+ * @see /components/file/index.ts for import implementation
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logger } from '@/lib/logger';

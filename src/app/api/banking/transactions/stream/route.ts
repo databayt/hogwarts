@@ -1,14 +1,39 @@
+/**
+ * Transaction Streaming API - Server-Sent Events (SSE)
+ *
+ * Real-time transaction updates without WebSocket complexity.
+ *
+ * WHY SSE OVER WEBSOCKETS:
+ * - Simpler implementation (HTTP-based, no upgrade handshake)
+ * - Works through proxies and load balancers
+ * - Auto-reconnect built into EventSource API
+ * - Sufficient for one-way server→client updates
+ *
+ * ARCHITECTURE:
+ * 1. Client opens EventSource connection
+ * 2. Server sends "connected" event
+ * 3. Server polls database every 5s for new transactions
+ * 4. New transactions streamed as "update" events
+ * 5. Connection closes on client disconnect or error
+ *
+ * GOTCHAS:
+ * - Must use 'nodejs' runtime (not edge) for database access
+ * - force-dynamic prevents caching of SSE responses
+ * - Decimal fields must be serialized (Prisma Decimal → string)
+ * - Clear interval on connection close to prevent memory leaks
+ *
+ * PRODUCTION IMPROVEMENT:
+ * Replace polling with database triggers (Postgres NOTIFY) or
+ * webhook-based updates for lower latency and reduced DB load.
+ */
+
 import { NextRequest } from 'next/server'
 import { auth } from '@/auth'
 
-// Runtime configuration - Node.js for database
+// WHY NODE.JS RUNTIME: Edge runtime can't use Prisma with direct database connections
 export const runtime = 'nodejs'
+// WHY FORCE-DYNAMIC: SSE responses must not be cached
 export const dynamic = 'force-dynamic'
-
-/**
- * Stream transaction updates using Server-Sent Events (SSE)
- * This allows real-time updates without WebSockets
- */
 export async function GET(request: NextRequest) {
   // Auth check
   const session = await auth()

@@ -1,6 +1,32 @@
 /**
- * Cache Service
- * Implements caching strategies for static content, API responses, and database queries
+ * Cache Service - Dual-Layer Caching Strategy
+ *
+ * Implements both in-memory and Next.js caching for optimal performance.
+ *
+ * ARCHITECTURE:
+ *
+ * 1. MEMORY CACHE (Layer 1):
+ *    - Ultra-fast (no network/disk IO)
+ *    - Per-process - NOT shared across instances
+ *    - Limited to 1000 entries to prevent memory leaks
+ *    - Best for: hot data accessed multiple times per request
+ *
+ * 2. NEXT.JS unstable_cache (Layer 2):
+ *    - Shared across processes on Vercel
+ *    - Supports revalidation tags
+ *    - Survives deployments (backed by Vercel KV)
+ *    - Best for: data that needs invalidation by tag
+ *
+ * FLOW:
+ * 1. Check memory cache → if hit, return immediately
+ * 2. If miss, call fetcher function
+ * 3. Store in memory cache with TTL
+ * 4. Return data
+ *
+ * GOTCHAS:
+ * - Memory cache is per-process; in 3-instance deployment, each has own cache
+ * - Cache entries expire but aren't deleted until next access
+ * - Periodic cleanup (every 5 minutes) prevents unbounded growth
  */
 
 import { unstable_cache } from 'next/cache';
@@ -8,16 +34,17 @@ import { logger } from './logger';
 import { performanceMonitor } from './performance-monitor';
 
 export interface CacheConfig {
-  ttl: number; // Time to live in seconds
-  tags?: string[];
-  revalidate?: number;
+  ttl: number;          // Time to live in seconds
+  tags?: string[];      // Tags for invalidation via revalidateTag()
+  revalidate?: number;  // Next.js revalidation interval
 }
 
 class CacheService {
+  // In-memory cache - fast but per-process
   private memoryCache = new Map<string, { data: any; expires: number }>();
 
   /**
-   * Get from cache with fallback
+   * Get from cache with fallback to fetcher function
    */
   async get<T>(
     key: string,

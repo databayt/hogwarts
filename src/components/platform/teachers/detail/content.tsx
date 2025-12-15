@@ -1,3 +1,29 @@
+/**
+ * Teacher Detail Content - Profile & Analytics View
+ *
+ * Comprehensive single-teacher profile with:
+ * - Hero section: photo, name, employment status badge, edit button
+ * - Six tabbed sections: Overview, Qualifications, Experience, Classes, Schedule, Metadata
+ * - Overview: personal info (contact, dates), employment info, workload metrics
+ * - Workload widget: visual indicators for teaching load (UNDERUTILIZED/NORMAL/OVERLOAD)
+ * - Department/subject/class assignments displayed with badges
+ * - Bilingual support: names, dates formatted based on lang parameter
+ *
+ * Client component because:
+ * - Uses Modal context for edit form dialogs (requires hooks)
+ * - Tabs and active state management are client-side
+ * - Client passes data server-rendered from parent page component
+ *
+ * Date handling:
+ * - formatDate() uses Intl.DateTimeFormat for locale-aware formatting
+ * - Handles null/undefined gracefully with '-' fallback
+ * - Accepts both Date objects and ISO strings from database
+ *
+ * Workload calculation (server-provided):
+ * - totalPeriods: sum of all periods assigned to this teacher
+ * - workloadStatus: computed server-side based on workloadConfig ranges
+ * - classCount: number of unique classes taught
+ */
 "use client"
 
 import { useState } from 'react'
@@ -160,12 +186,16 @@ function getWorkloadColor(status: string): string {
   }
 }
 
+// Aggregate all teaching experience records and calculate total duration
+// Handles both current positions (endDate is null -> use today) and past positions
+// Returns human-readable string with years and months breakdown
 function calculateExperience(experiences?: Array<{ startDate: Date | string; endDate?: Date | string | null; isCurrent: boolean }>): string {
   if (!experiences || experiences.length === 0) return '0 years'
 
   let totalMonths = 0
   experiences.forEach(exp => {
     const start = new Date(exp.startDate)
+    // For current positions, use today's date; for past positions, use endDate
     const end = exp.endDate ? new Date(exp.endDate) : new Date()
     totalMonths += (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
   })
@@ -173,6 +203,7 @@ function calculateExperience(experiences?: Array<{ startDate: Date | string; end
   const years = Math.floor(totalMonths / 12)
   const months = totalMonths % 12
 
+  // Format with granular precision for display (years only, or years + months)
   if (years > 0 && months > 0) return `${years} years, ${months} months`
   if (years > 0) return `${years} years`
   return `${months} months`

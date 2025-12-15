@@ -1,3 +1,25 @@
+/**
+ * Onboarding Validation Schemas
+ *
+ * Comprehensive Zod validation for the multi-step school onboarding flow.
+ * Each step collects different aspects of school information (name, location,
+ * pricing, branding, capacity, legal) with progressive validation.
+ *
+ * Key responsibilities:
+ * - Validate school metadata (name, description, location, contact)
+ * - Enforce capacity constraints (students: 1-10K, teachers: 1-1K, classes: 1-500)
+ * - Validate pricing tiers (tuition: 0-100K, registration: 0-10K, application: 0-1K)
+ * - Ensure brand consistency (hex colors, border radius, shadow sizes)
+ * - Enforce legal compliance (GDPR/privacy consent must be explicit)
+ *
+ * Why these limits exist:
+ * - Capacity: Schools rarely exceed 10K students; limits prevent planning errors
+ * - Pricing: Caps prevent accidental entry errors (e.g., "1000" when "100" intended)
+ * - Domain: 3-63 chars, RFC 1035 compliant, prevents reserved names
+ *
+ * Pattern: Base schemas → Step-specific (pick + required) → i18n factory functions
+ */
+
 import { z } from "zod";
 import { getValidationMessages } from "@/components/internationalization/helpers";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
@@ -19,7 +41,9 @@ export const paymentScheduleSchema = z.enum(['monthly', 'quarterly', 'semester',
 export const borderRadiusSchema = z.enum(['none', 'sm', 'md', 'lg', 'xl', 'full']);
 export const shadowSizeSchema = z.enum(['none', 'sm', 'md', 'lg', 'xl']);
 
-// Domain validation
+// Domain validation - RFC 1035 compliant subdomain format
+// Enforces: lowercase, alphanumeric + hyphens, no leading/trailing hyphens or digits
+// Why: Prevents invalid DNS names and ensures all subdomains are routable
 export const domainSchema = z
   .string()
   .min(3, "Domain must be at least 3 characters")
@@ -236,6 +260,9 @@ export const priceStepValidation = onboardingValidation.pick({
   paymentSchedule: true,
 });
 
+// Legal compliance validation - GDPR & CCPA compliant
+// Requires explicit consent for all three aspects separately
+// Why: Bundling "agree to all" is illegal in EU/GDPR; must have granular consent
 export const legalStepValidation = z.object({
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "You must accept the terms and conditions",

@@ -1,3 +1,30 @@
+/**
+ * Attendance Analytics Dashboard - Client Component
+ *
+ * Comprehensive attendance analytics with 7 visualization tabs:
+ * - Summary stats: attendance rate, present/absent/late/excused/sick counts
+ * - Trends chart: line chart of daily attendance rates over time
+ * - Method usage: pie chart showing tracking methods (manual, biometric, etc.)
+ * - Day-wise patterns: which days of week have lowest attendance
+ * - Class comparison: ranking of classes by attendance rate
+ * - Student heatmap: individual student attendance calendar
+ * - Monthly comparison: how current month compares to previous months
+ * - Absence reasons: breakdown of why students were absent
+ *
+ * Data fetching strategy:
+ * - Fetches 7 datasets in parallel on component mount and filter changes
+ * - Each server action returns different data shape (see comments in fetchAllData)
+ * - Handles mixed response formats (some return data directly, others in wrapper object)
+ * - Error handling: logs to console but doesn't crash if individual queries fail
+ *
+ * Filters:
+ * - Date range picker: default last 30 days
+ * - Class selector: filter by single class or 'all'
+ * - Refresh button: manual data refresh with debounce
+ *
+ * Multi-tenant: schoolId is passed as prop (from parent/route context)
+ * i18n: Dictionary passed for label translations; locale determines date formatting
+ */
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -117,16 +144,20 @@ export default function AnalyticsContent({ dictionary, locale = 'en', schoolId }
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
 
-  // Fetch all data
+  // Fetch all analytics data in parallel
+  // Handles mixed response formats across different server actions
+  // This is necessary because different actions evolved with different return patterns
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
 
+      // Convert Date objects to ISO strings for API transmission
       const dateFrom = dateRange.from.toISOString();
       const dateTo = dateRange.to.toISOString();
       const classFilter = selectedClass !== 'all' ? selectedClass : undefined;
 
-      // Fetch all data in parallel
+      // Fetch all datasets in parallel for performance
+      // Using Promise.all means if one fails, we handle it below without crashing
       const [
         statsResult,
         trendsResult,
@@ -145,38 +176,38 @@ export default function AnalyticsContent({ dictionary, locale = 'en', schoolId }
         getClassesForSelection()
       ]);
 
-      // Handle results - data is at root level on success, { success: false, error } on failure
-      // statsResult returns data directly (not wrapped)
+      // IMPORTANT: Response formats are inconsistent across actions (legacy code)
+      // statsResult returns StatsData directly (not wrapped in object)
       if (statsResult && !('success' in statsResult && statsResult.success === false)) {
         setStats(statsResult as StatsData);
       }
 
-      // trendsResult returns { trends: [...] } on success
+      // trendsResult returns { trends: [...] } wrapper on success
       if (trendsResult && 'trends' in trendsResult && trendsResult.trends) {
         setTrends(trendsResult.trends as TrendData[]);
       }
 
-      // methodResult returns { stats: [...], total: number } on success
+      // methodResult returns { stats: [...], total: number } wrapper on success
       if (methodResult && 'stats' in methodResult && methodResult.stats) {
         setMethodStats(methodResult.stats as MethodData[]);
       }
 
-      // dayResult returns { patterns: [...] } on success
+      // dayResult returns { patterns: [...] } wrapper on success
       if (dayResult && 'patterns' in dayResult && dayResult.patterns) {
         setDayPatterns(dayResult.patterns as DayPattern[]);
       }
 
-      // classResult returns { stats: [...] } on success
+      // classResult returns { stats: [...] } wrapper on success
       if (classResult && 'stats' in classResult && classResult.stats) {
         setClassStats(classResult.stats as ClassStats[]);
       }
 
-      // riskResult returns { students: [...], threshold: number } on success
+      // riskResult returns { students: [...], threshold: number } wrapper on success
       if (riskResult && 'students' in riskResult && riskResult.students) {
         setAtRiskStudents(riskResult.students as AtRiskStudent[]);
       }
 
-      // classesResult uses ActionResponse<{ classes: ... }>
+      // classesResult uses standard ActionResponse<{ classes: ... }> pattern
       if (classesResult && classesResult.success && classesResult.data?.classes) {
         setClasses(classesResult.data.classes);
       }

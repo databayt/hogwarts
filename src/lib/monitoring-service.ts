@@ -1,6 +1,40 @@
 /**
  * Production Monitoring Service
- * Integrates error tracking, performance monitoring, and analytics
+ *
+ * Integrates error tracking, performance monitoring, and analytics.
+ *
+ * MONITORING LAYERS:
+ *
+ * 1. ERROR TRACKING (Sentry)
+ *    - Captures exceptions with full stack traces
+ *    - Includes user/school context for multi-tenant debugging
+ *    - Severity levels: info → warning → error → critical
+ *
+ * 2. PERFORMANCE METRICS (Custom)
+ *    - Buffered and flushed every 30 seconds
+ *    - Units: ms (timing), bytes (size), count, percent
+ *    - Tags for filtering in dashboards
+ *
+ * 3. USER ANALYTICS (Vercel + PostHog)
+ *    - Page views, feature usage, conversion funnels
+ *    - Multi-tenant aware (schoolId tagging)
+ *
+ * WHY BUFFER METRICS:
+ * - Reduces API call overhead (batch instead of individual)
+ * - Prevents metric loss during high-traffic spikes
+ * - 30-second flush balances freshness vs cost
+ *
+ * GOTCHAS:
+ * - Server-side only initialization (typeof window === 'undefined')
+ * - Sentry DSN must be set in both SENTRY_DSN and NEXT_PUBLIC_SENTRY_DSN
+ * - Metrics buffer lost on process restart (stateless design)
+ *
+ * EVENT CATEGORIES:
+ * - 'error': Exception tracking
+ * - 'performance': Timing and resource metrics
+ * - 'user_action': Click, navigation, form submission
+ * - 'api_call': External API interactions
+ * - 'business': Domain events (enrollment, payment, grade)
  */
 
 import * as Sentry from '@sentry/nextjs';

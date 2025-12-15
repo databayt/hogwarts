@@ -1,3 +1,54 @@
+/**
+ * Plaid Public Token Exchange API
+ *
+ * Exchanges temporary public_token for permanent access_token.
+ *
+ * SECURITY MODEL:
+ * - public_token: Short-lived (30 min), returned by Plaid Link
+ * - access_token: Long-lived, stored securely server-side
+ * - Client NEVER sees access_token (prevents theft)
+ *
+ * WHAT THIS ENDPOINT DOES:
+ * 1. Exchanges public_token → access_token via Plaid API
+ * 2. Fetches account details (name, balance, type)
+ * 3. Stores PlaidItem (access token, institution)
+ * 4. Creates BankAccount record
+ * 5. Fetches initial 6 months of transactions
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - schoolId from session, not request body
+ * - All records (PlaidItem, BankAccount, Transaction) scoped
+ * - Prevents cross-tenant access to financial data
+ *
+ * WHY STORE accessToken:
+ * - Needed for all future Plaid API calls
+ * - Fetching new transactions
+ * - Refreshing balances
+ * - Never exposed to client
+ *
+ * WHY PlaidItem + BankAccount SEPARATION:
+ * - One Plaid Item can have multiple accounts
+ * - PlaidItem holds institution-level data
+ * - BankAccount holds account-specific data
+ *
+ * INITIAL TRANSACTION FETCH:
+ * - 6 months lookback for financial history
+ * - Enables immediate dashboard population
+ * - Subsequent syncs use incremental cursor
+ *
+ * TRANSACTION AMOUNT SIGN:
+ * - Plaid: positive = debit (money out)
+ * - We store as-is, type field indicates direction
+ *
+ * GOTCHAS:
+ * - public_token expires quickly (exchange immediately)
+ * - Institution name may differ from account name
+ * - Transactions may take hours for some banks
+ * - Pending transactions may change
+ *
+ * @see /sync-transactions for incremental updates
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 import { auth } from '@/auth'

@@ -1,3 +1,33 @@
+/**
+ * Billing System Validation
+ *
+ * Comprehensive payment processing for school subscriptions including:
+ * - Multi-provider support: Stripe, PayPal, manual invoicing
+ * - Payment methods: Card, bank account, digital wallets (Apple/Google Pay)
+ * - Subscription management: Monthly/annual billing with tier switching
+ * - Discounts: Percentage (0-100%) or fixed amount, time-bound with usage limits
+ * - Credit notes: Refunds, promotional credits, adjustments (6 types)
+ * - Invoicing: Auto-generation, custom branding, tax calculations
+ * - Retry logic: 0-5 attempts with configurable intervals (1-30 days)
+ * - Budget tracking: Monthly limits with alerts
+ * - Usage metrics: Student count, teacher count, classes, storage, API calls
+ *
+ * Key constraints:
+ * - Prorations: How to handle mid-month tier changes
+ *   - "create_prorations": Credit for unused days when downgrading
+ *   - "none": No credit/charge (simpler, less fair)
+ *   - "always_invoice": Always charge difference (aggressive)
+ * - Tax: Optional per jurisdiction, stored as percentage * 100
+ * - Currency: 3-letter ISO code (USD, GBP, EUR, etc.)
+ * - Invoice status: draft → open → paid (or uncollectible/void)
+ *
+ * Why date range validation:
+ * - Discount validFrom < validUntil (prevents invalid ranges)
+ * - Period start < period end (prevents backward time travel)
+ * - Future dates in batch notifications and scheduled payments
+ * - Amount ranges: min <= max (for filter searches)
+ */
+
 import { z } from "zod";
 
 // Subscription schemas
@@ -77,6 +107,8 @@ export const createDiscountSchema = z.object({
     path: ["validUntil"],
   }
 ).refine(
+  // Percentage discounts must not exceed 100% (prevent negative charges)
+  // Why: 110% discount = customer pays negative amount = security issue
   (data) => data.type !== "percentage" || data.value <= 100,
   {
     message: "Percentage discount cannot exceed 100%",

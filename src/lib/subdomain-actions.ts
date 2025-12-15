@@ -1,5 +1,63 @@
 "use server"
 
+/**
+ * Subdomain Management - School Tenant Allocation
+ *
+ * PURPOSE: Manages subdomain allocation for multi-tenant school instances
+ * Subdomains serve as unique identifiers for schools (e.g., school1.ed.databayt.org)
+ *
+ * KEY FUNCTIONS:
+ * - checkSubdomainAvailability(): Verify subdomain is unclaimed
+ * - reserveSubdomain(): Claim subdomain during onboarding
+ * - updateSubdomain(): Change subdomain for existing school
+ * - getSchoolBySubdomain(): Lookup school from subdomain
+ * - getAllSubdomains(): List all schools and their subdomains
+ *
+ * SUBDOMAIN FORMAT:
+ * - Valid characters: a-z, 0-9, hyphens (no underscores, caps, special chars)
+ * - Min length: 3 characters
+ * - Max length: 63 characters (DNS limit)
+ * - Reserved: Avoid api, www, mail, ftp, admin, etc.
+ * - Normalized: Lowercase, hyphenated (via normalizeSubdomain())
+ *
+ * CONSTRAINT: One-to-one mapping
+ * - Each school has exactly one subdomain
+ * - Each subdomain maps to exactly one school
+ * - Subdomains cannot be reused (even if school deleted)
+ *
+ * ARCHITECTURE:
+ * - Unique constraint on domain field in School model
+ * - Middleware rewrites subdomain to tenantContext for routing
+ * - Production: school.ed.databayt.org
+ * - Preview: tenant---branch.vercel.app
+ * - Development: subdomain.localhost
+ *
+ * USE CASE: Onboarding flow
+ * 1. User enters desired subdomain
+ * 2. Validate format (normalizeSubdomain + isValidSubdomain)
+ * 3. Check availability (query School.domain = normalized)
+ * 4. Reserve subdomain (db.school.update)
+ * 5. Redirect to https://subdomain.ed.databayt.org
+ *
+ * ERROR HANDLING:
+ * - Invalid format: Return isValid=false with error message
+ * - Already taken: Return available=false with school name
+ * - Database error: Caught and logged, generic error returned
+ *
+ * PERFORMANCE:
+ * - checkSubdomainAvailability: O(1) - indexed unique query
+ * - getAllSubdomains: O(n) - table scan
+ * - Consider adding subdomain index if not present
+ *
+ * CONSTRAINTS & GOTCHAS:
+ * - Subdomain cannot be changed after onboarding (in current implementation)
+ *   updateSubdomain() available for admins
+ * - Reserved words should be validated (future enhancement)
+ * - DNS propagation takes 24-48 hours (info only, not enforced)
+ * - Requires middleware for subdomain routing to work
+ * - Not validated against existing TLDs or reserved domains
+ */
+
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { normalizeSubdomain, isValidSubdomain } from "./subdomain"

@@ -1,3 +1,37 @@
+/**
+ * Grade Generation & Question Bank Validation
+ *
+ * AI-powered grading and question generation for assessments including:
+ * - Question types: 5 types (multiple choice, T/F, fill blank, short answer, essay)
+ * - Difficulty levels: Aligned to Bloom's taxonomy (Remember, Understand, Apply, Analyze, Evaluate, Create)
+ * - Question banks: Import (100 max), generate with AI (20 max per request)
+ * - Exam templates: Distribute questions by type × difficulty matrix (50 distribution cells max)
+ * - Analytics: Track question performance (score, time spent, success rate)
+ * - Bulk operations: Import CSV/JSON with validation, export with filters
+ *
+ * Key validation rules:
+ * - Question text: Min 10 chars (prevents vague questions)
+ * - Points: 0.5-100 scale (granular partial credit, max 1000/exam)
+ * - Time estimate: 0-480 minutes (8 hour max, prevents outliers)
+ * - Options: MC 2-6 options, T/F exactly 2, ≥1 correct answer required
+ * - Answers: Fill-blank case-sensitive toggle, essay grading rubric required
+ * - Tags: Metadata for categorization (enables keyword search, analytics)
+ * - Distribution: At least one question required (prevents empty exams)
+ *
+ * Why AI generation:
+ * - Teachers create 20 questions at once (batch > one-by-one)
+ * - LLM-generated: Reduces prep time, ensures pedagogical quality
+ * - Bloom's levels: Questions test different cognitive skills (not just recall)
+ * - Randomization: Prevents academic dishonesty (different question per student)
+ *
+ * Why discriminated union (type-specific schemas):
+ * - MC needs options array
+ * - T/F needs exactly 2 options
+ * - Fill-blank needs acceptedAnswers
+ * - Essay needs gradingRubric (human grading)
+ * - Can't use single schema; type determines required fields
+ */
+
 import { z } from "zod";
 import {
   BloomLevel,

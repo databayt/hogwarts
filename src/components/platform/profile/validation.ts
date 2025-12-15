@@ -1,6 +1,25 @@
 /**
  * Profile System Validation Schemas
- * Comprehensive Zod validation schemas for all profile operations
+ *
+ * Comprehensive Zod validation for user profiles across 4 user types:
+ * - Students: Academic info (enrollment, GPA, certifications, skills)
+ * - Teachers: Professional info (employment, publications, office hours)
+ * - Parents: Family info (relationship, occupation, emergency contact status)
+ * - Staff: Employment info (department, designation, shift schedule)
+ *
+ * Key validation rules:
+ * - Email: Normalized to lowercase, trimmed (prevents duplicates from case sensitivity)
+ * - Phone: International format E.164 standard (allows 12-15 digits with +)
+ * - URLs: HTTPS only, optional fields, nullable for flexibility
+ * - Social links: Optional per platform (LinkedIn, Twitter, GitHub, etc.)
+ * - Visibility: School-scoped by default (SCHOOL > DISTRICT > PUBLIC)
+ * - Activity tracking: Timestamps, icons, metadata for extensibility
+ *
+ * Why these patterns:
+ * - Partial profiles: Not all fields required at once (multi-step/incremental updates)
+ * - Type-specific schemas: Different user types have different needs
+ * - Bulk operations: Import/export support up to 1000 profiles
+ * - Custom fields: Record<string, any> for extensibility without schema changes
  */
 
 import { z } from 'zod'
@@ -17,6 +36,7 @@ import {
 
 /**
  * Email validation with proper formatting
+ * Lowercase + trim prevents duplicate accounts from "John@example.com" vs "john@example.com"
  */
 export const emailSchema = z
   .string()
@@ -25,7 +45,9 @@ export const emailSchema = z
   .trim()
 
 /**
- * Phone number validation (international format)
+ * Phone number validation (international format E.164)
+ * E.164: +[country][number], 12-15 digits total, no hyphens in schema
+ * Why: Standardized format for international SMS, database storage, and telecommunications
  */
 export const phoneSchema = z
   .string()

@@ -13,13 +13,10 @@ export default async function EventsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.events
 
-  // Define events page navigation
+  // Events page navigation (4 links - Create+Categories merged into All)
   const eventsPages: PageNavItem[] = [
     { name: d?.navigation?.all || 'All', href: `/${lang}/events` },
-    { name: d?.navigation?.create || 'Create', href: `/${lang}/events/create` },
     { name: d?.navigation?.calendar || 'Calendar', href: `/${lang}/events/calendar` },
-    { name: d?.navigation?.categories || 'Categories', href: `/${lang}/events/categories` },
-    { name: d?.navigation?.attendance || 'Attendance', href: `/${lang}/events/attendance` },
     { name: d?.navigation?.recurring || 'Recurring', href: `/${lang}/events/recurring` },
     { name: d?.navigation?.settings || 'Settings', href: `/${lang}/events/settings` },
   ]

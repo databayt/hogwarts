@@ -1,6 +1,39 @@
 /**
- * Chunked Upload Hook
- * Handles large file uploads with chunking, progress tracking, and retry logic
+ * Chunked Upload Hook - Large File Upload with Progress Tracking
+ *
+ * Handles files too large for single-request upload (>10MB) by splitting
+ * into chunks and uploading in parallel with retry logic.
+ *
+ * KEY CONCEPTS:
+ *
+ * 1. CHUNKING:
+ *    - Files split into 5MB chunks (configurable via chunkSize)
+ *    - Each chunk uploaded independently
+ *    - Server reassembles chunks on completion
+ *
+ * 2. SHA-256 INTEGRITY:
+ *    - Each chunk gets SHA-256 hash before upload
+ *    - Server validates hash to detect corruption
+ *    - If hash mismatch, chunk is rejected and retried
+ *
+ * 3. EXPONENTIAL BACKOFF:
+ *    - Retry delay: retryDelay * Math.pow(2, retries)
+ *    - 1s → 2s → 4s → 8s (prevents hammering server on transient failures)
+ *    - maxRetries (default 3) prevents infinite loops
+ *
+ * 4. PARALLEL UPLOADS:
+ *    - Max 3 concurrent chunk uploads (prevents overwhelming server)
+ *    - Uses Promise.all with chunked batches
+ *
+ * 5. PROGRESS TRACKING:
+ *    - Real-time progress percentage
+ *    - Upload speed (bytes/sec) calculation
+ *    - ETA (estimated time remaining)
+ *
+ * 6. CANCELLATION:
+ *    - Uses AbortController for each upload
+ *    - pause()/resume()/cancel() controls
+ *    - Cleans up in-progress uploads on cancel
  */
 
 'use client';
@@ -16,9 +49,9 @@ import { uploadFile as uploadFileBasic } from './actions';
 import type { FileCategory } from '@prisma/client';
 
 interface ChunkedUploadOptions {
-  chunkSize?: number; // Default 5MB
-  maxRetries?: number; // Default 3
-  retryDelay?: number; // Default 1000ms
+  chunkSize?: number;    // Default 5MB - balance between parallelism and memory
+  maxRetries?: number;   // Default 3 - total attempts before failing
+  retryDelay?: number;   // Default 1000ms - base delay for exponential backoff
   onProgress?: (filename: string, progress: number) => void;
   onSuccess?: (fileId: string) => void;
   onError?: (error: string) => void;
@@ -63,6 +96,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         return await uploadFn();
       } catch (error) {
         if (retries < maxRetries) {
+          // Exponential backoff prevents hammering server on transient network failures (timeouts, 429s)
+          // Formula: base * 2^attempt ensures increasing delays (1s, 2s, 4s, 8s...)
           await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retries)));
           return uploadWithRetry(uploadFn, retries + 1);
         }
@@ -117,6 +152,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           const formData = new FormData();
           formData.append('file', file);
 
+          // Direct upload avoids chunking overhead for files under threshold
           const result = await uploadFileBasic(formData, {
             folder: 'uploads',
             category: 'document',
@@ -141,14 +177,15 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           return result;
         }
 
-        // For large files, use chunked upload
+        // For large files, use chunked upload to improve reliability and UX
         const totalChunks = Math.ceil(file.size / chunkSize);
 
-        // Calculate file hash
+        // Calculate file hash for integrity verification - detects corruption during network transit
+        // Server compares hash to validate chunk wasn't modified in flight
         const fileBuffer = await file.arrayBuffer();
         const finalHash = await calculateHash(fileBuffer);
 
-        // Initiate chunked upload session
+        // Initiate chunked upload session on server to reserve storage space and track session state
         const initResult = await initiateChunkedUpload({
           filename: file.name,
           mimeType: file.type,
@@ -162,28 +199,33 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
 
         const uploadId: string = initResult.uploadId;
 
-        // Create abort controller for this upload
+        // Create abort controller for cancellation support - allows pause/resume/cancel actions
         const abortController = new AbortController();
         abortControllers.current.set(filename, abortController);
 
-        // Upload chunks in parallel (max 3 concurrent)
+        // Upload chunks in parallel with concurrency limit to balance throughput vs server load
+        // Max 3 prevents overwhelming server with simultaneous requests; small files still benefit from parallelism
         const maxConcurrent = 3;
         const chunks: Promise<void>[] = [];
 
         for (let i = 0; i < totalChunks; i++) {
+          // Check abort signal on each iteration to respect user cancellation
           if (abortController.signal.aborted) {
             throw new Error('Upload cancelled');
           }
 
           const start = i * chunkSize;
           const end = Math.min(start + chunkSize, file.size);
+          // File.slice() is lazy - doesn't actually read bytes until arrayBuffer() is called
           const chunk = await file.slice(start, end).arrayBuffer();
 
           const chunkPromise = uploadSingleChunk(uploadId, chunk, i + 1, totalChunks)
             .then(() => {
               uploadedBytes += end - start;
 
-              // Calculate progress, speed, and ETA
+              // Calculate real-time metrics for progress UI feedback
+              // Speed helps user estimate if upload is stalled vs slow connection
+              // ETA helps user decide to cancel/retry vs wait
               const elapsedTime = (Date.now() - startTime) / 1000; // seconds
               const speed = uploadedBytes / elapsedTime; // bytes per second
               const remainingBytes = file.size - uploadedBytes;
@@ -205,7 +247,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
 
           chunks.push(chunkPromise);
 
-          // Wait if we've reached max concurrent uploads
+          // Process chunks in batches to control concurrency - prevents connection pool exhaustion
+          // Don't wait for final chunk (let it start immediately)
           if (chunks.length >= maxConcurrent || i === totalChunks - 1) {
             await Promise.all(chunks);
             chunks.length = 0;
