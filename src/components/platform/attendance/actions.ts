@@ -1,3 +1,61 @@
+/**
+ * Attendance Server Actions Module
+ *
+ * RESPONSIBILITY: Core attendance management system with multi-method tracking (manual, QR, biometric)
+ *
+ * WHAT IT HANDLES:
+ * - Marking attendance: Bulk (class-level), single student, QR code, manual override
+ * - Notifications: Real-time absence alerts to guardians (in-app + email)
+ * - Analytics: Attendance trends, at-risk students, method usage, class comparisons
+ * - QR Sessions: Generate ephemeral QR codes for touch-free check-in
+ * - Student Identifiers: Support multiple ID types (employee number, RFID, barcode, etc.)
+ * - Bulk Import: CSV upload with validation and error recovery
+ *
+ * KEY ALGORITHMS:
+ * 1. triggerAbsenceNotification(): Fire-and-forget pattern - failures don't block attendance saving
+ * 2. getStudentsAtRisk(): Aggregates absence patterns over configurable periods to identify chronic absences
+ * 3. QR Session: Generates 6-digit numeric codes (36^6 = 2.2B combinations) for 30-min windows
+ * 4. Bulk upload: Transaction-based with individual student error tracking (atomic per student)
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - Every function validates schoolId via getTenantContext()
+ * - QR sessions scoped to schoolId - prevents cross-school code reuse
+ * - Student identifiers must belong to same school
+ * - Bulk upload: Each row must reference students in same school
+ * - Guardian notifications only sent to parents within school
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. triggerAbsenceNotification is async but not awaited - failures are logged, not thrown
+ *    (Rationale: Attendance marking is more critical than notifications)
+ * 2. QR codes expire after 30 minutes (hardcoded, consider making configurable)
+ * 3. Late arrivals are counted as "attended" in metrics (include in attendance rate)
+ * 4. "Students at risk" uses configurable threshold (default unknown - check validation.ts)
+ * 5. Bulk upload creates records for valid rows even if later rows fail
+ *    (Recommendation: Implement rollback or status per row)
+ *
+ * PERFORMANCE NOTES:
+ * - markAttendance uses Promise.all for parallel student updates
+ * - getStudentsAtRisk aggregates attendance over days/months - potentially expensive
+ * - Consider caching at-risk students for 24 hours (stable data)
+ * - QR code lookup is O(1) but scan processing includes async notification
+ * - Bulk upload: O(n) with DB transaction overhead
+ *
+ * NOTIFICATION SYSTEM INTEGRATION:
+ * - Creates notification records with channels: ['in_app', 'email']
+ * - Includes both English and Arabic content (titleAr, bodyAr) for RTL support
+ * - Metadata embedded in notification for flexible templating downstream
+ * - actorId tracks who marked the attendance (audit trail)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Implement bulk upload transaction rollback (currently partial success possible)
+ * - Add SMS notification channel (currently email + in-app only)
+ * - Batch absence notifications (don't send 30 individual emails per class)
+ * - Implement timezone-aware attendance windows (currently assumes UTC)
+ * - Add biometric integration hooks (camera/fingerprint APIs)
+ * - Cache at-risk student calculations with invalidation strategy
+ * - Add attendance makeup policies (excused absences, medical certificates)
+ */
+
 "use server"
 
 import { z } from 'zod'

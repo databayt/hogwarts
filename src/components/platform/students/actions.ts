@@ -1,3 +1,74 @@
+/**
+ * Students Server Actions Module
+ *
+ * RESPONSIBILITY: Student lifecycle management - create, update, enroll, link guardians
+ *
+ * WHAT IT HANDLES:
+ * - Student records: Create, update, delete basic info (name, DOB, gender, enrollment date)
+ * - Class enrollment: Assign students to classes (delegated to classes/actions.ts)
+ * - Guardian linking: Associate parents/guardians with students
+ * - Data validation: Email uniqueness per school, phone normalization
+ * - Bulk operations: Export student lists as CSV
+ * - Search & filter: Find students by name, enrollment status, class
+ *
+ * KEY ALGORITHMS:
+ * 1. createStudent(): Validates userId uniqueness globally, normalizes strings
+ * 2. getStudents(): Supports filtering by name, class, year level with pagination
+ * 3. linkGuardian(): Creates many-to-many relationship between student and guardian
+ * 4. Email deduplication: UNIQUE constraint per school prevents duplicates within tenant
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL student records must have schoolId (required field in schema)
+ * - Email uniqueness constraint is scoped: @@unique([email, schoolId])
+ *   (Same email allowed across different schools)
+ * - Guardian linking validates both student and guardian are in same school
+ * - Search/filter always includes { where: { schoolId } } clause
+ * - Cross-tenant access prevented by middleware auth layer
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. userId field is optional but global-unique when present (one user → many students)
+ *    (Rationale: Student might use different auth identity, or multi-school student)
+ * 2. Email deduplication is PER SCHOOL - not platform-wide
+ * 3. Deleting student doesn't cascade to enrollments (manual cleanup may be needed)
+ * 4. Guardian linking allows same person to be linked multiple times (no dedup check)
+ * 5. Mobile/phone normalization removes spaces/dashes (design decision for storage)
+ *
+ * VALIDATION RULES:
+ * - Email: Must be unique within school
+ * - Name fields: Trim and validate presence
+ * - Date fields: Optional but must be valid dates if provided
+ * - Gender: Enum constraint (MALE | FEMALE | OTHER)
+ * - Phone: Normalized but not validated against real carriers
+ *
+ * EXPORT FUNCTIONALITY:
+ * - arrayToCSV() handles encoding (prevents Excel corruption with special chars)
+ * - Exports full student list with basic demographic data
+ * - Consider filtering by year level for large exports
+ *
+ * PERFORMANCE NOTES:
+ * - getStudents() includes multiple optional filters - ensure indexes on (schoolId, email) and (schoolId, name)
+ * - CSV export loads all students into memory - could be problematic for 10K+ students
+ * - Consider streaming export or pagination for very large schools
+ * - Guardian queries use include (eager load) - monitor N+1 if accessed frequently
+ *
+ * PERMISSION NOTES:
+ * - Teachers can view only their class students (enforce in UI)
+ * - Parents can view only their children (enforce via linkage query)
+ * - Students can view own profile (enforce in route guards)
+ * - Admins can view all students in school
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add student status tracking (active, graduated, transferred, suspended)
+ * - Implement bulk student import from CSV
+ * - Add student photo/profile image support
+ * - Support multiple email addresses per student
+ * - Add student ID card generation/printing
+ * - Implement student transfer between schools
+ * - Add medical/allergy information management
+ * - Support emergency contact management (separate from guardians)
+ * - Implement student activity tracking (attendance, grades, behavior)
+ */
+
 "use server";
 
 import { z } from "zod";

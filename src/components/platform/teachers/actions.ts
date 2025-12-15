@@ -1,3 +1,67 @@
+/**
+ * Teachers Server Actions Module
+ *
+ * RESPONSIBILITY: Teacher lifecycle management - create, update, assign classes/subjects, manage credentials
+ *
+ * WHAT IT HANDLES:
+ * - Teacher records: Create, update, delete basic info (name, qualifications, specialization)
+ * - Class assignment: Assign teachers to classes as homeroom or subject teachers
+ * - Subject expertise: Map teacher certifications and subject teaching assignments
+ * - Department management: Organize teachers into departments
+ * - Performance tracking: Monitor class assignments, student feedback, teaching metrics
+ * - Bulk operations: Export teacher lists, import teacher data
+ *
+ * KEY ALGORITHMS:
+ * 1. createTeacher(): Validates qualifications format, normalizes strings
+ * 2. getTeachers(): Supports filtering by department, subject, specialization
+ * 3. Assignment validation: Check teacher availability before adding to class
+ * 4. Subject mapping: Many-to-many relationship between teachers and subjects
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL teacher records must have schoolId (required field)
+ * - Class assignments validate class belongs to same school
+ * - Subject assignments must reference school's subject catalog
+ * - Department filtering scoped to schoolId
+ * - Email uniqueness is per-school (same logic as students)
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. Teacher can be assigned to multiple classes (1:many relationship)
+ * 2. Teacher can teach multiple subjects (many-to-many, allows overlaps)
+ * 3. qualifications is free-text (no validation, consider standardizing)
+ * 4. Deleting teacher doesn't auto-reassign classes (admin must manually handle)
+ * 5. Department is optional - allows teachers without department affiliation
+ *
+ * QUALIFICATION MANAGEMENT:
+ * - Stored as free-text (e.g., "BS Math, MS Education, PGCE")
+ * - No validation against known certifications (consider: standardized taxonomy)
+ * - No expiry tracking (assume permanent unless manually updated)
+ * - Consider: License/credential expiry dates and renewal tracking
+ *
+ * PERFORMANCE NOTES:
+ * - getTeachers() with multiple filters - ensure indexes on (schoolId, department) and (schoolId, name)
+ * - Subject assignments use joins - monitor for N+1 queries if fetched frequently
+ * - Department loading is eager - could optimize with lazy loading for large schools
+ * - Class assignments show workload - useful for balancing but can be expensive calculation
+ *
+ * PERMISSION NOTES:
+ * - Teachers can edit own profile (enforce in UI)
+ * - Department heads can manage teachers in their department
+ * - School admin can manage all teachers
+ * - Teachers cannot assign themselves to classes (prevent conflicts)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add standardized qualifications/certifications (CCNA, PMP, etc.)
+ * - Implement license expiry tracking and renewal reminders
+ * - Add teaching load balancing (suggest optimal class distribution)
+ * - Support teaching preferences (preferred subjects, grades, languages)
+ * - Add performance review tracking
+ * - Implement teacher evaluation system (student feedback, peer review)
+ * - Add professional development hours tracking
+ * - Support substitute teacher management
+ * - Add teacher mentorship program tracking
+ * - Implement absence/leave management
+ */
+
 "use server";
 
 import { z } from "zod";

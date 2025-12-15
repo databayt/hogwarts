@@ -1,3 +1,74 @@
+/**
+ * Parents (Guardians) Server Actions Module
+ *
+ * RESPONSIBILITY: Guardian/parent lifecycle management - create, update, link to students, manage contact info
+ *
+ * WHAT IT HANDLES:
+ * - Guardian records: Create, update, delete basic info (name, email, phone, relationship)
+ * - Student linking: Create parent-child relationships (many-to-many)
+ * - Contact management: Primary/secondary contact flags, emergency contact status
+ * - Bulk operations: Export guardian lists, import guardian data
+ * - Access delegation: Control what data guardians can view (their children only)
+ * - Notification preferences: Email/SMS opt-in settings
+ *
+ * KEY ALGORITHMS:
+ * 1. createGuardian(): Validates email uniqueness per school, phone normalization
+ * 2. linkStudentToGuardian(): Creates many-to-many relationship with relationship type
+ * 3. getGuardiansForStudent(): Returns all guardians linked to a student
+ * 4. Email deduplication: UNIQUE constraint scoped by schoolId
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL guardian records must have schoolId
+ * - Linking only possible between guardian and student in same school
+ * - Email uniqueness constraint per school: @@unique([email, schoolId])
+ * - Access control: Guardians see only their linked children (enforced in UI)
+ * - Notifications filtered by school when guardian has children in multiple schools
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. One guardian can be linked to multiple students (parent with multiple children)
+ * 2. One student can have multiple guardians (shared custody, multiple parents)
+ * 3. Relationship type tracks role (Mother, Father, Guardian, etc.) - important for context
+ * 4. Email may belong to guardian in multiple schools (per-school uniqueness)
+ * 5. Deleting guardian doesn't delete student - just breaks relationship
+ *
+ * GUARDIAN TYPES:
+ * - Relationship enum: MOTHER, FATHER, GUARDIAN, AUNT, UNCLE, GRANDPARENT, etc.
+ * - Used for: Proper address, role clarity, emergency contact priority
+ * - Consider: Add custom relationship type option
+ *
+ * CONTACT PREFERENCES:
+ * - emailVerified: Boolean flag (initially false, confirmed via email link)
+ * - receiveNotifications: Opt-in for announcements, grades, attendance
+ * - receiveEmergencyAlerts: Always on (cannot opt-out for safety)
+ * - Phone number: Optional, normalized format (remove spaces/dashes)
+ *
+ * PERFORMANCE NOTES:
+ * - getGuardiansForStudent(): Uses include (eager load) - O(1) per student
+ * - Email lookup can be bottleneck - ensure index on (schoolId, email)
+ * - Bulk export loads all guardians - streaming recommended for 10K+ records
+ * - Student-guardian queries use joins - monitor for N+1 if accessed frequently
+ *
+ * PERMISSION NOTES:
+ * - Guardians can view own profile and linked children
+ * - Teachers can view guardians of students in their classes
+ * - School admin can view all guardians
+ * - Platform admin can view across schools (with override)
+ * - Guardians cannot modify other guardian records
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add guardian photo/profile image support
+ * - Implement email verification workflow (confirmation link)
+ * - Add SMS notification support (phone number validation)
+ * - Support multiple email addresses per guardian
+ * - Add guardian organization (private, state, etc.)
+ * - Implement custody/access restrictions (e.g., father can't pick up child)
+ * - Add occupational information (employer, job title)
+ * - Support secondary emergency contacts (not parent)
+ * - Implement guardian access logs (track guardian logins, views)
+ * - Add two-factor authentication for guardian accounts
+ * - Support bulk guardian import/export from CSV
+ */
+
 "use server";
 
 import { z } from "zod";

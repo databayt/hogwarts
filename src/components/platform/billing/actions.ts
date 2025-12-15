@@ -1,3 +1,102 @@
+/**
+ * Billing Server Actions Module
+ *
+ * RESPONSIBILITY: School billing and subscription management - track fees, process payments, generate invoices
+ *
+ * WHAT IT HANDLES:
+ * - Subscription management: Plans, billing cycles, seat management for school instance
+ * - Fee management: Create, update, assign fees to students (tuition, activities, uniforms)
+ * - Payment processing: Record manual payments, integrate with payment gateways
+ * - Invoice generation: Create and manage student/family invoices
+ * - Financial reports: Revenue, outstanding balances, payment tracking
+ * - Multi-currency support: Handle international transactions
+ *
+ * KEY ALGORITHMS:
+ * 1. Subscription billing: Calculate seats used vs paid (per student enrollment)
+ * 2. Fee assignment: One-to-many (fee can apply to multiple students/classes)
+ * 3. Invoice generation: Aggregate all fees for student in period, calculate totals + taxes
+ * 4. Payment tracking: Match received payments to invoices using reference numbers
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL subscriptions scoped to schoolId (one school = one subscription)
+ * - Fee assignment validates student belongs to school
+ * - Payment records must reference school's invoices only
+ * - Invoices generated only for students in school
+ * - Financial reports filtered by schoolId (no cross-school rollups)
+ * - Currency conversion only allowed by system (prevent school manipulation)
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. Subscription seats are enforced - cannot exceed paid seats (but app doesn't auto-limit enrollment)
+ *    (Workaround: Manual email warning to admin when over limit)
+ * 2. Fees can be:
+ *    - Optional (parent can choose): Activity fees, optional transport
+ *    - Required: Tuition, mandatory uniforms
+ *    - Recurring: Monthly/termly charges
+ *    - One-time: Registration, exam fees
+ * 3. Discounts are applied at invoice level, not fee level (aggregates first, then discounts)
+ * 4. Payment status: NOT PAID > PARTIAL > PAID (can overpay - creates credit)
+ * 5. Currency codes stored in fee, not school (allows mixed-currency fees rare edge case)
+ *
+ * SUBSCRIPTION LIFECYCLE:
+ * - Trial period: 30 days free (included in plan)
+ * - Auto-renewal: Monthly/yearly based on billingCycle
+ * - Dunning: Failed payments trigger retry + warning emails
+ * - Cancellation: Soft-cancel (access revoked but data retained)
+ * - Churn prevention: Email offer before auto-renewal
+ *
+ * PAYMENT INTEGRATION:
+ * - Stripe integration: Payment gateway for CC/bank transfers (not implemented yet)
+ * - Manual payment entry: Admin records offline payments (check, wire transfer, cash)
+ * - Payment matching: Reference number links payment to invoice
+ * - Webhooks: Stripe sends payment confirmations (requires listener)
+ *
+ * INVOICE MANAGEMENT:
+ * - Auto-generated: On student enrollment (creates semester invoice)
+ * - Manual generation: Admin can regenerate for adjustments
+ * - PDF export: Generate printable invoice with school branding
+ * - Email delivery: Send to parents (with payment link)
+ * - Payment links: Include Stripe checkout URL (requires integration)
+ *
+ * FINANCIAL REPORTS:
+ * - Revenue dashboard: Total collected, by payment method
+ * - Accounts receivable: Outstanding balances by student/class
+ * - Cash flow: Payment timing and patterns
+ * - Aging report: Overdue invoices by days (30/60/90+)
+ * - Budget vs actual: Compare to financial targets
+ *
+ * PERFORMANCE NOTES:
+ * - Invoice generation aggregates fees: O(n) students × O(m) fees = O(n×m)
+ * - Consider caching generated invoices (immutable after student pays)
+ * - Payment reconciliation queries large result sets - batch processing recommended
+ * - Subscription upgrade/downgrade may recalculate mid-cycle - track proration
+ *
+ * PERMISSION NOTES:
+ * - School admin (ACCOUNTANT role) manages billing
+ * - Parents view own invoices and payment status
+ * - School finance team generates reports
+ * - Platform admin can view across schools
+ *
+ * TAX & COMPLIANCE:
+ * - Tax calculation: % of fee amount (e.g., 15% VAT)
+ * - Tax ID storage: School tax number for invoices (required in some regions)
+ * - Compliance note: PCI-DSS for payment processing (use Stripe, don't store CC)
+ * - Audit trail: All payment changes logged with actor + timestamp
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Implement Stripe payment gateway integration
+ * - Add installment plans (pay semester in 3 months)
+ * - Support fee waivers (need approval workflow)
+ * - Implement financial aid/scholarships
+ * - Add sibling discounts
+ * - Support EFT/auto-pay enrollment
+ * - Implement dunning management (retry failed payments)
+ * - Add multi-currency invoicing (international families)
+ * - Support payment reminders (email on due date)
+ * - Implement revenue recognition (accounting standards)
+ * - Add financial forecasting (project cash flow)
+ * - Support student fee customization (different per student)
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";

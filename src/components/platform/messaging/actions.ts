@@ -1,3 +1,74 @@
+/**
+ * Messaging (Direct Messages & Group Chats) Server Actions Module
+ *
+ * RESPONSIBILITY: Real-time messaging system with conversation management and notifications
+ *
+ * WHAT IT HANDLES:
+ * - Conversations: 1:1 private chats and group chats
+ * - Messages: Send, edit, delete with timestamps and read receipts
+ * - Participants: Add/remove members from group conversations
+ * - Reactions: Emoji/custom reactions to messages (like, love, etc.)
+ * - Message state: Mark read/unread, mute, archive, pin conversations
+ * - Pagination: Load message history in chunks (pagination via cursor)
+ *
+ * KEY ALGORITHMS:
+ * 1. createConversation(): Validates participant list, creates group or 1:1 based on count
+ * 2. sendMessage(): Broadcast new message to all participants (trigger real-time updates)
+ * 3. loadMoreMessages(): Cursor-based pagination (offset would be inefficient for large histories)
+ * 4. Participant management: Add/remove updates conversation metadata atomically
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - Conversation must be in same school (validated via schoolId)
+ * - All participants must be in same school
+ * - Message retrieval scoped to conversation members only (prevent cross-conversation leaks)
+ * - User cannot send message to conversation they're not part of
+ * - Removing participant prevents access to future messages (enforced at DB level)
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. 1:1 conversations can be duplicated (createConversation always creates new, no deduping)
+ *    (Rationale: UI can prevent duplicates, but no DB constraint)
+ * 2. Message edit/delete is soft-delete (content cleared but record remains for audit)
+ * 3. Read receipts are per-user per-message (not per-conversation - can see who read what)
+ * 4. Reactions are cumulative (multiple reactions possible per message)
+ * 5. Archive is soft-delete (hides from inbox but data remains)
+ * 6. loadMoreMessages cursor assumes chronological ordering (relies on createdAt + ID tiebreaker)
+ *
+ * REAL-TIME CONSIDERATIONS:
+ * - sendMessage should trigger WebSocket/SSE broadcast to all participants
+ * - Message reactions should update live (implement optimistic UI)
+ * - Read receipts should update without full page refresh
+ * - Consider implementing typing indicators (currently missing)
+ *
+ * NOTIFICATION INTEGRATION:
+ * - Message received should trigger notification to all participants except sender
+ * - Notification type: "message" or "group_message"
+ * - Include message preview in notification (first 100 chars)
+ * - Muted conversations should suppress notifications
+ *
+ * PERFORMANCE NOTES:
+ * - loadMoreMessages with cursor/limit prevents N+1 queries
+ * - Consider indexing on (conversationId, createdAt) for pagination
+ * - Mark read/unread operations are O(n) per conversation - consider batching
+ * - Reaction queries could benefit from aggregation caching
+ *
+ * PERMISSION NOTES:
+ * - All operations require user to be participant in conversation
+ * - Only message sender can edit/delete their own messages
+ * - Only conversation creator can remove participants (consider: admin override)
+ * - Students cannot DM teachers directly (unless configured)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add typing indicators ("User is typing...")
+ * - Implement message search across conversations
+ * - Add file/media sharing (currently text-only)
+ * - Support voice messages or transcription
+ * - Add conversation groups/categories (school-wide, by class, etc.)
+ * - Implement automatic read status (read when viewed, not manual)
+ * - Add forwarding messages to other conversations
+ * - Support scheduled messages (send later)
+ * - Add message reactions with emoji picker
+ */
+
 "use server"
 
 import { auth } from "@/auth"

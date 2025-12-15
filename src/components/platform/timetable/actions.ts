@@ -1,3 +1,63 @@
+/**
+ * Timetable (Schedule) Server Actions Module
+ *
+ * RESPONSIBILITY: School-wide schedule management with conflict detection and role-based visibility
+ *
+ * WHAT IT HANDLES:
+ * - Timetable slots: Create/update class-teacher-room-time combinations
+ * - Conflict detection: Prevent double-booking of teachers or rooms
+ * - Weekly configuration: Define school operating hours (start/end times, day patterns)
+ * - Multi-view access: Class view, teacher view, room view, analytics dashboard
+ * - Term management: Schedule across multiple academic terms
+ * - Free slot suggestions: AI-like recommendation for class/teacher availability
+ *
+ * KEY ALGORITHMS:
+ * 1. detectTimetableConflicts(): O(n²) comparison of all slots for same teacher/room at same time
+ * 2. suggestFreeSlots(): Finds gap patterns across week, excluding existing bookings
+ * 3. Role-based filtering: Different users see different views (teacher sees own classes, admin sees all)
+ * 4. Week offset calculations: Support current week (0) and next week (1) views
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL queries include schoolId filter via getTenantContext()
+ * - Permission layer validates user can view/edit specific classes, teachers, rooms
+ * - Role-based access control: Teachers only see own classes, students see their schedule only
+ * - Audit logging via logTimetableAction() tracks all schedule changes
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. Conflict detection happens AT INSERTION TIME, not validation during form (late error message)
+ * 2. Term-based scheduling allows same teacher in multiple classes per term (check business logic)
+ * 3. Room field is optional - may need to allow flexible room assignment
+ * 4. getWeeklyTimetable returns BOTH termId AND weekOffset - must handle year boundary (Dec/Jan)
+ * 5. Free slot suggestions assume linear availability (don't account for prep time, lunch, etc.)
+ *
+ * PERMISSION SYSTEM:
+ * - requireAdminAccess(): School admin or platform admin only (can modify timetable)
+ * - requireReadAccess(): Can view timetable (varies by role)
+ * - logTimetableAction(): Audit trail for compliance (track who changed what when)
+ * - filterTimetableByRole(): Client-side visibility filter (prevents info leakage)
+ *
+ * PERFORMANCE NOTES:
+ * - detectTimetableConflicts is O(n²) - could be optimized with indexed queries
+ * - Consider caching weekly timetables (immutable after term starts)
+ * - getTimetableAnalytics aggregates across all classes - potential bottleneck
+ * - Free slot suggestions could benefit from memoization (same input patterns daily)
+ *
+ * TERM & CALENDAR INTEGRATION:
+ * - Terms define schedule boundaries (start/end dates)
+ * - Week offsets (0/1) for current/next week within a term
+ * - Assumes academic calendar configured in settings/academic
+ * - No automatic holiday handling (manual blocking required)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Implement indexed conflict detection (use database constraints instead of app logic)
+ * - Add recurring pattern templates (e.g., "Math on M/W/F at 10am")
+ * - Support advanced room scheduling (equipment, capacity constraints)
+ * - Implement teacher prep time blocks (auto-block time between classes)
+ * - Add holiday/break calendar integration
+ * - Support student schedule viewing (currently only admin/teacher)
+ * - Implement schedule optimization (minimize conflicts, balance teacher load)
+ */
+
 "use server";
 
 import { db } from '@/lib/db'

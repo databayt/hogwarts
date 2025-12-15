@@ -1,3 +1,63 @@
+/**
+ * Classes (Sections/Groups) Server Actions Module
+ *
+ * RESPONSIBILITY: Academic class management - create, enroll, assign teachers, manage capacity
+ *
+ * WHAT IT HANDLES:
+ * - Class lifecycle: Create, update, delete class sections
+ * - Student enrollment: Enroll/unenroll students with capacity management
+ * - Subject-teacher assignments: Map subject teachers to classes (homeroom + subject teachers)
+ * - Capacity management: Track and enforce class size limits
+ * - Bulk operations: Export classes as CSV, import capacity data
+ * - Availability lookup: Find available teachers for class assignments
+ *
+ * KEY ALGORITHMS:
+ * 1. enrollStudentInClass(): Validates capacity BEFORE insertion (prevents over-enrollment)
+ * 2. getClassesCSV(): Chunks large exports to avoid memory issues
+ * 3. assignSubjectTeacher(): Supports 1:many subject teachers per class (not just homeroom)
+ * 4. Capacity calculation: Sum of enrolled students vs defined limit
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL queries filter by schoolId from getTenantContext()
+ * - Class queries MUST include: { where: { schoolId } }
+ * - Student enrollment validates student belongs to same school
+ * - Teacher assignment checks teacher is in same school
+ * - Prevent cross-school student movement or teacher assignment
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. teacherId is optional - allows classes without homeroom teacher assigned
+ * 2. getClasses() returns partial data (select fields) - not full class object
+ * 3. enrollStudentInClass() allows re-enrollment (silently ignores duplicates)
+ * 4. Subject teachers are additive - class can have multiple teachers for different subjects
+ * 5. getClassesExportData() aggregates students per class - O(n) query with join
+ *
+ * CAPACITY MANAGEMENT:
+ * - getClassCapacityStatus(): Returns absolute numbers + percentage used
+ * - getAllClassesCapacity(): School-wide capacity overview (useful for planning)
+ * - Capacity limit is hard constraint (unenroll required to add student)
+ * - No soft capacity warnings (consider adding threshold alerts)
+ *
+ * CSV EXPORT PERFORMANCE:
+ * - getClassesCSV(): Handles large datasets by chunking (prevent memory exhaustion)
+ * - arrayToCSV() handles encoding and formatting
+ * - Includes all enrolled students in export (for reporting)
+ * - Consider streaming for very large schools (10K+ students)
+ *
+ * PERMISSION NOTES:
+ * - No explicit permission checks (assume caller has auth)
+ * - Teachers can manage their own classes (enforce in UI/middleware)
+ * - Admins can modify any class in school
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add capacity threshold alerts (class 80%+ full)
+ * - Implement class templates (copy structure of previous year)
+ * - Add waitlist management (when class is full)
+ * - Support subject-specific capacity (different limits for subjects)
+ * - Implement class status tracking (active, archived, draft)
+ * - Add bulk class creation from CSV
+ * - Support class merging/splitting
+ */
+
 "use server";
 
 import { z } from "zod";

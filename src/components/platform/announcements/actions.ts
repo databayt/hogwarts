@@ -1,3 +1,80 @@
+/**
+ * Announcements Server Actions Module
+ *
+ * RESPONSIBILITY: School-wide announcements system with publication control and targeting
+ *
+ * WHAT IT HANDLES:
+ * - Announcement lifecycle: Create, publish, edit, archive, delete
+ * - Publication control: Draft mode, scheduled publishing, auto-expiry
+ * - Audience targeting: School-wide, class-specific, role-based distribution
+ * - Read tracking: Monitor which users have viewed each announcement
+ * - Search & filtering: Find announcements by date, category, author
+ * - Notifications: Trigger alerts to target audience on publish
+ *
+ * KEY ALGORITHMS:
+ * 1. publishAnnouncement(): Set publication status and notify all targeted users
+ * 2. getAnnouncements(): Filter by publication status, date range, target audience
+ * 3. markAsRead(): Track individual user read receipts (not conversation-based)
+ * 4. Scheduled publishing: Check for announcements ready to publish (via cron)
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL announcements must have schoolId
+ * - Publication only visible to users in same school
+ * - Notifications sent only to school members
+ * - Author validation: Creator must be in same school
+ * - Class targeting validated against school's classes
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. published field is boolean - only published announcements appear to target audience
+ * 2. Read receipts are individual (not per-class), separate from broadcast status
+ * 3. Expiry is soft-delete (archive) - data retained for audit trail
+ * 4. Scheduling requires external job (cron) - no built-in scheduler
+ * 5. Class-specific announcements require manual role-based filtering by client
+ *
+ * NOTIFICATION INTEGRATION:
+ * - publishAnnouncement() should create notification records for each target user
+ * - Notification type: "announcement"
+ * - Include announcement preview in notification (first 200 chars)
+ * - Role-based recipients: teachers, students, parents, admin
+ *
+ * PUBLICATION WORKFLOW:
+ * - Draft: Author creates announcement (not published)
+ * - Scheduled: Author can set publishAt date (requires job processing)
+ * - Published: Visible to target audience, notification sent
+ * - Archived: Soft-deleted (can be restored)
+ * - Expired: Auto-archive based on expiresAt (requires job)
+ *
+ * READ TRACKING:
+ * - Mark as read: Per-user per-announcement (not aggregated)
+ * - Used for UI: Show "unread" badge, track engagement
+ * - Consider privacy: Don't expose read status to other users
+ * - For notifications: Track opening in notification system, not here
+ *
+ * PERFORMANCE NOTES:
+ * - getAnnouncements() with filters - ensure indexes on (schoolId, published, createdAt)
+ * - Read tracking queries can be expensive - consider caching "read count"
+ * - Marking all as read should be batched, not individual queries
+ * - Publishing to large audience creates N notification records (async in background)
+ *
+ * TARGETING STRATEGIES:
+ * - School-wide: Broadcast to all users (default)
+ * - Class-specific: Show only to members of selected classes
+ * - Role-based: Limit to specific roles (teachers only, parents only, etc.)
+ * - Custom list: Allow specifying individual recipients (email-style)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add announcement categories/tags for organization
+ * - Implement scheduling engine (currently manual)
+ * - Add read receipt statistics (% read, time to read, etc.)
+ * - Support attachments (PDFs, images)
+ * - Add comment threads on announcements (not just broadcast)
+ * - Implement announcement approval workflow
+ * - Support announcement templates
+ * - Add multilingual support (English + Arabic variants)
+ * - Implement announcement analytics dashboard
+ * - Add announcement search across school
+ */
+
 "use server";
 
 import { z } from "zod";

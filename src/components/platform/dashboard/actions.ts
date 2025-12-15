@@ -1,3 +1,46 @@
+/**
+ * Dashboard Server Actions Module
+ *
+ * RESPONSIBILITY: Aggregates real-time metrics across all school operations for role-based dashboards
+ *
+ * WHAT IT HANDLES:
+ * - Admin Dashboard: School-wide enrollment, attendance, staff, academic performance, announcements, classes
+ * - Teacher Dashboard: Personal classroom metrics, student performance, attendance summary
+ * - Student Dashboard: Personal grades, timetable, attendance, upcoming exams
+ * - Parent Dashboard: Child's grades, attendance, announcements, school calendar
+ * - Compliance & Emergency Management: Track compliance items, emergency alerts
+ *
+ * KEY ALGORITHMS:
+ * 1. getDashboardSummary(): Parallel fetch of 7 metric functions using Promise.all() to minimize latency
+ * 2. getAttendanceMetrics(): Uses groupBy with _count aggregation to avoid loading individual records
+ * 3. Month/Year calculations: Uses date-fns for consistency and timezone safety
+ *
+ * MULTI-TENANT SAFETY (CRITICAL):
+ * - ALL functions extract schoolId via getTenantContext() - this enforces tenant isolation
+ * - If schoolId is missing, return empty/zero defaults (graceful degradation)
+ * - Every DB query MUST include { where: { schoolId } } filter
+ * - Never trust subdomain alone - always validate schoolId from session/context
+ *
+ * GOTCHAS & NON-OBVIOUS BEHAVIOR:
+ * 1. Empty schoolId returns empty metrics, not errors (prevents dashboard crashes during onboarding)
+ * 2. Attendance rate calculation includes LATE as successful (logic: late student did attend)
+ * 3. Academic metrics (GPA, pass rate) return null placeholders - not yet fully implemented
+ * 4. Promise.all() will reject if ANY metric function throws - consider try/catch wrapper for production
+ * 5. Date calculations use UTC midnight (new Date() + setHours) - assumes single timezone per school
+ *
+ * PERFORMANCE NOTES:
+ * - Parallel metric fetching reduces N+1 queries to single concurrent batch
+ * - Count queries optimized with Prisma groupBy (aggregates at DB level, not in app)
+ * - Consider caching these metrics for 1-5 minutes (high frequency, low change rate)
+ *
+ * FUTURE IMPROVEMENTS:
+ * - Add comprehensive error handling (current: Promise.all will fail on first error)
+ * - Implement proper timezone handling for international schools
+ * - Complete academic performance metrics (GPA calculation, pass rate analysis)
+ * - Add pagination for activity/recent items
+ * - Consider subscription-based refresh (WebSocket/SSE) for real-time updates
+ */
+
 "use server"
 
 import { db } from "@/lib/db"
