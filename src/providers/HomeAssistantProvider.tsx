@@ -7,10 +7,9 @@ import { haWebSocket } from "@/lib/haWebsocket"
 
 function getImportMetaEnv(key: string): string | undefined {
   try {
-    // @ts-ignore - import.meta may not exist in Next
-    return typeof import.meta !== "undefined"
-      ? import.meta.env?.[key]
-      : undefined
+    // Cast to bypass TypeScript's ImportMeta type (no env property in Next.js)
+    const meta = import.meta as { env?: Record<string, string> }
+    return meta.env?.[key]
   } catch {
     return undefined
   }
