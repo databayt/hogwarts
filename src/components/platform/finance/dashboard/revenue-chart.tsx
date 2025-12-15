@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { format } from "date-fns"
 import {
   Area,
@@ -33,7 +34,7 @@ interface RevenueChartProps {
   className?: string
 }
 
-export function RevenueChart({
+function RevenueChartInner({
   revenueData,
   expenseData,
   profitData,
@@ -274,3 +275,5 @@ export function RevenueChart({
     </Card>
   )
 }
+
+export const RevenueChart = React.memo(RevenueChartInner)

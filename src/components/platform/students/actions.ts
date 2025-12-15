@@ -456,6 +456,7 @@ export async function getStudents(
         orderBy,
         skip,
         take,
+        relationLoadStrategy: "join",
         include: {
           studentClasses: {
             include: {
@@ -553,6 +554,7 @@ export async function getStudentsCSV(
     // Fetch ALL students matching filters (no pagination for export)
     const students = await (db as any).student.findMany({
       where,
+      relationLoadStrategy: "join",
       include: {
         user: {
           select: {
@@ -711,6 +713,7 @@ export async function getStudentsExportData(
     // Fetch ALL students matching filters (no pagination for export)
     const students = await (db as any).student.findMany({
       where,
+      relationLoadStrategy: "join",
       include: {
         user: {
           select: {

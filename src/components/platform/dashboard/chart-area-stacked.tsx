@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingDown, TrendingUp } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
@@ -41,7 +42,7 @@ const defaultChartData = [
   { month: "June", desktop: 214, mobile: 140 },
 ]
 
-export function AreaChartStacked({
+function AreaChartStackedInner({
   data,
   primaryLabel = "Desktop",
   secondaryLabel = "Mobile",
@@ -135,3 +136,5 @@ export function AreaChartStacked({
     </Card>
   )
 }
+
+export const AreaChartStacked = React.memo(AreaChartStackedInner)

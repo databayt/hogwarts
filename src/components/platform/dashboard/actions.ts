@@ -43,6 +43,7 @@
 
 "use server"
 
+import { unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 import {
   addDays,
@@ -175,20 +176,9 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
 // ENROLLMENT METRICS
 // ============================================================================
 
-export async function getEnrollmentMetrics(): Promise<EnrollmentMetrics> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return {
-      total: 0,
-      newThisMonth: 0,
-      active: 0,
-      inactive: 0,
-      graduated: 0,
-      transferIn: 0,
-      transferOut: 0,
-    }
-  }
-
+async function getEnrollmentMetricsInternal(
+  schoolId: string
+): Promise<EnrollmentMetrics> {
   const now = new Date()
   const firstOfMonth = startOfMonth(now)
   const lastOfMonth = endOfMonth(now)
@@ -212,6 +202,29 @@ export async function getEnrollmentMetrics(): Promise<EnrollmentMetrics> {
     transferIn: 0,
     transferOut: 0,
   }
+}
+
+const getCachedEnrollmentMetrics = unstable_cache(
+  getEnrollmentMetricsInternal,
+  ["enrollment-metrics"],
+  { revalidate: 300, tags: ["enrollment"] }
+)
+
+export async function getEnrollmentMetrics(): Promise<EnrollmentMetrics> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return {
+      total: 0,
+      newThisMonth: 0,
+      active: 0,
+      inactive: 0,
+      graduated: 0,
+      transferIn: 0,
+      transferOut: 0,
+    }
+  }
+
+  return getCachedEnrollmentMetrics(schoolId)
 }
 
 // ============================================================================
@@ -270,16 +283,9 @@ export async function getAttendanceMetrics(): Promise<AttendanceMetrics> {
 // STAFF METRICS
 // ============================================================================
 
-export async function getStaffMetrics(): Promise<StaffMetrics> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return {
-      total: 0,
-      departments: 0,
-      presenceRate: 0,
-    }
-  }
-
+async function getStaffMetricsInternal(
+  schoolId: string
+): Promise<StaffMetrics> {
   const [totalTeachers, departments] = await Promise.all([
     db.teacher.count({ where: { schoolId } }),
     db.department.count({ where: { schoolId } }),
@@ -290,6 +296,25 @@ export async function getStaffMetrics(): Promise<StaffMetrics> {
     departments,
     presenceRate: 0,
   }
+}
+
+const getCachedStaffMetrics = unstable_cache(
+  getStaffMetricsInternal,
+  ["staff-metrics"],
+  { revalidate: 300, tags: ["staff"] }
+)
+
+export async function getStaffMetrics(): Promise<StaffMetrics> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return {
+      total: 0,
+      departments: 0,
+      presenceRate: 0,
+    }
+  }
+
+  return getCachedStaffMetrics(schoolId)
 }
 
 // ============================================================================

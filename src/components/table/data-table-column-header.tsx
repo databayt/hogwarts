@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import type { Column } from "@tanstack/react-table"
 import { ChevronDown, ChevronsUpDown, ChevronUp, EyeOff, X } from "lucide-react"
 
@@ -20,7 +21,7 @@ interface DataTableColumnHeaderProps<
   title: string
 }
 
-export function DataTableColumnHeader<TData, TValue>({
+function DataTableColumnHeaderInner<TData, TValue>({
   column,
   title,
   className,
@@ -93,3 +94,7 @@ export function DataTableColumnHeader<TData, TValue>({
     </DropdownMenu>
   )
 }
+
+export const DataTableColumnHeader = React.memo(
+  DataTableColumnHeaderInner
+) as typeof DataTableColumnHeaderInner

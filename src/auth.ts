@@ -4,9 +4,22 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import NextAuth from "next-auth"
 import { getToken } from "next-auth/jwt"
 
+import { validateAuthConfig } from "@/lib/auth-config-validator"
+import { authLogger } from "@/lib/auth-logger"
 import { db } from "@/lib/db"
 
 import authConfig from "./auth.config"
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STARTUP VALIDATION - Catches config issues BEFORE OAuth fails
+// ═══════════════════════════════════════════════════════════════════════════
+const configValidation = validateAuthConfig()
+if (!configValidation.valid) {
+  authLogger.error("🚨 AUTH CONFIG INVALID - OAuth will fail!", {
+    issues: configValidation.issues,
+    warnings: configValidation.warnings,
+  })
+}
 
 /**
  * Helper: Get school domain from database by schoolId
@@ -188,6 +201,57 @@ export const {
   },
   callbacks: {
     /**
+     * SignIn Callback - First callback after OAuth/Credentials authentication
+     *
+     * This runs BEFORE jwt callback and can block sign-in if it returns false.
+     * Use this to detect and log authentication issues early.
+     */
+    async signIn({ user, account, profile }) {
+      authLogger.callback("signIn", {
+        provider: account?.provider,
+        accountType: account?.type,
+        userId: user?.id,
+        userEmail: user?.email,
+        hasProfile: !!profile,
+        profileEmail: (profile as any)?.email,
+        timestamp: new Date().toISOString(),
+      })
+
+      // Log potential issues
+      if (!user?.email) {
+        authLogger.warn("SignIn: No email in user object", {
+          user: { id: user?.id, name: user?.name },
+          account: { provider: account?.provider, type: account?.type },
+        })
+      }
+
+      // Facebook-specific checks
+      if (account?.provider === "facebook") {
+        if (!(profile as any)?.email) {
+          authLogger.error(
+            "Facebook OAuth: No email returned - check app permissions (email scope)",
+            {
+              profileKeys: profile ? Object.keys(profile) : [],
+              profileId: (profile as any)?.id,
+            }
+          )
+        }
+      }
+
+      // Google-specific checks
+      if (account?.provider === "google") {
+        if (!(profile as any)?.email_verified) {
+          authLogger.warn("Google OAuth: Email not verified", {
+            email: (profile as any)?.email,
+          })
+        }
+      }
+
+      authLogger.info("SignIn callback completed - allowing sign in")
+      return true // Allow sign in to proceed
+    },
+
+    /**
      * JWT Callback - Token Population and Refresh
      *
      * Triggers:
@@ -203,61 +267,52 @@ export const {
      * See: src/lib/school-access.ts syncUserSchoolContext() for how refresh is triggered
      */
     async jwt({ token, user, account, trigger }) {
-      // Only log in development
-      if (process.env.NODE_ENV === "development") {
-        console.log("🔐 [DEBUG] JWT CALLBACK START:", {
-          trigger,
-          hasUser: !!user,
-          hasAccount: !!account,
-          timestamp: new Date().toISOString(),
-        })
-      }
+      // Log JWT callback entry (always - critical for debugging)
+      authLogger.callback("jwt", {
+        trigger,
+        hasUser: !!user,
+        hasAccount: !!account,
+        existingTokenId: token?.id,
+        existingTokenRole: token?.role,
+        existingTokenSchoolId: token?.schoolId,
+      })
 
       if (user) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("👤 [DEBUG] User data received:", {
-            id: user.id,
-            email: user.email,
-            hasRole: "role" in user,
-            hasSchoolId: "schoolId" in user,
-            userKeys: Object.keys(user),
-            userRole: (user as any).role,
-            userSchoolId: (user as any).schoolId,
-          })
-        }
+        authLogger.debug("JWT: User data received", {
+          id: user.id,
+          email: user.email,
+          hasRole: "role" in user,
+          hasSchoolId: "schoolId" in user,
+          role: (user as any).role,
+          schoolId: (user as any).schoolId,
+        })
 
         token.id = user.id
         // Only set role and schoolId if they exist on the user object
         if ("role" in user) {
           token.role = (user as any).role
-          if (process.env.NODE_ENV === "development") {
-            console.log("🎭 [DEBUG] Role set in token:", token.role)
-          }
+          authLogger.debug("JWT: Role set in token", { role: token.role })
         }
         if ("schoolId" in user) {
           token.schoolId = (user as any).schoolId
-          if (process.env.NODE_ENV === "development") {
-            console.log("🏫 [DEBUG] SchoolId set in token:", token.schoolId)
-          }
+          authLogger.debug("JWT: SchoolId set in token", {
+            schoolId: token.schoolId,
+          })
         }
 
         // Ensure we have a proper session token
         if (account) {
           token.provider = account.provider
           token.providerAccountId = account.providerAccountId
-          if (process.env.NODE_ENV === "development") {
-            console.log("🔗 [DEBUG] Account linked:", {
-              provider: account.provider,
-              id: account.providerAccountId,
-            })
-          }
+          authLogger.oauth(account.provider, "Account linked to token", {
+            providerAccountId:
+              account.providerAccountId?.substring(0, 10) + "...",
+          })
         }
 
         // Force session update after OAuth
         if (trigger === "signIn") {
-          if (process.env.NODE_ENV === "development") {
-            console.log("🔄 [DEBUG] Forcing session update after signIn")
-          }
+          authLogger.debug("JWT: Forcing session update after signIn")
           token.iat = Math.floor(Date.now() / 1000)
           token.exp = Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 24 hours
           // Force session refresh by updating token
@@ -276,17 +331,15 @@ export const {
       // This ensures the JWT has the latest schoolId immediately after school creation
       if (trigger === "update" || (!token.schoolId && token.id)) {
         try {
-          if (process.env.NODE_ENV === "development") {
-            console.log("🔄 [DEBUG] Refreshing schoolId from database:", {
-              trigger,
-              tokenId: token.id,
-              currentSchoolId: token.schoolId,
-              reason:
-                trigger === "update"
-                  ? "session update requested"
-                  : "no schoolId in token",
-            })
-          }
+          authLogger.debug("JWT: Refreshing from database", {
+            trigger,
+            tokenId: token.id,
+            currentSchoolId: token.schoolId,
+            reason:
+              trigger === "update"
+                ? "session update requested"
+                : "no schoolId in token",
+          })
 
           const dbUser = await db.user.findUnique({
             where: { id: token.id as string },
@@ -296,76 +349,53 @@ export const {
           if (dbUser) {
             // Only update if database has newer/different values
             if (dbUser.schoolId && dbUser.schoolId !== token.schoolId) {
+              const previousSchoolId = token.schoolId
               token.schoolId = dbUser.schoolId
               token.updatedAt = Date.now()
               token.hash = `hash_${Date.now()}`
-              if (process.env.NODE_ENV === "development") {
-                console.log("🏫 [DEBUG] SchoolId refreshed from database:", {
-                  newSchoolId: dbUser.schoolId,
-                  previousSchoolId: token.schoolId,
-                })
-              }
+              authLogger.info("JWT: SchoolId refreshed from database", {
+                newSchoolId: dbUser.schoolId,
+                previousSchoolId,
+              })
             }
             if (dbUser.role && dbUser.role !== token.role) {
+              const previousRole = token.role
               token.role = dbUser.role
-              if (process.env.NODE_ENV === "development") {
-                console.log("🎭 [DEBUG] Role refreshed from database:", {
-                  newRole: dbUser.role,
-                  previousRole: token.role,
-                })
-              }
+              authLogger.info("JWT: Role refreshed from database", {
+                newRole: dbUser.role,
+                previousRole,
+              })
             }
           }
         } catch (error) {
           // Don't fail the JWT callback on refresh errors - log and continue
-          console.error("[JWT] Error refreshing schoolId from database:", error)
+          authLogger.exception("JWT: Error refreshing from database", error)
         }
       }
 
-      // Debug JWT state
-      if (process.env.NODE_ENV === "development") {
-        console.log("🔐 [DEBUG] JWT CALLBACK END:", {
-          tokenId: token?.id,
-          hasRole: !!token?.role,
-          hasSchoolId: !!token?.schoolId,
-          tokenRole: token?.role,
-          tokenSchoolId: token?.schoolId,
-          provider: token?.provider,
-          iat: token?.iat,
-          exp: token?.exp,
-          sub: token?.sub,
-          sessionToken: token?.sessionToken,
-          updatedAt: token?.updatedAt,
-          hash: token?.hash,
-        })
-      }
+      // Log JWT state at end of callback (always - critical for debugging)
+      authLogger.callback("jwt-complete", {
+        tokenId: token?.id,
+        role: token?.role,
+        schoolId: token?.schoolId,
+        provider: token?.provider,
+        hasSessionToken: !!token?.sessionToken,
+      })
 
       return token
     },
-    async session({ session, token, user, trigger }) {
-      // Only log in development
-      if (process.env.NODE_ENV === "development") {
-        console.log("📋 [DEBUG] SESSION CALLBACK START:", {
-          trigger,
-          hasToken: !!token,
-          hasUser: !!user,
-          sessionUser: session.user?.id,
-          timestamp: new Date().toISOString(),
-          host: typeof window !== "undefined" ? window.location.host : "server",
-        })
-      }
+    async session({ session, token, trigger }) {
+      // Log session callback entry (always - critical for debugging)
+      authLogger.callback("session", {
+        trigger,
+        hasToken: !!token,
+        sessionUserId: session.user?.id,
+        tokenId: token?.id,
+        tokenRole: token?.role,
+        tokenSchoolId: token?.schoolId,
+      })
 
       if (token) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("🔑 [DEBUG] Token data available:", {
-            tokenId: token.id,
-            tokenRole: token.role,
-            tokenSchoolId: token.schoolId,
-            tokenUpdatedAt: token.updatedAt,
-            tokenHash: token.hash,
-          })
-        }
-
         // Always ensure we have the latest token data
         session.user.id = token.id as string
 
@@ -379,75 +409,38 @@ export const {
           // Apply preview role if preview mode is active
           ;(session.user as any).role = previewRoleCookie.value
           ;(session.user as any).isPreviewMode = true
-          if (process.env.NODE_ENV === "development") {
-            console.log(
-              "🎭 [DEBUG] Preview role applied to session:",
-              previewRoleCookie.value
-            )
-          }
+          authLogger.debug("Session: Preview role applied", {
+            role: previewRoleCookie.value,
+          })
         } else if (token.role) {
           // Apply normal role from token
           ;(session.user as any).role = token.role
           ;(session.user as any).isPreviewMode = false
-          if (process.env.NODE_ENV === "development") {
-            console.log("🎭 [DEBUG] Role applied to session:", token.role)
-          }
         }
         if (token.schoolId) {
           ;(session.user as any).schoolId = token.schoolId
-          if (process.env.NODE_ENV === "development") {
-            console.log(
-              "🏫 [DEBUG] SchoolId applied to session:",
-              token.schoolId
-            )
-          }
         }
 
         // Force session update if token has been updated
         if (token.updatedAt) {
-          if (process.env.NODE_ENV === "development") {
-            console.log("🔄 [DEBUG] Token updated, forcing session refresh")
-          }
           ;(session as any).updatedAt = token.updatedAt
         }
 
         // Force session refresh if token hash changed
         if (token.hash) {
-          if (process.env.NODE_ENV === "development") {
-            console.log(
-              "🔄 [DEBUG] Token hash changed, forcing session refresh"
-            )
-          }
           ;(session as any).hash = token.hash
         }
-
-        if (process.env.NODE_ENV === "development") {
-          console.log("✅ [DEBUG] Token data applied to session:", {
-            id: token.id,
-            role: token.role,
-            schoolId: token.schoolId,
-          })
-        }
       } else {
-        if (process.env.NODE_ENV === "development") {
-          console.log("⚠️ [DEBUG] No token available in session callback")
-        }
+        authLogger.warn("Session: No token available in callback")
       }
 
-      // Debug session state
-      if (process.env.NODE_ENV === "development") {
-        console.log("📋 [DEBUG] SESSION CALLBACK END:", {
-          sessionId: session.user?.id,
-          hasRole: !!(session.user as any)?.role,
-          hasSchoolId: !!(session.user as any)?.schoolId,
-          tokenId: token?.id,
-          sessionToken: token?.sessionToken,
-          iat: token?.iat,
-          exp: token?.exp,
-          email: session.user?.email,
-          timestamp: new Date().toISOString(),
-        })
-      }
+      // Log session callback completion
+      authLogger.callback("session-complete", {
+        userId: session.user?.id,
+        role: (session.user as any)?.role,
+        schoolId: (session.user as any)?.schoolId,
+        isPreviewMode: (session.user as any)?.isPreviewMode,
+      })
 
       return session
     },
