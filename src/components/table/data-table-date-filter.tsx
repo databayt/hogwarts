@@ -56,7 +56,7 @@ interface DataTableDateFilterProps<TData> {
   multiple?: boolean
 }
 
-export function DataTableDateFilter<TData>({
+function DataTableDateFilterInner<TData>({
   column,
   title,
   multiple,
@@ -218,3 +218,7 @@ export function DataTableDateFilter<TData>({
     </Popover>
   )
 }
+
+export const DataTableDateFilter = React.memo(
+  DataTableDateFilterInner
+) as typeof DataTableDateFilterInner

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { db } from "@/lib/db"
+import { safeQuery } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getTenantContext } from "@/components/operator/lib/tenant"
@@ -17,18 +17,20 @@ export default async function StaffDetail({ params }: Props) {
   if (!schoolId) return notFound()
 
   // Try to find as teacher first
-  let staff = await (db as any).teacher?.findFirst({
-    where: { id, schoolId },
-    select: {
-      id: true,
-      givenName: true,
-      surname: true,
-      gender: true,
-      emailAddress: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  })
+  let staff = await safeQuery("teacher", (model) =>
+    model.findFirst({
+      where: { id, schoolId },
+      select: {
+        id: true,
+        givenName: true,
+        surname: true,
+        gender: true,
+        emailAddress: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+  )
 
   // If not found as teacher, try to find as other staff (you might need to adjust this based on your actual staff model)
   if (!staff) {

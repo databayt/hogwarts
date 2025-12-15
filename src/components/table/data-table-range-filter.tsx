@@ -17,7 +17,7 @@ interface DataTableRangeFilterProps<TData> extends React.ComponentProps<"div"> {
   ) => void
 }
 
-export function DataTableRangeFilter<TData>({
+function DataTableRangeFilterInner<TData>({
   filter,
   column,
   inputId,
@@ -120,3 +120,7 @@ export function DataTableRangeFilter<TData>({
     </div>
   )
 }
+
+export const DataTableRangeFilter = React.memo(
+  DataTableRangeFilterInner
+) as typeof DataTableRangeFilterInner

@@ -1,0 +1,12 @@
+import { Skeleton } from "@/components/ui/skeleton"
+
+export default function Loading() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-8 p-8">
+      <Skeleton className="h-10 w-48" />
+      <Skeleton className="h-6 w-80" />
+      <Skeleton className="h-48 w-full rounded-lg border-2 border-dashed" />
+      <Skeleton className="h-10 w-32 rounded-md" />
+    </div>
+  )
+}

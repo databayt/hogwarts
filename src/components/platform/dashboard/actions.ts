@@ -231,18 +231,9 @@ export async function getEnrollmentMetrics(): Promise<EnrollmentMetrics> {
 // ATTENDANCE METRICS
 // ============================================================================
 
-export async function getAttendanceMetrics(): Promise<AttendanceMetrics> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return {
-      attendanceRate: 0,
-      present: 0,
-      absent: 0,
-      late: 0,
-      total: 0,
-    }
-  }
-
+async function getAttendanceMetricsInternal(
+  schoolId: string
+): Promise<AttendanceMetrics> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -277,6 +268,27 @@ export async function getAttendanceMetrics(): Promise<AttendanceMetrics> {
     late: lateCount,
     total: totalStudents,
   }
+}
+
+const getCachedAttendanceMetrics = unstable_cache(
+  getAttendanceMetricsInternal,
+  ["attendance-metrics"],
+  { revalidate: 60, tags: ["attendance"] } // 1 min cache for attendance (more real-time)
+)
+
+export async function getAttendanceMetrics(): Promise<AttendanceMetrics> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return {
+      attendanceRate: 0,
+      present: 0,
+      absent: 0,
+      late: 0,
+      total: 0,
+    }
+  }
+
+  return getCachedAttendanceMetrics(schoolId)
 }
 
 // ============================================================================
@@ -321,6 +333,31 @@ export async function getStaffMetrics(): Promise<StaffMetrics> {
 // ACADEMIC PERFORMANCE METRICS
 // ============================================================================
 
+async function getAcademicPerformanceMetricsInternal(
+  schoolId: string
+): Promise<AcademicPerformanceMetrics> {
+  // Parallelize the two count queries
+  const [totalExams, totalAssignments] = await Promise.all([
+    db.exam.count({ where: { schoolId } }),
+    db.assignment.count({ where: { schoolId } }),
+  ])
+
+  return {
+    averageGPA: null,
+    passRate: null,
+    improvement: null,
+    topPerformers: null,
+    totalExams,
+    totalAssignments,
+  }
+}
+
+const getCachedAcademicPerformanceMetrics = unstable_cache(
+  getAcademicPerformanceMetricsInternal,
+  ["academic-performance-metrics"],
+  { revalidate: 300, tags: ["academics"] }
+)
+
 export async function getAcademicPerformanceMetrics(): Promise<AcademicPerformanceMetrics> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
@@ -334,34 +371,16 @@ export async function getAcademicPerformanceMetrics(): Promise<AcademicPerforman
     }
   }
 
-  const totalExams = await db.exam.count({ where: { schoolId } })
-  const totalAssignments = await db.assignment.count({ where: { schoolId } })
-
-  return {
-    averageGPA: null,
-    passRate: null,
-    improvement: null,
-    topPerformers: null,
-    totalExams,
-    totalAssignments,
-  }
+  return getCachedAcademicPerformanceMetrics(schoolId)
 }
 
 // ============================================================================
 // ANNOUNCEMENTS METRICS
 // ============================================================================
 
-export async function getAnnouncementsMetrics(): Promise<AnnouncementsMetrics> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) {
-    return {
-      total: 0,
-      published: 0,
-      unpublished: 0,
-      recentCount: 0,
-    }
-  }
-
+async function getAnnouncementsMetricsInternal(
+  schoolId: string
+): Promise<AnnouncementsMetrics> {
   const [total, published, unpublished, recentCount] = await Promise.all([
     db.announcement.count({ where: { schoolId } }),
     db.announcement.count({ where: { schoolId, published: true } }),
@@ -382,20 +401,33 @@ export async function getAnnouncementsMetrics(): Promise<AnnouncementsMetrics> {
   }
 }
 
-// ============================================================================
-// CLASSES METRICS
-// ============================================================================
+const getCachedAnnouncementsMetrics = unstable_cache(
+  getAnnouncementsMetricsInternal,
+  ["announcements-metrics"],
+  { revalidate: 300, tags: ["announcements"] }
+)
 
-export async function getClassesMetrics(): Promise<ClassesMetrics> {
+export async function getAnnouncementsMetrics(): Promise<AnnouncementsMetrics> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
     return {
       total: 0,
-      active: 0,
-      studentTeacherRatio: 0,
+      published: 0,
+      unpublished: 0,
+      recentCount: 0,
     }
   }
 
+  return getCachedAnnouncementsMetrics(schoolId)
+}
+
+// ============================================================================
+// CLASSES METRICS
+// ============================================================================
+
+async function getClassesMetricsInternal(
+  schoolId: string
+): Promise<ClassesMetrics> {
   const [totalClasses, students, teachers] = await Promise.all([
     db.class.count({ where: { schoolId } }),
     db.student.count({ where: { schoolId } }),
@@ -410,6 +442,25 @@ export async function getClassesMetrics(): Promise<ClassesMetrics> {
     active: totalClasses,
     studentTeacherRatio: parseFloat(studentTeacherRatio),
   }
+}
+
+const getCachedClassesMetrics = unstable_cache(
+  getClassesMetricsInternal,
+  ["classes-metrics"],
+  { revalidate: 300, tags: ["classes"] }
+)
+
+export async function getClassesMetrics(): Promise<ClassesMetrics> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) {
+    return {
+      total: 0,
+      active: 0,
+      studentTeacherRatio: 0,
+    }
+  }
+
+  return getCachedClassesMetrics(schoolId)
 }
 
 // ============================================================================

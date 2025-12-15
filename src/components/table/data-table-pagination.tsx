@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { Table } from "@tanstack/react-table"
 import {
   ChevronLeft,
@@ -21,7 +22,7 @@ interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
   pageSizeOptions?: number[]
 }
 
-export function DataTablePagination<TData>({
+function DataTablePaginationInner<TData>({
   table,
   pageSizeOptions = [10, 20, 30, 40, 50],
   className,
@@ -110,3 +111,7 @@ export function DataTablePagination<TData>({
     </div>
   )
 }
+
+export const DataTablePagination = React.memo(
+  DataTablePaginationInner
+) as typeof DataTablePaginationInner

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Mail, Users } from "lucide-react"
@@ -37,7 +38,7 @@ interface ParentsTableProps {
   perPage?: number
 }
 
-export function ParentsTable({
+function ParentsTableInner({
   initialData,
   total,
   dictionary,
@@ -347,3 +348,5 @@ export function ParentsTable({
     </>
   )
 }
+
+export const ParentsTable = React.memo(ParentsTableInner)

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, Clock, User } from "lucide-react"
@@ -37,7 +38,7 @@ interface LessonsTableProps {
   perPage?: number
 }
 
-export function LessonsTable({
+function LessonsTableInner({
   initialData,
   total,
   dictionary,
@@ -358,3 +359,5 @@ export function LessonsTable({
     </>
   )
 }
+
+export const LessonsTable = React.memo(LessonsTableInner)

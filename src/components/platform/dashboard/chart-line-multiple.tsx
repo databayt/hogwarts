@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
 
@@ -38,7 +39,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function LineChartMultiple() {
+function LineChartMultipleInner() {
   return (
     <Card className="bg-muted border-none shadow-none">
       <CardHeader>
@@ -92,3 +93,5 @@ export function LineChartMultiple() {
     </Card>
   )
 }
+
+export const LineChartMultiple = React.memo(LineChartMultipleInner)

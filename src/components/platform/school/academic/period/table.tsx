@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -28,7 +29,7 @@ interface PeriodTableProps {
   perPage?: number
 }
 
-export function PeriodTable({
+function PeriodTableInner({
   initialData,
   total,
   lang,
@@ -159,3 +160,5 @@ export function PeriodTable({
     </>
   )
 }
+
+export const PeriodTable = React.memo(PeriodTableInner)

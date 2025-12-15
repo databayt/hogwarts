@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import {
   useCallback,
   useDeferredValue,
@@ -97,7 +98,7 @@ function createGetAnnouncementsCSV(lang: Locale) {
   }
 }
 
-export function AnnouncementsTable({
+function AnnouncementsTableInner({
   initialData,
   total,
   dictionary,
@@ -431,3 +432,5 @@ export function AnnouncementsTable({
     </>
   )
 }
+
+export const AnnouncementsTable = React.memo(AnnouncementsTableInner)

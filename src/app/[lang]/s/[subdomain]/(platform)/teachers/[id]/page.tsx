@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { db } from "@/lib/db"
+import { getModel, safeQuery } from "@/lib/prisma-guards"
 import { ModalProvider } from "@/components/atom/modal/context"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
@@ -16,10 +16,11 @@ export default async function TeacherDetailPage({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
-  if (!schoolId || !(db as any).teacher) return notFound()
+  const teacherModel = getModel("teacher")
+  if (!schoolId || !teacherModel) return notFound()
 
   // Fetch teacher with all related data
-  const teacher = await (db as any).teacher.findFirst({
+  const teacher = await teacherModel.findFirst({
     where: { id, schoolId },
     include: {
       phoneNumbers: {
@@ -101,7 +102,7 @@ export default async function TeacherDetailPage({ params }: Props) {
 
   if (!teacher) return notFound()
 
-  // Get workload data
+  // Get workload data using type-safe queries
   let workload:
     | {
         totalPeriods: number
@@ -112,13 +113,13 @@ export default async function TeacherDetailPage({ params }: Props) {
     | undefined = undefined
   try {
     const timetableSlots =
-      (await (db as any).timetableSlot?.findMany?.({
-        where: { schoolId, teacherId: id },
-      })) || []
+      (await safeQuery("timetableSlot", (model) =>
+        model.findMany({ where: { schoolId, teacherId: id } })
+      )) ?? []
 
-    const workloadConfig = (await (db as any).workloadConfig?.findUnique?.({
-      where: { schoolId },
-    })) || {
+    const workloadConfig = (await safeQuery("workloadConfig", (model) =>
+      model.findUnique({ where: { schoolId } })
+    )) ?? {
       minPeriodsPerWeek: 15,
       maxPeriodsPerWeek: 25,
       overloadThreshold: 25,

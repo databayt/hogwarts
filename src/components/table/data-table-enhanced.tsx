@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useEffect, useState } from "react"
 import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
 
@@ -67,7 +68,7 @@ export interface DataTableEnhancedProps<TData> {
   emptyMessage?: string
 }
 
-export function DataTableEnhanced<TData>({
+function DataTableEnhancedInner<TData>({
   table,
   toolbar,
   exportConfig,
@@ -262,3 +263,7 @@ export function DataTableEnhanced<TData>({
     </div>
   )
 }
+
+export const DataTableEnhanced = React.memo(
+  DataTableEnhancedInner
+) as typeof DataTableEnhancedInner

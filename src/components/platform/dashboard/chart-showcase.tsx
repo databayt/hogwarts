@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import { type Locale } from "@/components/internationalization/config"
 import { type getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -17,10 +19,7 @@ interface ChartsContentProps {
   lang: Locale
 }
 
-export default function ChartsContent({
-  dictionary,
-  lang,
-}: ChartsContentProps) {
+function ChartsContentInner({ dictionary, lang }: ChartsContentProps) {
   return (
     <>
       <DashboardHeader heading="Charts" text="List of charts by shadcn-ui." />
@@ -44,3 +43,6 @@ export default function ChartsContent({
     </>
   )
 }
+
+const ChartsContent = React.memo(ChartsContentInner)
+export default ChartsContent

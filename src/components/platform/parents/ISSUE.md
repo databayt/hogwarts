@@ -1,7 +1,7 @@
 # Parents — Production Readiness Tracker
 
 **Status:** ✅ Production-Ready MVP
-**Last Updated:** 2025-10-10
+**Last Updated:** 2025-12-15
 
 ---
 
@@ -9,10 +9,17 @@
 
 **Production-Ready MVP Features ✅**
 
-- [x] CRUD operations
-- [x] Student relationships
-- [x] Contact information
-- [x] Multi-tenant isolation
+- [x] CRUD operations (create, read, update, delete guardians)
+- [x] Contact information storage
+- [x] Multi-tenant isolation (schoolId scoping)
+- [x] Student-Guardian linking (`linkGuardian` action)
+- [x] Unlink functionality (`unlinkGuardian` action)
+- [x] Tests written (250 lines)
+
+**Known Issues:**
+
+- [ ] Test infrastructure: Vitest import alias `@/lib/db` resolution fails
+- [ ] `db as any` type bypasses in actions (part of 181 codebase-wide bypasses)
 
 ---
 
@@ -20,6 +27,7 @@
 
 ### Critical Issues (Priority 1) 🔴
 
+- [ ] Fix Vitest import resolution for test execution
 - [ ] Communication logs
 - [ ] Access analytics
 - [ ] Permission management

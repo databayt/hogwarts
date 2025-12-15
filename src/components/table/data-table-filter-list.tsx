@@ -87,7 +87,7 @@ interface DataTableFilterListProps<TData> extends React.ComponentProps<
   shallow?: boolean
 }
 
-export function DataTableFilterList<TData>({
+function DataTableFilterListInner<TData>({
   table,
   debounceMs = DEBOUNCE_MS,
   throttleMs = THROTTLE_MS,
@@ -828,3 +828,9 @@ function onFilterInputRender<TData>({
       return null
   }
 }
+
+export const DataTableFilterList = React.memo(DataTableFilterListInner) as <
+  TData,
+>(
+  props: DataTableFilterListProps<TData>
+) => React.ReactElement

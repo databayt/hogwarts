@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import {
   Label,
@@ -33,7 +34,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function RadialShapeChart() {
+function RadialShapeChartInner() {
   return (
     <Card className="bg-muted flex flex-col border-none shadow-none">
       {/* <CardHeader className="items-center pb-0">
@@ -104,3 +105,5 @@ export function RadialShapeChart() {
     </Card>
   )
 }
+
+export const RadialShapeChart = React.memo(RadialShapeChartInner)

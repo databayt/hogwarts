@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 
@@ -52,7 +53,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function BarChartMixed() {
+function BarChartMixedInner() {
   return (
     <Card className="bg-muted flex flex-col border-none shadow-none">
       <CardHeader>
@@ -99,3 +100,5 @@ export function BarChartMixed() {
     </Card>
   )
 }
+
+export const BarChartMixed = React.memo(BarChartMixedInner)

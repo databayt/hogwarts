@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState } from "react"
 import {
   ArrowUpDown,
@@ -84,7 +85,7 @@ interface SortState {
   direction: "asc" | "desc"
 }
 
-export function TransactionsTableImproved({
+function TransactionsTableImprovedInner({
   transactions,
   accounts,
   currentPage = 1,
@@ -650,3 +651,7 @@ export function TransactionsTableImproved({
     </Card>
   )
 }
+
+export const TransactionsTableImproved = React.memo(
+  TransactionsTableImprovedInner
+)

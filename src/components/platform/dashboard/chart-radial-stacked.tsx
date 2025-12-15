@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
 
@@ -31,7 +32,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function RadialStackedChart() {
+function RadialStackedChartInner() {
   const totalVisitors = chartData[0].desktop + chartData[0].mobile
 
   return (
@@ -109,3 +110,5 @@ export function RadialStackedChart() {
     </Card>
   )
 }
+
+export const RadialStackedChart = React.memo(RadialStackedChartInner)

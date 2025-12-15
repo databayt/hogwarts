@@ -34,7 +34,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
 
-export function DataTable<TData, TValue>({
+function DataTableInner<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -145,3 +145,5 @@ export function DataTable<TData, TValue>({
     </div>
   )
 }
+
+export const DataTable = React.memo(DataTableInner) as typeof DataTableInner

@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import {
   Card,
@@ -11,7 +13,7 @@ import {
 
 import type { ChartCardProps } from "./types"
 
-export function ChartCard({
+function ChartCardInner({
   title,
   description,
   children,
@@ -33,3 +35,5 @@ export function ChartCard({
     </Card>
   )
 }
+
+export const ChartCard = React.memo(ChartCardInner)

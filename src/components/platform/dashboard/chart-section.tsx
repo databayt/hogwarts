@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+
 import {
   AreaChartStacked,
   type AreaChartStackedData,
@@ -364,7 +366,7 @@ const defaultDataByRole: Record<DashboardRole, RoleChartData> = {
  * Uses finance page layout: InteractiveBarChart (full width) +
  * RadialTextChart & AreaChartStacked (2-column grid).
  */
-export function ChartSection({ role, className }: ChartSectionProps) {
+function ChartSectionInner({ role, className }: ChartSectionProps) {
   // Use default data based on role (API data is in legacy format)
   const data = defaultDataByRole[role] || defaultDataByRole.ADMIN
   const sectionTitle = getChartSectionTitle(role)
@@ -404,6 +406,8 @@ export function ChartSection({ role, className }: ChartSectionProps) {
   )
 }
 
+export const ChartSection = React.memo(ChartSectionInner)
+
 // ============================================================================
 // STATIC CHART SECTION (For server components)
 // ============================================================================
@@ -417,7 +421,7 @@ export interface StaticChartSectionProps {
 /**
  * Static version of ChartSection for server-side rendering.
  */
-export function StaticChartSection({
+function StaticChartSectionInner({
   role,
   data,
   className,
@@ -459,3 +463,5 @@ export function StaticChartSection({
     </section>
   )
 }
+
+export const StaticChartSection = React.memo(StaticChartSectionInner)

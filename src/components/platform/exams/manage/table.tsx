@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
@@ -27,7 +28,7 @@ interface ExamsTableProps {
   perPage?: number
 }
 
-export function ExamsTable({
+function ExamsTableInner({
   initialData,
   total,
   perPage = 20,
@@ -146,3 +147,5 @@ export function ExamsTable({
     </DataTable>
   )
 }
+
+export const ExamsTable = React.memo(ExamsTableInner)

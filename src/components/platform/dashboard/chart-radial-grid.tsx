@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { PolarGrid, RadialBar, RadialBarChart } from "recharts"
 
@@ -52,7 +53,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function RadialChartGrid() {
+function RadialChartGridInner() {
   return (
     <Card className="bg-muted flex flex-col border-none shadow-none">
       {/* <CardHeader className="items-center pb-0">
@@ -85,3 +86,5 @@ export function RadialChartGrid() {
     </Card>
   )
 }
+
+export const RadialChartGrid = React.memo(RadialChartGridInner)

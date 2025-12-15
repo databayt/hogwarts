@@ -1,6 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
-import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -29,7 +29,8 @@ export default async function StudentsContent({
 
   let data: StudentRow[] = []
   let total = 0
-  if (effectiveSchoolId && (db as any).student) {
+  const studentModel = getModel("student")
+  if (effectiveSchoolId && studentModel) {
     const where: any = {
       schoolId: effectiveSchoolId,
       ...(sp.name
@@ -55,7 +56,7 @@ export default async function StudentsContent({
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
-      (db as any).student.findMany({
+      studentModel.findMany({
         where,
         orderBy,
         skip,
@@ -77,7 +78,7 @@ export default async function StudentsContent({
           },
         },
       }),
-      (db as any).student.count({ where }),
+      studentModel.count({ where }),
     ])
     data = rows.map((s: any) => ({
       id: s.id,

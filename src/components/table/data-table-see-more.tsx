@@ -47,7 +47,7 @@ interface DataTableSeeMoreProps extends React.ComponentProps<"div"> {
   selectedCount?: number
 }
 
-export function DataTableSeeMore({
+function DataTableSeeMoreInner({
   seeMoreState,
   onSeeMore,
   isLoading = false,
@@ -141,10 +141,12 @@ export function DataTableSeeMore({
   )
 }
 
+export const DataTableSeeMore = React.memo(DataTableSeeMoreInner)
+
 /**
  * Simpler version without batch size selector
  */
-export function DataTableSeeMoreSimple({
+function DataTableSeeMoreSimpleInner({
   seeMoreState,
   onSeeMore,
   isLoading = false,
@@ -194,3 +196,5 @@ export function DataTableSeeMoreSimple({
     </div>
   )
 }
+
+export const DataTableSeeMoreSimple = React.memo(DataTableSeeMoreSimpleInner)

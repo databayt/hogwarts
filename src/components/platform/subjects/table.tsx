@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, Building2 } from "lucide-react"
@@ -72,7 +73,7 @@ async function getSubjectsCSV(
   return [headers.join(","), ...csvRows].join("\n")
 }
 
-export function SubjectsTable({
+function SubjectsTableInner({
   initialData,
   total,
   dictionary,
@@ -336,3 +337,5 @@ export function SubjectsTable({
     </>
   )
 }
+
+export const SubjectsTable = React.memo(SubjectsTableInner)

@@ -1,6 +1,6 @@
 "use client"
 
-import type * as React from "react"
+import * as React from "react"
 import type { Table } from "@tanstack/react-table"
 
 import { cn } from "@/lib/utils"
@@ -12,7 +12,7 @@ interface DataTableAdvancedToolbarProps<
   table: Table<TData>
 }
 
-export function DataTableAdvancedToolbar<TData>({
+function DataTableAdvancedToolbarInner<TData>({
   table,
   children,
   className,
@@ -35,3 +35,7 @@ export function DataTableAdvancedToolbar<TData>({
     </div>
   )
 }
+
+export const DataTableAdvancedToolbar = React.memo(
+  DataTableAdvancedToolbarInner
+) as typeof DataTableAdvancedToolbarInner

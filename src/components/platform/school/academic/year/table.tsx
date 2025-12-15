@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -28,7 +29,7 @@ interface SchoolYearTableProps {
   perPage?: number
 }
 
-export function SchoolYearTable({
+function SchoolYearTableInner({
   initialData,
   total,
   lang,
@@ -168,3 +169,5 @@ export function SchoolYearTable({
     </>
   )
 }
+
+export const SchoolYearTable = React.memo(SchoolYearTableInner)

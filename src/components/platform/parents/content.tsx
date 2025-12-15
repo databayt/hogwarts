@@ -1,6 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
-import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -23,7 +23,8 @@ export default async function ParentsContent({
   const { schoolId } = await getTenantContext()
   let data: ParentRow[] = []
   let total = 0
-  if (schoolId && (db as any).guardian) {
+  const guardianModel = getModel("guardian")
+  if (schoolId && guardianModel) {
     const where: any = {
       schoolId,
       ...(sp.name
@@ -52,11 +53,12 @@ export default async function ParentsContent({
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
-      (db as any).guardian.findMany({ where, orderBy, skip, take }),
-      (db as any).guardian.count({ where }),
+      guardianModel.findMany({ where, orderBy, skip, take }),
+      guardianModel.count({ where }),
     ])
     data = rows.map((p: any) => ({
       id: p.id,
+      userId: p.userId || null,
       name: [p.givenName, p.surname].filter(Boolean).join(" "),
       emailAddress: p.emailAddress || "-",
       status: p.userId ? "active" : "inactive",

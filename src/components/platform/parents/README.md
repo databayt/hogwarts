@@ -20,10 +20,17 @@ The Parents feature manages guardian accounts, links them to students, handles c
 
 **Completed:**
 
-- ✅ CRUD operations
-- ✅ Student relationships (StudentGuardian)
+- ✅ Guardian CRUD operations (create, read, update, delete)
 - ✅ Contact information management
-- ✅ Multi-tenant isolation
+- ✅ Multi-tenant isolation (schoolId scoping)
+- ✅ `linkGuardian` action (links parents to students)
+- ✅ `unlinkGuardian` action (removes links)
+- ✅ Tests written (but failing due to Vitest import resolution bug)
+
+**Known Issues:**
+
+- ⚠️ Test infrastructure: Import alias `@/lib/db` not resolving in Vitest
+- ⚠️ 181 `db as any` casts for optional model checking
 
 **Planned:**
 

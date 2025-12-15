@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getTenantContext } from "@/components/operator/lib/tenant"
@@ -14,13 +14,14 @@ export default async function StudentDetail({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
-  if (!schoolId || !(db as any).student) return notFound()
+  const studentModel = getModel("student")
+  if (!schoolId || !studentModel) return notFound()
 
   // Calculate date range for attendance (last 60 days)
   const sixtyDaysAgo = new Date()
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
-  const student = await (db as any).student.findFirst({
+  const student = await studentModel.findFirst({
     where: { id, schoolId },
     include: {
       // Classes & Academic enrollment

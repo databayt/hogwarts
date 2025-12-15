@@ -1,6 +1,6 @@
 import { SearchParams } from "nuqs/server"
 
-import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
@@ -23,7 +23,8 @@ export default async function SubjectsContent({
   const { schoolId } = await getTenantContext()
   let data: SubjectRow[] = []
   let total = 0
-  if (schoolId && (db as any).subject) {
+  const subjectModel = getModel("subject")
+  if (schoolId && subjectModel) {
     const where: any = {
       schoolId,
       ...(sp.subjectName
@@ -38,7 +39,7 @@ export default async function SubjectsContent({
         ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
         : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
-      (db as any).subject.findMany({
+      subjectModel.findMany({
         where,
         orderBy,
         skip,
@@ -52,7 +53,7 @@ export default async function SubjectsContent({
           },
         },
       }),
-      (db as any).subject.count({ where }),
+      subjectModel.count({ where }),
     ])
     data = rows.map((s: any) => ({
       id: s.id,

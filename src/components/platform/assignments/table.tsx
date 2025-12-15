@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo } from "react"
 import { Plus } from "lucide-react"
 
@@ -31,7 +32,7 @@ interface AssignmentsTableProps {
   perPage?: number
 }
 
-export function AssignmentsTable({
+function AssignmentsTableInner({
   initialData,
   total,
   dictionary,
@@ -165,3 +166,5 @@ export function AssignmentsTable({
     </DataTable>
   )
 }
+
+export const AssignmentsTable = React.memo(AssignmentsTableInner)

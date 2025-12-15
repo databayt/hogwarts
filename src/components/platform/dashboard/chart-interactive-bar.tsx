@@ -139,7 +139,7 @@ const defaultChartConfig = {
   },
 } satisfies ChartConfig
 
-export function InteractiveBarChart({
+function InteractiveBarChartInner({
   data,
   title = "Bar Chart - Interactive",
   description = "Showing total visitors for the last 3 months",
@@ -269,3 +269,5 @@ export function InteractiveBarChart({
     </Card>
   )
 }
+
+export const InteractiveBarChart = React.memo(InteractiveBarChartInner)

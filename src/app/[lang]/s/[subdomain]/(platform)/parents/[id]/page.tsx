@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getTenantContext } from "@/components/operator/lib/tenant"
@@ -14,9 +14,11 @@ export default async function ParentDetail({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
-  if (!schoolId || !(db as any).guardian) return notFound()
 
-  const parent = await (db as any).guardian.findFirst({
+  const guardianModel = getModel("guardian")
+  if (!schoolId || !guardianModel) return notFound()
+
+  const parent = await guardianModel.findFirst({
     where: { id, schoolId },
     select: {
       id: true,

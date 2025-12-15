@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { Table } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react"
 
@@ -10,7 +11,7 @@ interface DataTableLoadMoreProps<TData> extends React.ComponentProps<"div"> {
   onLoadMore?: () => void
 }
 
-export function DataTableLoadMore<TData>({
+function DataTableLoadMoreInner<TData>({
   table,
   hasMore = false,
   isLoading = false,
@@ -55,3 +56,7 @@ export function DataTableLoadMore<TData>({
     </div>
   )
 }
+
+export const DataTableLoadMore = React.memo(
+  DataTableLoadMoreInner
+) as typeof DataTableLoadMoreInner

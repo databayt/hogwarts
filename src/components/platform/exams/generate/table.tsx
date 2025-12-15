@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
@@ -21,7 +22,7 @@ interface TemplatesTableProps {
   dictionary?: Dictionary
 }
 
-export function TemplatesTable({
+function TemplatesTableInner({
   initialData,
   total,
   dictionary,
@@ -78,3 +79,5 @@ export function TemplatesTable({
     </DataTable>
   )
 }
+
+export const TemplatesTable = React.memo(TemplatesTableInner)

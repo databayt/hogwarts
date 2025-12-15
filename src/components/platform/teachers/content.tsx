@@ -1,6 +1,7 @@
 import { SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
+import { getModel } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -24,7 +25,8 @@ export default async function TeachersContent({
   let data: TeacherRow[] = []
   let total = 0
 
-  if (schoolId && (db as any).teacher) {
+  const teacherModel = getModel("teacher")
+  if (schoolId && teacherModel) {
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -58,7 +60,7 @@ export default async function TeachersContent({
 
     // Fetch teachers with related data for practical display
     const [rows, count] = await Promise.all([
-      (db as any).teacher.findMany({
+      teacherModel.findMany({
         where,
         orderBy,
         skip,
@@ -98,7 +100,7 @@ export default async function TeachersContent({
           },
         },
       }),
-      (db as any).teacher.count({ where }),
+      teacherModel.count({ where }),
     ])
 
     // Transform to enhanced row format

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { GraduationCap, User } from "lucide-react"
@@ -44,7 +45,7 @@ interface StudentsTableProps {
   perPage?: number
 }
 
-export function StudentsTable({
+function StudentsTableInner({
   initialData,
   total,
   dictionary,
@@ -445,3 +446,5 @@ export function StudentsTable({
     </>
   )
 }
+
+export const StudentsTable = React.memo(StudentsTableInner)

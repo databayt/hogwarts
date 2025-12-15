@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -28,7 +29,7 @@ interface ScoreRangeTableProps {
   perPage?: number
 }
 
-export function ScoreRangeTable({
+function ScoreRangeTableInner({
   initialData,
   total,
   lang,
@@ -160,3 +161,5 @@ export function ScoreRangeTable({
     </>
   )
 }
+
+export const ScoreRangeTable = React.memo(ScoreRangeTableInner)

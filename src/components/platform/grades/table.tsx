@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck, TrendingUp } from "lucide-react"
@@ -36,7 +37,7 @@ interface ResultsTableProps {
   perPage?: number
 }
 
-export function ResultsTable({
+function ResultsTableInner({
   initialData,
   total,
   dictionary,
@@ -316,3 +317,5 @@ export function ResultsTable({
     </>
   )
 }
+
+export const ResultsTable = React.memo(ResultsTableInner)

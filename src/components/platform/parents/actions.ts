@@ -75,6 +75,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   createGuardianAndLinkSchema,
@@ -144,7 +145,8 @@ export async function createParent(
     const parsed = parentCreateSchema.parse(input)
 
     // Create parent
-    const row = await (db as any).guardian.create({
+    const guardianModel = getModelOrThrow("guardian")
+    const row = await guardianModel.create({
       data: {
         schoolId,
         givenName: parsed.givenName,
@@ -206,7 +208,8 @@ export async function updateParent(
     if (typeof rest.userId !== "undefined") data.userId = rest.userId || null
 
     // Update parent (using updateMany for tenant safety)
-    await (db as any).guardian.updateMany({
+    const guardianModel = getModelOrThrow("guardian")
+    await guardianModel.updateMany({
       where: { id, schoolId },
       data,
     })
@@ -254,7 +257,8 @@ export async function deleteParent(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete parent (using deleteMany for tenant safety)
-    await (db as any).guardian.deleteMany({
+    const guardianModel = getModelOrThrow("guardian")
+    await guardianModel.deleteMany({
       where: { id, schoolId },
     })
 
@@ -304,13 +308,9 @@ export async function getParent(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Check if guardian model exists
-    if (!(db as any).guardian) {
-      return { success: true, data: null }
-    }
-
     // Fetch parent
-    const parent = await (db as any).guardian.findFirst({
+    const guardianModel = getModelOrThrow("guardian")
+    const parent = await guardianModel.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
@@ -364,12 +364,8 @@ export async function getParents(
     // Parse and validate input
     const sp = getParentsSchema.parse(input ?? {})
 
-    // Check if guardian model exists
-    if (!(db as any).guardian) {
-      return { success: true, data: { rows: [], total: 0 } }
-    }
-
     // Build where clause
+    const guardianModel = getModelOrThrow("guardian")
     const where: any = {
       schoolId,
       ...(sp.name
@@ -404,8 +400,8 @@ export async function getParents(
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
-      (db as any).guardian.findMany({ where, orderBy, skip, take }),
-      (db as any).guardian.count({ where }),
+      guardianModel.findMany({ where, orderBy, skip, take }),
+      guardianModel.count({ where }),
     ])
 
     // Map results
@@ -457,12 +453,8 @@ export async function getParentsCSV(
     // Parse and validate input
     const sp = getParentsSchema.parse(input ?? {})
 
-    // Check if guardian model exists
-    if (!(db as any).guardian) {
-      return { success: true, data: "" }
-    }
-
     // Build where clause
+    const guardianModel = getModelOrThrow("guardian")
     const where: any = {
       schoolId,
       ...(sp.name
@@ -483,7 +475,7 @@ export async function getParentsCSV(
     }
 
     // Fetch all parents matching criteria
-    const parents = await (db as any).guardian.findMany({
+    const parents = await guardianModel.findMany({
       where,
       orderBy: [{ createdAt: "desc" }],
     })
@@ -539,12 +531,13 @@ export async function getParentsCSV(
  * Helper to get or create guardian type
  */
 async function getOrCreateGuardianType(schoolId: string, typeName: string) {
-  let guardianType = await (db as any).guardianType.findFirst({
+  const guardianTypeModel = getModelOrThrow("guardianType")
+  let guardianType = await guardianTypeModel.findFirst({
     where: { schoolId, name: typeName },
   })
 
   if (!guardianType) {
-    guardianType = await (db as any).guardianType.create({
+    guardianType = await guardianTypeModel.create({
       data: { schoolId, name: typeName },
     })
   }
@@ -567,7 +560,8 @@ export async function linkGuardian(
     const parsed = linkGuardianSchema.parse(input)
 
     // Verify guardian exists in this school
-    const guardian = await (db as any).guardian.findFirst({
+    const guardianModel = getModelOrThrow("guardian")
+    const guardian = await guardianModel.findFirst({
       where: { id: parsed.guardianId, schoolId },
     })
 
@@ -576,7 +570,8 @@ export async function linkGuardian(
     }
 
     // Verify student exists in this school
-    const student = await (db as any).student.findFirst({
+    const studentModel = getModelOrThrow("student")
+    const student = await studentModel.findFirst({
       where: { id: parsed.studentId, schoolId },
     })
 
@@ -585,7 +580,8 @@ export async function linkGuardian(
     }
 
     // Check if relationship already exists
-    const existing = await (db as any).studentGuardian.findFirst({
+    const studentGuardianModel = getModelOrThrow("studentGuardian")
+    const existing = await studentGuardianModel.findFirst({
       where: {
         schoolId,
         studentId: parsed.studentId,
@@ -657,7 +653,8 @@ export async function createGuardianAndLink(
     const parsed = createGuardianAndLinkSchema.parse(input)
 
     // Verify student exists
-    const student = await (db as any).student.findFirst({
+    const studentModel = getModelOrThrow("student")
+    const student = await studentModel.findFirst({
       where: { id: parsed.studentId, schoolId },
     })
 
@@ -672,16 +669,17 @@ export async function createGuardianAndLink(
     )
 
     // Check if guardian already exists by email (if provided)
+    const guardianModel = getModelOrThrow("guardian")
     let guardian = null
     if (parsed.emailAddress) {
-      guardian = await (db as any).guardian.findFirst({
+      guardian = await guardianModel.findFirst({
         where: { schoolId, emailAddress: parsed.emailAddress },
       })
     }
 
     // Create guardian if not found
     if (!guardian) {
-      guardian = await (db as any).guardian.create({
+      guardian = await guardianModel.create({
         data: {
           schoolId,
           givenName: parsed.givenName,
@@ -692,7 +690,8 @@ export async function createGuardianAndLink(
 
       // Add phone number if provided
       if (parsed.phoneNumber) {
-        await (db as any).guardianPhoneNumber.create({
+        const guardianPhoneNumberModel = getModelOrThrow("guardianPhoneNumber")
+        await guardianPhoneNumberModel.create({
           data: {
             schoolId,
             guardianId: guardian.id,
@@ -705,7 +704,8 @@ export async function createGuardianAndLink(
     }
 
     // Check if relationship already exists
-    const existingLink = await (db as any).studentGuardian.findFirst({
+    const studentGuardianModel = getModelOrThrow("studentGuardian")
+    const existingLink = await studentGuardianModel.findFirst({
       where: {
         schoolId,
         studentId: parsed.studentId,
@@ -722,14 +722,14 @@ export async function createGuardianAndLink(
 
     // If setting as primary, unset other primaries
     if (parsed.isPrimary) {
-      await (db as any).studentGuardian.updateMany({
+      await studentGuardianModel.updateMany({
         where: { schoolId, studentId: parsed.studentId, isPrimary: true },
         data: { isPrimary: false },
       })
     }
 
     // Create the relationship
-    const studentGuardian = await (db as any).studentGuardian.create({
+    const studentGuardian = await studentGuardianModel.create({
       data: {
         schoolId,
         studentId: parsed.studentId,

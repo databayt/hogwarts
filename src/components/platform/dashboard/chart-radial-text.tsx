@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingDown, TrendingUp } from "lucide-react"
 import {
   Label,
@@ -27,7 +28,7 @@ export interface RadialTextChartProps {
   maxValue?: number
 }
 
-export function RadialTextChart({
+function RadialTextChartInner({
   value = 200,
   label = "Visitors",
   trend = 5.2,
@@ -123,3 +124,5 @@ export function RadialTextChart({
     </Card>
   )
 }
+
+export const RadialTextChart = React.memo(RadialTextChartInner)

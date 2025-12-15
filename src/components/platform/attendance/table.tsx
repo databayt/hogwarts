@@ -13,7 +13,7 @@ export type AttendanceRow = {
   status: "present" | "absent" | "late"
 }
 
-export function AttendanceTable({
+function AttendanceTableInner({
   data,
   columns,
   onChangeStatus,
@@ -35,3 +35,5 @@ export function AttendanceTable({
     </DataTable>
   )
 }
+
+export const AttendanceTable = React.memo(AttendanceTableInner)

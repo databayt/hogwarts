@@ -1412,17 +1412,20 @@ const MemoizedComponent = memo(Component)
 
 - **Platform**: Hogwarts - School automation platform
 - **License**: MIT
-- **Test Coverage**: ~15 test files (target: 50+)
-- **MVP Status**: ~75% functional (4 critical blockers remaining)
+- **Test Coverage**: 51 test files, **514 tests passing** (26 suites pass, 25 need mock fixes)
+- **Type Safety**: 181 `db as any` casts bypass multi-tenant verification (target: 0)
+- **MVP Status**: ~70% functional (Guardian Linking works, test infra fixed)
 - **AI Automation**: 34 agents, 22 commands, 7 skills
 
 ### Critical Blockers (MVP)
 
-| Blocker                    | Status         | Impact                                       |
-| -------------------------- | -------------- | -------------------------------------------- |
-| Password Reset             | BUG            | Cannot reset passwords                       |
-| Guardian Linking           | NOT FUNCTIONAL | Cannot link parents to students              |
-| Academic Year Setup        | 15% complete   | Cannot configure school calendar             |
-| Subject Teacher Assignment | INCOMPLETE     | Only homeroom teachers, not subject teachers |
+| Blocker                    | Status           | Impact                                       | Notes                                        |
+| -------------------------- | ---------------- | -------------------------------------------- | -------------------------------------------- |
+| Password Reset             | UNTESTED         | Works but no test coverage                   | Implemented but zero tests, RTL bug in email |
+| Guardian Linking           | ✅ IMPLEMENTED   | Server actions work                          | `linkGuardian` exists, tests fail on import  |
+| Academic Year Setup        | 15% complete     | Cannot configure school calendar             | Actions exist, no UI or workflow             |
+| Subject Teacher Assignment | INCOMPLETE       | Only homeroom teachers, not subject teachers |                                              |
+| Type Safety Erosion        | **181 bypasses** | Multi-tenant isolation not compiler-verified | `db as any` pattern throughout codebase      |
+| Test Infrastructure        | ✅ FIXED         | 514 tests passing (was 383)                  | Vitest alias resolution fixed                |
 
 See [roadmap.mdx](</content/docs/(root)/roadmap.mdx>) for detailed URL-by-URL readiness assessment.

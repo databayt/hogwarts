@@ -1,4 +1,4 @@
-import { db } from "@/lib/db"
+import { safeQuery } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { getTenantContext } from "@/components/operator/lib/tenant"
@@ -27,41 +27,45 @@ export default async function Page({ params }: Props) {
 
   // Fetch all teachers with their related data
   const teachers =
-    (await (db as any).teacher?.findMany?.({
-      where: { schoolId },
-      include: {
-        subjectExpertise: {
-          include: {
-            subject: {
-              select: { id: true, subjectName: true, subjectNameAr: true },
-            },
-          },
-        },
-        teacherDepartments: {
-          include: {
-            department: {
-              select: {
-                id: true,
-                departmentName: true,
-                departmentNameAr: true,
+    (await safeQuery("teacher", (model) =>
+      model.findMany({
+        where: { schoolId },
+        include: {
+          subjectExpertise: {
+            include: {
+              subject: {
+                select: { id: true, subjectName: true, subjectNameAr: true },
               },
             },
           },
+          teacherDepartments: {
+            include: {
+              department: {
+                select: {
+                  id: true,
+                  departmentName: true,
+                  departmentNameAr: true,
+                },
+              },
+            },
+          },
+          classes: {
+            select: { id: true, className: true, classNameAr: true },
+          },
+          user: {
+            select: { id: true, email: true, image: true },
+          },
         },
-        classes: {
-          select: { id: true, className: true, classNameAr: true },
-        },
-        user: {
-          select: { id: true, email: true, image: true },
-        },
-      },
-      orderBy: { surname: "asc" },
-    })) || []
+        orderBy: { surname: "asc" },
+      })
+    )) ?? []
 
   // Fetch workload config
-  const workloadConfig = (await (db as any).workloadConfig?.findUnique?.({
-    where: { schoolId },
-  })) || {
+  const workloadConfig = (await safeQuery("workloadConfig", (model) =>
+    model.findUnique({
+      where: { schoolId },
+    })
+  )) ?? {
     minPeriodsPerWeek: 15,
     maxPeriodsPerWeek: 25,
     overloadThreshold: 25,
@@ -71,20 +75,30 @@ export default async function Page({ params }: Props) {
   const teachersWithPerformance = await Promise.all(
     teachers.map(async (teacher: any) => {
       // Get timetable slots (teaching periods)
-      const timetableSlots =
-        (await (db as any).timetableSlot?.findMany?.({
-          where: { schoolId, teacherId: teacher.id },
-        })) ||
-        (await (db as any).timetable?.findMany?.({
-          where: { schoolId, teacherId: teacher.id },
-        })) ||
-        []
+      let timetableSlots =
+        (await safeQuery("timetableSlot", (model) =>
+          model.findMany({
+            where: { schoolId, teacherId: teacher.id },
+          })
+        )) ?? []
+
+      // Fallback to timetableSlot if no data
+      if (timetableSlots.length === 0) {
+        timetableSlots =
+          (await safeQuery("timetableSlot", (model) =>
+            model.findMany({
+              where: { schoolId, teacherId: teacher.id },
+            })
+          )) ?? []
+      }
 
       // Get attendance records marked by this teacher
       const attendanceMarked =
-        (await (db as any).attendance?.count?.({
-          where: { schoolId, markedBy: teacher.id },
-        })) || 0
+        (await safeQuery("attendance", (model) =>
+          model.count({
+            where: { schoolId, markedBy: teacher.id },
+          })
+        )) ?? 0
 
       // Calculate workload metrics
       const totalPeriods = timetableSlots.length

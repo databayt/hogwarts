@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
@@ -26,7 +27,7 @@ interface InvoiceTableProps {
   perPage?: number
 }
 
-export function InvoiceTable({
+function InvoiceTableInner({
   initialData,
   total,
   perPage = 20,
@@ -144,3 +145,5 @@ export function InvoiceTable({
     </DataTable>
   )
 }
+
+export const InvoiceTable = React.memo(InvoiceTableInner)

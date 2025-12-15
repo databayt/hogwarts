@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
@@ -29,7 +30,7 @@ interface TermTableProps {
   perPage?: number
 }
 
-export function TermTable({
+function TermTableInner({
   initialData,
   total,
   lang,
@@ -183,3 +184,5 @@ export function TermTable({
     </>
   )
 }
+
+export const TermTable = React.memo(TermTableInner)

@@ -97,14 +97,38 @@ export const {
   debug: true, // TEMPORARILY enable debug for all environments to see Facebook OAuth errors
   trustHost: true, // Required for OAuth in production (Vercel proxies)
   logger: {
-    error(code, ...message) {
-      console.error("[AUTH ERROR]", code, JSON.stringify(message, null, 2))
+    error(code, ...message: unknown[]) {
+      console.error("[AUTH ERROR]", code, message)
+      // Deep log the error cause for CallbackRouteError debugging
+      if (message && message.length > 0) {
+        const err = message[0] as Record<string, unknown> | undefined
+        if (err && typeof err === "object") {
+          if ("cause" in err && err.cause) {
+            console.error(
+              "[AUTH ERROR CAUSE]",
+              JSON.stringify(err.cause, null, 2)
+            )
+            // If cause is an Error object, log its details
+            const cause = err.cause as Error | Record<string, unknown>
+            if (cause instanceof Error) {
+              console.error("[AUTH ERROR CAUSE DETAILS]", {
+                name: cause.name,
+                message: cause.message,
+                stack: cause.stack,
+              })
+            }
+          }
+          if ("type" in err) {
+            console.error("[AUTH ERROR TYPE]", err.type)
+          }
+        }
+      }
     },
-    warn(code, ...message) {
-      console.warn("[AUTH WARN]", code, JSON.stringify(message, null, 2))
+    warn(code, ...message: unknown[]) {
+      console.warn("[AUTH WARN]", code, message)
     },
-    debug(code, ...message) {
-      console.log("[AUTH DEBUG]", code, JSON.stringify(message, null, 2))
+    debug(code, ...message: unknown[]) {
+      console.log("[AUTH DEBUG]", code, message)
     },
   },
   events: {

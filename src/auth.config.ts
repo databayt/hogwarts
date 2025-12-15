@@ -70,47 +70,13 @@ export default {
         }
       },
     }),
-    // Facebook provider - With profile callback for logging
-    // IMPORTANT: In Live mode, Facebook requires exact redirect_uri match
-    // IMPORTANT: Email permission must be approved in Facebook App Review
+    // Facebook provider - Minimal configuration for AuthJS v5
+    // NOTE: AuthJS v5 has stricter OAuth/OIDC compliance
+    // Facebook is OAuth 2.0 only (not OIDC), so we use minimal config
+    // See: https://github.com/nextauthjs/next-auth/discussions/4146
     Facebook({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      // Request email scope explicitly
-      authorization: {
-        params: {
-          scope: "email,public_profile",
-        },
-      },
-      profile(profile) {
-        authLogger.oauth("facebook", "Profile callback received", {
-          id: profile.id,
-          email: profile.email,
-          hasName: !!profile.name,
-          hasPicture: !!profile.picture?.data?.url,
-          profileKeys: Object.keys(profile),
-        })
-
-        // Check for missing email (common Facebook issue)
-        if (!profile.email) {
-          authLogger.error(
-            "Facebook OAuth: No email returned - check app permissions",
-            {
-              hint: "User may have denied email permission or app lacks email scope approval",
-              profileId: profile.id,
-              profileKeys: Object.keys(profile),
-            }
-          )
-        }
-
-        return {
-          id: profile.id,
-          email: profile.email,
-          name: profile.name,
-          image: profile.picture?.data?.url,
-          emailVerified: new Date(),
-        }
-      },
     }),
     Credentials({
       async authorize(credentials) {

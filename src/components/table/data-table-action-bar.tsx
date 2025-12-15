@@ -23,7 +23,7 @@ interface DataTableActionBarProps<TData> extends React.ComponentProps<
   container?: Element | DocumentFragment | null
 }
 
-function DataTableActionBar<TData>({
+function DataTableActionBarInner<TData>({
   table,
   visible: visibleProp,
   container: containerProp,
@@ -87,7 +87,7 @@ interface DataTableActionBarActionProps extends React.ComponentProps<
   isPending?: boolean
 }
 
-function DataTableActionBarAction({
+function DataTableActionBarActionInner({
   size = "sm",
   tooltip,
   isPending,
@@ -131,7 +131,7 @@ interface DataTableActionBarSelectionProps<TData> {
   table: Table<TData>
 }
 
-function DataTableActionBarSelection<TData>({
+function DataTableActionBarSelectionInner<TData>({
   table,
 }: DataTableActionBarSelectionProps<TData>) {
   const onClearSelection = React.useCallback(() => {
@@ -173,6 +173,14 @@ function DataTableActionBarSelection<TData>({
     </div>
   )
 }
+
+const DataTableActionBar = React.memo(
+  DataTableActionBarInner
+) as typeof DataTableActionBarInner
+const DataTableActionBarAction = React.memo(DataTableActionBarActionInner)
+const DataTableActionBarSelection = React.memo(
+  DataTableActionBarSelectionInner
+) as typeof DataTableActionBarSelectionInner
 
 export {
   DataTableActionBar,

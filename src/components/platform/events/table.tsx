@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Calendar, MapPin, Users } from "lucide-react"
@@ -37,7 +38,7 @@ interface EventsTableProps {
   perPage?: number
 }
 
-export function EventsTable({
+function EventsTableInner({
   initialData,
   total,
   dictionary,
@@ -356,3 +357,5 @@ export function EventsTable({
     </>
   )
 }
+
+export const EventsTable = React.memo(EventsTableInner)

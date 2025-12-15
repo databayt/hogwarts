@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { TrendingUp } from "lucide-react"
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
 
@@ -34,7 +35,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function RadarChartSimple() {
+function RadarChartSimpleInner() {
   return (
     <Card className="bg-muted border-none shadow-none">
       {/* <CardHeader className="items-center pb-4">
@@ -71,3 +72,5 @@ export function RadarChartSimple() {
     </Card>
   )
 }
+
+export const RadarChartSimple = React.memo(RadarChartSimpleInner)

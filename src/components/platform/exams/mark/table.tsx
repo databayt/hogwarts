@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 // Marking Dashboard Data Table
 import { useMemo, useState } from "react"
 import type {
@@ -44,7 +45,7 @@ interface MarkingTableProps {
   dictionary: Dictionary
 }
 
-export function MarkingTable({ data, dictionary }: MarkingTableProps) {
+function MarkingTableInner({ data, dictionary }: MarkingTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -153,3 +154,5 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
     </div>
   )
 }
+
+export const MarkingTable = React.memo(MarkingTableInner)

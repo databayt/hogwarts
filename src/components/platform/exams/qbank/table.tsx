@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Sparkles } from "lucide-react"
@@ -28,7 +29,7 @@ interface QuestionBankTableProps {
   dictionary?: Dictionary
 }
 
-export function QuestionBankTable({
+function QuestionBankTableInner({
   initialData,
   total,
   perPage = 20,
@@ -201,3 +202,5 @@ export function QuestionBankTable({
     </div>
   )
 }
+
+export const QuestionBankTable = React.memo(QuestionBankTableInner)

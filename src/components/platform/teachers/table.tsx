@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, UserCheck, Users, UserX } from "lucide-react"
@@ -43,7 +44,7 @@ interface TeachersTableProps {
   perPage?: number
 }
 
-export function TeachersTable({
+function TeachersTableInner({
   initialData,
   total,
   dictionary,
@@ -471,3 +472,5 @@ export function TeachersTable({
     </>
   )
 }
+
+export const TeachersTable = React.memo(TeachersTableInner)
