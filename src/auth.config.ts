@@ -41,14 +41,21 @@ export default {
         }
       },
     }),
-    // Facebook provider - Let NextAuth handle URLs automatically (fixes Live mode)
+    // Facebook provider - Let NextAuth handle redirect_uri automatically
+    // Specify userinfo to request email and profile picture fields
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      // Only override scope - NextAuth handles redirect_uri from NEXTAUTH_URL
       authorization: {
         params: {
           scope: "email public_profile",
+        },
+      },
+      // Specify userinfo endpoint with required fields
+      userinfo: {
+        url: "https://graph.facebook.com/me",
+        params: {
+          fields: "id,name,email,picture.width(250).height(250)",
         },
       },
       profile(profile) {

@@ -1,5 +1,6 @@
 "use server"
 
+import { unstable_cache } from "next/cache"
 import { auth } from "@/auth"
 import { Decimal } from "@prisma/client/runtime/library"
 import {
@@ -14,11 +15,87 @@ import { db } from "@/lib/db"
 
 import type { DashboardStats, FinancialAlert, RecentTransaction } from "./types"
 
+// Cache tags for invalidation
+const FINANCE_DASHBOARD_TAG = "finance-dashboard"
+const CACHE_REVALIDATE_SECONDS = 300 // 5 minutes
+
 // Helper to convert Decimal to number
 function decimalToNumber(value: Decimal | null | undefined): number {
   if (!value) return 0
   return typeof value === "number" ? value : parseFloat(value.toString())
 }
+
+// Cached data fetching for dashboard (5 min TTL)
+const getCachedDashboardData = unstable_cache(
+  async (schoolId: string, startDate: Date, endDate: Date) => {
+    const [
+      invoices,
+      payments,
+      expenses,
+      bankAccounts,
+      budgets,
+      feeStructures,
+      students,
+      payrollRuns,
+      wallets,
+      transactions,
+    ] = await Promise.all([
+      db.userInvoice.findMany({
+        where: { schoolId, invoice_date: { gte: startDate, lte: endDate } },
+      }),
+      db.payment.findMany({
+        where: {
+          schoolId,
+          paymentDate: { gte: startDate, lte: endDate },
+          status: "SUCCESS",
+        },
+      }),
+      db.expense.findMany({
+        where: { schoolId, expenseDate: { gte: startDate, lte: endDate } },
+        include: { category: true },
+      }),
+      db.bankAccount.findMany({ where: { schoolId } }),
+      db.budget.findMany({
+        where: { schoolId, status: "ACTIVE" },
+        include: { allocations: { include: { category: true } } },
+      }),
+      db.feeStructure.findMany({ where: { schoolId, isActive: true } }),
+      db.student.findMany({
+        where: { schoolId },
+        include: {
+          feeAssignments: {
+            where: { academicYear: new Date().getFullYear().toString() },
+            include: { payments: { where: { status: "SUCCESS" } } },
+          },
+        },
+      }),
+      db.payrollRun.findMany({
+        where: { schoolId, payDate: { gte: startDate, lte: endDate } },
+      }),
+      db.wallet.findMany({ where: { schoolId } }),
+      db.transaction.findMany({
+        where: { schoolId, date: { gte: startDate, lte: endDate } },
+        orderBy: { date: "desc" },
+        take: 10,
+      }),
+    ])
+
+    return {
+      invoices,
+      payments,
+      expenses,
+      bankAccounts,
+      budgets,
+      feeStructures,
+      students,
+      payrollRuns,
+      wallets,
+      transactions,
+    }
+  },
+  [FINANCE_DASHBOARD_TAG],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: [FINANCE_DASHBOARD_TAG] }
+)
 
 export async function getDashboardStats(
   dateRange: "month" | "quarter" | "year" = "month"
@@ -49,8 +126,8 @@ export async function getDashboardStats(
       break
   }
 
-  // Fetch all required data in parallel for performance
-  const [
+  // Use cached data fetching (5 min TTL) for performance
+  const {
     invoices,
     payments,
     expenses,
@@ -61,105 +138,7 @@ export async function getDashboardStats(
     payrollRuns,
     wallets,
     transactions,
-  ] = await Promise.all([
-    // Invoices
-    db.userInvoice.findMany({
-      where: {
-        schoolId,
-        invoice_date: { gte: startDate, lte: endDate },
-      },
-    }),
-
-    // Payments
-    db.payment.findMany({
-      where: {
-        schoolId,
-        paymentDate: { gte: startDate, lte: endDate },
-        status: "SUCCESS",
-      },
-    }),
-
-    // Expenses
-    db.expense.findMany({
-      where: {
-        schoolId,
-        expenseDate: { gte: startDate, lte: endDate },
-      },
-      include: {
-        category: true,
-      },
-    }),
-
-    // Bank Accounts
-    db.bankAccount.findMany({
-      where: { schoolId },
-    }),
-
-    // Budgets
-    db.budget.findMany({
-      where: {
-        schoolId,
-        status: "ACTIVE",
-      },
-      include: {
-        allocations: {
-          include: {
-            category: true,
-          },
-        },
-      },
-    }),
-
-    // Fee Structures
-    db.feeStructure.findMany({
-      where: {
-        schoolId,
-        isActive: true,
-      },
-    }),
-
-    // Students with fee assignments
-    db.student.findMany({
-      where: { schoolId },
-      include: {
-        feeAssignments: {
-          where: {
-            academicYear: new Date().getFullYear().toString(),
-          },
-          include: {
-            payments: {
-              where: {
-                status: "SUCCESS",
-              },
-            },
-          },
-        },
-      },
-    }),
-
-    // Payroll
-    db.payrollRun.findMany({
-      where: {
-        schoolId,
-        payDate: { gte: startDate, lte: endDate },
-      },
-    }),
-
-    // Wallets
-    db.wallet.findMany({
-      where: { schoolId },
-    }),
-
-    // Bank Transactions
-    db.transaction.findMany({
-      where: {
-        schoolId,
-        date: { gte: startDate, lte: endDate },
-      },
-      orderBy: { date: "desc" },
-      take: 10,
-    }),
-  ])
+  } = await getCachedDashboardData(schoolId, startDate, endDate)
 
   // Calculate Revenue Metrics
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0)

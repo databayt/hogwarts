@@ -7,9 +7,18 @@ const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
 
-  // Optimize package imports
+  // Optimize package imports for tree-shaking
   experimental: {
-    optimizePackageImports: ["@assistant-ui/react", "@radix-ui/react-icons"],
+    optimizePackageImports: [
+      "@assistant-ui/react",
+      "@radix-ui/react-icons",
+      "@tanstack/react-table",
+      "recharts",
+      "date-fns",
+      "@tabler/icons-react",
+      "lucide-react",
+      "framer-motion",
+    ],
   },
 
   // Security headers

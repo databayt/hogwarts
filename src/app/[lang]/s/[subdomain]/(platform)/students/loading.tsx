@@ -8,7 +8,7 @@ export default function Loading() {
       <Skeleton className="h-8 w-48" />
 
       {/* Students data table */}
-      <SkeletonDataTable columns={5} rows={15} />
+      <SkeletonDataTable columns={6} rows={12} />
     </div>
   )
 }
