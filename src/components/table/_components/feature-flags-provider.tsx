@@ -1,38 +1,41 @@
-"use client";
+"use client"
 
-import { useQueryState } from "nuqs";
-import * as React from "react";
+import * as React from "react"
+import { useQueryState } from "nuqs"
 
-import { ToggleGroup, ToggleGroupItem } from "@/components/table/atom/toggle-group";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { type FlagConfig, flagConfig } from "@/components/table/config/flag";
+} from "@/components/ui/tooltip"
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/table/atom/toggle-group"
+import { flagConfig, type FlagConfig } from "@/components/table/config/flag"
 
-type FilterFlag = FlagConfig["featureFlags"][number]["value"];
+type FilterFlag = FlagConfig["featureFlags"][number]["value"]
 
 interface FeatureFlagsContextValue {
-  filterFlag: FilterFlag;
-  enableAdvancedFilter: boolean;
+  filterFlag: FilterFlag
+  enableAdvancedFilter: boolean
 }
 
 const FeatureFlagsContext =
-  React.createContext<FeatureFlagsContextValue | null>(null);
+  React.createContext<FeatureFlagsContextValue | null>(null)
 
 export function useFeatureFlags() {
-  const context = React.useContext(FeatureFlagsContext);
+  const context = React.useContext(FeatureFlagsContext)
   if (!context) {
     throw new Error(
-      "useFeatureFlags must be used within a FeatureFlagsProvider",
-    );
+      "useFeatureFlags must be used within a FeatureFlagsProvider"
+    )
   }
-  return context;
+  return context
 }
 
 interface FeatureFlagsProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
@@ -40,26 +43,26 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
     "filterFlag",
     {
       parse: (value) => {
-        if (!value) return null;
-        const validValues = flagConfig.featureFlags.map((flag) => flag.value);
+        if (!value) return null
+        const validValues = flagConfig.featureFlags.map((flag) => flag.value)
         return validValues.includes(value as FilterFlag)
           ? (value as FilterFlag)
-          : null;
+          : null
       },
       serialize: (value) => value ?? "",
       defaultValue: null,
       clearOnDefault: true,
       shallow: false,
       eq: (a, b) => (!a && !b) || a === b,
-    },
-  );
+    }
+  )
 
   const onFilterFlagChange = React.useCallback(
     (value: FilterFlag) => {
-      setFilterFlag(value);
+      setFilterFlag(value)
     },
-    [setFilterFlag],
-  );
+    [setFilterFlag]
+  )
 
   const contextValue = React.useMemo<FeatureFlagsContextValue>(
     () => ({
@@ -67,8 +70,8 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
       enableAdvancedFilter:
         filterFlag === "advancedFilters" || filterFlag === "commandFilters",
     }),
-    [filterFlag],
-  );
+    [filterFlag]
+  )
 
   return (
     <FeatureFlagsContext.Provider value={contextValue}>
@@ -85,7 +88,7 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
             <Tooltip key={flag.value} delayDuration={700}>
               <ToggleGroupItem
                 value={flag.value}
-                className="whitespace-nowrap px-3 text-xs data-[state=on]:bg-accent/70 data-[state=on]:hover:bg-accent/90"
+                className="data-[state=on]:bg-accent/70 data-[state=on]:hover:bg-accent/90 px-3 text-xs whitespace-nowrap"
                 asChild
               >
                 <TooltipTrigger>
@@ -97,10 +100,10 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
                 align="start"
                 side="bottom"
                 sideOffset={6}
-                className="flex flex-col gap-1.5 border bg-background py-2 font-semibold text-foreground [&>span]:hidden"
+                className="bg-background text-foreground flex flex-col gap-1.5 border py-2 font-semibold [&>span]:hidden"
               >
                 <div>{flag.tooltipTitle}</div>
-                <p className="text-balance text-muted-foreground text-xs">
+                <p className="text-muted-foreground text-xs text-balance">
                   {flag.tooltipDescription}
                 </p>
               </TooltipContent>
@@ -110,5 +113,5 @@ export function FeatureFlagsProvider({ children }: FeatureFlagsProviderProps) {
       </div>
       {children}
     </FeatureFlagsContext.Provider>
-  );
+  )
 }

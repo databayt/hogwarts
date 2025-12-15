@@ -1,62 +1,74 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from "react"
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Clock,
+  MapPin,
+  PieChart as PieChartIcon,
+  Target,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar
-} from 'recharts'
-import {
-  TimetableSlot,
-  Period,
-  TeacherInfo,
-  SubjectInfo,
   ClassroomInfo,
+  Period,
+  SubjectInfo,
+  TeacherInfo,
   TimetableAnalytics,
-  TimetableConflict
-} from './types'
+  TimetableConflict,
+  TimetableSlot,
+} from "./types"
 import {
   calculateTeacherWorkload,
   calculateUtilizationRate,
   detectConflicts,
-  getDayName
-} from './utils'
-import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
-import { Users, BookOpen, MapPin, TriangleAlert, TrendingUp, Clock, Activity, Target } from "lucide-react"
-import { BarChart3, PieChart as PieChartIcon } from "lucide-react"
+  getDayName,
+} from "./utils"
 
 interface AnalyticsReportsProps {
   slots: TimetableSlot[]
@@ -75,9 +87,11 @@ export function AnalyticsReports({
   teachers,
   subjects,
   classrooms,
-  dictionary = {}
+  dictionary = {},
 }: AnalyticsReportsProps) {
-  const [selectedMetric, setSelectedMetric] = useState<'utilization' | 'workload' | 'distribution'>('utilization')
+  const [selectedMetric, setSelectedMetric] = useState<
+    "utilization" | "workload" | "distribution"
+  >("utilization")
   const [analytics, setAnalytics] = useState<TimetableAnalytics | null>(null)
   const [conflicts, setConflicts] = useState<TimetableConflict[]>([])
 
@@ -91,31 +105,37 @@ export function AnalyticsReports({
     setConflicts(detectedConflicts)
 
     // Calculate teacher workload
-    const teacherWorkload = teachers.map(teacher => {
+    const teacherWorkload = teachers.map((teacher) => {
       const workload = calculateTeacherWorkload(teacher.id, slots, periods)
       return {
         teacherId: teacher.id,
         name: `${teacher.firstName} ${teacher.lastName}`,
         hoursPerWeek: workload.hoursPerWeek,
         subjects: teacher.subjects,
-        classes: Array.from(new Set(
-          slots
-            .filter(s => s.teacherId === teacher.id)
-            .map(s => s.classId)
-        ))
+        classes: Array.from(
+          new Set(
+            slots
+              .filter((s) => s.teacherId === teacher.id)
+              .map((s) => s.classId)
+          )
+        ),
       }
     })
 
     // Calculate room utilization
-    const totalPossibleSlots = workingDays.length * periods.filter(p => !p.isBreak).length
-    const roomUtilization = classrooms.map(room => {
-      const roomSlots = slots.filter(s => s.classroomId === room.id)
-      const utilizationPercent = calculateUtilizationRate(roomSlots, totalPossibleSlots)
+    const totalPossibleSlots =
+      workingDays.length * periods.filter((p) => !p.isBreak).length
+    const roomUtilization = classrooms.map((room) => {
+      const roomSlots = slots.filter((s) => s.classroomId === room.id)
+      const utilizationPercent = calculateUtilizationRate(
+        roomSlots,
+        totalPossibleSlots
+      )
 
       // Find peak hours
       const hourCounts: Record<string, number> = {}
-      roomSlots.forEach(slot => {
-        const period = periods.find(p => p.id === slot.periodId)
+      roomSlots.forEach((slot) => {
+        const period = periods.find((p) => p.id === slot.periodId)
         if (period) {
           hourCounts[period.startTime] = (hourCounts[period.startTime] || 0) + 1
         }
@@ -129,73 +149,86 @@ export function AnalyticsReports({
         roomId: room.id,
         name: room.name,
         utilizationPercent,
-        peakHours
+        peakHours,
       }
     })
 
     // Calculate subject distribution
-    const subjectDistribution = subjects.map(subject => {
-      const subjectSlots = slots.filter(s => s.subjectId === subject.id)
+    const subjectDistribution = subjects.map((subject) => {
+      const subjectSlots = slots.filter((s) => s.subjectId === subject.id)
       const totalHours = subjectSlots.length * 0.75 // Assuming 45-minute periods
-      const classes = Array.from(new Set(subjectSlots.map(s => s.classId)))
+      const classes = Array.from(new Set(subjectSlots.map((s) => s.classId)))
 
       return {
         subjectId: subject.id,
         name: subject.name,
         totalHours,
-        classes
+        classes,
       }
     })
 
     // Generate suggestions
     const suggestions: string[] = []
     if (detectedConflicts.length > 0) {
-      suggestions.push(`Resolve ${detectedConflicts.length} scheduling conflicts`)
+      suggestions.push(
+        `Resolve ${detectedConflicts.length} scheduling conflicts`
+      )
     }
 
-    const underutilizedRooms = roomUtilization.filter(r => r.utilizationPercent < 50)
+    const underutilizedRooms = roomUtilization.filter(
+      (r) => r.utilizationPercent < 50
+    )
     if (underutilizedRooms.length > 0) {
-      suggestions.push(`Optimize usage of ${underutilizedRooms.length} underutilized rooms`)
+      suggestions.push(
+        `Optimize usage of ${underutilizedRooms.length} underutilized rooms`
+      )
     }
 
-    const overworkedTeachers = teacherWorkload.filter(t => t.hoursPerWeek > WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK)
+    const overworkedTeachers = teacherWorkload.filter(
+      (t) => t.hoursPerWeek > WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK
+    )
     if (overworkedTeachers.length > 0) {
-      suggestions.push(`Rebalance workload for ${overworkedTeachers.length} teachers`)
+      suggestions.push(
+        `Rebalance workload for ${overworkedTeachers.length} teachers`
+      )
     }
 
     setAnalytics({
       totalSlots: slots.length,
-      utilizationRate: calculateUtilizationRate(slots, totalPossibleSlots * classrooms.length),
+      utilizationRate: calculateUtilizationRate(
+        slots,
+        totalPossibleSlots * classrooms.length
+      ),
       teacherWorkload,
       roomUtilization,
       subjectDistribution,
       conflicts: detectedConflicts,
-      suggestions
+      suggestions,
     })
   }
 
   if (!analytics) return null
 
   // Prepare chart data
-  const workloadChartData = analytics.teacherWorkload.map(t => ({
-    name: t.name.split(' ')[0], // First name only for chart
+  const workloadChartData = analytics.teacherWorkload.map((t) => ({
+    name: t.name.split(" ")[0], // First name only for chart
     hours: t.hoursPerWeek,
-    limit: WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK
+    limit: WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK,
   }))
 
-  const utilizationChartData = analytics.roomUtilization.map(r => ({
+  const utilizationChartData = analytics.roomUtilization.map((r) => ({
     room: r.name,
-    utilization: r.utilizationPercent
+    utilization: r.utilizationPercent,
   }))
 
-  const subjectPieData = analytics.subjectDistribution.map(s => ({
+  const subjectPieData = analytics.subjectDistribution.map((s) => ({
     name: s.name,
-    value: s.totalHours
+    value: s.totalHours,
   }))
 
-  const dayDistributionData = workingDays.map(day => ({
+  const dayDistributionData = workingDays.map((day) => ({
     day: getDayName(day, true),
-    slots: slots.filter(s => s.dayOfWeek === day).length
+    slots: slots.filter((s) => s.dayOfWeek === day).length,
   }))
 
   return (
@@ -204,8 +237,10 @@ export function AnalyticsReports({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><h6>Total Slots</h6></CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>
+              <h6>Total Slots</h6>
+            </CardTitle>
+            <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{analytics.totalSlots}</h3>
@@ -218,8 +253,10 @@ export function AnalyticsReports({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><h6>Utilization Rate</h6></CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>
+              <h6>Utilization Rate</h6>
+            </CardTitle>
+            <Activity className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{analytics.utilizationRate}%</h3>
@@ -227,18 +264,30 @@ export function AnalyticsReports({
               <small>Room and teacher efficiency</small>
             </p>
             <Badge
-              variant={analytics.utilizationRate > 80 ? 'default' : analytics.utilizationRate > 60 ? 'secondary' : 'destructive'}
+              variant={
+                analytics.utilizationRate > 80
+                  ? "default"
+                  : analytics.utilizationRate > 60
+                    ? "secondary"
+                    : "destructive"
+              }
               className="mt-2"
             >
-              {analytics.utilizationRate > 80 ? 'Optimal' : analytics.utilizationRate > 60 ? 'Good' : 'Low'}
+              {analytics.utilizationRate > 80
+                ? "Optimal"
+                : analytics.utilizationRate > 60
+                  ? "Good"
+                  : "Low"}
             </Badge>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><h6>Active Conflicts</h6></CardTitle>
-            <TriangleAlert className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>
+              <h6>Active Conflicts</h6>
+            </CardTitle>
+            <TriangleAlert className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{conflicts.length}</h3>
@@ -255,15 +304,20 @@ export function AnalyticsReports({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><h6>Avg Workload</h6></CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle>
+              <h6>Avg Workload</h6>
+            </CardTitle>
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">
               {Math.round(
-                analytics.teacherWorkload.reduce((sum, t) => sum + t.hoursPerWeek, 0) /
-                analytics.teacherWorkload.length
-              )}h/week
+                analytics.teacherWorkload.reduce(
+                  (sum, t) => sum + t.hoursPerWeek,
+                  0
+                ) / analytics.teacherWorkload.length
+              )}
+              h/week
             </h3>
             <p className="muted">
               <small>Per teacher average</small>
@@ -273,7 +327,10 @@ export function AnalyticsReports({
       </div>
 
       {/* Detailed Analytics */}
-      <Tabs value={selectedMetric} onValueChange={(v) => setSelectedMetric(v as any)}>
+      <Tabs
+        value={selectedMetric}
+        onValueChange={(v) => setSelectedMetric(v as any)}
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="utilization">Room Utilization</TabsTrigger>
           <TabsTrigger value="workload">Teacher Workload</TabsTrigger>
@@ -283,9 +340,13 @@ export function AnalyticsReports({
         <TabsContent value="utilization" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle><h4>Room Utilization Analysis</h4></CardTitle>
+              <CardTitle>
+                <h4>Room Utilization Analysis</h4>
+              </CardTitle>
               <CardDescription>
-                <p className="muted">Percentage of time each room is occupied</p>
+                <p className="muted">
+                  Percentage of time each room is occupied
+                </p>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -304,21 +365,29 @@ export function AnalyticsReports({
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle><h5>Top Utilized Rooms</h5></CardTitle>
+                <CardTitle>
+                  <h5>Top Utilized Rooms</h5>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {analytics.roomUtilization
                     .sort((a, b) => b.utilizationPercent - a.utilizationPercent)
                     .slice(0, 5)
-                    .map(room => (
-                      <div key={room.roomId} className="flex items-center justify-between">
+                    .map((room) => (
+                      <div
+                        key={room.roomId}
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4" />
                           <h6>{room.name}</h6>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Progress value={room.utilizationPercent} className="w-20" />
+                          <Progress
+                            value={room.utilizationPercent}
+                            className="w-20"
+                          />
                           <p className="muted">
                             <small>{room.utilizationPercent}%</small>
                           </p>
@@ -331,7 +400,9 @@ export function AnalyticsReports({
 
             <Card>
               <CardHeader>
-                <CardTitle><h5>Day Distribution</h5></CardTitle>
+                <CardTitle>
+                  <h5>Day Distribution</h5>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
@@ -351,9 +422,13 @@ export function AnalyticsReports({
         <TabsContent value="workload" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle><h4>Teacher Workload Distribution</h4></CardTitle>
+              <CardTitle>
+                <h4>Teacher Workload Distribution</h4>
+              </CardTitle>
               <CardDescription>
-                <p className="muted">Weekly hours per teacher vs recommended limits</p>
+                <p className="muted">
+                  Weekly hours per teacher vs recommended limits
+                </p>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -365,7 +440,12 @@ export function AnalyticsReports({
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="hours" fill="#8B5CF6" name="Actual Hours" />
-                  <Bar dataKey="limit" fill="#EF4444" name="Max Limit" opacity={0.3} />
+                  <Bar
+                    dataKey="limit"
+                    fill="#EF4444"
+                    name="Max Limit"
+                    opacity={0.3}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -375,7 +455,7 @@ export function AnalyticsReports({
             {analytics.teacherWorkload
               .sort((a, b) => b.hoursPerWeek - a.hoursPerWeek)
               .slice(0, 6)
-              .map(teacher => (
+              .map((teacher) => (
                 <Card key={teacher.teacherId}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -384,9 +464,10 @@ export function AnalyticsReports({
                       </CardTitle>
                       <Badge
                         variant={
-                          teacher.hoursPerWeek > WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK
-                            ? 'destructive'
-                            : 'default'
+                          teacher.hoursPerWeek >
+                          WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK
+                            ? "destructive"
+                            : "default"
                         }
                       >
                         {teacher.hoursPerWeek}h
@@ -395,11 +476,18 @@ export function AnalyticsReports({
                   </CardHeader>
                   <CardContent>
                     <Progress
-                      value={(teacher.hoursPerWeek / WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK) * 100}
+                      value={
+                        (teacher.hoursPerWeek /
+                          WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK) *
+                        100
+                      }
                       className="mb-2"
                     />
                     <p className="muted">
-                      <small>{teacher.classes.length} classes, {teacher.subjects.length} subjects</small>
+                      <small>
+                        {teacher.classes.length} classes,{" "}
+                        {teacher.subjects.length} subjects
+                      </small>
                     </p>
                   </CardContent>
                 </Card>
@@ -411,7 +499,9 @@ export function AnalyticsReports({
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle><h4>Subject Hours Distribution</h4></CardTitle>
+                <CardTitle>
+                  <h4>Subject Hours Distribution</h4>
+                </CardTitle>
                 <CardDescription>
                   <p className="muted">Total hours allocated per subject</p>
                 </CardDescription>
@@ -424,7 +514,9 @@ export function AnalyticsReports({
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
@@ -432,7 +524,11 @@ export function AnalyticsReports({
                       {subjectPieData.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={SUBJECT_COLORS[entry.name as keyof typeof SUBJECT_COLORS] || SUBJECT_COLORS.default}
+                          fill={
+                            SUBJECT_COLORS[
+                              entry.name as keyof typeof SUBJECT_COLORS
+                            ] || SUBJECT_COLORS.default
+                          }
                         />
                       ))}
                     </Pie>
@@ -444,7 +540,9 @@ export function AnalyticsReports({
 
             <Card>
               <CardHeader>
-                <CardTitle><h4>Subject Coverage</h4></CardTitle>
+                <CardTitle>
+                  <h4>Subject Coverage</h4>
+                </CardTitle>
                 <CardDescription>
                   <p className="muted">Classes covered by each subject</p>
                 </CardDescription>
@@ -454,13 +552,19 @@ export function AnalyticsReports({
                   {analytics.subjectDistribution
                     .sort((a, b) => b.totalHours - a.totalHours)
                     .slice(0, 8)
-                    .map(subject => (
-                      <div key={subject.subjectId} className="flex items-center justify-between">
+                    .map((subject) => (
+                      <div
+                        key={subject.subjectId}
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center gap-2">
                           <div
                             className="h-3 w-3 rounded"
                             style={{
-                              backgroundColor: SUBJECT_COLORS[subject.name as keyof typeof SUBJECT_COLORS] || SUBJECT_COLORS.default
+                              backgroundColor:
+                                SUBJECT_COLORS[
+                                  subject.name as keyof typeof SUBJECT_COLORS
+                                ] || SUBJECT_COLORS.default,
                             }}
                           />
                           <p>{subject.name}</p>

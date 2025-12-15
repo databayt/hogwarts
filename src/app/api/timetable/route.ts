@@ -43,9 +43,10 @@
  */
 
 import { NextRequest } from "next/server"
-import { getWeeklyTimetable } from "@/components/platform/timetable/actions"
-import { db } from "@/lib/db"
+
 import { createErrorResponse } from "@/lib/auth-security"
+import { db } from "@/lib/db"
+import { getWeeklyTimetable } from "@/components/platform/timetable/actions"
 
 // WHY: Timetable must be fresh, week offset depends on current date
 export const dynamic = "force-dynamic"
@@ -60,39 +61,46 @@ export async function GET(req: NextRequest) {
 
     if (!termId) {
       // Public fallback by domain when tenant context is not available
-      const domain = searchParams.get('domain') || searchParams.get('school') || undefined
+      const domain =
+        searchParams.get("domain") || searchParams.get("school") || undefined
       if (domain) {
         // Use proper Prisma client without unsafe type casting
-        const school = await db.school.findFirst({ 
-          where: { domain }, 
-          select: { id: true } 
+        const school = await db.school.findFirst({
+          where: { domain },
+          select: { id: true },
         })
-        
+
         if (school) {
-          const term = await db.term.findFirst({ 
-            where: { schoolId: school.id }, 
-            orderBy: { startDate: 'desc' }, 
-            select: { id: true } 
+          const term = await db.term.findFirst({
+            where: { schoolId: school.id },
+            orderBy: { startDate: "desc" },
+            select: { id: true },
           })
           termId = term?.id ?? null
         }
       }
       if (!termId) {
-        return new Response(JSON.stringify({ error: "Missing termId" }), { status: 400 })
+        return new Response(JSON.stringify({ error: "Missing termId" }), {
+          status: 400,
+        })
       }
     }
 
     const data = await getWeeklyTimetable({
       termId,
       weekOffset: (weekOffset === "1" ? 1 : 0) as 0 | 1,
-      view: { classId: classId ?? undefined, teacherId: teacherId ?? undefined },
+      view: {
+        classId: classId ?? undefined,
+        teacherId: teacherId ?? undefined,
+      },
     })
 
-    return new Response(JSON.stringify(data), { status: 200, headers: { "content-type": "application/json" } })
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    })
   } catch (error) {
     console.error("Error fetching timetable:", error)
     return createErrorResponse(error)
   }
 }
-
-

@@ -1,5 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { auth } from "@/auth"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // Mock the dependencies before importing actions
 vi.mock("@/lib/db", () => ({
@@ -15,13 +19,15 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      notification: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        notification: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -37,10 +43,6 @@ vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
-import { auth } from "@/auth"
 
 describe("Notification Actions", () => {
   const mockSchoolId = "school-123"
@@ -63,10 +65,14 @@ describe("Notification Actions", () => {
     const notificationSchema = z.object({
       title: z.string().min(1, "Title is required"),
       message: z.string().min(1, "Message is required"),
-      type: z.enum(["INFO", "WARNING", "ERROR", "SUCCESS", "ANNOUNCEMENT"]).default("INFO"),
+      type: z
+        .enum(["INFO", "WARNING", "ERROR", "SUCCESS", "ANNOUNCEMENT"])
+        .default("INFO"),
       priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).default("MEDIUM"),
       recipientId: z.string().optional(),
-      recipientRole: z.enum(["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "STAFF", "ALL"]).optional(),
+      recipientRole: z
+        .enum(["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "STAFF", "ALL"])
+        .optional(),
       expiresAt: z.string().optional(),
       actionUrl: z.string().url().optional(),
       metadata: z.record(z.string()).optional(),
@@ -152,7 +158,9 @@ describe("Notification Actions", () => {
         schoolId: mockSchoolId,
       }
 
-      vi.mocked(db.notification.create).mockResolvedValue(mockNotification as any)
+      vi.mocked(db.notification.create).mockResolvedValue(
+        mockNotification as any
+      )
 
       // Simulating action behavior
       const notification = await db.notification.create({
@@ -180,7 +188,9 @@ describe("Notification Actions", () => {
         { id: "2", title: "Notif 2", schoolId: mockSchoolId },
       ]
 
-      vi.mocked(db.notification.findMany).mockResolvedValue(mockNotifications as any)
+      vi.mocked(db.notification.findMany).mockResolvedValue(
+        mockNotifications as any
+      )
 
       await db.notification.findMany({
         where: { schoolId: mockSchoolId, recipientId: mockUserId },

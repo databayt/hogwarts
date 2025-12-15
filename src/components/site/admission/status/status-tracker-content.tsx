@@ -1,49 +1,61 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Loader2 } from "lucide-react";
-import { AnthropicIcons } from "@/components/icons/anthropic";
-import { toast } from "sonner";
-import type { School } from "../../types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { ApplicationStatus } from "../types";
-import { requestStatusOTP, verifyStatusOTP, getApplicationStatus } from "../actions";
-import StatusDisplay from "./status-display";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { AnthropicIcons } from "@/components/icons/anthropic"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { School } from "../../types"
+import {
+  getApplicationStatus,
+  requestStatusOTP,
+  verifyStatusOTP,
+} from "../actions"
+import type { ApplicationStatus } from "../types"
+import StatusDisplay from "./status-display"
 
 interface Props {
-  school: School;
-  dictionary: Dictionary;
-  lang: Locale;
-  subdomain: string;
-  initialToken?: string;
+  school: School
+  dictionary: Dictionary
+  lang: Locale
+  subdomain: string
+  initialToken?: string
 }
 
-type Step = "request" | "verify" | "display";
+type Step = "request" | "verify" | "display"
 
 const requestSchema = z.object({
   applicationNumber: z.string().min(1, "Application number is required"),
   email: z.string().email("Invalid email address"),
-});
+})
 
 const verifySchema = z.object({
   otp: z.string().length(6, "OTP must be 6 digits"),
-});
+})
 
 export default function StatusTrackerContent({
   school,
@@ -52,13 +64,15 @@ export default function StatusTrackerContent({
   subdomain,
   initialToken,
 }: Props) {
-  const [step, setStep] = useState<Step>(initialToken ? "display" : "request");
-  const [isLoading, setIsLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(initialToken || null);
-  const [applicationNumber, setApplicationNumber] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [status, setStatus] = useState<ApplicationStatus | null>(null);
-  const isRTL = lang === "ar";
+  const [step, setStep] = useState<Step>(initialToken ? "display" : "request")
+  const [isLoading, setIsLoading] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(
+    initialToken || null
+  )
+  const [applicationNumber, setApplicationNumber] = useState<string>("")
+  const [email, setEmail] = useState<string>("")
+  const [status, setStatus] = useState<ApplicationStatus | null>(null)
+  const isRTL = lang === "ar"
 
   const requestForm = useForm({
     resolver: zodResolver(requestSchema),
@@ -66,120 +80,126 @@ export default function StatusTrackerContent({
       applicationNumber: "",
       email: "",
     },
-  });
+  })
 
   const verifyForm = useForm({
     resolver: zodResolver(verifySchema),
     defaultValues: {
       otp: "",
     },
-  });
+  })
 
   // Fetch status if we have a token
   useEffect(() => {
     if (accessToken) {
-      fetchStatus(accessToken);
+      fetchStatus(accessToken)
     }
-  }, []);
+  }, [])
 
   const fetchStatus = async (token: string) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const result = await getApplicationStatus(token);
+      const result = await getApplicationStatus(token)
       if (result.success && result.data) {
-        setStatus(result.data);
-        setStep("display");
+        setStatus(result.data)
+        setStep("display")
       } else {
-        toast.error(result.error || (isRTL ? "فشل في جلب الحالة" : "Failed to fetch status"));
-        setAccessToken(null);
-        setStep("request");
+        toast.error(
+          result.error ||
+            (isRTL ? "فشل في جلب الحالة" : "Failed to fetch status")
+        )
+        setAccessToken(null)
+        setStep("request")
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في جلب الحالة" : "Failed to fetch status");
-      setAccessToken(null);
-      setStep("request");
+      toast.error(isRTL ? "فشل في جلب الحالة" : "Failed to fetch status")
+      setAccessToken(null)
+      setStep("request")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const onRequestOTP = async (data: z.infer<typeof requestSchema>) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const result = await requestStatusOTP(
         subdomain,
         data.applicationNumber,
         data.email
-      );
+      )
 
       if (result.success) {
-        setApplicationNumber(data.applicationNumber);
-        setEmail(data.email);
-        setStep("verify");
+        setApplicationNumber(data.applicationNumber)
+        setEmail(data.email)
+        setStep("verify")
         toast.success(
           isRTL
             ? "تم إرسال رمز التحقق إلى بريدك الإلكتروني"
             : "Verification code sent to your email"
-        );
+        )
       } else {
-        toast.error(result.error || (isRTL ? "فشل في إرسال الرمز" : "Failed to send code"));
+        toast.error(
+          result.error || (isRTL ? "فشل في إرسال الرمز" : "Failed to send code")
+        )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في إرسال الرمز" : "Failed to send code");
+      toast.error(isRTL ? "فشل في إرسال الرمز" : "Failed to send code")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const onVerifyOTP = async (data: z.infer<typeof verifySchema>) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const result = await verifyStatusOTP(
         subdomain,
         applicationNumber,
         data.otp
-      );
+      )
 
       if (result.success && result.data?.accessToken) {
-        setAccessToken(result.data.accessToken);
-        await fetchStatus(result.data.accessToken);
+        setAccessToken(result.data.accessToken)
+        await fetchStatus(result.data.accessToken)
       } else {
-        toast.error(result.error || (isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code"));
+        toast.error(
+          result.error ||
+            (isRTL ? "رمز التحقق غير صحيح" : "Invalid verification code")
+        )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في التحقق" : "Verification failed");
+      toast.error(isRTL ? "فشل في التحقق" : "Verification failed")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleResendOTP = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const result = await requestStatusOTP(
-        subdomain,
-        applicationNumber,
-        email
-      );
+      const result = await requestStatusOTP(subdomain, applicationNumber, email)
 
       if (result.success) {
-        toast.success(isRTL ? "تم إرسال رمز جديد" : "New code sent");
+        toast.success(isRTL ? "تم إرسال رمز جديد" : "New code sent")
       } else {
-        toast.error(result.error || (isRTL ? "فشل في إعادة الإرسال" : "Failed to resend"));
+        toast.error(
+          result.error || (isRTL ? "فشل في إعادة الإرسال" : "Failed to resend")
+        )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في إعادة الإرسال" : "Failed to resend");
+      toast.error(isRTL ? "فشل في إعادة الإرسال" : "Failed to resend")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (isLoading && step === "display") {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
-    );
+    )
   }
 
   if (step === "display" && status) {
@@ -188,24 +208,24 @@ export default function StatusTrackerContent({
         status={status}
         lang={lang}
         onBack={() => {
-          setStep("request");
-          setAccessToken(null);
-          setStatus(null);
+          setStep("request")
+          setAccessToken(null)
+          setStatus(null)
         }}
       />
-    );
+    )
   }
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-          <AnthropicIcons.Checklist className="h-8 w-8 text-primary" />
+        <div className="bg-primary/10 mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full">
+          <AnthropicIcons.Checklist className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "تتبع حالة الطلب" : "Track Application Status"}
         </h1>
-        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+        <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
           {isRTL
             ? `تحقق من حالة طلبك في ${school.name}`
             : `Check your application status at ${school.name}`}
@@ -226,7 +246,10 @@ export default function StatusTrackerContent({
           </CardHeader>
           <CardContent>
             <Form {...requestForm}>
-              <form onSubmit={requestForm.handleSubmit(onRequestOTP)} className="space-y-4">
+              <form
+                onSubmit={requestForm.handleSubmit(onRequestOTP)}
+                className="space-y-4"
+              >
                 <FormField
                   control={requestForm.control}
                   name="applicationNumber"
@@ -236,10 +259,7 @@ export default function StatusTrackerContent({
                         {isRTL ? "رقم الطلب" : "Application Number"}
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="APP-2024-XXXXX"
-                        />
+                        <Input {...field} placeholder="APP-2024-XXXXX" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -271,15 +291,19 @@ export default function StatusTrackerContent({
                   )}
                 />
 
-                <Button type="submit" className="w-full group" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="group w-full"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       {isRTL ? "جارٍ الإرسال..." : "Sending..."}
                     </>
                   ) : (
                     <>
-                      <AnthropicIcons.Lightning className="w-4 h-4 me-2" />
+                      <AnthropicIcons.Lightning className="me-2 h-4 w-4" />
                       {isRTL ? "إرسال رمز التحقق" : "Send Verification Code"}
                     </>
                   )}
@@ -302,7 +326,10 @@ export default function StatusTrackerContent({
           </CardHeader>
           <CardContent>
             <Form {...verifyForm}>
-              <form onSubmit={verifyForm.handleSubmit(onVerifyOTP)} className="space-y-4">
+              <form
+                onSubmit={verifyForm.handleSubmit(onVerifyOTP)}
+                className="space-y-4"
+              >
                 <FormField
                   control={verifyForm.control}
                   name="otp"
@@ -329,11 +356,13 @@ export default function StatusTrackerContent({
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       {isRTL ? "جارٍ التحقق..." : "Verifying..."}
                     </>
+                  ) : isRTL ? (
+                    "تحقق"
                   ) : (
-                    isRTL ? "تحقق" : "Verify"
+                    "Verify"
                   )}
                 </Button>
 
@@ -365,12 +394,10 @@ export default function StatusTrackerContent({
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <AnthropicIcons.Book className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <AnthropicIcons.Book className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h3 className="font-medium mb-2">
-                {isRTL ? "نصائح" : "Tips"}
-              </h3>
-              <ul className="text-sm text-muted-foreground space-y-2">
+              <h3 className="mb-2 font-medium">{isRTL ? "نصائح" : "Tips"}</h3>
+              <ul className="text-muted-foreground space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
                   {isRTL
@@ -395,5 +422,5 @@ export default function StatusTrackerContent({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

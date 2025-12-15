@@ -5,9 +5,10 @@
  * Based on tweakcn's theme-preset-store.ts pattern.
  */
 
-import { create } from 'zustand'
-import type { ThemePreset } from '@/types/theme-editor'
-import { getUserThemes } from '@/components/theme/actions'
+import { create } from "zustand"
+
+import type { ThemePreset } from "@/types/theme-editor"
+import { getUserThemes } from "@/components/theme/actions"
 
 interface ThemePresetStore {
   presets: Record<string, ThemePreset>
@@ -65,18 +66,18 @@ export const useThemePresetStore = create<ThemePresetStore>()((set, get) => ({
     try {
       const result = await getUserThemes()
       if (result.error) {
-        console.error('Failed to load saved presets:', result.error)
+        console.error("Failed to load saved presets:", result.error)
         return
       }
 
       const savedThemes = result.themes || []
       const savedPresets = savedThemes.reduce(
         (acc, theme) => {
-          const presetName = theme.name.toLowerCase().replace(/\s+/g, '-')
+          const presetName = theme.name.toLowerCase().replace(/\s+/g, "-")
           acc[presetName] = {
             label: theme.name,
             styles: theme.themeConfig as any, // Type assertion needed
-            source: 'SAVED',
+            source: "SAVED",
             createdAt: theme.createdAt.toISOString(),
           }
           return acc
@@ -91,18 +92,21 @@ export const useThemePresetStore = create<ThemePresetStore>()((set, get) => ({
         },
       }))
     } catch (error) {
-      console.error('Failed to load saved presets:', error)
+      console.error("Failed to load saved presets:", error)
     }
   },
 
   unloadSavedPresets: () => {
     set((state) => {
       const builtInPresets = Object.entries(state.presets)
-        .filter(([_, preset]) => preset.source === 'BUILT_IN')
-        .reduce((acc, [name, preset]) => {
-          acc[name] = preset
-          return acc
-        }, {} as Record<string, ThemePreset>)
+        .filter(([_, preset]) => preset.source === "BUILT_IN")
+        .reduce(
+          (acc, [name, preset]) => {
+            acc[name] = preset
+            return acc
+          },
+          {} as Record<string, ThemePreset>
+        )
 
       return { presets: builtInPresets }
     })

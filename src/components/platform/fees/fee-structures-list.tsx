@@ -1,8 +1,17 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -10,37 +19,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Copy } from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface FeeStructure {
-  id: string;
-  name: string;
-  academicYear: string;
-  totalAmount: any;
-  installments: number;
-  isActive: boolean;
+  id: string
+  name: string
+  academicYear: string
+  totalAmount: any
+  installments: number
+  isActive: boolean
   class?: {
-    name: string;
-  } | null;
+    name: string
+  } | null
 }
 
 interface Props {
-  structures: FeeStructure[];
-  dictionary?: Dictionary;
+  structures: FeeStructure[]
+  dictionary?: Dictionary
 }
 
 export function FeeStructuresList({ structures, dictionary }: Props) {
   const formatCurrency = (amount: any) => {
-    const value = typeof amount === 'object' ? amount.toNumber() : amount;
+    const value = typeof amount === "object" ? amount.toNumber() : amount
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
-    }).format(value);
-  };
+    }).format(value)
+  }
 
   return (
     <Card>
@@ -66,28 +73,35 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
               <TableHead>Total Amount</TableHead>
               <TableHead>Installments</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">
-                Actions
-              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {structures.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-muted-foreground py-8 text-center"
+                >
                   No fee structures found
                 </TableCell>
               </TableRow>
             ) : (
               structures.map((structure) => (
                 <TableRow key={structure.id}>
-                  <TableCell className="font-medium">{structure.name}</TableCell>
-                  <TableCell>{structure.class?.name || "All Classes"}</TableCell>
+                  <TableCell className="font-medium">
+                    {structure.name}
+                  </TableCell>
+                  <TableCell>
+                    {structure.class?.name || "All Classes"}
+                  </TableCell>
                   <TableCell>{structure.academicYear}</TableCell>
                   <TableCell>{formatCurrency(structure.totalAmount)}</TableCell>
                   <TableCell>{structure.installments}</TableCell>
                   <TableCell>
-                    <Badge variant={structure.isActive ? "default" : "secondary"}>
+                    <Badge
+                      variant={structure.isActive ? "default" : "secondary"}
+                    >
                       {structure.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
@@ -111,5 +125,5 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }

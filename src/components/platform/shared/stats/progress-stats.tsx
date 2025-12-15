@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { ProgressStatItem, StatGridConfig, StatVariant } from "./types"
 
 interface ProgressStatsProps {
@@ -57,7 +59,7 @@ export function ProgressStats({
   if (loading) {
     return (
       <div className={className}>
-        {title && <Skeleton className="h-6 w-40 mb-4" />}
+        {title && <Skeleton className="mb-4 h-6 w-40" />}
         <div className={gridClasses}>
           {Array.from({ length: items.length || 4 }).map((_, i) => (
             <ProgressStatSkeleton key={i} />
@@ -85,16 +87,19 @@ function ProgressStatCard({ item }: { item: ProgressStatItem }) {
   return (
     <Card className="py-4">
       <CardContent>
-        <p className="text-sm text-muted-foreground">{item.label}</p>
-        <p className="text-2xl font-semibold text-foreground">
-          {item.value}
-        </p>
+        <p className="text-muted-foreground text-sm">{item.label}</p>
+        <p className="text-foreground text-2xl font-semibold">{item.value}</p>
         <Progress
           value={Math.min(item.percentage, 100)}
           className={cn("mt-4 h-2", progressColor)}
         />
         <div className="mt-2 flex items-center justify-between text-sm">
-          <span className={cn("font-medium", getTextColor(item.variant, item.percentage))}>
+          <span
+            className={cn(
+              "font-medium",
+              getTextColor(item.variant, item.percentage)
+            )}
+          >
             {item.percentage.toFixed(1)}%
           </span>
           {item.limit && (
@@ -133,7 +138,7 @@ export function ProgressStatInline({
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{label}</span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           {value} {limit && `/ ${limit}`}
         </span>
       </div>
@@ -173,13 +178,16 @@ export function ProgressStatStacked({
             <div key={item.label} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{item.label}</span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   {item.value} ({percentage.toFixed(1)}%)
                 </span>
               </div>
-              <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <div className="bg-muted h-2 overflow-hidden rounded-full">
                 <div
-                  className={cn("h-full transition-all duration-300", item.color)}
+                  className={cn(
+                    "h-full transition-all duration-300",
+                    item.color
+                  )}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
@@ -195,9 +203,9 @@ function ProgressStatSkeleton() {
   return (
     <Card className="py-4">
       <CardContent>
-        <Skeleton className="h-4 w-20 mb-2" />
-        <Skeleton className="h-8 w-24 mb-4" />
-        <Skeleton className="h-2 w-full mb-2" />
+        <Skeleton className="mb-2 h-4 w-20" />
+        <Skeleton className="mb-4 h-8 w-24" />
+        <Skeleton className="mb-2 h-2 w-full" />
         <div className="flex justify-between">
           <Skeleton className="h-4 w-12" />
           <Skeleton className="h-4 w-24" />

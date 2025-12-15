@@ -1,18 +1,24 @@
 "use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react"
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-import { getScoreRangeColumns, type ScoreRangeColumnCallbacks } from "./columns"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
-import { ScoreRangeForm } from "./form"
-import { getScoreRanges, deleteScoreRange } from "./actions"
-import { usePlatformData } from "@/hooks/use-platform-data"
-import { PlatformToolbar } from "@/components/platform/shared"
-import { useRouter } from "next/navigation"
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteScoreRange, getScoreRanges } from "./actions"
+import { getScoreRangeColumns, type ScoreRangeColumnCallbacks } from "./columns"
+import { ScoreRangeForm } from "./form"
 import type { ScoreRangeRow } from "./types"
 
 interface ScoreRangeTableProps {
@@ -34,7 +40,8 @@ export function ScoreRangeTable({
 
   // Translations
   const t = {
-    search: lang === "ar" ? "بحث في نطاقات الدرجات..." : "Search grade ranges...",
+    search:
+      lang === "ar" ? "بحث في نطاقات الدرجات..." : "Search grade ranges...",
     create: lang === "ar" ? "إضافة نطاق" : "Add Range",
     deleteRange: lang === "ar" ? "حذف نطاق الدرجات" : "Delete grade range",
     reset: lang === "ar" ? "إعادة تعيين" : "Reset",
@@ -44,26 +51,20 @@ export function ScoreRangeTable({
   const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
-  const {
-    data,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<ScoreRangeRow, { grade?: string }>({
-    initialData,
-    total,
-    perPage,
-    fetcher: async (params) => {
-      const result = await getScoreRanges(params)
-      if (!result.success || !result.data) {
-        return { rows: [], total: 0 }
-      }
-      return { rows: result.data.rows, total: result.data.total }
-    },
-    filters: searchValue ? { grade: searchValue } : undefined,
-  })
+  const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+    usePlatformData<ScoreRangeRow, { grade?: string }>({
+      initialData,
+      total,
+      perPage,
+      fetcher: async (params) => {
+        const result = await getScoreRanges(params)
+        if (!result.success || !result.data) {
+          return { rows: [], total: 0 }
+        }
+        return { rows: result.data.rows, total: result.data.total }
+      },
+      filters: searchValue ? { grade: searchValue } : undefined,
+    })
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(

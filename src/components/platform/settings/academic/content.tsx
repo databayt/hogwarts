@@ -1,31 +1,18 @@
 "use client"
 
 import * as React from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
-import { Plus, Calendar, CalendarDays, Clock, AlertCircle, RefreshCw } from "lucide-react"
-import { YearList } from "./year-list"
-import { YearForm } from "./year-form"
-import { TermList } from "./term-list"
-import { TermForm } from "./term-form"
-import { PeriodList } from "./period-list"
-import { PeriodForm } from "./period-form"
-import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
 import {
-  getSchoolYears,
-  getTermsForYear,
-  getPeriodsForYear,
-  deleteSchoolYear,
-  deleteTerm,
-  deletePeriod,
-  setActiveTerm,
-} from "./actions"
-import type { SchoolYear, Term, Period } from "./types"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { Locale } from "@/components/internationalization/config"
+  AlertCircle,
+  Calendar,
+  CalendarDays,
+  Clock,
+  Plus,
+  RefreshCw,
+} from "lucide-react"
 import { toast } from "sonner"
+
+import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +23,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+
+import {
+  deletePeriod,
+  deleteSchoolYear,
+  deleteTerm,
+  getPeriodsForYear,
+  getSchoolYears,
+  getTermsForYear,
+  setActiveTerm,
+} from "./actions"
+import { PeriodForm } from "./period-form"
+import { PeriodList } from "./period-list"
+import { TermForm } from "./term-form"
+import { TermList } from "./term-list"
+import type { Period, SchoolYear, Term } from "./types"
+import { YearForm } from "./year-form"
+import { YearList } from "./year-list"
 
 interface AcademicContentProps {
   dictionary: Dictionary
@@ -49,7 +64,9 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
   const [years, setYears] = React.useState<SchoolYear[]>([])
   const [terms, setTerms] = React.useState<Term[]>([])
   const [periods, setPeriods] = React.useState<Period[]>([])
-  const [selectedYearId, setSelectedYearId] = React.useState<string | null>(null)
+  const [selectedYearId, setSelectedYearId] = React.useState<string | null>(
+    null
+  )
   const [isLoading, setIsLoading] = React.useState(true)
   const [isLoadingTerms, setIsLoadingTerms] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -102,7 +119,8 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
         setError(result.message || "Failed to load academic years")
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load academic years"
+      const message =
+        err instanceof Error ? err.message : "Failed to load academic years"
       console.error("Failed to fetch years:", err)
       setError(message)
     } finally {
@@ -267,14 +285,15 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
   }
 
   const selectedYear = years.find((y) => y.id === selectedYearId)
-  const existingTermNumbers = React.useMemo(() => terms.map((t) => t.termNumber), [terms])
+  const existingTermNumbers = React.useMemo(
+    () => terms.map((t) => t.termNumber),
+    [terms]
+  )
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <PageHeadingSetter
-        title={dict.title || "Academic Year Setup"}
-      />
+      <PageHeadingSetter title={dict.title || "Academic Year Setup"} />
 
       {/* Description */}
       <div className="space-y-1">
@@ -299,7 +318,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
               onClick={fetchYears}
               className="ml-4"
             >
-              <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
               {dict.retry || "Retry"}
             </Button>
           </AlertDescription>
@@ -307,13 +326,16 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
       )}
 
       {/* 3-Column Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Column 1: Academic Years */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <Calendar
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden="true"
+                />
                 <CardTitle className="text-base">
                   {dict.academicYears || "Academic Years"}
                 </CardTitle>
@@ -324,7 +346,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 onClick={handleAddYear}
                 aria-label={dict.addYear || "Add academic year"}
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
+                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>
@@ -350,7 +372,10 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <CalendarDays
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden="true"
+                />
                 <CardTitle className="text-base">
                   {dict.terms || "Terms"}
                 </CardTitle>
@@ -362,14 +387,14 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 disabled={!selectedYearId}
                 aria-label={dict.addTerm || "Add term"}
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
+                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>
             <CardDescription className="text-xs">
               {selectedYear
                 ? `${dict.termsFor || "Terms for"} ${selectedYear.yearName}`
-                : (dict.termsDescription || "Semesters or quarters")}
+                : dict.termsDescription || "Semesters or quarters"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -390,7 +415,10 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                <Clock
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden="true"
+                />
                 <CardTitle className="text-base">
                   {dict.dailyPeriods || "Daily Periods"}
                 </CardTitle>
@@ -402,14 +430,14 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
                 disabled={!selectedYearId}
                 aria-label={dict.addPeriod || "Add period"}
               >
-                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
+                <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
                 {dict.add || "Add"}
               </Button>
             </div>
             <CardDescription className="text-xs">
               {selectedYear
                 ? `${dict.periodsFor || "Periods for"} ${selectedYear.yearName}`
-                : (dict.periodsDescription || "Class time slots")}
+                : dict.periodsDescription || "Class time slots"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -468,7 +496,7 @@ export function AcademicContent({ dictionary, lang }: AcademicContentProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <AlertCircle className="text-destructive h-5 w-5" />
               {dict.confirmDelete || "Confirm Delete"}
             </AlertDialogTitle>
             <AlertDialogDescription>

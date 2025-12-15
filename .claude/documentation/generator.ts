@@ -3,38 +3,38 @@
  * Automatically generates and maintains documentation across the codebase
  */
 
-import { parse } from '@typescript-eslint/parser'
-import { readFile, writeFile, mkdir } from 'fs/promises'
-import { glob } from 'glob'
-import { compile } from 'handlebars'
-import { z } from 'zod'
-import path from 'path'
+import { mkdir, readFile, writeFile } from "fs/promises"
+import path from "path"
+import { parse } from "@typescript-eslint/parser"
+import { glob } from "glob"
+import { compile } from "handlebars"
+import { z } from "zod"
 
 // Configuration
 const CONFIG = {
-  templatesDir: '.claude/documentation/templates',
-  outputDir: 'docs',
+  templatesDir: ".claude/documentation/templates",
+  outputDir: "docs",
   sourcePatterns: {
-    api: 'src/**/actions.ts',
-    components: 'src/components/**/content.tsx',
-    features: 'src/components/platform/*/README.md',
-    validation: 'src/**/validation.ts'
-  }
+    api: "src/**/actions.ts",
+    components: "src/components/**/content.tsx",
+    features: "src/components/platform/*/README.md",
+    validation: "src/**/validation.ts",
+  },
 }
 
 // Template loaders
 async function loadTemplate(name: string): Promise<HandlebarsTemplateDelegate> {
   const templatePath = path.join(CONFIG.templatesDir, `${name}-template.md`)
-  const content = await readFile(templatePath, 'utf-8')
+  const content = await readFile(templatePath, "utf-8")
   return compile(content)
 }
 
 // Source file parsers
 async function parseApiFile(filePath: string) {
-  const content = await readFile(filePath, 'utf-8')
+  const content = await readFile(filePath, "utf-8")
   const ast = parse(content, {
-    ecmaVersion: 'latest',
-    sourceType: 'module'
+    ecmaVersion: "latest",
+    sourceType: "module",
   })
 
   const functions = []
@@ -42,28 +42,30 @@ async function parseApiFile(filePath: string) {
 
   // Extract exported functions
   for (const node of ast.body) {
-    if (node.type === 'ExportNamedDeclaration' && node.declaration) {
-      if (node.declaration.type === 'FunctionDeclaration') {
+    if (node.type === "ExportNamedDeclaration" && node.declaration) {
+      if (node.declaration.type === "FunctionDeclaration") {
         functions.push({
           name: node.declaration.id?.name,
           async: node.declaration.async,
-          params: node.declaration.params.map(p => p.name),
-          body: content.substring(node.declaration.start, node.declaration.end)
+          params: node.declaration.params.map((p) => p.name),
+          body: content.substring(node.declaration.start, node.declaration.end),
         })
       }
     }
   }
 
   // Extract validation schemas
-  const validationPath = filePath.replace('actions.ts', 'validation.ts')
+  const validationPath = filePath.replace("actions.ts", "validation.ts")
   try {
-    const validationContent = await readFile(validationPath, 'utf-8')
-    const schemaMatches = validationContent.matchAll(/export const (\w+Schema) = z\.object\(([\s\S]*?)\)/g)
+    const validationContent = await readFile(validationPath, "utf-8")
+    const schemaMatches = validationContent.matchAll(
+      /export const (\w+Schema) = z\.object\(([\s\S]*?)\)/g
+    )
 
     for (const match of schemaMatches) {
       validations.push({
         name: match[1],
-        definition: match[0]
+        definition: match[0],
       })
     }
   } catch (e) {
@@ -74,12 +76,12 @@ async function parseApiFile(filePath: string) {
     functions,
     validations,
     filePath,
-    feature: path.dirname(filePath).split('/').pop()
+    feature: path.dirname(filePath).split("/").pop(),
   }
 }
 
 async function parseComponentFile(filePath: string) {
-  const content = await readFile(filePath, 'utf-8')
+  const content = await readFile(filePath, "utf-8")
 
   // Extract component info
   const componentMatch = content.match(/export (default )?function (\w+)/)
@@ -100,38 +102,43 @@ async function parseComponentFile(filePath: string) {
   }
 
   return {
-    name: componentMatch?.[2] || 'Unknown',
+    name: componentMatch?.[2] || "Unknown",
     props: propsMatch?.[0] || null,
-    imports: imports.filter(i => i.startsWith('@/components')),
+    imports: imports.filter((i) => i.startsWith("@/components")),
     hooks,
-    hasServerAction: content.includes('actions.'),
-    isMultiTenant: content.includes('schoolId'),
+    hasServerAction: content.includes("actions."),
+    isMultiTenant: content.includes("schoolId"),
     filePath,
-    feature: path.dirname(filePath).split('/').pop()
+    feature: path.dirname(filePath).split("/").pop(),
   }
 }
 
 // Documentation generators
 async function generateApiDocs(apiData: any) {
-  const template = await loadTemplate('api')
+  const template = await loadTemplate("api")
 
   for (const func of apiData.functions) {
     const docData = {
       name: func.name,
       description: extractComment(func.body),
-      method: 'POST', // Server actions are POST
+      method: "POST", // Server actions are POST
       path: `/api/${apiData.feature}/${func.name}`,
       authRequired: true,
-      multiTenant: func.body.includes('schoolId'),
+      multiTenant: func.body.includes("schoolId"),
       parameters: extractParams(func),
-      bodySchema: apiData.validations.find(v => v.name.includes(func.name))?.definition,
+      bodySchema: apiData.validations.find((v) => v.name.includes(func.name))
+        ?.definition,
       implementation: func.body,
       timestamp: new Date().toISOString(),
-      sourceFile: apiData.filePath
+      sourceFile: apiData.filePath,
     }
 
     const output = template(docData)
-    const outputPath = path.join(CONFIG.outputDir, 'api', `${apiData.feature}.md`)
+    const outputPath = path.join(
+      CONFIG.outputDir,
+      "api",
+      `${apiData.feature}.md`
+    )
 
     await mkdir(path.dirname(outputPath), { recursive: true })
     await writeFile(outputPath, output)
@@ -139,37 +146,41 @@ async function generateApiDocs(apiData: any) {
 }
 
 async function generateComponentDocs(componentData: any) {
-  const template = await loadTemplate('component')
+  const template = await loadTemplate("component")
 
   const docData = {
     name: componentData.name,
     description: extractComponentDescription(componentData),
     importPath: `@/components/${componentData.feature}/content`,
     propsInterface: componentData.props,
-    hasState: componentData.hooks.includes('useState'),
-    usesContext: componentData.hooks.includes('useContext'),
+    hasState: componentData.hooks.includes("useState"),
+    usesContext: componentData.hooks.includes("useContext"),
     isMultiTenant: componentData.isMultiTenant,
     hasServerAction: componentData.hasServerAction,
     externalDeps: extractExternalDeps(componentData.imports),
     internalDeps: extractInternalDeps(componentData.imports),
     timestamp: new Date().toISOString(),
-    sourceFile: componentData.filePath
+    sourceFile: componentData.filePath,
   }
 
   const output = template(docData)
-  const outputPath = path.join(CONFIG.outputDir, 'components', `${componentData.feature}.md`)
+  const outputPath = path.join(
+    CONFIG.outputDir,
+    "components",
+    `${componentData.feature}.md`
+  )
 
   await mkdir(path.dirname(outputPath), { recursive: true })
   await writeFile(outputPath, output)
 }
 
 async function generateFeatureReadme(featurePath: string) {
-  const template = await loadTemplate('feature-readme')
+  const template = await loadTemplate("feature-readme")
   const feature = path.basename(path.dirname(featurePath))
 
   // Gather all feature data
-  const actionsPath = path.join(path.dirname(featurePath), 'actions.ts')
-  const contentPath = path.join(path.dirname(featurePath), 'content.tsx')
+  const actionsPath = path.join(path.dirname(featurePath), "actions.ts")
+  const contentPath = path.join(path.dirname(featurePath), "content.tsx")
 
   const apiData = await parseApiFile(actionsPath).catch(() => null)
   const componentData = await parseComponentFile(contentPath).catch(() => null)
@@ -180,13 +191,16 @@ async function generateFeatureReadme(featurePath: string) {
     description: `Comprehensive ${feature} management system`,
     mainComponent: componentData?.name || `${feature}Content`,
     components: extractComponents(path.dirname(featurePath)),
-    actions: apiData?.functions.map(f => ({
-      name: f.name,
-      purpose: extractPurpose(f.body),
-      params: f.params.join(', ')
-    })) || [],
-    validationSchemas: apiData?.validations.map(v => v.definition).join('\n\n'),
-    timestamp: new Date().toISOString()
+    actions:
+      apiData?.functions.map((f) => ({
+        name: f.name,
+        purpose: extractPurpose(f.body),
+        params: f.params.join(", "),
+      })) || [],
+    validationSchemas: apiData?.validations
+      .map((v) => v.definition)
+      .join("\n\n"),
+    timestamp: new Date().toISOString(),
   }
 
   const output = template(docData)
@@ -196,7 +210,9 @@ async function generateFeatureReadme(featurePath: string) {
 // Helper functions
 function extractComment(code: string): string {
   const match = code.match(/\/\*\*([\s\S]*?)\*\//)
-  return match ? match[1].replace(/\* ?/g, '').trim() : 'No description available'
+  return match
+    ? match[1].replace(/\* ?/g, "").trim()
+    : "No description available"
 }
 
 function extractComponentDescription(data: any): string {
@@ -205,59 +221,59 @@ function extractComponentDescription(data: any): string {
 }
 
 function extractParams(func: any): any[] {
-  return func.params.map(p => ({
+  return func.params.map((p) => ({
     name: p,
-    type: 'any', // Would need more advanced parsing
+    type: "any", // Would need more advanced parsing
     required: true,
-    description: `Parameter ${p}`
+    description: `Parameter ${p}`,
   }))
 }
 
 function extractPurpose(code: string): string {
   // Extract from function comment or name
   const comment = extractComment(code)
-  if (comment !== 'No description available') return comment
+  if (comment !== "No description available") return comment
 
   // Infer from function name
-  if (code.includes('create')) return 'Create new record'
-  if (code.includes('update')) return 'Update existing record'
-  if (code.includes('delete')) return 'Delete record'
-  if (code.includes('get') || code.includes('find')) return 'Retrieve records'
+  if (code.includes("create")) return "Create new record"
+  if (code.includes("update")) return "Update existing record"
+  if (code.includes("delete")) return "Delete record"
+  if (code.includes("get") || code.includes("find")) return "Retrieve records"
 
-  return 'Process data'
+  return "Process data"
 }
 
 function extractExternalDeps(imports: string[]): any[] {
   return imports
-    .filter(i => !i.startsWith('@/') && !i.startsWith('./'))
-    .map(i => ({
-      package: i.split('/')[0],
-      version: 'latest' // Would need package.json parsing
+    .filter((i) => !i.startsWith("@/") && !i.startsWith("./"))
+    .map((i) => ({
+      package: i.split("/")[0],
+      version: "latest", // Would need package.json parsing
     }))
 }
 
 function extractInternalDeps(imports: string[]): any[] {
   return imports
-    .filter(i => i.startsWith('@/components'))
-    .map(i => ({
+    .filter((i) => i.startsWith("@/components"))
+    .map((i) => ({
       component: path.basename(i),
-      purpose: 'Component dependency'
+      purpose: "Component dependency",
     }))
 }
 
 async function extractComponents(featureDir: string): Promise<any[]> {
   const files = await glob(`${featureDir}/*.tsx`)
-  return files.map(f => ({
-    name: path.basename(f, '.tsx'),
-    purpose: `${path.basename(f, '.tsx')} component`
+  return files.map((f) => ({
+    name: path.basename(f, ".tsx"),
+    purpose: `${path.basename(f, ".tsx")} component`,
   }))
 }
 
 // Main generator
 export async function generateDocumentation(type?: string) {
-  console.log('🚀 Starting documentation generation...')
+  console.log("🚀 Starting documentation generation...")
 
-  if (!type || type === 'api') {
+  if (!type || type === "api") {
     const apiFiles = await glob(CONFIG.sourcePatterns.api)
     for (const file of apiFiles) {
       const data = await parseApiFile(file)
@@ -266,7 +282,7 @@ export async function generateDocumentation(type?: string) {
     }
   }
 
-  if (!type || type === 'components') {
+  if (!type || type === "components") {
     const componentFiles = await glob(CONFIG.sourcePatterns.components)
     for (const file of componentFiles) {
       const data = await parseComponentFile(file)
@@ -275,16 +291,16 @@ export async function generateDocumentation(type?: string) {
     }
   }
 
-  if (!type || type === 'features') {
-    const features = await glob('src/components/platform/*/')
+  if (!type || type === "features") {
+    const features = await glob("src/components/platform/*/")
     for (const feature of features) {
-      const readmePath = path.join(feature, 'README.md')
+      const readmePath = path.join(feature, "README.md")
       await generateFeatureReadme(readmePath)
       console.log(`✅ Generated README for ${path.basename(feature)}`)
     }
   }
 
-  console.log('📚 Documentation generation complete!')
+  console.log("📚 Documentation generation complete!")
 }
 
 // CLI interface

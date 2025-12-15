@@ -17,17 +17,25 @@ interface PageNavProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultPage?: PageNavItem
 }
 
-export function PageNav({ pages, defaultPage, className, ...props }: PageNavProps) {
+export function PageNav({
+  pages,
+  defaultPage,
+  className,
+  ...props
+}: PageNavProps) {
   const pathname = usePathname()
 
   // Helper to check if a page is active
   const isPageActive = (pageHref: string) => {
     // Remove trailing slash for comparison
-    const normalizedPath = pathname.replace(/\/$/, '')
-    const normalizedHref = pageHref.replace(/\/$/, '')
+    const normalizedPath = pathname.replace(/\/$/, "")
+    const normalizedHref = pageHref.replace(/\/$/, "")
 
     // For attendance overview, check if we're at the base attendance path
-    if (normalizedHref.endsWith('/attendance') && normalizedPath.endsWith('/attendance')) {
+    if (
+      normalizedHref.endsWith("/attendance") &&
+      normalizedPath.endsWith("/attendance")
+    ) {
       return true
     }
 
@@ -75,13 +83,13 @@ function PageLink({
       href={page.href}
       key={page.href}
       className={cn(
-        "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
+        "hover:text-primary relative px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors",
         isActive ? "text-primary" : "text-muted-foreground"
       )}
     >
       {page.name}
       {isActive && (
-        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+        <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
       )}
     </Link>
   )

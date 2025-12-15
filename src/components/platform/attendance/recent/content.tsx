@@ -1,21 +1,47 @@
 "use client"
 
-import * as React from 'react'
-import { useCallback, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Users, Clock, CircleCheck, CircleX, CircleAlert, LoaderCircle, RefreshCw } from "lucide-react";
-import { cn } from '@/lib/utils'
-import { formatDistanceToNow, isValid } from 'date-fns'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { UserRole } from '@prisma/client'
-import { getRecentAttendance, getAttendanceStats, getClassesForSelection } from '../actions'
+import * as React from "react"
+import { useCallback, useMemo } from "react"
+import type { UserRole } from "@prisma/client"
+import { formatDistanceToNow, isValid } from "date-fns"
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  LoaderCircle,
+  RefreshCw,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  getAttendanceStats,
+  getClassesForSelection,
+  getRecentAttendance,
+} from "../actions"
 
 interface Props {
-  dictionary?: Dictionary['school']
+  dictionary?: Dictionary["school"]
   locale?: string
   userRole?: UserRole
 }
@@ -49,7 +75,9 @@ interface ClassOption {
 }
 
 // Safe date formatting helpers
-function safeFormatDistanceToNow(date: Date | string | null | undefined): string {
+function safeFormatDistanceToNow(
+  date: Date | string | null | undefined
+): string {
   if (!date) return "recently"
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date
@@ -60,7 +88,10 @@ function safeFormatDistanceToNow(date: Date | string | null | undefined): string
   }
 }
 
-function safeFormatDate(date: Date | string | null | undefined, locale: string = 'en'): string {
+function safeFormatDate(
+  date: Date | string | null | undefined,
+  locale: string = "en"
+): string {
   if (!date) return "-"
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date
@@ -71,12 +102,18 @@ function safeFormatDate(date: Date | string | null | undefined, locale: string =
   }
 }
 
-function safeFormatTime(date: Date | string | null | undefined, locale: string = 'en'): string {
+function safeFormatTime(
+  date: Date | string | null | undefined,
+  locale: string = "en"
+): string {
   if (!date) return "-"
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date
     if (!isValid(dateObj)) return "-"
-    return dateObj.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+    return dateObj.toLocaleTimeString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   } catch {
     return "-"
   }
@@ -84,79 +121,92 @@ function safeFormatTime(date: Date | string | null | undefined, locale: string =
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'PRESENT':
+    case "PRESENT":
       return <CircleCheck className="h-4 w-4 text-green-500" />
-    case 'ABSENT':
+    case "ABSENT":
       return <CircleX className="h-4 w-4 text-red-500" />
-    case 'LATE':
+    case "LATE":
       return <Clock className="h-4 w-4 text-yellow-500" />
-    case 'EXCUSED':
-    case 'SICK':
+    case "EXCUSED":
+    case "SICK":
       return <CircleAlert className="h-4 w-4 text-blue-500" />
     default:
-      return <CircleAlert className="h-4 w-4 text-muted-foreground" />
+      return <CircleAlert className="text-muted-foreground h-4 w-4" />
   }
 }
 
-const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
+const getStatusBadgeVariant = (
+  status: string
+): "default" | "destructive" | "secondary" | "outline" => {
   switch (status) {
-    case 'PRESENT':
-      return 'default'
-    case 'ABSENT':
-      return 'destructive'
-    case 'LATE':
-      return 'secondary'
+    case "PRESENT":
+      return "default"
+    case "ABSENT":
+      return "destructive"
+    case "LATE":
+      return "secondary"
     default:
-      return 'outline'
+      return "outline"
   }
 }
 
 const getMethodDisplayName = (method: string): string => {
   const names: Record<string, string> = {
-    'MANUAL': 'Manual',
-    'QR_CODE': 'QR Code',
-    'BARCODE': 'Barcode',
-    'GEOFENCE': 'Geofence',
-    'RFID': 'RFID Card',
-    'NFC': 'NFC',
-    'BLUETOOTH': 'Bluetooth',
-    'BULK_UPLOAD': 'Bulk Upload'
+    MANUAL: "Manual",
+    QR_CODE: "QR Code",
+    BARCODE: "Barcode",
+    GEOFENCE: "Geofence",
+    RFID: "RFID Card",
+    NFC: "NFC",
+    BLUETOOTH: "Bluetooth",
+    BULK_UPLOAD: "Bulk Upload",
   }
   return names[method] || method
 }
 
-export function RecentActivityContent({ dictionary, locale = 'en', userRole }: Props) {
+export function RecentActivityContent({
+  dictionary,
+  locale = "en",
+  userRole,
+}: Props) {
   const [records, setRecords] = React.useState<AttendanceRecord[]>([])
   const [stats, setStats] = React.useState<Stats | null>(null)
   const [classes, setClasses] = React.useState<ClassOption[]>([])
-  const [filter, setFilter] = React.useState<string>('all')
-  const [selectedClass, setSelectedClass] = React.useState<string>('all')
+  const [filter, setFilter] = React.useState<string>("all")
+  const [selectedClass, setSelectedClass] = React.useState<string>("all")
   const [loading, setLoading] = React.useState(true)
   const [refreshing, setRefreshing] = React.useState(false)
 
   const fetchData = React.useCallback(async () => {
     try {
-      const classFilter = selectedClass !== 'all' ? selectedClass : undefined
+      const classFilter = selectedClass !== "all" ? selectedClass : undefined
 
       const [recordsResult, statsResult, classesResult] = await Promise.all([
         getRecentAttendance({ limit: 100, classId: classFilter }),
         getAttendanceStats({ classId: classFilter }),
-        getClassesForSelection()
+        getClassesForSelection(),
       ])
 
       // Map the results to match our interface types (mixed return types)
-      if (!('success' in recordsResult && !recordsResult.success) && 'records' in recordsResult) {
-        setRecords(recordsResult.records.map((r: any) => ({
-          ...r,
-          status: String(r.status),
-          method: String(r.method),
-        })))
+      if (
+        !("success" in recordsResult && !recordsResult.success) &&
+        "records" in recordsResult
+      ) {
+        setRecords(
+          recordsResult.records.map((r: any) => ({
+            ...r,
+            status: String(r.status),
+            method: String(r.method),
+          }))
+        )
       }
       // statsResult returns raw data on success
-      if (!('success' in statsResult && !statsResult.success)) setStats(statsResult as any)
-      if (classesResult.success && classesResult.data) setClasses(classesResult.data.classes)
+      if (!("success" in statsResult && !statsResult.success))
+        setStats(statsResult as any)
+      if (classesResult.success && classesResult.data)
+        setClasses(classesResult.data.classes)
     } catch (error) {
-      console.error('Error fetching recent attendance:', error)
+      console.error("Error fetching recent attendance:", error)
     } finally {
       setLoading(false)
     }
@@ -174,28 +224,28 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
 
   // Memoize filtered records to prevent recalculation on every render
   const filteredRecords = React.useMemo(() => {
-    if (filter === 'all') return records
-    return records.filter(r => r.status === filter.toUpperCase())
+    if (filter === "all") return records
+    return records.filter((r) => r.status === filter.toUpperCase())
   }, [filter, records])
 
   const dict = dictionary?.attendance || {
-    recentActivity: 'Recent Activity',
-    recentActivityDescription: 'Latest attendance records across all methods',
-    allRecords: 'All',
-    present: 'Present',
-    absent: 'Absent',
-    late: 'Late',
-    noRecentRecords: 'No recent attendance records',
-    startMarkingAttendance: 'Start Marking Attendance',
-    markedBy: 'Marked by',
-    via: 'via',
+    recentActivity: "Recent Activity",
+    recentActivityDescription: "Latest attendance records across all methods",
+    allRecords: "All",
+    present: "Present",
+    absent: "Absent",
+    late: "Late",
+    noRecentRecords: "No recent attendance records",
+    startMarkingAttendance: "Start Marking Attendance",
+    markedBy: "Marked by",
+    via: "via",
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <LoaderCircle className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <LoaderCircle className="text-muted-foreground mx-auto mb-4 h-8 w-8 animate-spin" />
           <p className="text-muted-foreground">Loading recent activity...</p>
         </div>
       </div>
@@ -207,8 +257,12 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">{dict.recentActivity}</h1>
-          <p className="text-sm text-muted-foreground">{dict.recentActivityDescription}</p>
+          <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            {dict.recentActivity}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            {dict.recentActivityDescription}
+          </p>
         </div>
         <Button
           variant="outline"
@@ -216,7 +270,9 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
           onClick={handleRefresh}
           disabled={refreshing}
         >
-          <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
+          <RefreshCw
+            className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")}
+          />
           Refresh
         </Button>
       </div>
@@ -226,11 +282,11 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {stats?.attendanceRate || 0}% attendance rate
             </p>
           </CardContent>
@@ -238,15 +294,20 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.present}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {dict.present}
+            </CardTitle>
             <CircleCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {stats?.present || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.total ? Math.round((stats.present / stats.total) * 100) : 0}% of total
+            <p className="text-muted-foreground text-xs">
+              {stats?.total
+                ? Math.round((stats.present / stats.total) * 100)
+                : 0}
+              % of total
             </p>
           </CardContent>
         </Card>
@@ -260,8 +321,9 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
             <div className="text-2xl font-bold text-yellow-600">
               {stats?.late || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}% of total
+            <p className="text-muted-foreground text-xs">
+              {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}%
+              of total
             </p>
           </CardContent>
         </Card>
@@ -275,8 +337,11 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
             <div className="text-2xl font-bold text-red-600">
               {stats?.absent || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.total ? Math.round((stats.absent / stats.total) * 100) : 0}% of total
+            <p className="text-muted-foreground text-xs">
+              {stats?.total
+                ? Math.round((stats.absent / stats.total) * 100)
+                : 0}
+              % of total
             </p>
           </CardContent>
         </Card>
@@ -285,49 +350,53 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
       {/* Recent Records */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <CardTitle>{dict.recentActivity}</CardTitle>
-              <CardDescription>{dict.recentActivityDescription}</CardDescription>
+              <CardDescription>
+                {dict.recentActivityDescription}
+              </CardDescription>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
-                  {classes.map(cls => (
-                    <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1">
                 <Button
-                  variant={filter === 'all' ? 'default' : 'outline'}
+                  variant={filter === "all" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter('all')}
+                  onClick={() => setFilter("all")}
                 >
                   {dict.allRecords}
                 </Button>
                 <Button
-                  variant={filter === 'present' ? 'default' : 'outline'}
+                  variant={filter === "present" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter('present')}
+                  onClick={() => setFilter("present")}
                 >
                   {dict.present}
                 </Button>
                 <Button
-                  variant={filter === 'late' ? 'default' : 'outline'}
+                  variant={filter === "late" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter('late')}
+                  onClick={() => setFilter("late")}
                 >
                   {dict.late}
                 </Button>
                 <Button
-                  variant={filter === 'absent' ? 'default' : 'outline'}
+                  variant={filter === "absent" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter('absent')}
+                  onClick={() => setFilter("absent")}
                 >
                   {dict.absent}
                 </Button>
@@ -337,8 +406,8 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
         </CardHeader>
         <CardContent>
           {filteredRecords.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <div className="text-muted-foreground py-12 text-center">
+              <Users className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p>{dict.noRecentRecords}</p>
             </div>
           ) : (
@@ -348,25 +417,27 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
                   <div
                     key={record.id}
                     className={cn(
-                      "flex items-center justify-between p-4 rounded-lg border transition-colors hover:bg-muted/50",
+                      "hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors",
                       "rtl:flex-row-reverse"
                     )}
                   >
                     <div className="flex items-center gap-4 rtl:flex-row-reverse">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+                      <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
                         {getStatusIcon(record.status)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2 rtl:flex-row-reverse">
-                          <h4 className="font-semibold">{record.studentName}</h4>
+                          <h4 className="font-semibold">
+                            {record.studentName}
+                          </h4>
                           <Badge variant={getStatusBadgeVariant(record.status)}>
                             {record.status}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {record.className}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 rtl:flex-row-reverse">
+                        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs rtl:flex-row-reverse">
                           <span>
                             {dict.via} {getMethodDisplayName(record.method)}
                           </span>
@@ -374,14 +445,15 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
                             <>
                               <span>•</span>
                               <span>
-                                Check-in: {safeFormatTime(record.checkInTime, locale)}
+                                Check-in:{" "}
+                                {safeFormatTime(record.checkInTime, locale)}
                               </span>
                             </>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground text-right">
+                    <div className="text-muted-foreground text-right text-sm">
                       <p>{safeFormatDate(record.date, locale)}</p>
                       <p className="text-xs">
                         {safeFormatDistanceToNow(record.markedAt)}

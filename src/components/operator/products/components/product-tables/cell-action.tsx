@@ -1,30 +1,39 @@
-'use client';
-function AlertModal(_props: { isOpen: boolean; onClose: () => void; onConfirm: () => void; loading: boolean }) {
-  return null;
-}
-import { Button } from '@/components/ui/button';
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { IconDotsVertical, IconEdit, IconTrash } from "@tabler/icons-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import type { Product } from './index';
-import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import type { Product } from "./index"
+
+function AlertModal(_props: {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  loading: boolean
+}) {
+  return null
+}
 
 interface CellActionProps {
-  data: Product;
+  data: Product
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
-  const [loading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const [loading] = useState(false)
+  const [open, setOpen] = useState(false)
+  const router = useRouter()
 
-  const onConfirm = async () => {};
+  const onConfirm = async () => {}
 
   return (
     <>
@@ -36,24 +45,24 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0'>
-            <span className='sr-only'>Open menu</span>
-            <IconDotsVertical className='h-4 w-4' />
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <IconDotsVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align='end'>
+        <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
           <DropdownMenuItem
             onClick={() => router.push(`/dashboard/product/${data.id}`)}
           >
-            <IconEdit className='mr-2 h-4 w-4' /> Update
+            <IconEdit className="mr-2 h-4 w-4" /> Update
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen(true)}>
-            <IconTrash className='mr-2 h-4 w-4' /> Delete
+            <IconTrash className="mr-2 h-4 w-4" /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </>
-  );
-};
+  )
+}

@@ -10,6 +10,7 @@
 Validates Prisma queries for field types, required fields, includes, and multi-tenant safety. Uses the `prisma-optimizer` skill for comprehensive analysis.
 
 **Prevents**:
+
 - Field type confusion (connect on ID fields) - 8+ errors
 - Invalid includes (ID fields as relations) - 3+ errors
 - Missing required fields - 2+ errors
@@ -38,21 +39,25 @@ Validates Prisma queries for field types, required fields, includes, and multi-t
 ## What It Does
 
 ### 1. Field Type Validation
+
 - Detects `connect` pattern on ID fields
 - Identifies relation fields vs ID fields
 - Suggests correct patterns
 
 ### 2. Required Fields Check
+
 - Scans Prisma schema for required fields
 - Compares against create/update data
 - Generates missing field values
 
 ### 3. Include Validation
+
 - Checks if included fields are relations
 - Flags ID fields incorrectly used as relations
 - Suggests correct include patterns
 
 ### 4. Multi-Tenant Safety
+
 - Ensures all queries have `schoolId` filter
 - Validates session context usage
 - Flags tenant isolation violations
@@ -217,11 +222,13 @@ Auto-fix all issues? [Y/n]
 ## Auto-Fix Process
 
 ### 1. Backup Original
+
 ```bash
 ✅ Created backup: expenses/actions.ts.backup
 ```
 
 ### 2. Apply Fixes
+
 ```bash
 Applying fixes...
   ✅ Line 35: Convert connect to direct ID
@@ -233,12 +240,14 @@ Applying fixes...
 ```
 
 ### 3. Verify TypeScript
+
 ```bash
 Running: pnpm tsc --noEmit
 ✅ TypeScript compilation successful
 ```
 
 ### 4. Show Diff
+
 ```bash
 Show diff? [Y/n]
 > Y
@@ -265,10 +274,12 @@ diff --git a/src/components/platform/finance/expenses/actions.ts
 ## Integration Points
 
 ### Uses Skills
+
 - **prisma-optimizer**: Field type detection, N+1 detection
 - **multi-tenant-validator**: schoolId scoping validation
 
 ### Used By
+
 - **/pre-commit-full**: Pre-commit validation
 - **/scan-errors**: Pattern-based error detection
 - **CI/CD Pipeline**: Automated validation
@@ -314,12 +325,14 @@ diff --git a/src/components/platform/finance/expenses/actions.ts
 ## Best Practices
 
 ### 1. Run Before Commit
+
 ```bash
 # Add to .husky/pre-commit
 /validate-prisma src/
 ```
 
 ### 2. CI/CD Integration
+
 ```yaml
 # .github/workflows/ci.yml
 - name: Validate Prisma
@@ -327,6 +340,7 @@ diff --git a/src/components/platform/finance/expenses/actions.ts
 ```
 
 ### 3. Pre-PR Checklist
+
 ```bash
 # Before creating PR
 /validate-prisma src/components/platform/
@@ -337,6 +351,7 @@ diff --git a/src/components/platform/finance/expenses/actions.ts
 ## Error Messages
 
 ### Clear, Actionable Errors
+
 ```
 ❌ Using connect on ID field 'submittedBy'
 

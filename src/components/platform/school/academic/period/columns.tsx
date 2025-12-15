@@ -1,9 +1,9 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+import { Clock, Ellipsis } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
-import { Ellipsis, Clock } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
 import type { PeriodRow } from "./types"
 
 export interface PeriodColumnCallbacks {
@@ -49,7 +51,7 @@ export const getPeriodColumns = (
         const value = getValue<string>()
         return (
           <span className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="text-muted-foreground h-4 w-4" />
             <span className="font-medium">{value}</span>
           </span>
         )
@@ -102,7 +104,7 @@ export const getPeriodColumns = (
         const endMinutes = end[0] * 60 + end[1]
         const duration = endMinutes - startMinutes
         return (
-          <span className="text-sm tabular-nums text-muted-foreground">
+          <span className="text-muted-foreground text-sm tabular-nums">
             {duration} {t.minutes}
           </span>
         )
@@ -115,7 +117,7 @@ export const getPeriodColumns = (
       ),
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
             lang === "ar" ? "ar-SA" : "en-US"
           )}

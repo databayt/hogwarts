@@ -1,20 +1,24 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 
 /**
  * Checks if current user is enrolled in a course
  * Multi-tenant: Scoped by schoolId
  */
-export async function checkIfEnrolled(courseId: string, schoolId: string | null) {
+export async function checkIfEnrolled(
+  courseId: string,
+  schoolId: string | null
+) {
   if (!schoolId) {
-    return false;
+    return false
   }
 
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.id) {
-    return false;
+    return false
   }
 
   const enrollment = await db.streamEnrollment.findFirst({
@@ -24,7 +28,7 @@ export async function checkIfEnrolled(courseId: string, schoolId: string | null)
       schoolId,
       isActive: true,
     },
-  });
+  })
 
-  return !!enrollment;
+  return !!enrollment
 }

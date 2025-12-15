@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useModal } from "@/components/atom/modal/context"
+import { Calendar, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -23,12 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Loader2, Calendar } from "lucide-react"
-import { SuccessToast, ErrorToast } from "@/components/atom/toast"
-import { termCreateSchema, type TermCreateInput } from "./validation"
-import { createTerm, updateTerm, getTerm } from "./actions"
-import { getSchoolYearOptions } from "../year/actions"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+
+import { getSchoolYearOptions } from "../year/actions"
+import { createTerm, getTerm, updateTerm } from "./actions"
+import { termCreateSchema, type TermCreateInput } from "./validation"
 
 interface TermFormProps {
   onSuccess?: () => void
@@ -38,7 +40,9 @@ interface TermFormProps {
 export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
   const { modal, closeModal } = useModal()
   const [isPending, startTransition] = useTransition()
-  const [years, setYears] = useState<Array<{ id: string; yearName: string }>>([])
+  const [years, setYears] = useState<Array<{ id: string; yearName: string }>>(
+    []
+  )
   const itemId = modal.id
   const isEdit = !!itemId
 
@@ -64,8 +68,10 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
     save: lang === "ar" ? "حفظ" : "Save",
     saving: lang === "ar" ? "جاري الحفظ..." : "Saving...",
-    createSuccess: lang === "ar" ? "تم إنشاء الفصل بنجاح" : "Term created successfully",
-    updateSuccess: lang === "ar" ? "تم تحديث الفصل بنجاح" : "Term updated successfully",
+    createSuccess:
+      lang === "ar" ? "تم إنشاء الفصل بنجاح" : "Term created successfully",
+    updateSuccess:
+      lang === "ar" ? "تم تحديث الفصل بنجاح" : "Term updated successfully",
   }
 
   const form = useForm<TermCreateInput>({
@@ -126,7 +132,7 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-primary" />
+        <Calendar className="text-primary h-5 w-5" />
         <h2 className="font-semibold">{t.title}</h2>
       </div>
 
@@ -174,7 +180,9 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
                     max={4}
                     placeholder={t.termNumberPlaceholder}
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 1)
+                    }
                     disabled={isPending}
                   />
                 </FormControl>
@@ -247,7 +255,7 @@ export function TermForm({ onSuccess, lang = "en" }: TermFormProps) {
             control={form.control}
             name="isActive"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
                 <FormControl>
                   <Checkbox
                     checked={field.value}

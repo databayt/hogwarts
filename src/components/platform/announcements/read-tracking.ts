@@ -3,34 +3,36 @@
  * Tracks user engagement and provides analytics
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import type { ActionResponse } from "./actions";
+import { revalidateTag } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResponse } from "./actions"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export type ReadStatus = {
-  isRead: boolean;
-  readAt: Date | null;
-  totalReads: number;
-  readPercentage: number;
-};
+  isRead: boolean
+  readAt: Date | null
+  totalReads: number
+  readPercentage: number
+}
 
 export type AnnouncementReadStats = {
-  id: string;
-  title: string;
-  totalReads: number;
-  uniqueReaders: number;
-  readPercentage: number;
-  lastReadAt: Date | null;
-};
+  id: string
+  title: string
+  totalReads: number
+  uniqueReaders: number
+  readPercentage: number
+  lastReadAt: Date | null
+}
 
 // ============================================================================
 // Mutations
@@ -41,37 +43,37 @@ export type AnnouncementReadStats = {
  * @param input - Announcement ID
  * @returns Action response
  */
-export async function markAnnouncementAsRead(
-  input: { announcementId: string }
-): Promise<ActionResponse<void>> {
+export async function markAnnouncementAsRead(input: {
+  announcementId: string
+}): Promise<ActionResponse<void>> {
   try {
     // Get authentication context
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
-    const userId = session.user.id;
+    const userId = session.user.id
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
     const { announcementId } = z
       .object({ announcementId: z.string().min(1) })
-      .parse(input);
+      .parse(input)
 
     // Verify announcement exists and belongs to school
     const announcement = await db.announcement.findFirst({
       where: { id: announcementId, schoolId },
       select: { id: true },
-    });
+    })
 
     if (!announcement) {
-      return { success: false, error: "Announcement not found" };
+      return { success: false, error: "Announcement not found" }
     }
 
     // Create or update read record (upsert for idempotency)
@@ -90,30 +92,30 @@ export async function markAnnouncementAsRead(
       update: {
         readAt: new Date(),
       },
-    });
+    })
 
     // Invalidate cache for read status
-    revalidateTag(`announcement-reads-${announcementId}`, "max");
-    revalidateTag(`user-reads-${userId}`, "max");
+    revalidateTag(`announcement-reads-${announcementId}`, "max")
+    revalidateTag(`user-reads-${userId}`, "max")
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[markAnnouncementAsRead] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to mark as read",
-    };
+    }
   }
 }
 
@@ -122,22 +124,22 @@ export async function markAnnouncementAsRead(
  * @param input - Array of announcement IDs
  * @returns Action response with count of marked announcements
  */
-export async function markMultipleAnnouncementsAsRead(
-  input: { announcementIds: string[] }
-): Promise<ActionResponse<{ count: number }>> {
+export async function markMultipleAnnouncementsAsRead(input: {
+  announcementIds: string[]
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
-    const userId = session.user.id;
+    const userId = session.user.id
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
@@ -145,7 +147,7 @@ export async function markMultipleAnnouncementsAsRead(
       .object({
         announcementIds: z.array(z.string().min(1)).min(1).max(100),
       })
-      .parse(input);
+      .parse(input)
 
     // Verify announcements exist and belong to school
     const announcements = await db.announcement.findMany({
@@ -154,52 +156,55 @@ export async function markMultipleAnnouncementsAsRead(
         schoolId,
       },
       select: { id: true },
-    });
+    })
 
-    const validIds = announcements.map((a) => a.id);
+    const validIds = announcements.map((a) => a.id)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Create read records for all announcements
-    const now = new Date();
+    const now = new Date()
     const readRecords = validIds.map((announcementId) => ({
       announcementId,
       userId,
       readAt: now,
-    }));
+    }))
 
     // Use createMany with skipDuplicates for idempotency
     const result = await db.announcementRead.createMany({
       data: readRecords,
       skipDuplicates: true,
-    });
+    })
 
     // Invalidate cache for all affected announcements
     validIds.forEach((id) => {
-      revalidateTag(`announcement-reads-${id}`, "max");
-    });
-    revalidateTag(`user-reads-${userId}`, "max");
+      revalidateTag(`announcement-reads-${id}`, "max")
+    })
+    revalidateTag(`user-reads-${userId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[markMultipleAnnouncementsAsRead] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to mark announcements as read",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to mark announcements as read",
+    }
   }
 }
 
@@ -227,11 +232,11 @@ export async function getAnnouncementReadStatus(
     select: {
       readAt: true,
     },
-  });
+  })
 
   const totalReads = await db.announcementRead.count({
     where: { announcementId },
-  });
+  })
 
   // Calculate read percentage (would need total users in scope for accurate percentage)
   // For now, just return the count
@@ -240,7 +245,7 @@ export async function getAnnouncementReadStatus(
     readAt: readRecord?.readAt || null,
     totalReads,
     readPercentage: 0, // TODO: Calculate based on target audience size
-  };
+  }
 }
 
 /**
@@ -259,7 +264,7 @@ export async function getUnreadAnnouncementCount(
       schoolId,
       published: true,
     },
-  });
+  })
 
   // Get read announcements count
   const readCount = await db.announcementRead.count({
@@ -270,9 +275,9 @@ export async function getUnreadAnnouncementCount(
         published: true,
       },
     },
-  });
+  })
 
-  return totalPublished - readCount;
+  return totalPublished - readCount
 }
 
 /**
@@ -296,10 +301,10 @@ export async function getAnnouncementReadStatistics(
         classId: true,
         role: true,
       },
-    });
+    })
 
     if (!announcement) {
-      return { success: false, error: "Announcement not found" };
+      return { success: false, error: "Announcement not found" }
     }
 
     // Get read records
@@ -312,16 +317,16 @@ export async function getAnnouncementReadStatistics(
       orderBy: {
         readAt: "desc",
       },
-    });
+    })
 
-    const uniqueReaders = new Set(reads.map((r) => r.userId)).size;
-    const lastReadAt = reads.length > 0 ? reads[0].readAt : null;
+    const uniqueReaders = new Set(reads.map((r) => r.userId)).size
+    const lastReadAt = reads.length > 0 ? reads[0].readAt : null
 
     // TODO: Calculate read percentage based on target audience
     // For school-wide: total users in school
     // For class: students in class
     // For role: users with that role
-    const readPercentage = 0;
+    const readPercentage = 0
 
     return {
       success: true,
@@ -333,17 +338,20 @@ export async function getAnnouncementReadStatistics(
         readPercentage,
         lastReadAt,
       },
-    };
+    }
   } catch (error) {
     console.error("[getAnnouncementReadStatistics] Error:", error, {
       announcementId,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to get read statistics",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get read statistics",
+    }
   }
 }
 
@@ -356,7 +364,16 @@ export async function getAnnouncementReadStatistics(
 export async function getAnnouncementReaders(
   announcementId: string,
   limit = 50
-): Promise<ActionResponse<Array<{ userId: string; readAt: Date; username: string | null; email: string | null }>>> {
+): Promise<
+  ActionResponse<
+    Array<{
+      userId: string
+      readAt: Date
+      username: string | null
+      email: string | null
+    }>
+  >
+> {
   try {
     const readers = await db.announcementRead.findMany({
       where: { announcementId },
@@ -374,26 +391,26 @@ export async function getAnnouncementReaders(
         readAt: "desc",
       },
       take: limit,
-    });
+    })
 
     const mapped = readers.map((r) => ({
       userId: r.userId,
       readAt: r.readAt,
       username: r.user.username,
       email: r.user.email,
-    }));
+    }))
 
-    return { success: true, data: mapped };
+    return { success: true, data: mapped }
   } catch (error) {
     console.error("[getAnnouncementReaders] Error:", error, {
       announcementId,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get readers",
-    };
+    }
   }
 }
 
@@ -417,7 +434,7 @@ export async function getUserReadAnnouncementIds(
     select: {
       announcementId: true,
     },
-  });
+  })
 
-  return new Set(reads.map((r) => r.announcementId));
+  return new Set(reads.map((r) => r.announcementId))
 }

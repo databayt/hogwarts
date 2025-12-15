@@ -116,69 +116,69 @@ Comparison between **Marshal-LMS Reference** and **Hogwarts Stream Implementatio
 
 ### Core Features
 
-| Feature | Reference LMS | Hogwarts Stream | Status | Notes |
-|---------|---------------|-----------------|--------|-------|
-| **Course Management** |
-| Create/Edit Courses | ✅ | ✅ | ✅ Complete | Full CRUD with validation |
-| Course Categories | ✅ (hardcoded) | ✅ (database) | ✅ Better | Separate Category model |
-| Course Slug | ✅ (auto-gen) | ✅ (manual) | ⚠️ Partial | Missing auto-generation |
-| Course Thumbnails | ✅ (S3 upload) | ✅ (URL field) | ⚠️ Schema Only | Upload UI pending |
-| Course Description | ✅ (Tiptap) | ✅ (plain text) | ⚠️ Basic | Missing rich text editor |
-| Course Pricing | ✅ | ✅ | ✅ Complete | Supports free courses |
-| Course Status | ✅ (enum) | ⚠️ (boolean) | ⚠️ Simplified | Draft/Published/Archived → isPublished |
-| Course Level | ✅ | ❌ | ❌ Missing | No Beginner/Intermediate/Advanced |
-| Course Duration | ✅ | ⚠️ (lesson only) | ⚠️ Partial | Not aggregated at course level |
-| **Course Structure** |
-| Chapters | ✅ | ✅ | ✅ Complete | Multi-level organization |
-| Lessons | ✅ | ✅ | ✅ Complete | With position ordering |
-| Chapter Ordering | ✅ (drag-drop) | ⚠️ (manual) | ❌ Missing | No dnd-kit integration |
-| Lesson Ordering | ✅ (drag-drop) | ⚠️ (manual) | ❌ Missing | No dnd-kit integration |
-| Free Preview | ✅ | ✅ | ✅ Complete | isFree flag on chapters/lessons |
-| **Media & Content** |
-| Video Upload | ✅ (S3 presigned) | ⚠️ (URL field) | ❌ Missing | No upload implementation |
-| Video Player | ✅ (HTML5) | ⚠️ (basic) | ⚠️ Basic | No controls/progress |
-| Image Upload | ✅ (S3 presigned) | ⚠️ (URL field) | ❌ Missing | No upload implementation |
-| File Attachments | ❌ | ✅ | ✅ Better | StreamAttachment model |
-| Upload Progress | ✅ (XHR) | ❌ | ❌ Missing | No progress tracking |
-| Multiple Formats | ✅ (MP4/WebM) | ⚠️ (any URL) | ⚠️ Flexible | No validation |
-| Rich Text Editor | ✅ (Tiptap) | ❌ | ❌ Missing | Plain textarea only |
-| **Student Features** |
-| Browse Courses | ✅ | ✅ | ✅ Complete | With filtering |
-| Course Details | ✅ | ✅ | ✅ Complete | Full curriculum view |
-| Enrollment | ✅ (Stripe) | ✅ (Stripe) | ✅ Complete | Payment integration |
-| Enrollment Status | ✅ (enum) | ⚠️ (boolean) | ⚠️ Simplified | Pending/Active → isActive |
-| Dashboard | ✅ | ✅ | ✅ Complete | Enrolled courses |
-| Lesson Viewer | ✅ | ✅ | ✅ Complete | Video + description |
-| Progress Tracking | ✅ | ✅ | ✅ Complete | Per-lesson completion |
-| Resume Learning | ✅ | ⚠️ | ⚠️ Basic | No last-watched tracking |
-| Course Completion | ✅ | ⚠️ | ⚠️ Schema Ready | Certificate not generated |
-| **Admin Features** |
-| Admin Dashboard | ✅ | ✅ | ✅ Complete | Stats and metrics |
-| Analytics Charts | ✅ (recharts) | ❌ | ❌ Missing | No enrollment trends |
-| Manage Courses | ✅ | ✅ | ✅ Complete | Full admin panel |
-| Delete Courses | ✅ | ✅ | ✅ Complete | With confirmation |
-| View Enrollments | ✅ | ⚠️ | ⚠️ Basic | Limited reporting |
-| **Payment & Commerce** |
-| Stripe Checkout | ✅ | ✅ | ✅ Complete | Full integration |
-| Webhook Handling | ✅ | ✅ | ✅ Complete | Event processing |
-| Free Courses | ✅ | ✅ | ✅ Complete | Auto-enrollment |
-| Refund Support | ⚠️ (basic) | ❌ | ❌ Missing | No refund UI |
-| Revenue Tracking | ✅ | ❌ | ❌ Missing | No financial reports |
+| Feature                    | Reference LMS     | Hogwarts Stream  | Status          | Notes                                  |
+| -------------------------- | ----------------- | ---------------- | --------------- | -------------------------------------- |
+| **Course Management**      |
+| Create/Edit Courses        | ✅                | ✅               | ✅ Complete     | Full CRUD with validation              |
+| Course Categories          | ✅ (hardcoded)    | ✅ (database)    | ✅ Better       | Separate Category model                |
+| Course Slug                | ✅ (auto-gen)     | ✅ (manual)      | ⚠️ Partial      | Missing auto-generation                |
+| Course Thumbnails          | ✅ (S3 upload)    | ✅ (URL field)   | ⚠️ Schema Only  | Upload UI pending                      |
+| Course Description         | ✅ (Tiptap)       | ✅ (plain text)  | ⚠️ Basic        | Missing rich text editor               |
+| Course Pricing             | ✅                | ✅               | ✅ Complete     | Supports free courses                  |
+| Course Status              | ✅ (enum)         | ⚠️ (boolean)     | ⚠️ Simplified   | Draft/Published/Archived → isPublished |
+| Course Level               | ✅                | ❌               | ❌ Missing      | No Beginner/Intermediate/Advanced      |
+| Course Duration            | ✅                | ⚠️ (lesson only) | ⚠️ Partial      | Not aggregated at course level         |
+| **Course Structure**       |
+| Chapters                   | ✅                | ✅               | ✅ Complete     | Multi-level organization               |
+| Lessons                    | ✅                | ✅               | ✅ Complete     | With position ordering                 |
+| Chapter Ordering           | ✅ (drag-drop)    | ⚠️ (manual)      | ❌ Missing      | No dnd-kit integration                 |
+| Lesson Ordering            | ✅ (drag-drop)    | ⚠️ (manual)      | ❌ Missing      | No dnd-kit integration                 |
+| Free Preview               | ✅                | ✅               | ✅ Complete     | isFree flag on chapters/lessons        |
+| **Media & Content**        |
+| Video Upload               | ✅ (S3 presigned) | ⚠️ (URL field)   | ❌ Missing      | No upload implementation               |
+| Video Player               | ✅ (HTML5)        | ⚠️ (basic)       | ⚠️ Basic        | No controls/progress                   |
+| Image Upload               | ✅ (S3 presigned) | ⚠️ (URL field)   | ❌ Missing      | No upload implementation               |
+| File Attachments           | ❌                | ✅               | ✅ Better       | StreamAttachment model                 |
+| Upload Progress            | ✅ (XHR)          | ❌               | ❌ Missing      | No progress tracking                   |
+| Multiple Formats           | ✅ (MP4/WebM)     | ⚠️ (any URL)     | ⚠️ Flexible     | No validation                          |
+| Rich Text Editor           | ✅ (Tiptap)       | ❌               | ❌ Missing      | Plain textarea only                    |
+| **Student Features**       |
+| Browse Courses             | ✅                | ✅               | ✅ Complete     | With filtering                         |
+| Course Details             | ✅                | ✅               | ✅ Complete     | Full curriculum view                   |
+| Enrollment                 | ✅ (Stripe)       | ✅ (Stripe)      | ✅ Complete     | Payment integration                    |
+| Enrollment Status          | ✅ (enum)         | ⚠️ (boolean)     | ⚠️ Simplified   | Pending/Active → isActive              |
+| Dashboard                  | ✅                | ✅               | ✅ Complete     | Enrolled courses                       |
+| Lesson Viewer              | ✅                | ✅               | ✅ Complete     | Video + description                    |
+| Progress Tracking          | ✅                | ✅               | ✅ Complete     | Per-lesson completion                  |
+| Resume Learning            | ✅                | ⚠️               | ⚠️ Basic        | No last-watched tracking               |
+| Course Completion          | ✅                | ⚠️               | ⚠️ Schema Ready | Certificate not generated              |
+| **Admin Features**         |
+| Admin Dashboard            | ✅                | ✅               | ✅ Complete     | Stats and metrics                      |
+| Analytics Charts           | ✅ (recharts)     | ❌               | ❌ Missing      | No enrollment trends                   |
+| Manage Courses             | ✅                | ✅               | ✅ Complete     | Full admin panel                       |
+| Delete Courses             | ✅                | ✅               | ✅ Complete     | With confirmation                      |
+| View Enrollments           | ✅                | ⚠️               | ⚠️ Basic        | Limited reporting                      |
+| **Payment & Commerce**     |
+| Stripe Checkout            | ✅                | ✅               | ✅ Complete     | Full integration                       |
+| Webhook Handling           | ✅                | ✅               | ✅ Complete     | Event processing                       |
+| Free Courses               | ✅                | ✅               | ✅ Complete     | Auto-enrollment                        |
+| Refund Support             | ⚠️ (basic)        | ❌               | ❌ Missing      | No refund UI                           |
+| Revenue Tracking           | ✅                | ❌               | ❌ Missing      | No financial reports                   |
 | **Security & Performance** |
-| Role-Based Access | ✅ | ✅ | ✅ Complete | ADMIN/TEACHER/STUDENT |
-| Rate Limiting | ✅ (Arcjet) | ❌ | ❌ Missing | No rate limits |
-| Bot Detection | ✅ (Arcjet) | ❌ | ❌ Missing | No bot protection |
-| Multi-Tenant | ❌ | ✅ | ✅ Better | Full schoolId isolation |
-| Data Isolation | ❌ | ✅ | ✅ Better | Query scoping enforced |
-| Optimistic UI | ✅ | ❌ | ❌ Missing | No rollback on failure |
-| **Additional Features** |
-| Certificates | ❌ | ✅ | ⚠️ Schema Only | Model exists, no generation |
-| Email Notifications | ✅ (Resend) | ❌ | ❌ Missing | No email integration |
-| OAuth Login | ✅ (GitHub) | ✅ (Google/FB) | ✅ Complete | Via Hogwarts auth |
-| Course Reviews | ❌ | ❌ | ❌ Not Planned | Future consideration |
-| Discussion Forums | ❌ | ❌ | ❌ Not Planned | Future consideration |
-| Quizzes/Assessments | ❌ | ❌ | ❌ Not Planned | Future consideration |
-| Live Streaming | ❌ | ❌ | ❌ Not Planned | Future consideration |
+| Role-Based Access          | ✅                | ✅               | ✅ Complete     | ADMIN/TEACHER/STUDENT                  |
+| Rate Limiting              | ✅ (Arcjet)       | ❌               | ❌ Missing      | No rate limits                         |
+| Bot Detection              | ✅ (Arcjet)       | ❌               | ❌ Missing      | No bot protection                      |
+| Multi-Tenant               | ❌                | ✅               | ✅ Better       | Full schoolId isolation                |
+| Data Isolation             | ❌                | ✅               | ✅ Better       | Query scoping enforced                 |
+| Optimistic UI              | ✅                | ❌               | ❌ Missing      | No rollback on failure                 |
+| **Additional Features**    |
+| Certificates               | ❌                | ✅               | ⚠️ Schema Only  | Model exists, no generation            |
+| Email Notifications        | ✅ (Resend)       | ❌               | ❌ Missing      | No email integration                   |
+| OAuth Login                | ✅ (GitHub)       | ✅ (Google/FB)   | ✅ Complete     | Via Hogwarts auth                      |
+| Course Reviews             | ❌                | ❌               | ❌ Not Planned  | Future consideration                   |
+| Discussion Forums          | ❌                | ❌               | ❌ Not Planned  | Future consideration                   |
+| Quizzes/Assessments        | ❌                | ❌               | ❌ Not Planned  | Future consideration                   |
+| Live Streaming             | ❌                | ❌               | ❌ Not Planned  | Future consideration                   |
 
 ### Summary Score
 
@@ -196,6 +196,7 @@ Comparison between **Marshal-LMS Reference** and **Hogwarts Stream Implementatio
 All models include `schoolId` for multi-tenant support.
 
 #### StreamCourse
+
 ```prisma
 model StreamCourse {
   id          String   @id @default(cuid())
@@ -221,6 +222,7 @@ model StreamCourse {
 ```
 
 #### StreamCategory
+
 ```prisma
 model StreamCategory {
   id       String @id @default(cuid())
@@ -233,6 +235,7 @@ model StreamCategory {
 ```
 
 #### StreamChapter
+
 ```prisma
 model StreamChapter {
   id          String  @id @default(cuid())
@@ -250,6 +253,7 @@ model StreamChapter {
 ```
 
 #### StreamLesson
+
 ```prisma
 model StreamLesson {
   id          String  @id @default(cuid())
@@ -270,6 +274,7 @@ model StreamLesson {
 ```
 
 #### StreamAttachment
+
 ```prisma
 model StreamAttachment {
   id       String @id @default(cuid())
@@ -282,6 +287,7 @@ model StreamAttachment {
 ```
 
 #### StreamEnrollment
+
 ```prisma
 model StreamEnrollment {
   id        String @id @default(cuid())
@@ -304,6 +310,7 @@ model StreamEnrollment {
 ```
 
 #### StreamLessonProgress
+
 ```prisma
 model StreamLessonProgress {
   id          String  @id @default(cuid())
@@ -316,6 +323,7 @@ model StreamLessonProgress {
 ```
 
 #### StreamCertificate
+
 ```prisma
 model StreamCertificate {
   id                String   @id @default(cuid())
@@ -360,11 +368,11 @@ Stream fully integrates with Hogwarts' multi-tenant system:
 
 ```typescript
 // Every query includes schoolId
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 
 const courses = await db.streamCourse.findMany({
-  where: { schoolId, isPublished: true }
-});
+  where: { schoolId, isPublished: true },
+})
 ```
 
 ### Subdomain Routing
@@ -389,11 +397,11 @@ URL: https://portsudan.databayt.org/en/stream/courses
 Uses Hogwarts' NextAuth v5 session:
 
 ```typescript
-const session = await auth();
-const user = session?.user;
+const session = await auth()
+const user = session?.user
 
 // User roles from Hogwarts
-if (user.role === 'ADMIN' || user.role === 'TEACHER') {
+if (user.role === "ADMIN" || user.role === "TEACHER") {
   // Admin access
 }
 ```
@@ -417,7 +425,7 @@ Stream supports Hogwarts' full i18n system:
 
 ```typescript
 // All routes include [lang] segment
-/${lang}/stream/courses  // /ar/... or /en/...
+;/${lang}/aemrst / courses // /ar/... or /en/...
 
 // Dictionary support
 dictionary?.stream?.courses?.title
@@ -478,6 +486,7 @@ Headers: { "Content-Type": "video/mp4" }
 ```
 
 **Benefits:**
+
 - No server storage required
 - Supports large files (up to 5GB)
 - Direct browser → S3 transfer
@@ -488,18 +497,15 @@ Headers: { "Content-Type": "video/mp4" }
 
 ```tsx
 // components/stream/video-player.tsx
-<video
-  className="w-full aspect-video"
-  controls
-  poster={lesson.thumbnailUrl}
->
+<video className="aspect-video w-full" controls poster={lesson.thumbnailUrl}>
   <source src={lesson.videoUrl} type="video/mp4" />
-  <source src={lesson.videoUrl.replace('.mp4', '.webm')} type="video/webm" />
+  <source src={lesson.videoUrl.replace(".mp4", ".webm")} type="video/webm" />
   Your browser doesn't support video playback.
 </video>
 ```
 
 **Features to Add:**
+
 - ✅ Play/pause controls
 - ✅ Fullscreen support
 - ✅ Playback speed control
@@ -514,19 +520,19 @@ Headers: { "Content-Type": "video/mp4" }
 ```typescript
 // Track upload progress
 const uploadFile = async (file: File) => {
-  const xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest()
 
-  xhr.upload.addEventListener('progress', (e) => {
-    const percent = (e.loaded / e.total) * 100;
-    setUploadProgress(percent);
-  });
+  xhr.upload.addEventListener("progress", (e) => {
+    const percent = (e.loaded / e.total) * 100
+    setUploadProgress(percent)
+  })
 
-  xhr.upload.addEventListener('load', () => {
-    setUploadComplete(true);
-  });
+  xhr.upload.addEventListener("load", () => {
+    setUploadComplete(true)
+  })
 
   // ... XHR upload logic
-};
+}
 ```
 
 #### 4. File Management UI
@@ -563,23 +569,27 @@ const uploadFile = async (file: File) => {
 #### 5. Supported File Types
 
 **Videos:**
+
 - MP4 (H.264 codec) - Primary
 - WebM (VP9 codec) - Alternative
 - Ogg (Theora codec) - Fallback
 - Max size: 5GB per file
 
 **Images:**
+
 - PNG, JPG, WebP
 - Max size: 5MB per file
 - Auto-optimization via Next.js Image
 
 **Documents:**
+
 - PDF, DOC, DOCX
 - PPT, PPTX
 - XLS, XLSX
 - Max size: 50MB per file
 
 **Archives:**
+
 - ZIP
 - Max size: 100MB
 
@@ -599,6 +609,7 @@ NEXT_PUBLIC_S3_BUCKET_NAME_DOCUMENTS=hogwarts-documents
 ```
 
 **Bucket Structure:**
+
 ```
 hogwarts-videos/
 ├── {schoolId}/
@@ -639,6 +650,7 @@ For production-grade video delivery:
 ```
 
 **Benefits:**
+
 - Adaptive bitrate streaming
 - Faster load times
 - Better mobile experience
@@ -647,6 +659,7 @@ For production-grade video delivery:
 #### 8. Implementation Checklist
 
 **Phase 1: Basic Upload (MVP)**
+
 - [ ] Create S3 bucket with proper permissions
 - [ ] Implement `/api/s3/upload` endpoint (presigned URL generation)
 - [ ] Implement `/api/s3/delete` endpoint
@@ -656,6 +669,7 @@ For production-grade video delivery:
 - [ ] Test with small video files
 
 **Phase 2: Enhanced Player**
+
 - [ ] Create `VideoPlayer` component with controls
 - [ ] Add playback speed control
 - [ ] Add fullscreen support
@@ -663,12 +677,14 @@ For production-grade video delivery:
 - [ ] Test cross-browser compatibility
 
 **Phase 3: Attachments**
+
 - [ ] Add attachment upload to lesson editor
 - [ ] Create `AttachmentList` component
 - [ ] Implement download tracking (optional)
 - [ ] Add attachment icons by file type
 
 **Phase 4: Advanced Features**
+
 - [ ] Implement progress saving (resume playback)
 - [ ] Add subtitle support (VTT upload)
 - [ ] Implement quality selection
@@ -764,12 +780,12 @@ const course = await db.streamCourse.findFirst({
     id: courseId,
     schoolId, // CRITICAL: Multi-tenant scope
   },
-});
+})
 
 // ❌ WRONG: Missing schoolId
 const course = await db.streamCourse.findUnique({
   where: { id: courseId }, // ⚠️ Cross-school data access!
-});
+})
 ```
 
 **All mutations verify ownership:**
@@ -778,46 +794,53 @@ const course = await db.streamCourse.findUnique({
 // Before delete, verify course belongs to school
 const course = await db.streamCourse.findFirst({
   where: { id: courseId, schoolId },
-});
+})
 
 if (!course) {
-  throw new Error("Course not found or access denied");
+  throw new Error("Course not found or access denied")
 }
 
-await db.streamCourse.delete({ where: { id: courseId } });
+await db.streamCourse.delete({ where: { id: courseId } })
 ```
 
 ### Role-Based Access Control
 
 ```typescript
 // Admin-only routes
-if (user.role !== 'ADMIN' && user.role !== 'TEACHER' && user.role !== 'DEVELOPER') {
-  redirect('/stream/not-admin');
+if (
+  user.role !== "ADMIN" &&
+  user.role !== "TEACHER" &&
+  user.role !== "DEVELOPER"
+) {
+  redirect("/stream/not-admin")
 }
 
 // Student-only routes
 const enrollment = await db.streamEnrollment.findFirst({
   where: { userId: user.id, courseId, isActive: true },
-});
+})
 
 if (!enrollment) {
-  throw new Error("You must be enrolled to access this content");
+  throw new Error("You must be enrolled to access this content")
 }
 ```
 
 ### Data Isolation
 
 **Database Level:**
+
 - Unique constraints include `schoolId`
 - Foreign keys ensure referential integrity
 - Cascade deletes prevent orphaned data
 
 **Application Level:**
+
 - `getTenantContext()` extracts schoolId from subdomain
 - All queries filter by schoolId
 - Enrollment checks include schoolId
 
 **Payment Level:**
+
 - Stripe metadata includes `schoolId`
 - Webhook validates school ownership
 - Customer IDs scoped per user (global)
@@ -829,6 +852,7 @@ if (!enrollment) {
 ### Manual Testing Checklist
 
 **Public Routes (Unauthenticated)**
+
 - [ ] Browse courses at `/stream/courses`
 - [ ] View course details at `/stream/courses/[slug]`
 - [ ] Filter by category
@@ -836,6 +860,7 @@ if (!enrollment) {
 - [ ] Enrollment button prompts login
 
 **Student Flow (STUDENT role)**
+
 - [ ] Login as student
 - [ ] Browse available courses
 - [ ] Enroll in free course (auto-enrollment)
@@ -849,6 +874,7 @@ if (!enrollment) {
 - [ ] Download attachments (when implemented)
 
 **Instructor Flow (ADMIN/TEACHER role)**
+
 - [ ] Login as admin/teacher
 - [ ] Access admin panel at `/stream/admin`
 - [ ] View dashboard statistics
@@ -865,6 +891,7 @@ if (!enrollment) {
 - [ ] Delete course with confirmation
 
 **Multi-Tenant Testing**
+
 - [ ] Create course in School A
 - [ ] Verify course NOT visible in School B
 - [ ] Enroll in course as School A student
@@ -873,6 +900,7 @@ if (!enrollment) {
 - [ ] Verify 404 or access denied
 
 **Payment Testing (Stripe Test Mode)**
+
 - [ ] Use test card: 4242 4242 4242 4242
 - [ ] Complete checkout flow
 - [ ] Verify webhook received (`checkout.session.completed`)
@@ -892,6 +920,7 @@ pnpm test:coverage
 ```
 
 **Test Coverage Goals:**
+
 - Data fetchers: 90%
 - Server actions: 85%
 - Components: 70%
@@ -904,11 +933,13 @@ pnpm test:coverage
 ### Pre-Deployment Checklist
 
 **Database**
+
 - [ ] Run migrations: `pnpm prisma migrate deploy`
 - [ ] Verify all `stream_*` tables created
 - [ ] Seed test data (optional): `pnpm db:seed`
 
 **Environment Variables**
+
 - [ ] `DATABASE_URL` (production PostgreSQL)
 - [ ] `STRIPE_SECRET_KEY` (production key)
 - [ ] `STRIPE_WEBHOOK_SECRET` (production webhook)
@@ -919,6 +950,7 @@ pnpm test:coverage
 - [ ] `NEXT_PUBLIC_S3_BUCKET_NAME_VIDEOS`
 
 **Stripe Configuration**
+
 - [ ] Create webhook endpoint in Stripe dashboard
 - [ ] Point webhook to `https://yourdomain.com/api/webhook/stripe`
 - [ ] Select events: `checkout.session.completed`, `checkout.session.expired`
@@ -926,6 +958,7 @@ pnpm test:coverage
 - [ ] Test webhook with Stripe CLI
 
 **Vercel Deployment**
+
 - [ ] Push code to GitHub
 - [ ] Vercel auto-deploys from `main` branch
 - [ ] Verify build succeeds
@@ -959,24 +992,28 @@ pnpm test:coverage
 See [ISSUES.md](./ISSUES.md) for detailed tracking.
 
 **Q1 2025**
+
 - [ ] S3 file upload implementation
 - [ ] Video player with controls
 - [ ] Rich text editor (Tiptap)
 - [ ] Drag-and-drop chapter/lesson reordering
 
 **Q2 2025**
+
 - [ ] Certificate generation and download
 - [ ] Email notifications for enrollments
 - [ ] Admin analytics dashboard with charts
 - [ ] Rate limiting (Arcjet integration)
 
 **Q3 2025**
+
 - [ ] Course reviews and ratings
 - [ ] Discussion forums per course
 - [ ] Quiz and assignment system
 - [ ] Bulk course imports
 
 **Future Considerations**
+
 - Live streaming integration
 - Mobile app support
 - Advanced video processing pipeline
@@ -987,12 +1024,14 @@ See [ISSUES.md](./ISSUES.md) for detailed tracking.
 ## 🆘 Support
 
 **Issues & Questions**
+
 1. Check [ISSUES.md](./ISSUES.md) for known problems
 2. Review this README's relevant section
 3. Check Hogwarts main documentation
 4. Contact development team
 
 **External Documentation**
+
 - Next.js: https://nextjs.org/docs
 - Prisma: https://www.prisma.io/docs
 - Stripe: https://stripe.com/docs

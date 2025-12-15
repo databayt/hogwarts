@@ -52,16 +52,21 @@
  * ```
  */
 
-import { supportedTimezones, type SupportedTimezone } from '@/components/platform/settings/validation';
+import {
+  supportedTimezones,
+  type SupportedTimezone,
+} from "@/components/platform/settings/validation"
 
 export class TimezoneHelper {
   /**
    * Convert a Date to a specific timezone
    */
   static toTimezone(date: Date, timezone: string): Date {
-    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const targetTime = new Date(utc + (this.getTimezoneOffset(timezone) * 3600000));
-    return targetTime;
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000
+    const targetTime = new Date(
+      utc + this.getTimezoneOffset(timezone) * 3600000
+    )
+    return targetTime
   }
 
   /**
@@ -73,16 +78,19 @@ export class TimezoneHelper {
     options: Intl.DateTimeFormatOptions = {}
   ): string {
     const defaultOptions: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
       timeZone: timezone,
-    };
+    }
 
-    return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(date);
+    return new Intl.DateTimeFormat("en-US", {
+      ...defaultOptions,
+      ...options,
+    }).format(date)
   }
 
   /**
@@ -90,16 +98,16 @@ export class TimezoneHelper {
    */
   static getCurrentTimeInTimezone(timezone: string): string {
     try {
-      return new Intl.DateTimeFormat('en-US', {
+      return new Intl.DateTimeFormat("en-US", {
         timeZone: timezone,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
         hour12: false,
-      }).format(new Date());
+      }).format(new Date())
     } catch (error) {
-      console.warn(`Invalid timezone: ${timezone}`, error);
-      return 'Invalid timezone';
+      console.warn(`Invalid timezone: ${timezone}`, error)
+      return "Invalid timezone"
     }
   }
 
@@ -108,15 +116,15 @@ export class TimezoneHelper {
    */
   static getCurrentDateInTimezone(timezone: string): string {
     try {
-      return new Intl.DateTimeFormat('en-CA', {
+      return new Intl.DateTimeFormat("en-CA", {
         timeZone: timezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }).format(new Date());
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date())
     } catch (error) {
-      console.warn(`Invalid timezone: ${timezone}`, error);
-      return new Date().toISOString().split('T')[0];
+      console.warn(`Invalid timezone: ${timezone}`, error)
+      return new Date().toISOString().split("T")[0]
     }
   }
 
@@ -126,29 +134,29 @@ export class TimezoneHelper {
    */
   private static getTimezoneOffset(timezone: string): number {
     const offsets: Record<string, number> = {
-      'Africa/Khartoum': 2,
-      'Africa/Cairo': 2,
-      'Asia/Riyadh': 3,
-      'Asia/Dubai': 4,
-      'Asia/Kuwait': 3,
-      'Asia/Qatar': 3,
-      'Asia/Bahrain': 3,
-      'Africa/Casablanca': 1,
-      'Africa/Tunis': 1,
-      'Africa/Algiers': 1,
-      'Asia/Baghdad': 3,
-      'Asia/Damascus': 2,
-      'Asia/Beirut': 2,
-      'Asia/Amman': 2,
-      'Europe/London': 0, // Can be +1 during BST
-      'Europe/Paris': 1, // Can be +2 during CEST
-      'Europe/Berlin': 1, // Can be +2 during CEST
-      'America/New_York': -5, // Can be -4 during EDT
-      'America/Los_Angeles': -8, // Can be -7 during PDT
-      'UTC': 0,
-    };
+      "Africa/Khartoum": 2,
+      "Africa/Cairo": 2,
+      "Asia/Riyadh": 3,
+      "Asia/Dubai": 4,
+      "Asia/Kuwait": 3,
+      "Asia/Qatar": 3,
+      "Asia/Bahrain": 3,
+      "Africa/Casablanca": 1,
+      "Africa/Tunis": 1,
+      "Africa/Algiers": 1,
+      "Asia/Baghdad": 3,
+      "Asia/Damascus": 2,
+      "Asia/Beirut": 2,
+      "Asia/Amman": 2,
+      "Europe/London": 0, // Can be +1 during BST
+      "Europe/Paris": 1, // Can be +2 during CEST
+      "Europe/Berlin": 1, // Can be +2 during CEST
+      "America/New_York": -5, // Can be -4 during EDT
+      "America/Los_Angeles": -8, // Can be -7 during PDT
+      UTC: 0,
+    }
 
-    return offsets[timezone] || 0;
+    return offsets[timezone] || 0
   }
 
   /**
@@ -156,44 +164,47 @@ export class TimezoneHelper {
    */
   static convertUtcToSchoolTime(utcDate: Date, schoolTimezone: string): string {
     return this.formatInTimezone(utcDate, schoolTimezone, {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
   }
 
   /**
    * Get time for different school contexts (attendance, timetable, etc.)
    */
-  static getSchoolTime(schoolTimezone: string, format: 'date' | 'time' | 'datetime' = 'datetime'): string {
-    const now = new Date();
+  static getSchoolTime(
+    schoolTimezone: string,
+    format: "date" | "time" | "datetime" = "datetime"
+  ): string {
+    const now = new Date()
 
     switch (format) {
-      case 'date':
+      case "date":
         return this.formatInTimezone(now, schoolTimezone, {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
-      case 'time':
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+      case "time":
         return this.formatInTimezone(now, schoolTimezone, {
-          hour: '2-digit',
-          minute: '2-digit',
+          hour: "2-digit",
+          minute: "2-digit",
           hour12: false,
-        });
-      case 'datetime':
+        })
+      case "datetime":
       default:
         return this.formatInTimezone(now, schoolTimezone, {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
           hour12: false,
-        });
+        })
     }
   }
 
@@ -206,18 +217,18 @@ export class TimezoneHelper {
     endHour: number = 15
   ): boolean {
     try {
-      const now = new Date();
+      const now = new Date()
       const timeString = this.formatInTimezone(now, schoolTimezone, {
-        hour: '2-digit',
-        minute: '2-digit',
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: false,
-      });
+      })
 
-      const [hours] = timeString.split(':').map(Number);
-      return hours >= startHour && hours < endHour;
+      const [hours] = timeString.split(":").map(Number)
+      return hours >= startHour && hours < endHour
     } catch (error) {
-      console.warn('Error checking school hours:', error);
-      return true; // Default to allowing access
+      console.warn("Error checking school hours:", error)
+      return true // Default to allowing access
     }
   }
 
@@ -225,14 +236,14 @@ export class TimezoneHelper {
    * Get the start of day in school timezone as UTC Date
    */
   static getSchoolDayStart(schoolTimezone: string): Date {
-    const today = this.getCurrentDateInTimezone(schoolTimezone);
+    const today = this.getCurrentDateInTimezone(schoolTimezone)
     // Create a date at midnight in the school timezone
-    const schoolMidnight = new Date(`${today}T00:00:00`);
+    const schoolMidnight = new Date(`${today}T00:00:00`)
 
     // Convert back to UTC
     // This is approximate and may have DST issues
-    const offset = this.getTimezoneOffset(schoolTimezone);
-    return new Date(schoolMidnight.getTime() - (offset * 3600000));
+    const offset = this.getTimezoneOffset(schoolTimezone)
+    return new Date(schoolMidnight.getTime() - offset * 3600000)
   }
 
   /**
@@ -244,18 +255,18 @@ export class TimezoneHelper {
     schoolTimezone: string
   ): string {
     const start = this.formatInTimezone(startTime, schoolTimezone, {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
-    });
+    })
 
     const end = this.formatInTimezone(endTime, schoolTimezone, {
-      hour: '2-digit',
-      minute: '2-digit',
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: false,
-    });
+    })
 
-    return `${start} - ${end}`;
+    return `${start} - ${end}`
   }
 
   /**
@@ -270,59 +281,63 @@ export class TimezoneHelper {
     minute: number = 0
   ): Date {
     // Create a date string in ISO format for the school timezone
-    const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+    const dateString = `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}T${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:00`
 
     // This creates a local date, then we need to adjust for timezone
-    const localDate = new Date(dateString);
-    const offset = this.getTimezoneOffset(schoolTimezone);
+    const localDate = new Date(dateString)
+    const offset = this.getTimezoneOffset(schoolTimezone)
 
     // Adjust to UTC
-    return new Date(localDate.getTime() - (offset * 3600000));
+    return new Date(localDate.getTime() - offset * 3600000)
   }
 
   /**
    * Validate if a timezone is supported
    */
   static isSupportedTimezone(timezone: string): timezone is SupportedTimezone {
-    return supportedTimezones.includes(timezone as SupportedTimezone);
+    return supportedTimezones.includes(timezone as SupportedTimezone)
   }
 
   /**
    * Get all supported timezones with their display names
    */
-  static getSupportedTimezones(): Array<{ value: SupportedTimezone; label: string; currentTime: string }> {
-    return supportedTimezones.map(tz => ({
+  static getSupportedTimezones(): Array<{
+    value: SupportedTimezone
+    label: string
+    currentTime: string
+  }> {
+    return supportedTimezones.map((tz) => ({
       value: tz,
       label: this.getTimezoneDisplayName(tz),
       currentTime: this.getCurrentTimeInTimezone(tz),
-    }));
+    }))
   }
 
   private static getTimezoneDisplayName(timezone: string): string {
     const timezoneNames: Record<string, string> = {
-      'Africa/Khartoum': 'Sudan (Khartoum)',
-      'Africa/Cairo': 'Egypt (Cairo)',
-      'Asia/Riyadh': 'Saudi Arabia (Riyadh)',
-      'Asia/Dubai': 'UAE (Dubai)',
-      'Asia/Kuwait': 'Kuwait',
-      'Asia/Qatar': 'Qatar',
-      'Asia/Bahrain': 'Bahrain',
-      'Africa/Casablanca': 'Morocco (Casablanca)',
-      'Africa/Tunis': 'Tunisia (Tunis)',
-      'Africa/Algiers': 'Algeria (Algiers)',
-      'Asia/Baghdad': 'Iraq (Baghdad)',
-      'Asia/Damascus': 'Syria (Damascus)',
-      'Asia/Beirut': 'Lebanon (Beirut)',
-      'Asia/Amman': 'Jordan (Amman)',
-      'Europe/London': 'United Kingdom (London)',
-      'Europe/Paris': 'France (Paris)',
-      'Europe/Berlin': 'Germany (Berlin)',
-      'America/New_York': 'United States (New York)',
-      'America/Los_Angeles': 'United States (Los Angeles)',
-      'UTC': 'Coordinated Universal Time',
-    };
+      "Africa/Khartoum": "Sudan (Khartoum)",
+      "Africa/Cairo": "Egypt (Cairo)",
+      "Asia/Riyadh": "Saudi Arabia (Riyadh)",
+      "Asia/Dubai": "UAE (Dubai)",
+      "Asia/Kuwait": "Kuwait",
+      "Asia/Qatar": "Qatar",
+      "Asia/Bahrain": "Bahrain",
+      "Africa/Casablanca": "Morocco (Casablanca)",
+      "Africa/Tunis": "Tunisia (Tunis)",
+      "Africa/Algiers": "Algeria (Algiers)",
+      "Asia/Baghdad": "Iraq (Baghdad)",
+      "Asia/Damascus": "Syria (Damascus)",
+      "Asia/Beirut": "Lebanon (Beirut)",
+      "Asia/Amman": "Jordan (Amman)",
+      "Europe/London": "United Kingdom (London)",
+      "Europe/Paris": "France (Paris)",
+      "Europe/Berlin": "Germany (Berlin)",
+      "America/New_York": "United States (New York)",
+      "America/Los_Angeles": "United States (Los Angeles)",
+      UTC: "Coordinated Universal Time",
+    }
 
-    return timezoneNames[timezone] || timezone;
+    return timezoneNames[timezone] || timezone
   }
 }
 
@@ -338,4 +353,4 @@ export const {
   createSchoolDateTime,
   isSupportedTimezone,
   getSupportedTimezones,
-} = TimezoneHelper;
+} = TimezoneHelper

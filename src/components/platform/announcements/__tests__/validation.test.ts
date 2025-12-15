@@ -1,16 +1,25 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Announcements validation schema tests
 describe("Announcement Validation Schemas", () => {
-  const audienceEnum = z.enum(["ALL", "STUDENTS", "TEACHERS", "PARENTS", "STAFF", "ADMINS"])
+  const audienceEnum = z.enum([
+    "ALL",
+    "STUDENTS",
+    "TEACHERS",
+    "PARENTS",
+    "STAFF",
+    "ADMINS",
+  ])
 
   const announcementBaseSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title too long"),
     content: z.string().min(1, "Content is required"),
     audience: z.array(audienceEnum).min(1, "At least one audience is required"),
     priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
-    category: z.enum(["GENERAL", "ACADEMIC", "ADMINISTRATIVE", "EVENTS", "EMERGENCY"]).default("GENERAL"),
+    category: z
+      .enum(["GENERAL", "ACADEMIC", "ADMINISTRATIVE", "EVENTS", "EMERGENCY"])
+      .default("GENERAL"),
     publishAt: z.string().optional(),
     expiresAt: z.string().optional(),
     isPinned: z.boolean().default(false),
@@ -30,7 +39,9 @@ describe("Announcement Validation Schemas", () => {
     perPage: z.number().int().positive().max(50).default(10),
     audience: audienceEnum.optional(),
     priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
-    category: z.enum(["GENERAL", "ACADEMIC", "ADMINISTRATIVE", "EVENTS", "EMERGENCY"]).optional(),
+    category: z
+      .enum(["GENERAL", "ACADEMIC", "ADMINISTRATIVE", "EVENTS", "EMERGENCY"])
+      .optional(),
     search: z.string().optional(),
     isPinned: z.boolean().optional(),
     includeExpired: z.boolean().default(false),
@@ -72,9 +83,15 @@ describe("Announcement Validation Schemas", () => {
         content: "Content here",
       }
 
-      expect(announcementCreateSchema.safeParse(missingTitle).success).toBe(false)
-      expect(announcementCreateSchema.safeParse(missingContent).success).toBe(false)
-      expect(announcementCreateSchema.safeParse(missingAudience).success).toBe(false)
+      expect(announcementCreateSchema.safeParse(missingTitle).success).toBe(
+        false
+      )
+      expect(announcementCreateSchema.safeParse(missingContent).success).toBe(
+        false
+      )
+      expect(announcementCreateSchema.safeParse(missingAudience).success).toBe(
+        false
+      )
     })
 
     it("validates title length", () => {
@@ -91,11 +108,20 @@ describe("Announcement Validation Schemas", () => {
       }
 
       expect(announcementCreateSchema.safeParse(validTitle).success).toBe(true)
-      expect(announcementCreateSchema.safeParse(tooLongTitle).success).toBe(false)
+      expect(announcementCreateSchema.safeParse(tooLongTitle).success).toBe(
+        false
+      )
     })
 
     it("validates audience enum values", () => {
-      const validAudiences = ["ALL", "STUDENTS", "TEACHERS", "PARENTS", "STAFF", "ADMINS"]
+      const validAudiences = [
+        "ALL",
+        "STUDENTS",
+        "TEACHERS",
+        "PARENTS",
+        "STAFF",
+        "ADMINS",
+      ]
 
       validAudiences.forEach((audience) => {
         const data = {
@@ -111,7 +137,9 @@ describe("Announcement Validation Schemas", () => {
         content: "Content",
         audience: ["INVALID"],
       }
-      expect(announcementCreateSchema.safeParse(invalidAudience).success).toBe(false)
+      expect(announcementCreateSchema.safeParse(invalidAudience).success).toBe(
+        false
+      )
     })
 
     it("allows multiple audiences", () => {
@@ -151,7 +179,13 @@ describe("Announcement Validation Schemas", () => {
     })
 
     it("validates category enum", () => {
-      const validCategories = ["GENERAL", "ACADEMIC", "ADMINISTRATIVE", "EVENTS", "EMERGENCY"]
+      const validCategories = [
+        "GENERAL",
+        "ACADEMIC",
+        "ADMINISTRATIVE",
+        "EVENTS",
+        "EMERGENCY",
+      ]
 
       validCategories.forEach((category) => {
         const data = {

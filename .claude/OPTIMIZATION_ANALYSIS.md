@@ -7,6 +7,7 @@
 ## 📊 Current State
 
 ### Size Distribution
+
 ```
 Total Size: 213K (52 files)
 
@@ -20,13 +21,14 @@ Breakdown:
 ```
 
 ### Documentation Files
-| File | Lines | Size | Purpose |
-|------|-------|------|---------|
-| ISSUE.md | 530 | 12K | Troubleshooting guide |
-| INDEX.md | 336 | 8K | Directory navigation |
-| README.md | 274 | 8K | Main documentation |
-| OPTIMIZATION_COMPLETE.md | 200+ | 8K | Optimization summary |
-| OPTIMIZATION_PLAN.md | 150+ | 8K | Original plan |
+
+| File                     | Lines | Size | Purpose               |
+| ------------------------ | ----- | ---- | --------------------- |
+| ISSUE.md                 | 530   | 12K  | Troubleshooting guide |
+| INDEX.md                 | 336   | 8K   | Directory navigation  |
+| README.md                | 274   | 8K   | Main documentation    |
+| OPTIMIZATION_COMPLETE.md | 200+  | 8K   | Optimization summary  |
+| OPTIMIZATION_PLAN.md     | 150+  | 8K   | Original plan         |
 
 **Total**: 1,490+ lines, 44K
 
@@ -37,9 +39,11 @@ Breakdown:
 ### Priority 1: Documentation Consolidation
 
 #### Issue: Redundancy in Documentation
+
 **Current**: 5 separate doc files (44K, 1490+ lines)
 
 **Redundancy Found**:
+
 - Agent lists duplicated in README, INDEX, and OPTIMIZATION docs
 - Configuration sections duplicated in README and INDEX
 - Quick start duplicated in README and INDEX
@@ -48,6 +52,7 @@ Breakdown:
 **Recommendation**: Consolidate documentation
 
 **Option A - Single Master Doc** (Most Efficient):
+
 ```
 GUIDE.md (Combined README + INDEX + Optimization summary)
 ├─ Getting Started
@@ -70,6 +75,7 @@ Archived:
 **Savings**: ~20K (45% reduction in docs)
 
 **Option B - Streamlined Docs** (Balanced):
+
 ```
 README.md (Main guide - keep current)
 TROUBLESHOOTING.md (Renamed ISSUE.md)
@@ -81,6 +87,7 @@ Remove: INDEX.md (redundant with README)
 **Savings**: ~10K (23% reduction in docs)
 
 **Option C - Minimal** (Conservative):
+
 ```
 Merge OPTIMIZATION_COMPLETE + OPTIMIZATION_PLAN → OPTIMIZATION.md
 Keep README, ISSUE, INDEX as-is
@@ -93,6 +100,7 @@ Keep README, ISSUE, INDEX as-is
 ### Priority 2: Agent Optimization Review
 
 #### Current Agent Distribution
+
 ```
 Large (5-7K): 6 agents
 - git-github (6.8K) - Git + GitHub combined
@@ -114,6 +122,7 @@ Small (1-2K): 11 agents
 #### Analysis: Agent Sizes Are Optimal ✅
 
 **Reasoning**:
+
 1. Large agents (5-7K) are comprehensive by design
 2. No single agent > 7K (good size limit)
 3. Small agents (1-2K) are focused and efficient
@@ -126,6 +135,7 @@ Small (1-2K): 11 agents
 ### Priority 3: Configuration Optimization
 
 #### Current Config
+
 ```json
 settings.json (4K)
 - permissions.allow: 28 entries
@@ -139,6 +149,7 @@ settings.json (4K)
 
 **Option A - Simplify Permissions**:
 Current 28 allow entries could use wildcards:
+
 ```json
 "allow": [
   "Read",
@@ -157,6 +168,7 @@ Current 28 allow entries could use wildcards:
 
 **Option B - External Hook Scripts**:
 Move complex hooks to `.claude/hooks/` scripts:
+
 ```bash
 .claude/hooks/
 ├── post-write-format.sh
@@ -170,6 +182,7 @@ Move complex hooks to `.claude/hooks/` scripts:
 ### Priority 4: Directory Structure Enhancement
 
 #### Current Structure
+
 ```
 .claude/
 ├── agents/
@@ -180,6 +193,7 @@ Move complex hooks to `.claude/hooks/` scripts:
 ```
 
 #### Proposed: Organized Structure
+
 ```
 .claude/
 ├── agents/          (20 agents)
@@ -195,6 +209,7 @@ Move complex hooks to `.claude/hooks/` scripts:
 ```
 
 **Benefits**:
+
 - Cleaner root directory
 - Better organization
 - Easier navigation
@@ -205,16 +220,19 @@ Move complex hooks to `.claude/hooks/` scripts:
 ### Priority 5: Backup Directory Review
 
 #### Check Backup Directory
+
 ```bash
 ls -lh .backup/ 2>/dev/null
 ```
 
 **If exists**:
+
 - Contains 6 old agent files (architect, pattern, git, github, build, prettier)
 - Size: ~13K
 - Purpose: Historical reference
 
 **Recommendation**:
+
 - **Keep** if < 30 days old (rollback safety)
 - **Archive** to docs/archive/ if > 30 days
 - **Document** what's backed up and why
@@ -228,12 +246,14 @@ ls -lh .backup/ 2>/dev/null
 **Action**: Consolidate documentation
 
 **Steps**:
+
 1. **Merge** OPTIMIZATION_COMPLETE + OPTIMIZATION_PLAN → **CHANGELOG.md**
 2. **Rename** ISSUE.md → **TROUBLESHOOTING.md** (clearer name)
 3. **Remove** INDEX.md (redundant with README)
 4. **Archive** old optimization docs to docs/archive/
 
 **Impact**:
+
 - Files: 5 → 3 docs (-40%)
 - Size: 44K → 28K (-36%)
 - Clarity: Improved (less redundancy)
@@ -246,12 +266,14 @@ ls -lh .backup/ 2>/dev/null
 **Action**: Move docs to subdirectory
 
 **Steps**:
+
 1. Create `.claude/docs/` directory
 2. Move README, TROUBLESHOOTING, CHANGELOG to docs/
 3. Create docs/archive/ for historical docs
 4. Update paths in documentation
 
 **Impact**:
+
 - Cleaner root directory
 - Better organization
 - Easier to find docs
@@ -263,12 +285,14 @@ ls -lh .backup/ 2>/dev/null
 **Action**: Simplify settings.json
 
 **Steps**:
+
 1. Use wildcards for Bash permissions
 2. Use wildcards for WebFetch domains
 3. Reduce from 28 to ~9 allow entries
 4. Optional: Extract complex hooks to scripts
 
 **Impact**:
+
 - Cleaner config
 - Easier to read
 - Maintained: Same functionality
@@ -280,19 +304,23 @@ ls -lh .backup/ 2>/dev/null
 **Action**: Add compressed quick reference
 
 **Create**: **QUICKREF.md** (1-2K compressed reference)
+
 ```markdown
 # Quick Reference
 
 ## Agents (20)
+
 orchestrate, nextjs, react, shadcn, prisma, typescript, tailwind, i18n,
 architecture, test, security, auth, performance, typography,
 git-github, api, multi-tenant, database-optimizer, debug, react-reviewer
 
 ## Commands (12)
+
 /component, /page, /api, /migration, /review, /test, /fix-all,
 /security-scan, /optimize, /build-changed, /i18n-check, /deploy
 
 ## Common Tasks
+
 New feature → /agents/orchestrate
 Quick component → /component <name>
 Code review → /review
@@ -301,6 +329,7 @@ Debugging → /agents/debug
 ```
 
 **Benefits**:
+
 - Ultra-fast lookup
 - No need to read full docs for quick reference
 - Perfect for daily use
@@ -311,14 +340,14 @@ Debugging → /agents/debug
 
 ### If All Phases Implemented:
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **Total Size** | 213K | ~185K | -13% |
-| **Doc Files** | 5 | 4 | -20% |
-| **Doc Size** | 44K | ~20K | -55% |
-| **Root Files** | 7 | 3 | -57% |
-| **Organization** | Flat | Nested | Better |
-| **Config Lines** | ~85 | ~50 | -41% |
+| Metric           | Before | After  | Change |
+| ---------------- | ------ | ------ | ------ |
+| **Total Size**   | 213K   | ~185K  | -13%   |
+| **Doc Files**    | 5      | 4      | -20%   |
+| **Doc Size**     | 44K    | ~20K   | -55%   |
+| **Root Files**   | 7      | 3      | -57%   |
+| **Organization** | Flat   | Nested | Better |
+| **Config Lines** | ~85    | ~50    | -41%   |
 
 **Functionality Lost**: 0%
 **Usability**: Improved
@@ -331,16 +360,19 @@ Debugging → /agents/debug
 ### Recommended: Phases 1 + 4 (Conservative)
 
 **Do**:
+
 1. ✅ Merge optimization docs → CHANGELOG.md
 2. ✅ Rename ISSUE → TROUBLESHOOTING (clearer)
 3. ✅ Remove INDEX.md (redundant)
 4. ✅ Create QUICKREF.md (fast lookup)
 
 **Skip** (for now):
+
 - Directory reorganization (Phase 2) - can do later
 - Config simplification (Phase 3) - working fine
 
 **Impact**:
+
 - Size: 213K → ~195K (-8%)
 - Docs: 5 → 4 files
 - Clarity: Much improved
@@ -354,6 +386,7 @@ Debugging → /agents/debug
 **Do**: Everything above + Phase 2 & 3
 
 **Impact**:
+
 - Size: 213K → ~185K (-13%)
 - Docs: Much cleaner
 - Config: Simplified
@@ -368,6 +401,7 @@ Debugging → /agents/debug
 **Do**: Just Phase 1 (merge optimization docs)
 
 **Impact**:
+
 - Size: 213K → ~205K (-4%)
 - Docs: 5 → 4 files
 - Risk: None
@@ -378,15 +412,18 @@ Debugging → /agents/debug
 ## ✅ Recommended Actions (Priority Order)
 
 ### High Priority (Do Now)
+
 1. **Merge optimization docs** → CHANGELOG.md
 2. **Remove INDEX.md** (redundant with README)
 3. **Create QUICKREF.md** (fast reference)
 
 ### Medium Priority (This Week)
+
 4. **Rename ISSUE → TROUBLESHOOTING** (clearer)
 5. **Archive old docs** to docs/archive/
 
 ### Low Priority (When Convenient)
+
 6. **Reorganize into docs/** subdirectory
 7. **Simplify settings.json** permissions
 
@@ -395,6 +432,7 @@ Debugging → /agents/debug
 ## 🚫 Not Recommended
 
 ### Do NOT:
+
 - ❌ Consolidate agents further (already optimized)
 - ❌ Combine README with ISSUE (different purposes)
 - ❌ Remove TROUBLESHOOTING guide (essential)
@@ -406,6 +444,7 @@ Debugging → /agents/debug
 ## 📈 Expected Benefits
 
 ### After Optimization:
+
 - **Faster navigation** - QUICKREF for instant lookup
 - **Less redundancy** - Single source of truth
 - **Clearer naming** - TROUBLESHOOTING > ISSUE
@@ -419,6 +458,7 @@ Debugging → /agents/debug
 ## 🎬 Implementation
 
 ### Quick Win (5 minutes):
+
 ```bash
 # Merge optimization docs
 cat OPTIMIZATION_COMPLETE.md OPTIMIZATION_PLAN.md > CHANGELOG.md
@@ -431,6 +471,7 @@ rm INDEX.md
 ```
 
 ### Full Optimization (30 minutes):
+
 Follow all 4 phases in sequence
 
 ---

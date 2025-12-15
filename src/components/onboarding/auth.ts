@@ -3,9 +3,9 @@
  * Provides flexible auth checks during the onboarding flow
  */
 
-import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { getAuthContext, TenantError } from "@/lib/auth-security";
+import { getAuthContext, TenantError } from "@/lib/auth-security"
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 /**
  * Check if a user has access to a school during onboarding
@@ -27,12 +27,15 @@ export async function checkOnboardingAccess(
     // PRIMARY CHECK: User's schoolId should match (this is the expected path)
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { schoolId: true, createdAt: true }
-    });
+      select: { schoolId: true, createdAt: true },
+    })
 
     if (user?.schoolId === schoolId) {
-      logger.debug('checkOnboardingAccess: Primary check passed', { userId, schoolId });
-      return true;
+      logger.debug("checkOnboardingAccess: Primary check passed", {
+        userId,
+        schoolId,
+      })
+      return true
     }
 
     // DEPRECATED FALLBACK: 1-hour grace period for race conditions
@@ -40,35 +43,41 @@ export async function checkOnboardingAccess(
     // If this logs frequently, investigate why the transaction flow isn't working
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { createdAt: true }
-    });
+      select: { createdAt: true },
+    })
 
     if (!school) {
-      return false;
+      return false
     }
 
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const schoolIsRecent = school.createdAt > oneHourAgo;
-    const userIsRecent = user && user.createdAt > oneHourAgo;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    const schoolIsRecent = school.createdAt > oneHourAgo
+    const userIsRecent = user && user.createdAt > oneHourAgo
 
     if (schoolIsRecent && userIsRecent) {
       // Log warning - this path should be rare after transaction implementation
-      logger.warn('checkOnboardingAccess: DEPRECATED FALLBACK TRIGGERED - Investigate transaction sync', {
-        userId,
-        schoolId,
-        userSchoolId: user?.schoolId,
-        schoolAge: Date.now() - school.createdAt.getTime(),
-        userAge: user ? Date.now() - user.createdAt.getTime() : null,
-        reason: 'User schoolId does not match but both entities are recent',
-        action: 'Check if atomic transaction is working correctly'
-      });
-      return true;
+      logger.warn(
+        "checkOnboardingAccess: DEPRECATED FALLBACK TRIGGERED - Investigate transaction sync",
+        {
+          userId,
+          schoolId,
+          userSchoolId: user?.schoolId,
+          schoolAge: Date.now() - school.createdAt.getTime(),
+          userAge: user ? Date.now() - user.createdAt.getTime() : null,
+          reason: "User schoolId does not match but both entities are recent",
+          action: "Check if atomic transaction is working correctly",
+        }
+      )
+      return true
     }
 
-    return false;
+    return false
   } catch (error) {
-    logger.error('checkOnboardingAccess: Error checking access', error, { userId, schoolId });
-    return false;
+    logger.error("checkOnboardingAccess: Error checking access", error, {
+      userId,
+      schoolId,
+    })
+    return false
   }
 }
 
@@ -76,15 +85,18 @@ export async function checkOnboardingAccess(
  * Determines if an error is due to cross-tenant access denial
  */
 export function isCrossTenantError(error: unknown): boolean {
-  if (error instanceof TenantError && error.code === 'CROSS_TENANT_ACCESS_DENIED') {
-    return true;
+  if (
+    error instanceof TenantError &&
+    error.code === "CROSS_TENANT_ACCESS_DENIED"
+  ) {
+    return true
   }
 
-  if (error && typeof error === 'object' && 'code' in error) {
-    return (error as { code: string }).code === 'CROSS_TENANT_ACCESS_DENIED';
+  if (error && typeof error === "object" && "code" in error) {
+    return (error as { code: string }).code === "CROSS_TENANT_ACCESS_DENIED"
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -97,54 +109,56 @@ export async function getSchoolWithOnboardingFallback(
 ) {
   try {
     // Try standard ownership check first
-    await requireOwnership(schoolId);
+    await requireOwnership(schoolId)
 
     // If successful, fetch and return the school
     const school = await db.school.findUnique({
-      where: { id: schoolId }
-    });
+      where: { id: schoolId },
+    })
 
     if (!school) {
-      throw new Error("School not found");
+      throw new Error("School not found")
     }
 
-    return { school, fallbackUsed: false };
+    return { school, fallbackUsed: false }
   } catch (error) {
     // Only attempt fallback for cross-tenant errors during onboarding
     if (!isCrossTenantError(error)) {
-      throw error;
+      throw error
     }
 
-    logger.debug('Standard auth failed, attempting onboarding fallback', { schoolId });
+    logger.debug("Standard auth failed, attempting onboarding fallback", {
+      schoolId,
+    })
 
     // Get auth context for fallback check
-    const authContext = await getAuthContext();
+    const authContext = await getAuthContext()
 
     // Check if user has onboarding access
-    const hasAccess = await checkOnboardingAccess(authContext.userId, schoolId);
+    const hasAccess = await checkOnboardingAccess(authContext.userId, schoolId)
 
     if (!hasAccess) {
-      logger.warn('Onboarding access denied', {
+      logger.warn("Onboarding access denied", {
         userId: authContext.userId,
-        schoolId
-      });
-      throw error; // Re-throw original error
+        schoolId,
+      })
+      throw error // Re-throw original error
     }
 
     // Fetch the school data
     const school = await db.school.findUnique({
-      where: { id: schoolId }
-    });
+      where: { id: schoolId },
+    })
 
     if (!school) {
-      throw new Error("School not found");
+      throw new Error("School not found")
     }
 
-    logger.info('Onboarding fallback successful', {
+    logger.info("Onboarding fallback successful", {
       userId: authContext.userId,
-      schoolId
-    });
+      schoolId,
+    })
 
-    return { school, fallbackUsed: true };
+    return { school, fallbackUsed: true }
   }
 }

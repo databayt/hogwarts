@@ -1,86 +1,122 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { classCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import { getTermsForSelection, getRoomsForSelection, getPeriodsForTerm } from "@/components/platform/timetable/actions";
+import { useEffect, useState } from "react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { ClassFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  getPeriodsForTerm,
+  getRoomsForSelection,
+  getTermsForSelection,
+} from "@/components/platform/timetable/actions"
+
+import { ClassFormStepProps } from "./types"
+import { classCreateSchema } from "./validation"
 
 export function ScheduleStep({ form, isView }: ClassFormStepProps) {
-  const [terms, setTerms] = useState<Array<{ id: string; termName: string }>>([]);
-  const [periods, setPeriods] = useState<Array<{ id: string; periodName: string }>>([]);
-  const [classrooms, setClassrooms] = useState<Array<{ id: string; roomName: string }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [terms, setTerms] = useState<Array<{ id: string; termName: string }>>(
+    []
+  )
+  const [periods, setPeriods] = useState<
+    Array<{ id: string; periodName: string }>
+  >([])
+  const [classrooms, setClassrooms] = useState<
+    Array<{ id: string; roomName: string }>
+  >([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Watch termId to load periods when term changes
-  const selectedTermId = form.watch("termId");
+  const selectedTermId = form.watch("termId")
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true)
         // Load terms from database
-        const termsRes = await getTermsForSelection();
+        const termsRes = await getTermsForSelection()
         if (termsRes.terms) {
-          setTerms(termsRes.terms.map((t: any) => ({
-            id: t.id,
-            termName: t.termNumber ? `Term ${t.termNumber}` : t.termName || 'Unknown'
-          })));
+          setTerms(
+            termsRes.terms.map((t: any) => ({
+              id: t.id,
+              termName: t.termNumber
+                ? `Term ${t.termNumber}`
+                : t.termName || "Unknown",
+            }))
+          )
         }
 
         // Load classrooms from database
-        const roomsRes = await getRoomsForSelection();
+        const roomsRes = await getRoomsForSelection()
         if (roomsRes.rooms) {
-          setClassrooms(roomsRes.rooms.map((r: any) => ({
-            id: r.id,
-            roomName: r.roomName || 'Unknown'
-          })));
+          setClassrooms(
+            roomsRes.rooms.map((r: any) => ({
+              id: r.id,
+              roomName: r.roomName || "Unknown",
+            }))
+          )
         }
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("Failed to load data:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    loadInitialData();
-  }, []);
+    }
+    loadInitialData()
+  }, [])
 
   // Load periods when term changes
   useEffect(() => {
     const loadPeriods = async () => {
       if (!selectedTermId) {
-        setPeriods([]);
-        return;
+        setPeriods([])
+        return
       }
       try {
-        const periodsRes = await getPeriodsForTerm({ termId: selectedTermId });
+        const periodsRes = await getPeriodsForTerm({ termId: selectedTermId })
         if (periodsRes.periods) {
-          setPeriods(periodsRes.periods.map((p: any) => ({
-            id: p.id,
-            periodName: p.periodLabel || `Period ${p.periodNumber}` || 'Unknown'
-          })));
+          setPeriods(
+            periodsRes.periods.map((p: any) => ({
+              id: p.id,
+              periodName:
+                p.periodLabel || `Period ${p.periodNumber}` || "Unknown",
+            }))
+          )
         }
       } catch (error) {
-        console.error("Failed to load periods:", error);
-        setPeriods([]);
+        console.error("Failed to load periods:", error)
+        setPeriods([])
       }
-    };
-    loadPeriods();
-  }, [selectedTermId]);
+    }
+    loadPeriods()
+  }, [selectedTermId])
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="termId"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Term</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select term" />
@@ -105,7 +141,11 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Start Period</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select start period" />
@@ -130,7 +170,11 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>End Period</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select end period" />
@@ -155,7 +199,11 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Classroom</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select classroom" />
@@ -174,5 +222,5 @@ export function ScheduleStep({ form, isView }: ClassFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

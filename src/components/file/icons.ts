@@ -3,7 +3,7 @@
  * Maps file types to Lucide icon names
  */
 
-import type { FileCategory, FileType } from "./types";
+import type { FileCategory, FileType } from "./types"
 
 // ============================================================================
 // Category Icons
@@ -16,7 +16,7 @@ export const CATEGORY_ICONS: Record<FileCategory, string> = {
   audio: "Music",
   archive: "Archive",
   other: "File",
-};
+}
 
 // ============================================================================
 // File Type Icons
@@ -48,7 +48,7 @@ export const FILE_TYPE_ICONS: Record<string, string> = {
   report: "FileBarChart",
   transcript: "ScrollText",
   id_card: "IdCard",
-};
+}
 
 // ============================================================================
 // Extension Icons
@@ -94,7 +94,7 @@ export const EXTENSION_ICONS: Record<string, string> = {
   ".7z": "Archive",
   ".gz": "Archive",
   ".tar": "Archive",
-};
+}
 
 // ============================================================================
 // Status Icons
@@ -107,7 +107,7 @@ export const STATUS_ICONS = {
   error: "XCircle",
   downloading: "Download",
   processing: "Loader",
-} as const;
+} as const
 
 // ============================================================================
 // Action Icons
@@ -125,7 +125,7 @@ export const ACTION_ICONS = {
   print: "Printer",
   export: "FileDown",
   import: "FileUp",
-} as const;
+} as const
 
 // ============================================================================
 // Utility Functions
@@ -135,23 +135,23 @@ export const ACTION_ICONS = {
  * Get icon name for file category
  */
 export function getIconForCategory(category: FileCategory): string {
-  return CATEGORY_ICONS[category] || "File";
+  return CATEGORY_ICONS[category] || "File"
 }
 
 /**
  * Get icon name for file type
  */
 export function getIconForType(type?: FileType): string {
-  if (!type) return "File";
-  return FILE_TYPE_ICONS[type] || "File";
+  if (!type) return "File"
+  return FILE_TYPE_ICONS[type] || "File"
 }
 
 /**
  * Get icon name for file extension
  */
 export function getIconForExtension(filename: string): string {
-  const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
-  return EXTENSION_ICONS[ext] || "File";
+  const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase()
+  return EXTENSION_ICONS[ext] || "File"
 }
 
 /**
@@ -163,19 +163,19 @@ export function getFileIcon(
 ): string {
   // Try type first
   if (options?.type && FILE_TYPE_ICONS[options.type]) {
-    return FILE_TYPE_ICONS[options.type];
+    return FILE_TYPE_ICONS[options.type]
   }
 
   // Try extension
-  const extIcon = getIconForExtension(filename);
+  const extIcon = getIconForExtension(filename)
   if (extIcon !== "File") {
-    return extIcon;
+    return extIcon
   }
 
   // Fall back to category
   if (options?.category) {
-    return CATEGORY_ICONS[options.category];
+    return CATEGORY_ICONS[options.category]
   }
 
-  return "File";
+  return "File"
 }

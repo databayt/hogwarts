@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { useState, useTransition, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Suspense, useEffect, useMemo, useState, useTransition } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   // CardDescription,
   CardHeader,
   // CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/card"
 // import { Label } from "@/components/ui/label";
 import {
   Form,
@@ -23,18 +23,18 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
-import { createLoginSchema } from "../validation";
-import { login } from "./action";
-import { FormError } from "../error/form-error";
-import { FormSuccess } from "../form-success";
-import { Social } from "../social";
-import { Suspense } from "react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { useMemo } from "react";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { FormError } from "../error/form-error"
+import { FormSuccess } from "../form-success"
+import { Social } from "../social"
+import { createLoginSchema } from "../validation"
+import { login } from "./action"
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
-  dictionary?: Dictionary;
+  dictionary?: Dictionary
 }
 
 export const LoginForm = ({
@@ -42,36 +42,37 @@ export const LoginForm = ({
   dictionary,
   ...props
 }: LoginFormProps) => {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
-  const tenant = searchParams.get("tenant");
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl")
+  const tenant = searchParams.get("tenant")
 
   // Get localized error messages
-  const oauthError = dictionary?.messages?.errors?.auth?.emailAlreadyExists
-    || "Email already in use with different provider!";
-  const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
-    ? oauthError
-    : "";
+  const oauthError =
+    dictionary?.messages?.errors?.auth?.emailAlreadyExists ||
+    "Email already in use with different provider!"
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked" ? oauthError : ""
 
-  const [showTwoFactor, setShowTwoFactor] = useState(false);
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
-  const [isPending, startTransition] = useTransition();
+  const [showTwoFactor, setShowTwoFactor] = useState(false)
+  const [error, setError] = useState<string | undefined>("")
+  const [success, setSuccess] = useState<string | undefined>("")
+  const [isPending, startTransition] = useTransition()
 
   // Handle tenant redirect after successful login
   useEffect(() => {
-    const tenant = searchParams.get('tenant');
+    const tenant = searchParams.get("tenant")
 
     if (tenant && success) {
       // Redirect back to tenant subdomain after successful login
-      const tenantUrl = process.env.NODE_ENV === 'production'
-        ? `https://${tenant}.databayt.org/dashboard`
-        : `http://${tenant}.localhost:3000/dashboard`;
+      const tenantUrl =
+        process.env.NODE_ENV === "production"
+          ? `https://${tenant}.databayt.org/dashboard`
+          : `http://${tenant}.localhost:3000/dashboard`
 
-      console.log('🔄 Redirecting to tenant after login:', tenantUrl);
-      window.location.href = tenantUrl;
+      console.log("🔄 Redirecting to tenant after login:", tenantUrl)
+      window.location.href = tenantUrl
     }
-  }, [success, searchParams]);
+  }, [success, searchParams])
 
   // Create localized schema (memoized to prevent recreation on every render)
   const LoginSchema = useMemo(() => {
@@ -79,14 +80,25 @@ export const LoginForm = ({
       // Fallback to legacy schema if dictionary not available
       return createLoginSchema({
         messages: {
-          validation: { email: "Email is required", passwordRequired: "Password is required" },
+          validation: {
+            email: "Email is required",
+            passwordRequired: "Password is required",
+          },
           toast: { success: {}, error: {}, warning: {}, info: {} },
-          errors: { server: {}, auth: {}, tenant: {}, resource: {}, file: {}, payment: {}, integration: {} }
-        }
-      } as any);
+          errors: {
+            server: {},
+            auth: {},
+            tenant: {},
+            resource: {},
+            file: {},
+            payment: {},
+            integration: {},
+          },
+        },
+      } as any)
     }
-    return createLoginSchema(dictionary);
-  }, [dictionary]);
+    return createLoginSchema(dictionary)
+  }, [dictionary])
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -94,55 +106,64 @@ export const LoginForm = ({
       email: "",
       password: "",
     },
-  });
+  })
 
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
-    setError("");
-    setSuccess("");
-    
+    setError("")
+    setSuccess("")
+
     // Construct callback URL with tenant if present
-    let finalCallbackUrl = callbackUrl;
-    if (tenant && !finalCallbackUrl?.includes('tenant=')) {
-      const separator = finalCallbackUrl?.includes('?') ? '&' : '?';
-      finalCallbackUrl = `${finalCallbackUrl || '/dashboard'}${separator}tenant=${tenant}`;
+    let finalCallbackUrl = callbackUrl
+    if (tenant && !finalCallbackUrl?.includes("tenant=")) {
+      const separator = finalCallbackUrl?.includes("?") ? "&" : "?"
+      finalCallbackUrl = `${finalCallbackUrl || "/dashboard"}${separator}tenant=${tenant}`
     }
-    
-    console.log('📋 LOGIN FORM SUBMIT:', {
+
+    console.log("📋 LOGIN FORM SUBMIT:", {
       tenant,
       callbackUrl,
       finalCallbackUrl,
-      hasValues: !!values
-    });
-    
+      hasValues: !!values,
+    })
+
     startTransition(() => {
       login(values, finalCallbackUrl)
         .then((data) => {
           if (data?.error) {
-            form.reset();
-            setError(data.error);
+            form.reset()
+            setError(data.error)
           }
           if (data?.success) {
-            form.reset();
-            setSuccess(data.success);
+            form.reset()
+            setSuccess(data.success)
           }
           if (data?.twoFactor) {
-            setShowTwoFactor(true);
+            setShowTwoFactor(true)
           }
         })
         .catch((error) => {
           // Don't show error for redirect - this is expected behavior for successful login
           // NextAuth throws NEXT_REDIRECT when signIn succeeds with a redirect
-          if (error?.digest?.startsWith?.('NEXT_REDIRECT')) {
-            return; // Redirect is happening, no need to show error
+          if (error?.digest?.startsWith?.("NEXT_REDIRECT")) {
+            return // Redirect is happening, no need to show error
           }
-          setError(dictionary?.messages?.toast?.error?.generic || "Something went wrong");
-        });
-    });
-  };
+          setError(
+            dictionary?.messages?.toast?.error?.generic ||
+              "Something went wrong"
+          )
+        })
+    })
+  }
 
   return (
-    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
-      <Card className="border-none shadow-none bg-background">
+    <div
+      className={cn(
+        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        className
+      )}
+      {...props}
+    >
+      <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center">
           {/* <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>
@@ -150,19 +171,19 @@ export const LoginForm = ({
           </CardDescription> */}
         </CardHeader>
         <CardContent>
-          <Suspense fallback={<div className="h-10" />}> 
+          <Suspense fallback={<div className="h-10" />}>
             <Social />
           </Suspense>
         </CardContent>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-              <div className="relative text-center muted after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              <div className="muted after:border-border relative text-center after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                <span className="bg-background text-muted-foreground relative z-10 px-2">
                   {dictionary?.auth?.orContinueWith || "Or continue with"}
                 </span>
               </div>
-              
+
               <div className="grid gap-4">
                 {showTwoFactor ? (
                   <FormField
@@ -174,7 +195,10 @@ export const LoginForm = ({
                           <Input
                             {...field}
                             disabled={isPending}
-                            placeholder={dictionary?.auth?.twoFactorCode || "Two Factor Code"}
+                            placeholder={
+                              dictionary?.auth?.twoFactorCode ||
+                              "Two Factor Code"
+                            }
                           />
                         </FormControl>
                         <FormMessage />
@@ -212,14 +236,17 @@ export const LoginForm = ({
                               id="password"
                               type="password"
                               disabled={isPending}
-                              placeholder={dictionary?.auth?.password || "Password"}
+                              placeholder={
+                                dictionary?.auth?.password || "Password"
+                              }
                             />
                           </FormControl>
                           <Link
                             href="/reset"
-                            className="text-start muted hover:underline underline-offset-4"
+                            className="muted text-start underline-offset-4 hover:underline"
                           >
-                            {dictionary?.auth?.forgotPassword || "Forgot password?"}
+                            {dictionary?.auth?.forgotPassword ||
+                              "Forgot password?"}
                           </Link>
                           <FormMessage />
                         </FormItem>
@@ -227,18 +254,28 @@ export const LoginForm = ({
                     />
                   </>
                 )}
-                
+
                 <FormError message={error || urlError} />
                 <FormSuccess message={success} />
-                
-                <Button disabled={isPending} type="submit" className="w-full h-11">
-                  {showTwoFactor ? (dictionary?.auth?.confirm || "Confirm") : (dictionary?.auth?.signIn || "Login")}
+
+                <Button
+                  disabled={isPending}
+                  type="submit"
+                  className="h-11 w-full"
+                >
+                  {showTwoFactor
+                    ? dictionary?.auth?.confirm || "Confirm"
+                    : dictionary?.auth?.signIn || "Login"}
                 </Button>
               </div>
-              
-              <div className="text-center muted">
-                <Link href="/join" className="hover:underline underline-offset-4">
-                  {dictionary?.auth?.dontHaveAccount || "Don't have an account?"}
+
+              <div className="muted text-center">
+                <Link
+                  href="/join"
+                  className="underline-offset-4 hover:underline"
+                >
+                  {dictionary?.auth?.dontHaveAccount ||
+                    "Don't have an account?"}
                 </Link>
               </div>
             </form>
@@ -250,5 +287,5 @@ export const LoginForm = ({
         and <a href="#">Privacy Policy</a>.
       </div> */}
     </div>
-  );
-};
+  )
+}

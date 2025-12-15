@@ -1,11 +1,13 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { StatValue } from "./stat-value"
+
 import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import { TrendBadge } from "./trend-badge"
 import type { CardSize, ComparisonMetric, TrendData } from "./types"
 
@@ -87,7 +89,7 @@ export function ComparisonCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -128,8 +130,10 @@ export function ComparisonCard({
             {/* VS Badge (optional visual) */}
             {metrics.length === 2 && (
               <div className="flex items-center justify-center">
-                <div className="rounded-md border border-border bg-muted px-2 py-1">
-                  <small className="font-medium text-muted-foreground">vs</small>
+                <div className="border-border bg-muted rounded-md border px-2 py-1">
+                  <small className="text-muted-foreground font-medium">
+                    vs
+                  </small>
                 </div>
               </div>
             )}

@@ -3,7 +3,15 @@
 import { MessageBubble, type MessageBubbleProps } from "./message-bubble"
 import type { MessageDTO } from "./types"
 
-export interface MessageGroupProps extends Omit<MessageBubbleProps, "message" | "showAvatar" | "showSenderName" | "showTimestamp" | "isFirstInGroup" | "isLastInGroup"> {
+export interface MessageGroupProps extends Omit<
+  MessageBubbleProps,
+  | "message"
+  | "showAvatar"
+  | "showSenderName"
+  | "showTimestamp"
+  | "isFirstInGroup"
+  | "isLastInGroup"
+> {
   messages: MessageDTO[]
 }
 
@@ -85,7 +93,9 @@ export function groupMessages(messages: MessageDTO[]): MessageDTO[][] {
     const shouldStartNewGroup =
       !prevMessage ||
       prevMessage.senderId !== message.senderId ||
-      new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime() > TIME_THRESHOLD
+      new Date(message.createdAt).getTime() -
+        new Date(prevMessage.createdAt).getTime() >
+        TIME_THRESHOLD
 
     if (shouldStartNewGroup) {
       if (currentGroup.length > 0) {

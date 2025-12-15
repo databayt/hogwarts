@@ -4,15 +4,22 @@
  * Migrated to use enhanced FileUploader component
  */
 
-'use client'
+"use client"
 
-import * as React from 'react'
-import { useRouter } from 'next/navigation'
-import { uploadReceipt } from './actions'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { Upload, LoaderCircle } from "lucide-react"
-import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file'
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { LoaderCircle, Upload } from "lucide-react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import {
+  ACCEPT_DOCUMENTS,
+  ACCEPT_IMAGES,
+  FileUploader,
+  type UploadedFileResult,
+} from "@/components/file"
+
+import { uploadReceipt } from "./actions"
 
 interface UploadFormProps {
   locale?: string
@@ -21,17 +28,19 @@ interface UploadFormProps {
 // Combine image and PDF acceptance
 const RECEIPT_ACCEPT = {
   ...ACCEPT_IMAGES,
-  'application/pdf': ['.pdf'],
+  "application/pdf": [".pdf"],
 }
 
-export function UploadForm({ locale = 'en' }: UploadFormProps) {
+export function UploadForm({ locale = "en" }: UploadFormProps) {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = React.useState(false)
-  const [uploadedFiles, setUploadedFiles] = React.useState<UploadedFileResult[]>([])
+  const [uploadedFiles, setUploadedFiles] = React.useState<
+    UploadedFileResult[]
+  >([])
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     setUploadedFiles(files)
-    toast.success('File uploaded successfully! Ready to process.')
+    toast.success("File uploaded successfully! Ready to process.")
   }
 
   const handleUploadError = (error: string) => {
@@ -40,7 +49,7 @@ export function UploadForm({ locale = 'en' }: UploadFormProps) {
 
   const handleProcess = async () => {
     if (uploadedFiles.length === 0) {
-      toast.error('Please upload a file first.')
+      toast.error("Please upload a file first.")
       return
     }
 
@@ -52,22 +61,24 @@ export function UploadForm({ locale = 'en' }: UploadFormProps) {
       // This is a TODO for Phase 4 completion
       const fileId = uploadedFiles[0].fileId
       const formData = new FormData()
-      formData.append('fileId', fileId)
+      formData.append("fileId", fileId)
 
       const result = await uploadReceipt(formData)
 
       if (result.success && result.data) {
-        toast.success('Receipt processed successfully! AI extraction in progress...')
+        toast.success(
+          "Receipt processed successfully! AI extraction in progress..."
+        )
         setUploadedFiles([])
         // Redirect to receipt detail page (relative to current route)
         router.push(`${result.data.receiptId}`)
         router.refresh()
       } else {
-        toast.error(result.error || 'Processing failed. Please try again.')
+        toast.error(result.error || "Processing failed. Please try again.")
       }
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again.')
-      console.error('Processing error:', error)
+      toast.error("An unexpected error occurred. Please try again.")
+      console.error("Processing error:", error)
     } finally {
       setIsProcessing(false)
     }
@@ -89,13 +100,13 @@ export function UploadForm({ locale = 'en' }: UploadFormProps) {
           onUploadError={handleUploadError}
         />
       ) : (
-        <div className="border-2 border-dashed rounded-lg p-8 text-center border-primary/50">
+        <div className="border-primary/50 rounded-lg border-2 border-dashed p-8 text-center">
           <div className="space-y-2">
-            <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <Upload className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+              <Upload className="text-primary h-6 w-6" />
             </div>
             <p className="text-sm font-medium">File uploaded successfully</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Ready to process with AI extraction
             </p>
             <Button

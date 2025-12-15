@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+
 import { generateUserStripe } from "./actions/generate-user-stripe"
 
 export function CheckoutLauncher({ price }: { price: string }) {
@@ -17,5 +18,3 @@ export function CheckoutLauncher({ price }: { price: string }) {
 
   return null
 }
-
-

@@ -1,15 +1,16 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { auth } from "@/auth";
-import { LeadStatus, LeadSource, LeadPriority, LeadType } from "@prisma/client";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { LeadPriority, LeadSource, LeadStatus, LeadType } from "@prisma/client"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 import {
   createLeadSchema,
-  updateLeadSchema,
   leadFilterSchema,
-} from "@/components/sales/validation";
+  updateLeadSchema,
+} from "@/components/sales/validation"
 
 // ============================================================================
 // Types
@@ -17,35 +18,35 @@ import {
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const SALES_PATH = "/sales";
+const SALES_PATH = "/sales"
 
 // Platform schoolId for operator-level leads (no tenant scoping)
-const PLATFORM_SCHOOL_ID = "platform";
+const PLATFORM_SCHOOL_ID = "platform"
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
 async function getOperatorContext() {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   // Check if user is a platform admin (DEVELOPER role)
-  const isPlatformAdmin = session.user.role === "DEVELOPER";
+  const isPlatformAdmin = session.user.role === "DEVELOPER"
   if (!isPlatformAdmin) {
-    throw new Error("Unauthorized: Platform admin access required");
+    throw new Error("Unauthorized: Platform admin access required")
   }
 
-  return { userId: session.user.id };
+  return { userId: session.user.id }
 }
 
 // ============================================================================
@@ -59,10 +60,10 @@ export async function createOperatorLead(
   input: z.infer<typeof createLeadSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { userId } = await getOperatorContext();
+    const { userId } = await getOperatorContext()
 
     // Validate input
-    const validated = createLeadSchema.parse(input);
+    const validated = createLeadSchema.parse(input)
 
     // Check for duplicate email at platform level
     if (validated.email) {
@@ -71,13 +72,13 @@ export async function createOperatorLead(
           email: validated.email,
           schoolId: PLATFORM_SCHOOL_ID,
         },
-      });
+      })
 
       if (existing) {
         return {
           success: false,
           error: "A lead with this email already exists",
-        };
+        }
       }
     }
 
@@ -105,25 +106,25 @@ export async function createOperatorLead(
         notes: validated.notes || null,
         tags: validated.tags || [],
       },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: { id: lead.id } };
+    return { success: true, data: { id: lead.id } }
   } catch (error) {
-    console.error("[createOperatorLead] Error:", error);
+    console.error("[createOperatorLead] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create lead",
-    };
+    }
   }
 }
 
@@ -135,18 +136,18 @@ export async function updateOperatorLead(
   input: z.infer<typeof updateLeadSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    await getOperatorContext();
+    await getOperatorContext()
 
     // Validate input
-    const validated = updateLeadSchema.parse(input);
+    const validated = updateLeadSchema.parse(input)
 
     // Find the lead
     const existing = await db.lead.findFirst({
       where: { id, schoolId: PLATFORM_SCHOOL_ID },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
     // Update the lead
@@ -154,43 +155,65 @@ export async function updateOperatorLead(
       where: { id },
       data: {
         ...(validated.name && { name: validated.name }),
-        ...(validated.email !== undefined && { email: validated.email || null }),
-        ...(validated.phone !== undefined && { phone: validated.phone || null }),
-        ...(validated.company !== undefined && { company: validated.company || null }),
-        ...(validated.title !== undefined && { title: validated.title || null }),
-        ...(validated.website !== undefined && { website: validated.website || null }),
-        ...(validated.linkedinUrl !== undefined && { linkedinUrl: validated.linkedinUrl || null }),
+        ...(validated.email !== undefined && {
+          email: validated.email || null,
+        }),
+        ...(validated.phone !== undefined && {
+          phone: validated.phone || null,
+        }),
+        ...(validated.company !== undefined && {
+          company: validated.company || null,
+        }),
+        ...(validated.title !== undefined && {
+          title: validated.title || null,
+        }),
+        ...(validated.website !== undefined && {
+          website: validated.website || null,
+        }),
+        ...(validated.linkedinUrl !== undefined && {
+          linkedinUrl: validated.linkedinUrl || null,
+        }),
         ...(validated.leadType && { leadType: validated.leadType as LeadType }),
-        ...(validated.industry !== undefined && { industry: validated.industry || null }),
-        ...(validated.location !== undefined && { location: validated.location || null }),
+        ...(validated.industry !== undefined && {
+          industry: validated.industry || null,
+        }),
+        ...(validated.location !== undefined && {
+          location: validated.location || null,
+        }),
         ...(validated.status && { status: validated.status as LeadStatus }),
         ...(validated.source && { source: validated.source as LeadSource }),
-        ...(validated.priority && { priority: validated.priority as LeadPriority }),
+        ...(validated.priority && {
+          priority: validated.priority as LeadPriority,
+        }),
         ...(validated.score !== undefined && { score: validated.score }),
-        ...(validated.verified !== undefined && { verified: validated.verified }),
-        ...(validated.notes !== undefined && { notes: validated.notes || null }),
+        ...(validated.verified !== undefined && {
+          verified: validated.verified,
+        }),
+        ...(validated.notes !== undefined && {
+          notes: validated.notes || null,
+        }),
         ...(validated.tags && { tags: validated.tags }),
       },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
-    revalidatePath(`${SALES_PATH}/${id}`);
+    revalidatePath(SALES_PATH)
+    revalidatePath(`${SALES_PATH}/${id}`)
 
-    return { success: true, data: { id: lead.id } };
+    return { success: true, data: { id: lead.id } }
   } catch (error) {
-    console.error("[updateOperatorLead] Error:", error);
+    console.error("[updateOperatorLead] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update lead",
-    };
+    }
   }
 }
 
@@ -201,31 +224,31 @@ export async function deleteOperatorLead(
   id: string
 ): Promise<ActionResponse<void>> {
   try {
-    await getOperatorContext();
+    await getOperatorContext()
 
     // Find the lead
     const existing = await db.lead.findFirst({
       where: { id, schoolId: PLATFORM_SCHOOL_ID },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
     // Delete the lead
     await db.lead.delete({
       where: { id },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[deleteOperatorLead] Error:", error);
+    console.error("[deleteOperatorLead] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete lead",
-    };
+    }
   }
 }
 
@@ -239,50 +262,50 @@ export async function getOperatorLeads(
 ): Promise<
   ActionResponse<{
     leads: Array<{
-      id: string;
-      name: string;
-      email: string | null;
-      phone: string | null;
-      company: string | null;
-      title: string | null;
-      status: LeadStatus;
-      source: LeadSource;
-      priority: LeadPriority;
-      score: number;
-      verified: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    }>;
-    total: number;
-    page: number;
-    perPage: number;
-    totalPages: number;
+      id: string
+      name: string
+      email: string | null
+      phone: string | null
+      company: string | null
+      title: string | null
+      status: LeadStatus
+      source: LeadSource
+      priority: LeadPriority
+      score: number
+      verified: boolean
+      createdAt: Date
+      updatedAt: Date
+    }>
+    total: number
+    page: number
+    perPage: number
+    totalPages: number
   }>
 > {
   try {
-    await getOperatorContext();
+    await getOperatorContext()
 
     // Build where clause
     const where: Record<string, unknown> = {
       schoolId: PLATFORM_SCHOOL_ID,
-    };
+    }
 
     if (filters?.search) {
       where.OR = [
         { name: { contains: filters.search, mode: "insensitive" } },
         { email: { contains: filters.search, mode: "insensitive" } },
         { company: { contains: filters.search, mode: "insensitive" } },
-      ];
+      ]
     }
 
-    if (filters?.status) where.status = filters.status;
-    if (filters?.source) where.source = filters.source;
-    if (filters?.priority) where.priority = filters.priority;
-    if (filters?.leadType) where.leadType = filters.leadType;
-    if (filters?.verified !== undefined) where.verified = filters.verified;
+    if (filters?.status) where.status = filters.status
+    if (filters?.source) where.source = filters.source
+    if (filters?.priority) where.priority = filters.priority
+    if (filters?.leadType) where.leadType = filters.leadType
+    if (filters?.verified !== undefined) where.verified = filters.verified
 
     // Get total count
-    const total = await db.lead.count({ where });
+    const total = await db.lead.count({ where })
 
     // Get leads
     const leads = await db.lead.findMany({
@@ -305,7 +328,7 @@ export async function getOperatorLeads(
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
-    });
+    })
 
     return {
       success: true,
@@ -316,52 +339,52 @@ export async function getOperatorLeads(
         perPage,
         totalPages: Math.ceil(total / perPage),
       },
-    };
+    }
   } catch (error) {
-    console.error("[getOperatorLeads] Error:", error);
+    console.error("[getOperatorLeads] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch leads",
-    };
+    }
   }
 }
 
 /**
  * Get a single platform-level lead by ID
  */
-export async function getOperatorLeadById(
-  id: string
-): Promise<ActionResponse<{
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  company: string | null;
-  title: string | null;
-  website: string | null;
-  linkedinUrl: string | null;
-  leadType: LeadType;
-  industry: string | null;
-  location: string | null;
-  status: LeadStatus;
-  source: LeadSource;
-  priority: LeadPriority;
-  score: number;
-  verified: boolean;
-  notes: string | null;
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
-} | null>> {
+export async function getOperatorLeadById(id: string): Promise<
+  ActionResponse<{
+    id: string
+    name: string
+    email: string | null
+    phone: string | null
+    company: string | null
+    title: string | null
+    website: string | null
+    linkedinUrl: string | null
+    leadType: LeadType
+    industry: string | null
+    location: string | null
+    status: LeadStatus
+    source: LeadSource
+    priority: LeadPriority
+    score: number
+    verified: boolean
+    notes: string | null
+    tags: string[]
+    createdAt: Date
+    updatedAt: Date
+  } | null>
+> {
   try {
-    await getOperatorContext();
+    await getOperatorContext()
 
     const lead = await db.lead.findFirst({
       where: { id, schoolId: PLATFORM_SCHOOL_ID },
-    });
+    })
 
     if (!lead) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     return {
@@ -388,12 +411,12 @@ export async function getOperatorLeadById(
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
       },
-    };
+    }
   } catch (error) {
-    console.error("[getOperatorLeadById] Error:", error);
+    console.error("[getOperatorLeadById] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch lead",
-    };
+    }
   }
 }

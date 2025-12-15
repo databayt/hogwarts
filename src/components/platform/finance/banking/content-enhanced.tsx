@@ -10,9 +10,11 @@
 export async function BankingContent() {
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="text-center text-muted-foreground">
+      <div className="text-muted-foreground text-center">
         <p>Enhanced banking content is currently unavailable.</p>
-        <p className="text-sm mt-2">Please use the standard banking interface.</p>
+        <p className="mt-2 text-sm">
+          Please use the standard banking interface.
+        </p>
       </div>
     </div>
   )

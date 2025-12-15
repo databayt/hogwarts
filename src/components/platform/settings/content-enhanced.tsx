@@ -1,91 +1,121 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Database } from "lucide-react";
-import { useSchool } from "@/components/platform/context/school-context";
-import { type Locale } from "@/components/internationalization/config";
-import { type Dictionary } from "@/components/internationalization/dictionaries";
-import { useSession } from "next-auth/react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { Database } from "lucide-react"
+import { useSession } from "next-auth/react"
+
+import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { useSchool } from "@/components/platform/context/school-context"
 
 // Lazy load heavy components for better initial page load performance
-const BasicSettings = React.lazy(() => import("./content").then(m => ({ default: m.SettingsContent })));
-const RoleManagement = React.lazy(() => import("./role-management").then(m => ({ default: m.RoleManagement })));
-const RoleSwitcher = React.lazy(() => import("./role-switcher").then(m => ({ default: m.RoleSwitcher })));
-const PermissionsPanel = React.lazy(() => import("./permissions-panel").then(m => ({ default: m.PermissionsPanel })));
-const NotificationSettings = React.lazy(() => import("./notification-settings").then(m => ({ default: m.NotificationSettings })));
-const AppearanceSettings = React.lazy(() => import("./appearance-settings").then(m => ({ default: m.AppearanceSettings })));
+const BasicSettings = React.lazy(() =>
+  import("./content").then((m) => ({ default: m.SettingsContent }))
+)
+const RoleManagement = React.lazy(() =>
+  import("./role-management").then((m) => ({ default: m.RoleManagement }))
+)
+const RoleSwitcher = React.lazy(() =>
+  import("./role-switcher").then((m) => ({ default: m.RoleSwitcher }))
+)
+const PermissionsPanel = React.lazy(() =>
+  import("./permissions-panel").then((m) => ({ default: m.PermissionsPanel }))
+)
+const NotificationSettings = React.lazy(() =>
+  import("./notification-settings").then((m) => ({
+    default: m.NotificationSettings,
+  }))
+)
+const AppearanceSettings = React.lazy(() =>
+  import("./appearance-settings").then((m) => ({
+    default: m.AppearanceSettings,
+  }))
+)
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
+  dictionary: Dictionary
+  lang: Locale
 }
 
 export function EnhancedSettingsContent({ dictionary, lang }: Props) {
-  const { school } = useSchool();
-  const { data: session } = useSession();
+  const { school } = useSchool()
+  const { data: session } = useSession()
 
   // Active tab state
-  const [activeTab, setActiveTab] = React.useState("general");
+  const [activeTab, setActiveTab] = React.useState("general")
 
   // Check if user has developer or admin access
-  const isDeveloper = session?.user?.role === "DEVELOPER";
-  const isAdmin = session?.user?.role === "ADMIN";
-  const hasFullAccess = isDeveloper || isAdmin;
+  const isDeveloper = session?.user?.role === "DEVELOPER"
+  const isAdmin = session?.user?.role === "ADMIN"
+  const hasFullAccess = isDeveloper || isAdmin
 
   // Check for developer mode from localStorage
-  const [isDeveloperMode, setIsDeveloperMode] = React.useState(false);
+  const [isDeveloperMode, setIsDeveloperMode] = React.useState(false)
 
   React.useEffect(() => {
-    const devMode = localStorage.getItem("developer-mode") === "true";
-    setIsDeveloperMode(devMode);
-  }, []);
+    const devMode = localStorage.getItem("developer-mode") === "true"
+    setIsDeveloperMode(devMode)
+  }, [])
 
   // Tab configuration
-  const tabs = React.useMemo(() => [
-    {
-      value: "general",
-      label: dictionary?.school?.settings?.general || "General",
-    },
-    {
-      value: "users",
-      label: dictionary?.school?.settings?.users || "Users",
-    },
-    {
-      value: "roles",
-      label: dictionary?.school?.settings?.roles || "Roles",
-    },
-    {
-      value: "permissions",
-      label: dictionary?.school?.settings?.permissions || "Permissions",
-    },
-    {
-      value: "notifications",
-      label: dictionary?.school?.settings?.notifications || "Notifications",
-    },
-    {
-      value: "appearance",
-      label: dictionary?.school?.settings?.appearance || "Appearance",
-    },
-    {
-      value: "advanced",
-      label: dictionary?.school?.settings?.advanced || "Advanced",
-    },
-  ], [dictionary]);
+  const tabs = React.useMemo(
+    () => [
+      {
+        value: "general",
+        label: dictionary?.school?.settings?.general || "General",
+      },
+      {
+        value: "users",
+        label: dictionary?.school?.settings?.users || "Users",
+      },
+      {
+        value: "roles",
+        label: dictionary?.school?.settings?.roles || "Roles",
+      },
+      {
+        value: "permissions",
+        label: dictionary?.school?.settings?.permissions || "Permissions",
+      },
+      {
+        value: "notifications",
+        label: dictionary?.school?.settings?.notifications || "Notifications",
+      },
+      {
+        value: "appearance",
+        label: dictionary?.school?.settings?.appearance || "Appearance",
+      },
+      {
+        value: "advanced",
+        label: dictionary?.school?.settings?.advanced || "Advanced",
+      },
+    ],
+    [dictionary]
+  )
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeadingSetter
-        title={dictionary?.school?.settings?.title || 'Settings'}
+        title={dictionary?.school?.settings?.title || "Settings"}
       />
 
       {/* Settings Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         {/* Tab Navigation with Bottom Border Indicator */}
         <div className="border-b">
           <ScrollArea className="max-w-[600px] lg:max-w-none">
@@ -96,7 +126,7 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
                     key={tab.value}
                     onClick={() => setActiveTab(tab.value)}
                     className={cn(
-                      "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
+                      "hover:text-primary relative px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors",
                       activeTab === tab.value
                         ? "text-primary"
                         : "text-muted-foreground"
@@ -104,10 +134,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
                   >
                     {tab.label}
                     {activeTab === tab.value && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                      <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
                     )}
                   </button>
-                );
+                )
               })}
             </nav>
             <ScrollBar orientation="horizontal" className="invisible" />
@@ -136,7 +166,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         <TabsContent value="roles" className="space-y-6">
           <React.Suspense fallback={<LoadingFallback />}>
             <RoleSwitcher
-              currentRole={(session?.user?.role || "USER") as import("./role-management").UserRole}
+              currentRole={
+                (session?.user?.role ||
+                  "USER") as import("./role-management").UserRole
+              }
               currentUserId={session?.user?.id}
               schoolId={school?.id}
               dictionary={dictionary.school}
@@ -148,7 +181,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         <TabsContent value="permissions" className="space-y-6">
           <React.Suspense fallback={<LoadingFallback />}>
             <PermissionsPanel
-              currentRole={(session?.user?.role || "USER") as import("./role-management").UserRole}
+              currentRole={
+                (session?.user?.role ||
+                  "USER") as import("./role-management").UserRole
+              }
               isDeveloperMode={isDeveloperMode || isDeveloper}
               dictionary={dictionary.school}
             />
@@ -180,18 +216,18 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
 
 // Loading Fallback Component
 function LoadingFallback() {
   return (
     <div className="space-y-4">
-      <div className="h-32 bg-muted animate-pulse rounded-lg" />
-      <div className="h-32 bg-muted animate-pulse rounded-lg" />
-      <div className="h-32 bg-muted animate-pulse rounded-lg" />
+      <div className="bg-muted h-32 animate-pulse rounded-lg" />
+      <div className="bg-muted h-32 animate-pulse rounded-lg" />
+      <div className="bg-muted h-32 animate-pulse rounded-lg" />
     </div>
-  );
+  )
 }
 
 // Advanced Settings Component
@@ -201,31 +237,31 @@ function AdvancedSettings({
   schoolId,
   dictionary,
 }: {
-  isDeveloper: boolean;
-  isAdmin: boolean;
-  schoolId?: string;
-  dictionary: Dictionary;
+  isDeveloper: boolean
+  isAdmin: boolean
+  schoolId?: string
+  dictionary: Dictionary
 }) {
-  const [dataExportLoading, setDataExportLoading] = React.useState(false);
-  const [cacheCleared, setCacheCleared] = React.useState(false);
+  const [dataExportLoading, setDataExportLoading] = React.useState(false)
+  const [cacheCleared, setCacheCleared] = React.useState(false)
 
   const handleDataExport = async () => {
-    setDataExportLoading(true);
+    setDataExportLoading(true)
     try {
       // In production, this would trigger a data export
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert("Data export initiated. You will receive an email when ready.");
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      alert("Data export initiated. You will receive an email when ready.")
     } finally {
-      setDataExportLoading(false);
+      setDataExportLoading(false)
     }
-  };
+  }
 
   const handleCacheClear = async () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    setCacheCleared(true);
-    setTimeout(() => setCacheCleared(false), 3000);
-  };
+    localStorage.clear()
+    sessionStorage.clear()
+    setCacheCleared(true)
+    setTimeout(() => setCacheCleared(false), 3000)
+  }
 
   return (
     <div className="space-y-6">
@@ -234,85 +270,112 @@ function AdvancedSettings({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Database className="h-5 w-5" />
-            {dictionary?.school?.settings?.databaseOperations || 'Database Operations'}
+            {dictionary?.school?.settings?.databaseOperations ||
+              "Database Operations"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.school?.settings?.manageDatabaseOperations || 'Manage database and system operations'}
+            {dictionary?.school?.settings?.manageDatabaseOperations ||
+              "Manage database and system operations"}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {/* Data Export */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
+          <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
             <div>
-              <p className="font-medium">{dictionary?.school?.settings?.exportSchoolData || 'Export School Data'}</p>
-              <p className="text-sm text-muted-foreground">
-                {dictionary?.school?.settings?.downloadAllData || 'Download all school data in CSV/Excel format'}
+              <p className="font-medium">
+                {dictionary?.school?.settings?.exportSchoolData ||
+                  "Export School Data"}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.school?.settings?.downloadAllData ||
+                  "Download all school data in CSV/Excel format"}
               </p>
             </div>
             <button
               onClick={handleDataExport}
               disabled={dataExportLoading}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 shrink-0"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0 rounded-md px-4 py-2 disabled:opacity-50"
             >
-              {dataExportLoading ? (dictionary?.school?.settings?.exporting || 'Exporting...') : (dictionary?.school?.settings?.exportData || 'Export Data')}
+              {dataExportLoading
+                ? dictionary?.school?.settings?.exporting || "Exporting..."
+                : dictionary?.school?.settings?.exportData || "Export Data"}
             </button>
           </div>
 
           {/* Cache Management */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
+          <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
             <div>
-              <p className="font-medium">{dictionary?.school?.settings?.clearCache || 'Clear Cache'}</p>
-              <p className="text-sm text-muted-foreground">
-                {dictionary?.school?.settings?.clearBrowserCache || 'Clear browser cache and temporary data'}
+              <p className="font-medium">
+                {dictionary?.school?.settings?.clearCache || "Clear Cache"}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.school?.settings?.clearBrowserCache ||
+                  "Clear browser cache and temporary data"}
               </p>
             </div>
             <button
               onClick={handleCacheClear}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 shrink-0"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0 rounded-md px-4 py-2"
             >
-              {cacheCleared ? (dictionary?.school?.settings?.cacheCleared || 'Cache Cleared!') : (dictionary?.school?.settings?.clearCache || 'Clear Cache')}
+              {cacheCleared
+                ? dictionary?.school?.settings?.cacheCleared || "Cache Cleared!"
+                : dictionary?.school?.settings?.clearCache || "Clear Cache"}
             </button>
           </div>
 
           {/* System Info */}
-          <div className="p-4 rounded-xl bg-background">
-            <p className="font-medium mb-2">System Information</p>
+          <div className="bg-background rounded-xl p-4">
+            <p className="mb-2 font-medium">System Information</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between rtl:flex-row-reverse">
-                <span className="text-muted-foreground">{dictionary?.school?.settings?.schoolId || 'School ID:'}</span>
+                <span className="text-muted-foreground">
+                  {dictionary?.school?.settings?.schoolId || "School ID:"}
+                </span>
                 <span className="font-mono">{schoolId || "N/A"}</span>
               </div>
               <div className="flex justify-between rtl:flex-row-reverse">
-                <span className="text-muted-foreground">{dictionary?.school?.settings?.version || 'Version:'}</span>
+                <span className="text-muted-foreground">
+                  {dictionary?.school?.settings?.version || "Version:"}
+                </span>
                 <span>v1.0.0</span>
               </div>
               <div className="flex justify-between rtl:flex-row-reverse">
-                <span className="text-muted-foreground">{dictionary?.school?.settings?.environment || 'Environment:'}</span>
+                <span className="text-muted-foreground">
+                  {dictionary?.school?.settings?.environment || "Environment:"}
+                </span>
                 <span>{process.env.NODE_ENV}</span>
               </div>
               <div className="flex justify-between rtl:flex-row-reverse">
-                <span className="text-muted-foreground">{dictionary?.school?.settings?.apiStatus || 'API Status:'}</span>
-                <span className="text-chart-2">{dictionary?.school?.settings?.operational || 'Operational'}</span>
+                <span className="text-muted-foreground">
+                  {dictionary?.school?.settings?.apiStatus || "API Status:"}
+                </span>
+                <span className="text-chart-2">
+                  {dictionary?.school?.settings?.operational || "Operational"}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Developer Tools (Only for developers) */}
           {isDeveloper && (
-            <div className="p-4 rounded-xl bg-chart-3/10">
-              <p className="font-medium mb-2 text-chart-3">
-                {dictionary?.school?.settings?.developerTools || 'Developer Tools'}
+            <div className="bg-chart-3/10 rounded-xl p-4">
+              <p className="text-chart-3 mb-2 font-medium">
+                {dictionary?.school?.settings?.developerTools ||
+                  "Developer Tools"}
               </p>
               <div className="space-y-2">
-                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
-                  {dictionary?.school?.settings?.runDatabaseMigrations || 'Run Database Migrations'}
+                <button className="bg-chart-3 hover:bg-chart-3/90 w-full rounded-md px-4 py-2 text-sm text-white">
+                  {dictionary?.school?.settings?.runDatabaseMigrations ||
+                    "Run Database Migrations"}
                 </button>
-                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
-                  {dictionary?.school?.settings?.seedTestData || 'Seed Test Data'}
+                <button className="bg-chart-3 hover:bg-chart-3/90 w-full rounded-md px-4 py-2 text-sm text-white">
+                  {dictionary?.school?.settings?.seedTestData ||
+                    "Seed Test Data"}
                 </button>
-                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
-                  {dictionary?.school?.settings?.viewDebugLogs || 'View Debug Logs'}
+                <button className="bg-chart-3 hover:bg-chart-3/90 w-full rounded-md px-4 py-2 text-sm text-white">
+                  {dictionary?.school?.settings?.viewDebugLogs ||
+                    "View Debug Logs"}
                 </button>
               </div>
             </div>
@@ -323,40 +386,50 @@ function AdvancedSettings({
       {/* API Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>{dictionary?.school?.settings?.apiSettings || 'API Settings'}</CardTitle>
+          <CardTitle>
+            {dictionary?.school?.settings?.apiSettings || "API Settings"}
+          </CardTitle>
           <CardDescription>
-            {dictionary?.school?.settings?.configureApiAccess || 'Configure API access and webhooks'}
+            {dictionary?.school?.settings?.configureApiAccess ||
+              "Configure API access and webhooks"}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {/* API Key */}
-          <div className="p-4 rounded-xl bg-background">
-            <p className="font-medium mb-2">{dictionary?.school?.settings?.apiKey || 'API Key'}</p>
+          <div className="bg-background rounded-xl p-4">
+            <p className="mb-2 font-medium">
+              {dictionary?.school?.settings?.apiKey || "API Key"}
+            </p>
             <div className="flex items-center gap-2 rtl:flex-row-reverse">
               <input
                 type="password"
                 value="sk_live_••••••••••••••••"
-                className="flex-1 px-3 py-2 border rounded-md bg-background"
+                className="bg-background flex-1 rounded-md border px-3 py-2"
                 readOnly
               />
-              <button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 shrink-0">
-                {dictionary?.school?.settings?.regenerate || 'Regenerate'}
+              <button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0 rounded-md px-4 py-2">
+                {dictionary?.school?.settings?.regenerate || "Regenerate"}
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {dictionary?.school?.settings?.useKeyToAuthenticate || 'Use this key to authenticate API requests'}
+            <p className="text-muted-foreground mt-2 text-xs">
+              {dictionary?.school?.settings?.useKeyToAuthenticate ||
+                "Use this key to authenticate API requests"}
             </p>
           </div>
 
           {/* Webhooks */}
-          <div className="p-4 rounded-xl bg-background">
-            <p className="font-medium mb-2">{dictionary?.school?.settings?.webhooks || 'Webhooks'}</p>
-            <p className="text-sm text-muted-foreground mb-3">
-              {dictionary?.school?.settings?.configureWebhooks || 'Configure webhook endpoints for real-time events'}
+          <div className="bg-background rounded-xl p-4">
+            <p className="mb-2 font-medium">
+              {dictionary?.school?.settings?.webhooks || "Webhooks"}
             </p>
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-              {dictionary?.school?.settings?.configureWebhooksButton || 'Configure Webhooks'}
+            <p className="text-muted-foreground mb-3 text-sm">
+              {dictionary?.school?.settings?.configureWebhooks ||
+                "Configure webhook endpoints for real-time events"}
+            </p>
+            <button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2">
+              {dictionary?.school?.settings?.configureWebhooksButton ||
+                "Configure Webhooks"}
             </button>
           </div>
         </CardContent>
@@ -366,41 +439,49 @@ function AdvancedSettings({
       {(isDeveloper || isAdmin) && (
         <Card className="bg-destructive/10">
           <CardHeader>
-            <CardTitle className="text-destructive">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</CardTitle>
+            <CardTitle className="text-destructive">
+              {dictionary?.school?.settings?.dangerZone || "Danger Zone"}
+            </CardTitle>
             <CardDescription className="text-destructive/80">
-              {dictionary?.school?.settings?.irreversibleActions || 'These actions are irreversible. Please proceed with caution.'}
+              {dictionary?.school?.settings?.irreversibleActions ||
+                "These actions are irreversible. Please proceed with caution."}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
             {/* Reset School Data */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
+            <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
               <div>
-                <p className="font-medium text-destructive">
-                  {dictionary?.school?.settings?.resetSchoolData || 'Reset School Data'}
+                <p className="text-destructive font-medium">
+                  {dictionary?.school?.settings?.resetSchoolData ||
+                    "Reset School Data"}
                 </p>
-                <p className="text-sm text-destructive/80">
-                  {dictionary?.school?.settings?.deleteAllData || 'Delete all school data and start fresh'}
+                <p className="text-destructive/80 text-sm">
+                  {dictionary?.school?.settings?.deleteAllData ||
+                    "Delete all school data and start fresh"}
                 </p>
               </div>
-              <button className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 shrink-0">
-                {dictionary?.school?.settings?.resetData || 'Reset Data'}
+              <button className="bg-destructive text-destructive-foreground hover:bg-destructive/90 shrink-0 rounded-md px-4 py-2">
+                {dictionary?.school?.settings?.resetData || "Reset Data"}
               </button>
             </div>
 
             {/* Delete School */}
             {isDeveloper && (
-              <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
+              <div className="bg-background flex items-center justify-between rounded-xl p-4 rtl:flex-row-reverse">
                 <div>
-                  <p className="font-medium text-destructive">
-                    {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
+                  <p className="text-destructive font-medium">
+                    {dictionary?.school?.settings?.deleteSchool ||
+                      "Delete School"}
                   </p>
-                  <p className="text-sm text-destructive/80">
-                    {dictionary?.school?.settings?.permanentlyDelete || 'Permanently delete this school and all associated data'}
+                  <p className="text-destructive/80 text-sm">
+                    {dictionary?.school?.settings?.permanentlyDelete ||
+                      "Permanently delete this school and all associated data"}
                   </p>
                 </div>
-                <button className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 shrink-0">
-                  {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
+                <button className="bg-destructive text-destructive-foreground hover:bg-destructive/90 shrink-0 rounded-md px-4 py-2">
+                  {dictionary?.school?.settings?.deleteSchool ||
+                    "Delete School"}
                 </button>
               </div>
             )}
@@ -408,5 +489,5 @@ function AdvancedSettings({
         </Card>
       )}
     </div>
-  );
+  )
 }

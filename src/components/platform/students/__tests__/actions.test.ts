@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
   createStudent,
-  updateStudent,
   deleteStudent,
   getStudents,
+  updateStudent,
 } from "../actions"
 
 // Mock dependencies
@@ -22,16 +26,18 @@ vi.mock("@/lib/db", () => ({
     yearLevel: {
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      student: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-        findFirst: vi.fn(),
-        findMany: vi.fn(),
-        count: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        student: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+          count: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -42,9 +48,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Student Actions", () => {
   const mockSchoolId = "school-123"
@@ -191,7 +194,12 @@ describe("Student Actions", () => {
     it("fetches students scoped to schoolId", async () => {
       const mockStudents = [
         { id: "1", givenName: "John", surname: "Doe", schoolId: mockSchoolId },
-        { id: "2", givenName: "Jane", surname: "Smith", schoolId: mockSchoolId },
+        {
+          id: "2",
+          givenName: "Jane",
+          surname: "Smith",
+          schoolId: mockSchoolId,
+        },
       ]
 
       vi.mocked(db.student.findMany).mockResolvedValue(mockStudents as any)

@@ -2,7 +2,7 @@
  * Unified File Block - Configuration Constants
  */
 
-import type { FileCategory, StorageProvider, StorageTier } from "./types";
+import type { FileCategory, StorageProvider, StorageTier } from "./types"
 
 // ============================================================================
 // Size Limits (in bytes)
@@ -38,7 +38,7 @@ export const SIZE_LIMITS = {
   // Defaults
   default: 10 * 1024 * 1024, // 10 MB
   maxTotal: 5 * 1024 * 1024 * 1024, // 5 GB
-} as const;
+} as const
 
 // ============================================================================
 // MIME Types
@@ -68,11 +68,16 @@ export const MIME_TYPES = {
   document: {
     "application/pdf": [".pdf"],
     "application/msword": [".doc"],
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+      ".docx",
+    ],
     "application/vnd.ms-excel": [".xls"],
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+      ".xlsx",
+    ],
     "application/vnd.ms-powerpoint": [".ppt"],
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+      [".pptx"],
     "text/plain": [".txt"],
     "text/csv": [".csv"],
   },
@@ -94,7 +99,7 @@ export const MIME_TYPES = {
     "application/gzip": [".gz"],
     "application/x-7z-compressed": [".7z"],
   },
-} as const;
+} as const
 
 // ============================================================================
 // Provider Configuration
@@ -103,10 +108,10 @@ export const MIME_TYPES = {
 export const PROVIDER_CONFIG: Record<
   StorageProvider,
   {
-    name: string;
-    maxSize: number;
-    tier: StorageTier;
-    features: string[];
+    name: string
+    maxSize: number
+    tier: StorageTier
+    features: string[]
   }
 > = {
   vercel_blob: {
@@ -133,7 +138,7 @@ export const PROVIDER_CONFIG: Record<
     tier: "hot",
     features: ["image_optimization", "transformations", "cdn"],
   },
-} as const;
+} as const
 
 // ============================================================================
 // Storage Tier Thresholds
@@ -152,7 +157,7 @@ export const TIER_THRESHOLDS = {
     maxSize: Infinity,
     maxAge: Infinity,
   },
-} as const;
+} as const
 
 // ============================================================================
 // Folder Structure
@@ -178,7 +183,7 @@ export const FOLDER_STRUCTURE = {
   exports: "exports",
   imports: "imports",
   temp: "temp",
-} as const;
+} as const
 
 // ============================================================================
 // Export Configuration
@@ -196,7 +201,7 @@ export const EXPORT_CONFIG = {
     en: "USD",
     ar: "SAR",
   },
-} as const;
+} as const
 
 // ============================================================================
 // Import Configuration
@@ -208,7 +213,7 @@ export const IMPORT_CONFIG = {
   maxRetries: 3,
   previewLimit: 5,
   supportedFormats: ["csv", "excel", "json"] as const,
-} as const;
+} as const
 
 // ============================================================================
 // Print Configuration
@@ -230,7 +235,7 @@ export const PRINT_CONFIG = {
     A3: { width: 297, height: 420 },
     A5: { width: 148, height: 210 },
   },
-} as const;
+} as const
 
 // ============================================================================
 // Document Generation Configuration
@@ -248,7 +253,7 @@ export const GENERATE_CONFIG = {
     id_card: ["standard", "photo-id", "minimal"],
     transcript: ["official", "summary"],
   },
-} as const;
+} as const
 
 // ============================================================================
 // File Icons Mapping
@@ -261,7 +266,7 @@ export const FILE_ICONS: Record<FileCategory, string> = {
   audio: "music",
   archive: "archive",
   other: "file",
-};
+}
 
 export const DOCUMENT_ICONS: Record<string, string> = {
   pdf: "file-type-pdf",
@@ -270,7 +275,7 @@ export const DOCUMENT_ICONS: Record<string, string> = {
   powerpoint: "presentation",
   text: "file-text",
   csv: "table",
-};
+}
 
 // ============================================================================
 // Utility Functions
@@ -280,9 +285,9 @@ export const DOCUMENT_ICONS: Record<string, string> = {
  * Get category from MIME type
  */
 export function getCategoryFromMimeType(mimeType: string): FileCategory {
-  if (mimeType.startsWith("image/")) return "image";
-  if (mimeType.startsWith("video/")) return "video";
-  if (mimeType.startsWith("audio/")) return "audio";
+  if (mimeType.startsWith("image/")) return "image"
+  if (mimeType.startsWith("video/")) return "video"
+  if (mimeType.startsWith("audio/")) return "audio"
   if (
     mimeType.startsWith("application/pdf") ||
     mimeType.includes("document") ||
@@ -290,12 +295,16 @@ export function getCategoryFromMimeType(mimeType: string): FileCategory {
     mimeType.includes("presentation") ||
     mimeType.startsWith("text/")
   ) {
-    return "document";
+    return "document"
   }
-  if (mimeType.includes("zip") || mimeType.includes("rar") || mimeType.includes("7z")) {
-    return "archive";
+  if (
+    mimeType.includes("zip") ||
+    mimeType.includes("rar") ||
+    mimeType.includes("7z")
+  ) {
+    return "archive"
   }
-  return "other";
+  return "other"
 }
 
 /**
@@ -303,24 +312,24 @@ export function getCategoryFromMimeType(mimeType: string): FileCategory {
  */
 export function getSizeLimit(category: FileCategory, type?: string): number {
   if (type && type in SIZE_LIMITS) {
-    return SIZE_LIMITS[type as keyof typeof SIZE_LIMITS];
+    return SIZE_LIMITS[type as keyof typeof SIZE_LIMITS]
   }
-  return SIZE_LIMITS.default;
+  return SIZE_LIMITS.default
 }
 
 /**
  * Format bytes to human readable string
  */
 export function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return "0 Bytes";
+  if (bytes === 0) return "0 Bytes"
 
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
 
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
 // ============================================================================
@@ -355,51 +364,57 @@ export const STORAGE_CONFIG = {
   },
 
   // Provider selection rules
-  getProvider: (fileSize: number, fileType: "video" | "material" | "image"): string => {
+  getProvider: (
+    fileSize: number,
+    fileType: "video" | "material" | "image"
+  ): string => {
     // For videos over 500MB, use extended storage if configured
-    if (fileType === "video" && fileSize > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video) {
+    if (
+      fileType === "video" &&
+      fileSize > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video
+    ) {
       // Check which extended provider is available
-      if (process.env.CLOUDFLARE_R2_ACCOUNT_ID) return STORAGE_CONFIG.PROVIDERS.CLOUDFLARE_R2;
-      if (process.env.AWS_S3_BUCKET) return STORAGE_CONFIG.PROVIDERS.AWS_S3;
+      if (process.env.CLOUDFLARE_R2_ACCOUNT_ID)
+        return STORAGE_CONFIG.PROVIDERS.CLOUDFLARE_R2
+      if (process.env.AWS_S3_BUCKET) return STORAGE_CONFIG.PROVIDERS.AWS_S3
 
       // No extended storage configured, reject file
       throw new Error(
         `Video file size (${(fileSize / (1024 * 1024)).toFixed(2)} MB) exceeds Vercel Blob limit. ` +
-        `Please configure AWS S3 or Cloudflare R2 for large video files.`
-      );
+          `Please configure AWS S3 or Cloudflare R2 for large video files.`
+      )
     }
 
     // Use Vercel Blob for small files
-    return STORAGE_CONFIG.PROVIDERS.VERCEL_BLOB;
+    return STORAGE_CONFIG.PROVIDERS.VERCEL_BLOB
   },
 
   // Get max size for file type based on available storage
   getMaxSize: (fileType: "video" | "material" | "image"): number => {
     // Check if extended storage is configured
     const hasExtendedStorage =
-      process.env.CLOUDFLARE_R2_ACCOUNT_ID ||
-      process.env.AWS_S3_BUCKET;
+      process.env.CLOUDFLARE_R2_ACCOUNT_ID || process.env.AWS_S3_BUCKET
 
     if (hasExtendedStorage) {
-      return STORAGE_CONFIG.MAX_SIZES.EXTENDED[fileType];
+      return STORAGE_CONFIG.MAX_SIZES.EXTENDED[fileType]
     }
 
-    return STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB[fileType];
+    return STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB[fileType]
   },
-} as const;
+} as const
 
 /**
  * Human-readable size labels
  */
 export const SIZE_LABELS = {
   getLabel: (bytes: number): string => {
-    const gb = bytes / (1024 * 1024 * 1024);
-    const mb = bytes / (1024 * 1024);
+    const gb = bytes / (1024 * 1024 * 1024)
+    const mb = bytes / (1024 * 1024)
 
-    if (gb >= 1) return `${gb.toFixed(1)} GB`;
-    return `${mb.toFixed(0)} MB`;
+    if (gb >= 1) return `${gb.toFixed(1)} GB`
+    return `${mb.toFixed(0)} MB`
   },
-} as const;
+} as const
 
 /**
  * Video quality recommendations
@@ -425,20 +440,22 @@ export const VIDEO_RECOMMENDATIONS = {
     duration40min: "6 GB",
     recommended: "Maximum quality, large displays",
   },
-} as const;
+} as const
 
 /**
  * Get accept object for react-dropzone
  */
-export function getAcceptForCategory(category: FileCategory): Record<string, string[]> {
-  if (category === "other") return {};
-  const mimeConfig = MIME_TYPES[category as keyof typeof MIME_TYPES];
-  if (!mimeConfig) return {};
+export function getAcceptForCategory(
+  category: FileCategory
+): Record<string, string[]> {
+  if (category === "other") return {}
+  const mimeConfig = MIME_TYPES[category as keyof typeof MIME_TYPES]
+  if (!mimeConfig) return {}
 
   // Convert readonly arrays to mutable for compatibility
-  const result: Record<string, string[]> = {};
+  const result: Record<string, string[]> = {}
   for (const [mime, exts] of Object.entries(mimeConfig)) {
-    result[mime] = [...exts];
+    result[mime] = [...exts]
   }
-  return result;
+  return result
 }

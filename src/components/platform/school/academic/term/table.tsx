@@ -1,18 +1,25 @@
 "use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react"
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-import { getTermColumns, type TermColumnCallbacks } from "./columns"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
-import { TermForm } from "./form"
-import { getTerms, deleteTerm, setActiveTerm } from "./actions"
-import { usePlatformData } from "@/hooks/use-platform-data"
-import { PlatformToolbar } from "@/components/platform/shared"
-import { useRouter } from "next/navigation"
-import { DeleteToast, SuccessToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+  SuccessToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteTerm, getTerms, setActiveTerm } from "./actions"
+import { getTermColumns, type TermColumnCallbacks } from "./columns"
+import { TermForm } from "./form"
 import type { TermRow } from "./types"
 
 interface TermTableProps {
@@ -37,7 +44,8 @@ export function TermTable({
     search: lang === "ar" ? "بحث في الفصول الدراسية..." : "Search terms...",
     create: lang === "ar" ? "إضافة فصل" : "Add Term",
     deleteTerm: lang === "ar" ? "حذف الفصل الدراسي" : "Delete term",
-    setActiveSuccess: lang === "ar" ? "تم تعيين الفصل كنشط" : "Term set as active",
+    setActiveSuccess:
+      lang === "ar" ? "تم تعيين الفصل كنشط" : "Term set as active",
     reset: lang === "ar" ? "إعادة تعيين" : "Reset",
   }
 
@@ -45,31 +53,28 @@ export function TermTable({
   const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
-  const {
-    data,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<TermRow, { yearId?: string }>({
-    initialData,
-    total,
-    perPage,
-    fetcher: async (params) => {
-      const result = await getTerms(params)
-      if (!result.success || !result.data) {
-        return { rows: [], total: 0 }
-      }
-      return { rows: result.data.rows, total: result.data.total }
-    },
-    filters: searchValue ? { yearId: searchValue } : undefined,
-  })
+  const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+    usePlatformData<TermRow, { yearId?: string }>({
+      initialData,
+      total,
+      perPage,
+      fetcher: async (params) => {
+        const result = await getTerms(params)
+        if (!result.success || !result.data) {
+          return { rows: [], total: 0 }
+        }
+        return { rows: result.data.rows, total: result.data.total }
+      },
+      filters: searchValue ? { yearId: searchValue } : undefined,
+    })
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(
     async (termItem: TermRow) => {
-      const termName = lang === "ar" ? `الفصل ${termItem.termNumber}` : `Term ${termItem.termNumber}`
+      const termName =
+        lang === "ar"
+          ? `الفصل ${termItem.termNumber}`
+          : `Term ${termItem.termNumber}`
       try {
         const ok = await confirmDeleteDialog(
           `${t.deleteTerm} "${termName}" (${termItem.yearName})?`

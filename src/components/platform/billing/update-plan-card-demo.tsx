@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { UpdatePlanCard } from "@/components/billingsdk/update-plan-card";
-import { plans } from "@/lib/billingsdk-config";
+import { plans } from "@/lib/billingsdk-config"
+import { UpdatePlanCard } from "@/components/billingsdk/update-plan-card"
 
 export function UpdatePlanCardDemo() {
   return (
@@ -11,5 +11,5 @@ export function UpdatePlanCardDemo() {
       onPlanChange={(planId) => console.log("Plan selected:", planId)}
       title="Upgrade Your Plan"
     />
-  );
+  )
 }

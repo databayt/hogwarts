@@ -1,11 +1,10 @@
-"use client";
+"use client"
 
-import React, { forwardRef, useImperativeHandle, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import { useParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
 import {
   Form,
   FormControl,
@@ -13,88 +12,104 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useLocale } from '@/components/internationalization/use-locale';
-import { useApplication } from '../application-context';
-import { academicSchema, type AcademicSchemaType } from './validation';
-import { saveAcademicStep } from './actions';
-import { STREAM_OPTIONS, LANGUAGE_OPTIONS } from './config';
-import { DEFAULT_GRADES } from '../types';
-import type { AcademicFormRef, AcademicFormProps } from './types';
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useLocale } from "@/components/internationalization/use-locale"
+
+import { useApplication } from "../application-context"
+import { DEFAULT_GRADES } from "../types"
+import { saveAcademicStep } from "./actions"
+import { LANGUAGE_OPTIONS, STREAM_OPTIONS } from "./config"
+import type { AcademicFormProps, AcademicFormRef } from "./types"
+import { academicSchema, type AcademicSchemaType } from "./validation"
 
 export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
-    const params = useParams();
-    const subdomain = params.subdomain as string;
-    const { locale: lang } = useLocale();
-    const isRTL = lang === 'ar';
-    const { session, updateStepData } = useApplication();
+    const params = useParams()
+    const subdomain = params.subdomain as string
+    const { locale: lang } = useLocale()
+    const isRTL = lang === "ar"
+    const { session, updateStepData } = useApplication()
 
     const form = useForm<AcademicSchemaType>({
       resolver: zodResolver(academicSchema),
       defaultValues: {
-        previousSchool: initialData?.previousSchool || '',
-        previousClass: initialData?.previousClass || '',
-        previousMarks: initialData?.previousMarks || '',
-        previousPercentage: initialData?.previousPercentage || '',
-        achievements: initialData?.achievements || '',
-        applyingForClass: initialData?.applyingForClass || '',
-        preferredStream: initialData?.preferredStream || '',
-        secondLanguage: initialData?.secondLanguage || '',
-        thirdLanguage: initialData?.thirdLanguage || ''
-      }
-    });
+        previousSchool: initialData?.previousSchool || "",
+        previousClass: initialData?.previousClass || "",
+        previousMarks: initialData?.previousMarks || "",
+        previousPercentage: initialData?.previousPercentage || "",
+        achievements: initialData?.achievements || "",
+        applyingForClass: initialData?.applyingForClass || "",
+        preferredStream: initialData?.preferredStream || "",
+        secondLanguage: initialData?.secondLanguage || "",
+        thirdLanguage: initialData?.thirdLanguage || "",
+      },
+    })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)?.apply?.academic ?? {}) as Record<string, string>;
+    const dict = ((dictionary as Record<string, Record<string, string>> | null)
+      ?.apply?.academic ?? {}) as Record<string, string>
 
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData('academic', value as AcademicSchemaType);
-      });
-      return () => subscription.unsubscribe();
-    }, [form, updateStepData]);
+        updateStepData("academic", value as AcademicSchemaType)
+      })
+      return () => subscription.unsubscribe()
+    }, [form, updateStepData])
 
     const saveAndNext = async () => {
-      const isValid = await form.trigger();
-      if (!isValid) throw new Error('Form validation failed');
+      const isValid = await form.trigger()
+      if (!isValid) throw new Error("Form validation failed")
 
-      const data = form.getValues();
-      const result = await saveAcademicStep(data);
+      const data = form.getValues()
+      const result = await saveAcademicStep(data)
 
-      if (!result.success) throw new Error(result.error || 'Failed to save');
+      if (!result.success) throw new Error(result.error || "Failed to save")
 
       // Update context with validated data
       if (result.data) {
-        updateStepData('academic', result.data);
+        updateStepData("academic", result.data)
       }
 
-      onSuccess?.();
-    };
+      onSuccess?.()
+    }
 
-    useImperativeHandle(ref, () => ({ saveAndNext }));
+    useImperativeHandle(ref, () => ({ saveAndNext }))
 
     return (
       <Form {...form}>
         <form className="space-y-8">
           {/* Previous Education */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.previousEducation || (isRTL ? 'التعليم السابق' : 'Previous Education')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.previousEducation ||
+                (isRTL ? "التعليم السابق" : "Previous Education")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="previousSchool"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.previousSchool || (isRTL ? 'المدرسة السابقة' : 'Previous School')}</FormLabel>
+                    <FormLabel>
+                      {dict.previousSchool ||
+                        (isRTL ? "المدرسة السابقة" : "Previous School")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.schoolPlaceholder || (isRTL ? 'اسم المدرسة' : 'School name')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.schoolPlaceholder ||
+                          (isRTL ? "اسم المدرسة" : "School name")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -105,9 +120,18 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousClass"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.previousClass || (isRTL ? 'الصف السابق' : 'Previous Class')}</FormLabel>
+                    <FormLabel>
+                      {dict.previousClass ||
+                        (isRTL ? "الصف السابق" : "Previous Class")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.classPlaceholder || (isRTL ? 'مثال: الصف الخامس' : 'e.g., Grade 5')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.classPlaceholder ||
+                          (isRTL ? "مثال: الصف الخامس" : "e.g., Grade 5")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -118,9 +142,18 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousMarks"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.previousMarks || (isRTL ? 'الدرجات السابقة' : 'Previous Marks')}</FormLabel>
+                    <FormLabel>
+                      {dict.previousMarks ||
+                        (isRTL ? "الدرجات السابقة" : "Previous Marks")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.marksPlaceholder || (isRTL ? 'مثال: 450/500' : 'e.g., 450/500')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.marksPlaceholder ||
+                          (isRTL ? "مثال: 450/500" : "e.g., 450/500")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -131,9 +164,18 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="previousPercentage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.previousPercentage || (isRTL ? 'النسبة المئوية' : 'Percentage')}</FormLabel>
+                    <FormLabel>
+                      {dict.previousPercentage ||
+                        (isRTL ? "النسبة المئوية" : "Percentage")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.percentagePlaceholder || (isRTL ? 'مثال: 90%' : 'e.g., 90%')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.percentagePlaceholder ||
+                          (isRTL ? "مثال: 90%" : "e.g., 90%")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -144,18 +186,31 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
 
           {/* Applying For */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.applyingFor || (isRTL ? 'التقديم لـ' : 'Applying For')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.applyingFor || (isRTL ? "التقديم لـ" : "Applying For")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="applyingForClass"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.applyingForClass || (isRTL ? 'الصف المتقدم إليه' : 'Applying for Class')} *</FormLabel>
+                    <FormLabel>
+                      {dict.applyingForClass ||
+                        (isRTL
+                          ? "الصف المتقدم إليه"
+                          : "Applying for Class")}{" "}
+                      *
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={dict.selectClass || (isRTL ? 'اختر الصف' : 'Select class')} />
+                          <SelectValue
+                            placeholder={
+                              dict.selectClass ||
+                              (isRTL ? "اختر الصف" : "Select class")
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -175,11 +230,19 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="preferredStream"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.preferredStream || (isRTL ? 'المسار المفضل' : 'Preferred Stream')}</FormLabel>
+                    <FormLabel>
+                      {dict.preferredStream ||
+                        (isRTL ? "المسار المفضل" : "Preferred Stream")}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={dict.selectStream || (isRTL ? 'اختر المسار' : 'Select stream')} />
+                          <SelectValue
+                            placeholder={
+                              dict.selectStream ||
+                              (isRTL ? "اختر المسار" : "Select stream")
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -199,18 +262,28 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
 
           {/* Languages */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.languages || (isRTL ? 'اللغات' : 'Languages')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.languages || (isRTL ? "اللغات" : "Languages")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="secondLanguage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.secondLanguage || (isRTL ? 'اللغة الثانية' : 'Second Language')}</FormLabel>
+                    <FormLabel>
+                      {dict.secondLanguage ||
+                        (isRTL ? "اللغة الثانية" : "Second Language")}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={dict.selectLanguage || (isRTL ? 'اختر اللغة' : 'Select language')} />
+                          <SelectValue
+                            placeholder={
+                              dict.selectLanguage ||
+                              (isRTL ? "اختر اللغة" : "Select language")
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -230,11 +303,19 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
                 name="thirdLanguage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.thirdLanguage || (isRTL ? 'اللغة الثالثة' : 'Third Language')}</FormLabel>
+                    <FormLabel>
+                      {dict.thirdLanguage ||
+                        (isRTL ? "اللغة الثالثة" : "Third Language")}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={dict.selectLanguage || (isRTL ? 'اختر اللغة' : 'Select language')} />
+                          <SelectValue
+                            placeholder={
+                              dict.selectLanguage ||
+                              (isRTL ? "اختر اللغة" : "Select language")
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -258,12 +339,19 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
             name="achievements"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dict.achievements || (isRTL ? 'الإنجازات' : 'Achievements')}</FormLabel>
+                <FormLabel>
+                  {dict.achievements || (isRTL ? "الإنجازات" : "Achievements")}
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
                     rows={4}
-                    placeholder={dict.achievementsPlaceholder || (isRTL ? 'أدخل أي إنجازات أو جوائز' : 'Enter any achievements or awards')}
+                    placeholder={
+                      dict.achievementsPlaceholder ||
+                      (isRTL
+                        ? "أدخل أي إنجازات أو جوائز"
+                        : "Enter any achievements or awards")
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -272,8 +360,8 @@ export const AcademicForm = forwardRef<AcademicFormRef, AcademicFormProps>(
           />
         </form>
       </Form>
-    );
+    )
   }
-);
+)
 
-AcademicForm.displayName = 'AcademicForm';
+AcademicForm.displayName = "AcademicForm"

@@ -11,9 +11,11 @@ model: sonnet
 ## Typography Rules (STRICT)
 
 ### Core Principle
+
 **NEVER** use hardcoded typography classes. Always use semantic HTML.
 
 ### Forbidden Patterns ❌
+
 ```typescript
 // NEVER do this:
 <div className="text-3xl font-bold">Title</div>
@@ -22,6 +24,7 @@ model: sonnet
 ```
 
 ### Correct Patterns ✅
+
 ```typescript
 // ALWAYS do this:
 <h2>Title</h2>
@@ -31,21 +34,22 @@ model: sonnet
 
 ## Typography Mapping
 
-| Hardcoded Classes | Semantic Element | Use Case |
-|-------------------|------------------|----------|
-| `text-4xl font-bold` | `<h1>` | Page title |
-| `text-3xl font-bold` | `<h2>` | Section header |
-| `text-2xl font-semibold` | `<h3>` | Subsection |
-| `text-xl font-semibold` | `<h4>` | Card title |
-| `text-lg font-semibold` | `<h5>` | List header |
-| `text-base font-semibold` | `<h6>` | Small header |
+| Hardcoded Classes               | Semantic Element                        | Use Case       |
+| ------------------------------- | --------------------------------------- | -------------- |
+| `text-4xl font-bold`            | `<h1>`                                  | Page title     |
+| `text-3xl font-bold`            | `<h2>`                                  | Section header |
+| `text-2xl font-semibold`        | `<h3>`                                  | Subsection     |
+| `text-xl font-semibold`         | `<h4>`                                  | Card title     |
+| `text-lg font-semibold`         | `<h5>`                                  | List header    |
+| `text-base font-semibold`       | `<h6>`                                  | Small header   |
 | `text-sm text-muted-foreground` | `<p className="text-muted-foreground">` | Secondary text |
-| `text-xl` | `<p className="text-lg">` | Lead paragraph |
-| `text-xs` | `<small>` | Fine print |
+| `text-xl`                       | `<p className="text-lg">`               | Lead paragraph |
+| `text-xs`                       | `<small>`                               | Fine print     |
 
 ## Semantic HTML Elements
 
 ### Headings
+
 ```typescript
 <h1>Main Page Title</h1>          // One per page
 <h2>Section Header</h2>            // Major sections
@@ -56,6 +60,7 @@ model: sonnet
 ```
 
 ### Text Content
+
 ```typescript
 <p>Regular paragraph text</p>
 <p className="text-muted-foreground">Secondary text</p>
@@ -69,6 +74,7 @@ model: sonnet
 ```
 
 ### Lists
+
 ```typescript
 // Unordered
 <ul>
@@ -90,6 +96,7 @@ model: sonnet
 ```
 
 ### Quotes
+
 ```typescript
 <blockquote>
   <p>Long quote text</p>
@@ -102,6 +109,7 @@ model: sonnet
 ## Typography Components
 
 ### Page Header
+
 ```typescript
 <div className="space-y-2">
   <h1>Page Title</h1>
@@ -112,6 +120,7 @@ model: sonnet
 ```
 
 ### Card
+
 ```typescript
 <Card>
   <CardHeader>
@@ -129,6 +138,7 @@ model: sonnet
 ```
 
 ### Form Labels
+
 ```typescript
 <Label htmlFor="input-id">
   Field Label
@@ -140,6 +150,7 @@ model: sonnet
 ```
 
 ### Data Display
+
 ```typescript
 <div>
   <dt className="text-muted-foreground">Label</dt>
@@ -150,6 +161,7 @@ model: sonnet
 ## Accessibility Requirements
 
 ### Heading Hierarchy
+
 ```typescript
 // ✅ Correct - Sequential
 <h1>Title</h1>
@@ -162,6 +174,7 @@ model: sonnet
 ```
 
 ### Screen Reader Support
+
 ```typescript
 // Visually hidden but readable
 <span className="sr-only">
@@ -175,6 +188,7 @@ model: sonnet
 ```
 
 ### Focus Indicators
+
 ```typescript
 // Ensure interactive elements have focus styles
 <button className="focus:outline-none focus:ring-2 focus:ring-primary">
@@ -185,6 +199,7 @@ model: sonnet
 ## RTL/LTR Support
 
 ### Directional Classes
+
 ```typescript
 // Use logical properties
 <div className="ps-4">  // padding-start
@@ -199,13 +214,15 @@ model: sonnet
 ## Typography Validation
 
 Run validation with:
+
 ```typescript
-import { validateTypography } from '@/lib/typography-validator'
+import { validateTypography } from "@/lib/typography-validator"
 
 validateTypography(component)
 ```
 
 Checks for:
+
 - Semantic HTML usage
 - No hardcoded text/font classes
 - Proper heading hierarchy
@@ -215,6 +232,7 @@ Checks for:
 ## Common Violations & Fixes
 
 ### Violation: Div for text
+
 ```typescript
 // ❌ Wrong
 <div>Some text content</div>
@@ -224,6 +242,7 @@ Checks for:
 ```
 
 ### Violation: Hardcoded sizes
+
 ```typescript
 // ❌ Wrong
 <span className="text-2xl font-bold">Title</span>
@@ -233,6 +252,7 @@ Checks for:
 ```
 
 ### Violation: Non-semantic markup
+
 ```typescript
 // ❌ Wrong
 <div className="font-semibold mb-2">Section Title</div>
@@ -248,24 +268,28 @@ Checks for:
 ## Typography Checklist
 
 ### Structure
+
 - [ ] Semantic HTML elements used
 - [ ] No `<div>` or `<span>` for text content
 - [ ] Proper heading hierarchy (h1→h2→h3)
 - [ ] Lists use ul/ol/dl tags
 
 ### Styling
-- [ ] No hardcoded text-* classes
-- [ ] No hardcoded font-* classes
+
+- [ ] No hardcoded text-\* classes
+- [ ] No hardcoded font-\* classes
 - [ ] Theme colors used (text-foreground, text-muted-foreground)
 - [ ] RTL-safe directional classes
 
 ### Accessibility
+
 - [ ] Headings properly nested
 - [ ] ARIA labels where needed
 - [ ] Focus indicators present
 - [ ] Screen reader friendly
 
 ### Content
+
 - [ ] No hardcoded text (use dictionaries)
 - [ ] Proper language attributes
 - [ ] Character encoding correct

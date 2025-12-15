@@ -1,19 +1,26 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid
 } from "recharts"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface ExpenseChartProps {
@@ -26,33 +33,44 @@ interface ExpenseChartProps {
 }
 
 const COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
-  '#06b6d4', // cyan
-  '#84cc16', // lime
+  "#3b82f6", // blue
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#14b8a6", // teal
+  "#f97316", // orange
+  "#06b6d4", // cyan
+  "#84cc16", // lime
 ]
 
-export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps) {
+export function ExpenseChart({
+  expenseCategories,
+  className,
+}: ExpenseChartProps) {
   // Sort categories by amount for better visualization
-  const sortedCategories = [...expenseCategories].sort((a, b) => b.amount - a.amount)
+  const sortedCategories = [...expenseCategories].sort(
+    (a, b) => b.amount - a.amount
+  )
 
   // Take top 8 categories and group the rest as "Other"
   const topCategories = sortedCategories.slice(0, 8)
   const otherCategories = sortedCategories.slice(8)
 
   if (otherCategories.length > 0) {
-    const otherAmount = otherCategories.reduce((sum, cat) => sum + cat.amount, 0)
-    const otherPercentage = otherCategories.reduce((sum, cat) => sum + cat.percentage, 0)
+    const otherAmount = otherCategories.reduce(
+      (sum, cat) => sum + cat.amount,
+      0
+    )
+    const otherPercentage = otherCategories.reduce(
+      (sum, cat) => sum + cat.percentage,
+      0
+    )
     topCategories.push({
-      category: 'Other',
+      category: "Other",
       amount: otherAmount,
-      percentage: otherPercentage
+      percentage: otherPercentage,
     })
   }
 
@@ -62,10 +80,10 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
 
     const data = payload[0]
     return (
-      <div className="bg-background border rounded-lg shadow-lg p-3">
+      <div className="bg-background rounded-lg border p-3 shadow-lg">
         <p className="font-semibold">{data.name || data.payload.category}</p>
         <p className="text-sm">
-          Amount: SDG {new Intl.NumberFormat('en-SD').format(data.value)}
+          Amount: SDG {new Intl.NumberFormat("en-SD").format(data.value)}
         </p>
         <p className="text-sm">
           Percentage: {data.payload.percentage.toFixed(1)}%
@@ -75,7 +93,14 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
   }
 
   // Custom label for pie chart
-  const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
+  const renderCustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percentage,
+  }: any) => {
     if (percentage < 5) return null // Don't show label for small slices
 
     const RADIAN = Math.PI / 180
@@ -88,7 +113,7 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
         x={x}
         y={y}
         fill="white"
-        textAnchor={x > cx ? 'start' : 'end'}
+        textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         className="text-xs font-medium"
       >
@@ -115,9 +140,7 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
     <Card className={className}>
       <CardHeader>
         <CardTitle>Expense Breakdown</CardTitle>
-        <CardDescription>
-          Distribution of expenses by category
-        </CardDescription>
+        <CardDescription>Distribution of expenses by category</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="pie" className="w-full">
@@ -171,13 +194,13 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis
                   type="number"
-                  tick={{ fill: 'currentColor', fontSize: 12 }}
+                  tick={{ fill: "currentColor", fontSize: 12 }}
                   tickFormatter={formatYAxis}
                 />
                 <YAxis
                   type="category"
                   dataKey="category"
-                  tick={{ fill: 'currentColor', fontSize: 12 }}
+                  tick={{ fill: "currentColor", fontSize: 12 }}
                   width={90}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -195,31 +218,34 @@ export function ExpenseChart({ expenseCategories, className }: ExpenseChartProps
         </Tabs>
 
         {/* Summary Stats */}
-        <div className="mt-6 pt-6 border-t">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mt-6 border-t pt-6">
+          <div className="mb-4 flex items-center justify-between">
             <span className="text-sm font-medium">Total Expenses</span>
             <span className="text-lg font-bold">
-              SDG {new Intl.NumberFormat('en-SD').format(totalExpenses)}
+              SDG {new Intl.NumberFormat("en-SD").format(totalExpenses)}
             </span>
           </div>
 
           {/* Top 3 Categories */}
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Top Categories</p>
+            <p className="text-muted-foreground text-sm">Top Categories</p>
             {topCategories.slice(0, 3).map((cat, index) => (
-              <div key={cat.category} className="flex items-center justify-between">
+              <div
+                key={cat.category}
+                className="flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: COLORS[index] }}
                   />
                   <span className="text-sm">{cat.category}</span>
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-medium">
-                    SDG {new Intl.NumberFormat('en-SD').format(cat.amount)}
+                    SDG {new Intl.NumberFormat("en-SD").format(cat.amount)}
                   </span>
-                  <span className="text-xs text-muted-foreground ml-2">
+                  <span className="text-muted-foreground ml-2 text-xs">
                     ({cat.percentage.toFixed(1)}%)
                   </span>
                 </div>

@@ -3,14 +3,15 @@
  * Follows Hogwarts table pattern with client-side column generation
  */
 
-'use client'
+"use client"
 
-import { ColumnDef } from '@tanstack/react-table'
-import { format } from 'date-fns'
-import Link from 'next/link'
-import { ExpenseReceipt } from './types'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import Link from "next/link"
+import { ColumnDef } from "@tanstack/react-table"
+import { format } from "date-fns"
+import { Ellipsis, Eye, RefreshCw, Trash2 } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,14 +19,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Ellipsis, Eye, Trash2, RefreshCw } from "lucide-react"
+} from "@/components/ui/dropdown-menu"
+
+import { ExpenseReceipt } from "./types"
 
 export function getColumns(): ColumnDef<ExpenseReceipt>[] {
   return [
     {
-      accessorKey: 'fileName',
-      header: 'File Name',
+      accessorKey: "fileName",
+      header: "File Name",
       cell: ({ row }) => {
         const receipt = row.original
         return (
@@ -36,31 +38,31 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
       },
     },
     {
-      accessorKey: 'merchantName',
-      header: 'Merchant',
+      accessorKey: "merchantName",
+      header: "Merchant",
       cell: ({ row }) => {
-        const merchantName = row.getValue('merchantName') as string | null
+        const merchantName = row.getValue("merchantName") as string | null
         return merchantName || <span className="text-muted-foreground">—</span>
       },
     },
     {
-      accessorKey: 'transactionDate',
-      header: 'Date',
+      accessorKey: "transactionDate",
+      header: "Date",
       cell: ({ row }) => {
-        const date = row.getValue('transactionDate') as Date | null
+        const date = row.getValue("transactionDate") as Date | null
         return date ? (
-          format(new Date(date), 'PP')
+          format(new Date(date), "PP")
         ) : (
           <span className="text-muted-foreground">—</span>
         )
       },
     },
     {
-      accessorKey: 'transactionAmount',
-      header: 'Amount',
+      accessorKey: "transactionAmount",
+      header: "Amount",
       cell: ({ row }) => {
-        const amount = row.getValue('transactionAmount') as number | null
-        const currency = row.original.currency || 'USD'
+        const amount = row.getValue("transactionAmount") as number | null
+        const currency = row.original.currency || "USD"
         return amount !== null ? (
           <span className="font-semibold">
             {currency} {amount.toFixed(2)}
@@ -71,33 +73,35 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
       },
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: "status",
+      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue('status') as string
+        const status = row.getValue("status") as string
 
         const statusConfig = {
-          pending: { label: 'Pending', variant: 'secondary' as const },
-          processing: { label: 'Processing', variant: 'default' as const },
-          processed: { label: 'Processed', variant: 'default' as const },
-          error: { label: 'Error', variant: 'destructive' as const },
+          pending: { label: "Pending", variant: "secondary" as const },
+          processing: { label: "Processing", variant: "default" as const },
+          processed: { label: "Processed", variant: "default" as const },
+          error: { label: "Error", variant: "destructive" as const },
         }
 
-        const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
+        const config =
+          statusConfig[status as keyof typeof statusConfig] ||
+          statusConfig.pending
 
         return <Badge variant={config.variant}>{config.label}</Badge>
       },
     },
     {
-      accessorKey: 'uploadedAt',
-      header: 'Uploaded',
+      accessorKey: "uploadedAt",
+      header: "Uploaded",
       cell: ({ row }) => {
-        const date = row.getValue('uploadedAt') as Date
-        return format(new Date(date), 'PP')
+        const date = row.getValue("uploadedAt") as Date
+        return format(new Date(date), "PP")
       },
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }) => {
         const receipt = row.original
 
@@ -118,17 +122,17 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                   window.location.href = `/receipts/${receipt.id}`
                 }}
               >
-                <Eye className="h-4 w-4 mr-2" />
+                <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
-              {receipt.status === 'error' && (
+              {receipt.status === "error" && (
                 <DropdownMenuItem
                   onClick={() => {
                     // Handle retry - this would call retryReceiptExtraction
-                    console.log('Retry extraction for:', receipt.id)
+                    console.log("Retry extraction for:", receipt.id)
                   }}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Retry Extraction
                 </DropdownMenuItem>
               )}
@@ -137,10 +141,10 @@ export function getColumns(): ColumnDef<ExpenseReceipt>[] {
                 className="text-destructive"
                 onClick={() => {
                   // Handle delete - this would call deleteReceipt
-                  console.log('Delete receipt:', receipt.id)
+                  console.log("Delete receipt:", receipt.id)
                 }}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

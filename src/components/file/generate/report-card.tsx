@@ -3,17 +3,18 @@
  * PDF template for student report cards
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { ReportCardData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { ReportCardData, TemplateStyle } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,15 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
 const createStyles = (locale: string = "en") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -289,8 +290,8 @@ const createStyles = (locale: string = "en") => {
       fontSize: 8,
       color: "#999",
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // Helper Functions
@@ -301,22 +302,25 @@ const formatDate = (date: Date, locale: string): string => {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
 // ============================================================================
 // Report Card Template Component
 // ============================================================================
 
 interface ReportCardTemplateProps {
-  data: ReportCardData;
-  style?: TemplateStyle;
+  data: ReportCardData
+  style?: TemplateStyle
 }
 
-export function ReportCardTemplate({ data, style = "standard" }: ReportCardTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale);
-  const isRTL = locale === "ar";
+export function ReportCardTemplate({
+  data,
+  style = "standard",
+}: ReportCardTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale)
+  const isRTL = locale === "ar"
 
   const labels = {
     reportCard: isRTL ? "بطاقة التقرير" : "Report Card",
@@ -346,24 +350,30 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
     classTeacher: isRTL ? "معلم الفصل" : "Class Teacher",
     principal: isRTL ? "المدير" : "Principal",
     parentSignature: isRTL ? "توقيع ولي الأمر" : "Parent Signature",
-  };
+  }
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          {data.schoolLogo && <Image src={data.schoolLogo} style={styles.logo} />}
+          {data.schoolLogo && (
+            <Image src={data.schoolLogo} style={styles.logo} />
+          )}
           <View style={styles.headerCenter}>
             <Text style={styles.schoolName}>
               {isRTL ? data.schoolNameAr || data.schoolName : data.schoolName}
             </Text>
             <Text style={styles.reportTitle}>{labels.reportCard}</Text>
             <Text style={styles.termInfo}>
-              {labels.term}: {isRTL ? data.termNameAr || data.termName : data.termName} | {labels.academicYear}: {data.academicYear}
+              {labels.term}:{" "}
+              {isRTL ? data.termNameAr || data.termName : data.termName} |{" "}
+              {labels.academicYear}: {data.academicYear}
             </Text>
           </View>
-          {data.studentPhoto && <Image src={data.studentPhoto} style={styles.studentPhoto} />}
+          {data.studentPhoto && (
+            <Image src={data.studentPhoto} style={styles.studentPhoto} />
+          )}
         </View>
 
         {/* Student Info */}
@@ -372,7 +382,9 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>{labels.studentName}:</Text>
               <Text style={styles.infoValue}>
-                {isRTL ? data.studentNameAr || data.studentName : data.studentName}
+                {isRTL
+                  ? data.studentNameAr || data.studentName
+                  : data.studentName}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -398,11 +410,21 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
         <View style={styles.gradesTable}>
           <Text style={styles.tableTitle}>{labels.subject}</Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerCell, styles.subjectCol]}>{labels.subject}</Text>
-            <Text style={[styles.headerCell, styles.gradeCol]}>{labels.grade}</Text>
-            <Text style={[styles.headerCell, styles.scoreCol]}>{labels.score}</Text>
-            <Text style={[styles.headerCell, styles.percentCol]}>{labels.percentage}</Text>
-            <Text style={[styles.headerCell, styles.teacherCol]}>{labels.teacher}</Text>
+            <Text style={[styles.headerCell, styles.subjectCol]}>
+              {labels.subject}
+            </Text>
+            <Text style={[styles.headerCell, styles.gradeCol]}>
+              {labels.grade}
+            </Text>
+            <Text style={[styles.headerCell, styles.scoreCol]}>
+              {labels.score}
+            </Text>
+            <Text style={[styles.headerCell, styles.percentCol]}>
+              {labels.percentage}
+            </Text>
+            <Text style={[styles.headerCell, styles.teacherCol]}>
+              {labels.teacher}
+            </Text>
           </View>
 
           {data.subjects.map((subject, idx) => (
@@ -413,14 +435,22 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
               <Text style={[styles.cell, styles.subjectCol]}>
                 {isRTL ? subject.nameAr || subject.name : subject.name}
               </Text>
-              <Text style={[styles.cell, styles.gradeCol]}>{subject.grade}</Text>
+              <Text style={[styles.cell, styles.gradeCol]}>
+                {subject.grade}
+              </Text>
               <Text style={[styles.cell, styles.scoreCol]}>
-                {subject.score !== undefined ? `${subject.score}/${subject.maxScore || 100}` : "-"}
+                {subject.score !== undefined
+                  ? `${subject.score}/${subject.maxScore || 100}`
+                  : "-"}
               </Text>
               <Text style={[styles.cell, styles.percentCol]}>
-                {subject.percentage !== undefined ? `${subject.percentage}%` : "-"}
+                {subject.percentage !== undefined
+                  ? `${subject.percentage}%`
+                  : "-"}
               </Text>
-              <Text style={[styles.cell, styles.teacherCol]}>{subject.teacherName || "-"}</Text>
+              <Text style={[styles.cell, styles.teacherCol]}>
+                {subject.teacherName || "-"}
+              </Text>
             </View>
           ))}
         </View>
@@ -435,7 +465,9 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
           )}
           {data.overallPercentage !== undefined && (
             <View style={styles.summaryBox}>
-              <Text style={styles.summaryLabel}>{labels.overallPercentage}</Text>
+              <Text style={styles.summaryLabel}>
+                {labels.overallPercentage}
+              </Text>
               <Text style={styles.summaryValue}>{data.overallPercentage}%</Text>
             </View>
           )}
@@ -464,15 +496,21 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
                 <Text style={styles.attendanceLabel}>{labels.totalDays}</Text>
               </View>
               <View style={styles.attendanceItem}>
-                <Text style={styles.attendanceValue}>{data.presentDays || 0}</Text>
+                <Text style={styles.attendanceValue}>
+                  {data.presentDays || 0}
+                </Text>
                 <Text style={styles.attendanceLabel}>{labels.present}</Text>
               </View>
               <View style={styles.attendanceItem}>
-                <Text style={styles.attendanceValue}>{data.absentDays || 0}</Text>
+                <Text style={styles.attendanceValue}>
+                  {data.absentDays || 0}
+                </Text>
                 <Text style={styles.attendanceLabel}>{labels.absent}</Text>
               </View>
               <View style={styles.attendanceItem}>
-                <Text style={styles.attendanceValue}>{data.attendancePercentage || 0}%</Text>
+                <Text style={styles.attendanceValue}>
+                  {data.attendancePercentage || 0}%
+                </Text>
                 <Text style={styles.attendanceLabel}>{labels.attendance}</Text>
               </View>
             </View>
@@ -485,15 +523,21 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
             <View style={styles.commentBox}>
               <Text style={styles.commentTitle}>{labels.teacherComments}</Text>
               <Text style={styles.commentText}>
-                {isRTL ? data.teacherCommentsAr || data.teacherComments : data.teacherComments}
+                {isRTL
+                  ? data.teacherCommentsAr || data.teacherComments
+                  : data.teacherComments}
               </Text>
             </View>
           )}
           {data.principalComments && (
             <View style={styles.commentBox}>
-              <Text style={styles.commentTitle}>{labels.principalComments}</Text>
+              <Text style={styles.commentTitle}>
+                {labels.principalComments}
+              </Text>
               <Text style={styles.commentText}>
-                {isRTL ? data.principalCommentsAr || data.principalComments : data.principalComments}
+                {isRTL
+                  ? data.principalCommentsAr || data.principalComments
+                  : data.principalComments}
               </Text>
             </View>
           )}
@@ -503,7 +547,10 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
         <View style={styles.signaturesSection}>
           <View style={styles.signatureBlock}>
             {data.classTeacherSignature ? (
-              <Image src={data.classTeacherSignature} style={styles.signatureImage} />
+              <Image
+                src={data.classTeacherSignature}
+                style={styles.signatureImage}
+              />
             ) : (
               <View style={styles.signatureLine} />
             )}
@@ -511,7 +558,10 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
           </View>
           <View style={styles.signatureBlock}>
             {data.principalSignature ? (
-              <Image src={data.principalSignature} style={styles.signatureImage} />
+              <Image
+                src={data.principalSignature}
+                style={styles.signatureImage}
+              />
             ) : (
               <View style={styles.signatureLine} />
             )}
@@ -525,16 +575,22 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>{isRTL ? `تاريخ الإصدار: ${formatDate(data.issueDate, locale)}` : `Issue Date: ${formatDate(data.issueDate, locale)}`}</Text>
+          <Text>
+            {isRTL
+              ? `تاريخ الإصدار: ${formatDate(data.issueDate, locale)}`
+              : `Issue Date: ${formatDate(data.issueDate, locale)}`}
+          </Text>
           {data.nextTermStart && (
             <Text>
-              {isRTL ? `بداية الفصل القادم: ${formatDate(data.nextTermStart, locale)}` : `Next Term Starts: ${formatDate(data.nextTermStart, locale)}`}
+              {isRTL
+                ? `بداية الفصل القادم: ${formatDate(data.nextTermStart, locale)}`
+                : `Next Term Starts: ${formatDate(data.nextTermStart, locale)}`}
             </Text>
           )}
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles as createReportCardStyles };
+export { createStyles as createReportCardStyles }

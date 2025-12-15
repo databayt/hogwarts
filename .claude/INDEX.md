@@ -32,11 +32,13 @@
 ## 🚀 Quick Links
 
 ### For New Users
+
 1. **Start here**: `README.md` - Full usage guide
 2. **Having issues?**: `ISSUE.md` - Troubleshooting
 3. **Project docs**: `../CLAUDE.md` - Complete project guide
 
 ### For Existing Users (Post-Optimization)
+
 1. **What changed?**: `OPTIMIZATION_COMPLETE.md`
 2. **Migration guide**: `README.md` (section: Migration Guide)
 3. **Old agents**: `.backup/` directory
@@ -46,9 +48,11 @@
 ## 📚 Documentation Files
 
 ### README.md (6.4K) - Main Documentation
+
 **Purpose**: Complete usage guide for Claude Code automation suite
 
 **Contents**:
+
 - Overview of 32 agents, 22 commands, 7 skills
 - Quick start examples
 - Agent selection guide
@@ -63,9 +67,11 @@
 ---
 
 ### ISSUE.md (11K) - Issue Reporting
+
 **Purpose**: Troubleshooting and issue reporting guide
 
 **Contents**:
+
 - Common issues and solutions
 - Diagnostic commands
 - Issue report template
@@ -80,9 +86,11 @@
 ---
 
 ### OPTIMIZATION_COMPLETE.md (5.6K)
+
 **Purpose**: Detailed optimization summary
 
 **Contents**:
+
 - Changes implemented (Phases 1-5)
 - Before/after comparison
 - Benefits achieved
@@ -96,9 +104,11 @@
 ---
 
 ### OPTIMIZATION_PLAN.md (5.6K)
+
 **Purpose**: Original optimization analysis and plan
 
 **Contents**:
+
 - Current state analysis
 - Issues identified (duplicates, overlaps, unclear naming)
 - Optimization goals
@@ -113,9 +123,11 @@
 ## 🤖 Agents Directory (32 files)
 
 ### Core
+
 - `orchestrate.md` (6KB) - Master coordinator
 
 ### Tech Stack (7)
+
 - `nextjs.md` - Next.js + build
 - `react.md` - React 19
 - `shadcn.md` - shadcn/ui
@@ -125,6 +137,7 @@
 - `i18n.md` - Bilingual
 
 ### Process (7)
+
 - `architecture.md` - Design + patterns
 - `test.md` - TDD
 - `security.md` - OWASP
@@ -134,6 +147,7 @@
 - `type-safety.md` - Enum completeness
 
 ### Workflow (5)
+
 - `git-github.md` - Git + GitHub
 - `workflow.md` - Git workflow
 - `api.md` - Server actions
@@ -141,6 +155,7 @@
 - `database-optimizer.md` - Query optimization
 
 ### Developer Productivity (10)
+
 - `build.md` - Build optimization
 - `deps.md` - Dependency management
 - `dx.md` - Developer experience
@@ -153,6 +168,7 @@
 - `mcp.md` - MCP development
 
 ### Specialized (2)
+
 - `debug.md` - Debugging
 - `react-reviewer.md` - React review
 
@@ -163,6 +179,7 @@
 ## ⚡ Commands Directory (22 files)
 
 Quick workflow shortcuts:
+
 - `component.md` - Generate component
 - `page.md` - Create page
 - `api.md` - Create API
@@ -183,6 +200,7 @@ Quick workflow shortcuts:
 ## 🎨 Skills Directory (7 packages)
 
 Reusable capabilities:
+
 - `prisma-optimizer/` - Query optimization patterns
 - `react-performance/` - Component optimization
 - `security-scanner/` - OWASP checklist
@@ -198,6 +216,7 @@ Reusable capabilities:
 ## 🗄️ Backup Directory (6 files)
 
 Archived agents from optimization:
+
 - `architect.md` - Merged into architecture.md
 - `pattern.md` - Merged into architecture.md
 - `git.md` - Merged into git-github.md
@@ -212,9 +231,11 @@ Archived agents from optimization:
 ## 🔧 Configuration Files
 
 ### settings.json
+
 **Main configuration** (committed to git, shared with team)
 
 **Contains**:
+
 - Tool permissions (Read, Write, Edit, Bash, Task, etc.)
 - Automation hooks (PostToolUse, SessionStart, etc.)
 - Project metadata
@@ -225,9 +246,11 @@ Archived agents from optimization:
 ---
 
 ### settings.local.json
+
 **Local overrides** (NOT committed, personal settings)
 
 **Contains**:
+
 - Local database credentials
 - Personal permissions
 - Development-specific overrides
@@ -239,24 +262,28 @@ Archived agents from optimization:
 ## 🎯 Common Tasks
 
 ### Getting Started
+
 1. Read `README.md`
 2. Try basic agents: `/agents/nextjs`, `/agents/react`
 3. Try commands: `/component`, `/review`
 4. Read agent docs as needed
 
 ### Troubleshooting
+
 1. Check `ISSUE.md` common issues section
 2. Run diagnostic commands
 3. Check logs: `.claude/*.log`
 4. Review configuration: `settings.json`
 
 ### Learning Agents
+
 1. Read `README.md` agent list
 2. Read individual agent files in `agents/`
 3. Try agents with simple tasks
 4. Use orchestrator for complex tasks
 
 ### Migrating from Old Names
+
 1. Check migration guide in `README.md`
 2. Update your usage:
    - architect → architecture
@@ -271,6 +298,7 @@ Archived agents from optimization:
 ## 📊 Statistics
 
 ### File Sizes
+
 - **Documentation**: ~30KB (4 main docs)
 - **Agents**: ~130KB (32 agents)
 - **Commands**: ~25KB (22 commands)
@@ -278,6 +306,7 @@ Archived agents from optimization:
 - **Total**: ~210KB
 
 ### Expansion Results
+
 - **Before**: 20 agents
 - **After**: 32 agents
 - **Growth**: 60% expansion
@@ -290,11 +319,13 @@ Archived agents from optimization:
 ## 🔗 External References
 
 ### Project Documentation
+
 - `../CLAUDE.md` - Complete project guide
 - `../.mcp.json` - MCP server configurations
 - `../package.json` - Dependencies
 
 ### Official Docs
+
 - Claude Code: https://docs.claude.com/claude-code
 - Next.js 15: https://nextjs.org/docs
 - React 19: https://react.dev
@@ -305,6 +336,7 @@ Archived agents from optimization:
 ## ✅ Quick Reference
 
 ### Start Here
+
 ```bash
 # Read main docs
 cat .claude/README.md
@@ -320,6 +352,7 @@ ls .claude/agents/
 ```
 
 ### Getting Help
+
 ```bash
 # Troubleshooting
 cat .claude/ISSUE.md
@@ -332,6 +365,7 @@ grep -A 10 "Migration" .claude/README.md
 ```
 
 ### Check Configuration
+
 ```bash
 # View settings
 cat .claude/settings.json

@@ -1,7 +1,8 @@
 import React from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface Props {
   primaryLabel: string
@@ -21,14 +22,10 @@ export function TwoButtons({
   return (
     <div className={cn("flex flex-wrap gap-4", className)}>
       <Button asChild>
-        <Link href={primaryHref}>
-          {primaryLabel}
-        </Link>
+        <Link href={primaryHref}>{primaryLabel}</Link>
       </Button>
       <Button variant="ghost" asChild>
-        <Link href={secondaryHref}>
-          {secondaryLabel}
-        </Link>
+        <Link href={secondaryHref}>{secondaryLabel}</Link>
       </Button>
     </div>
   )

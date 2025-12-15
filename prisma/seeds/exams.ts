@@ -3,34 +3,41 @@
  * Seeds all exam-related data: Question Bank, Templates, Exams, Auto-Marking, Results
  */
 
+import { faker } from "@faker-js/faker"
 import {
-  ExamType,
-  ExamStatus,
-  QuestionType,
-  DifficultyLevel,
   BloomLevel,
-  QuestionSource,
+  DifficultyLevel,
+  ExamStatus,
+  ExamType,
   GradingMethod,
-  SubmissionType,
   MarkingStatus,
-} from "@prisma/client";
-import { faker } from "@faker-js/faker";
-import type { SeedPrisma, StudentRef, SubjectRef, ClassRef, TeacherRef } from "./types";
+  QuestionSource,
+  QuestionType,
+  SubmissionType,
+} from "@prisma/client"
+
+import type {
+  ClassRef,
+  SeedPrisma,
+  StudentRef,
+  SubjectRef,
+  TeacherRef,
+} from "./types"
 
 // ============================================================================
 // QUESTION BANK DATA
 // ============================================================================
 
 interface QuestionData {
-  questionText: string;
-  questionType: QuestionType;
-  difficulty: DifficultyLevel;
-  bloomLevel: BloomLevel;
-  points: number;
-  options?: object;
-  sampleAnswer?: string;
-  tags: string[];
-  explanation?: string;
+  questionText: string
+  questionType: QuestionType
+  difficulty: DifficultyLevel
+  bloomLevel: BloomLevel
+  points: number
+  options?: object
+  sampleAnswer?: string
+  tags: string[]
+  explanation?: string
 }
 
 // Mathematics Questions
@@ -51,7 +58,8 @@ const mathQuestions: QuestionData[] = [
     explanation: "Solve: 2x + 5 = 15 → 2x = 10 → x = 5",
   },
   {
-    questionText: "The area of a circle is πr². Is this statement true or false?",
+    questionText:
+      "The area of a circle is πr². Is this statement true or false?",
     questionType: QuestionType.TRUE_FALSE,
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.REMEMBER,
@@ -71,7 +79,8 @@ const mathQuestions: QuestionData[] = [
     points: 4,
     sampleAnswer: "x = 2 or x = 3. Factor: (x-2)(x-3) = 0",
     tags: ["algebra", "quadratic-equations", "factoring"],
-    explanation: "Factor the equation to find (x-2)(x-3) = 0, giving x = 2 or x = 3",
+    explanation:
+      "Factor the equation to find (x-2)(x-3) = 0, giving x = 2 or x = 3",
   },
   {
     questionText: "The derivative of sin(x) is cos(x).",
@@ -91,20 +100,26 @@ const mathQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.REMEMBER,
     points: 1,
-    options: { acceptedAnswers: ["3.14", "3.14159", "3.1416"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["3.14", "3.14159", "3.1416"],
+      caseSensitive: false,
+    },
     tags: ["constants", "geometry"],
   },
   {
-    questionText: "Explain why the Pythagorean theorem only applies to right triangles and provide a real-world application.",
+    questionText:
+      "Explain why the Pythagorean theorem only applies to right triangles and provide a real-world application.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.EVALUATE,
     points: 10,
-    sampleAnswer: "The Pythagorean theorem states that in a right triangle, a² + b² = c². It only applies to right triangles because the proof relies on the 90-degree angle to create similar triangles. Real-world applications include construction, navigation, and computer graphics.",
+    sampleAnswer:
+      "The Pythagorean theorem states that in a right triangle, a² + b² = c². It only applies to right triangles because the proof relies on the 90-degree angle to create similar triangles. Real-world applications include construction, navigation, and computer graphics.",
     tags: ["geometry", "pythagorean-theorem", "applications"],
   },
   {
-    questionText: "What is the slope of the line passing through points (2, 3) and (4, 7)?",
+    questionText:
+      "What is the slope of the line passing through points (2, 3) and (4, 7)?",
     questionType: QuestionType.MULTIPLE_CHOICE,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.APPLY,
@@ -126,18 +141,23 @@ const mathQuestions: QuestionData[] = [
     sampleAnswer: "f(2) = 3(4) - 2(2) + 1 = 12 - 4 + 1 = 9",
     tags: ["functions", "evaluation"],
   },
-];
+]
 
 // Physics Questions
 const physicsQuestions: QuestionData[] = [
   {
-    questionText: "Which of Newton's laws explains why passengers lurch forward when a car suddenly brakes?",
+    questionText:
+      "Which of Newton's laws explains why passengers lurch forward when a car suddenly brakes?",
     questionType: QuestionType.MULTIPLE_CHOICE,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.UNDERSTAND,
     points: 2,
     options: [
-      { text: "First Law (Inertia)", isCorrect: true, explanation: "Objects in motion tend to stay in motion" },
+      {
+        text: "First Law (Inertia)",
+        isCorrect: true,
+        explanation: "Objects in motion tend to stay in motion",
+      },
       { text: "Second Law (F=ma)", isCorrect: false },
       { text: "Third Law (Action-Reaction)", isCorrect: false },
       { text: "Law of Gravitation", isCorrect: false },
@@ -155,10 +175,12 @@ const physicsQuestions: QuestionData[] = [
       { text: "False", isCorrect: true },
     ],
     tags: ["thermodynamics", "conservation-laws"],
-    explanation: "Law of Conservation of Energy: Energy cannot be created or destroyed, only transformed.",
+    explanation:
+      "Law of Conservation of Energy: Energy cannot be created or destroyed, only transformed.",
   },
   {
-    questionText: "Calculate the kinetic energy of a 2 kg object moving at 3 m/s. Show your work.",
+    questionText:
+      "Calculate the kinetic energy of a 2 kg object moving at 3 m/s. Show your work.",
     questionType: QuestionType.SHORT_ANSWER,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.APPLY,
@@ -172,16 +194,21 @@ const physicsQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.REMEMBER,
     points: 1,
-    options: { acceptedAnswers: ["Newton", "newton", "N"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["Newton", "newton", "N"],
+      caseSensitive: false,
+    },
     tags: ["units", "force"],
   },
   {
-    questionText: "Analyze the energy transformations that occur when a ball is thrown vertically upward and returns to the starting point.",
+    questionText:
+      "Analyze the energy transformations that occur when a ball is thrown vertically upward and returns to the starting point.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.ANALYZE,
     points: 10,
-    sampleAnswer: "When thrown upward: kinetic energy converts to gravitational potential energy. At peak: all KE becomes PE. Falling: PE converts back to KE. Some energy is lost to air resistance (heat). Total mechanical energy decreases slightly due to friction.",
+    sampleAnswer:
+      "When thrown upward: kinetic energy converts to gravitational potential energy. At peak: all KE becomes PE. Falling: PE converts back to KE. Some energy is lost to air resistance (heat). Total mechanical energy decreases slightly due to friction.",
     tags: ["mechanics", "energy-transformation", "kinematics"],
   },
   {
@@ -198,18 +225,23 @@ const physicsQuestions: QuestionData[] = [
     ],
     tags: ["gravity", "constants"],
   },
-];
+]
 
 // English Questions
 const englishQuestions: QuestionData[] = [
   {
-    questionText: "Which literary device is used in 'The wind whispered through the trees'?",
+    questionText:
+      "Which literary device is used in 'The wind whispered through the trees'?",
     questionType: QuestionType.MULTIPLE_CHOICE,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.ANALYZE,
     points: 2,
     options: [
-      { text: "Personification", isCorrect: true, explanation: "The wind is given human ability to whisper" },
+      {
+        text: "Personification",
+        isCorrect: true,
+        explanation: "The wind is given human ability to whisper",
+      },
       { text: "Metaphor", isCorrect: false },
       { text: "Simile", isCorrect: false },
       { text: "Alliteration", isCorrect: false },
@@ -229,33 +261,41 @@ const englishQuestions: QuestionData[] = [
     tags: ["poetry", "sonnet", "forms"],
   },
   {
-    questionText: "Write a brief analysis of the theme of ambition in Shakespeare's Macbeth.",
+    questionText:
+      "Write a brief analysis of the theme of ambition in Shakespeare's Macbeth.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.EVALUATE,
     points: 15,
-    sampleAnswer: "Ambition in Macbeth is portrayed as a destructive force. Initially a loyal soldier, Macbeth's 'vaulting ambition' leads him to murder King Duncan. The play shows how unchecked ambition corrupts moral judgment and leads to psychological torment. Lady Macbeth's ambition drives her to madness, demonstrating the devastating consequences of prioritizing power over ethics.",
+    sampleAnswer:
+      "Ambition in Macbeth is portrayed as a destructive force. Initially a loyal soldier, Macbeth's 'vaulting ambition' leads him to murder King Duncan. The play shows how unchecked ambition corrupts moral judgment and leads to psychological torment. Lady Macbeth's ambition drives her to madness, demonstrating the devastating consequences of prioritizing power over ethics.",
     tags: ["shakespeare", "macbeth", "themes", "tragedy"],
   },
   {
-    questionText: "The correct form of the verb in 'She ___ to school every day' is:",
+    questionText:
+      "The correct form of the verb in 'She ___ to school every day' is:",
     questionType: QuestionType.FILL_BLANK,
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.APPLY,
     points: 1,
-    options: { acceptedAnswers: ["goes", "walks", "runs", "drives"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["goes", "walks", "runs", "drives"],
+      caseSensitive: false,
+    },
     tags: ["grammar", "verbs", "present-tense"],
   },
   {
-    questionText: "Identify the subject and predicate in the sentence: 'The old man with the cane walked slowly.'",
+    questionText:
+      "Identify the subject and predicate in the sentence: 'The old man with the cane walked slowly.'",
     questionType: QuestionType.SHORT_ANSWER,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.ANALYZE,
     points: 3,
-    sampleAnswer: "Subject: 'The old man with the cane' (complete subject); Predicate: 'walked slowly' (complete predicate)",
+    sampleAnswer:
+      "Subject: 'The old man with the cane' (complete subject); Predicate: 'walked slowly' (complete predicate)",
     tags: ["grammar", "sentence-structure", "syntax"],
   },
-];
+]
 
 // Biology Questions
 const biologyQuestions: QuestionData[] = [
@@ -266,7 +306,11 @@ const biologyQuestions: QuestionData[] = [
     bloomLevel: BloomLevel.REMEMBER,
     points: 2,
     options: [
-      { text: "Mitochondria", isCorrect: true, explanation: "Mitochondria are the 'powerhouse of the cell'" },
+      {
+        text: "Mitochondria",
+        isCorrect: true,
+        explanation: "Mitochondria are the 'powerhouse of the cell'",
+      },
       { text: "Nucleus", isCorrect: false },
       { text: "Ribosome", isCorrect: false },
       { text: "Golgi apparatus", isCorrect: false },
@@ -286,12 +330,14 @@ const biologyQuestions: QuestionData[] = [
     tags: ["genetics", "dna", "molecular-biology"],
   },
   {
-    questionText: "Describe the process of photosynthesis and explain its importance for life on Earth.",
+    questionText:
+      "Describe the process of photosynthesis and explain its importance for life on Earth.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.UNDERSTAND,
     points: 12,
-    sampleAnswer: "Photosynthesis converts light energy, water, and CO₂ into glucose and oxygen. The equation is: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. It occurs in chloroplasts via light-dependent and light-independent reactions. Importance: produces oxygen for respiration, forms the base of food chains, and removes CO₂ from atmosphere.",
+    sampleAnswer:
+      "Photosynthesis converts light energy, water, and CO₂ into glucose and oxygen. The equation is: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. It occurs in chloroplasts via light-dependent and light-independent reactions. Importance: produces oxygen for respiration, forms the base of food chains, and removes CO₂ from atmosphere.",
     tags: ["photosynthesis", "ecology", "biochemistry"],
   },
   {
@@ -309,10 +355,11 @@ const biologyQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.UNDERSTAND,
     points: 4,
-    sampleAnswer: "Mitosis produces 2 identical diploid cells for growth/repair. Meiosis produces 4 genetically different haploid cells (gametes) for reproduction. Meiosis involves 2 divisions and crossing over.",
+    sampleAnswer:
+      "Mitosis produces 2 identical diploid cells for growth/repair. Meiosis produces 4 genetically different haploid cells (gametes) for reproduction. Meiosis involves 2 divisions and crossing over.",
     tags: ["cell-division", "genetics", "reproduction"],
   },
-];
+]
 
 // Chemistry Questions
 const chemistryQuestions: QuestionData[] = [
@@ -361,12 +408,14 @@ const chemistryQuestions: QuestionData[] = [
     tags: ["acids-bases", "ph", "solutions"],
   },
   {
-    questionText: "Explain why ionic compounds have high melting points compared to covalent compounds.",
+    questionText:
+      "Explain why ionic compounds have high melting points compared to covalent compounds.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.EVALUATE,
     points: 10,
-    sampleAnswer: "Ionic compounds have high melting points because they form crystal lattices with strong electrostatic forces between oppositely charged ions. Breaking these bonds requires significant energy. Covalent compounds have weaker intermolecular forces (van der Waals, hydrogen bonds) that require less energy to overcome, resulting in lower melting points.",
+    sampleAnswer:
+      "Ionic compounds have high melting points because they form crystal lattices with strong electrostatic forces between oppositely charged ions. Breaking these bonds requires significant energy. Covalent compounds have weaker intermolecular forces (van der Waals, hydrogen bonds) that require less energy to overcome, resulting in lower melting points.",
     tags: ["bonding", "ionic", "covalent", "properties"],
   },
   {
@@ -394,7 +443,8 @@ const chemistryQuestions: QuestionData[] = [
       { text: "False", isCorrect: true },
     ],
     tags: ["noble-gases", "periodic-table", "reactivity"],
-    explanation: "Noble gases have complete outer electron shells, making them chemically inert.",
+    explanation:
+      "Noble gases have complete outer electron shells, making them chemically inert.",
   },
   {
     questionText: "The number of protons in an atom equals the ___.",
@@ -402,10 +452,13 @@ const chemistryQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.REMEMBER,
     points: 1,
-    options: { acceptedAnswers: ["atomic number", "number of electrons"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["atomic number", "number of electrons"],
+      caseSensitive: false,
+    },
     tags: ["atomic-structure", "protons"],
   },
-];
+]
 
 // Computer Science Questions
 const computerScienceQuestions: QuestionData[] = [
@@ -437,7 +490,8 @@ const computerScienceQuestions: QuestionData[] = [
     explanation: "HTML is a markup language, not a programming language.",
   },
   {
-    questionText: "Which data structure follows the LIFO (Last In First Out) principle?",
+    questionText:
+      "Which data structure follows the LIFO (Last In First Out) principle?",
     questionType: QuestionType.MULTIPLE_CHOICE,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.UNDERSTAND,
@@ -451,12 +505,14 @@ const computerScienceQuestions: QuestionData[] = [
     tags: ["data-structures", "stack", "algorithms"],
   },
   {
-    questionText: "Write a function in Python to calculate the factorial of a number.",
+    questionText:
+      "Write a function in Python to calculate the factorial of a number.",
     questionType: QuestionType.SHORT_ANSWER,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.APPLY,
     points: 5,
-    sampleAnswer: "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)",
+    sampleAnswer:
+      "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)",
     tags: ["python", "recursion", "functions"],
   },
   {
@@ -465,20 +521,26 @@ const computerScienceQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.UNDERSTAND,
     points: 2,
-    options: { acceptedAnswers: ["O(log n)", "O(logn)", "log n"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["O(log n)", "O(logn)", "log n"],
+      caseSensitive: false,
+    },
     tags: ["algorithms", "complexity", "search"],
   },
   {
-    questionText: "Explain the difference between compilation and interpretation in programming languages.",
+    questionText:
+      "Explain the difference between compilation and interpretation in programming languages.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.EVALUATE,
     points: 10,
-    sampleAnswer: "Compilation translates entire source code to machine code before execution (C, C++), producing fast executables but requiring recompilation for changes. Interpretation executes code line by line at runtime (Python, JavaScript), offering flexibility and easier debugging but slower execution. JIT compilers combine both approaches for optimization.",
+    sampleAnswer:
+      "Compilation translates entire source code to machine code before execution (C, C++), producing fast executables but requiring recompilation for changes. Interpretation executes code line by line at runtime (Python, JavaScript), offering flexibility and easier debugging but slower execution. JIT compilers combine both approaches for optimization.",
     tags: ["programming-languages", "compilation", "interpretation"],
   },
   {
-    questionText: "Which of the following is NOT a valid JavaScript variable declaration?",
+    questionText:
+      "Which of the following is NOT a valid JavaScript variable declaration?",
     questionType: QuestionType.MULTIPLE_CHOICE,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.ANALYZE,
@@ -497,10 +559,13 @@ const computerScienceQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.EASY,
     bloomLevel: BloomLevel.REMEMBER,
     points: 1,
-    options: { acceptedAnswers: ["Structured Query Language"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["Structured Query Language"],
+      caseSensitive: false,
+    },
     tags: ["databases", "sql", "basics"],
   },
-];
+]
 
 // History Questions
 const historyQuestions: QuestionData[] = [
@@ -540,7 +605,8 @@ const historyQuestions: QuestionData[] = [
     tags: ["american-history", "presidents", "18th-century"],
   },
   {
-    questionText: "The ancient city of ___ was destroyed by the eruption of Mount Vesuvius in 79 AD.",
+    questionText:
+      "The ancient city of ___ was destroyed by the eruption of Mount Vesuvius in 79 AD.",
     questionType: QuestionType.FILL_BLANK,
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.REMEMBER,
@@ -549,12 +615,14 @@ const historyQuestions: QuestionData[] = [
     tags: ["ancient-rome", "natural-disasters", "1st-century"],
   },
   {
-    questionText: "Analyze the causes and consequences of the Industrial Revolution on society.",
+    questionText:
+      "Analyze the causes and consequences of the Industrial Revolution on society.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.ANALYZE,
     points: 15,
-    sampleAnswer: "The Industrial Revolution (1760-1840) was caused by agricultural improvements, capital accumulation, natural resources, and technological innovation. Consequences included urbanization, new social classes (industrial capitalists and working class), child labor, environmental pollution, but also increased productivity, improved living standards over time, and global trade expansion.",
+    sampleAnswer:
+      "The Industrial Revolution (1760-1840) was caused by agricultural improvements, capital accumulation, natural resources, and technological innovation. Consequences included urbanization, new social classes (industrial capitalists and working class), child labor, environmental pollution, but also increased productivity, improved living standards over time, and global trade expansion.",
     tags: ["industrial-revolution", "18th-century", "social-change"],
   },
   {
@@ -571,7 +639,7 @@ const historyQuestions: QuestionData[] = [
     ],
     tags: ["ancient-egypt", "pyramids", "civilizations"],
   },
-];
+]
 
 // Geography Questions
 const geographyQuestions: QuestionData[] = [
@@ -600,7 +668,8 @@ const geographyQuestions: QuestionData[] = [
       { text: "False", isCorrect: true },
     ],
     tags: ["rivers", "south-america"],
-    explanation: "The Nile River is the longest; Amazon is the largest by volume.",
+    explanation:
+      "The Nile River is the longest; Amazon is the largest by volume.",
   },
   {
     questionText: "Name the capital city of Japan.",
@@ -617,16 +686,21 @@ const geographyQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.REMEMBER,
     points: 2,
-    options: { acceptedAnswers: ["Mariana", "mariana", "Marianas"], caseSensitive: false },
+    options: {
+      acceptedAnswers: ["Mariana", "mariana", "Marianas"],
+      caseSensitive: false,
+    },
     tags: ["oceans", "physical-geography"],
   },
   {
-    questionText: "Explain how plate tectonics cause earthquakes and volcanic activity.",
+    questionText:
+      "Explain how plate tectonics cause earthquakes and volcanic activity.",
     questionType: QuestionType.ESSAY,
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.UNDERSTAND,
     points: 12,
-    sampleAnswer: "Earth's lithosphere is divided into tectonic plates floating on the asthenosphere. At convergent boundaries, plates collide causing earthquakes and volcanic mountains. At divergent boundaries, plates separate allowing magma to rise. Transform boundaries cause lateral movement and earthquakes. The Pacific Ring of Fire demonstrates these processes with 75% of world's volcanoes.",
+    sampleAnswer:
+      "Earth's lithosphere is divided into tectonic plates floating on the asthenosphere. At convergent boundaries, plates collide causing earthquakes and volcanic mountains. At divergent boundaries, plates separate allowing magma to rise. Transform boundaries cause lateral movement and earthquakes. The Pacific Ring of Fire demonstrates these processes with 75% of world's volcanoes.",
     tags: ["plate-tectonics", "earthquakes", "volcanoes"],
   },
   {
@@ -643,7 +717,7 @@ const geographyQuestions: QuestionData[] = [
     ],
     tags: ["population", "demographics"],
   },
-];
+]
 
 // Arabic Language Questions (for Arabic schools)
 const arabicQuestions: QuestionData[] = [
@@ -679,7 +753,8 @@ const arabicQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.MEDIUM,
     bloomLevel: BloomLevel.APPLY,
     points: 4,
-    sampleAnswer: "قرأ: فعل ماضٍ مبني على الفتح. الطالب: فاعل مرفوع بالضمة. الكتاب: مفعول به منصوب بالفتحة.",
+    sampleAnswer:
+      "قرأ: فعل ماضٍ مبني على الفتح. الطالب: فاعل مرفوع بالضمة. الكتاب: مفعول به منصوب بالفتحة.",
     tags: ["grammar", "parsing", "arabic"],
   },
   {
@@ -688,7 +763,8 @@ const arabicQuestions: QuestionData[] = [
     difficulty: DifficultyLevel.HARD,
     bloomLevel: BloomLevel.CREATE,
     points: 15,
-    sampleAnswer: "القراءة غذاء الروح والعقل، فهي تنمي المعرفة وتوسع الأفق وتثري اللغة. من خلال القراءة نتعرف على ثقافات الشعوب ونستفيد من تجارب الآخرين. إنها المفتاح الذي يفتح أبواب النجاح والتقدم.",
+    sampleAnswer:
+      "القراءة غذاء الروح والعقل، فهي تنمي المعرفة وتوسع الأفق وتثري اللغة. من خلال القراءة نتعرف على ثقافات الشعوب ونستفيد من تجارب الآخرين. إنها المفتاح الذي يفتح أبواب النجاح والتقدم.",
     tags: ["composition", "expression", "arabic"],
   },
   {
@@ -700,7 +776,7 @@ const arabicQuestions: QuestionData[] = [
     options: { acceptedAnswers: ["متطرفة", "المتطرفة"], caseSensitive: false },
     tags: ["spelling", "hamza", "arabic"],
   },
-];
+]
 
 // ============================================================================
 // SEED FUNCTION
@@ -714,48 +790,121 @@ export async function seedExams(
   students: StudentRef[],
   teachers?: TeacherRef[]
 ): Promise<void> {
-  console.log("📝 Creating comprehensive exam data...");
+  console.log("📝 Creating comprehensive exam data...")
 
   // Get subject IDs
-  const mathSubject = subjects.find((s) => s.subjectName === "Mathematics");
-  const physicsSubject = subjects.find((s) => s.subjectName === "Physics");
-  const englishSubject = subjects.find((s) => s.subjectName === "English Language");
-  const biologySubject = subjects.find((s) => s.subjectName === "Biology") || subjects.find((s) => s.subjectName === "Science");
-  const chemistrySubject = subjects.find((s) => s.subjectName === "Chemistry") || subjects.find((s) => s.subjectName === "Science");
-  const csSubject = subjects.find((s) => s.subjectName === "Computer Science") || subjects.find((s) => s.subjectName === "ICT");
-  const historySubject = subjects.find((s) => s.subjectName === "History") || subjects.find((s) => s.subjectName === "Social Studies");
-  const geographySubject = subjects.find((s) => s.subjectName === "Geography") || subjects.find((s) => s.subjectName === "Social Studies");
-  const arabicSubject = subjects.find((s) => s.subjectName === "Arabic Language") || subjects.find((s) => s.subjectName === "Arabic");
+  const mathSubject = subjects.find((s) => s.subjectName === "Mathematics")
+  const physicsSubject = subjects.find((s) => s.subjectName === "Physics")
+  const englishSubject = subjects.find(
+    (s) => s.subjectName === "English Language"
+  )
+  const biologySubject =
+    subjects.find((s) => s.subjectName === "Biology") ||
+    subjects.find((s) => s.subjectName === "Science")
+  const chemistrySubject =
+    subjects.find((s) => s.subjectName === "Chemistry") ||
+    subjects.find((s) => s.subjectName === "Science")
+  const csSubject =
+    subjects.find((s) => s.subjectName === "Computer Science") ||
+    subjects.find((s) => s.subjectName === "ICT")
+  const historySubject =
+    subjects.find((s) => s.subjectName === "History") ||
+    subjects.find((s) => s.subjectName === "Social Studies")
+  const geographySubject =
+    subjects.find((s) => s.subjectName === "Geography") ||
+    subjects.find((s) => s.subjectName === "Social Studies")
+  const arabicSubject =
+    subjects.find((s) => s.subjectName === "Arabic Language") ||
+    subjects.find((s) => s.subjectName === "Arabic")
 
-  const teacherId = teachers?.[0]?.id || "system";
+  const teacherId = teachers?.[0]?.id || "system"
 
   // ========== 1. GRADE BOUNDARIES ==========
-  console.log("   📊 Creating grade boundaries...");
+  console.log("   📊 Creating grade boundaries...")
   await prisma.gradeBoundary.createMany({
     data: [
-      { schoolId, grade: "A+", minScore: "95.00", maxScore: "100.00", gpaValue: "4.00" },
-      { schoolId, grade: "A", minScore: "90.00", maxScore: "94.99", gpaValue: "3.70" },
-      { schoolId, grade: "B+", minScore: "85.00", maxScore: "89.99", gpaValue: "3.30" },
-      { schoolId, grade: "B", minScore: "80.00", maxScore: "84.99", gpaValue: "3.00" },
-      { schoolId, grade: "C+", minScore: "75.00", maxScore: "79.99", gpaValue: "2.70" },
-      { schoolId, grade: "C", minScore: "70.00", maxScore: "74.99", gpaValue: "2.30" },
-      { schoolId, grade: "D+", minScore: "65.00", maxScore: "69.99", gpaValue: "2.00" },
-      { schoolId, grade: "D", minScore: "60.00", maxScore: "64.99", gpaValue: "1.70" },
-      { schoolId, grade: "F", minScore: "0.00", maxScore: "59.99", gpaValue: "0.00" },
+      {
+        schoolId,
+        grade: "A+",
+        minScore: "95.00",
+        maxScore: "100.00",
+        gpaValue: "4.00",
+      },
+      {
+        schoolId,
+        grade: "A",
+        minScore: "90.00",
+        maxScore: "94.99",
+        gpaValue: "3.70",
+      },
+      {
+        schoolId,
+        grade: "B+",
+        minScore: "85.00",
+        maxScore: "89.99",
+        gpaValue: "3.30",
+      },
+      {
+        schoolId,
+        grade: "B",
+        minScore: "80.00",
+        maxScore: "84.99",
+        gpaValue: "3.00",
+      },
+      {
+        schoolId,
+        grade: "C+",
+        minScore: "75.00",
+        maxScore: "79.99",
+        gpaValue: "2.70",
+      },
+      {
+        schoolId,
+        grade: "C",
+        minScore: "70.00",
+        maxScore: "74.99",
+        gpaValue: "2.30",
+      },
+      {
+        schoolId,
+        grade: "D+",
+        minScore: "65.00",
+        maxScore: "69.99",
+        gpaValue: "2.00",
+      },
+      {
+        schoolId,
+        grade: "D",
+        minScore: "60.00",
+        maxScore: "64.99",
+        gpaValue: "1.70",
+      },
+      {
+        schoolId,
+        grade: "F",
+        minScore: "0.00",
+        maxScore: "59.99",
+        gpaValue: "0.00",
+      },
     ],
     skipDuplicates: true,
-  });
+  })
 
   // ========== 2. QUESTION BANK ==========
-  console.log("   📚 Creating question bank...");
-  const createdQuestions: { id: string; subjectId: string; questionType: QuestionType; points: number }[] = [];
+  console.log("   📚 Creating question bank...")
+  const createdQuestions: {
+    id: string
+    subjectId: string
+    questionType: QuestionType
+    points: number
+  }[] = []
 
   // Helper to create questions for a subject
   async function createQuestionsForSubject(
     subjectId: string | undefined,
     questions: QuestionData[]
   ) {
-    if (!subjectId) return;
+    if (!subjectId) return
 
     for (const q of questions) {
       const question = await prisma.questionBank.create({
@@ -774,52 +923,63 @@ export async function seedExams(
           source: QuestionSource.MANUAL,
           createdBy: teacherId,
         },
-      });
+      })
       createdQuestions.push({
         id: question.id,
         subjectId,
         questionType: q.questionType,
         points: Number(q.points),
-      });
+      })
     }
   }
 
-  await createQuestionsForSubject(mathSubject?.id, mathQuestions);
-  await createQuestionsForSubject(physicsSubject?.id, physicsQuestions);
-  await createQuestionsForSubject(englishSubject?.id, englishQuestions);
-  await createQuestionsForSubject(biologySubject?.id, biologyQuestions);
-  await createQuestionsForSubject(chemistrySubject?.id, chemistryQuestions);
-  await createQuestionsForSubject(csSubject?.id, computerScienceQuestions);
-  await createQuestionsForSubject(historySubject?.id, historyQuestions);
-  await createQuestionsForSubject(geographySubject?.id, geographyQuestions);
-  await createQuestionsForSubject(arabicSubject?.id, arabicQuestions);
+  await createQuestionsForSubject(mathSubject?.id, mathQuestions)
+  await createQuestionsForSubject(physicsSubject?.id, physicsQuestions)
+  await createQuestionsForSubject(englishSubject?.id, englishQuestions)
+  await createQuestionsForSubject(biologySubject?.id, biologyQuestions)
+  await createQuestionsForSubject(chemistrySubject?.id, chemistryQuestions)
+  await createQuestionsForSubject(csSubject?.id, computerScienceQuestions)
+  await createQuestionsForSubject(historySubject?.id, historyQuestions)
+  await createQuestionsForSubject(geographySubject?.id, geographyQuestions)
+  await createQuestionsForSubject(arabicSubject?.id, arabicQuestions)
 
   // ========== 3. QUESTION ANALYTICS ==========
-  console.log("   📈 Creating question analytics...");
+  console.log("   📈 Creating question analytics...")
   for (const q of createdQuestions) {
     await prisma.questionAnalytics.create({
       data: {
         schoolId,
         questionId: q.id,
         timesUsed: faker.number.int({ min: 5, max: 50 }),
-        avgScore: faker.number.float({ min: 50, max: 95, fractionDigits: 2 }).toString(),
-        successRate: faker.number.float({ min: 40, max: 90, fractionDigits: 2 }),
-        avgTimeSpent: faker.number.float({ min: 2, max: 15, fractionDigits: 1 }),
+        avgScore: faker.number
+          .float({ min: 50, max: 95, fractionDigits: 2 })
+          .toString(),
+        successRate: faker.number.float({
+          min: 40,
+          max: 90,
+          fractionDigits: 2,
+        }),
+        avgTimeSpent: faker.number.float({
+          min: 2,
+          max: 15,
+          fractionDigits: 1,
+        }),
         lastUsed: faker.date.recent({ days: 30 }),
       },
-    });
+    })
   }
 
   // ========== 4. EXAM TEMPLATES ==========
-  console.log("   📋 Creating exam templates...");
-  const templates: { id: string; subjectId: string }[] = [];
+  console.log("   📋 Creating exam templates...")
+  const templates: { id: string; subjectId: string }[] = []
 
   if (mathSubject) {
     const template = await prisma.examTemplate.create({
       data: {
         schoolId,
         name: "Mathematics Mid-Term Template",
-        description: "Standard mid-term exam with balanced question distribution",
+        description:
+          "Standard mid-term exam with balanced question distribution",
         subjectId: mathSubject.id,
         duration: 90,
         totalMarks: 50,
@@ -838,8 +998,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: mathSubject.id });
+    })
+    templates.push({ id: template.id, subjectId: mathSubject.id })
   }
 
   if (physicsSubject) {
@@ -860,8 +1020,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: physicsSubject.id });
+    })
+    templates.push({ id: template.id, subjectId: physicsSubject.id })
   }
 
   // English Quick Quiz Template
@@ -887,8 +1047,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: englishSubject.id });
+    })
+    templates.push({ id: template.id, subjectId: englishSubject.id })
   }
 
   // Biology Lab Assessment Template
@@ -915,8 +1075,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: biologySubject.id });
+    })
+    templates.push({ id: template.id, subjectId: biologySubject.id })
   }
 
   // Computer Science Coding Test Template
@@ -944,8 +1104,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: csSubject.id });
+    })
+    templates.push({ id: template.id, subjectId: csSubject.id })
   }
 
   // History Comprehensive Test Template
@@ -974,8 +1134,8 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: historySubject.id });
+    })
+    templates.push({ id: template.id, subjectId: historySubject.id })
   }
 
   // Arabic Language Assessment Template
@@ -1004,13 +1164,18 @@ export async function seedExams(
         createdBy: teacherId,
         isActive: true,
       },
-    });
-    templates.push({ id: template.id, subjectId: arabicSubject.id });
+    })
+    templates.push({ id: template.id, subjectId: arabicSubject.id })
   }
 
   // ========== 5. EXAMS ==========
-  console.log("   📝 Creating exams...");
-  const exams: { id: string; subjectId: string; status: ExamStatus; classId: string }[] = [];
+  console.log("   📝 Creating exams...")
+  const exams: {
+    id: string
+    subjectId: string
+    status: ExamStatus
+    classId: string
+  }[] = []
 
   // Define exam subjects
   const examSubjects = [
@@ -1023,10 +1188,10 @@ export async function seedExams(
     { subject: historySubject, name: "History" },
     { subject: geographySubject, name: "Geography" },
     { subject: arabicSubject, name: "Arabic Language" },
-  ].filter((s) => s.subject);
+  ].filter((s) => s.subject)
 
   for (const { subject, name } of examSubjects) {
-    if (!subject) continue;
+    if (!subject) continue
 
     // Completed Midterm
     const midterm = await prisma.exam.create({
@@ -1044,10 +1209,16 @@ export async function seedExams(
         passingMarks: 50,
         examType: ExamType.MIDTERM,
         status: ExamStatus.COMPLETED,
-        instructions: "Answer all questions. Show your work for partial credit.",
+        instructions:
+          "Answer all questions. Show your work for partial credit.",
       },
-    });
-    exams.push({ id: midterm.id, subjectId: subject.id, status: ExamStatus.COMPLETED, classId: classes[0].id });
+    })
+    exams.push({
+      id: midterm.id,
+      subjectId: subject.id,
+      status: ExamStatus.COMPLETED,
+      classId: classes[0].id,
+    })
 
     // Upcoming Final
     const final = await prisma.exam.create({
@@ -1065,10 +1236,16 @@ export async function seedExams(
         passingMarks: 50,
         examType: ExamType.FINAL,
         status: ExamStatus.PLANNED,
-        instructions: "This is a comprehensive final exam. Read all instructions carefully.",
+        instructions:
+          "This is a comprehensive final exam. Read all instructions carefully.",
       },
-    });
-    exams.push({ id: final.id, subjectId: subject.id, status: ExamStatus.PLANNED, classId: classes[0].id });
+    })
+    exams.push({
+      id: final.id,
+      subjectId: subject.id,
+      status: ExamStatus.PLANNED,
+      classId: classes[0].id,
+    })
 
     // Quiz (in progress)
     if (classes.length > 1) {
@@ -1088,20 +1265,27 @@ export async function seedExams(
           examType: ExamType.QUIZ,
           status: ExamStatus.IN_PROGRESS,
         },
-      });
-      exams.push({ id: quiz.id, subjectId: subject.id, status: ExamStatus.IN_PROGRESS, classId: classes[1].id });
+      })
+      exams.push({
+        id: quiz.id,
+        subjectId: subject.id,
+        status: ExamStatus.IN_PROGRESS,
+        classId: classes[1].id,
+      })
     }
   }
 
   // ========== 6. GENERATED EXAMS (link questions to exams) ==========
-  console.log("   🔗 Creating generated exams with questions...");
-  const completedExams = exams.filter((e) => e.status === ExamStatus.COMPLETED);
+  console.log("   🔗 Creating generated exams with questions...")
+  const completedExams = exams.filter((e) => e.status === ExamStatus.COMPLETED)
 
   for (const exam of completedExams) {
-    const template = templates.find((t) => t.subjectId === exam.subjectId);
-    const examQuestions = createdQuestions.filter((q) => q.subjectId === exam.subjectId);
+    const template = templates.find((t) => t.subjectId === exam.subjectId)
+    const examQuestions = createdQuestions.filter(
+      (q) => q.subjectId === exam.subjectId
+    )
 
-    if (examQuestions.length === 0) continue;
+    if (examQuestions.length === 0) continue
 
     const generatedExam = await prisma.generatedExam.create({
       data: {
@@ -1114,10 +1298,10 @@ export async function seedExams(
         generationNotes: "Auto-generated from question bank",
         generatedBy: teacherId,
       },
-    });
+    })
 
     // Add questions to the generated exam
-    const questionsToAdd = examQuestions.slice(0, 10);
+    const questionsToAdd = examQuestions.slice(0, 10)
     for (let i = 0; i < questionsToAdd.length; i++) {
       await prisma.generatedExamQuestion.create({
         data: {
@@ -1127,13 +1311,15 @@ export async function seedExams(
           order: i + 1,
           points: questionsToAdd[i].points,
         },
-      });
+      })
     }
   }
 
   // ========== 7. RUBRICS FOR ESSAY QUESTIONS ==========
-  console.log("   📐 Creating rubrics for essay questions...");
-  const essayQuestions = createdQuestions.filter((q) => q.questionType === QuestionType.ESSAY);
+  console.log("   📐 Creating rubrics for essay questions...")
+  const essayQuestions = createdQuestions.filter(
+    (q) => q.questionType === QuestionType.ESSAY
+  )
 
   for (const question of essayQuestions) {
     const rubric = await prisma.rubric.create({
@@ -1144,15 +1330,35 @@ export async function seedExams(
         description: "Standard rubric for evaluating essay responses",
         totalPoints: question.points,
       },
-    });
+    })
 
     // Add rubric criteria
     const criteriaData = [
-      { criterion: "Content & Understanding", description: "Demonstrates thorough understanding of concepts", maxPoints: question.points * 0.4, order: 1 },
-      { criterion: "Organization & Structure", description: "Clear introduction, body, and conclusion", maxPoints: question.points * 0.2, order: 2 },
-      { criterion: "Critical Analysis", description: "Shows critical thinking and analysis", maxPoints: question.points * 0.25, order: 3 },
-      { criterion: "Grammar & Mechanics", description: "Proper grammar, spelling, and punctuation", maxPoints: question.points * 0.15, order: 4 },
-    ];
+      {
+        criterion: "Content & Understanding",
+        description: "Demonstrates thorough understanding of concepts",
+        maxPoints: question.points * 0.4,
+        order: 1,
+      },
+      {
+        criterion: "Organization & Structure",
+        description: "Clear introduction, body, and conclusion",
+        maxPoints: question.points * 0.2,
+        order: 2,
+      },
+      {
+        criterion: "Critical Analysis",
+        description: "Shows critical thinking and analysis",
+        maxPoints: question.points * 0.25,
+        order: 3,
+      },
+      {
+        criterion: "Grammar & Mechanics",
+        description: "Proper grammar, spelling, and punctuation",
+        maxPoints: question.points * 0.15,
+        order: 4,
+      },
+    ]
 
     for (const criteria of criteriaData) {
       await prisma.rubricCriterion.create({
@@ -1161,23 +1367,33 @@ export async function seedExams(
           rubricId: rubric.id,
           ...criteria,
         },
-      });
+      })
     }
   }
 
   // ========== 8. EXAM RESULTS & STUDENT ANSWERS ==========
-  console.log("   ✏️ Creating student answers and exam results...");
+  console.log("   ✏️ Creating student answers and exam results...")
 
   for (const exam of completedExams) {
-    const examQuestions = createdQuestions.filter((q) => q.subjectId === exam.subjectId).slice(0, 10);
+    const examQuestions = createdQuestions
+      .filter((q) => q.subjectId === exam.subjectId)
+      .slice(0, 10)
 
     // Create results for students
     for (let i = 0; i < Math.min(30, students.length); i++) {
-      const student = students[i];
-      const marks = faker.number.int({ min: 35, max: 98 });
-      const percentage = marks;
+      const student = students[i]
+      const marks = faker.number.int({ min: 35, max: 98 })
+      const percentage = marks
       const grade =
-        marks >= 90 ? "A" : marks >= 80 ? "B" : marks >= 70 ? "C" : marks >= 60 ? "D" : "F";
+        marks >= 90
+          ? "A"
+          : marks >= 80
+            ? "B"
+            : marks >= 70
+              ? "C"
+              : marks >= 60
+                ? "D"
+                : "F"
 
       // Create exam result
       await prisma.examResult.create({
@@ -1190,15 +1406,28 @@ export async function seedExams(
           percentage,
           grade,
           isAbsent: faker.datatype.boolean({ probability: 0.05 }),
-          remarks: marks >= 80 ? "Excellent performance" : marks >= 60 ? "Good effort" : "Needs improvement",
+          remarks:
+            marks >= 80
+              ? "Excellent performance"
+              : marks >= 60
+                ? "Good effort"
+                : "Needs improvement",
         },
-      });
+      })
 
       // Create student answers and marking results for each question
       for (const question of examQuestions) {
-        const autoGradableTypes: QuestionType[] = [QuestionType.MULTIPLE_CHOICE, QuestionType.TRUE_FALSE, QuestionType.FILL_BLANK];
-        const isAutoGradable = autoGradableTypes.includes(question.questionType);
-        const gradingMethod = isAutoGradable ? GradingMethod.AUTO : question.questionType === QuestionType.ESSAY ? GradingMethod.AI_ASSISTED : GradingMethod.MANUAL;
+        const autoGradableTypes: QuestionType[] = [
+          QuestionType.MULTIPLE_CHOICE,
+          QuestionType.TRUE_FALSE,
+          QuestionType.FILL_BLANK,
+        ]
+        const isAutoGradable = autoGradableTypes.includes(question.questionType)
+        const gradingMethod = isAutoGradable
+          ? GradingMethod.AUTO
+          : question.questionType === QuestionType.ESSAY
+            ? GradingMethod.AI_ASSISTED
+            : GradingMethod.MANUAL
 
         const studentAnswer = await prisma.studentAnswer.create({
           data: {
@@ -1207,15 +1436,25 @@ export async function seedExams(
             questionId: question.id,
             studentId: student.id,
             submissionType: SubmissionType.DIGITAL,
-            answerText: question.questionType === QuestionType.ESSAY ? faker.lorem.paragraphs(2) : faker.lorem.sentence(),
-            selectedOptionIds: question.questionType === QuestionType.MULTIPLE_CHOICE ? [String(faker.number.int({ min: 0, max: 3 }))] : [],
+            answerText:
+              question.questionType === QuestionType.ESSAY
+                ? faker.lorem.paragraphs(2)
+                : faker.lorem.sentence(),
+            selectedOptionIds:
+              question.questionType === QuestionType.MULTIPLE_CHOICE
+                ? [String(faker.number.int({ min: 0, max: 3 }))]
+                : [],
             submittedAt: new Date(),
           },
-        });
+        })
 
         // Create marking result
-        const scorePercentage = faker.number.float({ min: 0.4, max: 1.0, fractionDigits: 2 });
-        const pointsAwarded = (question.points * scorePercentage).toFixed(2);
+        const scorePercentage = faker.number.float({
+          min: 0.4,
+          max: 1.0,
+          fractionDigits: 2,
+        })
+        const pointsAwarded = (question.points * scorePercentage).toFixed(2)
 
         await prisma.markingResult.create({
           data: {
@@ -1228,9 +1467,16 @@ export async function seedExams(
             status: MarkingStatus.COMPLETED,
             pointsAwarded,
             maxPoints: question.points,
-            aiScore: gradingMethod !== GradingMethod.MANUAL ? pointsAwarded : null,
-            aiConfidence: gradingMethod !== GradingMethod.MANUAL ? faker.number.float({ min: 0.7, max: 0.98, fractionDigits: 2 }) : null,
-            aiReasoning: gradingMethod === GradingMethod.AI_ASSISTED ? "Response demonstrates good understanding of key concepts." : null,
+            aiScore:
+              gradingMethod !== GradingMethod.MANUAL ? pointsAwarded : null,
+            aiConfidence:
+              gradingMethod !== GradingMethod.MANUAL
+                ? faker.number.float({ min: 0.7, max: 0.98, fractionDigits: 2 })
+                : null,
+            aiReasoning:
+              gradingMethod === GradingMethod.AI_ASSISTED
+                ? "Response demonstrates good understanding of key concepts."
+                : null,
             feedback: faker.helpers.arrayElement([
               "Good work!",
               "Well explained.",
@@ -1243,21 +1489,23 @@ export async function seedExams(
             needsReview: false,
             wasOverridden: false,
           },
-        });
+        })
       }
     }
   }
 
   // Summary
-  const questionCount = createdQuestions.length;
-  const examCount = exams.length;
-  const templateCount = templates.length;
+  const questionCount = createdQuestions.length
+  const examCount = exams.length
+  const templateCount = templates.length
 
-  console.log(`   ✅ Created:`);
-  console.log(`      - ${questionCount} questions in question bank`);
-  console.log(`      - ${templateCount} exam templates`);
-  console.log(`      - ${examCount} exams (midterms, finals, quizzes)`);
-  console.log(`      - ${essayQuestions.length} rubrics with criteria`);
-  console.log(`      - ${completedExams.length * Math.min(30, students.length)} exam results`);
-  console.log(`      - Student answers and marking results\n`);
+  console.log(`   ✅ Created:`)
+  console.log(`      - ${questionCount} questions in question bank`)
+  console.log(`      - ${templateCount} exam templates`)
+  console.log(`      - ${examCount} exams (midterms, finals, quizzes)`)
+  console.log(`      - ${essayQuestions.length} rubrics with criteria`)
+  console.log(
+    `      - ${completedExams.length * Math.min(30, students.length)} exam results`
+  )
+  console.log(`      - Student answers and marking results\n`)
 }

@@ -17,11 +17,11 @@ export {
   getQuotaStats,
   getQuotaByCategory,
   getQuotaByTier,
-} from "./actions";
+} from "./actions"
 
 // Constants
-export { DEFAULT_QUOTA, QUOTA_TIERS } from "./constants";
-export type { QuotaTier } from "./constants";
+export { DEFAULT_QUOTA, QUOTA_TIERS } from "./constants"
+export type { QuotaTier } from "./constants"
 
 // Types
 export type {
@@ -31,4 +31,4 @@ export type {
   QuotaByCategory,
   QuotaByTier,
   QuotaLimits,
-} from "./types";
+} from "./types"

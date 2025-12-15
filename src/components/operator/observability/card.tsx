@@ -1,21 +1,34 @@
-"use client";
+"use client"
 
 /**
  * Observability card components for displaying logs and metrics
  */
+import {
+  Activity,
+  AlertCircle,
+  Clock,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Activity, AlertCircle, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { UnifiedLog, LogLevel, MetricValue } from "./types";
-import { formatTimestamp, formatRelativeTime, getActionCategory, formatPercentage } from "./util";
-import { LOG_LEVEL_VARIANTS, ACTION_CATEGORY_LABELS } from "./config";
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { ACTION_CATEGORY_LABELS, LOG_LEVEL_VARIANTS } from "./config"
+import type { LogLevel, MetricValue, UnifiedLog } from "./types"
+import {
+  formatPercentage,
+  formatRelativeTime,
+  formatTimestamp,
+  getActionCategory,
+} from "./util"
 
 /**
  * Log entry card
  */
 export function LogCard({ log }: { log: UnifiedLog }) {
-  const category = getActionCategory(log.action);
+  const category = getActionCategory(log.action)
 
   return (
     <Card>
@@ -55,7 +68,7 @@ export function LogCard({ log }: { log: UnifiedLog }) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -66,13 +79,22 @@ export function MetricCard({
   metric,
   icon: Icon = Activity,
 }: {
-  title: string;
-  metric: MetricValue;
-  icon?: React.ComponentType<{ className?: string }>;
+  title: string
+  metric: MetricValue
+  icon?: React.ComponentType<{ className?: string }>
 }) {
-  const TrendIcon = metric.trend === "up" ? TrendingUp : metric.trend === "down" ? TrendingDown : Minus;
+  const TrendIcon =
+    metric.trend === "up"
+      ? TrendingUp
+      : metric.trend === "down"
+        ? TrendingDown
+        : Minus
   const trendColor =
-    metric.trend === "up" ? "text-green-600" : metric.trend === "down" ? "text-red-600" : "text-muted-foreground";
+    metric.trend === "up"
+      ? "text-green-600"
+      : metric.trend === "down"
+        ? "text-red-600"
+        : "text-muted-foreground"
 
   return (
     <Card>
@@ -80,7 +102,7 @@ export function MetricCard({
         <CardTitle>
           <small>{title}</small>
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground size-4" />
       </CardHeader>
       <CardContent>
         <h2 className="font-bold">
@@ -88,14 +110,14 @@ export function MetricCard({
           {metric.unit}
         </h2>
         {metric.trend && (
-          <div className={`flex items-center gap-1 mt-1 ${trendColor}`}>
+          <div className={`mt-1 flex items-center gap-1 ${trendColor}`}>
             <TrendIcon className="size-3" />
             <small>{metric.trend}</small>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -105,8 +127,8 @@ export function HealthStatusCard({
   status,
   message,
 }: {
-  status: "healthy" | "warning" | "critical";
-  message: string;
+  status: "healthy" | "warning" | "critical"
+  message: string
 }) {
   const config = {
     healthy: {
@@ -127,10 +149,10 @@ export function HealthStatusCard({
       bg: "bg-red-50 dark:bg-red-950/10",
       label: "Critical",
     },
-  };
+  }
 
-  const cfg = config[status];
-  const Icon = cfg.icon;
+  const cfg = config[status]
+  const Icon = cfg.icon
 
   return (
     <div className={`flex items-center gap-3 rounded-lg ${cfg.bg} p-4`}>
@@ -140,5 +162,5 @@ export function HealthStatusCard({
         <small className="muted">{message}</small>
       </div>
     </div>
-  );
+  )
 }

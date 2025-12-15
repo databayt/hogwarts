@@ -18,67 +18,76 @@ You are the **Loop Orchestrator** - responsible for executing continuous develop
 ## Loop Types
 
 ### 1. Story Loop
+
 Execute all stories in an epic sequentially
+
 ```typescript
 interface StoryLoop {
-  type: 'story'
+  type: "story"
   epicId: string
   stories: Story[]
   currentIndex: number
-  status: 'running' | 'paused' | 'completed'
+  status: "running" | "paused" | "completed"
   startTime: Date
   metrics: LoopMetrics
 }
 ```
 
 ### 2. Bug Loop
+
 Fix bugs matching criteria continuously
+
 ```typescript
 interface BugLoop {
-  type: 'bug'
+  type: "bug"
   filter: {
-    priority?: 'critical' | 'high' | 'medium' | 'low'
-    status?: 'open' | 'in_progress'
+    priority?: "critical" | "high" | "medium" | "low"
+    status?: "open" | "in_progress"
     assignee?: string
   }
   bugs: Bug[]
   fixed: number
-  status: 'running' | 'paused' | 'completed'
+  status: "running" | "paused" | "completed"
 }
 ```
 
 ### 3. Refactor Loop
+
 Improve code quality to target metrics
+
 ```typescript
 interface RefactorLoop {
-  type: 'refactor'
+  type: "refactor"
   target: {
-    coverage?: number      // e.g., 95
-    complexity?: number    // e.g., 10
-    smells?: number       // e.g., 0
+    coverage?: number // e.g., 95
+    complexity?: number // e.g., 10
+    smells?: number // e.g., 0
   }
   current: QualityMetrics
   improvements: Improvement[]
-  status: 'running' | 'paused' | 'completed'
+  status: "running" | "paused" | "completed"
 }
 ```
 
 ### 4. Test Loop
+
 Increase test coverage systematically
+
 ```typescript
 interface TestLoop {
-  type: 'test'
+  type: "test"
   targetCoverage: number
   currentCoverage: number
   filesProcessed: string[]
   testsWritten: number
-  status: 'running' | 'paused' | 'completed'
+  status: "running" | "paused" | "completed"
 }
 ```
 
 ## Loop Execution Flow
 
 ### Main Loop Logic
+
 ```typescript
 async function executeLoop(config: LoopConfig) {
   // Initialize
@@ -112,7 +121,6 @@ async function executeLoop(config: LoopConfig) {
 
       // Rate limiting
       await sleep(config.delayBetweenIterations)
-
     } catch (error) {
       await handleError(error, state)
 
@@ -131,6 +139,7 @@ async function executeLoop(config: LoopConfig) {
 ## Story Loop Implementation
 
 ### Story Execution Cycle
+
 ```typescript
 async function executeStoryLoop(epicId: string) {
   const stories = await loadStories(epicId)
@@ -140,7 +149,7 @@ async function executeStoryLoop(epicId: string) {
     console.log(`📋 Starting story: ${story.id} - ${story.title}`)
 
     // Update status
-    await updateStoryStatus(story.id, 'IN_PROGRESS')
+    await updateStoryStatus(story.id, "IN_PROGRESS")
 
     // Phase 1: Setup
     await executeSetup(story)
@@ -169,7 +178,7 @@ async function executeStoryLoop(epicId: string) {
     await commitChanges(story)
 
     // Update status
-    await updateStoryStatus(story.id, 'COMPLETED')
+    await updateStoryStatus(story.id, "COMPLETED")
 
     // Update metrics
     await updateVelocity(story)
@@ -180,25 +189,26 @@ async function executeStoryLoop(epicId: string) {
 ```
 
 ### Story Implementation Details
+
 ```typescript
 async function implementStory(story: Story) {
   const { requirements, components, apis } = story
 
   // Create components
   for (const component of components) {
-    await invokeAgent('react', {
-      task: 'create',
+    await invokeAgent("react", {
+      task: "create",
       component,
-      requirements: story.requirements
+      requirements: story.requirements,
     })
   }
 
   // Create APIs
   for (const api of apis) {
-    await invokeAgent('api', {
-      task: 'create',
+    await invokeAgent("api", {
+      task: "create",
       endpoint: api,
-      validation: story.validation
+      validation: story.validation,
     })
   }
 
@@ -210,6 +220,7 @@ async function implementStory(story: Story) {
 ## Bug Loop Implementation
 
 ### Bug Fix Cycle
+
 ```typescript
 async function executeBugLoop(filter: BugFilter) {
   const bugs = await loadBugs(filter)
@@ -222,10 +233,10 @@ async function executeBugLoop(filter: BugFilter) {
     await runTest(reproTest) // Should fail
 
     // Phase 2: Debug
-    const analysis = await invokeAgent('debug', {
+    const analysis = await invokeAgent("debug", {
       bug,
       stackTrace: bug.stackTrace,
-      logs: bug.logs
+      logs: bug.logs,
     })
 
     // Phase 3: Fix
@@ -246,6 +257,7 @@ async function executeBugLoop(filter: BugFilter) {
 ## Refactor Loop Implementation
 
 ### Refactoring Cycle
+
 ```typescript
 async function executeRefactorLoop(target: RefactorTarget) {
   while (!meetsTarget(current, target)) {
@@ -262,10 +274,10 @@ async function executeRefactorLoop(target: RefactorTarget) {
       }
 
       // Apply refactoring
-      const refactoring = await invokeAgent('refactor', {
+      const refactoring = await invokeAgent("refactor", {
         file: issue.file,
         type: issue.type,
-        pattern: issue.suggestedPattern
+        pattern: issue.suggestedPattern,
       })
 
       // Verify tests still pass
@@ -286,6 +298,7 @@ async function executeRefactorLoop(target: RefactorTarget) {
 ## Test Loop Implementation
 
 ### Test Generation Cycle
+
 ```typescript
 async function executeTestLoop(targetCoverage: number) {
   let coverage = await measureCoverage()
@@ -298,10 +311,10 @@ async function executeTestLoop(targetCoverage: number) {
       console.log(`🧪 Adding tests for: ${file.path}`)
 
       // Generate tests
-      const tests = await invokeAgent('test', {
+      const tests = await invokeAgent("test", {
         file: file.path,
         uncoveredLines: file.uncoveredLines,
-        targetCoverage: targetCoverage
+        targetCoverage: targetCoverage,
       })
 
       // Write tests
@@ -324,13 +337,14 @@ async function executeTestLoop(targetCoverage: number) {
 ## Stop Conditions
 
 ### Configurable Limits
+
 ```typescript
 interface StopConditions {
-  maxIterations?: number       // e.g., 50
-  maxDuration?: number        // e.g., 4 hours
-  targetMet?: boolean         // e.g., coverage >= 95%
-  errorsThreshold?: number    // e.g., 3 consecutive errors
-  userInterruption?: boolean  // e.g., Ctrl+C
+  maxIterations?: number // e.g., 50
+  maxDuration?: number // e.g., 4 hours
+  targetMet?: boolean // e.g., coverage >= 95%
+  errorsThreshold?: number // e.g., 3 consecutive errors
+  userInterruption?: boolean // e.g., Ctrl+C
 }
 
 function checkStopConditions(state: LoopState): boolean {
@@ -346,6 +360,7 @@ function checkStopConditions(state: LoopState): boolean {
 ## Progress Tracking
 
 ### Real-time Metrics
+
 ```typescript
 interface LoopMetrics {
   startTime: Date
@@ -362,21 +377,30 @@ interface LoopMetrics {
 
 async function updateProgressDisplay(metrics: LoopMetrics) {
   console.clear()
-  console.log('═══════════════════════════════════════')
+  console.log("═══════════════════════════════════════")
   console.log(`🔄 LOOP PROGRESS`)
-  console.log('═══════════════════════════════════════')
+  console.log("═══════════════════════════════════════")
   console.log(`Type: ${metrics.type}`)
   console.log(`Status: ${metrics.status}`)
-  console.log(`Progress: ${'█'.repeat(metrics.progressPercentage / 5)}${'░'.repeat(20 - metrics.progressPercentage / 5)} ${metrics.progressPercentage}%`)
-  console.log(`Items: ${metrics.itemsProcessed}/${metrics.itemsProcessed + metrics.itemsRemaining}`)
-  console.log(`Success Rate: ${Math.round(metrics.successCount / metrics.itemsProcessed * 100)}%`)
-  console.log(`Time Elapsed: ${formatDuration(metrics.currentTime - metrics.startTime)}`)
+  console.log(
+    `Progress: ${"█".repeat(metrics.progressPercentage / 5)}${"░".repeat(20 - metrics.progressPercentage / 5)} ${metrics.progressPercentage}%`
+  )
+  console.log(
+    `Items: ${metrics.itemsProcessed}/${metrics.itemsProcessed + metrics.itemsRemaining}`
+  )
+  console.log(
+    `Success Rate: ${Math.round((metrics.successCount / metrics.itemsProcessed) * 100)}%`
+  )
+  console.log(
+    `Time Elapsed: ${formatDuration(metrics.currentTime - metrics.startTime)}`
+  )
   console.log(`ETA: ${metrics.estimatedCompletion}`)
-  console.log('═══════════════════════════════════════')
+  console.log("═══════════════════════════════════════")
 }
 ```
 
 ### Checkpoint System
+
 ```typescript
 interface Checkpoint {
   loopId: string
@@ -390,7 +414,7 @@ async function saveCheckpoint(state: LoopState) {
     loopId: state.id,
     state: serialize(state),
     timestamp: new Date(),
-    canResume: true
+    canResume: true,
   }
 
   await writeFile(
@@ -411,6 +435,7 @@ async function loadCheckpoint(loopId: string): Promise<Checkpoint | null> {
 ## Error Handling
 
 ### Recovery Strategies
+
 ```typescript
 async function handleError(error: Error, state: LoopState) {
   console.error(`❌ Error in loop: ${error.message}`)
@@ -422,22 +447,22 @@ async function handleError(error: Error, state: LoopState) {
   const strategy = determineRecoveryStrategy(error)
 
   switch (strategy) {
-    case 'retry':
+    case "retry":
       await sleep(5000)
-      return 'continue'
+      return "continue"
 
-    case 'skip':
+    case "skip":
       state.skipped.push(state.current)
-      return 'continue'
+      return "continue"
 
-    case 'pause':
-      state.status = 'paused'
+    case "pause":
+      state.status = "paused"
       await saveCheckpoint(state)
-      return 'pause'
+      return "pause"
 
-    case 'abort':
-      state.status = 'failed'
-      return 'stop'
+    case "abort":
+      state.status = "failed"
+      return "stop"
   }
 }
 ```
@@ -445,9 +470,10 @@ async function handleError(error: Error, state: LoopState) {
 ## Loop Configuration
 
 ### Configuration File
+
 ```typescript
 interface LoopConfig {
-  type: 'story' | 'bug' | 'refactor' | 'test'
+  type: "story" | "bug" | "refactor" | "test"
   target: any
   stopConditions: StopConditions
   errorHandling: {
@@ -472,16 +498,19 @@ interface LoopConfig {
 ## Integration Points
 
 ### With Story Agent
+
 - Load stories for processing
 - Update story status
 - Track dependencies
 
 ### With Other Agents
+
 - Invoke specialized agents for tasks
 - Coordinate multi-agent workflows
 - Aggregate results
 
 ### With Metrics System
+
 - Update velocity metrics
 - Track quality improvements
 - Generate reports
@@ -489,6 +518,7 @@ interface LoopConfig {
 ## Common Loop Patterns
 
 ### Pattern 1: Sprint Loop
+
 ```typescript
 async function sprintLoop(sprintId: string) {
   const sprint = await loadSprint(sprintId)
@@ -503,13 +533,14 @@ async function sprintLoop(sprintId: string) {
 ```
 
 ### Pattern 2: Quality Loop
+
 ```typescript
 async function qualityLoop() {
   const targets = {
     coverage: 95,
     lintErrors: 0,
     typeErrors: 0,
-    complexity: 10
+    complexity: 10,
   }
 
   await executeTestLoop(targets.coverage)

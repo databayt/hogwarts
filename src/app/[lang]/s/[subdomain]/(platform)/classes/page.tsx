@@ -1,9 +1,10 @@
-import ClassesContent from '@/components/platform/classes/content'
-import { SearchParams } from 'nuqs/server'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { SearchParams } from "nuqs/server"
 
-export const metadata = { title: 'Dashboard: Classes' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ClassesContent from "@/components/platform/classes/content"
+
+export const metadata = { title: "Dashboard: Classes" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -14,7 +15,11 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <ClassesContent searchParams={searchParams} dictionary={dictionary.school} lang={lang} />
+  return (
+    <ClassesContent
+      searchParams={searchParams}
+      dictionary={dictionary.school}
+      lang={lang}
+    />
+  )
 }
-
-

@@ -27,26 +27,26 @@
  * webhook-based updates for lower latency and reduced DB load.
  */
 
-import { NextRequest } from 'next/server'
-import { auth } from '@/auth'
+import { NextRequest } from "next/server"
+import { auth } from "@/auth"
 
 // WHY NODE.JS RUNTIME: Edge runtime can't use Prisma with direct database connections
-export const runtime = 'nodejs'
+export const runtime = "nodejs"
 // WHY FORCE-DYNAMIC: SSE responses must not be cached
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 export async function GET(request: NextRequest) {
   // Auth check
   const session = await auth()
   if (!session?.user?.id) {
-    return new Response('Unauthorized', { status: 401 })
+    return new Response("Unauthorized", { status: 401 })
   }
 
   // Parse query params
   const { searchParams } = new URL(request.url)
-  const accountId = searchParams.get('accountId')
+  const accountId = searchParams.get("accountId")
 
   if (!accountId) {
-    return new Response('Account ID required', { status: 400 })
+    return new Response("Account ID required", { status: 400 })
   }
 
   // Create a TransformStream for SSE
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
   const writer = stream.writable.getWriter()
 
   // Import database utilities
-  const { db } = await import('@/lib/db')
+  const { db } = await import("@/lib/db")
 
   // Start streaming
   const sendEvent = async (data: any) => {
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Initial connection message
-  await sendEvent({ type: 'connected', timestamp: new Date().toISOString() })
+  await sendEvent({ type: "connected", timestamp: new Date().toISOString() })
 
   // Set up polling for new transactions (in production, use database triggers or webhooks)
   let lastCheck = new Date()
@@ -74,23 +74,23 @@ export async function GET(request: NextRequest) {
       const newTransactions = await db.transaction.findMany({
         where: {
           bankAccountId: accountId,
-          createdAt: { gt: lastCheck }
+          createdAt: { gt: lastCheck },
         },
-        orderBy: { createdAt: 'desc' },
-        take: 10
+        orderBy: { createdAt: "desc" },
+        take: 10,
       })
 
       if (newTransactions.length > 0) {
         // Serialize Decimal fields
-        const serialized = newTransactions.map(tx => ({
+        const serialized = newTransactions.map((tx) => ({
           ...tx,
           amount: Number(tx.amount),
         }))
 
         await sendEvent({
-          type: 'transactions',
+          type: "transactions",
           data: serialized,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
 
         lastCheck = new Date()
@@ -102,32 +102,32 @@ export async function GET(request: NextRequest) {
         select: {
           currentBalance: true,
           availableBalance: true,
-          updatedAt: true
-        }
+          updatedAt: true,
+        },
       })
 
       if (account && account.updatedAt > lastCheck) {
         await sendEvent({
-          type: 'balance_update',
+          type: "balance_update",
           data: {
             currentBalance: Number(account.currentBalance),
             availableBalance: Number(account.availableBalance),
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
     } catch (error) {
-      console.error('Stream error:', error)
+      console.error("Stream error:", error)
       await sendEvent({
-        type: 'error',
-        message: 'Failed to fetch updates',
-        timestamp: new Date().toISOString()
+        type: "error",
+        message: "Failed to fetch updates",
+        timestamp: new Date().toISOString(),
       })
     }
   }, 5000) // Poll every 5 seconds
 
   // Clean up on disconnect
-  request.signal.addEventListener('abort', () => {
+  request.signal.addEventListener("abort", () => {
     clearInterval(interval)
     writer.close()
   })
@@ -135,10 +135,10 @@ export async function GET(request: NextRequest) {
   // Return SSE response
   return new Response(stream.readable, {
     headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no', // Disable Nginx buffering
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no", // Disable Nginx buffering
     },
   })
 }
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
   // Auth check
   const session = await auth()
   if (!session?.user?.id) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
@@ -158,17 +158,18 @@ export async function POST(request: NextRequest) {
     const { accountId } = body
 
     if (!accountId) {
-      return Response.json({ error: 'Account ID required' }, { status: 400 })
+      return Response.json({ error: "Account ID required" }, { status: 400 })
     }
 
     // Import and execute sync
-    const { syncTransactions } = await import('@/components/platform/finance/banking/actions/bank.actions')
+    const { syncTransactions } =
+      await import("@/components/platform/finance/banking/actions/bank.actions")
 
     const result = await syncTransactions({ accountId })
 
     if (!result.success) {
       return Response.json(
-        { error: result.error || 'Sync failed' },
+        { error: result.error || "Sync failed" },
         { status: 500 }
       )
     }
@@ -176,13 +177,10 @@ export async function POST(request: NextRequest) {
     return Response.json({
       success: true,
       message: `Synced ${result.count || 0} new transactions`,
-      count: result.count
+      count: result.count,
     })
   } catch (error) {
-    console.error('Sync error:', error)
-    return Response.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error("Sync error:", error)
+    return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }

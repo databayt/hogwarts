@@ -1,23 +1,25 @@
-"use client";
+"use client"
 
-import { Shell as PageContainer } from "@/components/table/shell";
-import { AuditLogTable } from "./logs-table/table";
-import { auditColumns, type AuditRow } from "./logs-table/columns";
-import { DataTableSkeleton } from "@/components/table/data-table-skeleton";
-import { EmptyState } from "@/components/operator/common/empty-state";
-import { useState, useEffect } from "react";
-import type { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import { useEffect, useState } from "react"
+
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { EmptyState } from "@/components/operator/common/empty-state"
+import { DataTableSkeleton } from "@/components/table/data-table-skeleton"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+import { auditColumns, type AuditRow } from "./logs-table/columns"
+import { AuditLogTable } from "./logs-table/table"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  lang: Locale;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  lang: Locale
 }
 
 export function ObservabilityContent(props: Props) {
-  const [data, setData] = useState<{ rows: AuditRow[] } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<{ rows: AuditRow[] } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     // For now, use sample data to show the working table structure
@@ -33,14 +35,14 @@ export function ObservabilityContent(props: Props) {
           reason: null,
           ip: "192.168.1.1",
           level: "info",
-          requestId: "req-123"
-        }
-      ]
-    };
-    
-    setData(sampleData);
-    setIsLoading(false);
-  }, []);
+          requestId: "req-123",
+        },
+      ],
+    }
+
+    setData(sampleData)
+    setIsLoading(false)
+  }, [])
 
   if (isLoading) {
     return (
@@ -48,12 +50,14 @@ export function ObservabilityContent(props: Props) {
         <div className="flex flex-1 flex-col gap-4">
           <div>
             <h1 className="text-xl font-semibold">Audit Logs</h1>
-            <p className="text-sm text-muted-foreground">Recent sensitive operator actions</p>
+            <p className="text-muted-foreground text-sm">
+              Recent sensitive operator actions
+            </p>
           </div>
           <DataTableSkeleton columnCount={auditColumns.length} />
         </div>
       </PageContainer>
-    );
+    )
   }
 
   if (error) {
@@ -62,31 +66,39 @@ export function ObservabilityContent(props: Props) {
         <div className="flex flex-1 flex-col gap-4">
           <div>
             <h1 className="text-xl font-semibold">Audit Logs</h1>
-            <p className="text-sm text-muted-foreground">Recent sensitive operator actions</p>
+            <p className="text-muted-foreground text-sm">
+              Recent sensitive operator actions
+            </p>
           </div>
-          <EmptyState title="Error loading audit logs" description="Please try again later." />
+          <EmptyState
+            title="Error loading audit logs"
+            description="Please try again later."
+          />
         </div>
       </PageContainer>
-    );
+    )
   }
 
-  const { rows } = data || { rows: [] };
+  const { rows } = data || { rows: [] }
 
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
           <h1 className="text-xl font-semibold">Audit Logs</h1>
-          <p className="text-sm text-muted-foreground">Recent sensitive operator actions</p>
+          <p className="text-muted-foreground text-sm">
+            Recent sensitive operator actions
+          </p>
         </div>
         {rows && rows.length > 0 ? (
           <AuditLogTable data={rows} columns={auditColumns} />
         ) : (
-          <EmptyState title="No audit entries" description="Actions will be listed here as they happen." />
+          <EmptyState
+            title="No audit entries"
+            description="Actions will be listed here as they happen."
+          />
         )}
       </div>
     </PageContainer>
-  );
+  )
 }
-
-

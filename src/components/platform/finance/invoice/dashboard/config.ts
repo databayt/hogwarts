@@ -1,4 +1,4 @@
-import { ChartConfig } from "@/components/ui/chart";
+import { ChartConfig } from "@/components/ui/chart"
 
 // Sample chart data (currently unused in DashboardContent; API provides data)
 export const chartData = [
@@ -93,7 +93,7 @@ export const chartData = [
   { date: "2024-06-28", desktop: 149, mobile: 200 },
   { date: "2024-06-29", desktop: 103, mobile: 160 },
   { date: "2024-06-30", desktop: 446, mobile: 400 },
-];
+]
 
 export const chartConfig = {
   visitors: {
@@ -107,7 +107,7 @@ export const chartConfig = {
     label: "Paid Revenue",
     color: "var(--chart-2)",
   },
-} satisfies ChartConfig;
+} satisfies ChartConfig
 
 // Dashboard stat cards definition
 export const STATS_CARD_DEFS = [
@@ -115,6 +115,4 @@ export const STATS_CARD_DEFS = [
   { title: "Total Invoice", key: "totalInvoice" },
   { title: "Paid Invoice", key: "paidInvoice" },
   { title: "Unpaid Invoice", key: "UnpaidInvoice" },
-] as const;
-
-
+] as const

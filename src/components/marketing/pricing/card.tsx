@@ -1,30 +1,54 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Check } from "lucide-react";
+import Link from "next/link"
+import { Check } from "lucide-react"
 
-import { SubscriptionPlan, UserSubscriptionPlan } from "@/components/marketing/pricing/types";
-import { BillingFormButton } from "@/components/marketing/pricing/forms/billing-form-button";
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { getCtaLabel, getIncludesHeading, getPriceDisplay, getYearlyTotal, isStarterTitle, isProTitle } from "./config";
-import { Separator } from "@/components/ui/separator";
-import type { Locale } from "@/components/internationalization/config";
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import type { Locale } from "@/components/internationalization/config"
+import { BillingFormButton } from "@/components/marketing/pricing/forms/billing-form-button"
+import {
+  SubscriptionPlan,
+  UserSubscriptionPlan,
+} from "@/components/marketing/pricing/types"
+
+import {
+  getCtaLabel,
+  getIncludesHeading,
+  getPriceDisplay,
+  getYearlyTotal,
+  isProTitle,
+  isStarterTitle,
+} from "./config"
 
 interface PricingCardProps {
-  offer: SubscriptionPlan;
-  isYearly: boolean;
-  userId?: string;
-  subscriptionPlan?: UserSubscriptionPlan;
-  userRole?: string;
-  lang?: Locale;
+  offer: SubscriptionPlan
+  isYearly: boolean
+  userId?: string
+  subscriptionPlan?: UserSubscriptionPlan
+  userRole?: string
+  lang?: Locale
 }
 
-export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRole, lang }: PricingCardProps) {
-  const isPro = isProTitle(offer.title);
-  const isStarter = isStarterTitle(offer.title);
-  const priceDisplay = getPriceDisplay(offer, isYearly);
+export function PricingCard({
+  offer,
+  isYearly,
+  userId,
+  subscriptionPlan,
+  userRole,
+  lang,
+}: PricingCardProps) {
+  const isPro = isProTitle(offer.title)
+  const isStarter = isStarterTitle(offer.title)
+  const priceDisplay = getPriceDisplay(offer, isYearly)
 
   const ctaArea = (
     <>
@@ -32,10 +56,7 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         isStarter ? (
           <Link
             href={`/${lang}/dashboard`}
-            className={cn(
-              buttonVariants({ variant: "default" }),
-
-            )}
+            className={cn(buttonVariants({ variant: "default" }))}
           >
             Start trial
           </Link>
@@ -50,19 +71,19 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
       ) : (
         <Link
           href={(() => {
-            const monthly = offer.stripeIds.monthly;
-            const yearly = offer.stripeIds.yearly;
-            const priceId = (isYearly ? yearly : monthly) || monthly;
+            const monthly = offer.stripeIds.monthly
+            const yearly = offer.stripeIds.yearly
+            const priceId = (isYearly ? yearly : monthly) || monthly
             return priceId
               ? `/${lang}/starter/dashboard/billing/checkout?price=${encodeURIComponent(priceId)}`
-              : `/${lang}/starter/dashboard/billing`;
+              : `/${lang}/starter/dashboard/billing`
           })()}
           className={cn(
             buttonVariants({
               variant: "default",
               size: "sm",
             }),
-            "hover:scale-[1.01] transition-transform",
+            "transition-transform hover:scale-[1.01]"
           )}
         >
           {getCtaLabel(offer.title)}
@@ -74,15 +95,15 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         </a>
       )}
     </>
-  );
+  )
 
-  const includesHeading = getIncludesHeading(offer.title);
+  const includesHeading = getIncludesHeading(offer.title)
 
   return (
     <Card
       key={offer.title}
       className={cn(
-        "relative overflow-hidden rounded-2xl border-none  shadow-none bg-muted text-card-foreground flex flex-col items-start text-left h-full w-full",
+        "bg-muted text-card-foreground relative flex h-full w-full flex-col items-start overflow-hidden rounded-2xl border-none text-left shadow-none"
       )}
     >
       <CardHeader className="pb-4">
@@ -98,12 +119,12 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         <Separator />
       </div>
 
-      <CardContent className="pt-4 flex-1">
+      <CardContent className="flex-1 pt-4">
         <p className="muted mb-2">{includesHeading}</p>
         <ul>
           {offer.benefits.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
-              <Check className="mt-1 text-primary size-3" />
+              <Check className="text-primary mt-1 size-3" />
               <span className="muted leading-6">{feature}</span>
             </li>
           ))}
@@ -113,6 +134,5 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
 
       <CardFooter className="">{ctaArea}</CardFooter>
     </Card>
-  );
+  )
 }
-

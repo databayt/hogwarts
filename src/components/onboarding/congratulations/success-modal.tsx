@@ -1,135 +1,155 @@
-"use client";
+"use client"
 
-import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
-import { Modal } from '@/components/atom/modal';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { CheckCircle, Users, GraduationCap, Calendar, Settings2, ExternalLink, Sparkles, School, Trophy, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
-import confetti from 'canvas-confetti';
-import { cn } from '@/lib/utils';
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import confetti from "canvas-confetti"
+import { motion } from "framer-motion"
+import {
+  Calendar,
+  CheckCircle,
+  ExternalLink,
+  GraduationCap,
+  School,
+  Settings2,
+  Sparkles,
+  Trophy,
+  Users,
+  Zap,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Modal } from "@/components/atom/modal"
 
 interface SuccessModalProps {
   schoolData: {
-    name: string;
-    domain: string;
-    id: string;
-  };
-  showModal: boolean;
-  setShowModal: Dispatch<SetStateAction<boolean>>;
-  onGoToDashboard: () => void;
+    name: string
+    domain: string
+    id: string
+  }
+  showModal: boolean
+  setShowModal: Dispatch<SetStateAction<boolean>>
+  onGoToDashboard: () => void
 }
 
 export default function SuccessModal({
   schoolData,
   showModal,
   setShowModal,
-  onGoToDashboard
+  onGoToDashboard,
 }: SuccessModalProps) {
-  const [step, setStep] = useState<'celebration' | 'nextSteps'>('celebration');
+  const [step, setStep] = useState<"celebration" | "nextSteps">("celebration")
 
   useEffect(() => {
     if (showModal) {
       // Trigger confetti animation
-      const duration = 3 * 1000;
-      const animationEnd = Date.now() + duration;
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000 };
-
-      function randomInRange(min: number, max: number) {
-        return Math.random() * (max - min) + min;
+      const duration = 3 * 1000
+      const animationEnd = Date.now() + duration
+      const defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 100000,
       }
 
-      const interval: any = setInterval(function() {
-        const timeLeft = animationEnd - Date.now();
+      function randomInRange(min: number, max: number) {
+        return Math.random() * (max - min) + min
+      }
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now()
 
         if (timeLeft <= 0) {
-          return clearInterval(interval);
+          return clearInterval(interval)
         }
 
-        const particleCount = 50 * (timeLeft / duration);
+        const particleCount = 50 * (timeLeft / duration)
 
         // Confetti from left
         confetti({
           ...defaults,
           particleCount,
           origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          colors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444']
-        });
+          colors: ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"],
+        })
 
         // Confetti from right
         confetti({
           ...defaults,
           particleCount,
           origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          colors: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444']
-        });
-      }, 250);
+          colors: ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"],
+        })
+      }, 250)
 
       // Auto-transition to next steps after animation
       setTimeout(() => {
-        setStep('nextSteps');
-      }, 4000);
+        setStep("nextSteps")
+      }, 4000)
     }
-  }, [showModal]);
+  }, [showModal])
 
   const nextStepsCards = [
     {
       icon: Users,
-      color: 'blue',
-      title: 'Invite Your Team',
-      description: 'Add teachers, staff, and administrators to start collaborating',
+      color: "blue",
+      title: "Invite Your Team",
+      description:
+        "Add teachers, staff, and administrators to start collaborating",
     },
     {
       icon: GraduationCap,
-      color: 'purple',
-      title: 'Add Students',
-      description: 'Import student data or add them individually to get started',
+      color: "purple",
+      title: "Add Students",
+      description:
+        "Import student data or add them individually to get started",
     },
     {
       icon: Calendar,
-      color: 'green',
-      title: 'Set Up Classes',
-      description: 'Create class schedules, assign teachers, and organize subjects',
+      color: "green",
+      title: "Set Up Classes",
+      description:
+        "Create class schedules, assign teachers, and organize subjects",
     },
     {
       icon: Settings2,
-      color: 'orange',
-      title: 'Configure Settings',
-      description: 'Customize your school preferences, policies, and branding',
+      color: "orange",
+      title: "Configure Settings",
+      description: "Customize your school preferences, policies, and branding",
     },
-  ];
+  ]
 
   return (
     <Modal
       showModal={showModal}
       setShowModal={setShowModal}
-      className="max-w-full h-full md:max-w-full md:h-full md:rounded-none"
-      preventDefaultClose={step === 'celebration'}
+      className="h-full max-w-full md:h-full md:max-w-full md:rounded-none"
+      preventDefaultClose={step === "celebration"}
     >
-      <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="from-primary/5 via-background to-secondary/5 relative h-screen w-full overflow-hidden bg-gradient-to-br">
         {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="bg-primary/10 absolute -top-40 -right-40 h-80 w-80 rounded-full blur-3xl" />
+          <div className="bg-secondary/10 absolute -bottom-40 -left-40 h-80 w-80 rounded-full blur-3xl" />
+          <div className="bg-primary/5 absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 md:p-12">
-          {step === 'celebration' ? (
+        <div className="relative z-10 flex h-full flex-col items-center justify-center p-6 md:p-12">
+          {step === "celebration" ? (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-center max-w-2xl"
+              className="max-w-2xl text-center"
             >
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
-                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-chart-2 to-chart-2 rounded-full mb-8 shadow-2xl"
+                className="from-chart-2 to-chart-2 mb-8 inline-flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br shadow-2xl"
               >
-                <CheckCircle className="w-20 h-20 text-white" />
+                <CheckCircle className="h-20 w-20 text-white" />
               </motion.div>
 
               <motion.div
@@ -137,13 +157,13 @@ export default function SuccessModal({
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <h1 className="from-primary to-secondary mb-4 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent md:text-7xl">
                   Congratulations!
                 </h1>
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <Sparkles className="w-6 h-6 text-chart-4" />
-                  <Trophy className="w-8 h-8 text-chart-4" />
-                  <Sparkles className="w-6 h-6 text-chart-4" />
+                <div className="mb-6 flex items-center justify-center gap-2">
+                  <Sparkles className="text-chart-4 h-6 w-6" />
+                  <Trophy className="text-chart-4 h-8 w-8" />
+                  <Sparkles className="text-chart-4 h-6 w-6" />
                 </div>
                 <h2 className="text-muted-foreground mb-2">
                   {schoolData.name}
@@ -157,10 +177,10 @@ export default function SuccessModal({
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="mt-12 p-6 bg-primary/10 backdrop-blur-sm rounded-2xl border border-primary/20"
+                className="bg-primary/10 border-primary/20 mt-12 rounded-2xl border p-6 backdrop-blur-sm"
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <School className="w-5 h-5 text-primary" />
+                <div className="mb-2 flex items-center gap-3">
+                  <School className="text-primary h-5 w-5" />
                   <p className="muted">Your school's portal:</p>
                 </div>
                 <h3 className="text-primary">
@@ -175,11 +195,11 @@ export default function SuccessModal({
               transition={{ duration: 0.5 }}
               className="w-full max-w-6xl"
             >
-              <div className="text-center mb-12">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mb-4">
-                  <Zap className="w-10 h-10 text-white" />
+              <div className="mb-12 text-center">
+                <div className="from-primary to-secondary mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br">
+                  <Zap className="h-10 w-10 text-white" />
                 </div>
-                <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                <h2 className="mb-4 text-4xl font-bold md:text-5xl">
                   Let's Get Started!
                 </h2>
                 <p className="lead text-muted-foreground">
@@ -187,7 +207,7 @@ export default function SuccessModal({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
                 {nextStepsCards.map((card, index) => (
                   <motion.div
                     key={card.title}
@@ -196,24 +216,28 @@ export default function SuccessModal({
                     transition={{ delay: index * 0.1 }}
                   >
                     <Card
-                      className="p-8 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 border-2 hover:border-primary/30"
+                      className="hover:border-primary/30 cursor-pointer border-2 p-8 transition-all duration-300 hover:scale-105 hover:shadow-xl"
                       onClick={onGoToDashboard}
                     >
                       <div className="flex items-start gap-4">
-                        <div className={cn(
-                          "p-3 rounded-xl",
-                          card.color === 'blue' && "bg-chart-1/10",
-                          card.color === 'purple' && "bg-chart-3/10",
-                          card.color === 'green' && "bg-chart-2/10",
-                          card.color === 'orange' && "bg-chart-1/10"
-                        )}>
-                          <card.icon className={cn(
-                            "w-8 h-8",
-                            card.color === 'blue' && "text-chart-1",
-                            card.color === 'purple' && "text-chart-3",
-                            card.color === 'green' && "text-chart-2",
-                            card.color === 'orange' && "text-chart-1"
-                          )} />
+                        <div
+                          className={cn(
+                            "rounded-xl p-3",
+                            card.color === "blue" && "bg-chart-1/10",
+                            card.color === "purple" && "bg-chart-3/10",
+                            card.color === "green" && "bg-chart-2/10",
+                            card.color === "orange" && "bg-chart-1/10"
+                          )}
+                        >
+                          <card.icon
+                            className={cn(
+                              "h-8 w-8",
+                              card.color === "blue" && "text-chart-1",
+                              card.color === "purple" && "text-chart-3",
+                              card.color === "green" && "text-chart-2",
+                              card.color === "orange" && "text-chart-1"
+                            )}
+                          />
                         </div>
                         <div className="flex-1">
                           <h4 className="mb-2">{card.title}</h4>
@@ -231,7 +255,7 @@ export default function SuccessModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="flex flex-col md:flex-row gap-4 justify-center"
+                className="flex flex-col justify-center gap-4 md:flex-row"
               >
                 <Button
                   variant="outline"
@@ -244,10 +268,10 @@ export default function SuccessModal({
                 <Button
                   size="lg"
                   onClick={onGoToDashboard}
-                  className="px-8 py-6 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                  className="from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 gap-2 bg-gradient-to-r px-8 py-6"
                 >
                   Go to School Dashboard
-                  <ExternalLink className="w-5 h-5" />
+                  <ExternalLink className="h-5 w-5" />
                 </Button>
               </motion.div>
             </motion.div>
@@ -255,5 +279,5 @@ export default function SuccessModal({
         </div>
       </div>
     </Modal>
-  );
+  )
 }

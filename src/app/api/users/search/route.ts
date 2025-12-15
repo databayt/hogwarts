@@ -47,8 +47,9 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { getTenantContext } from "@/lib/tenant-context"
+
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // WHY: User data changes constantly
 export const dynamic = "force-dynamic"
@@ -61,7 +62,10 @@ export async function GET(request: NextRequest) {
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return NextResponse.json({ error: "Missing school context" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing school context" },
+        { status: 400 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -93,14 +97,11 @@ export async function GET(request: NextRequest) {
         role: true,
       },
       take: limit,
-      orderBy: [
-        { username: "asc" },
-        { email: "asc" },
-      ],
+      orderBy: [{ username: "asc" }, { email: "asc" }],
     })
 
     // Map to consistent format
-    const formattedUsers = users.map(user => ({
+    const formattedUsers = users.map((user) => ({
       id: user.id,
       username: user.username,
       email: user.email,

@@ -1,54 +1,225 @@
 ---
 title: "Prettier"
-description: "Documentation for Prettier"
+description: "Code formatting with shadcn/ui patterns, import ordering, and Tailwind class sorting"
 ---
 
 ## Prettier
 
-We follow the shadcn/ui formatting style: opinionated, minimal config, integrates with Tailwind and the component patterns in `@/components/ui`.
+We use Prettier with shadcn/ui's official formatting patterns for consistent, beautiful code across the entire codebase.
 
-### Config
+### Configuration
 
-Create `.prettierrc` in the repo root:
+Our configuration follows [shadcn/ui's prettier.config.cjs](https://github.com/shadcn-ui/ui/blob/main/prettier.config.cjs):
 
-```json
-{
-  "semi": false,
-  "singleQuote": true,
-  "printWidth": 100,
-  "trailingComma": "all",
-  "plugins": [
-    "prettier-plugin-tailwindcss"
-  ]
+```js
+// prettier.config.js
+/** @type {import('prettier').Config} */
+module.exports = {
+  // shadcn/ui official patterns
+  semi: false,
+  singleQuote: false,
+  trailingComma: "es5",
+
+  // Standard settings
+  tabWidth: 2,
+  printWidth: 80,
+  bracketSpacing: true,
+  endOfLine: "lf",
+
+  // Import ordering (shadcn/ui pattern)
+  importOrder: [
+    "^(react/(.*)$)|^(react$)",
+    "^(next/(.*)$)|^(next$)",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^types$",
+    "^@/env(.*)$",
+    "^@/types/(.*)$",
+    "^@/config/(.*)$",
+    "^@/lib/(.*)$",
+    "^@/hooks/(.*)$",
+    "^@/components/ui/(.*)$",
+    "^@/components/(.*)$",
+    "^@/styles/(.*)$",
+    "^@/app/(.*)$",
+    "",
+    "^[./]",
+  ],
+  importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
+
+  // Plugins (order matters: tailwind must be last)
+  plugins: [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss",
+  ],
 }
 ```
 
-Install dependencies:
+### Key Differences from Default
+
+| Option          | shadcn/ui | Default | Why                                        |
+| --------------- | --------- | ------- | ------------------------------------------ |
+| `semi`          | `false`   | `true`  | Cleaner code, matches shadcn/ui components |
+| `trailingComma` | `"es5"`   | `"all"` | Better compatibility, smaller diffs        |
+
+### Commands
 
 ```bash
-pnpm add -D prettier prettier-plugin-tailwindcss
+pnpm format           # Format entire project
+pnpm format:check     # Check formatting (CI)
+pnpm format:staged    # Format staged files only
+pnpm format:cache     # Format with caching (faster)
 ```
 
-Ignore files in `.prettierignore`:
+### Import Ordering
+
+Imports are automatically sorted into logical groups:
+
+```typescript
+// 1. React & Next.js
+import * as React from "react"
+import { useCallback, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+// 2. Third-party packages
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+// 3. Internal imports (grouped by type)
+import { env } from "@/env"
+import type { Student } from "@/types/student"
+import { db } from "@/lib/db"
+import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { StudentForm } from "@/components/students/form"
+
+// 4. Relative imports
+import { localHelper } from "./helpers"
+```
+
+### Tailwind Class Sorting
+
+Classes are automatically sorted by Tailwind conventions:
+
+```tsx
+// Before
+<div className="p-4 flex bg-blue-500 items-center text-white">
+
+// After (automatically sorted)
+<div className="flex items-center bg-blue-500 p-4 text-white">
+```
+
+### Plugins
+
+| Plugin                                                                                       | Purpose                                      |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| [@ianvs/prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports) | Intelligent import sorting with regex groups |
+| [prettier-plugin-tailwindcss](https://github.com/tailwindlabs/prettier-plugin-tailwindcss)   | Sorts Tailwind CSS classes                   |
+
+**Important**: Tailwind plugin must be **last** in the plugins array.
+
+### ESLint Integration
+
+We use `eslint-config-prettier` to disable conflicting ESLint rules:
+
+```js
+// eslint.config.mjs
+import eslintConfigPrettier from "eslint-config-prettier"
+
+export default [
+  // ... other configs
+  eslintConfigPrettier, // Must be last
+]
+```
+
+### IDE Setup
+
+#### VS Code
+
+1. Install [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+2. Add to `.vscode/settings.json`:
+
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "prettier.requireConfig": true
+}
+```
+
+#### WebStorm
+
+1. **Settings** > **Languages & Frameworks** > **JavaScript** > **Prettier**
+2. Enable "On save" and "On 'Reformat Code' action"
+3. Set Prettier package to `node_modules/prettier`
+
+### Pre-commit Hook
+
+Formatting runs automatically on staged files:
+
+```bash
+# .husky/pre-commit
+npx pretty-quick --staged
+```
+
+### Ignored Files
 
 ```text
+# .prettierignore
+dist
 node_modules
 .next
+build
+.contentlayer
 pnpm-lock.yaml
-dist
 ```
 
-### Usage
+### Troubleshooting
 
-```bash
-pnpm prettier --write .
+#### Import sorting not working
+
+Ensure plugins are in correct order (sort-imports first, tailwindcss last):
+
+```js
+plugins: [
+  "@ianvs/prettier-plugin-sort-imports", // First
+  "prettier-plugin-tailwindcss", // Last
+]
 ```
 
-### Conventions
+#### VS Code not formatting
 
-- Match shadcn/ui: no semicolons, single quotes, Tailwind classes sorted
-- Keep files small and composable; one component per file
-- Co-locate component implementations under `@/components/ui` and feature content under `@/components/...`
+1. Check Prettier extension is installed
+2. Verify `editor.defaultFormatter` is set to `esbenp.prettier-vscode`
+3. Ensure `prettier.config.js` exists in project root
 
+#### Different formatting locally vs CI
 
+Lock Prettier version in `package.json`:
 
+```json
+{
+  "devDependencies": {
+    "prettier": "3.7.4"
+  }
+}
+```
+
+### Agent
+
+Use `/agents/prettier` for:
+
+- Configuration optimization
+- Plugin troubleshooting
+- ESLint conflict resolution
+- IDE integration help
+- CI/CD setup
+
+### Resources
+
+- [Prettier Options](https://prettier.io/docs/options)
+- [shadcn/ui prettier.config.cjs](https://github.com/shadcn-ui/ui/blob/main/prettier.config.cjs)
+- [@ianvs/prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports)
+- [eslint-config-prettier](https://github.com/prettier/eslint-config-prettier)

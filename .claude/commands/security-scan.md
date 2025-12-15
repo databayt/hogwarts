@@ -11,6 +11,7 @@ Comprehensive security audit:
 5. Check for exposed secrets: git log -p | grep -E "(api[_-]?key|secret|password)"
 
 Report:
+
 - Critical vulnerabilities
 - Medium vulnerabilities
 - Recommendations

@@ -1,8 +1,8 @@
-import ClassSettingsContent from '@/components/platform/classes/settings/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ClassSettingsContent from "@/components/platform/classes/settings/content"
 
-export const metadata = { title: 'Dashboard: Class Settings' }
+export const metadata = { title: "Dashboard: Class Settings" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

@@ -1,6 +1,6 @@
-import CardsContent from "@/components/platform/dashboard/card-showcase"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import CardsContent from "@/components/platform/dashboard/card-showcase"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

@@ -1,8 +1,9 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
 import {
   Sidebar,
   SidebarContent,
@@ -12,17 +13,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { dashboardNav } from "@/components/template/dashboard-sidebar/config";
-import { Icons } from "@/components/template/dashboard-sidebar/icons";
+} from "@/components/ui/sidebar"
+import { dashboardNav } from "@/components/template/dashboard-sidebar/config"
+import { Icons } from "@/components/template/dashboard-sidebar/icons"
 
-export default function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname();
-  const { setOpenMobile } = useSidebar();
+export default function DashboardSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
 
   const handleLinkClick = React.useCallback(() => {
-    setOpenMobile(false);
-  }, [setOpenMobile]);
+    setOpenMobile(false)
+  }, [setOpenMobile])
 
   return (
     <Sidebar {...props} className="w-56 pt-14" collapsible="offcanvas">
@@ -43,26 +46,30 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
         <SidebarGroup className="p-2">
           <SidebarMenu className="space-y-1">
             {dashboardNav.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === item.href
               return (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={isActive} size="sm">
-                    <Link href={item.href} className="muted" onClick={handleLinkClick}>
+                    <Link
+                      href={item.href}
+                      className="muted"
+                      onClick={handleLinkClick}
+                    >
                       <span className="mr-2 inline-flex size-4 items-center justify-center">
                         {(() => {
-                          const Icon = Icons[item.icon];
-                          return Icon ? <Icon className="h-4 w-4" /> : null;
+                          const Icon = Icons[item.icon]
+                          return Icon ? <Icon className="h-4 w-4" /> : null
                         })()}
                       </span>
                       {item.title}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              );
+              )
             })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  );
+  )
 }

@@ -1,29 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useTransition, useState, useEffect } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Loader2, Mail, Shield, Trash2, UserPlus, Users } from "lucide-react"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,18 +16,45 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { UserPlus, Trash2, Loader2, Users, Mail, Shield } from "lucide-react"
-import { SuccessToast, ErrorToast } from "@/components/atom/toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
+
 import {
   assignSubjectTeacher,
-  removeSubjectTeacher,
-  getClassSubjectTeachers,
   getAvailableTeachersForClass,
+  getClassSubjectTeachers,
+  removeSubjectTeacher,
   type ClassTeacherRow,
 } from "./actions"
 import { classTeacherRoles, type ClassTeacherRole } from "./validation"
-import type { Locale } from "@/components/internationalization/config"
 
 interface SubjectTeachersProps {
   classId: string
@@ -67,7 +75,8 @@ export function SubjectTeachers({
   >([])
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [selectedTeacherId, setSelectedTeacherId] = useState("")
-  const [selectedRole, setSelectedRole] = useState<ClassTeacherRole>("ASSISTANT")
+  const [selectedRole, setSelectedRole] =
+    useState<ClassTeacherRole>("ASSISTANT")
   const [isLoadingTeachers, setIsLoadingTeachers] = useState(false)
 
   const isRTL = lang === "ar"
@@ -78,9 +87,7 @@ export function SubjectTeachers({
       ? "المعلمون المعينون لهذا الفصل"
       : "Teachers assigned to this class",
     addTeacher: isRTL ? "إضافة معلم" : "Add Teacher",
-    noTeachers: isRTL
-      ? "لم يتم تعيين معلمين بعد"
-      : "No teachers assigned yet",
+    noTeachers: isRTL ? "لم يتم تعيين معلمين بعد" : "No teachers assigned yet",
     selectTeacher: isRTL ? "اختر معلماً" : "Select a teacher",
     selectRole: isRTL ? "اختر الدور" : "Select role",
     role: isRTL ? "الدور" : "Role",
@@ -94,8 +101,12 @@ export function SubjectTeachers({
     confirmRemoveDescription: isRTL
       ? "هل أنت متأكد من إزالة هذا المعلم من الفصل؟"
       : "Are you sure you want to remove this teacher from the class?",
-    assignSuccess: isRTL ? "تم تعيين المعلم بنجاح" : "Teacher assigned successfully",
-    removeSuccess: isRTL ? "تم إزالة المعلم بنجاح" : "Teacher removed successfully",
+    assignSuccess: isRTL
+      ? "تم تعيين المعلم بنجاح"
+      : "Teacher assigned successfully",
+    removeSuccess: isRTL
+      ? "تم إزالة المعلم بنجاح"
+      : "Teacher removed successfully",
     noAvailableTeachers: isRTL
       ? "لا يوجد معلمون متاحون"
       : "No available teachers",
@@ -204,9 +215,7 @@ export function SubjectTeachers({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t.addTeacher}</DialogTitle>
-              <DialogDescription>
-                {t.description}
-              </DialogDescription>
+              <DialogDescription>{t.description}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -214,7 +223,9 @@ export function SubjectTeachers({
                 {isLoadingTeachers ? (
                   <Skeleton className="h-10 w-full" />
                 ) : availableTeachers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t.noAvailableTeachers}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t.noAvailableTeachers}
+                  </p>
                 ) : (
                   <Select
                     value={selectedTeacherId}
@@ -230,7 +241,7 @@ export function SubjectTeachers({
                           <div className="flex flex-col">
                             <span>{teacher.name}</span>
                             {teacher.email && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 {teacher.email}
                               </span>
                             )}
@@ -288,7 +299,7 @@ export function SubjectTeachers({
       </CardHeader>
       <CardContent>
         {teachers.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
+          <p className="text-muted-foreground py-8 text-center text-sm">
             {t.noTeachers}
           </p>
         ) : (
@@ -313,11 +324,12 @@ export function SubjectTeachers({
                       <p className="font-medium">{teacher.teacherName}</p>
                       <Badge variant={getRoleBadgeVariant(teacher.role)}>
                         <Shield className="mr-1 h-3 w-3" />
-                        {t.roles[teacher.role as ClassTeacherRole] || teacher.role}
+                        {t.roles[teacher.role as ClassTeacherRole] ||
+                          teacher.role}
                       </Badge>
                     </div>
                     {teacher.teacherEmail && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <p className="text-muted-foreground flex items-center gap-1 text-xs">
                         <Mail className="h-3 w-3" />
                         {teacher.teacherEmail}
                       </p>

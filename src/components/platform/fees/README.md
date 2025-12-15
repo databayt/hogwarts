@@ -7,6 +7,7 @@ The Fees module provides comprehensive financial management for educational inst
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 💰 Configure complex fee structures (course-wise, category-wise)
 - 📋 Create and manage fee components (tuition, lab, library, etc.)
 - 💳 Process payments through multiple channels
@@ -18,6 +19,7 @@ The Fees module provides comprehensive financial management for educational inst
 - 📧 Automated payment reminders and notifications
 
 ### What Accountants Can Do
+
 - ✅ Full access to fee management and collection
 - ✅ Generate financial reports and analytics
 - ✅ Process refunds and adjustments
@@ -26,6 +28,7 @@ The Fees module provides comprehensive financial management for educational inst
 - ❌ Cannot modify school structure
 
 ### What Students Can View
+
 - ✅ View their fee structure and payment schedule
 - ✅ Check outstanding dues
 - ✅ Make online payments
@@ -34,6 +37,7 @@ The Fees module provides comprehensive financial management for educational inst
 - ❌ Cannot see other students' financial data
 
 ### What Parents Can Do
+
 - ✅ View child's fee details
 - ✅ Make online payments
 - ✅ Download receipts and statements
@@ -42,17 +46,21 @@ The Fees module provides comprehensive financial management for educational inst
 - ❌ Cannot modify fee structure
 
 ### Current Implementation Status
+
 **Planning Stage ⏸️**
 
 **Completed:**
+
 - ⏸️ Fee structure schema design
 - ⏸️ Payment gateway research
 
 **In Progress:**
+
 - 🚧 Fee configuration interface
 - 🚧 Payment processing system
 
 **Planned:**
+
 - ⏸️ Multiple payment gateway integration
 - ⏸️ Automated reminder system
 - ⏸️ Financial reporting dashboard
@@ -64,6 +72,7 @@ The Fees module provides comprehensive financial management for educational inst
 ## Admin Workflows
 
 ### 1. Configure Fee Structure
+
 **Prerequisites:** Academic year and courses configured
 
 1. Navigate to `/fees/structure`
@@ -88,6 +97,7 @@ The Fees module provides comprehensive financial management for educational inst
 6. System applies to enrolled students
 
 ### 2. Collect Fee Payment
+
 **Prerequisites:** Fee structure assigned to student
 
 1. Navigate to `/fees/collection`
@@ -117,6 +127,7 @@ The Fees module provides comprehensive financial management for educational inst
    - Update student ledger
 
 ### 3. Manage Outstanding Fees
+
 **Prerequisites:** Payment deadlines configured
 
 1. Navigate to `/fees/outstanding`
@@ -143,6 +154,7 @@ The Fees module provides comprehensive financial management for educational inst
    - Generate updated statements
 
 ### 4. Process Scholarships/Discounts
+
 **Prerequisites:** Scholarship criteria defined
 
 1. Navigate to `/fees/scholarships`
@@ -165,6 +177,7 @@ The Fees module provides comprehensive financial management for educational inst
    - Renewal processing
 
 ### 5. Handle Refunds
+
 **Prerequisites:** Refund policy configured
 
 1. Navigate to `/fees/refunds`
@@ -185,6 +198,7 @@ The Fees module provides comprehensive financial management for educational inst
    - Notify student/parent
 
 ### 6. Generate Financial Reports
+
 1. Navigate to `/fees/reports`
 2. Select report type:
    - **Collection Report**: Daily/monthly collection
@@ -209,34 +223,40 @@ The Fees module provides comprehensive financial management for educational inst
 ## Integration with Other Features
 
 ### Links to Students Module
+
 - Fee structure assignment on enrollment
 - Student account ledger maintenance
 - Outstanding fees blocking exam hall tickets
 - Graduation clearance certificate
 
 ### Links to Admission Module
+
 - Admission fee collection
 - Fee structure display during admission
 - Payment verification for seat confirmation
 - Refund on admission cancellation
 
 ### Links to Exams Module
+
 - Fee clearance for exam eligibility
 - Exam fee collection
 - Re-exam fee processing
 - Certificate fee collection
 
 ### Links to Library Module
+
 - Library fine integration
 - Book damage charges
 - Library clearance for graduation
 
 ### Links to Transport Module
+
 - Route-based fee calculation
 - Monthly transport fee collection
 - Route change fee adjustment
 
 ### Links to Hostel Module
+
 - Room-based fee structure
 - Mess fee collection
 - Security deposit management
@@ -251,6 +271,7 @@ The Fees module provides comprehensive financial management for educational inst
 Complete fee management system with flexible structure configuration, multi-channel payment processing, and comprehensive financial reporting.
 
 ### Files and Responsibilities
+
 - `content.tsx`: Fee dashboard with statistics
 - `structure/`: Fee structure management
   - `list.tsx`: Structure listing
@@ -280,12 +301,14 @@ Complete fee management system with flexible structure configuration, multi-chan
 - `utils.ts`: Calculation utilities
 
 ### Data Flow
+
 1. Structure configuration → Student assignment → Payment schedule
 2. Payment collection → Receipt generation → Ledger update
 3. Outstanding calculation → Reminder sending → Late fee application
 4. Report generation → Export → Financial analysis
 
 ### Multi-Tenant Safety
+
 - Every fee record includes `schoolId`
 - Payment receipts scoped by tenant
 - Financial data strictly isolated
@@ -456,31 +479,37 @@ enum RefundStatus {
 This feature uses the platform's standard technology stack with financial-specific additions:
 
 ### Core Framework
+
 - **Next.js 15.4+** - Server Components for secure financial operations
 - **React 19+** - Server Actions for payment processing
 - **TypeScript** - Type-safe financial calculations
 
 ### Payment Integration
+
 - **Stripe** - International payment processing
 - **Razorpay/PayU** - Local payment methods
 - **Bank APIs** - Direct bank integration
 
 ### Financial Libraries
+
 - **decimal.js** - Precise monetary calculations
 - **currency.js** - Multi-currency support
 - **date-fns** - Payment schedule calculations
 
 ### Reporting
+
 - **React PDF** - Receipt and statement generation
 - **ExcelJS** - Financial report exports
 - **Recharts** - Financial analytics charts
 
 ### Security
+
 - **PCI DSS Compliance** - Card data handling
 - **Encryption** - Sensitive data protection
 - **Audit Logging** - Financial transaction tracking
 
 ### Server Actions Pattern
+
 ```typescript
 "use server"
 export async function collectPayment(input: FormData) {
@@ -496,8 +525,8 @@ export async function collectPayment(input: FormData) {
         schoolId,
         receiptNumber: await generateReceiptNumber(schoolId),
         collectedBy: session.user.id,
-        status: 'SUCCESS'
-      }
+        status: "SUCCESS",
+      },
     })
 
     // Update student fee account
@@ -507,8 +536,8 @@ export async function collectPayment(input: FormData) {
         paidAmount: { increment: validated.amount },
         outstandingAmount: { decrement: validated.amount },
         status: calculateFeeStatus(studentFee),
-        lastPaymentDate: new Date()
-      }
+        lastPaymentDate: new Date(),
+      },
     })
 
     // Generate receipt
@@ -520,7 +549,7 @@ export async function collectPayment(input: FormData) {
   // Send receipt email
   await sendPaymentReceipt(result.receipt)
 
-  revalidatePath('/fees/collection')
+  revalidatePath("/fees/collection")
   return { success: true, receiptNumber: result.payment.receiptNumber }
 }
 ```

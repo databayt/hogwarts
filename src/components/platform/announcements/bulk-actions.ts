@@ -3,26 +3,25 @@
  * Enables efficient management of multiple announcements at once
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import {
-  getAuthContext,
-  assertAnnouncementPermission,
-} from "./authorization";
-import { verifyAnnouncementOwnership } from "./queries";
-import type { ActionResponse } from "./actions";
-import type { Prisma } from "@prisma/client";
+import { revalidatePath, revalidateTag } from "next/cache"
+import { auth } from "@/auth"
+import type { Prisma } from "@prisma/client"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResponse } from "./actions"
+import { assertAnnouncementPermission, getAuthContext } from "./authorization"
+import { verifyAnnouncementOwnership } from "./queries"
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const ANNOUNCEMENTS_PATH = "/announcements";
+const ANNOUNCEMENTS_PATH = "/announcements"
 
 // ============================================================================
 // Validation Schemas
@@ -30,7 +29,7 @@ const ANNOUNCEMENTS_PATH = "/announcements";
 
 const bulkIdsSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(100),
-});
+})
 
 // ============================================================================
 // Bulk Mutation Functions
@@ -41,41 +40,44 @@ const bulkIdsSchema = z.object({
  * @param input - Array of announcement IDs
  * @returns Action response with count of published announcements
  */
-export async function bulkPublishAnnouncements(
-  input: { ids: string[] }
-): Promise<ActionResponse<{ count: number }>> {
+export async function bulkPublishAnnouncements(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { ids } = bulkIdsSchema.parse(input);
+    const { ids } = bulkIdsSchema.parse(input)
 
     // Check bulk action permission
     try {
-      assertAnnouncementPermission(authContext, "bulk_action");
+      assertAnnouncementPermission(authContext, "bulk_action")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized for bulk actions",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized for bulk actions",
+      }
     }
 
     // Verify announcements exist and belong to school
-    const validIds = await verifyAnnouncementOwnership(schoolId, ids);
+    const validIds = await verifyAnnouncementOwnership(schoolId, ids)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Bulk update announcements
@@ -89,30 +91,33 @@ export async function bulkPublishAnnouncements(
         // Will add publishedAt after schema migration
         // publishedAt: new Date(),
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkPublishAnnouncements] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to publish announcements",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to publish announcements",
+    }
   }
 }
 
@@ -121,41 +126,44 @@ export async function bulkPublishAnnouncements(
  * @param input - Array of announcement IDs
  * @returns Action response with count of unpublished announcements
  */
-export async function bulkUnpublishAnnouncements(
-  input: { ids: string[] }
-): Promise<ActionResponse<{ count: number }>> {
+export async function bulkUnpublishAnnouncements(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { ids } = bulkIdsSchema.parse(input);
+    const { ids } = bulkIdsSchema.parse(input)
 
     // Check bulk action permission
     try {
-      assertAnnouncementPermission(authContext, "bulk_action");
+      assertAnnouncementPermission(authContext, "bulk_action")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized for bulk actions",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized for bulk actions",
+      }
     }
 
     // Verify announcements exist and belong to school
-    const validIds = await verifyAnnouncementOwnership(schoolId, ids);
+    const validIds = await verifyAnnouncementOwnership(schoolId, ids)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Bulk update announcements
@@ -169,30 +177,33 @@ export async function bulkUnpublishAnnouncements(
         // Will add publishedAt after schema migration
         // publishedAt: null,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkUnpublishAnnouncements] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to unpublish announcements",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to unpublish announcements",
+    }
   }
 }
 
@@ -201,41 +212,44 @@ export async function bulkUnpublishAnnouncements(
  * @param input - Array of announcement IDs
  * @returns Action response with count of deleted announcements
  */
-export async function bulkDeleteAnnouncements(
-  input: { ids: string[] }
-): Promise<ActionResponse<{ count: number }>> {
+export async function bulkDeleteAnnouncements(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { ids } = bulkIdsSchema.parse(input);
+    const { ids } = bulkIdsSchema.parse(input)
 
     // Check bulk action permission
     try {
-      assertAnnouncementPermission(authContext, "bulk_action");
+      assertAnnouncementPermission(authContext, "bulk_action")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized for bulk actions",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized for bulk actions",
+      }
     }
 
     // Verify announcements exist and belong to school
-    const validIds = await verifyAnnouncementOwnership(schoolId, ids);
+    const validIds = await verifyAnnouncementOwnership(schoolId, ids)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Bulk delete announcements (using deleteMany for tenant safety)
@@ -244,30 +258,33 @@ export async function bulkDeleteAnnouncements(
         id: { in: validIds },
         schoolId,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkDeleteAnnouncements] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete announcements",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete announcements",
+    }
   }
 }
 
@@ -276,21 +293,22 @@ export async function bulkDeleteAnnouncements(
  * @param input - Array of announcement IDs and priority level
  * @returns Action response with count of updated announcements
  */
-export async function bulkUpdatePriority(
-  input: { ids: string[]; priority: "low" | "normal" | "high" | "urgent" }
-): Promise<ActionResponse<{ count: number }>> {
+export async function bulkUpdatePriority(input: {
+  ids: string[]
+  priority: "low" | "normal" | "high" | "urgent"
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
@@ -299,23 +317,26 @@ export async function bulkUpdatePriority(
         ids: z.array(z.string().min(1)).min(1).max(100),
         priority: z.enum(["low", "normal", "high", "urgent"]),
       })
-      .parse(input);
+      .parse(input)
 
     // Check bulk action permission
     try {
-      assertAnnouncementPermission(authContext, "bulk_action");
+      assertAnnouncementPermission(authContext, "bulk_action")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized for bulk actions",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized for bulk actions",
+      }
     }
 
     // Verify announcements exist and belong to school
-    const validIds = await verifyAnnouncementOwnership(schoolId, validated.ids);
+    const validIds = await verifyAnnouncementOwnership(schoolId, validated.ids)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Bulk update priority
@@ -327,30 +348,31 @@ export async function bulkUpdatePriority(
       data: {
         priority: validated.priority,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkUpdatePriority] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update priority",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to update priority",
+    }
   }
 }
 
@@ -359,21 +381,22 @@ export async function bulkUpdatePriority(
  * @param input - Array of announcement IDs and pin flag
  * @returns Action response with count of updated announcements
  */
-export async function bulkTogglePin(
-  input: { ids: string[]; pinned: boolean }
-): Promise<ActionResponse<{ count: number }>> {
+export async function bulkTogglePin(input: {
+  ids: string[]
+  pinned: boolean
+}): Promise<ActionResponse<{ count: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
@@ -382,23 +405,26 @@ export async function bulkTogglePin(
         ids: z.array(z.string().min(1)).min(1).max(100),
         pinned: z.boolean(),
       })
-      .parse(input);
+      .parse(input)
 
     // Check bulk action permission
     try {
-      assertAnnouncementPermission(authContext, "bulk_action");
+      assertAnnouncementPermission(authContext, "bulk_action")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized for bulk actions",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized for bulk actions",
+      }
     }
 
     // Verify announcements exist and belong to school
-    const validIds = await verifyAnnouncementOwnership(schoolId, validated.ids);
+    const validIds = await verifyAnnouncementOwnership(schoolId, validated.ids)
 
     if (validIds.length === 0) {
-      return { success: false, error: "No valid announcements found" };
+      return { success: false, error: "No valid announcements found" }
     }
 
     // Bulk update pinned status
@@ -410,29 +436,30 @@ export async function bulkTogglePin(
       data: {
         pinned: validated.pinned,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { count: result.count } };
+    return { success: true, data: { count: result.count } }
   } catch (error) {
     console.error("[bulkTogglePin] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle pin status",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to toggle pin status",
+    }
   }
 }

@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
+import { Calendar as CalendarIcon, Clock, MapPin } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Calendar as CalendarIcon, Clock, MapPin } from "lucide-react"
+
 import type { CardSize } from "./types"
 
 interface CalendarCardProps {
@@ -95,7 +97,7 @@ export function CalendarCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -120,20 +122,20 @@ export function CalendarCard({
 
             {/* Event Details */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 muted">
+              <div className="muted flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4 shrink-0" />
                 <span>{date}</span>
               </div>
 
               {time && (
-                <div className="flex items-center gap-2 muted">
+                <div className="muted flex items-center gap-2">
                   <Clock className="h-4 w-4 shrink-0" />
                   <span>{time}</span>
                 </div>
               )}
 
               {location && (
-                <div className="flex items-center gap-2 muted">
+                <div className="muted flex items-center gap-2">
                   <MapPin className="h-4 w-4 shrink-0" />
                   <span>{location}</span>
                 </div>
@@ -141,9 +143,7 @@ export function CalendarCard({
             </div>
 
             {/* Description */}
-            {description && (
-              <p className="muted line-clamp-2">{description}</p>
-            )}
+            {description && <p className="muted line-clamp-2">{description}</p>}
           </div>
         )}
       </CardContent>

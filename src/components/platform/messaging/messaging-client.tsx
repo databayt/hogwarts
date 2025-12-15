@@ -1,31 +1,33 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
-import type { ConversationDTO, MessageDTO } from "./types"
-import { ConversationList } from "./conversation-list"
-import { ChatInterface, ChatInterfaceSkeleton } from "./chat-interface"
-import { NewConversationDialog } from "./new-conversation-dialog"
-import { NoActiveConversation } from "./empty-state"
-import {
-  sendMessage,
-  editMessage,
-  deleteMessage,
-  addReaction,
-  removeReaction,
-  archiveConversation,
-  markMessageAsRead,
-  markConversationAsRead,
-  pinConversation,
-  muteConversation,
-  unmuteConversation,
-  leaveConversation,
-} from "./actions"
-import { toast } from "@/components/ui/use-toast"
-import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
+import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/use-toast"
+
+import {
+  addReaction,
+  archiveConversation,
+  deleteMessage,
+  editMessage,
+  leaveConversation,
+  markConversationAsRead,
+  markMessageAsRead,
+  muteConversation,
+  pinConversation,
+  removeReaction,
+  sendMessage,
+  unmuteConversation,
+} from "./actions"
+import { ChatInterface, ChatInterfaceSkeleton } from "./chat-interface"
+import { ConversationList } from "./conversation-list"
+import { NoActiveConversation } from "./empty-state"
+import { NewConversationDialog } from "./new-conversation-dialog"
+import type { ConversationDTO, MessageDTO } from "./types"
 
 export interface MessagingClientProps {
   initialConversations: ConversationDTO[]
@@ -43,14 +45,15 @@ export function MessagingClient({
   locale = "en",
 }: MessagingClientProps) {
   const router = useRouter()
-  const [conversations, setConversations] = useState<ConversationDTO[]>(initialConversations)
-  const [activeConversation, setActiveConversation] = useState<ConversationDTO | null>(
-    initialActiveConversation
-  )
+  const [conversations, setConversations] =
+    useState<ConversationDTO[]>(initialConversations)
+  const [activeConversation, setActiveConversation] =
+    useState<ConversationDTO | null>(initialActiveConversation)
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [showNewConversationDialog, setShowNewConversationDialog] = useState(false)
+  const [showNewConversationDialog, setShowNewConversationDialog] =
+    useState(false)
 
   // Connect to Socket.IO
   useEffect(() => {
@@ -78,37 +81,45 @@ export function MessagingClient({
   useEffect(() => {
     if (!isConnected) return
 
-    const unsubscribeConversationNew = socketService.on("conversation:new", (data) => {
-      // Add new conversation to list
-      setConversations(prev => [
-        {
-          id: data.id,
-          schoolId: "",
-          type: data.type as any,
-          title: data.title,
-          avatar: null,
-          directParticipant1Id: null,
-          directParticipant2Id: null,
-          lastMessageAt: new Date(),
-          isArchived: false,
-          participantCount: data.participantIds.length,
-          unreadCount: 0,
-          lastMessage: null,
-          participants: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        ...prev,
-      ])
-    })
+    const unsubscribeConversationNew = socketService.on(
+      "conversation:new",
+      (data) => {
+        // Add new conversation to list
+        setConversations((prev) => [
+          {
+            id: data.id,
+            schoolId: "",
+            type: data.type as any,
+            title: data.title,
+            avatar: null,
+            directParticipant1Id: null,
+            directParticipant2Id: null,
+            lastMessageAt: new Date(),
+            isArchived: false,
+            participantCount: data.participantIds.length,
+            unreadCount: 0,
+            lastMessage: null,
+            participants: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          ...prev,
+        ])
+      }
+    )
 
-    const unsubscribeConversationUpdated = socketService.on("conversation:updated", (data) => {
-      setConversations(prev => prev.map(conv =>
-        conv.id === data.conversationId
-          ? { ...conv, ...data.updates }
-          : conv
-      ))
-    })
+    const unsubscribeConversationUpdated = socketService.on(
+      "conversation:updated",
+      (data) => {
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === data.conversationId
+              ? { ...conv, ...data.updates }
+              : conv
+          )
+        )
+      }
+    )
 
     return () => {
       unsubscribeConversationNew()
@@ -192,14 +203,17 @@ export function MessagingClient({
     const result = await archiveConversation({ conversationId })
 
     if (result.success) {
-      setConversations(prev => prev.filter(c => c.id !== conversationId))
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId))
       if (activeConversation?.id === conversationId) {
         setActiveConversation(null)
         router.push("/messages")
       }
       toast({
         title: locale === "ar" ? "تمت الأرشفة" : "Archived",
-        description: locale === "ar" ? "تم أرشفة المحادثة بنجاح" : "Conversation archived successfully",
+        description:
+          locale === "ar"
+            ? "تم أرشفة المحادثة بنجاح"
+            : "Conversation archived successfully",
       })
     } else {
       toast({
@@ -213,14 +227,17 @@ export function MessagingClient({
     const result = await leaveConversation({ conversationId })
 
     if (result.success) {
-      setConversations(prev => prev.filter(c => c.id !== conversationId))
+      setConversations((prev) => prev.filter((c) => c.id !== conversationId))
       if (activeConversation?.id === conversationId) {
         setActiveConversation(null)
         router.push("/messages")
       }
       toast({
         title: locale === "ar" ? "تم الحذف" : "Deleted",
-        description: locale === "ar" ? "تم حذف المحادثة بنجاح" : "Conversation deleted successfully",
+        description:
+          locale === "ar"
+            ? "تم حذف المحادثة بنجاح"
+            : "Conversation deleted successfully",
       })
     } else {
       toast({
@@ -231,8 +248,10 @@ export function MessagingClient({
   }
 
   const handlePinConversation = async (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId)
-    const currentParticipant = conversation?.participants?.find(p => p.userId === currentUserId)
+    const conversation = conversations.find((c) => c.id === conversationId)
+    const currentParticipant = conversation?.participants?.find(
+      (p) => p.userId === currentUserId
+    )
     const isPinned = currentParticipant?.isPinned ?? false
 
     const result = await pinConversation({
@@ -242,22 +261,36 @@ export function MessagingClient({
 
     if (result.success) {
       // Update local state
-      setConversations(prev => prev.map(c => {
-        if (c.id === conversationId) {
-          return {
-            ...c,
-            participants: c.participants?.map(p =>
-              p.userId === currentUserId ? { ...p, isPinned: !isPinned } : p
-            ),
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === conversationId) {
+            return {
+              ...c,
+              participants: c.participants?.map((p) =>
+                p.userId === currentUserId ? { ...p, isPinned: !isPinned } : p
+              ),
+            }
           }
-        }
-        return c
-      }))
+          return c
+        })
+      )
       toast({
-        title: locale === "ar" ? (isPinned ? "تم إلغاء التثبيت" : "تم التثبيت") : (isPinned ? "Unpinned" : "Pinned"),
-        description: locale === "ar"
-          ? (isPinned ? "تم إلغاء تثبيت المحادثة" : "تم تثبيت المحادثة")
-          : (isPinned ? "Conversation unpinned" : "Conversation pinned"),
+        title:
+          locale === "ar"
+            ? isPinned
+              ? "تم إلغاء التثبيت"
+              : "تم التثبيت"
+            : isPinned
+              ? "Unpinned"
+              : "Pinned",
+        description:
+          locale === "ar"
+            ? isPinned
+              ? "تم إلغاء تثبيت المحادثة"
+              : "تم تثبيت المحادثة"
+            : isPinned
+              ? "Conversation unpinned"
+              : "Conversation pinned",
       })
     } else {
       toast({
@@ -268,8 +301,10 @@ export function MessagingClient({
   }
 
   const handleMuteConversation = async (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId)
-    const currentParticipant = conversation?.participants?.find(p => p.userId === currentUserId)
+    const conversation = conversations.find((c) => c.id === conversationId)
+    const currentParticipant = conversation?.participants?.find(
+      (p) => p.userId === currentUserId
+    )
     const isMuted = currentParticipant?.isMuted ?? false
 
     let result
@@ -281,22 +316,36 @@ export function MessagingClient({
 
     if (result.success) {
       // Update local state
-      setConversations(prev => prev.map(c => {
-        if (c.id === conversationId) {
-          return {
-            ...c,
-            participants: c.participants?.map(p =>
-              p.userId === currentUserId ? { ...p, isMuted: !isMuted } : p
-            ),
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === conversationId) {
+            return {
+              ...c,
+              participants: c.participants?.map((p) =>
+                p.userId === currentUserId ? { ...p, isMuted: !isMuted } : p
+              ),
+            }
           }
-        }
-        return c
-      }))
+          return c
+        })
+      )
       toast({
-        title: locale === "ar" ? (isMuted ? "تم إلغاء الكتم" : "تم الكتم") : (isMuted ? "Unmuted" : "Muted"),
-        description: locale === "ar"
-          ? (isMuted ? "تم إلغاء كتم المحادثة" : "تم كتم المحادثة")
-          : (isMuted ? "Conversation unmuted" : "Conversation muted"),
+        title:
+          locale === "ar"
+            ? isMuted
+              ? "تم إلغاء الكتم"
+              : "تم الكتم"
+            : isMuted
+              ? "Unmuted"
+              : "Muted",
+        description:
+          locale === "ar"
+            ? isMuted
+              ? "تم إلغاء كتم المحادثة"
+              : "تم كتم المحادثة"
+            : isMuted
+              ? "Conversation unmuted"
+              : "Conversation muted",
       })
     } else {
       toast({
@@ -307,11 +356,11 @@ export function MessagingClient({
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-4rem)] bg-background">
+    <div className="bg-background relative flex h-[calc(100vh-4rem)]">
       {/* Mobile/Tablet: Overlay backdrop */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -323,9 +372,9 @@ export function MessagingClient({
       <div
         className={cn(
           // Base styles
-          "flex-shrink-0 bg-background border-r border-border",
+          "bg-background border-border flex-shrink-0 border-r",
           // Mobile: full width overlay OR show when no conversation
-          "fixed md:relative z-50 md:z-0",
+          "fixed z-50 md:relative md:z-0",
           "h-full w-full sm:w-96 md:w-[430px]",
           // Mobile: show sidebar if open OR if no active conversation
           activeConversation
@@ -338,7 +387,7 @@ export function MessagingClient({
         )}
       >
         {/* Close button for mobile/tablet overlay */}
-        <div className="md:hidden absolute top-4 right-4 z-10">
+        <div className="absolute top-4 right-4 z-10 md:hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -368,14 +417,14 @@ export function MessagingClient({
       {/* Desktop: Always visible, takes remaining space */}
       <div
         className={cn(
-          "flex-1 flex flex-col",
+          "flex flex-1 flex-col",
           // Mobile: hide when no active conversation
           !activeConversation && "hidden md:flex"
         )}
       >
         {/* Mobile/Tablet: Menu button to toggle sidebar (only show when conversation is active) */}
         {activeConversation && (
-          <div className="md:hidden border-b border-border px-4 py-3 flex items-center gap-3 bg-background">
+          <div className="border-border bg-background flex items-center gap-3 border-b px-4 py-3 md:hidden">
             <Button
               variant="ghost"
               size="icon"
@@ -384,11 +433,14 @@ export function MessagingClient({
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-foreground truncate">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-foreground truncate font-semibold">
                 {activeConversation.type === "direct"
-                  ? activeConversation.participants?.find(p => p.userId !== currentUserId)?.user?.username || (locale === "ar" ? "مستخدم" : "User")
-                  : activeConversation.title || (locale === "ar" ? "محادثة" : "Conversation")}
+                  ? activeConversation.participants?.find(
+                      (p) => p.userId !== currentUserId
+                    )?.user?.username || (locale === "ar" ? "مستخدم" : "User")
+                  : activeConversation.title ||
+                    (locale === "ar" ? "محادثة" : "Conversation")}
               </h2>
             </div>
           </div>

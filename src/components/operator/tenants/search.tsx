@@ -1,41 +1,42 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useQueryState, parseAsString } from "nuqs";
-import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { X } from "lucide-react"
+import { parseAsString, useQueryState } from "nuqs"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export function TenantsSearch() {
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState("")
   const [search, setSearch] = useQueryState(
     "search",
     parseAsString
       .withOptions({ shallow: false, history: "replace", clearOnDefault: true })
       .withDefault("")
-  );
+  )
 
   React.useEffect(() => {
-    setValue(search ?? "");
+    setValue(search ?? "")
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   const onChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const next = e.target.value;
-      setValue(next);
+      const next = e.target.value
+      setValue(next)
       const handler = setTimeout(() => {
-        void setSearch(next || null);
-      }, 300);
-      return () => clearTimeout(handler);
+        void setSearch(next || null)
+      }, 300)
+      return () => clearTimeout(handler)
     },
     [setSearch]
-  );
+  )
 
   const onClear = React.useCallback(() => {
-    setValue("");
-    void setSearch(null);
-  }, [setSearch]);
+    setValue("")
+    void setSearch(null)
+  }, [setSearch])
 
   return (
     <div className="flex items-center gap-2">
@@ -46,13 +47,16 @@ export function TenantsSearch() {
         onChange={onChange}
       />
       {value && (
-        <Button aria-label="Clear search" variant="ghost" size="icon" className="h-8 w-8" onClick={onClear}>
+        <Button
+          aria-label="Clear search"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onClear}
+        >
           <X className="h-4 w-4" />
         </Button>
       )}
     </div>
-  );
+  )
 }
-
-
-

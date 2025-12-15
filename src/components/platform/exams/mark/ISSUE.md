@@ -22,11 +22,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Error: "Invalid API Key"
 
 **Symptoms:**
+
 - AI grading fails with authentication error
 - OCR processing returns 401 errors
 
 **Solutions:**
+
 1. Check your `.env.local` file has valid `OPENAI_API_KEY`:
+
    ```bash
    # Verify the key exists and is not empty
    cat .env.local | grep OPENAI_API_KEY
@@ -45,10 +48,12 @@ This guide helps resolve common issues with the auto-marking system.
 ### Error: "Rate Limit Exceeded" (429)
 
 **Symptoms:**
+
 - AI grading fails with "Too many requests"
 - Error message: "You exceeded your current quota"
 
 **Solutions:**
+
 1. Check your OpenAI usage and billing:
    - Visit https://platform.openai.com/usage
    - Verify you have available credits
@@ -56,10 +61,11 @@ This guide helps resolve common issues with the auto-marking system.
 2. The rate limiter should handle this automatically with exponential backoff
    - Default: 5 concurrent requests, exponential backoff on 429 errors
    - Check rate limiter stats:
+
    ```typescript
    const stats = aiRateLimiter.getStats()
-   console.log('Queue length:', stats.queueLength)
-   console.log('Active requests:', stats.activeRequests)
+   console.log("Queue length:", stats.queueLength)
+   console.log("Active requests:", stats.activeRequests)
    ```
 
 3. Reduce concurrent requests in rate limiter:
@@ -67,16 +73,18 @@ This guide helps resolve common issues with the auto-marking system.
    // In src/lib/ai/rate-limiter.ts
    const customLimiter = new AIRateLimiter({
      maxConcurrent: 3, // Reduce from 5 to 3
-     minDelay: 2000,   // Increase delay to 2s
+     minDelay: 2000, // Increase delay to 2s
    })
    ```
 
 ### Error: "Model Not Found" or "Invalid Model"
 
 **Symptoms:**
+
 - Grading fails with "The model 'gpt-4' does not exist"
 
 **Solutions:**
+
 1. Check your OpenAI account has access to GPT-4:
    - Visit https://platform.openai.com/account/limits
    - Verify GPT-4 access
@@ -97,11 +105,13 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Low OCR Confidence Scores
 
 **Symptoms:**
+
 - OCR extracts text but confidence is below 70%
 - `needsReview` flag is set to true
 - Manual review required frequently
 
 **Solutions:**
+
 1. **Improve scan quality:**
    - Use 300+ DPI for scans
    - Ensure good lighting and contrast
@@ -123,16 +133,19 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: OCR Returns Empty Text
 
 **Symptoms:**
+
 - `extractedText` is null or empty string
 - Confidence score is 0
 
 **Solutions:**
+
 1. **Check image accessibility:**
+
    ```typescript
    // Verify imageUrl is accessible
    const response = await fetch(imageUrl)
    if (!response.ok) {
-     console.error('Image not accessible:', imageUrl)
+     console.error("Image not accessible:", imageUrl)
    }
    ```
 
@@ -147,16 +160,19 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Wrong Text Extracted
 
 **Symptoms:**
+
 - OCR extracts incorrect or garbled text
 - Numbers confused with letters (0 vs O, 1 vs l)
 
 **Solutions:**
+
 1. **Provide context to OCR:**
+
    ```typescript
    await processOCRWithAI({
      imageUrl,
      questionText: "What is 2+2?", // Helps AI understand expected format
-     expectedFormat: "number"       // Guides extraction
+     expectedFormat: "number", // Guides extraction
    })
    ```
 
@@ -175,34 +191,47 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: AI Gives Different Scores for Same Answer
 
 **Symptoms:**
+
 - Same student answer gets different scores on re-grading
 - Scores vary by ±10-20%
 
 **Solutions:**
+
 1. **Use rubrics for consistency:**
+
    ```typescript
    // Always create detailed rubrics for essays
    await createRubric({
      questionId,
      title: "Essay Rubric",
      criteria: [
-       { criterion: "Thesis clarity", maxPoints: 5, description: "Clear, focused thesis statement" },
-       { criterion: "Evidence", maxPoints: 10, description: "3+ relevant examples with citations" },
+       {
+         criterion: "Thesis clarity",
+         maxPoints: 5,
+         description: "Clear, focused thesis statement",
+       },
+       {
+         criterion: "Evidence",
+         maxPoints: 10,
+         description: "3+ relevant examples with citations",
+       },
        // ...
-     ]
+     ],
    })
    ```
 
 2. **Provide sample answers:**
+
    ```typescript
    // In question creation
    await createQuestion({
      // ...
-     sampleAnswer: "Detailed example of excellent answer with key points..."
+     sampleAnswer: "Detailed example of excellent answer with key points...",
    })
    ```
 
 3. **Set temperature to 0 for consistency:**
+
    ```typescript
    // In src/lib/ai/openai.ts
    const response = await openai.chat.completions.create({
@@ -219,17 +248,20 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: AI Too Lenient or Too Strict
 
 **Symptoms:**
+
 - Average scores unusually high (>90%) or low (<50%)
 - AI doesn't catch obvious errors
 - AI penalizes minor issues too harshly
 
 **Solutions:**
+
 1. **Calibrate with sample grading:**
    - Grade 10-20 answers manually first
    - Compare AI scores with manual scores
    - Adjust rubrics based on discrepancies
 
 2. **Refine rubric descriptions:**
+
    ```typescript
    // VAGUE (inconsistent grading)
    { criterion: "Good writing", maxPoints: 10 }
@@ -246,9 +278,9 @@ This guide helps resolve common issues with the auto-marking system.
    ```typescript
    // In config.ts
    AI_CONFIDENCE = {
-     HIGH: 0.90,   // Increase from 0.85 for stricter auto-accept
-     MEDIUM: 0.70, // Increase from 0.65
-     LOW: 0.50,    // Increase from 0.40
+     HIGH: 0.9, // Increase from 0.85 for stricter auto-accept
+     MEDIUM: 0.7, // Increase from 0.65
+     LOW: 0.5, // Increase from 0.40
    }
    ```
 
@@ -259,11 +291,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Error: "schoolId is required"
 
 **Symptoms:**
+
 - Queries fail with missing schoolId
 - "WHERE clause is missing schoolId" error
 
 **Solutions:**
+
 1. **Always include schoolId in queries:**
+
    ```typescript
    // ❌ WRONG
    await db.questionBank.findMany()
@@ -278,18 +313,21 @@ This guide helps resolve common issues with the auto-marking system.
    ```typescript
    const session = await auth()
    if (!session?.user?.schoolId) {
-     throw new Error('User session missing schoolId')
+     throw new Error("User session missing schoolId")
    }
    ```
 
 ### Error: "Prisma Client Not Generated"
 
 **Symptoms:**
+
 - TypeScript errors about missing Prisma types
 - Import errors for `@prisma/client`
 
 **Solutions:**
+
 1. **Regenerate Prisma client:**
+
    ```bash
    pnpm prisma generate
    ```
@@ -303,17 +341,21 @@ This guide helps resolve common issues with the auto-marking system.
 ### Error: "Slow Queries" / "Timeout"
 
 **Symptoms:**
+
 - Page loads take >5 seconds
 - Database queries timing out
 
 **Solutions:**
+
 1. **Check indexes are applied:**
+
    ```bash
    # Run migration to apply indexes
    pnpm prisma migrate deploy
    ```
 
 2. **Use selective field fetching:**
+
    ```typescript
    // ❌ SLOW - Fetches all fields
    await db.questionBank.findMany({ where: { schoolId } })
@@ -327,12 +369,13 @@ This guide helps resolve common issues with the auto-marking system.
        questionType: true,
        difficulty: true,
        points: true,
-       subject: { select: { subjectName: true } }
-     }
+       subject: { select: { subjectName: true } },
+     },
    })
    ```
 
 3. **Add pagination:**
+
    ```typescript
    await db.studentAnswer.findMany({
      where: { schoolId, examId },
@@ -354,11 +397,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Bulk Grading Too Slow
 
 **Symptoms:**
+
 - Grading 100 submissions takes >10 minutes
 - Browser becomes unresponsive
 
 **Solutions:**
+
 1. **Use rate limiter batch method:**
+
    ```typescript
    // ❌ SLOW - Sequential processing
    for (const answer of answers) {
@@ -367,20 +413,21 @@ This guide helps resolve common issues with the auto-marking system.
 
    // ✅ FAST - Parallel with rate limiting
    await aiRateLimiter.batch(
-     answers.map(answer => ({
+     answers.map((answer) => ({
        data: answer,
-       execute: (data) => aiGradeAnswer(data.id)
+       execute: (data) => aiGradeAnswer(data.id),
      })),
      1 // Priority
    )
    ```
 
 2. **Monitor rate limiter stats:**
+
    ```typescript
    const stats = aiRateLimiter.getStats()
-   console.log('Total requests:', stats.totalRequests)
-   console.log('Total cost:', stats.totalCost)
-   console.log('Avg cost:', stats.averageCostPerRequest)
+   console.log("Total requests:", stats.totalRequests)
+   console.log("Total cost:", stats.totalCost)
+   console.log("Avg cost:", stats.averageCostPerRequest)
    ```
 
 3. **Increase batch delay for stability:**
@@ -394,18 +441,21 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: High OpenAI Costs
 
 **Symptoms:**
+
 - Monthly bill exceeds budget
 - Unexpected charges
 
 **Solutions:**
+
 1. **Track costs with rate limiter:**
+
    ```typescript
    // After each grading operation
    const stats = aiRateLimiter.getStats()
    console.log(`Total cost so far: $${stats.totalCost}`)
 
    if (stats.totalCost > 50) {
-     console.warn('Daily cost limit exceeded!')
+     console.warn("Daily cost limit exceeded!")
    }
    ```
 
@@ -428,11 +478,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Seeing Other Schools' Data
 
 **Symptoms:**
+
 - Questions from other schools appear in list
 - Student data from wrong school
 
 **Solutions:**
+
 1. **Verify all queries include schoolId:**
+
    ```typescript
    // Check all actions.ts files
    grep -r "db\\.questionBank\\.findMany" src/components/platform/mark/
@@ -440,10 +493,11 @@ This guide helps resolve common issues with the auto-marking system.
    ```
 
 2. **Check session schoolId:**
+
    ```typescript
    const session = await auth()
-   console.log('User schoolId:', session?.user?.schoolId)
-   console.log('User role:', session?.user?.role)
+   console.log("User schoolId:", session?.user?.schoolId)
+   console.log("User role:", session?.user?.role)
    ```
 
 3. **Audit database queries:**
@@ -453,15 +507,18 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: "Unauthorized" Errors
 
 **Symptoms:**
+
 - User can't access marking features
 - "You don't have permission" errors
 
 **Solutions:**
+
 1. **Check user role:**
+
    ```typescript
    const session = await auth()
-   if (!['ADMIN', 'TEACHER'].includes(session?.user?.role)) {
-     return { error: 'Unauthorized' }
+   if (!["ADMIN", "TEACHER"].includes(session?.user?.role)) {
+     return { error: "Unauthorized" }
    }
    ```
 
@@ -478,11 +535,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Form Submission Fails Silently
 
 **Symptoms:**
+
 - Submit button doesn't do anything
 - No error message shown
 
 **Solutions:**
+
 1. **Check Zod schema validation:**
+
    ```typescript
    // In validation.ts
    export const createQuestionSchema = z.object({
@@ -498,19 +558,22 @@ This guide helps resolve common issues with the auto-marking system.
    ```
 
 2. **Display validation errors:**
+
    ```tsx
-   {form.formState.errors.questionText && (
-     <p className="text-xs text-destructive mt-1">
-       {form.formState.errors.questionText.message}
-     </p>
-   )}
+   {
+     form.formState.errors.questionText && (
+       <p className="text-destructive mt-1 text-xs">
+         {form.formState.errors.questionText.message}
+       </p>
+     )
+   }
    ```
 
 3. **Log form data on submit:**
    ```typescript
    const handleSubmit = async (data: any) => {
-     console.log('Form data:', data)
-     console.log('Form errors:', form.formState.errors)
+     console.log("Form data:", data)
+     console.log("Form errors:", form.formState.errors)
      // ...
    }
    ```
@@ -518,11 +581,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Options Not Saving
 
 **Symptoms:**
+
 - MCQ options disappear after submit
 - "At least 2 options required" error
 
 **Solutions:**
+
 1. **Verify options state:**
+
    ```typescript
    const [options, setOptions] = useState([
      { text: "", isCorrect: false },
@@ -530,18 +596,22 @@ This guide helps resolve common issues with the auto-marking system.
    ])
 
    // Before submit
-   console.log('Options:', options)
-   console.log('Has correct answer:', options.some(o => o.isCorrect))
+   console.log("Options:", options)
+   console.log(
+     "Has correct answer:",
+     options.some((o) => o.isCorrect)
+   )
    ```
 
 2. **Check FormData serialization:**
+
    ```typescript
    const formData = new FormData()
-   formData.append('options', JSON.stringify(options))
+   formData.append("options", JSON.stringify(options))
 
    // In server action
-   const parsed = JSON.parse(formData.get('options') as string)
-   console.log('Parsed options:', parsed)
+   const parsed = JSON.parse(formData.get("options") as string)
+   console.log("Parsed options:", parsed)
    ```
 
 ---
@@ -551,21 +621,25 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Components Not Updating After Data Change
 
 **Symptoms:**
+
 - Question list doesn't refresh after create/edit
 - Stale data displayed
 
 **Solutions:**
+
 1. **Ensure revalidatePath is called:**
+
    ```typescript
    // In actions.ts
    export async function createQuestion(data: FormData) {
      // ... create logic
-     revalidatePath('/mark/questions') // Must call this
+     revalidatePath("/mark/questions") // Must call this
      return { success: true }
    }
    ```
 
 2. **Use router.refresh():**
+
    ```typescript
    // In client component
    const router = useRouter()
@@ -582,11 +656,14 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: "Hydration Mismatch" Errors
 
 **Symptoms:**
+
 - Console errors about React hydration
 - Content flashing/jumping on page load
 
 **Solutions:**
+
 1. **Avoid using Date/random on server:**
+
    ```typescript
    // ❌ WRONG - Different on server/client
    <p>{new Date().toLocaleDateString()}</p>
@@ -610,21 +687,25 @@ This guide helps resolve common issues with the auto-marking system.
 ### Issue: Queue Length Growing Infinitely
 
 **Symptoms:**
+
 - `aiRateLimiter.getStats().queueLength` keeps increasing
 - Requests never complete
 
 **Solutions:**
+
 1. **Check for failed requests:**
+
    ```typescript
    try {
      await aiRateLimiter.enqueue(() => gradeAnswer(id), 1)
    } catch (error) {
-     console.error('AI request failed:', error)
+     console.error("AI request failed:", error)
      // Handle error - don't let it silently fail
    }
    ```
 
 2. **Increase maxRetries:**
+
    ```typescript
    const limiter = new AIRateLimiter({
      maxConcurrent: 5,
@@ -637,7 +718,7 @@ This guide helps resolve common issues with the auto-marking system.
    ```typescript
    const stats = aiRateLimiter.getStats()
    if (stats.queueLength > 1000) {
-     console.warn('Queue too large, may need to reset')
+     console.warn("Queue too large, may need to reset")
      aiRateLimiter.resetStats() // This clears stats but not queue
    }
    ```
@@ -674,7 +755,7 @@ export async function gradeEssayWithAI(params) {
 ```typescript
 // Create a test route at app/api/test-marking/route.ts
 export async function GET() {
-  const result = await aiGradeAnswer('student-answer-id')
+  const result = await aiGradeAnswer("student-answer-id")
   return Response.json(result)
 }
 ```

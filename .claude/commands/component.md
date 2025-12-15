@@ -13,11 +13,13 @@ Create component $1:
 Follow project patterns from @CLAUDE.md.
 
 Generate:
+
 - `components/$1/index.tsx` - Component implementation
 - `components/$1/types.ts` - TypeScript interfaces
 - `components/$1/$1.test.tsx` - Vitest tests
 
 Requirements:
+
 - TypeScript strict mode
 - Props interface exported
 - Default export component

@@ -1,3 +1,6 @@
+// Import for internal use in legacy functions
+import { downloadBlob as _downloadBlob } from "./csv-generator"
+
 /**
  * Unified File Block - Export Module Exports
  */
@@ -13,7 +16,7 @@ export type {
   ExportProgress,
   UseExportReturn,
   ColumnHelpers,
-} from "./types";
+} from "./types"
 
 // Formatters
 export {
@@ -31,7 +34,7 @@ export {
   sanitizeFilename,
   generateExportFilename,
   createColumnHelpers,
-} from "./formatters";
+} from "./formatters"
 
 // CSV Generator
 export {
@@ -39,27 +42,24 @@ export {
   exportToCsv,
   downloadBlob,
   parseCsvContent,
-} from "./csv-generator";
-
-// Import for internal use in legacy functions
-import { downloadBlob as _downloadBlob } from "./csv-generator";
+} from "./csv-generator"
 
 // Excel Generator
 export {
   exportToExcel,
   exportToExcelMultiSheet,
   exportFromTemplate,
-} from "./excel-generator";
+} from "./excel-generator"
 
 // PDF Generator
 export {
   exportToPdf,
   PDFPreview,
   createStyles as createPdfStyles,
-} from "./pdf-generator";
+} from "./pdf-generator"
 
 // Hook
-export { useExport } from "./use-export";
+export { useExport } from "./use-export"
 
 // Components
 export {
@@ -67,7 +67,7 @@ export {
   SimpleExportButton,
   type ExportButtonProps,
   type SimpleExportButtonProps,
-} from "./export-button";
+} from "./export-button"
 
 // ============================================================================
 // Legacy Functions (backward compatibility)
@@ -80,55 +80,58 @@ export {
 export function arrayToCSV<T extends Record<string, unknown>>(
   data: T[],
   options?: {
-    columns?: Array<{ key: keyof T | string; label: string }>;
-    includeHeaders?: boolean;
-    delimiter?: string;
+    columns?: Array<{ key: keyof T | string; label: string }>
+    includeHeaders?: boolean
+    delimiter?: string
   }
 ): string {
-  const { columns, includeHeaders = true, delimiter = "," } = options || {};
+  const { columns, includeHeaders = true, delimiter = "," } = options || {}
 
-  if (data.length === 0) return "";
+  if (data.length === 0) return ""
 
-  const cols = columns || Object.keys(data[0]).map((key) => ({ key, label: key }));
-  const rows: string[] = [];
+  const cols =
+    columns || Object.keys(data[0]).map((key) => ({ key, label: key }))
+  const rows: string[] = []
 
   if (includeHeaders) {
-    const headerRow = cols.map((col) => escapeCSVValue(col.label)).join(delimiter);
-    rows.push(headerRow);
+    const headerRow = cols
+      .map((col) => escapeCSVValue(col.label))
+      .join(delimiter)
+    rows.push(headerRow)
   }
 
   for (const item of data) {
     const row = cols
       .map((col) => {
-        const value = item[col.key as keyof T];
-        return escapeCSVValue(formatCsvValue(value));
+        const value = item[col.key as keyof T]
+        return escapeCSVValue(formatCsvValue(value))
       })
-      .join(delimiter);
-    rows.push(row);
+      .join(delimiter)
+    rows.push(row)
   }
 
-  return rows.join("\n");
+  return rows.join("\n")
 }
 
 function escapeCSVValue(value: string): string {
-  const stringValue = String(value || "");
+  const stringValue = String(value || "")
   if (
     stringValue.includes(",") ||
     stringValue.includes('"') ||
     stringValue.includes("\n") ||
     stringValue.includes("\r")
   ) {
-    return `"${stringValue.replace(/"/g, '""')}"`;
+    return `"${stringValue.replace(/"/g, '""')}"`
   }
-  return stringValue;
+  return stringValue
 }
 
 function formatCsvValue(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (value instanceof Date) return value.toISOString().split("T")[0];
-  if (typeof value === "boolean") return value ? "Yes" : "No";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  if (value === null || value === undefined) return ""
+  if (value instanceof Date) return value.toISOString().split("T")[0]
+  if (typeof value === "boolean") return value ? "Yes" : "No"
+  if (typeof value === "object") return JSON.stringify(value)
+  return String(value)
 }
 
 /**
@@ -139,17 +142,17 @@ export function generateCSVFilename(
   prefix: string,
   options?: { timestamp?: boolean; extension?: string }
 ): string {
-  const { timestamp = true, extension = "csv" } = options || {};
-  let filename = prefix;
+  const { timestamp = true, extension = "csv" } = options || {}
+  let filename = prefix
 
   if (timestamp) {
-    const now = new Date();
-    const dateStr = now.toISOString().split("T")[0];
-    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
-    filename += `_${dateStr}_${timeStr}`;
+    const now = new Date()
+    const dateStr = now.toISOString().split("T")[0]
+    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-")
+    filename += `_${dateStr}_${timeStr}`
   }
 
-  return `${filename}.${extension}`;
+  return `${filename}.${extension}`
 }
 
 /**
@@ -161,7 +164,7 @@ export function downloadCSV(
   filename: string,
   columns?: Array<{ key: string; label: string }>
 ): void {
-  const csv = arrayToCSV(data, { columns });
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  _downloadBlob(blob, filename);
+  const csv = arrayToCSV(data, { columns })
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  _downloadBlob(blob, filename)
 }

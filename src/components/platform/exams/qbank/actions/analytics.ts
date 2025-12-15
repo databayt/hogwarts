@@ -1,12 +1,14 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
 import type {
   ActionResponse,
   AnalyticsUpdate,
   DashboardAnalytics,
-} from "./types";
+} from "./types"
 
 /**
  * Update question analytics after student attempt
@@ -15,17 +17,17 @@ export async function updateQuestionAnalytics(
   data: AnalyticsUpdate
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const { questionId, score, maxPoints, timeSpent } = data;
+    const schoolId = session.user.schoolId
+    const { questionId, score, maxPoints, timeSpent } = data
 
     // Get existing analytics
     const analytics = await db.questionAnalytics.findFirst({
@@ -33,7 +35,7 @@ export async function updateQuestionAnalytics(
         questionId,
         schoolId, // CRITICAL: Multi-tenant scope
       },
-    });
+    })
 
     if (!analytics) {
       // Create analytics if doesn't exist
@@ -47,20 +49,20 @@ export async function updateQuestionAnalytics(
           avgTimeSpent: timeSpent || 0,
           lastUsed: new Date(),
         },
-      });
+      })
     } else {
       // Calculate new averages
-      const timesUsed = analytics.timesUsed + 1;
-      const currentAvgScore = analytics.avgScore?.toNumber() || 0;
+      const timesUsed = analytics.timesUsed + 1
+      const currentAvgScore = analytics.avgScore?.toNumber() || 0
       const newAvgScore =
-        (currentAvgScore * analytics.timesUsed + score) / timesUsed;
+        (currentAvgScore * analytics.timesUsed + score) / timesUsed
 
-      const successRate = (newAvgScore / maxPoints) * 100;
+      const successRate = (newAvgScore / maxPoints) * 100
 
-      const currentAvgTime = analytics.avgTimeSpent || 0;
+      const currentAvgTime = analytics.avgTimeSpent || 0
       const newAvgTime = timeSpent
         ? (currentAvgTime * analytics.timesUsed + timeSpent) / timesUsed
-        : currentAvgTime;
+        : currentAvgTime
 
       // Update analytics
       await db.questionAnalytics.update({
@@ -74,18 +76,18 @@ export async function updateQuestionAnalytics(
           avgTimeSpent: newAvgTime,
           lastUsed: new Date(),
         },
-      });
+      })
     }
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Update analytics error:", error);
+    console.error("Update analytics error:", error)
     return {
       success: false,
       error: "Failed to update analytics",
       code: "UPDATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -96,16 +98,16 @@ export async function batchUpdateAnalytics(
   updates: AnalyticsUpdate[]
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Process updates in transaction
     await db.$transaction(async (tx) => {
@@ -115,7 +117,7 @@ export async function batchUpdateAnalytics(
             questionId: update.questionId,
             schoolId,
           },
-        });
+        })
 
         if (!analytics) {
           await tx.questionAnalytics.create({
@@ -128,21 +130,20 @@ export async function batchUpdateAnalytics(
               avgTimeSpent: update.timeSpent || 0,
               lastUsed: new Date(),
             },
-          });
+          })
         } else {
-          const timesUsed = analytics.timesUsed + 1;
-          const currentAvgScore = analytics.avgScore?.toNumber() || 0;
+          const timesUsed = analytics.timesUsed + 1
+          const currentAvgScore = analytics.avgScore?.toNumber() || 0
           const newAvgScore =
-            (currentAvgScore * analytics.timesUsed + update.score) /
-            timesUsed;
+            (currentAvgScore * analytics.timesUsed + update.score) / timesUsed
 
-          const successRate = (newAvgScore / update.maxPoints) * 100;
+          const successRate = (newAvgScore / update.maxPoints) * 100
 
-          const currentAvgTime = analytics.avgTimeSpent || 0;
+          const currentAvgTime = analytics.avgTimeSpent || 0
           const newAvgTime = update.timeSpent
             ? (currentAvgTime * analytics.timesUsed + update.timeSpent) /
               timesUsed
-            : currentAvgTime;
+            : currentAvgTime
 
           await tx.questionAnalytics.update({
             where: { id: analytics.id },
@@ -153,20 +154,20 @@ export async function batchUpdateAnalytics(
               avgTimeSpent: newAvgTime,
               lastUsed: new Date(),
             },
-          });
+          })
         }
       }
-    });
+    })
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Batch update analytics error:", error);
+    console.error("Batch update analytics error:", error)
     return {
       success: false,
       error: "Failed to update analytics",
       code: "BATCH_UPDATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -177,16 +178,16 @@ export async function getAnalyticsDashboard(): Promise<
   ActionResponse<DashboardAnalytics>
 > {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Fetch all data in parallel
     const [
@@ -241,24 +242,24 @@ export async function getAnalyticsDashboard(): Promise<
           id: true,
         },
       }),
-    ]);
+    ])
 
     // Transform breakdowns
-    const subjectBreakdown: Record<string, number> = {};
+    const subjectBreakdown: Record<string, number> = {}
     for (const stat of subjectStats) {
       if (stat.subjectId) {
-        subjectBreakdown[stat.subjectId] = stat._count.id;
+        subjectBreakdown[stat.subjectId] = stat._count.id
       }
     }
 
-    const difficultyBreakdown: any = {};
+    const difficultyBreakdown: any = {}
     for (const stat of difficultyStats) {
-      difficultyBreakdown[stat.difficulty] = stat._count.id;
+      difficultyBreakdown[stat.difficulty] = stat._count.id
     }
 
-    const typeBreakdown: any = {};
+    const typeBreakdown: any = {}
     for (const stat of typeStats) {
-      typeBreakdown[stat.questionType] = stat._count.id;
+      typeBreakdown[stat.questionType] = stat._count.id
     }
 
     return {
@@ -272,45 +273,43 @@ export async function getAnalyticsDashboard(): Promise<
         difficultyBreakdown,
         typeBreakdown,
       },
-    };
+    }
   } catch (error) {
-    console.error("Get analytics error:", error);
+    console.error("Get analytics error:", error)
     return {
       success: false,
       error: "Failed to get analytics",
       code: "FETCH_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
 /**
  * Get performance analytics for a specific question
  */
-export async function getQuestionPerformance(
-  questionId: string
-): Promise<
+export async function getQuestionPerformance(questionId: string): Promise<
   ActionResponse<{
-    analytics: any;
+    analytics: any
     recentAttempts: Array<{
-      studentId: string;
-      score: number;
-      attemptedAt: Date;
-    }>;
-    distribution: Record<string, number>;
+      studentId: string
+      score: number
+      attemptedAt: Date
+    }>
+    distribution: Record<string, number>
   }>
 > {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Get analytics
     const analytics = await db.questionAnalytics.findFirst({
@@ -318,14 +317,14 @@ export async function getQuestionPerformance(
         questionId,
         schoolId,
       },
-    });
+    })
 
     if (!analytics) {
       return {
         success: false,
         error: "Analytics not found",
         code: "ANALYTICS_NOT_FOUND",
-      };
+      }
     }
 
     // Get recent attempts from marking results
@@ -343,7 +342,7 @@ export async function getQuestionPerformance(
       orderBy: {
         gradedAt: "desc",
       },
-    });
+    })
 
     // Calculate score distribution
     const allAttempts = await db.markingResult.findMany({
@@ -355,7 +354,7 @@ export async function getQuestionPerformance(
         pointsAwarded: true,
         maxPoints: true,
       },
-    });
+    })
 
     const distribution: Record<string, number> = {
       "0-20": 0,
@@ -363,15 +362,16 @@ export async function getQuestionPerformance(
       "41-60": 0,
       "61-80": 0,
       "81-100": 0,
-    };
+    }
 
     for (const attempt of allAttempts) {
-      const percentage = (Number(attempt.pointsAwarded) / Number(attempt.maxPoints)) * 100;
-      if (percentage <= 20) distribution["0-20"]++;
-      else if (percentage <= 40) distribution["21-40"]++;
-      else if (percentage <= 60) distribution["41-60"]++;
-      else if (percentage <= 80) distribution["61-80"]++;
-      else distribution["81-100"]++;
+      const percentage =
+        (Number(attempt.pointsAwarded) / Number(attempt.maxPoints)) * 100
+      if (percentage <= 20) distribution["0-20"]++
+      else if (percentage <= 40) distribution["21-40"]++
+      else if (percentage <= 60) distribution["41-60"]++
+      else if (percentage <= 80) distribution["61-80"]++
+      else distribution["81-100"]++
     }
 
     return {
@@ -385,15 +385,15 @@ export async function getQuestionPerformance(
         })),
         distribution,
       },
-    };
+    }
   } catch (error) {
-    console.error("Get question performance error:", error);
+    console.error("Get question performance error:", error)
     return {
       success: false,
       error: "Failed to get performance data",
       code: "FETCH_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -404,13 +404,13 @@ export async function resetQuestionAnalytics(
   questionId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
     // Check admin permission
@@ -419,10 +419,10 @@ export async function resetQuestionAnalytics(
         success: false,
         error: "Only administrators can reset analytics",
         code: "ADMIN_ONLY",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     await db.questionAnalytics.updateMany({
       where: {
@@ -436,16 +436,16 @@ export async function resetQuestionAnalytics(
         avgTimeSpent: 0,
         lastUsed: null,
       },
-    });
+    })
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Reset analytics error:", error);
+    console.error("Reset analytics error:", error)
     return {
       success: false,
       error: "Failed to reset analytics",
       code: "RESET_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }

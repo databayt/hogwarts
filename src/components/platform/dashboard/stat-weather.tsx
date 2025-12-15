@@ -1,19 +1,20 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Icon from "@mdi/react"
 import {
-  mdiWeatherSunny,
-  mdiWeatherPartlyCloudy,
   mdiWeatherCloudy,
-  mdiWeatherRainy,
+  mdiWeatherPartlyCloudy,
   mdiWeatherPouring,
+  mdiWeatherRainy,
   mdiWeatherSnowy,
+  mdiWeatherSunny,
   mdiWeatherWindy,
 } from "@mdi/js"
-import { RefreshCcw, Droplets, Wind, Thermometer } from "lucide-react"
+import Icon from "@mdi/react"
+import { Droplets, RefreshCcw, Thermometer, Wind } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 const currentWeather = {
   day: "Monday",
@@ -35,7 +36,13 @@ const forecast = [
   { day: "Sun", condition: "sunny", temp: 23 },
 ]
 
-function WeatherIcon({ condition, className }: { condition: string; className?: string }) {
+function WeatherIcon({
+  condition,
+  className,
+}: {
+  condition: string
+  className?: string
+}) {
   const iconMap: Record<string, string> = {
     sunny: mdiWeatherSunny,
     partlycloudy: mdiWeatherPartlyCloudy,
@@ -46,7 +53,12 @@ function WeatherIcon({ condition, className }: { condition: string; className?: 
     windy: mdiWeatherWindy,
   }
 
-  return <Icon path={iconMap[condition] || mdiWeatherSunny} className={cn("size-6", className)} />
+  return (
+    <Icon
+      path={iconMap[condition] || mdiWeatherSunny}
+      className={cn("size-6", className)}
+    />
+  )
 }
 
 export default function StatsWeather() {
@@ -58,28 +70,35 @@ export default function StatsWeather() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <p className="text-lg font-medium">{currentWeather.day}</p>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <WeatherIcon condition={currentWeather.condition} className="size-5" />
-                <span className="text-sm">({currentWeather.conditionLabel})</span>
+              <div className="text-muted-foreground flex items-center gap-1">
+                <WeatherIcon
+                  condition={currentWeather.condition}
+                  className="size-5"
+                />
+                <span className="text-sm">
+                  ({currentWeather.conditionLabel})
+                </span>
               </div>
             </div>
 
             {/* Weather metrics */}
             <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Droplets className="size-4" />
                 <span>Humidity: {currentWeather.humidity}%</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="text-primary">Rain: {currentWeather.rainChance}%</span>
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                <span className="text-primary">
+                  Rain: {currentWeather.rainChance}%
+                </span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Thermometer className="size-4" />
                 <span>
                   {currentWeather.temperature}° ({currentWeather.tempLow}°)
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Wind className="size-4" />
                 <span>{currentWeather.windSpeed} km/h</span>
               </div>
@@ -92,10 +111,10 @@ export default function StatsWeather() {
         </div>
 
         {/* Forecast strip */}
-        <div className="mt-6 flex justify-between rounded-lg bg-muted/50 p-3">
+        <div className="bg-muted/50 mt-6 flex justify-between rounded-lg p-3">
           {forecast.map((item) => (
             <div key={item.day} className="flex flex-col items-center gap-1">
-              <span className="text-xs text-muted-foreground">{item.day}</span>
+              <span className="text-muted-foreground text-xs">{item.day}</span>
               <WeatherIcon condition={item.condition} className="size-6" />
               <span className="text-sm font-medium">{item.temp}°</span>
             </div>

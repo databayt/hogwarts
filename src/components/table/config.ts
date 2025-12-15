@@ -7,7 +7,7 @@
 // Data Table Config
 // ============================================================================
 
-export type DataTableConfig = typeof dataTableConfig;
+export type DataTableConfig = typeof dataTableConfig
 
 export const dataTableConfig = {
   textOperators: [
@@ -88,7 +88,7 @@ export const dataTableConfig = {
     "isRelativeToToday",
   ] as const,
   joinOperators: ["and", "or"] as const,
-};
+}
 
 // ============================================================================
 // Pagination Config (NEW)
@@ -99,4 +99,4 @@ export const paginationConfig = {
   batchSizeOptions: [10, 20, 30, 40, 50],
   defaultPageSize: 10,
   pageSizeOptions: [10, 20, 30, 40, 50],
-} as const;
+} as const

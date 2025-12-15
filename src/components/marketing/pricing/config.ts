@@ -1,44 +1,52 @@
-import type { PlansRow, SubscriptionPlan } from "@/components/marketing/pricing/types";
-import { env } from "@/env.mjs";
+import { env } from "@/env.mjs"
+import type {
+  PlansRow,
+  SubscriptionPlan,
+} from "@/components/marketing/pricing/types"
 
-export const isProTitle = (title: string): boolean => title.toLowerCase() === "pro";
+export const isProTitle = (title: string): boolean =>
+  title.toLowerCase() === "pro"
 
-export const isStarterTitle = (title: string): boolean => title.toLowerCase() === "hobby";
+export const isStarterTitle = (title: string): boolean =>
+  title.toLowerCase() === "hobby"
 
 export const getIncludesHeading = (title: string): string =>
   isStarterTitle(title)
     ? "Includes"
     : isProTitle(title)
-    ? "Everything in Hobby, plus"
-    : "Everything in Pro, plus";
+      ? "Everything in Hobby, plus"
+      : "Everything in Pro, plus"
 
 export const getCtaLabel = (title: string): string =>
-  isStarterTitle(title) ? "Start trial" : isProTitle(title) ? "Get Pro" : "Get Ultra";
+  isStarterTitle(title)
+    ? "Start trial"
+    : isProTitle(title)
+      ? "Get Pro"
+      : "Get Ultra"
 
-export const getPriceDisplay = (offer: SubscriptionPlan, isYearly: boolean): string => {
-  if (offer.prices.monthly === 0) return "Free";
+export const getPriceDisplay = (
+  offer: SubscriptionPlan,
+  isYearly: boolean
+): string => {
+  if (offer.prices.monthly === 0) return "Free"
   if (isYearly) {
-    const discountedPerMonth = offer.prices.monthly * 0.8;
-    return `$${discountedPerMonth}`;
+    const discountedPerMonth = offer.prices.monthly * 0.8
+    return `$${discountedPerMonth}`
   }
-  return `$${offer.prices.monthly}`;
-};
+  return `$${offer.prices.monthly}`
+}
 
 export const getYearlyTotal = (offer: SubscriptionPlan): number => {
-  if (offer.prices.monthly === 0) return 0;
-  return offer.prices.monthly * 12 * 0.8;
-};
+  if (offer.prices.monthly === 0) return 0
+  return offer.prices.monthly * 12 * 0.8
+}
 
 // Pricing data moved here from subscriptions.ts
 export const pricingData: SubscriptionPlan[] = [
   {
     title: "Hobby",
     description: "Get started for free",
-    benefits: [
-      "Up to 100 students",
-      "Up to 10 teachers",
-      "Core features",
-    ],
+    benefits: ["Up to 100 students", "Up to 10 teachers", "Core features"],
     limitations: [],
     prices: {
       monthly: 0,
@@ -71,10 +79,7 @@ export const pricingData: SubscriptionPlan[] = [
   {
     title: "Ultra",
     description: "For large organizations",
-    benefits: [
-      "Unlimited students and teachers",
-      "Custom integrations",
-    ],
+    benefits: ["Unlimited students and teachers", "Custom integrations"],
     limitations: [],
     prices: {
       monthly: 200,
@@ -82,14 +87,18 @@ export const pricingData: SubscriptionPlan[] = [
     },
     stripeIds: {
       monthly:
-        env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID ?? env.NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID ?? null,
+        env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID ??
+        env.NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID ??
+        null,
       yearly:
-        env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID ?? env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID ?? null,
+        env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID ??
+        env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID ??
+        null,
     },
   },
-];
+]
 
-export const plansColumns = ["hobby", "pro", "ultra", "enterprise"] as const;
+export const plansColumns = ["hobby", "pro", "ultra", "enterprise"] as const
 
 export const comparePlans: PlansRow[] = [
   {
@@ -121,7 +130,8 @@ export const comparePlans: PlansRow[] = [
     pro: null,
     ultra: true,
     enterprise: "Custom",
-    tooltip: "Advanced reporting is available in Business and Enterprise plans.",
+    tooltip:
+      "Advanced reporting is available in Business and Enterprise plans.",
   },
   {
     feature: "Dedicated manager",
@@ -152,7 +162,8 @@ export const comparePlans: PlansRow[] = [
     pro: false,
     ultra: "Available",
     enterprise: "Available",
-    tooltip: "Custom integrations are available in Business and Enterprise plans.",
+    tooltip:
+      "Custom integrations are available in Business and Enterprise plans.",
   },
   {
     feature: "Roles & permissions",
@@ -160,7 +171,8 @@ export const comparePlans: PlansRow[] = [
     pro: "Basic",
     ultra: "Advanced",
     enterprise: "Advanced",
-    tooltip: "User roles and permissions management improves with higher plans.",
+    tooltip:
+      "User roles and permissions management improves with higher plans.",
   },
   {
     feature: "Onboarding assistance",
@@ -170,6 +182,4 @@ export const comparePlans: PlansRow[] = [
     enterprise: "Full Service",
     tooltip: "Higher plans include more comprehensive onboarding assistance.",
   },
-];
-
-
+]

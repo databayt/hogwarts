@@ -1,49 +1,50 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 export interface LessonWithProgress {
-  id: string;
-  title: string;
-  description: string | null;
-  videoUrl: string | null;
-  duration: number | null;
-  position: number;
-  isPublished: boolean;
-  isFree: boolean;
+  id: string
+  title: string
+  description: string | null
+  videoUrl: string | null
+  duration: number | null
+  position: number
+  isPublished: boolean
+  isFree: boolean
   chapter: {
-    id: string;
-    title: string;
-    position: number;
+    id: string
+    title: string
+    position: number
     course: {
-      id: string;
-      title: string;
-      slug: string;
-    };
-  };
+      id: string
+      title: string
+      slug: string
+    }
+  }
   attachments: Array<{
-    id: string;
-    name: string;
-    url: string;
-  }>;
+    id: string
+    name: string
+    url: string
+  }>
   progress: {
-    isCompleted: boolean;
-  } | null;
+    isCompleted: boolean
+  } | null
   // Navigation helpers
-  previousLesson: { id: string; title: string } | null;
-  nextLesson: { id: string; title: string } | null;
+  previousLesson: { id: string; title: string } | null
+  nextLesson: { id: string; title: string } | null
 }
 
 export async function getLessonWithProgress(
   lessonId: string
 ): Promise<LessonWithProgress | null> {
-  const session = await auth();
-  const { schoolId } = await getTenantContext();
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
 
   if (!session?.user) {
-    return null;
+    return null
   }
 
   const lesson = await db.streamLesson.findFirst({
@@ -91,18 +92,20 @@ export async function getLessonWithProgress(
         },
       },
     },
-  });
+  })
 
   if (!lesson) {
-    return null;
+    return null
   }
 
   // Check access - must be enrolled or be admin/teacher
-  const isEnrolled = lesson.chapter.course.enrollments.length > 0;
-  const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(session.user.role || "");
+  const isEnrolled = lesson.chapter.course.enrollments.length > 0
+  const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
+    session.user.role || ""
+  )
 
   if (!isEnrolled && !isAdmin && !lesson.isFree) {
-    return null;
+    return null
   }
 
   // Get all lessons in the course for navigation
@@ -122,17 +125,14 @@ export async function getLessonWithProgress(
         },
       },
     },
-    orderBy: [
-      { chapter: { position: "asc" } },
-      { position: "asc" },
-    ],
-  });
+    orderBy: [{ chapter: { position: "asc" } }, { position: "asc" }],
+  })
 
   // Find current lesson index
-  const currentIndex = allLessons.findIndex((l) => l.id === lessonId);
-  const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const currentIndex = allLessons.findIndex((l) => l.id === lessonId)
+  const previousLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null
   const nextLesson =
-    currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+    currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
 
   return {
     id: lesson.id,
@@ -161,5 +161,5 @@ export async function getLessonWithProgress(
     nextLesson: nextLesson
       ? { id: nextLesson.id, title: nextLesson.title }
       : null,
-  };
+  }
 }

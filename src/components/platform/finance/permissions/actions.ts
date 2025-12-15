@@ -1,8 +1,9 @@
 "use server"
 
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import {
   checkFinancePermission,
   grantFinancePermission,
@@ -96,7 +97,9 @@ export async function getAllUsersWithPermissions(): Promise<{
       if (!userPerms.has(perm.module as FinanceModule)) {
         userPerms.set(perm.module as FinanceModule, [])
       }
-      userPerms.get(perm.module as FinanceModule)!.push(perm.action as FinanceAction)
+      userPerms
+        .get(perm.module as FinanceModule)!
+        .push(perm.action as FinanceAction)
     }
 
     // Build summary
@@ -299,7 +302,12 @@ export async function revokePermission(
 export async function bulkGrantPermissions(
   userId: string,
   permissions: Array<{ module: FinanceModule; action: FinanceAction }>
-): Promise<{ success: boolean; granted: number; failed: number; error?: string }> {
+): Promise<{
+  success: boolean
+  granted: number
+  failed: number
+  error?: string
+}> {
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
@@ -345,7 +353,12 @@ export async function bulkGrantPermissions(
 export async function bulkRevokePermissions(
   userId: string,
   permissions: Array<{ module: FinanceModule; action: FinanceAction }>
-): Promise<{ success: boolean; revoked: number; failed: number; error?: string }> {
+): Promise<{
+  success: boolean
+  revoked: number
+  failed: number
+  error?: string
+}> {
   try {
     const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {

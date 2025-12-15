@@ -3,17 +3,18 @@
  * PDF template for invoices
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { InvoiceData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { InvoiceData, TemplateStyle } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,15 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
 const createStyles = (locale: string = "en") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -234,52 +235,62 @@ const createStyles = (locale: string = "en") => {
       padding: 15,
       borderRadius: 4,
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-const formatCurrency = (amount: number, currency: string, locale: string): string => {
+const formatCurrency = (
+  amount: number,
+  currency: string,
+  locale: string
+): string => {
   return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-US", {
     style: "currency",
     currency,
-  }).format(amount);
-};
+  }).format(amount)
+}
 
 const formatDate = (date: Date, locale: string): string => {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
-const getStatusStyle = (status: string, styles: ReturnType<typeof createStyles>) => {
+const getStatusStyle = (
+  status: string,
+  styles: ReturnType<typeof createStyles>
+) => {
   switch (status) {
     case "paid":
-      return styles.statusPaid;
+      return styles.statusPaid
     case "overdue":
-      return styles.statusOverdue;
+      return styles.statusOverdue
     default:
-      return styles.statusPending;
+      return styles.statusPending
   }
-};
+}
 
 // ============================================================================
 // Invoice Template Component
 // ============================================================================
 
 interface InvoiceTemplateProps {
-  data: InvoiceData;
-  style?: TemplateStyle;
+  data: InvoiceData
+  style?: TemplateStyle
 }
 
-export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale);
-  const isRTL = locale === "ar";
+export function InvoiceTemplate({
+  data,
+  style = "modern",
+}: InvoiceTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale)
+  const isRTL = locale === "ar"
 
   const labels = {
     invoice: isRTL ? "فاتورة" : "INVOICE",
@@ -303,7 +314,7 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
     notes: isRTL ? "ملاحظات" : "Notes",
     paymentTerms: isRTL ? "شروط الدفع" : "Payment Terms",
     bankDetails: isRTL ? "تفاصيل البنك" : "Bank Details",
-  };
+  }
 
   const statusLabels: Record<string, string> = {
     paid: isRTL ? "مدفوع" : "Paid",
@@ -311,7 +322,7 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
     overdue: isRTL ? "متأخر" : "Overdue",
     draft: isRTL ? "مسودة" : "Draft",
     cancelled: isRTL ? "ملغي" : "Cancelled",
-  };
+  }
 
   return (
     <Document>
@@ -349,27 +360,41 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
             <Text style={styles.value}>{data.invoiceNumber}</Text>
 
             <Text style={styles.label}>{labels.issueDate}</Text>
-            <Text style={styles.value}>{formatDate(data.issueDate, locale)}</Text>
+            <Text style={styles.value}>
+              {formatDate(data.issueDate, locale)}
+            </Text>
 
             <Text style={styles.label}>{labels.dueDate}</Text>
             <Text style={styles.value}>{formatDate(data.dueDate, locale)}</Text>
 
             <Text style={styles.label}>{labels.status}</Text>
-            <View style={[styles.statusBadge, getStatusStyle(data.status, styles)]}>
+            <View
+              style={[styles.statusBadge, getStatusStyle(data.status, styles)]}
+            >
               <Text>{statusLabels[data.status]}</Text>
             </View>
           </View>
 
           <View style={styles.infoBlock}>
             <Text style={styles.label}>{labels.billTo}</Text>
-            <Text style={[styles.value, { fontWeight: "bold" }]}>{data.clientName}</Text>
-            {data.clientEmail && <Text style={styles.value}>{data.clientEmail}</Text>}
-            {data.clientPhone && <Text style={styles.value}>{data.clientPhone}</Text>}
-            {data.clientAddress && <Text style={styles.value}>{data.clientAddress}</Text>}
+            <Text style={[styles.value, { fontWeight: "bold" }]}>
+              {data.clientName}
+            </Text>
+            {data.clientEmail && (
+              <Text style={styles.value}>{data.clientEmail}</Text>
+            )}
+            {data.clientPhone && (
+              <Text style={styles.value}>{data.clientPhone}</Text>
+            )}
+            {data.clientAddress && (
+              <Text style={styles.value}>{data.clientAddress}</Text>
+            )}
 
             {data.studentName && (
               <>
-                <Text style={[styles.label, { marginTop: 10 }]}>{labels.student}</Text>
+                <Text style={[styles.label, { marginTop: 10 }]}>
+                  {labels.student}
+                </Text>
                 <Text style={styles.value}>{data.studentName}</Text>
               </>
             )}
@@ -385,18 +410,30 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, styles.colDescription]}>{labels.description}</Text>
-            <Text style={[styles.headerText, styles.colQty]}>{labels.quantity}</Text>
-            <Text style={[styles.headerText, styles.colPrice]}>{labels.unitPrice}</Text>
-            <Text style={[styles.headerText, styles.colTotal]}>{labels.total}</Text>
+            <Text style={[styles.headerText, styles.colDescription]}>
+              {labels.description}
+            </Text>
+            <Text style={[styles.headerText, styles.colQty]}>
+              {labels.quantity}
+            </Text>
+            <Text style={[styles.headerText, styles.colPrice]}>
+              {labels.unitPrice}
+            </Text>
+            <Text style={[styles.headerText, styles.colTotal]}>
+              {labels.total}
+            </Text>
           </View>
 
           {data.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
               <Text style={[styles.cellText, styles.colDescription]}>
-                {isRTL ? item.descriptionAr || item.description : item.description}
+                {isRTL
+                  ? item.descriptionAr || item.description
+                  : item.description}
               </Text>
-              <Text style={[styles.cellText, styles.colQty]}>{item.quantity}</Text>
+              <Text style={[styles.cellText, styles.colQty]}>
+                {item.quantity}
+              </Text>
               <Text style={[styles.cellText, styles.colPrice]}>
                 {formatCurrency(item.unitPrice, data.currency, locale)}
               </Text>
@@ -452,7 +489,9 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
 
           {data.balance !== undefined && (
             <View style={styles.totalRow}>
-              <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>{labels.balance}</Text>
+              <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
+                {labels.balance}
+              </Text>
               <Text style={[styles.totalValue, { fontWeight: "bold" }]}>
                 {formatCurrency(data.balance, data.currency, locale)}
               </Text>
@@ -478,7 +517,7 @@ export function InvoiceTemplate({ data, style = "modern" }: InvoiceTemplateProps
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles };
+export { createStyles }

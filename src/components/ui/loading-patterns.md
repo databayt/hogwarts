@@ -35,25 +35,27 @@ Loading states are critical for perceived performance and user experience. Our l
 
 All data table skeletons have been audited against actual column definitions:
 
-| Route | Actual Columns | Skeleton Columns | Status |
-|-------|---------------|------------------|--------|
-| **students** | 5 | 5 | ✅ Verified |
-| **teachers** | 5 | 5 | ✅ Verified (Fixed) |
-| **classes** | 10 | 10 | ✅ Verified (Fixed) |
-| **parents** | 5 | 5 | ✅ Verified |
-| **subjects** | 4 | 4 | ✅ Verified (Fixed) |
-| **announcements** | 5 | 5 | ✅ Verified (Fixed) |
-| **events** | 10 | 10 | ✅ Verified (Fixed) |
-| **lessons** | 9 | 9 | ✅ Verified (Fixed) |
-| **assignments** | 6 | 6 | ✅ Verified |
-| **grades** | 9 | 9 | ✅ Verified (Fixed) |
+| Route             | Actual Columns | Skeleton Columns | Status              |
+| ----------------- | -------------- | ---------------- | ------------------- |
+| **students**      | 5              | 5                | ✅ Verified         |
+| **teachers**      | 5              | 5                | ✅ Verified (Fixed) |
+| **classes**       | 10             | 10               | ✅ Verified (Fixed) |
+| **parents**       | 5              | 5                | ✅ Verified         |
+| **subjects**      | 4              | 4                | ✅ Verified (Fixed) |
+| **announcements** | 5              | 5                | ✅ Verified (Fixed) |
+| **events**        | 10             | 10               | ✅ Verified (Fixed) |
+| **lessons**       | 9              | 9                | ✅ Verified (Fixed) |
+| **assignments**   | 6              | 6                | ✅ Verified         |
+| **grades**        | 9              | 9                | ✅ Verified (Fixed) |
 
 **Card Grids:**
+
 - **finance**: 13 cards ✅
 - **exams**: 9 cards ✅
 - **attendance**: 8 method cards ✅
 
 **Navigation:**
+
 - **finance**: 7 tabs ✅
 - **exams**: 6 tabs ✅
 - **attendance**: 8 tabs ✅
@@ -116,11 +118,7 @@ All loading states use the same wrapper for vertical rhythm:
 
 ```tsx
 export default function Loading() {
-  return (
-    <div className="space-y-6">
-      {/* Your skeletons here */}
-    </div>
-  )
+  return <div className="space-y-6">{/* Your skeletons here */}</div>
 }
 ```
 
@@ -131,15 +129,17 @@ export default function Loading() {
 ### Base Components
 
 #### `<Skeleton>`
+
 Primitive building block for custom skeletons.
 
 ```tsx
 import { Skeleton } from "@/components/ui/skeleton"
 
-<Skeleton className="h-4 w-32" />
+;<Skeleton className="h-4 w-32" />
 ```
 
 #### `<SkeletonCard>`, `<SkeletonCardCompact>`, `<SkeletonStatCard>`
+
 Pre-built card skeletons (already existed).
 
 ```tsx
@@ -149,12 +149,13 @@ import { SkeletonCard, SkeletonStatCard } from "@/components/ui/skeleton-card"
 ### New Specialized Components
 
 #### `<SkeletonDataTable>`
+
 For data table pages (students, teachers, classes, etc.).
 
 ```tsx
 import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
 
-<SkeletonDataTable
+;<SkeletonDataTable
   columns={5}
   rows={10}
   showToolbar={true}
@@ -163,82 +164,95 @@ import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
 ```
 
 **Variants:**
+
 - `<SkeletonDataTableCompact>` - No toolbar/pagination
 
 #### `<SkeletonPageNav>`
+
 For tab navigation (finance, exams, attendance).
 
 ```tsx
 import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
-<SkeletonPageNav tabs={4} />
+;<SkeletonPageNav tabs={4} />
 ```
 
 **Variants:**
+
 - `<SkeletonPageNavWide>` - For 7+ tabs with scroll
 
 #### `<SkeletonForm>`
+
 For form pages (profile, settings).
 
 ```tsx
 import { SkeletonForm } from "@/components/ui/skeleton-form"
 
-<SkeletonForm fields={6} showCard={false} />
+;<SkeletonForm fields={6} showCard={false} />
 ```
 
 **Variants:**
+
 - `<SkeletonFormGrid>` - Two-column grid layout
 - `<SkeletonFormSection>` - Section with heading + fields
 
 #### `<SkeletonCalendar>`
+
 For timetable and calendar views.
 
 ```tsx
 import { SkeletonCalendar } from "@/components/ui/skeleton-calendar"
 
-<SkeletonCalendar days={7} periods={8} showTime={true} />
+;<SkeletonCalendar days={7} periods={8} showTime={true} />
 ```
 
 **Variants:**
+
 - `<SkeletonCalendarCompact>` - 5-day school week
 - `<SkeletonMonthCalendar>` - Month view (6×7 grid)
 
 #### `<SkeletonList>`
+
 For lists (notifications, activity feeds).
 
 ```tsx
 import { SkeletonList } from "@/components/ui/skeleton-list"
 
-<SkeletonList items={8} showAvatar={true} />
+;<SkeletonList items={8} showAvatar={true} />
 ```
 
 **Variants:**
+
 - `<SkeletonListCompact>` - Dense lists without descriptions
 - `<SkeletonActivityFeed>` - Timeline-style feed
 
 #### `<SkeletonStats>`
+
 For dashboard metrics and KPIs.
 
 ```tsx
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
-<SkeletonStats count={4} />
+;<SkeletonStats count={4} />
 ```
 
 **Variants:**
+
 - `<SkeletonStatsLarge>` - Detailed analytics cards
 - `<SkeletonStatsRow>` - Inline metrics row
 
 #### `<SkeletonChart>`
+
 For charts and data visualizations.
 
 ```tsx
 import { SkeletonChart } from "@/components/ui/skeleton-chart"
 
-<SkeletonChart variant="bar" height="h-[300px]" />
+;<SkeletonChart variant="bar" height="h-[300px]" />
 ```
 
 **Variants:**
+
 - `variant="bar" | "line" | "pie" | "area"`
 - `<SkeletonChartGrid>` - Multiple charts grid
 
@@ -252,8 +266,8 @@ import { SkeletonChart } from "@/components/ui/skeleton-chart"
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/students/loading.tsx
-import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
 
 export default function Loading() {
   return (
@@ -274,9 +288,9 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/finance/loading.tsx
-import { SkeletonPageNavWide } from "@/components/ui/skeleton-page-nav"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonPageNavWide } from "@/components/ui/skeleton-page-nav"
 
 export default function Loading() {
   return (
@@ -304,9 +318,9 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/lab/loading.tsx
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function Loading() {
   return (
@@ -336,10 +350,10 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/attendance/loading.tsx
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCard } from "@/components/ui/skeleton-card"
 import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {
   return (
@@ -364,8 +378,8 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/timetable/loading.tsx
-import { SkeletonCalendarCompact } from "@/components/ui/skeleton-calendar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCalendarCompact } from "@/components/ui/skeleton-calendar"
 
 export default function Loading() {
   return (
@@ -387,10 +401,10 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/notifications/loading.tsx
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonList } from "@/components/ui/skeleton-list"
 import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonList } from "@/components/ui/skeleton-list"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {
   return (
@@ -410,9 +424,9 @@ export default function Loading() {
 
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/profile/loading.tsx
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonFormSection } from "@/components/ui/skeleton-form"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonFormSection } from "@/components/ui/skeleton-form"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function Loading() {
   return (
@@ -514,7 +528,7 @@ export default function Loading() {
 ```tsx
 // ❌ Async function in loading.tsx
 export default async function Loading() {
-  const dict = await getDictionary('en')
+  const dict = await getDictionary("en")
   return <PageHeader title={dict.title} />
 }
 

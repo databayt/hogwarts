@@ -1,9 +1,14 @@
 "use server"
 
-import { db } from "@/lib/db"
 import { cache } from "@/lib/cache"
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import type { WeatherCondition, ForecastDay, WeatherConditionType } from "./weather"
+
+import type {
+  ForecastDay,
+  WeatherCondition,
+  WeatherConditionType,
+} from "./weather"
 
 // ============================================================================
 // TYPES
@@ -133,15 +138,17 @@ export async function getWeatherData(
         }
 
         // Map 6-day forecast (skip today)
-        const forecast: ForecastDay[] = data.daily.slice(1, 7).map((day: any) => {
-          const date = new Date(day.dt * 1000)
-          const dayWeather = day.weather[0]
-          return {
-            day: date.toLocaleDateString("en-US", { weekday: "short" }),
-            condition: mapCondition(dayWeather.id),
-            temp: Math.round(day.temp.day),
-          }
-        })
+        const forecast: ForecastDay[] = data.daily
+          .slice(1, 7)
+          .map((day: any) => {
+            const date = new Date(day.dt * 1000)
+            const dayWeather = day.weather[0]
+            return {
+              day: date.toLocaleDateString("en-US", { weekday: "short" }),
+              condition: mapCondition(dayWeather.id),
+              temp: Math.round(day.temp.day),
+            }
+          })
 
         return {
           current,

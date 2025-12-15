@@ -9,31 +9,38 @@ Comprehensive validation before allowing commits to ensure code quality and prev
 ## Execution Order
 
 ### 1. TypeScript Validation
+
 ```bash
 pnpm tsc --noEmit
 ```
+
 - Must show 0 errors
 - Prevents build hangs at "Environments: .env"
 - Critical for Next.js build success
 
 ### 2. Pattern Detection
+
 ```bash
 /scan-errors
 ```
+
 - Detects 204+ error patterns
 - Dictionary properties (173+)
 - Prisma field types (13+)
 - Enum completeness (2+)
 
 ### 3. Auto-Fix (if errors found)
+
 ```bash
 /fix-build
 ```
+
 - 95%+ success rate
 - Automatically fixes detected patterns
 - Re-runs validation after fixes
 
 ### 4. Prisma Validation
+
 ```bash
 # Check if schema changed
 git diff --cached --name-only | grep -q "\.prisma$"
@@ -44,12 +51,14 @@ fi
 ```
 
 ### 5. ESLint Check
+
 ```bash
 # Only on staged files
 git diff --cached --name-only --diff-filter=ACM | grep -E "\.(ts|tsx|js|jsx)$" | xargs pnpm eslint
 ```
 
 ### 6. Prettier Format
+
 ```bash
 # Format staged files
 git diff --cached --name-only --diff-filter=ACM | grep -E "\.(ts|tsx|js|jsx|json|md)$" | xargs pnpm prettier --write
@@ -57,12 +66,14 @@ git add -u  # Re-stage formatted files
 ```
 
 ### 7. Test Execution
+
 ```bash
 # Run tests for changed files
 git diff --cached --name-only --diff-filter=ACM | grep -E "\.test\.(ts|tsx)$" | xargs pnpm test
 ```
 
 ### 8. Multi-Tenant Safety
+
 ```bash
 # Check for schoolId in new queries
 git diff --cached | grep -E "(prisma|db\.).*\.(create|update|delete|findMany|findFirst)" | grep -v "schoolId"
@@ -74,6 +85,7 @@ fi
 ```
 
 ### 9. Seed Safety Check (CRITICAL)
+
 ```bash
 # Check for destructive operations in seed files
 # Prevents accidental data loss from deleteMany/delete operations
@@ -100,6 +112,7 @@ fi
 ```
 
 ### 9. Build Verification (main branch only)
+
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
@@ -110,6 +123,7 @@ fi
 ## Configuration
 
 Enable in `.claude/settings.json`:
+
 ```json
 {
   "git": {
@@ -138,17 +152,20 @@ Enable in `.claude/settings.json`:
 ## Override Behavior
 
 ### Protected Branches (main, master, production)
+
 - **STRICT**: No overrides allowed
 - All checks must pass
 - Build verification required
 
 ### Feature Branches
+
 - Warnings shown but commit allowed with `--no-verify`
 - Not recommended but available for emergencies
 
 ## Error Messages
 
 ### TypeScript Errors
+
 ```
 ❌ TypeScript compilation failed
 Found 5 errors. Run 'pnpm tsc --noEmit' to see details.
@@ -156,6 +173,7 @@ Commit blocked. Fix errors before committing.
 ```
 
 ### Pattern Errors
+
 ```
 ❌ Code patterns detected that will cause build failures
 Found: 173 dictionary errors, 13 Prisma errors, 2 enum errors
@@ -168,6 +186,7 @@ Re-running validation...
 ```
 
 ### Multi-Tenant Error
+
 ```
 ❌ Multi-tenant safety violation
 Database operation missing schoolId scope:
@@ -196,6 +215,7 @@ Proceeding with commit...
 ## Performance
 
 Average execution time:
+
 - TypeScript: ~12s
 - Pattern scan: ~5s
 - ESLint: ~3s
@@ -208,6 +228,7 @@ Average execution time:
 ## Metrics Tracking
 
 Hook automatically updates metrics:
+
 ```json
 {
   "preCommit": {

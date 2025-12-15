@@ -1,26 +1,34 @@
-import { MeritTable } from "@/components/platform/admission/merit-table";
-import type { MeritRow } from "@/components/platform/admission/merit-columns";
-import { SearchParams } from "nuqs/server";
-import { meritSearchParams } from "@/components/platform/admission/list-params";
-import { getTenantContext } from "@/lib/tenant-context";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { getMeritList, getMeritStats } from "@/components/platform/admission/queries";
+import { SearchParams } from "nuqs/server"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { meritSearchParams } from "@/components/platform/admission/list-params"
+import type { MeritRow } from "@/components/platform/admission/merit-columns"
+import { MeritTable } from "@/components/platform/admission/merit-table"
+import {
+  getMeritList,
+  getMeritStats,
+} from "@/components/platform/admission/queries"
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  dictionary: Dictionary["school"];
-  lang: Locale;
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary["school"]
+  lang: Locale
 }
 
-export default async function MeritContent({ searchParams, dictionary, lang }: Props) {
-  const sp = await meritSearchParams.parse(await searchParams);
-  const { schoolId } = await getTenantContext();
-  const t = dictionary.admission;
+export default async function MeritContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const sp = await meritSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+  const t = dictionary.admission
 
-  let data: MeritRow[] = [];
-  let total = 0;
-  let stats = { totalRanked: 0, selected: 0, waitlisted: 0, avgScore: 0 };
+  let data: MeritRow[] = []
+  let total = 0
+  let stats = { totalRanked: 0, selected: 0, waitlisted: 0, avgScore: 0 }
 
   if (schoolId) {
     try {
@@ -34,7 +42,7 @@ export default async function MeritContent({ searchParams, dictionary, lang }: P
           sort: sp.sort,
         }),
         getMeritStats(schoolId, sp.campaignId || undefined),
-      ]);
+      ])
 
       data = listResult.rows.map((a) => ({
         id: a.id,
@@ -51,14 +59,14 @@ export default async function MeritContent({ searchParams, dictionary, lang }: P
         interviewScore: a.interviewScore?.toString() ?? null,
         campaignName: a.campaign.name,
         campaignId: a.campaign.id,
-      }));
+      }))
 
-      total = listResult.count;
-      stats = statsResult;
+      total = listResult.count
+      stats = statsResult
     } catch (error) {
-      console.error("[MeritContent] Error fetching merit list:", error);
-      data = [];
-      total = 0;
+      console.error("[MeritContent] Error fetching merit list:", error)
+      data = []
+      total = 0
     }
   }
 
@@ -74,5 +82,5 @@ export default async function MeritContent({ searchParams, dictionary, lang }: P
         stats={stats}
       />
     </div>
-  );
+  )
 }

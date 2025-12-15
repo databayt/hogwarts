@@ -18,8 +18,8 @@ export function StackedBlocks({
       <div className="grid gap-4 md:grid-cols-3">
         {blocks.map((b) => (
           <div key={b.title} className="rounded-md border p-4">
-            <div className="text-sm font-medium mb-2">{b.title}</div>
-            <ul className="list-disc ps-4 text-sm text-muted-foreground space-y-1">
+            <div className="mb-2 text-sm font-medium">{b.title}</div>
+            <ul className="text-muted-foreground list-disc space-y-1 ps-4 text-sm">
               {b.items.map((it) => (
                 <li key={it}>{it}</li>
               ))}
@@ -43,10 +43,8 @@ export function DefaultStackedBlocks() {
     },
     {
       title: "Shared Core",
-      items: ["Auth", "Business logic", "Prisma + Postgres (tenant scoped)"]
+      items: ["Auth", "Business logic", "Prisma + Postgres (tenant scoped)"],
     },
   ]
   return <StackedBlocks blocks={blocks} title="High-level Blocks" />
 }
-
-

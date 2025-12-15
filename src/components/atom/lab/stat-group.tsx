@@ -1,9 +1,16 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { StatValue } from "./stat-value"
+
 import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import { TrendBadge } from "./trend-badge"
-import type { BaseComponentProps, BaseVariant, TrendData, LayoutVariant } from "./types"
+import type {
+  BaseComponentProps,
+  BaseVariant,
+  LayoutVariant,
+  TrendData,
+} from "./types"
 
 interface StatGroupProps extends BaseComponentProps {
   /**
@@ -60,13 +67,10 @@ export function StatGroup({
       )}
       {...props}
     >
-      <div className="flex items-baseline gap-2 flex-wrap">
+      <div className="flex flex-wrap items-baseline gap-2">
         <StatValue value={value} variant={variant} />
         {trend && (
-          <TrendBadge
-            value={trend.value}
-            direction={trend.direction}
-          />
+          <TrendBadge value={trend.value} direction={trend.direction} />
         )}
       </div>
       <StatLabel label={label} />

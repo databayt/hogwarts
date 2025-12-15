@@ -1,14 +1,16 @@
 "use server"
 
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResult } from "./types"
 import {
   createDepartmentSchema,
-  updateDepartmentSchema,
   deleteDepartmentSchema,
+  updateDepartmentSchema,
 } from "./validation"
-import type { ActionResult } from "./types"
 
 // ============================================================================
 // Get Departments
@@ -92,7 +94,8 @@ export async function getDepartments(): Promise<ActionResult> {
     console.error("Failed to fetch departments:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to fetch departments",
+      message:
+        error instanceof Error ? error.message : "Failed to fetch departments",
     }
   }
 }
@@ -101,7 +104,9 @@ export async function getDepartments(): Promise<ActionResult> {
 // Create Department
 // ============================================================================
 
-export async function createDepartment(formData: FormData): Promise<ActionResult> {
+export async function createDepartment(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -115,7 +120,8 @@ export async function createDepartment(formData: FormData): Promise<ActionResult
 
     const data = {
       departmentName: formData.get("departmentName") as string,
-      departmentNameAr: (formData.get("departmentNameAr") as string) || undefined,
+      departmentNameAr:
+        (formData.get("departmentNameAr") as string) || undefined,
     }
 
     const validated = createDepartmentSchema.parse(data)
@@ -126,7 +132,10 @@ export async function createDepartment(formData: FormData): Promise<ActionResult
     })
 
     if (existing) {
-      return { success: false, message: "A department with this name already exists" }
+      return {
+        success: false,
+        message: "A department with this name already exists",
+      }
     }
 
     const department = await db.department.create({
@@ -147,7 +156,8 @@ export async function createDepartment(formData: FormData): Promise<ActionResult
     console.error("Failed to create department:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create department",
+      message:
+        error instanceof Error ? error.message : "Failed to create department",
     }
   }
 }
@@ -156,7 +166,9 @@ export async function createDepartment(formData: FormData): Promise<ActionResult
 // Update Department
 // ============================================================================
 
-export async function updateDepartment(formData: FormData): Promise<ActionResult> {
+export async function updateDepartment(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -186,7 +198,10 @@ export async function updateDepartment(formData: FormData): Promise<ActionResult
     }
 
     // Check for duplicate name if changing name
-    if (validated.departmentName && validated.departmentName !== existing.departmentName) {
+    if (
+      validated.departmentName &&
+      validated.departmentName !== existing.departmentName
+    ) {
       const duplicate = await db.department.findFirst({
         where: {
           schoolId,
@@ -195,14 +210,19 @@ export async function updateDepartment(formData: FormData): Promise<ActionResult
         },
       })
       if (duplicate) {
-        return { success: false, message: "A department with this name already exists" }
+        return {
+          success: false,
+          message: "A department with this name already exists",
+        }
       }
     }
 
     const department = await db.department.update({
       where: { id: validated.id },
       data: {
-        ...(validated.departmentName && { departmentName: validated.departmentName }),
+        ...(validated.departmentName && {
+          departmentName: validated.departmentName,
+        }),
         ...(validated.departmentNameAr !== undefined && {
           departmentNameAr: validated.departmentNameAr || null,
         }),
@@ -219,7 +239,8 @@ export async function updateDepartment(formData: FormData): Promise<ActionResult
     console.error("Failed to update department:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to update department",
+      message:
+        error instanceof Error ? error.message : "Failed to update department",
     }
   }
 }
@@ -228,7 +249,9 @@ export async function updateDepartment(formData: FormData): Promise<ActionResult
 // Delete Department
 // ============================================================================
 
-export async function deleteDepartment(formData: FormData): Promise<ActionResult> {
+export async function deleteDepartment(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -288,7 +311,8 @@ export async function deleteDepartment(formData: FormData): Promise<ActionResult
     console.error("Failed to delete department:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete department",
+      message:
+        error instanceof Error ? error.message : "Failed to delete department",
     }
   }
 }

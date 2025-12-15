@@ -1,20 +1,22 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
+import Link from "next/link"
 import {
-  Search,
-  Grid3X3,
   Bell,
-  HelpCircle,
-  Settings,
-  Globe,
   ChevronDown,
-  Menu,
+  ExternalLink,
+  Globe,
+  Grid3X3,
+  HelpCircle,
   Info,
-  ExternalLink
+  Menu,
+  Search,
+  Settings,
 } from "lucide-react"
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { LangSwitcher } from "./lang-switcher"
 import { ModeSwitcher } from "./mode-switcher"
 
@@ -33,7 +35,7 @@ export function AWSHeader({
   accountId = "4467-3125-8367",
   organizationName = "Hogwarts",
   breadcrumbs,
-  pageTitle
+  pageTitle,
 }: AWSHeaderProps) {
   return (
     <div className="w-full">
@@ -43,7 +45,10 @@ export function AWSHeader({
           {/* Left Section */}
           <div className="flex items-center gap-4">
             {/* Logo */}
-            <Link href={`/${locale}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link
+              href={`/${locale}`}
+              className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            >
               <Image
                 src="/logo.png"
                 alt="Logo"
@@ -54,20 +59,20 @@ export function AWSHeader({
             </Link>
 
             {/* Apps Grid */}
-            <button className="p-1.5 rounded hover:bg-[#3c4b5e] transition-colors">
+            <button className="rounded p-1.5 transition-colors hover:bg-[#3c4b5e]">
               <Grid3X3 className="h-5 w-5" />
             </button>
 
             {/* Search Bar */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden items-center md:flex">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search"
-                  className="h-8 w-64 lg:w-80 rounded bg-[#0f1b2a] border border-[#5f6b7a] pl-10 pr-16 text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-[#539fe5] focus:ring-1 focus:ring-[#539fe5]"
+                  className="h-8 w-64 rounded border border-[#5f6b7a] bg-[#0f1b2a] pr-16 pl-10 text-sm text-white placeholder:text-gray-400 focus:border-[#539fe5] focus:ring-1 focus:ring-[#539fe5] focus:outline-none lg:w-80"
                 />
-                <kbd className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-xs bg-[#232f3e] border border-[#5f6b7a] rounded text-gray-400">
+                <kbd className="absolute top-1/2 right-2 -translate-y-1/2 rounded border border-[#5f6b7a] bg-[#232f3e] px-1.5 py-0.5 text-xs text-gray-400">
                   [Option+S]
                 </kbd>
               </div>
@@ -75,42 +80,44 @@ export function AWSHeader({
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="ml-auto flex items-center gap-1">
             {/* Icon Buttons */}
-            <button className="p-2 rounded hover:bg-[#3c4b5e] transition-colors hidden sm:block">
+            <button className="hidden rounded p-2 transition-colors hover:bg-[#3c4b5e] sm:block">
               <ExternalLink className="h-4 w-4" />
             </button>
-            <button className="p-2 rounded hover:bg-[#3c4b5e] transition-colors">
+            <button className="rounded p-2 transition-colors hover:bg-[#3c4b5e]">
               <Bell className="h-4 w-4" />
             </button>
-            <button className="p-2 rounded hover:bg-[#3c4b5e] transition-colors hidden sm:block">
+            <button className="hidden rounded p-2 transition-colors hover:bg-[#3c4b5e] sm:block">
               <HelpCircle className="h-4 w-4" />
             </button>
-            <button className="p-2 rounded hover:bg-[#3c4b5e] transition-colors hidden sm:block">
+            <button className="hidden rounded p-2 transition-colors hover:bg-[#3c4b5e] sm:block">
               <Settings className="h-4 w-4" />
             </button>
 
             {/* Global/Region Selector */}
-            <button className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded hover:bg-[#3c4b5e] transition-colors text-sm">
+            <button className="hidden items-center gap-1 rounded px-3 py-1.5 text-sm transition-colors hover:bg-[#3c4b5e] lg:flex">
               <Globe className="h-4 w-4" />
               <span>Global</span>
               <ChevronDown className="h-3 w-3" />
             </button>
 
             {/* Divider */}
-            <div className="h-6 w-px bg-[#5f6b7a] mx-2 hidden lg:block" />
+            <div className="mx-2 hidden h-6 w-px bg-[#5f6b7a] lg:block" />
 
             {/* Account Info */}
-            <div className="hidden lg:flex items-center gap-3">
-              <span className="text-xs text-gray-400">Account ID: {accountId}</span>
-              <button className="flex items-center gap-1 px-3 py-1.5 rounded hover:bg-[#3c4b5e] transition-colors text-sm font-medium">
+            <div className="hidden items-center gap-3 lg:flex">
+              <span className="text-xs text-gray-400">
+                Account ID: {accountId}
+              </span>
+              <button className="flex items-center gap-1 rounded px-3 py-1.5 text-sm font-medium transition-colors hover:bg-[#3c4b5e]">
                 {organizationName}
                 <ChevronDown className="h-3 w-3" />
               </button>
             </div>
 
             {/* Language & Theme Switchers */}
-            <div className="flex items-center gap-0.5 ml-2">
+            <div className="ml-2 flex items-center gap-0.5">
               <LangSwitcher />
               <ModeSwitcher />
             </div>
@@ -120,19 +127,19 @@ export function AWSHeader({
 
       {/* Secondary Header - Breadcrumb Navigation */}
       {(breadcrumbs || pageTitle) && (
-        <nav className="bg-background border-b border-border">
+        <nav className="bg-background border-border border-b">
           <div className="flex h-11 items-center px-4">
             {/* Menu Toggle */}
-            <button className="p-1.5 rounded hover:bg-accent transition-colors mr-4">
+            <button className="hover:bg-accent mr-4 rounded p-1.5 transition-colors">
               <Menu className="h-5 w-5" />
             </button>
 
             {/* Breadcrumbs */}
-            <div className="flex items-center gap-2 text-sm flex-1">
+            <div className="flex flex-1 items-center gap-2 text-sm">
               {breadcrumbs?.map((crumb, index) => (
                 <span key={index} className="flex items-center gap-2">
                   {index > 0 && (
-                    <ChevronDown className="h-3 w-3 -rotate-90 text-muted-foreground" />
+                    <ChevronDown className="text-muted-foreground h-3 w-3 -rotate-90" />
                   )}
                   {crumb.href ? (
                     <Link
@@ -153,8 +160,8 @@ export function AWSHeader({
 
             {/* Right Actions */}
             <div className="flex items-center gap-2">
-              <button className="p-1.5 rounded hover:bg-accent transition-colors">
-                <Info className="h-4 w-4 text-muted-foreground" />
+              <button className="hover:bg-accent rounded p-1.5 transition-colors">
+                <Info className="text-muted-foreground h-4 w-4" />
               </button>
             </div>
           </div>

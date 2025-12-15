@@ -1,20 +1,38 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { BloodGroup, Gender, StudentType } from "./validation";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { UseFormReturn } from "react-hook-form"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { BloodGroup, Gender, StudentType } from "./validation"
 
 interface PersonalInfoStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
 export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
@@ -375,5 +393,5 @@ export function PersonalInfoStep({ form, dictionary }: PersonalInfoStepProps) {
         />
       </div>
     </div>
-  );
+  )
 }

@@ -92,7 +92,7 @@
   /* For: marketing pages, tenant site pages */
   /* Characteristics: generous spacing, max-width centered */
   .marketing-container {
-    @apply w-full mx-auto;
+    @apply mx-auto w-full;
     padding-left: var(--marketing-px);
     padding-right: var(--marketing-px);
     max-width: var(--marketing-max);
@@ -125,7 +125,7 @@
 
   /* Standard container with max-width constraint */
   .container {
-    @apply w-full mx-auto;
+    @apply mx-auto w-full;
     padding-left: var(--container-px);
     padding-right: var(--container-px);
     max-width: var(--container-max);

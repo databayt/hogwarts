@@ -1,7 +1,7 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { SkeletonDataTable } from '@/components/ui/skeleton-data-table'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function InvoiceDashboardLoading() {
   return (
@@ -24,7 +24,12 @@ export default function InvoiceDashboardLoading() {
           <Skeleton className="h-6 w-32" />
         </CardHeader>
         <CardContent>
-          <SkeletonDataTable columns={6} rows={5} showToolbar={false} showPagination={false} />
+          <SkeletonDataTable
+            columns={6}
+            rows={5}
+            showToolbar={false}
+            showPagination={false}
+          />
         </CardContent>
       </Card>
     </div>

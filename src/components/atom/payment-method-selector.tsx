@@ -2,10 +2,11 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Icons } from "@/components/atom/icons"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Icons } from "@/components/atom/icons"
 
 const methodIcons = {
   card: Icons.creditCard,
@@ -48,7 +49,7 @@ export function PaymentMethodSelector({
               <Label
                 htmlFor={method}
                 className={cn(
-                  "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4",
+                  "border-muted bg-popover flex flex-col items-center justify-between rounded-md border-2 p-4",
                   "hover:bg-accent hover:text-accent-foreground",
                   "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                 )}

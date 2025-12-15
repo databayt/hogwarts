@@ -2,9 +2,10 @@
  * Budget Module - Type Definitions
  */
 
-import type { BudgetStatus } from '@prisma/client'
-import type { budgetSchema, budgetAllocationSchema } from './validation'
-import type { z } from 'zod'
+import type { BudgetStatus } from "@prisma/client"
+import type { z } from "zod"
+
+import type { budgetAllocationSchema, budgetSchema } from "./validation"
 
 export type BudgetInput = z.infer<typeof budgetSchema>
 export type BudgetAllocationInput = z.infer<typeof budgetAllocationSchema>

@@ -1,18 +1,20 @@
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
-import { cache } from 'react'
-import { plaidClient } from '../lib/plaid'
-import { parseStringify } from '../lib/utils'
-import { CountryCode } from 'plaid'
+import { cache } from "react"
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache"
+import { auth } from "@/auth"
+import { CountryCode } from "plaid"
+
+import { db } from "@/lib/db"
+
+import { plaidClient } from "../lib/plaid"
+import { parseStringify } from "../lib/utils"
 
 // Cache tags for granular revalidation
 const CACHE_TAGS = {
-  accounts: 'bank-accounts',
-  transactions: 'bank-transactions',
-  institutions: 'bank-institutions',
+  accounts: "bank-accounts",
+  transactions: "bank-transactions",
+  institutions: "bank-institutions",
 }
 
 // Cached function for getting accounts with React cache
@@ -23,9 +25,9 @@ export const getAccounts = cache(async ({ userId }: { userId: string }) => {
       include: {
         transactions: {
           take: 5,
-          orderBy: { date: 'desc' }
-        }
-      }
+          orderBy: { date: "desc" },
+        },
+      },
     })
 
     const totalBanks = accounts.length
@@ -39,7 +41,7 @@ export const getAccounts = cache(async ({ userId }: { userId: string }) => {
       totalCurrentBalance,
     })
   } catch (error) {
-    console.error('Error getting accounts:', error)
+    console.error("Error getting accounts:", error)
     return null
   }
 })
@@ -52,19 +54,19 @@ export const getAccount = unstable_cache(
         where: { id: accountId },
         include: {
           transactions: {
-            orderBy: { date: 'desc' },
-            take: 50
-          }
-        }
+            orderBy: { date: "desc" },
+            take: 50,
+          },
+        },
       })
 
       return parseStringify(account)
     } catch (error) {
-      console.error('Error getting account:', error)
+      console.error("Error getting account:", error)
       return null
     }
   },
-  ['get-account'],
+  ["get-account"],
   {
     tags: [CACHE_TAGS.accounts],
     revalidate: 60, // Revalidate every minute for fresh data
@@ -77,7 +79,7 @@ export const getBankInfo = unstable_cache(
     try {
       const account = await db.bankAccount.findUnique({
         where: { id: accountId },
-        select: { institutionId: true }
+        select: { institutionId: true },
       })
 
       if (!account) {
@@ -86,7 +88,7 @@ export const getBankInfo = unstable_cache(
 
       const institutionResponse = await plaidClient.institutionsGetById({
         institution_id: account.institutionId,
-        country_codes: ['US'] as CountryCode[],
+        country_codes: ["US"] as CountryCode[],
       })
 
       const institution = institutionResponse.data.institution
@@ -97,11 +99,11 @@ export const getBankInfo = unstable_cache(
         primaryColor: institution.primary_color,
       })
     } catch (error) {
-      console.error('Error getting bank info:', error)
+      console.error("Error getting bank info:", error)
       return null
     }
   },
-  ['get-bank-info'],
+  ["get-bank-info"],
   {
     tags: [CACHE_TAGS.institutions],
     revalidate: 3600, // Cache for 1 hour
@@ -128,12 +130,12 @@ export async function createBankAccount({
     // Verify user authentication
     const session = await auth()
     if (!session?.user?.id || session.user.id !== userId) {
-      throw new Error('Unauthorized')
+      throw new Error("Unauthorized")
     }
 
     // Verify schoolId exists
     if (!session.user.schoolId) {
-      throw new Error('School ID not found in session')
+      throw new Error("School ID not found in session")
     }
 
     const schoolId = session.user.schoolId
@@ -148,7 +150,7 @@ export async function createBankAccount({
     )
 
     if (!accountData) {
-      throw new Error('Account not found')
+      throw new Error("Account not found")
     }
 
     // Create bank account in database
@@ -168,7 +170,7 @@ export async function createBankAccount({
         currentBalance: accountData.balances.current || 0,
         availableBalance: accountData.balances.available || 0,
         type: accountData.type,
-        subtype: accountData.subtype || '',
+        subtype: accountData.subtype || "",
       },
     })
 
@@ -182,7 +184,7 @@ export async function createBankAccount({
 
     return parseStringify(bankAccount)
   } catch (error) {
-    console.error('Error creating bank account:', error)
+    console.error("Error creating bank account:", error)
     throw error // Re-throw for proper error handling in UI
   }
 }
@@ -191,7 +193,7 @@ export async function createBankAccount({
 export async function syncTransactions({
   accountId,
   startDate,
-  endDate
+  endDate,
 }: {
   accountId: string
   startDate?: Date
@@ -200,31 +202,32 @@ export async function syncTransactions({
   try {
     const account = await db.bankAccount.findUnique({
       where: { id: accountId },
-      select: { id: true, accessToken: true, accountId: true, schoolId: true }
+      select: { id: true, accessToken: true, accountId: true, schoolId: true },
     })
 
     if (!account) {
-      throw new Error('Account not found')
+      throw new Error("Account not found")
     }
 
     // Default date range: last 90 days
     const now = endDate || new Date()
-    const start = startDate || new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+    const start =
+      startDate || new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
     const transactionsResponse = await plaidClient.transactionsGet({
       access_token: account.accessToken,
-      start_date: start.toISOString().split('T')[0],
-      end_date: now.toISOString().split('T')[0],
+      start_date: start.toISOString().split("T")[0],
+      end_date: now.toISOString().split("T")[0],
       options: {
         count: 500, // Max transactions per request
         offset: 0,
-      }
+      },
     })
 
     const transactions = transactionsResponse.data.transactions
 
     // Batch upsert transactions for better performance
-    const upsertPromises = transactions.map(transaction =>
+    const upsertPromises = transactions.map((transaction) =>
       db.transaction.upsert({
         where: { id: transaction.transaction_id },
         create: {
@@ -235,13 +238,13 @@ export async function syncTransactions({
           name: transaction.name,
           amount: transaction.amount,
           date: new Date(transaction.date),
-          category: transaction.category?.[0] || 'Other',
+          category: transaction.category?.[0] || "Other",
           subcategory: transaction.category?.[1] || undefined,
-          type: transaction.amount > 0 ? 'debit' : 'credit',
+          type: transaction.amount > 0 ? "debit" : "credit",
           pending: transaction.pending,
           merchantName: transaction.merchant_name || undefined,
           paymentChannel: transaction.payment_channel || undefined,
-          isoCurrencyCode: transaction.iso_currency_code || 'USD',
+          isoCurrencyCode: transaction.iso_currency_code || "USD",
         },
         update: {
           name: transaction.name,
@@ -263,7 +266,7 @@ export async function syncTransactions({
     })
 
     const updatedAccountData = latestAccount.data.accounts.find(
-      acc => acc.account_id === account.accountId
+      (acc) => acc.account_id === account.accountId
     )
 
     if (updatedAccountData) {
@@ -272,7 +275,7 @@ export async function syncTransactions({
         data: {
           currentBalance: updatedAccountData.balances.current || 0,
           availableBalance: updatedAccountData.balances.available || 0,
-        }
+        },
       })
     }
 
@@ -282,7 +285,7 @@ export async function syncTransactions({
 
     return { success: true, count: transactions.length }
   } catch (error) {
-    console.error('Error syncing transactions:', error)
+    console.error("Error syncing transactions:", error)
     return { success: false, error: (error as Error).message }
   }
 }

@@ -1,33 +1,50 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Exam validation schema tests
 describe("Exam Validation Schemas", () => {
-  const examBaseSchema = z.object({
-    title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
-    subjectId: z.string().min(1, "Subject is required"),
-    classId: z.string().optional(),
-    termId: z.string().optional(),
-    date: z.string().min(1, "Date is required"),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
-    duration: z.number().min(1).max(480).optional(), // Minutes, max 8 hours
-    totalMarks: z.number().positive("Total marks must be positive"),
-    passingMarks: z.number().positive().optional(),
-    type: z.enum(["MIDTERM", "FINAL", "QUIZ", "UNIT_TEST", "PRACTICAL", "ORAL", "OTHER"]).default("OTHER"),
-    status: z.enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("DRAFT"),
-    instructions: z.string().optional(),
-    venue: z.string().optional(),
-  }).refine((data) => {
-    if (data.passingMarks && data.passingMarks > data.totalMarks) {
-      return false
-    }
-    return true
-  }, {
-    message: "Passing marks cannot exceed total marks",
-    path: ["passingMarks"],
-  })
+  const examBaseSchema = z
+    .object({
+      title: z.string().min(1, "Title is required"),
+      description: z.string().optional(),
+      subjectId: z.string().min(1, "Subject is required"),
+      classId: z.string().optional(),
+      termId: z.string().optional(),
+      date: z.string().min(1, "Date is required"),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      duration: z.number().min(1).max(480).optional(), // Minutes, max 8 hours
+      totalMarks: z.number().positive("Total marks must be positive"),
+      passingMarks: z.number().positive().optional(),
+      type: z
+        .enum([
+          "MIDTERM",
+          "FINAL",
+          "QUIZ",
+          "UNIT_TEST",
+          "PRACTICAL",
+          "ORAL",
+          "OTHER",
+        ])
+        .default("OTHER"),
+      status: z
+        .enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+        .default("DRAFT"),
+      instructions: z.string().optional(),
+      venue: z.string().optional(),
+    })
+    .refine(
+      (data) => {
+        if (data.passingMarks && data.passingMarks > data.totalMarks) {
+          return false
+        }
+        return true
+      },
+      {
+        message: "Passing marks cannot exceed total marks",
+        path: ["passingMarks"],
+      }
+    )
 
   const examCreateSchema = examBaseSchema
 
@@ -41,8 +58,20 @@ describe("Exam Validation Schemas", () => {
     subjectId: z.string().optional(),
     classId: z.string().optional(),
     termId: z.string().optional(),
-    type: z.enum(["MIDTERM", "FINAL", "QUIZ", "UNIT_TEST", "PRACTICAL", "ORAL", "OTHER"]).optional(),
-    status: z.enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
+    type: z
+      .enum([
+        "MIDTERM",
+        "FINAL",
+        "QUIZ",
+        "UNIT_TEST",
+        "PRACTICAL",
+        "ORAL",
+        "OTHER",
+      ])
+      .optional(),
+    status: z
+      .enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+      .optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
   })
@@ -151,7 +180,15 @@ describe("Exam Validation Schemas", () => {
     })
 
     it("validates exam type enum", () => {
-      const validTypes = ["MIDTERM", "FINAL", "QUIZ", "UNIT_TEST", "PRACTICAL", "ORAL", "OTHER"]
+      const validTypes = [
+        "MIDTERM",
+        "FINAL",
+        "QUIZ",
+        "UNIT_TEST",
+        "PRACTICAL",
+        "ORAL",
+        "OTHER",
+      ]
 
       validTypes.forEach((type) => {
         const data = {
@@ -166,7 +203,13 @@ describe("Exam Validation Schemas", () => {
     })
 
     it("validates status enum", () => {
-      const validStatuses = ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+      const validStatuses = [
+        "DRAFT",
+        "SCHEDULED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELLED",
+      ]
 
       validStatuses.forEach((status) => {
         const data = {

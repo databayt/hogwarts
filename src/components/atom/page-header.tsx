@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils"
 import React from "react"
+
+import { cn } from "@/lib/utils"
 
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   heading?: string | React.ReactNode
@@ -27,25 +28,15 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <section className={cn(className)} {...props}>
-      <div className="flex flex-col items-start gap-1 py-8 md:py-10 lg:py-12 px-4 md:px-0">
+      <div className="flex flex-col items-start gap-1 px-4 py-8 md:px-0 md:py-10 lg:py-12">
         {announcement && (
-          <div className={cn(announcementClassName)}>
-            {announcement}
-          </div>
+          <div className={cn(announcementClassName)}>{announcement}</div>
         )}
-        {heading && (
-          <h2
-            className={cn(
-              headingClassName
-            )}
-          >
-            {heading}
-          </h2>
-        )}
+        {heading && <h2 className={cn(headingClassName)}>{heading}</h2>}
         {description && (
           <p
             className={cn(
-              "max-w-2xl text-balance text-base font-light text-foreground leading-7 sm:text-lg ",
+              "text-foreground max-w-2xl text-base leading-7 font-light text-balance sm:text-lg",
               descriptionClassName
             )}
           >

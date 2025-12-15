@@ -4,14 +4,13 @@
  * GeofenceForm - Create/Pencil Geofence UI
  * Allows admins to create circular geofences for their school
  */
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { LoaderCircle } from "lucide-react"
+import { useForm, type SubmitHandler } from "react-hook-form"
+import { toast } from "sonner"
 
-import { useState } from 'react'
-import { useForm, type SubmitHandler } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { LoaderCircle } from "lucide-react";
-
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -20,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
@@ -29,40 +28,43 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
-import { circularGeofenceSchema, type CircularGeofenceInput } from './validation'
-import { createCircularGeofence } from './actions'
+import { createCircularGeofence } from "./actions"
+import {
+  circularGeofenceSchema,
+  type CircularGeofenceInput,
+} from "./validation"
 
 interface GeofenceFormProps {
   onSuccess?: () => void
 }
 
 const GEOFENCE_TYPES = [
-  { value: 'SCHOOL_GROUNDS', label: 'School Grounds (Main Campus)' },
-  { value: 'CLASSROOM', label: 'Classroom' },
-  { value: 'BUS_ROUTE', label: 'Bus Route' },
-  { value: 'PLAYGROUND', label: 'Playground' },
-  { value: 'CAFETERIA', label: 'Cafeteria' },
-  { value: 'LIBRARY', label: 'Library' },
+  { value: "SCHOOL_GROUNDS", label: "School Grounds (Main Campus)" },
+  { value: "CLASSROOM", label: "Classroom" },
+  { value: "BUS_ROUTE", label: "Bus Route" },
+  { value: "PLAYGROUND", label: "Playground" },
+  { value: "CAFETERIA", label: "Cafeteria" },
+  { value: "LIBRARY", label: "Library" },
 ] as const
 
 const PRESET_COLORS = [
-  { value: '#3b82f6', label: 'Blue' },
-  { value: '#10b981', label: 'Green' },
-  { value: '#f59e0b', label: 'Orange' },
-  { value: '#ef4444', label: 'Red' },
-  { value: '#8b5cf6', label: 'Purple' },
-  { value: '#ec4899', label: 'Pink' },
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#10b981", label: "Green" },
+  { value: "#f59e0b", label: "Orange" },
+  { value: "#ef4444", label: "Red" },
+  { value: "#8b5cf6", label: "Purple" },
+  { value: "#ec4899", label: "Pink" },
 ]
 
 export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
@@ -72,13 +74,13 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
   const form = useForm<CircularGeofenceInput>({
     resolver: zodResolver(circularGeofenceSchema) as any,
     defaultValues: {
-      name: '',
-      description: '',
-      type: 'SCHOOL_GROUNDS' as const,
+      name: "",
+      description: "",
+      type: "SCHOOL_GROUNDS" as const,
       centerLat: 24.7136, // Riyadh default
       centerLon: 46.6753,
       radiusMeters: 500,
-      color: '#3b82f6',
+      color: "#3b82f6",
       isActive: true,
     },
   })
@@ -90,16 +92,16 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
       const result = await createCircularGeofence(data)
 
       if (result.success) {
-        toast.success('Geofence created successfully')
+        toast.success("Geofence created successfully")
         form.reset()
         setOpen(false)
         onSuccess?.()
       } else {
-        toast.error(result.error || 'Failed to create geofence')
+        toast.error(result.error || "Failed to create geofence")
       }
     } catch (error) {
-      console.error('Error creating geofence:', error)
-      toast.error('Failed to create geofence')
+      console.error("Error creating geofence:", error)
+      toast.error("Failed to create geofence")
     } finally {
       setIsSubmitting(false)
     }
@@ -107,16 +109,16 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
 
   // Get current location from browser
   const handleUseCurrentLocation = () => {
-    if ('geolocation' in navigator) {
+    if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          form.setValue('centerLat', position.coords.latitude)
-          form.setValue('centerLon', position.coords.longitude)
-          toast.success('Location set to current position')
+          form.setValue("centerLat", position.coords.latitude)
+          form.setValue("centerLon", position.coords.longitude)
+          toast.success("Location set to current position")
         },
         (error) => {
-          console.error('Geolocation error:', error)
-          toast.error('Failed to get current location')
+          console.error("Geolocation error:", error)
+          toast.error("Failed to get current location")
         },
         {
           enableHighAccuracy: true,
@@ -124,7 +126,7 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
         }
       )
     } else {
-      toast.error('Geolocation not supported by your browser')
+      toast.error("Geolocation not supported by your browser")
     }
   }
 
@@ -133,11 +135,12 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
       <DialogTrigger asChild>
         <Button>Create Geofence</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Geofence</DialogTitle>
           <DialogDescription>
-            Define a circular area that will automatically mark attendance when students enter
+            Define a circular area that will automatically mark attendance when
+            students enter
           </DialogDescription>
         </DialogHeader>
 
@@ -151,7 +154,10 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                 <FormItem>
                   <FormLabel>Geofence Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Main Campus, Math Building" {...field} />
+                    <Input
+                      placeholder="e.g., Main Campus, Math Building"
+                      {...field}
+                    />
                   </FormControl>
                   <FormDescription>
                     A unique name to identify this geofence
@@ -187,7 +193,10 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Geofence Type *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -202,7 +211,8 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    SCHOOL_GROUNDS type will trigger automatic attendance marking
+                    SCHOOL_GROUNDS type will trigger automatic attendance
+                    marking
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -223,7 +233,9 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                         step="0.000001"
                         placeholder="24.7136"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -243,7 +255,9 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                         step="0.000001"
                         placeholder="46.6753"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value))
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -280,7 +294,8 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                     />
                   </FormControl>
                   <FormDescription>
-                    Radius in meters (10m - 5000m). Larger radius covers more area.
+                    Radius in meters (10m - 5000m). Larger radius covers more
+                    area.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -302,18 +317,15 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                         className="h-8 w-8 rounded-full border-2 transition-all hover:scale-110"
                         style={{
                           backgroundColor: color.value,
-                          borderColor: field.value === color.value ? '#000' : color.value,
+                          borderColor:
+                            field.value === color.value ? "#000" : color.value,
                         }}
                         onClick={() => field.onChange(color.value)}
                         title={color.label}
                       />
                     ))}
                     <FormControl>
-                      <Input
-                        type="color"
-                        className="h-8 w-16"
-                        {...field}
-                      />
+                      <Input type="color" className="h-8 w-16" {...field} />
                     </FormControl>
                   </div>
                   <FormDescription>
@@ -333,7 +345,9 @@ export function GeofenceForm({ onSuccess }: GeofenceFormProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Create Geofence
               </Button>
             </DialogFooter>

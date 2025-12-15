@@ -1,8 +1,10 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import { IconWrapper } from "./icon-wrapper"
-import { StatValue } from "./stat-value"
 import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import type { BaseComponentProps } from "./types"
 
 interface IconStatProps extends BaseComponentProps {
@@ -49,7 +51,7 @@ export function IconStat({
   return (
     <div className={cn("flex items-start gap-3", className)} {...props}>
       <IconWrapper icon={icon} variant={variant} />
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex min-w-0 flex-col gap-1">
         <StatValue value={value} size="md" />
         <StatLabel label={label} />
       </div>

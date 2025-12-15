@@ -1,17 +1,30 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { examCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExamFormStepProps } from "./types";
-import { TIME_SLOTS } from "./config";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
+
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { TIME_SLOTS } from "./config"
+import { ExamFormStepProps } from "./types"
+import { examCreateSchema } from "./validation"
 
 export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       {/* Exam Date */}
       <FormField
         control={form.control}
@@ -19,11 +32,15 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input 
-                type="date" 
-                disabled={isView} 
+              <Input
+                type="date"
+                disabled={isView}
                 {...field}
-                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                value={
+                  field.value
+                    ? new Date(field.value).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={(e) => field.onChange(new Date(e.target.value))}
               />
             </FormControl>
@@ -39,7 +56,11 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
           name="startTime"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Start time" />
@@ -63,7 +84,11 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
           name="endTime"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="End time" />
@@ -90,10 +115,10 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input 
-                type="number" 
-                placeholder="Duration (minutes)" 
-                disabled={isView} 
+              <Input
+                type="number"
+                placeholder="Duration (minutes)"
+                disabled={isView}
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
               />
@@ -111,12 +136,14 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="Total marks" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  placeholder="Total marks"
+                  disabled={isView}
                   {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    field.onChange(parseInt(e.target.value) || 0)
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -130,12 +157,14 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="Passing marks" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  placeholder="Passing marks"
+                  disabled={isView}
                   {...field}
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    field.onChange(parseInt(e.target.value) || 0)
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -144,5 +173,5 @@ export function ScheduleMarksStep({ form, isView }: ExamFormStepProps) {
         />
       </div>
     </div>
-  );
+  )
 }

@@ -1,47 +1,47 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useState, useMemo } from "react";
-import { BookCoverImage } from "@/components/ui/imagekit-image";
-import Image from "next/image";
-import type { Book } from "../types";
+import { useMemo, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+
+import { BookCoverImage } from "@/components/ui/imagekit-image"
+
+import type { Book } from "../types"
 
 interface Props {
-  book: Book;
+  book: Book
 }
 
 export default function BookCard({ book }: Props) {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState(false)
 
   // Check if it's a valid ImageKit URL
   const isImageKitUrl = useMemo(() => {
-    if (!book.coverUrl) return false;
+    if (!book.coverUrl) return false
     return (
       book.coverUrl.includes("ik.imagekit.io") ||
       book.coverUrl.startsWith("hogwarts/")
-    );
-  }, [book.coverUrl]);
+    )
+  }, [book.coverUrl])
 
   const hasValidImage =
-    book.coverUrl &&
-    !book.coverUrl.includes("placeholder") &&
-    !imageError;
+    book.coverUrl && !book.coverUrl.includes("placeholder") && !imageError
 
   // Fallback content for missing images
   const FallbackContent = () => (
-    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-      <h3 className="font-bold text-white text-lg line-clamp-3 mb-2">
+    <div className="flex h-full flex-col items-center justify-center p-4 text-center">
+      <h3 className="mb-2 line-clamp-3 text-lg font-bold text-white">
         {book.title}
       </h3>
-      <p className="text-white/80 text-sm">{book.author}</p>
+      <p className="text-sm text-white/80">{book.author}</p>
     </div>
-  );
+  )
 
   return (
     <li className="list-none">
       <Link
         href={`/library/books/${book.id}`}
-        className="block bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+        className="bg-card border-border block overflow-hidden rounded-lg border transition-shadow hover:shadow-lg"
       >
         {/* Book Cover */}
         <div
@@ -74,8 +74,8 @@ export default function BookCard({ book }: Props) {
         </div>
 
         {/* Book Info */}
-        <div className="p-4 space-y-2">
-          <h4 className="font-semibold text-foreground line-clamp-1">
+        <div className="space-y-2 p-4">
+          <h4 className="text-foreground line-clamp-1 font-semibold">
             {book.title}
           </h4>
           <p className="text-muted-foreground text-sm">by {book.author}</p>
@@ -99,5 +99,5 @@ export default function BookCard({ book }: Props) {
         </div>
       </Link>
     </li>
-  );
+  )
 }

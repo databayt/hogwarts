@@ -49,6 +49,7 @@ Generate Product Requirements Documents (PRD) and Architecture documents that ad
 ## Outputs
 
 Creates documents in `.bmad/planning/`:
+
 - `prd-[feature].md` - Product requirements
 - `architecture-[feature].md` - Technical architecture
 - `tech-spec-[feature].md` - Quick technical spec (Level 0)
@@ -56,17 +57,18 @@ Creates documents in `.bmad/planning/`:
 
 ## Complexity Levels
 
-| Level | Documentation | Timeline | Use Case |
-|-------|--------------|----------|-----------|
-| 0 - Quick | Tech spec only | Hours | Bug fixes, typos |
-| 1 - Simple | Basic PRD | Days | Small features |
-| 2 - Standard | PRD + Architecture | 1-2 weeks | Most features |
-| 3 - Complex | Full suite | 2-4 weeks | Large features |
-| 4 - Enterprise | Complete + ADRs | Months | System changes |
+| Level          | Documentation      | Timeline  | Use Case         |
+| -------------- | ------------------ | --------- | ---------------- |
+| 0 - Quick      | Tech spec only     | Hours     | Bug fixes, typos |
+| 1 - Simple     | Basic PRD          | Days      | Small features   |
+| 2 - Standard   | PRD + Architecture | 1-2 weeks | Most features    |
+| 3 - Complex    | Full suite         | 2-4 weeks | Large features   |
+| 4 - Enterprise | Complete + ADRs    | Months    | System changes   |
 
 ## Workflow Integration
 
 After planning completes:
+
 1. Use `/story` to generate detailed implementation stories
 2. Use `/cycle` to execute stories continuously
 3. Track progress in `.bmad/metrics/`
@@ -75,14 +77,14 @@ After planning completes:
 
 ```typescript
 // Invokes the plan agent
-await invokeAgent('/agents/bmad/plan', {
+await invokeAgent("/agents/bmad/plan", {
   feature: featureName,
-  level: complexityLevel || 'auto',
+  level: complexityLevel || "auto",
   context: {
     existingComponents: findRelatedComponents(),
     patterns: getCurrentPatterns(),
-    constraints: getProjectConstraints()
-  }
+    constraints: getProjectConstraints(),
+  },
 })
 
 // Generates:

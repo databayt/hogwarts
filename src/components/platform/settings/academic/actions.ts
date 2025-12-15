@@ -1,22 +1,24 @@
 "use server"
 
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResult } from "./types"
 import {
+  bulkCreatePeriodsSchema,
+  createPeriodSchema,
   createSchoolYearSchema,
-  updateSchoolYearSchema,
-  deleteSchoolYearSchema,
   createTermSchema,
-  updateTermSchema,
+  deletePeriodSchema,
+  deleteSchoolYearSchema,
   deleteTermSchema,
   setActiveTermSchema,
-  createPeriodSchema,
   updatePeriodSchema,
-  deletePeriodSchema,
-  bulkCreatePeriodsSchema,
+  updateSchoolYearSchema,
+  updateTermSchema,
 } from "./validation"
-import type { ActionResult } from "./types"
 
 // ============================================================================
 // School Year Actions
@@ -56,12 +58,15 @@ export async function getSchoolYears(): Promise<ActionResult> {
     console.error("Failed to fetch school years:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to fetch school years",
+      message:
+        error instanceof Error ? error.message : "Failed to fetch school years",
     }
   }
 }
 
-export async function createSchoolYear(formData: FormData): Promise<ActionResult> {
+export async function createSchoolYear(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -87,7 +92,10 @@ export async function createSchoolYear(formData: FormData): Promise<ActionResult
     })
 
     if (existing) {
-      return { success: false, message: "A school year with this name already exists" }
+      return {
+        success: false,
+        message: "A school year with this name already exists",
+      }
     }
 
     const year = await db.schoolYear.create({
@@ -100,17 +108,24 @@ export async function createSchoolYear(formData: FormData): Promise<ActionResult
     })
 
     revalidatePath("/settings")
-    return { success: true, message: "School year created successfully", data: { year } }
+    return {
+      success: true,
+      message: "School year created successfully",
+      data: { year },
+    }
   } catch (error) {
     console.error("Failed to create school year:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create school year",
+      message:
+        error instanceof Error ? error.message : "Failed to create school year",
     }
   }
 }
 
-export async function updateSchoolYear(formData: FormData): Promise<ActionResult> {
+export async function updateSchoolYear(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -124,9 +139,13 @@ export async function updateSchoolYear(formData: FormData): Promise<ActionResult
 
     const data = {
       id: formData.get("id") as string,
-      yearName: formData.get("yearName") as string || undefined,
-      startDate: formData.get("startDate") ? new Date(formData.get("startDate") as string) : undefined,
-      endDate: formData.get("endDate") ? new Date(formData.get("endDate") as string) : undefined,
+      yearName: (formData.get("yearName") as string) || undefined,
+      startDate: formData.get("startDate")
+        ? new Date(formData.get("startDate") as string)
+        : undefined,
+      endDate: formData.get("endDate")
+        ? new Date(formData.get("endDate") as string)
+        : undefined,
     }
 
     const validated = updateSchoolYearSchema.parse(data)
@@ -143,10 +162,17 @@ export async function updateSchoolYear(formData: FormData): Promise<ActionResult
     // Check for duplicate name if changing name
     if (validated.yearName && validated.yearName !== existing.yearName) {
       const duplicate = await db.schoolYear.findFirst({
-        where: { schoolId, yearName: validated.yearName, NOT: { id: validated.id } },
+        where: {
+          schoolId,
+          yearName: validated.yearName,
+          NOT: { id: validated.id },
+        },
       })
       if (duplicate) {
-        return { success: false, message: "A school year with this name already exists" }
+        return {
+          success: false,
+          message: "A school year with this name already exists",
+        }
       }
     }
 
@@ -160,17 +186,24 @@ export async function updateSchoolYear(formData: FormData): Promise<ActionResult
     })
 
     revalidatePath("/settings")
-    return { success: true, message: "School year updated successfully", data: { year } }
+    return {
+      success: true,
+      message: "School year updated successfully",
+      data: { year },
+    }
   } catch (error) {
     console.error("Failed to update school year:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to update school year",
+      message:
+        error instanceof Error ? error.message : "Failed to update school year",
     }
   }
 }
 
-export async function deleteSchoolYear(formData: FormData): Promise<ActionResult> {
+export async function deleteSchoolYear(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -205,7 +238,8 @@ export async function deleteSchoolYear(formData: FormData): Promise<ActionResult
     if (existing._count.terms > 0 || existing._count.periods > 0) {
       return {
         success: false,
-        message: "Cannot delete school year with existing terms or periods. Delete them first.",
+        message:
+          "Cannot delete school year with existing terms or periods. Delete them first.",
       }
     }
 
@@ -219,7 +253,8 @@ export async function deleteSchoolYear(formData: FormData): Promise<ActionResult
     console.error("Failed to delete school year:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete school year",
+      message:
+        error instanceof Error ? error.message : "Failed to delete school year",
     }
   }
 }
@@ -292,16 +327,29 @@ export async function createTerm(formData: FormData): Promise<ActionResult> {
 
     // Check for duplicate term number
     const existing = await db.term.findFirst({
-      where: { schoolId, yearId: validated.yearId, termNumber: validated.termNumber },
+      where: {
+        schoolId,
+        yearId: validated.yearId,
+        termNumber: validated.termNumber,
+      },
     })
 
     if (existing) {
-      return { success: false, message: `Term ${validated.termNumber} already exists for this year` }
+      return {
+        success: false,
+        message: `Term ${validated.termNumber} already exists for this year`,
+      }
     }
 
     // Validate term dates are within year dates
-    if (validated.startDate < year.startDate || validated.endDate > year.endDate) {
-      return { success: false, message: "Term dates must be within the academic year dates" }
+    if (
+      validated.startDate < year.startDate ||
+      validated.endDate > year.endDate
+    ) {
+      return {
+        success: false,
+        message: "Term dates must be within the academic year dates",
+      }
     }
 
     const term = await db.term.create({
@@ -316,7 +364,11 @@ export async function createTerm(formData: FormData): Promise<ActionResult> {
     })
 
     revalidatePath("/settings")
-    return { success: true, message: "Term created successfully", data: { term } }
+    return {
+      success: true,
+      message: "Term created successfully",
+      data: { term },
+    }
   } catch (error) {
     console.error("Failed to create term:", error)
     return {
@@ -340,10 +392,21 @@ export async function updateTerm(formData: FormData): Promise<ActionResult> {
 
     const data = {
       id: formData.get("id") as string,
-      termNumber: formData.get("termNumber") ? parseInt(formData.get("termNumber") as string, 10) : undefined,
-      startDate: formData.get("startDate") ? new Date(formData.get("startDate") as string) : undefined,
-      endDate: formData.get("endDate") ? new Date(formData.get("endDate") as string) : undefined,
-      isActive: formData.get("isActive") === "true" ? true : formData.get("isActive") === "false" ? false : undefined,
+      termNumber: formData.get("termNumber")
+        ? parseInt(formData.get("termNumber") as string, 10)
+        : undefined,
+      startDate: formData.get("startDate")
+        ? new Date(formData.get("startDate") as string)
+        : undefined,
+      endDate: formData.get("endDate")
+        ? new Date(formData.get("endDate") as string)
+        : undefined,
+      isActive:
+        formData.get("isActive") === "true"
+          ? true
+          : formData.get("isActive") === "false"
+            ? false
+            : undefined,
     }
 
     const validated = updateTermSchema.parse(data)
@@ -369,22 +432,33 @@ export async function updateTerm(formData: FormData): Promise<ActionResult> {
         },
       })
       if (duplicate) {
-        return { success: false, message: `Term ${validated.termNumber} already exists for this year` }
+        return {
+          success: false,
+          message: `Term ${validated.termNumber} already exists for this year`,
+        }
       }
     }
 
     const term = await db.term.update({
       where: { id: validated.id },
       data: {
-        ...(validated.termNumber !== undefined && { termNumber: validated.termNumber }),
+        ...(validated.termNumber !== undefined && {
+          termNumber: validated.termNumber,
+        }),
         ...(validated.startDate && { startDate: validated.startDate }),
         ...(validated.endDate && { endDate: validated.endDate }),
-        ...(validated.isActive !== undefined && { isActive: validated.isActive }),
+        ...(validated.isActive !== undefined && {
+          isActive: validated.isActive,
+        }),
       },
     })
 
     revalidatePath("/settings")
-    return { success: true, message: "Term updated successfully", data: { term } }
+    return {
+      success: true,
+      message: "Term updated successfully",
+      data: { term },
+    }
   } catch (error) {
     console.error("Failed to update term:", error)
     return {
@@ -481,7 +555,8 @@ export async function setActiveTerm(formData: FormData): Promise<ActionResult> {
     console.error("Failed to set active term:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to set active term",
+      message:
+        error instanceof Error ? error.message : "Failed to set active term",
     }
   }
 }
@@ -530,7 +605,8 @@ export async function getPeriodsForYear(yearId: string): Promise<ActionResult> {
     console.error("Failed to fetch periods:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to fetch periods",
+      message:
+        error instanceof Error ? error.message : "Failed to fetch periods",
     }
   }
 }
@@ -571,11 +647,16 @@ export async function createPeriod(formData: FormData): Promise<ActionResult> {
     })
 
     if (existing) {
-      return { success: false, message: `Period "${validated.name}" already exists for this year` }
+      return {
+        success: false,
+        message: `Period "${validated.name}" already exists for this year`,
+      }
     }
 
     // Convert time strings to proper format for database
-    const [startHours, startMinutes] = validated.startTime.split(":").map(Number)
+    const [startHours, startMinutes] = validated.startTime
+      .split(":")
+      .map(Number)
     const [endHours, endMinutes] = validated.endTime.split(":").map(Number)
 
     const startTime = new Date()
@@ -610,12 +691,17 @@ export async function createPeriod(formData: FormData): Promise<ActionResult> {
     }
 
     revalidatePath("/settings")
-    return { success: true, message: "Period created successfully", data: { period } }
+    return {
+      success: true,
+      message: "Period created successfully",
+      data: { period },
+    }
   } catch (error) {
     console.error("Failed to create period:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create period",
+      message:
+        error instanceof Error ? error.message : "Failed to create period",
     }
   }
 }
@@ -634,9 +720,9 @@ export async function updatePeriod(formData: FormData): Promise<ActionResult> {
 
     const data = {
       id: formData.get("id") as string,
-      name: formData.get("name") as string || undefined,
-      startTime: formData.get("startTime") as string || undefined,
-      endTime: formData.get("endTime") as string || undefined,
+      name: (formData.get("name") as string) || undefined,
+      startTime: (formData.get("startTime") as string) || undefined,
+      endTime: (formData.get("endTime") as string) || undefined,
     }
 
     const validated = updatePeriodSchema.parse(data)
@@ -661,7 +747,10 @@ export async function updatePeriod(formData: FormData): Promise<ActionResult> {
         },
       })
       if (duplicate) {
-        return { success: false, message: `Period "${validated.name}" already exists for this year` }
+        return {
+          success: false,
+          message: `Period "${validated.name}" already exists for this year`,
+        }
       }
     }
 
@@ -707,12 +796,17 @@ export async function updatePeriod(formData: FormData): Promise<ActionResult> {
     }
 
     revalidatePath("/settings")
-    return { success: true, message: "Period updated successfully", data: { period } }
+    return {
+      success: true,
+      message: "Period updated successfully",
+      data: { period },
+    }
   } catch (error) {
     console.error("Failed to update period:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to update period",
+      message:
+        error instanceof Error ? error.message : "Failed to update period",
     }
   }
 }
@@ -754,12 +848,15 @@ export async function deletePeriod(formData: FormData): Promise<ActionResult> {
     console.error("Failed to delete period:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete period",
+      message:
+        error instanceof Error ? error.message : "Failed to delete period",
     }
   }
 }
 
-export async function bulkCreatePeriods(formData: FormData): Promise<ActionResult> {
+export async function bulkCreatePeriods(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -820,12 +917,16 @@ export async function bulkCreatePeriods(formData: FormData): Promise<ActionResul
     })
 
     revalidatePath("/settings")
-    return { success: true, message: `${validated.periods.length} periods created successfully` }
+    return {
+      success: true,
+      message: `${validated.periods.length} periods created successfully`,
+    }
   } catch (error) {
     console.error("Failed to bulk create periods:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create periods",
+      message:
+        error instanceof Error ? error.message : "Failed to create periods",
     }
   }
 }

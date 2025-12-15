@@ -1,15 +1,24 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
-import { Resend } from "resend";
-import { nanoid } from "nanoid";
-import { createTourBookingSchema } from "../validation";
-import type { ActionResult, TourSlot, TourBookingConfirmation, TourBookingData } from "../types";
-import type { SlotType } from "@prisma/client";
+import type { SlotType } from "@prisma/client"
+import { nanoid } from "nanoid"
+import { Resend } from "resend"
+
+import { db } from "@/lib/db"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+
+import type {
+  ActionResult,
+  TourBookingConfirmation,
+  TourBookingData,
+  TourSlot,
+} from "../types"
+import { createTourBookingSchema } from "../validation"
 
 // Initialize Resend for email
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
 // ============================================
 // Time Slot Actions
@@ -26,16 +35,16 @@ export async function getAvailableSlots(
   campaignId?: string
 ): Promise<ActionResult<TourSlot[]>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     // Default to next 30 days if no dates provided
-    const start = startDate || new Date();
-    const end = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const start = startDate || new Date()
+    const end = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
     const slots = await db.admissionTimeSlot.findMany({
       where: {
@@ -49,11 +58,11 @@ export async function getAvailableSlots(
         ...(campaignId && { campaignId }),
       },
       orderBy: [{ date: "asc" }, { startTime: "asc" }],
-    });
+    })
 
     const availableSlots: TourSlot[] = slots
-      .filter(slot => slot.currentBookings < slot.maxCapacity)
-      .map(slot => ({
+      .filter((slot) => slot.currentBookings < slot.maxCapacity)
+      .map((slot) => ({
         id: slot.id,
         date: slot.date,
         startTime: slot.startTime.toISOString().split("T")[1].substring(0, 5),
@@ -62,12 +71,12 @@ export async function getAvailableSlots(
         location: slot.location ?? undefined,
         availableSpots: slot.maxCapacity - slot.currentBookings,
         maxCapacity: slot.maxCapacity,
-      }));
+      }))
 
-    return { success: true, data: availableSlots };
+    return { success: true, data: availableSlots }
   } catch (error) {
-    console.error("Error fetching available slots:", error);
-    return { success: false, error: "Failed to fetch available slots" };
+    console.error("Error fetching available slots:", error)
+    return { success: false, error: "Failed to fetch available slots" }
   }
 }
 
@@ -81,29 +90,34 @@ export async function getSlotsByMonth(
   slotType: SlotType = "TOUR"
 ): Promise<ActionResult<Record<string, TourSlot[]>>> {
   try {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0); // Last day of month
+    const startDate = new Date(year, month - 1, 1)
+    const endDate = new Date(year, month, 0) // Last day of month
 
-    const result = await getAvailableSlots(subdomain, slotType, startDate, endDate);
+    const result = await getAvailableSlots(
+      subdomain,
+      slotType,
+      startDate,
+      endDate
+    )
 
     if (!result.success || !result.data) {
-      return { success: false, error: result.error };
+      return { success: false, error: result.error }
     }
 
     // Group by date
-    const groupedSlots: Record<string, TourSlot[]> = {};
+    const groupedSlots: Record<string, TourSlot[]> = {}
     for (const slot of result.data) {
-      const dateKey = slot.date.toISOString().split("T")[0];
+      const dateKey = slot.date.toISOString().split("T")[0]
       if (!groupedSlots[dateKey]) {
-        groupedSlots[dateKey] = [];
+        groupedSlots[dateKey] = []
       }
-      groupedSlots[dateKey].push(slot);
+      groupedSlots[dateKey].push(slot)
     }
 
-    return { success: true, data: groupedSlots };
+    return { success: true, data: groupedSlots }
   } catch (error) {
-    console.error("Error fetching slots by month:", error);
-    return { success: false, error: "Failed to fetch slots" };
+    console.error("Error fetching slots by month:", error)
+    return { success: false, error: "Failed to fetch slots" }
   }
 }
 
@@ -115,11 +129,11 @@ export async function getSlotsByMonth(
  * Generate unique booking number
  */
 function generateBookingNumber(): string {
-  const date = new Date();
-  const year = date.getFullYear().toString().slice(-2);
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const random = nanoid(6).toUpperCase();
-  return `TOUR-${year}${month}-${random}`;
+  const date = new Date()
+  const year = date.getFullYear().toString().slice(-2)
+  const month = (date.getMonth() + 1).toString().padStart(2, "0")
+  const random = nanoid(6).toUpperCase()
+  return `TOUR-${year}${month}-${random}`
 }
 
 /**
@@ -130,16 +144,16 @@ export async function createTourBooking(
   data: TourBookingData
 ): Promise<ActionResult<TourBookingConfirmation>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     // Validate data
-    const schema = createTourBookingSchema();
-    const validated = schema.parse(data);
+    const schema = createTourBookingSchema()
+    const validated = schema.parse(data)
 
     // Check slot exists and has capacity
     const slot = await db.admissionTimeSlot.findFirst({
@@ -148,14 +162,20 @@ export async function createTourBooking(
         schoolId,
         isActive: true,
       },
-    });
+    })
 
     if (!slot) {
-      return { success: false, error: "Time slot not found or no longer available" };
+      return {
+        success: false,
+        error: "Time slot not found or no longer available",
+      }
     }
 
     if (slot.currentBookings >= slot.maxCapacity) {
-      return { success: false, error: "This time slot is fully booked. Please select another time." };
+      return {
+        success: false,
+        error: "This time slot is fully booked. Please select another time.",
+      }
     }
 
     // Check if email already has a booking for this slot
@@ -166,26 +186,32 @@ export async function createTourBooking(
         email: validated.email,
         status: { in: ["PENDING", "CONFIRMED"] },
       },
-    });
+    })
 
     if (existingBooking) {
-      return { success: false, error: "You already have a booking for this time slot." };
+      return {
+        success: false,
+        error: "You already have a booking for this time slot.",
+      }
     }
 
     // Generate booking number
-    let bookingNumber: string;
-    let attempts = 0;
+    let bookingNumber: string
+    let attempts = 0
     do {
-      bookingNumber = generateBookingNumber();
+      bookingNumber = generateBookingNumber()
       const exists = await db.tourBooking.findUnique({
         where: { bookingNumber },
-      });
-      if (!exists) break;
-      attempts++;
-    } while (attempts < 10);
+      })
+      if (!exists) break
+      attempts++
+    } while (attempts < 10)
 
     if (attempts >= 10) {
-      return { success: false, error: "Failed to generate booking number. Please try again." };
+      return {
+        success: false,
+        error: "Failed to generate booking number. Please try again.",
+      }
     }
 
     // Create booking and update slot count in a transaction
@@ -211,7 +237,7 @@ export async function createTourBooking(
           currentBookings: { increment: 1 },
         },
       }),
-    ]);
+    ])
 
     // Send confirmation email
     if (resend) {
@@ -221,9 +247,12 @@ export async function createTourBooking(
           year: "numeric",
           month: "long",
           day: "numeric",
-        });
-        const startTime = slot.startTime.toISOString().split("T")[1].substring(0, 5);
-        const endTime = slot.endTime.toISOString().split("T")[1].substring(0, 5);
+        })
+        const startTime = slot.startTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5)
+        const endTime = slot.endTime.toISOString().split("T")[1].substring(0, 5)
 
         await resend.emails.send({
           from: "noreply@databayt.org",
@@ -246,12 +275,16 @@ export async function createTourBooking(
                 <td style="padding: 8px; border: 1px solid #ddd;"><strong>Time</strong></td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${startTime} - ${endTime}</td>
               </tr>
-              ${slot.location ? `
+              ${
+                slot.location
+                  ? `
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;"><strong>Location</strong></td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${slot.location}</td>
               </tr>
-              ` : ""}
+              `
+                  : ""
+              }
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd;"><strong>Attendees</strong></td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${validated.numberOfAttendees}</td>
@@ -262,9 +295,9 @@ export async function createTourBooking(
             <p>We look forward to meeting you!</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
-        });
+        })
       } catch (emailError) {
-        console.error("Failed to send booking confirmation email:", emailError);
+        console.error("Failed to send booking confirmation email:", emailError)
       }
     }
 
@@ -285,12 +318,15 @@ export async function createTourBooking(
       email: validated.email,
       studentName: validated.studentName,
       numberOfAttendees: validated.numberOfAttendees,
-    };
+    }
 
-    return { success: true, data: confirmation };
+    return { success: true, data: confirmation }
   } catch (error) {
-    console.error("Error creating booking:", error);
-    return { success: false, error: "Failed to create booking. Please try again." };
+    console.error("Error creating booking:", error)
+    return {
+      success: false,
+      error: "Failed to create booking. Please try again.",
+    }
   }
 }
 
@@ -309,10 +345,10 @@ export async function getBookingDetails(
           select: { name: true, domain: true },
         },
       },
-    });
+    })
 
     if (!booking) {
-      return { success: false, error: "Booking not found" };
+      return { success: false, error: "Booking not found" }
     }
 
     const confirmation: TourBookingConfirmation = {
@@ -321,8 +357,14 @@ export async function getBookingDetails(
       slot: {
         id: booking.slot.id,
         date: booking.slot.date,
-        startTime: booking.slot.startTime.toISOString().split("T")[1].substring(0, 5),
-        endTime: booking.slot.endTime.toISOString().split("T")[1].substring(0, 5),
+        startTime: booking.slot.startTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5),
+        endTime: booking.slot.endTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5),
         slotType: booking.slot.slotType,
         location: booking.slot.location ?? undefined,
         availableSpots: booking.slot.maxCapacity - booking.slot.currentBookings,
@@ -332,12 +374,12 @@ export async function getBookingDetails(
       email: booking.email,
       studentName: booking.studentName ?? undefined,
       numberOfAttendees: booking.numberOfAttendees,
-    };
+    }
 
-    return { success: true, data: confirmation };
+    return { success: true, data: confirmation }
   } catch (error) {
-    console.error("Error fetching booking details:", error);
-    return { success: false, error: "Failed to fetch booking details" };
+    console.error("Error fetching booking details:", error)
+    return { success: false, error: "Failed to fetch booking details" }
   }
 }
 
@@ -357,18 +399,18 @@ export async function cancelTourBooking(
           select: { name: true, domain: true },
         },
       },
-    });
+    })
 
     if (!booking) {
-      return { success: false, error: "Booking not found" };
+      return { success: false, error: "Booking not found" }
     }
 
     if (booking.status === "CANCELLED") {
-      return { success: false, error: "Booking is already cancelled" };
+      return { success: false, error: "Booking is already cancelled" }
     }
 
     if (booking.status === "COMPLETED") {
-      return { success: false, error: "Cannot cancel a completed booking" };
+      return { success: false, error: "Cannot cancel a completed booking" }
     }
 
     // Cancel booking and decrement slot count
@@ -387,7 +429,7 @@ export async function cancelTourBooking(
           currentBookings: { decrement: 1 },
         },
       }),
-    ]);
+    ])
 
     // Send cancellation email
     if (resend) {
@@ -405,16 +447,19 @@ export async function cancelTourBooking(
             <p><a href="https://${booking.school.domain}.databayt.org/tour">Schedule Tour</a></p>
             <p>Best regards,<br>${booking.school.name}</p>
           `,
-        });
+        })
       } catch (emailError) {
-        console.error("Failed to send cancellation email:", emailError);
+        console.error("Failed to send cancellation email:", emailError)
       }
     }
 
-    return { success: true, data: { message: "Booking cancelled successfully" } };
+    return {
+      success: true,
+      data: { message: "Booking cancelled successfully" },
+    }
   } catch (error) {
-    console.error("Error cancelling booking:", error);
-    return { success: false, error: "Failed to cancel booking" };
+    console.error("Error cancelling booking:", error)
+    return { success: false, error: "Failed to cancel booking" }
   }
 }
 
@@ -434,14 +479,14 @@ export async function rescheduleTourBooking(
           select: { name: true, domain: true },
         },
       },
-    });
+    })
 
     if (!booking) {
-      return { success: false, error: "Booking not found" };
+      return { success: false, error: "Booking not found" }
     }
 
     if (booking.status !== "CONFIRMED" && booking.status !== "PENDING") {
-      return { success: false, error: "Cannot reschedule this booking" };
+      return { success: false, error: "Cannot reschedule this booking" }
     }
 
     // Check new slot exists and has capacity
@@ -451,14 +496,14 @@ export async function rescheduleTourBooking(
         schoolId: booking.schoolId,
         isActive: true,
       },
-    });
+    })
 
     if (!newSlot) {
-      return { success: false, error: "Selected time slot is not available" };
+      return { success: false, error: "Selected time slot is not available" }
     }
 
     if (newSlot.currentBookings >= newSlot.maxCapacity) {
-      return { success: false, error: "Selected time slot is fully booked" };
+      return { success: false, error: "Selected time slot is fully booked" }
     }
 
     // Update booking and slot counts in transaction
@@ -481,7 +526,7 @@ export async function rescheduleTourBooking(
           status: "RESCHEDULED",
         },
       }),
-    ]);
+    ])
 
     // Send reschedule email
     if (resend) {
@@ -491,9 +536,15 @@ export async function rescheduleTourBooking(
           year: "numeric",
           month: "long",
           day: "numeric",
-        });
-        const startTime = newSlot.startTime.toISOString().split("T")[1].substring(0, 5);
-        const endTime = newSlot.endTime.toISOString().split("T")[1].substring(0, 5);
+        })
+        const startTime = newSlot.startTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5)
+        const endTime = newSlot.endTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5)
 
         await resend.emails.send({
           from: "noreply@databayt.org",
@@ -515,9 +566,9 @@ export async function rescheduleTourBooking(
             </table>
             <p>Best regards,<br>${booking.school.name}</p>
           `,
-        });
+        })
       } catch (emailError) {
-        console.error("Failed to send reschedule email:", emailError);
+        console.error("Failed to send reschedule email:", emailError)
       }
     }
 
@@ -527,7 +578,10 @@ export async function rescheduleTourBooking(
       slot: {
         id: newSlot.id,
         date: newSlot.date,
-        startTime: newSlot.startTime.toISOString().split("T")[1].substring(0, 5),
+        startTime: newSlot.startTime
+          .toISOString()
+          .split("T")[1]
+          .substring(0, 5),
         endTime: newSlot.endTime.toISOString().split("T")[1].substring(0, 5),
         slotType: newSlot.slotType,
         location: newSlot.location ?? undefined,
@@ -538,11 +592,11 @@ export async function rescheduleTourBooking(
       email: booking.email,
       studentName: booking.studentName ?? undefined,
       numberOfAttendees: booking.numberOfAttendees,
-    };
+    }
 
-    return { success: true, data: confirmation };
+    return { success: true, data: confirmation }
   } catch (error) {
-    console.error("Error rescheduling booking:", error);
-    return { success: false, error: "Failed to reschedule booking" };
+    console.error("Error rescheduling booking:", error)
+    return { success: false, error: "Failed to reschedule booking" }
   }
 }

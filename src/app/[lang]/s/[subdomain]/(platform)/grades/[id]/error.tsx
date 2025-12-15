@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
-import { AlertCircle, RefreshCw, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { AlertCircle, ArrowLeft, RefreshCw } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,7 @@ export default function GradeDetailError({ error, reset }: ErrorProps) {
         <AlertDescription className="mt-2 space-y-2">
           <p>An unexpected error occurred while loading the grade details.</p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

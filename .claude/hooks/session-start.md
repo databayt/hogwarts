@@ -9,6 +9,7 @@ Automatically loads project context, shows status, and prepares the development 
 ## Execution Flow
 
 ### 1. Load Project Context
+
 ```bash
 # Display project info
 echo "🚀 Hogwarts School Automation Platform"
@@ -19,6 +20,7 @@ echo "Last commit: $(git log -1 --oneline)"
 ```
 
 ### 2. Git Status Check
+
 ```bash
 # Show current git state
 echo ""
@@ -35,6 +37,7 @@ fi
 ```
 
 ### 3. Load Active Stories
+
 ```bash
 # Check for in-progress stories
 if [ -d .bmad/stories ]; then
@@ -49,6 +52,7 @@ fi
 ```
 
 ### 4. Check System Health
+
 ```bash
 # Validate environment
 echo ""
@@ -83,6 +87,7 @@ fi
 ```
 
 ### 5. Load Session History
+
 ```bash
 # Show recent sessions
 if [ -f .bmad/sessions/history.json ]; then
@@ -94,6 +99,7 @@ fi
 ```
 
 ### 6. Display Available Commands
+
 ```bash
 # Quick reference
 echo ""
@@ -107,6 +113,7 @@ echo "  /review             - Comprehensive code review"
 ```
 
 ### 7. Load Metrics Dashboard
+
 ```bash
 # Show key metrics
 if [ -f .bmad/metrics/project-metrics.json ]; then
@@ -123,6 +130,7 @@ fi
 ```
 
 ### 8. Initialize Session
+
 ```bash
 # Create session record
 SESSION_ID=$(uuidgen)
@@ -179,6 +187,7 @@ echo "✅ Session initialized: $SESSION_ID"
 ## Compact Mode Output
 
 When `compactMode: true`:
+
 ```
 🚀 Hogwarts Platform | feature/search branch | 3 changes
 📝 STORY-005 in progress | ✅ TS clean | 🧪 234/240 tests
@@ -206,6 +215,7 @@ When `compactMode: true`:
 ## Error Recovery
 
 If session initialization fails:
+
 ```bash
 # Fallback to minimal mode
 if [ $? -ne 0 ]; then
@@ -218,6 +228,7 @@ fi
 ## Integration with Claude Code
 
 This hook automatically runs when:
+
 - Opening project in Claude Code
 - Using `claude` CLI command
 - Reconnecting after timeout

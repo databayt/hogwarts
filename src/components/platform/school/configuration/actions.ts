@@ -1,14 +1,18 @@
 "use server"
 
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
+
+import { db } from "@/lib/db"
 
 // Schema for school identity update
 const schoolIdentitySchema = z.object({
   name: z.string().min(2, "School name must be at least 2 characters"),
-  domain: z.string().min(2, "Subdomain must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  domain: z
+    .string()
+    .min(2, "Subdomain must be at least 2 characters")
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
@@ -19,8 +23,16 @@ const schoolIdentitySchema = z.object({
 // Schema for branding update
 const brandingSchema = z.object({
   logoUrl: z.string().url().optional().or(z.literal("")),
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid color").optional().or(z.literal("")),
-  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid color").optional().or(z.literal("")),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Invalid color")
+    .optional()
+    .or(z.literal("")),
+  secondaryColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Invalid color")
+    .optional()
+    .or(z.literal("")),
   borderRadius: z.string().optional(),
 })
 

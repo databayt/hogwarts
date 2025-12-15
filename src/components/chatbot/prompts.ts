@@ -46,6 +46,6 @@ Example: "For admission information:
 • Download the application form
 • Contact admissions@school.edu
 Would you like specific program details?"`,
-} as const;
+} as const
 
-export type SystemPromptType = keyof typeof SYSTEM_PROMPTS;
+export type SystemPromptType = keyof typeof SYSTEM_PROMPTS

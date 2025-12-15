@@ -3,8 +3,8 @@
 import { CodeBlockWrapper } from "@/components/docs/code-block-wrapper"
 
 interface CodeBlockProps {
-  language: string;
-  value: string;
+  language: string
+  value: string
 }
 
 export function CodeBlock({ language, value }: CodeBlockProps) {

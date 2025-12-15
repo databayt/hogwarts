@@ -9,9 +9,11 @@
 ### 1. Check Common Issues
 
 #### Agent Not Responding
+
 **Symptoms**: Agent doesn't execute or returns no output
 
 **Solutions**:
+
 ```bash
 # 1. Verify agent exists
 ls .claude/agents/<agent-name>.md
@@ -29,9 +31,11 @@ grep -A 5 "allow" .claude/settings.json | grep "Task"
 ```
 
 #### Command Not Found
+
 **Symptoms**: Slash command doesn't execute
 
 **Solutions**:
+
 ```bash
 # 1. Verify command exists
 ls .claude/commands/<command-name>.md
@@ -49,9 +53,11 @@ head -n 3 .claude/commands/component.md
 ```
 
 #### Auto-Format Not Working
+
 **Symptoms**: Files not auto-formatted on save
 
 **Solutions**:
+
 ```bash
 # 1. Check PostToolUse hooks in settings.json
 grep -A 10 "PostToolUse" .claude/settings.json
@@ -67,9 +73,11 @@ npx prettier --write src/test.tsx
 ```
 
 #### MCP Server Connection Failed
+
 **Symptoms**: Database or GitHub operations fail
 
 **Solutions**:
+
 ```bash
 # 1. Check MCP config
 cat .mcp.json
@@ -93,9 +101,11 @@ cat .claude/mcp-audit.log
 When reporting an issue, please include:
 
 ### Basic Information
+
 ```markdown
 **Agent/Command**: /agents/nextjs (or /component, etc.)
 **Environment**:
+
 - OS: Windows 11 / macOS / Linux
 - Claude Code Version:
 - Node Version:
@@ -108,25 +118,29 @@ When reporting an issue, please include:
 [ ] MCP connection failed
 [ ] Configuration error
 [ ] Performance issue
-[ ] Other: ___________
+[ ] Other: \***\*\_\_\_\*\***
 ```
 
 ### Description
-```markdown
+
+````markdown
 **What were you trying to do?**
 (Clear description of your goal)
 
 **What command/agent did you use?**
+
 ```bash
 /agents/nextjs -p "Create student page"
 ```
+````
 
 **What happened?**
 (Actual behavior)
 
 **What did you expect?**
 (Expected behavior)
-```
+
+````
 
 ### Reproduction Steps
 ```markdown
@@ -139,42 +153,55 @@ When reporting an issue, please include:
 [ ] Always
 [ ] Sometimes
 [ ] Once
-```
+````
 
 ### Error Messages
+
 ```markdown
 **Error output** (if any):
 ```
+
 Copy exact error message here
+
 ```
 
 **Console output**:
 ```
+
 Copy relevant console output
+
 ```
 
 **Stack trace** (if available):
 ```
+
 Copy stack trace
+
 ```
+
 ```
 
 ### Configuration
-```markdown
+
+````markdown
 **settings.json** (relevant sections):
+
 ```json
 {
   "permissions": { ... },
   "hooks": { ... }
 }
 ```
+````
 
 **Environment variables** (without sensitive data):
+
 ```bash
 DATABASE_URL=postgresql://localhost/...
 # (replace actual credentials with ...)
 ```
-```
+
+````
 
 ### Attempted Solutions
 ```markdown
@@ -188,7 +215,7 @@ DATABASE_URL=postgresql://localhost/...
 
 **Did anything work?**
 (What you tried and what happened)
-```
+````
 
 ---
 
@@ -197,6 +224,7 @@ DATABASE_URL=postgresql://localhost/...
 Run these to gather diagnostic information:
 
 ### Agent Configuration
+
 ```bash
 # List all agents
 ls -lh .claude/agents/*.md
@@ -212,6 +240,7 @@ ls .claude/agents/debug.md
 ```
 
 ### Settings Validation
+
 ```bash
 # Check settings.json structure
 cat .claude/settings.json | jq '.' 2>&1
@@ -224,6 +253,7 @@ cat .claude/settings.json | jq '.hooks'
 ```
 
 ### MCP Status
+
 ```bash
 # List configured MCP servers
 cat .mcp.json | jq '.mcpServers | keys'
@@ -236,6 +266,7 @@ pnpm prisma db pull --schema=prisma/schema.prisma
 ```
 
 ### Git Status
+
 ```bash
 # Check for uncommitted changes in .claude/
 git status .claude/
@@ -252,9 +283,11 @@ ls -lh .claude/.backup/
 ## 🚨 Common Error Messages
 
 ### "Agent not found"
+
 **Cause**: Using old agent name after optimization
 
 **Solution**: Use migration guide
+
 ```bash
 # Old → New
 /agents/architect → /agents/architecture
@@ -263,14 +296,16 @@ ls -lh .claude/.backup/
 ```
 
 ### "Permission denied"
+
 **Cause**: Tool not in allowed list
 
 **Solution**: Add to settings.json
+
 ```json
 {
   "permissions": {
     "allow": [
-      "Task",  // Required for agents
+      "Task", // Required for agents
       "Read",
       "Write",
       "Edit"
@@ -280,9 +315,11 @@ ls -lh .claude/.backup/
 ```
 
 ### "Hook failed"
+
 **Cause**: Hook command error
 
 **Solution**: Check hook syntax in settings.json
+
 ```json
 {
   "hooks": {
@@ -302,9 +339,11 @@ ls -lh .claude/.backup/
 ```
 
 ### "MCP server connection failed"
+
 **Cause**: Missing environment variables or server not running
 
 **Solution**:
+
 ```bash
 # 1. Check environment variables
 echo $DATABASE_URL
@@ -325,6 +364,7 @@ cat .mcp.json
 ### Enable Verbose Logging
 
 Add to settings.json:
+
 ```json
 {
   "audit": {
@@ -342,6 +382,7 @@ Add to settings.json:
 ```
 
 ### View Logs
+
 ```bash
 # Audit log
 tail -f .claude/audit.log
@@ -358,11 +399,13 @@ tail -f .claude/mcp-audit.log
 ## 🆘 Getting Help
 
 ### 1. Check Documentation
+
 - `.claude/README.md` - Setup and usage guide
 - `CLAUDE.md` (project root) - Full project documentation
 - `.claude/OPTIMIZATION_COMPLETE.md` - Recent changes
 
 ### 2. Review Agent Documentation
+
 ```bash
 # Read specific agent docs
 cat .claude/agents/nextjs.md
@@ -371,14 +414,18 @@ cat .claude/agents/git-github.md
 ```
 
 ### 3. Check Migration Guide
+
 If using old agent names:
+
 ```bash
 # See migration mappings
 grep -A 10 "Migration Guide" .claude/README.md
 ```
 
 ### 4. Search Issues
+
 Check if your issue was already reported:
+
 ```bash
 # Search in project
 grep -r "your error message" .claude/
@@ -389,9 +436,11 @@ grep -r "your error message" .claude/
 ## 📊 Performance Issues
 
 ### Agent Response Slow
+
 **Causes**: Large context, complex task, MCP latency
 
 **Solutions**:
+
 ```bash
 # 1. Use more specific agents (not orchestrate for simple tasks)
 /agents/nextjs    # Instead of orchestrate for Next.js tasks
@@ -407,6 +456,7 @@ rm -rf .claude/.cache/  # If cache directory exists
 ```
 
 ### Build Performance Issues
+
 ```bash
 # Use incremental build
 /build-changed
@@ -423,6 +473,7 @@ ANALYZE=true pnpm build
 ## 🔐 Security Concerns
 
 ### Sensitive Data in Logs
+
 **If logs contain sensitive data:**
 
 ```bash
@@ -439,6 +490,7 @@ cat .gitignore | grep settings.local.json
 ```
 
 ### Credentials Exposure
+
 **If credentials are accidentally committed:**
 
 ```bash
@@ -457,6 +509,7 @@ echo ".env.local" >> .gitignore
 ## 📝 Feature Requests
 
 ### Suggesting New Agents
+
 If you need a new specialized agent:
 
 ```markdown
@@ -464,15 +517,18 @@ If you need a new specialized agent:
 **Specialization**: What specific domain/technology
 **Why Needed**: What gap it fills
 **Use Cases**:
+
 1. Use case 1
 2. Use case 2
 
 **Alternative**: Could existing agent be enhanced instead?
+
 - Existing agent: <name>
 - Enhancement needed: <description>
 ```
 
 ### Suggesting New Commands
+
 If you need a new command shortcut:
 
 ```markdown
@@ -480,6 +536,7 @@ If you need a new command shortcut:
 **Purpose**: What it does (1 sentence)
 **Usage**: /command-name <args>
 **Workflow**:
+
 1. Step 1
 2. Step 2
 
@@ -491,12 +548,14 @@ If you need a new command shortcut:
 ## 🎯 Known Limitations
 
 ### Current Limitations
+
 1. **Agent count**: 32 agents (expanded from 20)
 2. **MCP servers**: Require environment variables
 3. **Hooks**: Windows may need different syntax
 4. **Auto-format**: Only for .ts, .tsx, .js, .jsx files
 
 ### Planned Enhancements
+
 - Additional specialized agents as needed
 - Enhanced error messages
 - Performance monitoring
@@ -519,6 +578,7 @@ Before closing an issue, verify:
 ## 📞 Contact
 
 For issues related to:
+
 - **Claude Code platform**: https://github.com/anthropics/claude-code/issues
 - **This project setup**: Create issue in project repository
 - **Agent optimization**: Review `.claude/OPTIMIZATION_COMPLETE.md`

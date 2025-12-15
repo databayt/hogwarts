@@ -1,5 +1,10 @@
-"use client";
-import Logo from "./logo";
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { BookOpen, LayoutDashboard } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import {
   Sidebar,
   SidebarContent,
@@ -8,14 +13,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
-import { BookOpen, LayoutDashboard } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+} from "@/components/ui/sidebar"
 
-export default function DashboardSidebar({children} : { children : React.ReactNode}) {
-  const pathname = usePathname();
+import Logo from "./logo"
+
+export default function DashboardSidebar({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const pathname = usePathname()
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -67,7 +74,5 @@ export default function DashboardSidebar({children} : { children : React.ReactNo
         {children}
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }
-
-

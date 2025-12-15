@@ -13,11 +13,11 @@ export function DocsNav() {
   const breadcrumbs = pathSegments.map((segment, index) => {
     const href = "/" + pathSegments.slice(0, index + 1).join("/")
     const isLast = index === pathSegments.length - 1
-    
+
     // Format segment name
     const name = segment
       .split("-")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
 
     return {
@@ -30,10 +30,10 @@ export function DocsNav() {
   if (breadcrumbs.length <= 1) return null
 
   return (
-    <div className="mb-4 flex items-center space-x-1 text-sm text-muted-foreground">
+    <div className="text-muted-foreground mb-4 flex items-center space-x-1 text-sm">
       <Link
         href="/docs"
-        className="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground"
+        className="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap"
       >
         Docs
       </Link>
@@ -44,9 +44,7 @@ export function DocsNav() {
             href={breadcrumb.href}
             className={cn(
               "ms-1 overflow-hidden text-ellipsis whitespace-nowrap",
-              breadcrumb.isLast
-                ? "text-foreground"
-                : "hover:text-foreground"
+              breadcrumb.isLast ? "text-foreground" : "hover:text-foreground"
             )}
           >
             {breadcrumb.name}
@@ -55,4 +53,4 @@ export function DocsNav() {
       ))}
     </div>
   )
-} 
+}

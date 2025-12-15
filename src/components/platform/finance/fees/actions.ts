@@ -6,24 +6,25 @@
  * Multi-tenant safe server actions for student fee management
  * Includes: fee structures, assignments, payments, scholarships, and fines
  */
-
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
 import {
-  feeStructureSchema,
+  bulkFeeAssignmentSchema,
   feeAssignmentSchema,
+  feeStructureSchema,
+  fineSchema,
   paymentSchema,
   scholarshipSchema,
-  fineSchema,
-  bulkFeeAssignmentSchema,
-  type FeeStructureInput,
+  type BulkFeeAssignmentInput,
   type FeeAssignmentInput,
+  type FeeStructureInput,
+  type FineInput,
   type PaymentInput,
   type ScholarshipInput,
-  type FineInput,
-  type BulkFeeAssignmentInput,
 } from "./validation"
 
 type ActionResult<T = void> = {
@@ -91,14 +92,30 @@ export async function createFeeStructure(
         stream: formData.stream as string | undefined,
         description: formData.description as string | undefined,
         tuitionFee: parseFloat(formData.tuitionFee as string),
-        admissionFee: formData.admissionFee ? parseFloat(formData.admissionFee as string) : null,
-        registrationFee: formData.registrationFee ? parseFloat(formData.registrationFee as string) : null,
-        examFee: formData.examFee ? parseFloat(formData.examFee as string) : null,
-        libraryFee: formData.libraryFee ? parseFloat(formData.libraryFee as string) : null,
-        laboratoryFee: formData.laboratoryFee ? parseFloat(formData.laboratoryFee as string) : null,
-        sportsFee: formData.sportsFee ? parseFloat(formData.sportsFee as string) : null,
-        transportFee: formData.transportFee ? parseFloat(formData.transportFee as string) : null,
-        hostelFee: formData.hostelFee ? parseFloat(formData.hostelFee as string) : null,
+        admissionFee: formData.admissionFee
+          ? parseFloat(formData.admissionFee as string)
+          : null,
+        registrationFee: formData.registrationFee
+          ? parseFloat(formData.registrationFee as string)
+          : null,
+        examFee: formData.examFee
+          ? parseFloat(formData.examFee as string)
+          : null,
+        libraryFee: formData.libraryFee
+          ? parseFloat(formData.libraryFee as string)
+          : null,
+        laboratoryFee: formData.laboratoryFee
+          ? parseFloat(formData.laboratoryFee as string)
+          : null,
+        sportsFee: formData.sportsFee
+          ? parseFloat(formData.sportsFee as string)
+          : null,
+        transportFee: formData.transportFee
+          ? parseFloat(formData.transportFee as string)
+          : null,
+        hostelFee: formData.hostelFee
+          ? parseFloat(formData.hostelFee as string)
+          : null,
         totalAmount: parseFloat(formData.totalAmount as string),
         installments: parseInt(formData.installments as string, 10) || 1,
         isActive: true,
@@ -120,9 +137,7 @@ export async function createFeeStructure(
 /**
  * Assign fee to a student
  */
-export async function assignFee(
-  data: FormData
-): Promise<ActionResult<string>> {
+export async function assignFee(data: FormData): Promise<ActionResult<string>> {
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()
@@ -154,8 +169,12 @@ export async function assignFee(
         feeStructureId: formData.feeStructureId as string,
         academicYear: formData.academicYear as string,
         finalAmount: parseFloat(formData.finalAmount as string),
-        customAmount: formData.customAmount ? parseFloat(formData.customAmount as string) : null,
-        totalDiscount: formData.totalDiscount ? parseFloat(formData.totalDiscount as string) : 0,
+        customAmount: formData.customAmount
+          ? parseFloat(formData.customAmount as string)
+          : null,
+        totalDiscount: formData.totalDiscount
+          ? parseFloat(formData.totalDiscount as string)
+          : 0,
         scholarshipId: formData.scholarshipId as string | undefined,
         status: "PENDING",
       },
@@ -292,7 +311,8 @@ export async function recordPayment(
     const finalAmount = Number(feeAssignment.finalAmount)
 
     // Determine new status
-    let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" = "PENDING"
+    let newStatus: "PENDING" | "PARTIAL" | "PAID" | "OVERDUE" | "CANCELLED" =
+      "PENDING"
     if (newTotalPaid >= finalAmount) {
       newStatus = "PAID"
     } else if (newTotalPaid > 0) {
@@ -305,12 +325,14 @@ export async function recordPayment(
         schoolId,
         feeAssignmentId,
         studentId: feeAssignment.studentId,
-        paymentNumber: `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+        paymentNumber:
+          `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
         amount,
         paymentMethod: formData.paymentMethod as any,
         paymentDate: new Date(formData.paymentDate as string),
         status: "SUCCESS",
-        receiptNumber: `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
+        receiptNumber:
+          `REC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`.toUpperCase(),
         transactionId: formData.transactionId as string | undefined,
         remarks: formData.remarks as string | undefined,
       },
@@ -466,7 +488,13 @@ export async function getFeeCollectionSummary(): Promise<ActionResult<any>> {
       return { success: false, error: "Not authenticated" }
     }
 
-    const [totalAssignments, paidAssignments, partialAssignments, pendingAssignments, totalPayments] = await Promise.all([
+    const [
+      totalAssignments,
+      paidAssignments,
+      partialAssignments,
+      pendingAssignments,
+      totalPayments,
+    ] = await Promise.all([
       db.feeAssignment.count({ where: { schoolId } }),
       db.feeAssignment.count({ where: { schoolId, status: "PAID" } }),
       db.feeAssignment.count({ where: { schoolId, status: "PARTIAL" } }),

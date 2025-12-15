@@ -7,8 +7,8 @@
  * @see https://vitest.dev/config/#setupfiles
  */
 
-import { expect, afterEach, vi, beforeAll } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup } from "@testing-library/react"
+import { afterEach, beforeAll, expect, vi } from "vitest"
 
 /**
  * Cleanup after each test
@@ -54,10 +54,12 @@ beforeAll(() => {
  * Wait for async operations to complete
  * Useful for testing debounced functions or async state updates
  */
-export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+export const waitFor = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
  * Flush all pending promises
  * Useful for testing microtask queue
  */
-export const flushPromises = () => new Promise(resolve => setImmediate(resolve))
+export const flushPromises = () =>
+  new Promise((resolve) => setImmediate(resolve))

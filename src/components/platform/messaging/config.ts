@@ -1,6 +1,10 @@
-import { MessageSquare, Users, Building2, Megaphone, Hash } from "lucide-react"
-import type { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
 import type { ElementType } from "react"
+import type {
+  ConversationType,
+  MessageStatus,
+  ParticipantRole,
+} from "@prisma/client"
+import { Building2, Hash, Megaphone, MessageSquare, Users } from "lucide-react"
 
 // Conversation type configuration
 export const CONVERSATION_TYPE_CONFIG: Record<
@@ -239,7 +243,16 @@ export const FILE_UPLOAD_CONFIG = {
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       "text/plain",
     ],
-    allowedExtensions: [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt"],
+    allowedExtensions: [
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".xls",
+      ".xlsx",
+      ".ppt",
+      ".pptx",
+      ".txt",
+    ],
   },
 } as const
 
@@ -257,19 +270,35 @@ export const DEFAULT_SETTINGS = {
 
 // Emoji reactions (common set)
 export const COMMON_REACTIONS = [
-  "👍", "❤️", "😂", "😮", "😢", "🙏",
-  "👏", "🔥", "🎉", "✅", "❌", "⭐"
+  "👍",
+  "❤️",
+  "😂",
+  "😮",
+  "😢",
+  "🙏",
+  "👏",
+  "🔥",
+  "🎉",
+  "✅",
+  "❌",
+  "⭐",
 ] as const
 
 // System message templates
 export const SYSTEM_MESSAGE_TEMPLATES = {
-  participant_joined: (username: string) => `${username} joined the conversation`,
+  participant_joined: (username: string) =>
+    `${username} joined the conversation`,
   participant_left: (username: string) => `${username} left the conversation`,
-  participant_added: (adder: string, added: string) => `${adder} added ${added}`,
-  participant_removed: (remover: string, removed: string) => `${remover} removed ${removed}`,
-  conversation_created: (creator: string) => `${creator} created this conversation`,
-  conversation_renamed: (username: string, newTitle: string) => `${username} changed the title to "${newTitle}"`,
-  conversation_archived: (username: string) => `${username} archived this conversation`,
+  participant_added: (adder: string, added: string) =>
+    `${adder} added ${added}`,
+  participant_removed: (remover: string, removed: string) =>
+    `${remover} removed ${removed}`,
+  conversation_created: (creator: string) =>
+    `${creator} created this conversation`,
+  conversation_renamed: (username: string, newTitle: string) =>
+    `${username} changed the title to "${newTitle}"`,
+  conversation_archived: (username: string) =>
+    `${username} archived this conversation`,
   message_pinned: (username: string) => `${username} pinned a message`,
   message_unpinned: (username: string) => `${username} unpinned a message`,
 } as const
@@ -365,7 +394,10 @@ export const CONVERSATION_CREATION_PERMISSIONS: Record<
 } as const
 
 // Helper functions
-export function canUserCreateConversationType(role: string, type: ConversationType): boolean {
+export function canUserCreateConversationType(
+  role: string,
+  type: ConversationType
+): boolean {
   const permissions = CONVERSATION_CREATION_PERMISSIONS[role]
   if (!permissions) return false
 
@@ -385,7 +417,9 @@ export function canUserCreateConversationType(role: string, type: ConversationTy
   }
 }
 
-export function getFileTypeCategory(mimeType: string): "image" | "video" | "audio" | "document" | "unknown" {
+export function getFileTypeCategory(
+  mimeType: string
+): "image" | "video" | "audio" | "document" | "unknown" {
   if (mimeType.startsWith("image/")) return "image"
   if (mimeType.startsWith("video/")) return "video"
   if (mimeType.startsWith("audio/")) return "audio"
@@ -401,12 +435,18 @@ export function getFileTypeCategory(mimeType: string): "image" | "video" | "audi
   return "unknown"
 }
 
-export function isFileTypeAllowed(mimeType: string, category: keyof typeof FILE_UPLOAD_CONFIG): boolean {
+export function isFileTypeAllowed(
+  mimeType: string,
+  category: keyof typeof FILE_UPLOAD_CONFIG
+): boolean {
   const config = FILE_UPLOAD_CONFIG[category]
   return (config.allowedTypes as readonly string[]).includes(mimeType)
 }
 
-export function isFileSizeAllowed(size: number, category: keyof typeof FILE_UPLOAD_CONFIG): boolean {
+export function isFileSizeAllowed(
+  size: number,
+  category: keyof typeof FILE_UPLOAD_CONFIG
+): boolean {
   const config = FILE_UPLOAD_CONFIG[category]
   return size <= config.maxSize
 }

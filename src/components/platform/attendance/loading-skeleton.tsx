@@ -1,8 +1,15 @@
-"use client";
+"use client"
 
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (
@@ -13,7 +20,7 @@ export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
           <div className="mb-2">
             <Skeleton className="h-4 w-20" />
           </div>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
             <Skeleton className="h-8 w-56" />
             <Skeleton className="h-8 w-44" />
             <div className="ml-auto flex items-center gap-2">
@@ -41,7 +48,7 @@ export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
                 <Skeleton className="h-4 w-32" />
               </TableHead>
               <TableHead className="text-center">
-                <Skeleton className="h-4 w-16 mx-auto" />
+                <Skeleton className="mx-auto h-4 w-16" />
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -73,7 +80,7 @@ export function AttendanceTableSkeleton({ rows = 10 }: { rows?: number }) {
         </Table>
       </div>
     </div>
-  );
+  )
 }
 
 export function AttendanceCardSkeleton() {
@@ -90,7 +97,7 @@ export function AttendanceCardSkeleton() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export function AttendanceStatsSkeleton() {
@@ -104,12 +111,12 @@ export function AttendanceStatsSkeleton() {
           </CardHeader>
           <CardContent>
             <Skeleton className="h-7 w-16" />
-            <Skeleton className="h-3 w-32 mt-1" />
+            <Skeleton className="mt-1 h-3 w-32" />
           </CardContent>
         </Card>
       ))}
     </div>
-  );
+  )
 }
 
 export function AttendanceChartSkeleton() {
@@ -119,9 +126,12 @@ export function AttendanceChartSkeleton() {
         <Skeleton className="h-6 w-48" />
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] flex items-end justify-around gap-2">
+        <div className="flex h-[300px] items-end justify-around gap-2">
           {Array.from({ length: 7 }).map((_, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center gap-1">
+            <div
+              key={index}
+              className="flex flex-1 flex-col items-center gap-1"
+            >
               <Skeleton
                 className="w-full"
                 style={{ height: `${Math.random() * 60 + 40}%` }}
@@ -132,15 +142,15 @@ export function AttendanceChartSkeleton() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // Inline loading state for buttons
 export function ButtonLoadingSkeleton({ className }: { className?: string }) {
   return (
     <div className={`inline-flex items-center space-x-2 ${className}`}>
-      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+      <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-gray-900"></div>
       <span>Loading...</span>
     </div>
-  );
+  )
 }

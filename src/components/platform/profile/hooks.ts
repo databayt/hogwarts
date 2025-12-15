@@ -5,22 +5,23 @@
 
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import useSWR, { mutate } from 'swr'
+import { useCallback, useEffect, useMemo, useState } from "react"
+import useSWR, { mutate } from "swr"
+
 import type {
+  ActivityItem,
   BaseProfile,
+  ConnectionStatus,
+  ContributionData,
+  ParentProfile,
+  ProfilePermissions,
+  ProfileResponse,
+  ProfileSearchParams,
+  StaffProfile,
   StudentProfile,
   TeacherProfile,
-  ParentProfile,
-  StaffProfile,
   UserProfileType,
-  ProfilePermissions,
-  ConnectionStatus,
-  ActivityItem,
-  ContributionData,
-  ProfileSearchParams,
-  ProfileResponse
-} from './types'
+} from "./types"
 
 // ============================================================================
 // API Fetchers
@@ -29,7 +30,7 @@ import type {
 const fetcher = async (url: string) => {
   const response = await fetch(url)
   if (!response.ok) {
-    throw new Error('Failed to fetch')
+    throw new Error("Failed to fetch")
   }
   return response.json()
 }
@@ -66,35 +67,37 @@ export function useProfile<T extends BaseProfile = BaseProfile>({
   includeActivities = true,
   includeContributions = true,
   includeConnections = false,
-  refreshInterval = 0
+  refreshInterval = 0,
 }: UseProfileOptions = {}): UseProfileReturn<T> {
   const queryParams = new URLSearchParams()
-  if (profileType) queryParams.append('type', profileType)
-  if (includeActivities) queryParams.append('includeActivities', 'true')
-  if (includeContributions) queryParams.append('includeContributions', 'true')
-  if (includeConnections) queryParams.append('includeConnections', 'true')
+  if (profileType) queryParams.append("type", profileType)
+  if (includeActivities) queryParams.append("includeActivities", "true")
+  if (includeContributions) queryParams.append("includeContributions", "true")
+  if (includeConnections) queryParams.append("includeConnections", "true")
 
   const url = userId
     ? `/api/profile/${userId}?${queryParams.toString()}`
     : `/api/profile/current?${queryParams.toString()}`
 
-  const { data, error, mutate: swrMutate } = useSWR<ProfileResponse<T>>(
-    url,
-    fetcher,
-    {
-      refreshInterval,
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true
-    }
-  )
+  const {
+    data,
+    error,
+    mutate: swrMutate,
+  } = useSWR<ProfileResponse<T>>(url, fetcher, {
+    refreshInterval,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  })
 
-  const [permissions, setPermissions] = useState<ProfilePermissions | null>(null)
+  const [permissions, setPermissions] = useState<ProfilePermissions | null>(
+    null
+  )
 
   // Fetch permissions
   useEffect(() => {
     if (data?.data) {
       fetch(`/api/profile/${data.data.id}/permissions`)
-        .then(res => res.json())
+        .then((res) => res.json())
         .then(setPermissions)
         .catch(console.error)
     }
@@ -104,27 +107,30 @@ export function useProfile<T extends BaseProfile = BaseProfile>({
     await swrMutate()
   }, [swrMutate])
 
-  const updateProfile = useCallback(async (updates: Partial<T>) => {
-    try {
-      const response = await fetch(url.replace('?', '/update?'), {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updates)
-      })
+  const updateProfile = useCallback(
+    async (updates: Partial<T>) => {
+      try {
+        const response = await fetch(url.replace("?", "/update?"), {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updates),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile')
+        if (!response.ok) {
+          throw new Error("Failed to update profile")
+        }
+
+        // Refresh the profile data
+        await swrMutate()
+      } catch (error) {
+        console.error("Profile update failed:", error)
+        throw error
       }
-
-      // Refresh the profile data
-      await swrMutate()
-    } catch (error) {
-      console.error('Profile update failed:', error)
-      throw error
-    }
-  }, [url, swrMutate])
+    },
+    [url, swrMutate]
+  )
 
   return {
     profile: data?.data || null,
@@ -133,7 +139,7 @@ export function useProfile<T extends BaseProfile = BaseProfile>({
     error,
     refresh,
     updateProfile,
-    permissions
+    permissions,
   }
 }
 
@@ -145,7 +151,7 @@ interface UseProfileActivityOptions {
   userId?: string
   limit?: number
   offset?: number
-  type?: ActivityItem['type'] | 'all'
+  type?: ActivityItem["type"] | "all"
   refreshInterval?: number
 }
 
@@ -166,28 +172,32 @@ export function useProfileActivity({
   userId,
   limit = 20,
   offset = 0,
-  type = 'all',
-  refreshInterval = 30000 // 30 seconds
+  type = "all",
+  refreshInterval = 30000, // 30 seconds
 }: UseProfileActivityOptions = {}): UseProfileActivityReturn {
   const [allActivities, setAllActivities] = useState<ActivityItem[]>([])
   const [hasMore, setHasMore] = useState(true)
   const [currentOffset, setCurrentOffset] = useState(offset)
 
   const queryParams = new URLSearchParams()
-  queryParams.append('limit', limit.toString())
-  queryParams.append('offset', currentOffset.toString())
-  if (type !== 'all') queryParams.append('type', type)
+  queryParams.append("limit", limit.toString())
+  queryParams.append("offset", currentOffset.toString())
+  if (type !== "all") queryParams.append("type", type)
 
   const url = userId
     ? `/api/profile/${userId}/activity?${queryParams.toString()}`
     : `/api/profile/current/activity?${queryParams.toString()}`
 
-  const { data, error, mutate: swrMutate } = useSWR<{
+  const {
+    data,
+    error,
+    mutate: swrMutate,
+  } = useSWR<{
     activities: ActivityItem[]
     hasMore: boolean
   }>(url, fetcher, {
     refreshInterval,
-    revalidateOnFocus: false
+    revalidateOnFocus: false,
   })
 
   useEffect(() => {
@@ -195,7 +205,7 @@ export function useProfileActivity({
       if (currentOffset === 0) {
         setAllActivities(data.activities)
       } else {
-        setAllActivities(prev => [...prev, ...data.activities])
+        setAllActivities((prev) => [...prev, ...data.activities])
       }
       setHasMore(data.hasMore)
     }
@@ -203,7 +213,7 @@ export function useProfileActivity({
 
   const loadMore = useCallback(async () => {
     if (!hasMore) return
-    setCurrentOffset(prev => prev + limit)
+    setCurrentOffset((prev) => prev + limit)
   }, [hasMore, limit])
 
   const refresh = useCallback(async () => {
@@ -218,7 +228,7 @@ export function useProfileActivity({
     error,
     hasMore,
     loadMore,
-    refresh
+    refresh,
   }
 }
 
@@ -246,20 +256,20 @@ interface UseProfileContributionsReturn {
 export function useProfileContributions({
   userId,
   year = new Date().getFullYear(),
-  refreshInterval = 60000 // 1 minute
+  refreshInterval = 60000, // 1 minute
 }: UseProfileContributionsOptions = {}): UseProfileContributionsReturn {
   const url = userId
     ? `/api/profile/${userId}/contributions?year=${year}`
     : `/api/profile/current/contributions?year=${year}`
 
-  const { data, error, mutate: swrMutate } = useSWR<ContributionData>(
-    url,
-    fetcher,
-    {
-      refreshInterval,
-      revalidateOnFocus: false
-    }
-  )
+  const {
+    data,
+    error,
+    mutate: swrMutate,
+  } = useSWR<ContributionData>(url, fetcher, {
+    refreshInterval,
+    revalidateOnFocus: false,
+  })
 
   const refresh = useCallback(async () => {
     await swrMutate()
@@ -270,7 +280,7 @@ export function useProfileContributions({
     isLoading: !error && !data,
     isError: !!error,
     error,
-    refresh
+    refresh,
   }
 }
 
@@ -315,95 +325,117 @@ export function useProfileConnections({
   userId,
   limit = 20,
   offset = 0,
-  refreshInterval = 0
+  refreshInterval = 0,
 }: UseProfileConnectionsOptions = {}): UseProfileConnectionsReturn {
   const queryParams = new URLSearchParams()
-  queryParams.append('limit', limit.toString())
-  queryParams.append('offset', offset.toString())
+  queryParams.append("limit", limit.toString())
+  queryParams.append("offset", offset.toString())
 
   const url = userId
     ? `/api/profile/${userId}/connections?${queryParams.toString()}`
     : `/api/profile/current/connections?${queryParams.toString()}`
 
-  const { data, error, mutate: swrMutate } = useSWR<{
+  const {
+    data,
+    error,
+    mutate: swrMutate,
+  } = useSWR<{
     connections: Connection[]
     total: number
   }>(url, fetcher, {
     refreshInterval,
-    revalidateOnFocus: true
+    revalidateOnFocus: true,
   })
 
-  const connect = useCallback(async (targetUserId: string, message?: string) => {
-    try {
-      const response = await fetch('/api/connections/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ targetUserId, message })
-      })
+  const connect = useCallback(
+    async (targetUserId: string, message?: string) => {
+      try {
+        const response = await fetch("/api/connections/request", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ targetUserId, message }),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to send connection request')
+        if (!response.ok) {
+          throw new Error("Failed to send connection request")
+        }
+
+        await swrMutate()
+      } catch (error) {
+        console.error("Connection request failed:", error)
+        throw error
       }
+    },
+    [swrMutate]
+  )
 
-      await swrMutate()
-    } catch (error) {
-      console.error('Connection request failed:', error)
-      throw error
-    }
-  }, [swrMutate])
+  const disconnect = useCallback(
+    async (targetUserId: string) => {
+      try {
+        const response = await fetch(`/api/connections/${targetUserId}`, {
+          method: "DELETE",
+        })
 
-  const disconnect = useCallback(async (targetUserId: string) => {
-    try {
-      const response = await fetch(`/api/connections/${targetUserId}`, {
-        method: 'DELETE'
-      })
+        if (!response.ok) {
+          throw new Error("Failed to disconnect")
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to disconnect')
+        await swrMutate()
+      } catch (error) {
+        console.error("Disconnect failed:", error)
+        throw error
       }
+    },
+    [swrMutate]
+  )
 
-      await swrMutate()
-    } catch (error) {
-      console.error('Disconnect failed:', error)
-      throw error
-    }
-  }, [swrMutate])
+  const acceptRequest = useCallback(
+    async (requestId: string) => {
+      try {
+        const response = await fetch(
+          `/api/connections/request/${requestId}/accept`,
+          {
+            method: "POST",
+          }
+        )
 
-  const acceptRequest = useCallback(async (requestId: string) => {
-    try {
-      const response = await fetch(`/api/connections/request/${requestId}/accept`, {
-        method: 'POST'
-      })
+        if (!response.ok) {
+          throw new Error("Failed to accept request")
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to accept request')
+        await swrMutate()
+      } catch (error) {
+        console.error("Accept request failed:", error)
+        throw error
       }
+    },
+    [swrMutate]
+  )
 
-      await swrMutate()
-    } catch (error) {
-      console.error('Accept request failed:', error)
-      throw error
-    }
-  }, [swrMutate])
+  const rejectRequest = useCallback(
+    async (requestId: string) => {
+      try {
+        const response = await fetch(
+          `/api/connections/request/${requestId}/reject`,
+          {
+            method: "POST",
+          }
+        )
 
-  const rejectRequest = useCallback(async (requestId: string) => {
-    try {
-      const response = await fetch(`/api/connections/request/${requestId}/reject`, {
-        method: 'POST'
-      })
+        if (!response.ok) {
+          throw new Error("Failed to reject request")
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to reject request')
+        await swrMutate()
+      } catch (error) {
+        console.error("Reject request failed:", error)
+        throw error
       }
-
-      await swrMutate()
-    } catch (error) {
-      console.error('Reject request failed:', error)
-      throw error
-    }
-  }, [swrMutate])
+    },
+    [swrMutate]
+  )
 
   const refresh = useCallback(async () => {
     await swrMutate()
@@ -419,7 +451,7 @@ export function useProfileConnections({
     connect,
     disconnect,
     acceptRequest,
-    rejectRequest
+    rejectRequest,
   }
 }
 
@@ -441,7 +473,9 @@ interface UseProfileSearchReturn {
  * Hook to search for profiles
  */
 export function useProfileSearch(): UseProfileSearchReturn {
-  const [searchParams, setSearchParams] = useState<ProfileSearchParams | null>(null)
+  const [searchParams, setSearchParams] = useState<ProfileSearchParams | null>(
+    null
+  )
   const [results, setResults] = useState<BaseProfile[]>([])
   const [totalResults, setTotalResults] = useState(0)
 
@@ -480,7 +514,7 @@ export function useProfileSearch(): UseProfileSearchReturn {
     error,
     totalResults,
     search,
-    clearResults
+    clearResults,
   }
 }
 
@@ -489,39 +523,39 @@ export function useProfileSearch(): UseProfileSearchReturn {
 // ============================================================================
 
 interface UseProfileThemeReturn {
-  theme: 'light' | 'dark' | 'system'
-  setTheme: (theme: 'light' | 'dark' | 'system') => void
-  resolvedTheme: 'light' | 'dark'
+  theme: "light" | "dark" | "system"
+  setTheme: (theme: "light" | "dark" | "system") => void
+  resolvedTheme: "light" | "dark"
 }
 
 /**
  * Hook to manage profile theme preferences
  */
 export function useProfileTheme(): UseProfileThemeReturn {
-  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setThemeState] = useState<"light" | "dark" | "system">("system")
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light")
 
   useEffect(() => {
     // Only run on client side
-    if (typeof window === 'undefined') return
+    if (typeof window === "undefined") return
 
     // Get saved theme from localStorage
-    const savedTheme = localStorage.getItem('profileTheme') as typeof theme
+    const savedTheme = localStorage.getItem("profileTheme") as typeof theme
     if (savedTheme) {
       setThemeState(savedTheme)
     }
 
     // Resolve system theme
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      setResolvedTheme(mediaQuery.matches ? 'dark' : 'light')
+    if (theme === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+      setResolvedTheme(mediaQuery.matches ? "dark" : "light")
 
       const handler = (e: MediaQueryListEvent) => {
-        setResolvedTheme(e.matches ? 'dark' : 'light')
+        setResolvedTheme(e.matches ? "dark" : "light")
       }
 
-      mediaQuery.addEventListener('change', handler)
-      return () => mediaQuery.removeEventListener('change', handler)
+      mediaQuery.addEventListener("change", handler)
+      return () => mediaQuery.removeEventListener("change", handler)
     } else {
       setResolvedTheme(theme)
     }
@@ -531,24 +565,24 @@ export function useProfileTheme(): UseProfileThemeReturn {
     setThemeState(newTheme)
 
     // Only access localStorage on client side
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('profileTheme', newTheme)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("profileTheme", newTheme)
     }
 
     // Update profile settings via API
-    fetch('/api/profile/current/settings', {
-      method: 'PATCH',
+    fetch("/api/profile/current/settings", {
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ theme: newTheme })
+      body: JSON.stringify({ theme: newTheme }),
     }).catch(console.error)
   }, [])
 
   return {
     theme,
     setTheme,
-    resolvedTheme
+    resolvedTheme,
   }
 }
 
@@ -582,49 +616,59 @@ interface UseProfileNotificationsReturn {
  * Hook to manage profile notifications
  */
 export function useProfileNotifications(): UseProfileNotificationsReturn {
-  const { data, error, mutate: swrMutate } = useSWR<{
+  const {
+    data,
+    error,
+    mutate: swrMutate,
+  } = useSWR<{
     notifications: Notification[]
     unreadCount: number
-  }>('/api/profile/current/notifications', fetcher, {
+  }>("/api/profile/current/notifications", fetcher, {
     refreshInterval: 30000, // 30 seconds
-    revalidateOnFocus: true
+    revalidateOnFocus: true,
   })
 
-  const markAsRead = useCallback(async (notificationId: string) => {
-    try {
-      await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST'
-      })
-      await swrMutate()
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error)
-      throw error
-    }
-  }, [swrMutate])
+  const markAsRead = useCallback(
+    async (notificationId: string) => {
+      try {
+        await fetch(`/api/notifications/${notificationId}/read`, {
+          method: "POST",
+        })
+        await swrMutate()
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error)
+        throw error
+      }
+    },
+    [swrMutate]
+  )
 
   const markAllAsRead = useCallback(async () => {
     try {
-      await fetch('/api/notifications/read-all', {
-        method: 'POST'
+      await fetch("/api/notifications/read-all", {
+        method: "POST",
       })
       await swrMutate()
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error)
+      console.error("Failed to mark all notifications as read:", error)
       throw error
     }
   }, [swrMutate])
 
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    try {
-      await fetch(`/api/notifications/${notificationId}`, {
-        method: 'DELETE'
-      })
-      await swrMutate()
-    } catch (error) {
-      console.error('Failed to delete notification:', error)
-      throw error
-    }
-  }, [swrMutate])
+  const deleteNotification = useCallback(
+    async (notificationId: string) => {
+      try {
+        await fetch(`/api/notifications/${notificationId}`, {
+          method: "DELETE",
+        })
+        await swrMutate()
+      } catch (error) {
+        console.error("Failed to delete notification:", error)
+        throw error
+      }
+    },
+    [swrMutate]
+  )
 
   const refresh = useCallback(async () => {
     await swrMutate()
@@ -639,6 +683,6 @@ export function useProfileNotifications(): UseProfileNotificationsReturn {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    refresh
+    refresh,
   }
 }

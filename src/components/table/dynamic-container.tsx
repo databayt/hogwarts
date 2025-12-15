@@ -1,23 +1,24 @@
-"use client";
+"use client"
 
 /**
  * @see https://github.com/dubinc/dub/blob/main/packages/ui/src/animated-size-container.tsx
  */
+import * as React from "react"
+import { motion, type TargetAndTransition } from "framer-motion"
 
-import { motion, type TargetAndTransition } from "framer-motion";
-import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 interface Dimensions extends TargetAndTransition {
-  width: string | number;
-  height: string | number;
+  width: string | number
+  height: string | number
 }
 
-interface DynamicContainerProps
-  extends React.ComponentProps<typeof motion.div> {
-  width?: boolean;
-  height?: boolean;
-  children?: React.ReactNode;
+interface DynamicContainerProps extends React.ComponentProps<
+  typeof motion.div
+> {
+  width?: boolean
+  height?: boolean
+  children?: React.ReactNode
 }
 
 function DynamicContainer({
@@ -33,48 +34,48 @@ function DynamicContainer({
   children,
   ...props
 }: DynamicContainerProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = React.useState<Dimensions>({
     width: "auto",
     height: "auto",
-  });
-  const rafRef = React.useRef<number | null>(null);
+  })
+  const rafRef = React.useRef<number | null>(null)
 
   React.useEffect(() => {
-    const node = containerRef?.current;
-    if (!node) return;
+    const node = containerRef?.current
+    if (!node) return
 
     function updateDimensions([entry]: ResizeObserverEntry[]) {
       if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
+        cancelAnimationFrame(rafRef.current)
       }
 
       rafRef.current = requestAnimationFrame(() => {
         setDimensions({
           width: width ? (entry?.contentRect?.width ?? "auto") : "auto",
           height: height ? (entry?.contentRect?.height ?? "auto") : "auto",
-        });
-      });
+        })
+      })
     }
 
-    const observer = new ResizeObserver(updateDimensions);
-    observer.observe(node);
+    const observer = new ResizeObserver(updateDimensions)
+    observer.observe(node)
 
     return () => {
-      observer.disconnect();
+      observer.disconnect()
       if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
+        cancelAnimationFrame(rafRef.current)
       }
-    };
-  }, [width, height]);
+    }
+  }, [width, height])
 
   const containerStyle = React.useMemo(
     () => ({
       height: height ? "max-content" : "auto",
       width: width ? "max-content" : "auto",
     }),
-    [height, width],
-  );
+    [height, width]
+  )
 
   return (
     <motion.div
@@ -87,7 +88,7 @@ function DynamicContainer({
         {children}
       </div>
     </motion.div>
-  );
+  )
 }
 
-export { DynamicContainer };
+export { DynamicContainer }

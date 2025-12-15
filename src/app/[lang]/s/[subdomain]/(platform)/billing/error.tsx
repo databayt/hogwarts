@@ -31,7 +31,7 @@ export default function BillingError({ error, reset }: ErrorProps) {
                 : "An unexpected error occurred while loading your billing information."}
           </p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

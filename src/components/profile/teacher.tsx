@@ -1,23 +1,30 @@
 "use client"
 
-import { useSidebar } from "@/components/ui/sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
+  AlertCircle,
+  Award,
   BookOpen,
   Calendar,
-  Users,
-  Clock,
   CheckCircle2,
-  AlertCircle,
-  GraduationCap,
+  Clock,
   FileText,
+  GraduationCap,
   TrendingUp,
-  Award
+  Users,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface TeacherDashboardProps {
   data: Record<string, unknown>
@@ -25,16 +32,55 @@ interface TeacherDashboardProps {
 
 // Classes being taught
 const CLASSES = [
-  { name: "Advanced Calculus", grade: "Grade 12", students: 32, time: "9:00 AM", room: "Room 201", color: "bg-chart-1" },
-  { name: "Algebra II", grade: "Grade 10", students: 28, time: "11:00 AM", room: "Room 203", color: "bg-chart-2" },
-  { name: "Statistics", grade: "Grade 11", students: 25, time: "2:00 PM", room: "Room 205", color: "bg-chart-3" },
+  {
+    name: "Advanced Calculus",
+    grade: "Grade 12",
+    students: 32,
+    time: "9:00 AM",
+    room: "Room 201",
+    color: "bg-chart-1",
+  },
+  {
+    name: "Algebra II",
+    grade: "Grade 10",
+    students: 28,
+    time: "11:00 AM",
+    room: "Room 203",
+    color: "bg-chart-2",
+  },
+  {
+    name: "Statistics",
+    grade: "Grade 11",
+    students: 25,
+    time: "2:00 PM",
+    room: "Room 205",
+    color: "bg-chart-3",
+  },
 ]
 
 // Pending grading tasks
 const GRADING_TASKS = [
-  { title: "Calculus Quiz - Chapter 7", class: "Grade 12", submitted: 28, graded: 15, due: "Dec 22" },
-  { title: "Mechanics Lab Report", class: "Grade 11", submitted: 18, graded: 8, due: "Dec 20" },
-  { title: "Algebra Homework Set 5", class: "Grade 10", submitted: 26, graded: 26, due: "Dec 15" },
+  {
+    title: "Calculus Quiz - Chapter 7",
+    class: "Grade 12",
+    submitted: 28,
+    graded: 15,
+    due: "Dec 22",
+  },
+  {
+    title: "Mechanics Lab Report",
+    class: "Grade 11",
+    submitted: 18,
+    graded: 8,
+    due: "Dec 20",
+  },
+  {
+    title: "Algebra Homework Set 5",
+    class: "Grade 10",
+    submitted: 26,
+    graded: 26,
+    due: "Dec 15",
+  },
 ]
 
 // Student performance overview
@@ -51,10 +97,14 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className={cn(
-        "grid gap-4",
-        useMobileLayout ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-4"
-      )}>
+      <div
+        className={cn(
+          "grid gap-4",
+          useMobileLayout
+            ? "grid-cols-1 sm:grid-cols-2"
+            : "grid-cols-1 md:grid-cols-4"
+        )}
+      >
         <Card className="border-border">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
@@ -64,7 +114,9 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-blue-500">127</span>
-            <p className="text-xs text-muted-foreground mt-1">Across 6 classes</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Across 6 classes
+            </p>
           </CardContent>
         </Card>
 
@@ -77,7 +129,9 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-orange-500">23</span>
-            <p className="text-xs text-muted-foreground mt-1">Assignments to grade</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Assignments to grade
+            </p>
           </CardContent>
         </Card>
 
@@ -90,7 +144,9 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-emerald-500">B+</span>
-            <p className="text-xs text-muted-foreground mt-1">All classes combined</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              All classes combined
+            </p>
           </CardContent>
         </Card>
 
@@ -103,21 +159,25 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           </CardHeader>
           <CardContent>
             <span className="text-3xl font-bold text-purple-500">3</span>
-            <p className="text-xs text-muted-foreground mt-1">Next at 9:00 AM</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Next at 9:00 AM
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Content Grid */}
-      <div className={cn(
-        "grid gap-6",
-        useMobileLayout ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-      )}>
+      <div
+        className={cn(
+          "grid gap-6",
+          useMobileLayout ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}
+      >
         {/* Today's Schedule */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="size-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Calendar className="text-primary size-5" />
               Today's Classes
             </CardTitle>
             <CardDescription>Your teaching schedule for today</CardDescription>
@@ -126,20 +186,31 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
             {CLASSES.map((cls, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn("size-10 rounded-lg flex items-center justify-center text-white", cls.color)}>
+                  <div
+                    className={cn(
+                      "flex size-10 items-center justify-center rounded-lg text-white",
+                      cls.color
+                    )}
+                  >
                     <BookOpen className="size-5" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{cls.name}</p>
-                    <p className="text-xs text-muted-foreground">{cls.grade} • {cls.room}</p>
+                    <p className="text-sm font-medium">{cls.name}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {cls.grade} • {cls.room}
+                    </p>
                   </div>
                 </div>
                 <div className="text-end">
-                  <Badge variant="secondary" className="mb-1">{cls.time}</Badge>
-                  <p className="text-xs text-muted-foreground">{cls.students} students</p>
+                  <Badge variant="secondary" className="mb-1">
+                    {cls.time}
+                  </Badge>
+                  <p className="text-muted-foreground text-xs">
+                    {cls.students} students
+                  </p>
                 </div>
               </div>
             ))}
@@ -149,7 +220,7 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
         {/* Grading Queue */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="size-5 text-orange-500" />
               Grading Queue
             </CardTitle>
@@ -163,30 +234,34 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
               return (
                 <div
                   key={idx}
-                  className="p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                  className="border-border bg-card hover:bg-muted/50 rounded-lg border p-3 transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {isComplete ? (
                         <CheckCircle2 className="size-4 text-emerald-500" />
                       ) : (
                         <AlertCircle className="size-4 text-orange-500" />
                       )}
-                      <span className="font-medium text-sm">{task.title}</span>
+                      <span className="text-sm font-medium">{task.title}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">Due: {task.due}</span>
+                    <span className="text-muted-foreground text-xs">
+                      Due: {task.due}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Progress value={progress} className="flex-1 h-1.5" />
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    <Progress value={progress} className="h-1.5 flex-1" />
+                    <span className="text-muted-foreground text-xs whitespace-nowrap">
                       {task.graded}/{task.submitted}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{task.class}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {task.class}
+                  </p>
                 </div>
               )
             })}
-            <button className="w-full text-sm text-primary hover:underline py-2">
+            <button className="text-primary w-full py-2 text-sm hover:underline">
               View all assignments
             </button>
           </CardContent>
@@ -196,34 +271,45 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
       {/* Top Performing Students */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Award className="size-5 text-amber-500" />
             Top Performing Students
           </CardTitle>
           <CardDescription>Students showing excellent progress</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-4",
-            useMobileLayout ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
-          )}>
+          <div
+            className={cn(
+              "grid gap-4",
+              useMobileLayout ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
+            )}
+          >
             {TOP_STUDENTS.map((student, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-4 transition-colors"
               >
                 <Avatar className="size-12 border-2 border-amber-500/30">
-                  <AvatarFallback className="bg-amber-500/10 text-amber-500 font-semibold">
-                    {student.name.split(" ").map(n => n[0]).join("")}
+                  <AvatarFallback className="bg-amber-500/10 font-semibold text-amber-500">
+                    {student.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{student.name}</p>
-                  <p className="text-xs text-muted-foreground">{student.class}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{student.name}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {student.class}
+                  </p>
                 </div>
                 <div className="text-end">
-                  <Badge className="bg-amber-500 text-white mb-1">{student.grade}</Badge>
-                  <p className="text-xs text-emerald-500">{student.improvement}</p>
+                  <Badge className="mb-1 bg-amber-500 text-white">
+                    {student.grade}
+                  </Badge>
+                  <p className="text-xs text-emerald-500">
+                    {student.improvement}
+                  </p>
                 </div>
               </div>
             ))}
@@ -238,10 +324,14 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           <CardDescription>Your class distribution this week</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-3",
-            useMobileLayout ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 md:grid-cols-3"
-          )}>
+          <div
+            className={cn(
+              "grid gap-3",
+              useMobileLayout
+                ? "grid-cols-1 sm:grid-cols-2"
+                : "grid-cols-2 md:grid-cols-3"
+            )}
+          >
             {[
               { day: "Monday", classes: 4, hours: 4 },
               { day: "Tuesday", classes: 3, hours: 3 },
@@ -253,22 +343,34 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
               <div
                 key={idx}
                 className={cn(
-                  "p-4 rounded-lg border border-border",
-                  item.day === "Total" ? "bg-primary/5 border-primary/30" : "bg-card"
+                  "border-border rounded-lg border p-4",
+                  item.day === "Total"
+                    ? "bg-primary/5 border-primary/30"
+                    : "bg-card"
                 )}
               >
-                <p className={cn(
-                  "font-medium text-sm",
-                  item.day === "Total" && "text-primary"
-                )}>{item.day}</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className={cn(
-                    "text-2xl font-bold",
-                    item.day === "Total" ? "text-primary" : "text-foreground"
-                  )}>{item.classes}</span>
-                  <span className="text-xs text-muted-foreground">classes</span>
+                <p
+                  className={cn(
+                    "text-sm font-medium",
+                    item.day === "Total" && "text-primary"
+                  )}
+                >
+                  {item.day}
+                </p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span
+                    className={cn(
+                      "text-2xl font-bold",
+                      item.day === "Total" ? "text-primary" : "text-foreground"
+                    )}
+                  >
+                    {item.classes}
+                  </span>
+                  <span className="text-muted-foreground text-xs">classes</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{item.hours} teaching hours</p>
+                <p className="text-muted-foreground text-xs">
+                  {item.hours} teaching hours
+                </p>
               </div>
             ))}
           </div>

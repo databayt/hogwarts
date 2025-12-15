@@ -1,71 +1,100 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useTransition, useDeferredValue } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import type { AnnouncementRow } from "./columns";
-import { getAnnouncementColumns } from "./columns";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { AnnouncementCreateForm } from "@/components/platform/announcements/form";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { getAnnouncements } from "./actions";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
 import {
-  PlatformToolbar,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+  useTransition,
+} from "react"
+import { useRouter } from "next/navigation"
+import { Megaphone, Pin, Star } from "lucide-react"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { AnnouncementCreateForm } from "@/components/platform/announcements/form"
+import {
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { Badge } from "@/components/ui/badge";
-import { Megaphone, Pin, Star } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import {
+  deleteAnnouncement,
+  getAnnouncements,
+  toggleAnnouncementPublish,
+} from "./actions"
+import type { AnnouncementRow } from "./columns"
+import { getAnnouncementColumns } from "./columns"
 
 interface AnnouncementsTableProps {
-  initialData: AnnouncementRow[];
-  total: number;
-  dictionary: Dictionary['school']['announcements'];
-  lang: Locale;
-  perPage?: number;
+  initialData: AnnouncementRow[]
+  total: number
+  dictionary: Dictionary["school"]["announcements"]
+  lang: Locale
+  perPage?: number
 }
 
 /**
  * Get localized title with fallback
  */
 function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
-  if (locale === 'ar') {
-    return row.titleAr || row.titleEn || '';
+  if (locale === "ar") {
+    return row.titleAr || row.titleEn || ""
   }
-  return row.titleEn || row.titleAr || '';
+  return row.titleEn || row.titleAr || ""
 }
 
 // Export CSV function
 function createGetAnnouncementsCSV(lang: Locale) {
-  return async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<string> {
+  return async function getAnnouncementsCSV(
+    filters?: Record<string, unknown>
+  ): Promise<string> {
     // Get all announcements without pagination for export
-    const result = await getAnnouncements({ page: 1, perPage: 1000, ...filters });
-    if (!result.success || !result.data.rows) return "";
+    const result = await getAnnouncements({
+      page: 1,
+      perPage: 1000,
+      ...filters,
+    })
+    if (!result.success || !result.data.rows) return ""
 
-    const rows = result.data.rows;
-    const headers = ["ID", "Title (EN)", "Title (AR)", "Scope", "Published", "Created At", "Created By"];
+    const rows = result.data.rows
+    const headers = [
+      "ID",
+      "Title (EN)",
+      "Title (AR)",
+      "Scope",
+      "Published",
+      "Created At",
+      "Created By",
+    ]
     const csvRows = rows.map((row) =>
       [
         row.id,
-        `"${(row.titleEn || '').replace(/"/g, '""')}"`,
-        `"${(row.titleAr || '').replace(/"/g, '""')}"`,
+        `"${(row.titleEn || "").replace(/"/g, '""')}"`,
+        `"${(row.titleAr || "").replace(/"/g, '""')}"`,
         row.scope,
         row.published ? "Yes" : "No",
         row.createdAt,
         row.createdBy || "",
       ].join(",")
-    );
+    )
 
-    return [headers.join(","), ...csvRows].join("\n");
-  };
+    return [headers.join(","), ...csvRows].join("\n")
+  }
 }
 
 export function AnnouncementsTable({
@@ -73,26 +102,26 @@ export function AnnouncementsTable({
   total,
   dictionary,
   lang,
-  perPage = 20
+  perPage = 20,
 }: AnnouncementsTableProps) {
-  const t = dictionary;
-  const router = useRouter();
-  const { openModal } = useModal();
-  const [isPending, startTransition] = useTransition();
+  const t = dictionary
+  const router = useRouter()
+  const { openModal } = useModal()
+  const [isPending, startTransition] = useTransition()
 
   // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
   // Search state with debouncing
-  const [searchInput, setSearchInput] = useState("");
-  const deferredSearch = useDeferredValue(searchInput);
+  const [searchInput, setSearchInput] = useState("")
+  const deferredSearch = useDeferredValue(searchInput)
 
   // Build filters object
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
-    if (deferredSearch) f.title = deferredSearch;
-    return f;
-  }, [deferredSearch]);
+    const f: Record<string, unknown> = {}
+    if (deferredSearch) f.title = deferredSearch
+    return f
+  }, [deferredSearch])
 
   // Data management with optimistic updates
   const {
@@ -113,69 +142,84 @@ export function AnnouncementsTable({
       const result = await getAnnouncements({
         ...params,
         title: deferredSearch || undefined,
-      });
+      })
       if (result.success) {
-        return { rows: result.data.rows as AnnouncementRow[], total: result.data.total };
+        return {
+          rows: result.data.rows as AnnouncementRow[],
+          total: result.data.total,
+        }
       }
-      return { rows: [], total: 0 };
+      return { rows: [], total: 0 }
     },
     filters,
-  });
+  })
 
   // Handle delete with optimistic update
-  const handleDelete = useCallback(async (announcement: AnnouncementRow) => {
-    const displayTitle = getLocalizedTitle(announcement, lang);
-    try {
-      const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', displayTitle));
-      if (!ok) return;
+  const handleDelete = useCallback(
+    async (announcement: AnnouncementRow) => {
+      const displayTitle = getLocalizedTitle(announcement, lang)
+      try {
+        const ok = await confirmDeleteDialog(
+          t.confirmDelete.replace("{title}", displayTitle)
+        )
+        if (!ok) return
 
-      // Optimistic remove
-      optimisticRemove(announcement.id);
+        // Optimistic remove
+        optimisticRemove(announcement.id)
 
-      const result = await deleteAnnouncement({ id: announcement.id });
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast(result.error || t.failedToDelete);
+        const result = await deleteAnnouncement({ id: announcement.id })
+        if (result.success) {
+          DeleteToast()
+        } else {
+          // Revert on error
+          refresh()
+          ErrorToast(result.error || t.failedToDelete)
+        }
+      } catch (e) {
+        refresh()
+        ErrorToast(e instanceof Error ? e.message : t.failedToDelete)
       }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
-    }
-  }, [t, lang, optimisticRemove, refresh]);
+    },
+    [t, lang, optimisticRemove, refresh]
+  )
 
   // Handle toggle publish with optimistic update
-  const handleTogglePublish = useCallback(async (announcement: AnnouncementRow) => {
-    try {
-      // Optimistic update
-      optimisticUpdate(announcement.id, (item) => ({
-        ...item,
-        published: !item.published,
-      }));
+  const handleTogglePublish = useCallback(
+    async (announcement: AnnouncementRow) => {
+      try {
+        // Optimistic update
+        optimisticUpdate(announcement.id, (item) => ({
+          ...item,
+          published: !item.published,
+        }))
 
-      const result = await toggleAnnouncementPublish({
-        id: announcement.id,
-        publish: !announcement.published,
-      });
+        const result = await toggleAnnouncementPublish({
+          id: announcement.id,
+          publish: !announcement.published,
+        })
 
-      if (!result.success) {
-        // Revert on error
-        refresh();
-        ErrorToast(result.error || t.failedToTogglePublish);
+        if (!result.success) {
+          // Revert on error
+          refresh()
+          ErrorToast(result.error || t.failedToTogglePublish)
+        }
+      } catch (e) {
+        refresh()
+        ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish)
       }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish);
-    }
-  }, [t, optimisticUpdate, refresh]);
+    },
+    [t, optimisticUpdate, refresh]
+  )
 
   // Generate columns with dictionary, locale, and optimistic callbacks
-  const columns = useMemo(() => getAnnouncementColumns(t, lang, {
-    onDelete: handleDelete,
-    onTogglePublish: handleTogglePublish,
-  }), [t, lang, handleDelete, handleTogglePublish]);
+  const columns = useMemo(
+    () =>
+      getAnnouncementColumns(t, lang, {
+        onDelete: handleDelete,
+        onTogglePublish: handleTogglePublish,
+      }),
+    [t, lang, handleDelete, handleTogglePublish]
+  )
 
   // Table instance (for table view)
   const { table } = useDataTable<AnnouncementRow>({
@@ -195,39 +239,48 @@ export function AnnouncementsTable({
         createdBy: false,
       },
     },
-  });
+  })
 
   // Handle search (debounced via useDeferredValue)
   const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-  }, []);
+    setSearchInput(value)
+  }, [])
 
   // Handle edit
-  const handleEdit = useCallback((id: string) => {
-    openModal(id);
-  }, [openModal]);
+  const handleEdit = useCallback(
+    (id: string) => {
+      openModal(id)
+    },
+    [openModal]
+  )
 
   // Handle view
-  const handleView = useCallback((id: string) => {
-    router.push(`/announcements/${id}`);
-  }, [router]);
+  const handleView = useCallback(
+    (id: string) => {
+      router.push(`/announcements/${id}`)
+    },
+    [router]
+  )
 
   // Get scope badge variant
   const getScopeBadge = (scope: string) => {
     switch (scope) {
       case "school":
-        return { label: t.schoolWide, variant: "default" as const };
+        return { label: t.schoolWide, variant: "default" as const }
       case "class":
-        return { label: t.classSpecific, variant: "secondary" as const };
+        return { label: t.classSpecific, variant: "secondary" as const }
       case "role":
-        return { label: t.roleSpecific, variant: "outline" as const };
+        return { label: t.roleSpecific, variant: "outline" as const }
       default:
-        return { label: scope, variant: "outline" as const };
+        return { label: scope, variant: "outline" as const }
     }
-  };
+  }
 
   // Create locale-aware CSV export function
-  const getAnnouncementsCSV = useMemo(() => createGetAnnouncementsCSV(lang), [lang]);
+  const getAnnouncementsCSV = useMemo(
+    () => createGetAnnouncementsCSV(lang),
+    [lang]
+  )
 
   // Translations for toolbar
   const toolbarTranslations = {
@@ -239,7 +292,7 @@ export function AnnouncementsTable({
     export: "Export",
     exportCSV: "Export CSV",
     exporting: "Exporting...",
-  };
+  }
 
   return (
     <>
@@ -275,13 +328,15 @@ export function AnnouncementsTable({
           ) : (
             <GridContainer columns={3}>
               {data.map((announcement) => {
-                const scopeBadge = getScopeBadge(announcement.scope);
-                const displayTitle = getLocalizedTitle(announcement, lang);
+                const scopeBadge = getScopeBadge(announcement.scope)
+                const displayTitle = getLocalizedTitle(announcement, lang)
                 return (
                   <GridCard
                     key={announcement.id}
                     title={displayTitle}
-                    subtitle={new Date(announcement.createdAt).toLocaleDateString()}
+                    subtitle={new Date(
+                      announcement.createdAt
+                    ).toLocaleDateString()}
                     avatarFallback={displayTitle.substring(0, 2).toUpperCase()}
                     status={{
                       label: announcement.published ? t.published : t.draft,
@@ -289,22 +344,37 @@ export function AnnouncementsTable({
                     }}
                     badges={[
                       scopeBadge,
-                      ...(announcement.pinned ? [{ label: "Pinned", variant: "secondary" as const }] : []),
-                      ...(announcement.featured ? [{ label: "Featured", variant: "default" as const }] : []),
+                      ...(announcement.pinned
+                        ? [{ label: "Pinned", variant: "secondary" as const }]
+                        : []),
+                      ...(announcement.featured
+                        ? [{ label: "Featured", variant: "default" as const }]
+                        : []),
                     ]}
                     metadata={[
                       { label: t.scope, value: scopeBadge.label },
-                      { label: t.created, value: new Date(announcement.createdAt).toLocaleDateString() },
+                      {
+                        label: t.created,
+                        value: new Date(
+                          announcement.createdAt
+                        ).toLocaleDateString(),
+                      },
                     ]}
                     actions={[
-                      { label: t.view, onClick: () => handleView(announcement.id) },
-                      { label: lang === 'ar' ? 'تعديل' : 'Edit', onClick: () => handleEdit(announcement.id) },
+                      {
+                        label: t.view,
+                        onClick: () => handleView(announcement.id),
+                      },
+                      {
+                        label: lang === "ar" ? "تعديل" : "Edit",
+                        onClick: () => handleEdit(announcement.id),
+                      },
                       {
                         label: announcement.published ? t.unpublish : t.publish,
                         onClick: () => handleTogglePublish(announcement),
                       },
                       {
-                        label: lang === 'ar' ? 'حذف' : 'Delete',
+                        label: lang === "ar" ? "حذف" : "Delete",
                         onClick: () => handleDelete(announcement),
                         variant: "destructive",
                       },
@@ -313,7 +383,7 @@ export function AnnouncementsTable({
                     onClick={() => handleView(announcement.id)}
                   >
                     {(announcement.pinned || announcement.featured) && (
-                      <div className="flex gap-2 mt-2">
+                      <div className="mt-2 flex gap-2">
                         {announcement.pinned && (
                           <Badge variant="secondary" className="gap-1">
                             <Pin className="h-3 w-3" />
@@ -329,18 +399,18 @@ export function AnnouncementsTable({
                       </div>
                     )}
                   </GridCard>
-                );
+                )
               })}
             </GridContainer>
           )}
 
           {/* Load more for grid view */}
           {hasMore && (
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={loadMore}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading ? "Loading..." : "Load More"}
               </button>
@@ -349,7 +419,15 @@ export function AnnouncementsTable({
         </>
       )}
 
-      <Modal content={<AnnouncementCreateForm dictionary={t} lang={lang} onSuccess={refresh} />} />
+      <Modal
+        content={
+          <AnnouncementCreateForm
+            dictionary={t}
+            lang={lang}
+            onSuccess={refresh}
+          />
+        }
+      />
     </>
-  );
+  )
 }

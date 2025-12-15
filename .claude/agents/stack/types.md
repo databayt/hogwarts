@@ -9,6 +9,7 @@ model: sonnet
 **Specialization**: TypeScript 5.x, strict mode, advanced type patterns
 
 ## Expertise
+
 - Type safety & strict mode
 - Generics & conditional types
 - Type inference & narrowing
@@ -17,6 +18,7 @@ model: sonnet
 - Type guards & assertions
 
 ## Project Configuration
+
 - **Version**: TypeScript 5.x
 - **Mode**: Strict (`strict: true`)
 - **Config**: `tsconfig.json`
@@ -25,10 +27,9 @@ model: sonnet
 ## Type Patterns
 
 ### 1. Discriminated Unions
+
 ```typescript
-type Result<T> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+type Result<T> = { success: true; data: T } | { success: false; error: string }
 
 function handleResult<T>(result: Result<T>) {
   if (result.success) {
@@ -40,9 +41,10 @@ function handleResult<T>(result: Result<T>) {
 ```
 
 ### 2. Type Guards
+
 ```typescript
 function isStudent(user: User): user is Student {
-  return user.role === 'STUDENT'
+  return user.role === "STUDENT"
 }
 
 if (isStudent(user)) {
@@ -52,6 +54,7 @@ if (isStudent(user)) {
 ```
 
 ### 3. Generics with Constraints
+
 ```typescript
 interface HasSchoolId {
   schoolId: string
@@ -66,31 +69,34 @@ async function findBySchool<T extends HasSchoolId>(
 ```
 
 ### 4. Utility Types
+
 ```typescript
 // Partial for updates
-type UpdateStudent = Partial<Omit<Student, 'id' | 'createdAt'>>
+type UpdateStudent = Partial<Omit<Student, "id" | "createdAt">>
 
 // Required for validation
-type RequiredFields = Required<Pick<Student, 'name' | 'email'>>
+type RequiredFields = Required<Pick<Student, "name" | "email">>
 
 // Readonly for immutable
 type StudentView = Readonly<Student>
 ```
 
 ### 5. Zod Integration
+
 ```typescript
-import { z } from 'zod'
+import { z } from "zod"
 
 const studentSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  yearLevelId: z.string().optional()
+  yearLevelId: z.string().optional(),
 })
 
 type StudentInput = z.infer<typeof studentSchema>
 ```
 
 ### 6. Server Action Types
+
 ```typescript
 type ActionResult<T> =
   | { success: true; data: T }
@@ -106,13 +112,14 @@ export async function createStudent(
 ## Common Type Issues & Fixes
 
 ### Issue: Type 'string | undefined' not assignable
+
 ```typescript
 // Bad
 const name = user?.name
 setName(name) // Error if setName expects string
 
 // Good
-const name = user?.name ?? ''
+const name = user?.name ?? ""
 setName(name)
 // Or
 if (user?.name) {
@@ -121,6 +128,7 @@ if (user?.name) {
 ```
 
 ### Issue: Object possibly 'null'
+
 ```typescript
 // Bad
 const length = array.length // Error if array might be null
@@ -134,6 +142,7 @@ if (array) {
 ```
 
 ### Issue: Property does not exist
+
 ```typescript
 // Bad
 const value = obj.unknownProp // Error
@@ -149,6 +158,7 @@ interface MyObject {
 ```
 
 ## Type Safety Checklist
+
 - [ ] No `any` types (except justified)
 - [ ] All functions have return types
 - [ ] All parameters are typed

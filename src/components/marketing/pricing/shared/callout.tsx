@@ -6,14 +6,14 @@ import {
   FileText,
   Info,
   Lightbulb,
-} from "lucide-react";
+} from "lucide-react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 interface CalloutProps {
-  twClass?: string;
-  children?: React.ReactNode;
-  type?: keyof typeof dataCallout;
+  twClass?: string
+  children?: React.ReactNode
+  type?: keyof typeof dataCallout
 }
 
 const dataCallout = {
@@ -57,7 +57,7 @@ const dataCallout = {
     classes:
       "border-orange-200 bg-orange-50 text-orange-800 dark:bg-orange-400/20 dark:text-orange-300",
   },
-};
+}
 
 export function Callout({
   children,
@@ -65,13 +65,13 @@ export function Callout({
   type = "default",
   ...props
 }: CalloutProps) {
-  const { icon: Icon, classes } = dataCallout[type];
+  const { icon: Icon, classes } = dataCallout[type]
   return (
     <div
       className={cn(
         "mt-6 flex items-start space-x-3 rounded-lg border px-4 py-3 dark:border-none",
         classes,
-        twClass,
+        twClass
       )}
       {...props}
     >
@@ -80,5 +80,5 @@ export function Callout({
       </div>
       <div className="[&>p]:my-0">{children}</div>
     </div>
-  );
+  )
 }

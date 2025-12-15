@@ -1,38 +1,41 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import { getLeadColumns, type LeadRow } from "@/components/sales/columns";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { OperatorLeadForm } from "./form";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { getOperatorLeads, deleteOperatorLead } from "./actions";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
 import {
-  PlatformToolbar,
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { Badge } from "@/components/ui/badge";
-import { useRouter } from "next/navigation";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { toast } from "sonner";
-import {
-  STATUS_COLORS,
-  PRIORITY_COLORS,
-} from "@/components/sales/constants";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { getLeadColumns, type LeadRow } from "@/components/sales/columns"
+import { PRIORITY_COLORS, STATUS_COLORS } from "@/components/sales/constants"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteOperatorLead, getOperatorLeads } from "./actions"
+import { OperatorLeadForm } from "./form"
 
 interface OperatorSalesTableProps {
-  initialData: LeadRow[];
-  total: number;
-  perPage: number;
-  dictionary?: Dictionary["sales"];
-  lang: Locale;
+  initialData: LeadRow[]
+  total: number
+  perPage: number
+  dictionary?: Dictionary["sales"]
+  lang: Locale
 }
 
 export function OperatorSalesTable({
@@ -42,25 +45,28 @@ export function OperatorSalesTable({
   dictionary,
   lang,
 }: OperatorSalesTableProps) {
-  const router = useRouter();
-  const { openModal } = useModal();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const { openModal } = useModal()
+  const [isPending, startTransition] = useTransition()
 
   // Translations
   const t = {
-    search: dictionary?.search || (lang === "ar" ? "بحث في العملاء المحتملين..." : "Search leads..."),
+    search:
+      dictionary?.search ||
+      (lang === "ar" ? "بحث في العملاء المحتملين..." : "Search leads..."),
     create: dictionary?.create || (lang === "ar" ? "إنشاء" : "Create"),
     export: dictionary?.export || (lang === "ar" ? "تصدير" : "Export"),
     reset: dictionary?.reset || (lang === "ar" ? "إعادة تعيين" : "Reset"),
-    deleteSuccess: dictionary?.messages?.deleteSuccess || "Lead deleted successfully",
+    deleteSuccess:
+      dictionary?.messages?.deleteSuccess || "Lead deleted successfully",
     deleteError: dictionary?.messages?.deleteError || "Failed to delete lead",
-  };
+  }
 
   // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
   // Search state
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
   const {
@@ -80,9 +86,9 @@ export function OperatorSalesTable({
         { search: params.search },
         params.page,
         params.perPage
-      );
+      )
       if (!result.success || !result.data) {
-        return { rows: [], total: 0 };
+        return { rows: [], total: 0 }
       }
       return {
         rows: result.data.leads.map((lead) => ({
@@ -100,13 +106,16 @@ export function OperatorSalesTable({
           createdAt: lead.createdAt.toISOString(),
         })),
         total: result.data.total,
-      };
+      }
     },
     filters: searchValue ? { search: searchValue } : undefined,
-  });
+  })
 
   // Generate columns on the client side
-  const columns = useMemo(() => getLeadColumns(dictionary, lang), [dictionary, lang]);
+  const columns = useMemo(
+    () => getLeadColumns(dictionary, lang),
+    [dictionary, lang]
+  )
 
   // Table instance
   const { table } = useDataTable<LeadRow>({
@@ -119,60 +128,78 @@ export function OperatorSalesTable({
         pageSize: data.length || perPage,
       },
     },
-  });
+  })
 
   // Handle search
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      startTransition(() => {
+        router.refresh()
+      })
+    },
+    [router]
+  )
 
   // Handle delete with optimistic update
-  const handleDelete = useCallback(async (lead: LeadRow) => {
-    try {
-      const deleteMsg = lang === "ar" ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`;
-      const ok = await confirmDeleteDialog(deleteMsg);
-      if (!ok) return;
+  const handleDelete = useCallback(
+    async (lead: LeadRow) => {
+      try {
+        const deleteMsg =
+          lang === "ar" ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`
+        const ok = await confirmDeleteDialog(deleteMsg)
+        if (!ok) return
 
-      // Optimistic remove
-      optimisticRemove(lead.id);
+        // Optimistic remove
+        optimisticRemove(lead.id)
 
-      const result = await deleteOperatorLead(lead.id);
-      if (result.success) {
-        toast.success(t.deleteSuccess);
-      } else {
-        // Revert on error
-        refresh();
-        toast.error(result.error || t.deleteError);
+        const result = await deleteOperatorLead(lead.id)
+        if (result.success) {
+          toast.success(t.deleteSuccess)
+        } else {
+          // Revert on error
+          refresh()
+          toast.error(result.error || t.deleteError)
+        }
+      } catch (e) {
+        refresh()
+        toast.error(e instanceof Error ? e.message : t.deleteError)
       }
-    } catch (e) {
-      refresh();
-      toast.error(e instanceof Error ? e.message : t.deleteError);
-    }
-  }, [optimisticRemove, refresh, lang, t.deleteSuccess, t.deleteError]);
+    },
+    [optimisticRemove, refresh, lang, t.deleteSuccess, t.deleteError]
+  )
 
   // Handle edit
-  const handleEdit = useCallback((id: string) => {
-    openModal(id);
-  }, [openModal]);
+  const handleEdit = useCallback(
+    (id: string) => {
+      openModal(id)
+    },
+    [openModal]
+  )
 
   // Get status badge
   const getStatusBadge = (status: LeadRow["status"]) => {
     return {
       label: dictionary?.status?.[status] || status,
-      variant: STATUS_COLORS[status] as "default" | "secondary" | "destructive" | "outline",
-    };
-  };
+      variant: STATUS_COLORS[status] as
+        | "default"
+        | "secondary"
+        | "destructive"
+        | "outline",
+    }
+  }
 
   // Get priority badge
   const getPriorityBadge = (priority: LeadRow["priority"]) => {
     return {
       label: dictionary?.priority?.[priority] || priority,
-      variant: PRIORITY_COLORS[priority] as "default" | "secondary" | "destructive" | "outline",
-    };
-  };
+      variant: PRIORITY_COLORS[priority] as
+        | "default"
+        | "secondary"
+        | "destructive"
+        | "outline",
+    }
+  }
 
   // Toolbar translations
   const toolbarTranslations = {
@@ -180,7 +207,7 @@ export function OperatorSalesTable({
     create: t.create,
     reset: t.reset,
     export: t.export,
-  };
+  }
 
   return (
     <>
@@ -209,7 +236,11 @@ export function OperatorSalesTable({
           {data.length === 0 && !isLoading ? (
             <GridEmptyState
               title={lang === "ar" ? "لا يوجد عملاء محتملين" : "No leads"}
-              description={lang === "ar" ? "أنشئ عميلاً محتملاً جديداً" : "Create a new lead to get started"}
+              description={
+                lang === "ar"
+                  ? "أنشئ عميلاً محتملاً جديداً"
+                  : "Create a new lead to get started"
+              }
             />
           ) : (
             data.map((lead) => (
@@ -234,10 +265,15 @@ export function OperatorSalesTable({
                   },
                 ]}
                 metadata={[
-                  { label: dictionary?.table?.score || "Score", value: String(lead.score) },
+                  {
+                    label: dictionary?.table?.score || "Score",
+                    value: String(lead.score),
+                  },
                   {
                     label: dictionary?.table?.created || "Created",
-                    value: new Date(lead.createdAt).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US"),
+                    value: new Date(lead.createdAt).toLocaleDateString(
+                      lang === "ar" ? "ar-SA" : "en-US"
+                    ),
                   },
                 ]}
               />
@@ -246,7 +282,7 @@ export function OperatorSalesTable({
           {hasMore && !isLoading && (
             <button
               onClick={loadMore}
-              className="col-span-full py-2 text-center text-sm text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground col-span-full py-2 text-center text-sm"
             >
               {dictionary?.loadMore || "Load More"}
             </button>
@@ -261,7 +297,11 @@ export function OperatorSalesTable({
         </GridContainer>
       )}
 
-      <Modal content={<OperatorLeadForm dictionary={dictionary} onSuccess={refresh} />} />
+      <Modal
+        content={
+          <OperatorLeadForm dictionary={dictionary} onSuccess={refresh} />
+        }
+      />
     </>
-  );
+  )
 }

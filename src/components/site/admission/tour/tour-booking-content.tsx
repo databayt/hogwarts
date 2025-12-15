@@ -1,14 +1,24 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -16,32 +26,34 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Loader2 } from "lucide-react";
-import { AnthropicIcons } from "@/components/icons/anthropic";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { ar, enUS } from "date-fns/locale";
-import type { School } from "../../types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { TourSlot, TourBookingData, TourBookingConfirmation } from "../types";
-import { DEFAULT_GRADES } from "../types";
-import { getAvailableSlots, createTourBooking } from "../actions";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { AnthropicIcons } from "@/components/icons/anthropic"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { School } from "../../types"
+import { createTourBooking, getAvailableSlots } from "../actions"
+import type {
+  TourBookingConfirmation,
+  TourBookingData,
+  TourSlot,
+} from "../types"
+import { DEFAULT_GRADES } from "../types"
 
 interface Props {
-  school: School;
-  dictionary: Dictionary;
-  lang: Locale;
-  subdomain: string;
+  school: School
+  dictionary: Dictionary
+  lang: Locale
+  subdomain: string
 }
 
 const bookingSchema = z.object({
@@ -52,9 +64,9 @@ const bookingSchema = z.object({
   interestedGrade: z.string().optional(),
   numberOfAttendees: z.number().min(1).max(5),
   specialRequests: z.string().optional(),
-});
+})
 
-type BookingFormData = z.infer<typeof bookingSchema>;
+type BookingFormData = z.infer<typeof bookingSchema>
 
 export default function TourBookingContent({
   school,
@@ -62,14 +74,15 @@ export default function TourBookingContent({
   lang,
   subdomain,
 }: Props) {
-  const router = useRouter();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedSlot, setSelectedSlot] = useState<TourSlot | null>(null);
-  const [availableSlots, setAvailableSlots] = useState<TourSlot[]>([]);
-  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmation, setConfirmation] = useState<TourBookingConfirmation | null>(null);
-  const isRTL = lang === "ar";
+  const router = useRouter()
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const [selectedSlot, setSelectedSlot] = useState<TourSlot | null>(null)
+  const [availableSlots, setAvailableSlots] = useState<TourSlot[]>([])
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [confirmation, setConfirmation] =
+    useState<TourBookingConfirmation | null>(null)
+  const isRTL = lang === "ar"
 
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -82,41 +95,43 @@ export default function TourBookingContent({
       numberOfAttendees: 1,
       specialRequests: "",
     },
-  });
+  })
 
   // Fetch available slots when date changes
   useEffect(() => {
     if (selectedDate) {
-      fetchSlots(selectedDate);
+      fetchSlots(selectedDate)
     }
-  }, [selectedDate]);
+  }, [selectedDate])
 
   const fetchSlots = async (date: Date) => {
-    setIsLoadingSlots(true);
-    setSelectedSlot(null);
+    setIsLoadingSlots(true)
+    setSelectedSlot(null)
     try {
-      const result = await getAvailableSlots(subdomain, "TOUR", date);
+      const result = await getAvailableSlots(subdomain, "TOUR", date)
 
       if (result.success && result.data) {
-        setAvailableSlots(result.data);
+        setAvailableSlots(result.data)
       } else {
-        setAvailableSlots([]);
+        setAvailableSlots([])
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في جلب المواعيد" : "Failed to fetch available slots");
-      setAvailableSlots([]);
+      toast.error(
+        isRTL ? "فشل في جلب المواعيد" : "Failed to fetch available slots"
+      )
+      setAvailableSlots([])
     } finally {
-      setIsLoadingSlots(false);
+      setIsLoadingSlots(false)
     }
-  };
+  }
 
   const onSubmit = async (data: BookingFormData) => {
     if (!selectedSlot) {
-      toast.error(isRTL ? "يرجى اختيار موعد" : "Please select a time slot");
-      return;
+      toast.error(isRTL ? "يرجى اختيار موعد" : "Please select a time slot")
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       const bookingData: TourBookingData = {
         slotId: selectedSlot.id,
@@ -127,35 +142,39 @@ export default function TourBookingContent({
         interestedGrade: data.interestedGrade,
         numberOfAttendees: data.numberOfAttendees,
         specialRequests: data.specialRequests,
-      };
+      }
 
-      const result = await createTourBooking(subdomain, bookingData);
+      const result = await createTourBooking(subdomain, bookingData)
 
       if (result.success && result.data) {
-        setConfirmation(result.data);
-        toast.success(isRTL ? "تم حجز الجولة بنجاح" : "Tour booked successfully");
+        setConfirmation(result.data)
+        toast.success(
+          isRTL ? "تم حجز الجولة بنجاح" : "Tour booked successfully"
+        )
       } else {
-        toast.error(result.error || (isRTL ? "فشل في الحجز" : "Failed to book tour"));
+        toast.error(
+          result.error || (isRTL ? "فشل في الحجز" : "Failed to book tour")
+        )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في الحجز" : "Failed to book tour");
+      toast.error(isRTL ? "فشل في الحجز" : "Failed to book tour")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   // Show confirmation if booking was successful
   if (confirmation) {
     return (
       <div className="space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-            <AnthropicIcons.Sparkle className="w-10 h-10 text-primary" />
+          <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
+            <AnthropicIcons.Sparkle className="text-primary h-10 w-10" />
           </div>
           <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
             {isRTL ? "تم تأكيد الحجز!" : "Tour Booked!"}
           </h1>
-          <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+          <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
             {isRTL
               ? "سيتم إرسال تفاصيل الحجز إلى بريدك الإلكتروني"
               : "Booking details have been sent to your email"}
@@ -167,33 +186,37 @@ export default function TourBookingContent({
             <CardDescription>
               {isRTL ? "رقم الحجز" : "Booking Number"}
             </CardDescription>
-            <CardTitle className="text-xl font-mono tracking-wider">
+            <CardTitle className="font-mono text-xl tracking-wider">
               {confirmation.bookingNumber}
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="space-y-4 pt-6">
             <div className="flex items-center gap-3">
-              <AnthropicIcons.CalendarChart className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.CalendarChart className="text-muted-foreground h-5 w-5" />
               <span>
-                {format(new Date(confirmation.slot.date), "EEEE, MMMM d, yyyy", {
-                  locale: isRTL ? ar : enUS,
-                })}
+                {format(
+                  new Date(confirmation.slot.date),
+                  "EEEE, MMMM d, yyyy",
+                  {
+                    locale: isRTL ? ar : enUS,
+                  }
+                )}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <AnthropicIcons.Lightning className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.Lightning className="text-muted-foreground h-5 w-5" />
               <span>
                 {confirmation.slot.startTime} - {confirmation.slot.endTime}
               </span>
             </div>
             {confirmation.slot.location && (
               <div className="flex items-center gap-3">
-                <AnthropicIcons.Checklist className="h-5 w-5 text-muted-foreground" />
+                <AnthropicIcons.Checklist className="text-muted-foreground h-5 w-5" />
                 <span>{confirmation.slot.location}</span>
               </div>
             )}
             <div className="flex items-center gap-3">
-              <AnthropicIcons.Chat className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.Chat className="text-muted-foreground h-5 w-5" />
               <span>
                 {confirmation.numberOfAttendees} {isRTL ? "شخص" : "attendee(s)"}
               </span>
@@ -201,39 +224,39 @@ export default function TourBookingContent({
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/${lang}`)}
-          >
+        <div className="flex justify-center gap-4">
+          <Button variant="outline" onClick={() => router.push(`/${lang}`)}>
             {isRTL ? "العودة للرئيسية" : "Back to Home"}
           </Button>
-          <Button onClick={() => router.push(`/${lang}/apply`)} className="group">
+          <Button
+            onClick={() => router.push(`/${lang}/apply`)}
+            className="group"
+          >
             {isRTL ? "قدم الآن" : "Apply Now"}
-            <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+            <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-          <AnthropicIcons.CalendarChart className="h-8 w-8 text-primary" />
+        <div className="bg-primary/10 mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full">
+          <AnthropicIcons.CalendarChart className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "حجز جولة في الحرم الجامعي" : "Schedule a Campus Tour"}
         </h1>
-        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+        <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
           {isRTL
             ? `زر ${school.name} واكتشف مرافقنا`
             : `Visit ${school.name} and explore our facilities`}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Calendar */}
         <Card>
           <CardHeader>
@@ -248,9 +271,11 @@ export default function TourBookingContent({
               onSelect={setSelectedDate}
               locale={isRTL ? ar : enUS}
               disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today || date.getDay() === 5 || date.getDay() === 6;
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                return (
+                  date < today || date.getDay() === 5 || date.getDay() === 6
+                )
               }}
               className="rounded-md border"
             />
@@ -273,24 +298,30 @@ export default function TourBookingContent({
           </CardHeader>
           <CardContent>
             {!selectedDate ? (
-              <p className="text-muted-foreground text-center py-8">
-                {isRTL ? "اختر تاريخاً لعرض المواعيد المتاحة" : "Select a date to see available times"}
+              <p className="text-muted-foreground py-8 text-center">
+                {isRTL
+                  ? "اختر تاريخاً لعرض المواعيد المتاحة"
+                  : "Select a date to see available times"}
               </p>
             ) : isLoadingSlots ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : availableSlots.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {isRTL ? "لا توجد مواعيد متاحة في هذا التاريخ" : "No available slots for this date"}
+              <p className="text-muted-foreground py-8 text-center">
+                {isRTL
+                  ? "لا توجد مواعيد متاحة في هذا التاريخ"
+                  : "No available slots for this date"}
               </p>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {availableSlots.map((slot) => (
                   <Button
                     key={slot.id}
-                    variant={selectedSlot?.id === slot.id ? "default" : "outline"}
-                    className="h-auto py-3 flex flex-col"
+                    variant={
+                      selectedSlot?.id === slot.id ? "default" : "outline"
+                    }
+                    className="flex h-auto flex-col py-3"
                     onClick={() => setSelectedSlot(slot)}
                     disabled={slot.availableSpots === 0}
                   >
@@ -316,13 +347,18 @@ export default function TourBookingContent({
               {isRTL ? "معلومات الحجز" : "Booking Information"}
             </CardTitle>
             <CardDescription>
-              {isRTL ? "أدخل بياناتك لإتمام الحجز" : "Enter your details to complete the booking"}
+              {isRTL
+                ? "أدخل بياناتك لإتمام الحجز"
+                : "Enter your details to complete the booking"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="parentName"
@@ -332,7 +368,12 @@ export default function TourBookingContent({
                           {isRTL ? "اسم ولي الأمر" : "Parent/Guardian Name"} *
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder={isRTL ? "أدخل اسمك" : "Enter your name"} />
+                          <Input
+                            {...field}
+                            placeholder={
+                              isRTL ? "أدخل اسمك" : "Enter your name"
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -347,7 +388,11 @@ export default function TourBookingContent({
                           {isRTL ? "البريد الإلكتروني" : "Email"} *
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="email" placeholder="example@email.com" />
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="example@email.com"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -355,7 +400,7 @@ export default function TourBookingContent({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="phone"
@@ -363,7 +408,11 @@ export default function TourBookingContent({
                       <FormItem>
                         <FormLabel>{isRTL ? "رقم الهاتف" : "Phone"}</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" placeholder="+249 123 456 789" />
+                          <Input
+                            {...field}
+                            type="tel"
+                            placeholder="+249 123 456 789"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -374,9 +423,16 @@ export default function TourBookingContent({
                     name="studentName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{isRTL ? "اسم الطالب" : "Student Name"}</FormLabel>
+                        <FormLabel>
+                          {isRTL ? "اسم الطالب" : "Student Name"}
+                        </FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder={isRTL ? "أدخل اسم الطالب" : "Enter student name"} />
+                          <Input
+                            {...field}
+                            placeholder={
+                              isRTL ? "أدخل اسم الطالب" : "Enter student name"
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -384,17 +440,26 @@ export default function TourBookingContent({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="interestedGrade"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{isRTL ? "الصف المهتم به" : "Interested Grade"}</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel>
+                          {isRTL ? "الصف المهتم به" : "Interested Grade"}
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={isRTL ? "اختر الصف" : "Select grade"} />
+                              <SelectValue
+                                placeholder={
+                                  isRTL ? "اختر الصف" : "Select grade"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -414,8 +479,13 @@ export default function TourBookingContent({
                     name="numberOfAttendees"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{isRTL ? "عدد الحضور" : "Number of Attendees"}</FormLabel>
-                        <Select onValueChange={(val) => field.onChange(Number(val))} value={String(field.value)}>
+                        <FormLabel>
+                          {isRTL ? "عدد الحضور" : "Number of Attendees"}
+                        </FormLabel>
+                        <Select
+                          onValueChange={(val) => field.onChange(Number(val))}
+                          value={String(field.value)}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -440,11 +510,17 @@ export default function TourBookingContent({
                   name="specialRequests"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{isRTL ? "طلبات خاصة" : "Special Requests"}</FormLabel>
+                      <FormLabel>
+                        {isRTL ? "طلبات خاصة" : "Special Requests"}
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder={isRTL ? "أي طلبات أو ملاحظات" : "Any special requests or notes"}
+                          placeholder={
+                            isRTL
+                              ? "أي طلبات أو ملاحظات"
+                              : "Any special requests or notes"
+                          }
                           rows={2}
                         />
                       </FormControl>
@@ -453,15 +529,19 @@ export default function TourBookingContent({
                   )}
                 />
 
-                <Button type="submit" className="w-full group" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="group w-full"
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                      <Loader2 className="me-2 h-4 w-4 animate-spin" />
                       {isRTL ? "جارٍ الحجز..." : "Booking..."}
                     </>
                   ) : (
                     <>
-                      <AnthropicIcons.Sparkle className="w-4 h-4 me-2" />
+                      <AnthropicIcons.Sparkle className="me-2 h-4 w-4" />
                       {isRTL ? "تأكيد الحجز" : "Confirm Booking"}
                     </>
                   )}
@@ -476,10 +556,12 @@ export default function TourBookingContent({
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <AnthropicIcons.Checklist className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <AnthropicIcons.Checklist className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h3 className="font-medium mb-2">{isRTL ? "معلومات الجولة" : "Tour Information"}</h3>
-              <ul className="text-sm text-muted-foreground space-y-2">
+              <h3 className="mb-2 font-medium">
+                {isRTL ? "معلومات الجولة" : "Tour Information"}
+              </h3>
+              <ul className="text-muted-foreground space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
                   {isRTL
@@ -504,5 +586,5 @@ export default function TourBookingContent({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

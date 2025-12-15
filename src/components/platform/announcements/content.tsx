@@ -1,19 +1,24 @@
-import { AnnouncementsTable } from '@/components/platform/announcements/table'
-import { type AnnouncementRow } from '@/components/platform/announcements/columns'
-import { SearchParams } from 'nuqs/server'
-import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
-import { getTenantContext } from '@/lib/tenant-context'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
-import { getAnnouncementsList } from '@/components/platform/announcements/queries'
+import { SearchParams } from "nuqs/server"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { type AnnouncementRow } from "@/components/platform/announcements/columns"
+import { announcementsSearchParams } from "@/components/platform/announcements/list-params"
+import { getAnnouncementsList } from "@/components/platform/announcements/queries"
+import { AnnouncementsTable } from "@/components/platform/announcements/table"
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
-export default async function AnnouncementsContent({ searchParams, dictionary, lang }: Props) {
+export default async function AnnouncementsContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   const t = dictionary.announcements
@@ -32,7 +37,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
         page: sp.page,
         perPage: sp.perPage,
         sort: sp.sort,
-      });
+      })
 
       // Map results to table format with bilingual fields
       // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
@@ -43,20 +48,25 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
         scope: a.scope,
         published: a.published,
         // Safe date serialization - fallback to current time if null/undefined
-        createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : new Date().toISOString(),
+        createdAt: a.createdAt
+          ? new Date(a.createdAt).toISOString()
+          : new Date().toISOString(),
         createdBy: a.createdBy,
         priority: a.priority,
         pinned: a.pinned,
         featured: a.featured,
-      }));
+      }))
 
-      total = count;
+      total = count
     } catch (error) {
       // Log error for debugging but don't crash the page
-      console.error('[AnnouncementsContent] Error fetching announcements:', error);
+      console.error(
+        "[AnnouncementsContent] Error fetching announcements:",
+        error
+      )
       // Return empty data - page will show "No announcements" instead of crashing
-      data = [];
-      total = 0;
+      data = []
+      total = 0
     }
   }
 

@@ -1,21 +1,22 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import React from "react"
+import { CheckCircle } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 interface FinishSetupFormProps {
-  onContinue?: () => void;
-  isLoading?: boolean;
+  onContinue?: () => void
+  isLoading?: boolean
 }
 
-export function FinishSetupForm({ 
+export function FinishSetupForm({
   onContinue,
-  isLoading = false
+  isLoading = false,
 }: FinishSetupFormProps) {
   return (
     <div className="flex justify-center pt-4">
-      <Button 
+      <Button
         onClick={onContinue}
         disabled={isLoading}
         size="lg"
@@ -23,7 +24,7 @@ export function FinishSetupForm({
       >
         {isLoading ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
+            <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
             Finishing...
           </>
         ) : (
@@ -34,7 +35,7 @@ export function FinishSetupForm({
         )}
       </Button>
     </div>
-  );
+  )
 }
 
-export default FinishSetupForm;
+export default FinishSetupForm

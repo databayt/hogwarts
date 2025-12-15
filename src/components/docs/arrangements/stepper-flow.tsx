@@ -22,16 +22,24 @@ export function StepperFlow({
       <ol className="relative">
         {steps.map((s, i) => (
           <li key={i} className="flex items-start">
-            <div className="flex flex-col items-center me-3">
-              <div className={`flex items-center justify-center rounded-full border ${circleSize} font-medium`}>{i + 1}</div>
+            <div className="me-3 flex flex-col items-center">
+              <div
+                className={`flex items-center justify-center rounded-full border ${circleSize} font-medium`}
+              >
+                {i + 1}
+              </div>
               {i < steps.length - 1 && (
-                <div className="w-px grow bg-border my-1" />
+                <div className="bg-border my-1 w-px grow" />
               )}
             </div>
             <div className="pb-4">
               <div className={`font-medium ${sizeClass}`}>{s.title}</div>
               {s.detail && (
-                <div className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}>{s.detail}</div>
+                <div
+                  className={`text-muted-foreground ${compact ? "text-xs" : "text-sm"}`}
+                >
+                  {s.detail}
+                </div>
               )}
             </div>
           </li>
@@ -43,7 +51,10 @@ export function StepperFlow({
 
 export function DefaultStepperFlow() {
   const steps: Step[] = [
-    { title: "Visit Marketing Site", detail: "Read features, pricing, and docs" },
+    {
+      title: "Visit Marketing Site",
+      detail: "Read features, pricing, and docs",
+    },
     { title: "Choose Plan", detail: "Trial, Basic, Pro" },
     { title: "Signup / Login" },
     { title: "Checkout", detail: "Payment or start trial" },
@@ -57,5 +68,3 @@ export function DefaultStepperFlow() {
   ]
   return <StepperFlow steps={steps} />
 }
-
-

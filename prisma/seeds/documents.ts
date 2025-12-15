@@ -10,7 +10,7 @@
  * Uses findFirst + create pattern - safe to run multiple times (no deletes)
  */
 
-import type { SeedPrisma } from "./types";
+import type { SeedPrisma } from "./types"
 
 // Document types and templates
 const DOCUMENT_TYPES = [
@@ -21,7 +21,10 @@ const DOCUMENT_TYPES = [
       { en: "Official Birth Record", ar: "سجل الميلاد الرسمي" },
     ],
     descriptions: [
-      { en: "Official birth certificate issued by Civil Registry", ar: "شهادة ميلاد رسمية صادرة من السجل المدني" },
+      {
+        en: "Official birth certificate issued by Civil Registry",
+        ar: "شهادة ميلاد رسمية صادرة من السجل المدني",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["official", "required", "identification"],
@@ -35,7 +38,10 @@ const DOCUMENT_TYPES = [
       { en: "Immunization Record", ar: "سجل التطعيمات" },
     ],
     descriptions: [
-      { en: "Complete vaccination history as per national schedule", ar: "سجل التطعيمات الكامل وفقاً للجدول الوطني" },
+      {
+        en: "Complete vaccination history as per national schedule",
+        ar: "سجل التطعيمات الكامل وفقاً للجدول الوطني",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["health", "required", "medical"],
@@ -49,7 +55,10 @@ const DOCUMENT_TYPES = [
       { en: "Student ID Document", ar: "وثيقة هوية الطالب" },
     ],
     descriptions: [
-      { en: "Copy of student's national identification card", ar: "صورة من بطاقة الهوية الوطنية للطالب" },
+      {
+        en: "Copy of student's national identification card",
+        ar: "صورة من بطاقة الهوية الوطنية للطالب",
+      },
     ],
     mimeType: "image/jpeg",
     tags: ["identification", "official"],
@@ -63,7 +72,10 @@ const DOCUMENT_TYPES = [
       { en: "Previous School Records", ar: "سجلات المدرسة السابقة" },
     ],
     descriptions: [
-      { en: "Transfer certificate from previous school", ar: "شهادة نقل من المدرسة السابقة" },
+      {
+        en: "Transfer certificate from previous school",
+        ar: "شهادة نقل من المدرسة السابقة",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["academic", "transfer"],
@@ -77,7 +89,10 @@ const DOCUMENT_TYPES = [
       { en: "Health Clearance Report", ar: "تقرير الخلو من الأمراض" },
     ],
     descriptions: [
-      { en: "Medical fitness report for school enrollment", ar: "تقرير اللياقة الطبية للالتحاق بالمدرسة" },
+      {
+        en: "Medical fitness report for school enrollment",
+        ar: "تقرير اللياقة الطبية للالتحاق بالمدرسة",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["health", "medical", "enrollment"],
@@ -91,7 +106,10 @@ const DOCUMENT_TYPES = [
       { en: "ID Photo", ar: "صورة الهوية" },
     ],
     descriptions: [
-      { en: "Recent passport-sized photograph", ar: "صورة حديثة بحجم جواز السفر" },
+      {
+        en: "Recent passport-sized photograph",
+        ar: "صورة حديثة بحجم جواز السفر",
+      },
     ],
     mimeType: "image/jpeg",
     tags: ["identification", "photo"],
@@ -100,11 +118,12 @@ const DOCUMENT_TYPES = [
   },
   {
     type: "Guardian ID Copy",
-    names: [
-      { en: "Parent/Guardian ID Copy", ar: "صورة هوية ولي الأمر" },
-    ],
+    names: [{ en: "Parent/Guardian ID Copy", ar: "صورة هوية ولي الأمر" }],
     descriptions: [
-      { en: "Copy of parent or guardian's national ID", ar: "صورة من بطاقة هوية ولي الأمر" },
+      {
+        en: "Copy of parent or guardian's national ID",
+        ar: "صورة من بطاقة هوية ولي الأمر",
+      },
     ],
     mimeType: "image/jpeg",
     tags: ["guardian", "identification"],
@@ -118,7 +137,10 @@ const DOCUMENT_TYPES = [
       { en: "Utility Bill", ar: "فاتورة خدمات" },
     ],
     descriptions: [
-      { en: "Document proving current residential address", ar: "وثيقة تثبت عنوان السكن الحالي" },
+      {
+        en: "Document proving current residential address",
+        ar: "وثيقة تثبت عنوان السكن الحالي",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["address", "residence"],
@@ -132,94 +154,103 @@ const DOCUMENT_TYPES = [
       { en: "Academic Transcript", ar: "كشف الدرجات" },
     ],
     descriptions: [
-      { en: "Academic report from previous academic year", ar: "التقرير الأكاديمي من السنة الدراسية السابقة" },
+      {
+        en: "Academic report from previous academic year",
+        ar: "التقرير الأكاديمي من السنة الدراسية السابقة",
+      },
     ],
     mimeType: "application/pdf",
     tags: ["academic", "grades", "transcript"],
     hasExpiry: false,
     probability: 0.6, // 60% of students
   },
-];
+]
 
 // Verification statuses
 const VERIFICATION_STATUSES = [
-  { verified: true, probability: 0.75 },   // 75% verified
-  { verified: false, probability: 0.25 },  // 25% pending
-];
+  { verified: true, probability: 0.75 }, // 75% verified
+  { verified: false, probability: 0.25 }, // 25% pending
+]
 
 export async function seedDocuments(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<void> {
-  console.log("📄 Creating student documents...");
+  console.log("📄 Creating student documents...")
 
   // Get students
   const students = await prisma.student.findMany({
     where: { schoolId },
     select: { id: true, givenName: true, surname: true },
-  });
+  })
 
   // Get admin user for uploadedBy/verifiedBy fields
   const adminUser = await prisma.user.findFirst({
     where: { email: "admin@databayt.org" },
     select: { id: true },
-  });
+  })
 
   if (students.length === 0) {
-    console.log("   ⚠️  No students found, skipping documents\n");
-    return;
+    console.log("   ⚠️  No students found, skipping documents\n")
+    return
   }
 
   // Check existing count
   const existingCount = await prisma.studentDocument.count({
     where: { schoolId },
-  });
+  })
 
   if (existingCount >= 500) {
-    console.log(`   ✅ Documents already exist (${existingCount}), skipping\n`);
-    return;
+    console.log(`   ✅ Documents already exist (${existingCount}), skipping\n`)
+    return
   }
 
-  const uploadedBy = adminUser?.id || null;
-  const now = new Date();
-  const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-  const oneYearFromNow = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const uploadedBy = adminUser?.id || null
+  const now = new Date()
+  const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+  const oneYearFromNow = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
 
   const documents: Array<{
-    schoolId: string;
-    studentId: string;
-    documentType: string;
-    documentName: string;
-    description: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-    uploadedAt: Date;
-    uploadedBy: string | null;
-    verifiedAt: Date | null;
-    verifiedBy: string | null;
-    isVerified: boolean;
-    expiryDate: Date | null;
-    tags: string[];
-  }> = [];
+    schoolId: string
+    studentId: string
+    documentType: string
+    documentName: string
+    description: string
+    fileUrl: string
+    fileSize: number
+    mimeType: string
+    uploadedAt: Date
+    uploadedBy: string | null
+    verifiedAt: Date | null
+    verifiedBy: string | null
+    isVerified: boolean
+    expiryDate: Date | null
+    tags: string[]
+  }> = []
 
   for (const student of students) {
     // Generate documents based on probability for each type
     for (const docType of DOCUMENT_TYPES) {
       if (Math.random() <= docType.probability) {
-        const nameTemplate = docType.names[Math.floor(Math.random() * docType.names.length)];
-        const descTemplate = docType.descriptions[Math.floor(Math.random() * docType.descriptions.length)];
-        const useArabic = Math.random() > 0.5;
+        const nameTemplate =
+          docType.names[Math.floor(Math.random() * docType.names.length)]
+        const descTemplate =
+          docType.descriptions[
+            Math.floor(Math.random() * docType.descriptions.length)
+          ]
+        const useArabic = Math.random() > 0.5
 
         // Determine verification status
-        const isVerified = Math.random() < 0.75;
+        const isVerified = Math.random() < 0.75
         const uploadDate = new Date(
-          oneYearAgo.getTime() + Math.random() * (now.getTime() - oneYearAgo.getTime())
-        );
+          oneYearAgo.getTime() +
+            Math.random() * (now.getTime() - oneYearAgo.getTime())
+        )
 
         // Generate placeholder file URL (simulating cloud storage)
-        const fileExtension = docType.mimeType === "application/pdf" ? "pdf" : "jpg";
-        const fileUrl = `https://storage.databayt.org/schools/${schoolId}/students/${student.id}/documents/${docType.type.toLowerCase().replace(/\s+/g, "-")}.${fileExtension}`;
+        const fileExtension =
+          docType.mimeType === "application/pdf" ? "pdf" : "jpg"
+        const fileUrl = `https://storage.databayt.org/schools/${schoolId}/students/${student.id}/documents/${docType.type.toLowerCase().replace(/\s+/g, "-")}.${fileExtension}`
 
         documents.push({
           schoolId,
@@ -232,39 +263,49 @@ export async function seedDocuments(
           mimeType: docType.mimeType,
           uploadedAt: uploadDate,
           uploadedBy,
-          verifiedAt: isVerified ? new Date(uploadDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000) : null,
+          verifiedAt: isVerified
+            ? new Date(
+                uploadDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000
+              )
+            : null,
           verifiedBy: isVerified ? uploadedBy : null,
           isVerified,
           expiryDate: docType.hasExpiry ? oneYearFromNow : null,
           tags: docType.tags,
-        });
+        })
       }
     }
   }
 
   // Create documents in batches
-  const batchSize = 500;
-  let createdCount = 0;
+  const batchSize = 500
+  let createdCount = 0
 
   for (let i = 0; i < documents.length; i += batchSize) {
-    const batch = documents.slice(i, i + batchSize);
+    const batch = documents.slice(i, i + batchSize)
     const result = await prisma.studentDocument.createMany({
       data: batch,
       skipDuplicates: true,
-    });
-    createdCount += result.count;
+    })
+    createdCount += result.count
   }
 
   // Count by type
-  const typeCountMap: Record<string, number> = {};
+  const typeCountMap: Record<string, number> = {}
   for (const doc of documents) {
-    typeCountMap[doc.documentType] = (typeCountMap[doc.documentType] || 0) + 1;
+    typeCountMap[doc.documentType] = (typeCountMap[doc.documentType] || 0) + 1
   }
 
-  const verifiedCount = documents.filter(d => d.isVerified).length;
+  const verifiedCount = documents.filter((d) => d.isVerified).length
 
-  console.log(`   ✅ Created ${createdCount} student documents:`);
-  console.log(`      - Verified: ${verifiedCount} (${Math.round(verifiedCount/documents.length*100)}%)`);
-  console.log(`      - Pending: ${documents.length - verifiedCount} (${Math.round((documents.length - verifiedCount)/documents.length*100)}%)`);
-  console.log(`      - Types: ${Object.keys(typeCountMap).length} document types\n`);
+  console.log(`   ✅ Created ${createdCount} student documents:`)
+  console.log(
+    `      - Verified: ${verifiedCount} (${Math.round((verifiedCount / documents.length) * 100)}%)`
+  )
+  console.log(
+    `      - Pending: ${documents.length - verifiedCount} (${Math.round(((documents.length - verifiedCount) / documents.length) * 100)}%)`
+  )
+  console.log(
+    `      - Types: ${Object.keys(typeCountMap).length} document types\n`
+  )
 }

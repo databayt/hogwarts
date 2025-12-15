@@ -38,9 +38,7 @@
       "mcp__Ref__ref_search_documentation",
       "mcp__Ref__ref_read_url"
     ],
-    "deny": [
-
-    ],
+    "deny": [],
     "ask": []
   },
   "model": "opus",

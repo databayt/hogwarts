@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Tool Development
+
 - **CLI Tools**: Command-line utilities for common tasks
 - **Scripts**: Automation scripts for repetitive workflows
 - **Code Generators**: Boilerplate generation tools
@@ -22,6 +23,7 @@ model: sonnet
 - **Monitoring Tools**: Performance profilers, analyzers
 
 ### Tool Categories
+
 - **Build Tools**: Custom build optimizations, bundlers
 - **Testing Tools**: Test utilities, mocks, fixtures
 - **Database Tools**: Seeders, migrations, backups
@@ -29,6 +31,7 @@ model: sonnet
 - **Analysis Tools**: Code quality, performance, security
 
 ### Quality Standards
+
 - Fast execution: <100ms startup time
 - Cross-platform: Windows, macOS, Linux
 - Well-documented: Comprehensive help text
@@ -40,6 +43,7 @@ model: sonnet
 ## Developer Tools Suite
 
 ### 1. Code Generator
+
 ```bash
 # Generate new feature with all boilerplate
 pnpm generate feature students
@@ -54,6 +58,7 @@ pnpm generate feature students
 ```
 
 Implementation:
+
 ```typescript
 // scripts/generate-feature.ts
 #!/usr/bin/env node
@@ -72,6 +77,7 @@ program.parse()
 ```
 
 ### 2. Database Seeder
+
 ```bash
 # Seed database with test data
 pnpm seed
@@ -83,10 +89,12 @@ pnpm seed --clean          # Clean before seed
 ```
 
 Implementation:
+
 ```typescript
 // scripts/seed.ts
-import { db } from '@/lib/db'
-import { faker } from '@faker-js/faker'
+import { faker } from "@faker-js/faker"
+
+import { db } from "@/lib/db"
 
 async function seedSchool(name: string) {
   const school = await db.school.create({
@@ -94,7 +102,7 @@ async function seedSchool(name: string) {
       name,
       subdomain: faker.helpers.slugify(name),
       // ...
-    }
+    },
   })
 
   // Create related data
@@ -105,6 +113,7 @@ async function seedSchool(name: string) {
 ```
 
 ### 3. Migration Helper
+
 ```bash
 # Interactive migration creator
 pnpm migrate:create
@@ -116,6 +125,7 @@ pnpm migrate:create
 ```
 
 ### 4. Performance Profiler
+
 ```bash
 # Profile component render performance
 pnpm profile:component StudentList
@@ -128,6 +138,7 @@ pnpm profile:db --duration 60s
 ```
 
 ### 5. Bundle Analyzer
+
 ```bash
 # Analyze bundle size and composition
 pnpm analyze
@@ -140,6 +151,7 @@ pnpm analyze
 ```
 
 ### 6. Type Checker
+
 ```bash
 # Enhanced type checking with auto-fix
 pnpm typecheck --fix
@@ -152,6 +164,7 @@ pnpm typecheck --fix
 ```
 
 ### 7. Test Generator
+
 ```bash
 # Generate tests from component
 pnpm generate:test components/students/form.tsx
@@ -164,6 +177,7 @@ pnpm generate:test components/students/form.tsx
 ```
 
 ### 8. Environment Manager
+
 ```bash
 # Switch between environments
 pnpm env:switch staging
@@ -176,6 +190,7 @@ pnpm env:generate
 ```
 
 ### 9. Release Automation
+
 ```bash
 # Automated release process
 pnpm release
@@ -191,6 +206,7 @@ pnpm release
 ```
 
 ### 10. Code Quality Scanner
+
 ```bash
 # Comprehensive code quality check
 pnpm quality:check
@@ -209,31 +225,29 @@ pnpm quality:check
 ## Script Templates
 
 ### CLI Tool Template
+
 ```typescript
 #!/usr/bin/env node
-import { Command } from 'commander'
-import chalk from 'chalk'
-import ora from 'ora'
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 const program = new Command()
 
-program
-  .name('tool-name')
-  .description('Tool description')
-  .version('1.0.0')
+program.name("tool-name").description("Tool description").version("1.0.0")
 
 program
-  .command('action <input>')
-  .description('Action description')
-  .option('-f, --flag', 'Flag description')
+  .command("action <input>")
+  .description("Action description")
+  .option("-f, --flag", "Flag description")
   .action(async (input, options) => {
-    const spinner = ora('Processing...').start()
+    const spinner = ora("Processing...").start()
 
     try {
       // Tool logic here
-      spinner.succeed(chalk.green('Success!'))
+      spinner.succeed(chalk.green("Success!"))
     } catch (error) {
-      spinner.fail(chalk.red('Failed'))
+      spinner.fail(chalk.red("Failed"))
       console.error(error)
       process.exit(1)
     }
@@ -243,6 +257,7 @@ program.parse()
 ```
 
 ### npm Script Template
+
 ```json
 {
   "scripts": {
@@ -254,6 +269,7 @@ program.parse()
 ```
 
 ### GitHub Action Template
+
 ```yaml
 name: Custom Tool
 
@@ -261,7 +277,7 @@ on:
   workflow_dispatch:
     inputs:
       parameter:
-        description: 'Tool parameter'
+        description: "Tool parameter"
         required: true
 
 jobs:
@@ -279,56 +295,59 @@ jobs:
 ## Development Utilities
 
 ### Hot Reload for Scripts
+
 ```typescript
 // scripts/watch.ts
-import { watch } from 'chokidar'
-import { spawn } from 'child_process'
+import { spawn } from "child_process"
+import { watch } from "chokidar"
 
 let process: any
 
 function restart() {
   if (process) process.kill()
-  process = spawn('tsx', ['scripts/tool.ts'], {
-    stdio: 'inherit'
+  process = spawn("tsx", ["scripts/tool.ts"], {
+    stdio: "inherit",
   })
 }
 
-watch('scripts/**/*.ts').on('change', restart)
+watch("scripts/**/*.ts").on("change", restart)
 ```
 
 ### Script Testing
+
 ```typescript
 // scripts/__tests__/tool.test.ts
-import { execSync } from 'child_process'
+import { execSync } from "child_process"
 
-describe('Tool', () => {
-  it('should execute successfully', () => {
-    const output = execSync('tsx scripts/tool.ts').toString()
-    expect(output).toContain('Success')
+describe("Tool", () => {
+  it("should execute successfully", () => {
+    const output = execSync("tsx scripts/tool.ts").toString()
+    expect(output).toContain("Success")
   })
 })
 ```
 
 ### Error Handling
+
 ```typescript
 // scripts/utils/error-handler.ts
 export function handleError(error: unknown) {
   if (error instanceof Error) {
-    console.error(chalk.red('Error:'), error.message)
+    console.error(chalk.red("Error:"), error.message)
 
     if (process.env.DEBUG) {
       console.error(error.stack)
     }
   } else {
-    console.error(chalk.red('Unknown error:'), error)
+    console.error(chalk.red("Unknown error:"), error)
   }
 
   process.exit(1)
 }
 
 // Usage
-process.on('unhandledRejection', handleError)
-process.on('uncaughtException', handleError)
+process.on("unhandledRejection", handleError)
+process.on("uncaughtException", handleError)
 ```
 
 ---
@@ -336,6 +355,7 @@ process.on('uncaughtException', handleError)
 ## Best Practices
 
 ### Tool Design
+
 - Single responsibility per tool
 - Clear, descriptive names
 - Comprehensive --help text
@@ -343,6 +363,7 @@ process.on('uncaughtException', handleError)
 - Colored output for better UX
 
 ### Performance
+
 - Lazy load dependencies
 - Stream large files
 - Use worker threads for CPU tasks
@@ -350,6 +371,7 @@ process.on('uncaughtException', handleError)
 - Profile and optimize bottlenecks
 
 ### Testing
+
 - Unit tests for logic
 - Integration tests for CLI
 - Snapshot tests for output
@@ -357,6 +379,7 @@ process.on('uncaughtException', handleError)
 - Test error scenarios
 
 ### Documentation
+
 - README for each tool
 - Usage examples
 - API documentation
@@ -364,6 +387,7 @@ process.on('uncaughtException', handleError)
 - Contribution guidelines
 
 ### Maintenance
+
 - Semantic versioning
 - Changelog maintenance
 - Deprecation warnings

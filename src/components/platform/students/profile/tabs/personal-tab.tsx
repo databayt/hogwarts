@@ -1,19 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { format } from "date-fns";
-import type { Student } from "../../registration/types";
+import { format } from "date-fns"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+
+import type { Student } from "../../registration/types"
 
 interface PersonalTabProps {
-  student: Student;
+  student: Student
 }
 
 export function PersonalTab({ student }: PersonalTabProps) {
   const InfoRow = ({ label, value }: { label: string; value: any }) => (
     <div className="flex flex-col space-y-1">
-      <Label className="text-sm text-muted-foreground">{label}</Label>
+      <Label className="text-muted-foreground text-sm">{label}</Label>
       <p className="font-medium">{value || "-"}</p>
     </div>
-  );
+  )
 
   return (
     <div className="grid gap-6">
@@ -28,7 +30,11 @@ export function PersonalTab({ student }: PersonalTabProps) {
           <InfoRow label="Last Name" value={student.surname} />
           <InfoRow
             label="Date of Birth"
-            value={student.dateOfBirth ? format(new Date(student.dateOfBirth), "dd MMM yyyy") : null}
+            value={
+              student.dateOfBirth
+                ? format(new Date(student.dateOfBirth), "dd MMM yyyy")
+                : null
+            }
           />
           <InfoRow label="Gender" value={student.gender} />
           <InfoRow label="Blood Group" value={student.bloodGroup} />
@@ -51,12 +57,20 @@ export function PersonalTab({ student }: PersonalTabProps) {
           <InfoRow label="Visa Status" value={student.visaStatus} />
           <InfoRow
             label="Visa Expiry"
-            value={student.visaExpiryDate ? format(new Date(student.visaExpiryDate), "dd MMM yyyy") : null}
+            value={
+              student.visaExpiryDate
+                ? format(new Date(student.visaExpiryDate), "dd MMM yyyy")
+                : null
+            }
           />
           <InfoRow label="ID Card Number" value={student.idCardNumber} />
           <InfoRow
             label="ID Card Issue Date"
-            value={student.idCardIssuedDate ? format(new Date(student.idCardIssuedDate), "dd MMM yyyy") : null}
+            value={
+              student.idCardIssuedDate
+                ? format(new Date(student.idCardIssuedDate), "dd MMM yyyy")
+                : null
+            }
           />
         </CardContent>
       </Card>
@@ -90,16 +104,17 @@ export function PersonalTab({ student }: PersonalTabProps) {
       </Card>
 
       {/* Permanent Address */}
-      {student.permanentAddress && student.permanentAddress !== student.currentAddress && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Permanent Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <InfoRow label="Address" value={student.permanentAddress} />
-          </CardContent>
-        </Card>
-      )}
+      {student.permanentAddress &&
+        student.permanentAddress !== student.currentAddress && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Permanent Address</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InfoRow label="Address" value={student.permanentAddress} />
+            </CardContent>
+          </Card>
+        )}
 
       {/* Emergency Contact */}
       <Card>
@@ -109,7 +124,10 @@ export function PersonalTab({ student }: PersonalTabProps) {
         <CardContent className="grid gap-4 md:grid-cols-3">
           <InfoRow label="Contact Name" value={student.emergencyContactName} />
           <InfoRow label="Phone Number" value={student.emergencyContactPhone} />
-          <InfoRow label="Relationship" value={student.emergencyContactRelation} />
+          <InfoRow
+            label="Relationship"
+            value={student.emergencyContactRelation}
+          />
         </CardContent>
       </Card>
 
@@ -121,15 +139,27 @@ export function PersonalTab({ student }: PersonalTabProps) {
         <CardContent className="grid gap-4 md:grid-cols-3">
           <InfoRow
             label="Enrollment Date"
-            value={student.enrollmentDate ? format(new Date(student.enrollmentDate), "dd MMM yyyy") : null}
+            value={
+              student.enrollmentDate
+                ? format(new Date(student.enrollmentDate), "dd MMM yyyy")
+                : null
+            }
           />
           <InfoRow
             label="Admission Date"
-            value={student.admissionDate ? format(new Date(student.admissionDate), "dd MMM yyyy") : null}
+            value={
+              student.admissionDate
+                ? format(new Date(student.admissionDate), "dd MMM yyyy")
+                : null
+            }
           />
           <InfoRow
             label="Graduation Date"
-            value={student.graduationDate ? format(new Date(student.graduationDate), "dd MMM yyyy") : null}
+            value={
+              student.graduationDate
+                ? format(new Date(student.graduationDate), "dd MMM yyyy")
+                : null
+            }
           />
           <InfoRow label="Status" value={student.status} />
         </CardContent>
@@ -142,18 +172,34 @@ export function PersonalTab({ student }: PersonalTabProps) {
             <CardTitle className="text-lg">Previous Education</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <InfoRow label="Previous School" value={student.previousSchoolName} />
-            <InfoRow label="Previous School Address" value={student.previousSchoolAddress} />
+            <InfoRow
+              label="Previous School"
+              value={student.previousSchoolName}
+            />
+            <InfoRow
+              label="Previous School Address"
+              value={student.previousSchoolAddress}
+            />
             <InfoRow label="Previous Grade" value={student.previousGrade} />
-            <InfoRow label="Transfer Certificate No" value={student.transferCertificateNo} />
+            <InfoRow
+              label="Transfer Certificate No"
+              value={student.transferCertificateNo}
+            />
             <InfoRow
               label="Transfer Date"
-              value={student.transferDate ? format(new Date(student.transferDate), "dd MMM yyyy") : null}
+              value={
+                student.transferDate
+                  ? format(new Date(student.transferDate), "dd MMM yyyy")
+                  : null
+              }
             />
-            <InfoRow label="Academic Record" value={student.previousAcademicRecord} />
+            <InfoRow
+              label="Academic Record"
+              value={student.previousAcademicRecord}
+            />
           </CardContent>
         </Card>
       )}
     </div>
-  );
+  )
 }

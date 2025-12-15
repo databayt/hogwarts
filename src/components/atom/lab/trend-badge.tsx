@@ -1,6 +1,8 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
 import { ArrowDown, ArrowUp, Minus } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
 import type { BaseComponentProps, TrendDirection } from "./types"
 
 interface TrendBadgeProps extends BaseComponentProps {
@@ -57,7 +59,10 @@ export function TrendBadge({
       {...props}
     >
       {showIcon && directionIcons[direction]}
-      <span>{value > 0 ? "+" : ""}{value}%</span>
+      <span>
+        {value > 0 ? "+" : ""}
+        {value}%
+      </span>
     </div>
   )
 }

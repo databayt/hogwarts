@@ -1,18 +1,21 @@
-"use client";
+"use client"
 
-import { useTransition } from "react";
-import { generateUserStripe } from "@/components/marketing/pricing/actions/generate-user-stripe";
-import { SubscriptionPlan, UserSubscriptionPlan } from "@/components/marketing/pricing/types";
+import { useTransition } from "react"
+import { UserRole } from "@prisma/client"
 
-import { Button } from "@/components/ui/button";
-import { UserRole } from "@prisma/client";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { Button } from "@/components/ui/button"
+import { generateUserStripe } from "@/components/marketing/pricing/actions/generate-user-stripe"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
+import {
+  SubscriptionPlan,
+  UserSubscriptionPlan,
+} from "@/components/marketing/pricing/types"
 
 interface BillingFormButtonProps {
-  offer: SubscriptionPlan;
-  subscriptionPlan: UserSubscriptionPlan;
-  year: boolean;
-  userRole?: UserRole;
+  offer: SubscriptionPlan
+  subscriptionPlan: UserSubscriptionPlan
+  year: boolean
+  userRole?: UserRole
 }
 
 export function BillingFormButton({
@@ -21,20 +24,23 @@ export function BillingFormButton({
   subscriptionPlan,
   userRole,
 }: BillingFormButtonProps) {
-  const [isPending, startTransition] = useTransition();
-  const selectedPriceId = offer.stripeIds[year ? "yearly" : "monthly"];
-  const generateUserStripeSession = generateUserStripe.bind(null, selectedPriceId as string);
+  const [isPending, startTransition] = useTransition()
+  const selectedPriceId = offer.stripeIds[year ? "yearly" : "monthly"]
+  const generateUserStripeSession = generateUserStripe.bind(
+    null,
+    selectedPriceId as string
+  )
 
   const stripeSessionAction = () =>
     startTransition(() => {
-      void generateUserStripeSession();
-    });
+      void generateUserStripeSession()
+    })
 
   const userOffer =
     subscriptionPlan.stripePriceId ===
-    offer.stripeIds[year ? "yearly" : "monthly"];
+    offer.stripeIds[year ? "yearly" : "monthly"]
 
-  const isAvailable = Boolean(selectedPriceId);
+  const isAvailable = Boolean(selectedPriceId)
 
   return (
     <Button
@@ -52,14 +58,14 @@ export function BillingFormButton({
           {!isAvailable
             ? "Unavailable"
             : userOffer
-            ? "Manage Subscription"
-            : offer.title.toLowerCase() === "pro"
-            ? "Get Pro"
-            : offer.title.toLowerCase() === "ultra"
-            ? "Get Ultra"
-            : "Get plan"}
+              ? "Manage Subscription"
+              : offer.title.toLowerCase() === "pro"
+                ? "Get Pro"
+                : offer.title.toLowerCase() === "ultra"
+                  ? "Get Ultra"
+                  : "Get plan"}
         </>
       )}
     </Button>
-  );
+  )
 }

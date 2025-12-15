@@ -1,59 +1,65 @@
-import React from 'react'
-import { MainNav } from './main-nav'
-import { SiteMobileNav } from './site-mobile-nav'
-import { marketingConfig } from "./config"
+import React from "react"
+import Link from "next/link"
 import { auth } from "@/auth"
-import { ModeSwitcher } from '@/components/template/marketing-header/mode-switcher'
-import { LangSwitcher } from '@/components/template/marketing-header/lang-switcher'
+
+import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Button, buttonVariants } from '@/components/ui/button'
-import { LogoutButton } from '@/components/auth/logout-button'
-import { cn } from '@/lib/utils'
-import Link from 'next/link'
-import { SearchButton } from './search-button'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { LogoutButton } from "@/components/auth/logout-button"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
+import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher"
+
+import { marketingConfig } from "./config"
+import { MainNav } from "./main-nav"
+import { SearchButton } from "./search-button"
+import { SiteMobileNav } from "./site-mobile-nav"
 
 interface School {
-  id: string;
-  name: string;
-  domain: string;
-  logoUrl?: string | null;
-  address?: string | null;
-  phoneNumber?: string | null;
-  email?: string | null;
-  website?: string | null;
-  timezone?: string;
-  planType?: string;
-  maxStudents?: number;
-  maxTeachers?: number;
-  isActive?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  id: string
+  name: string
+  domain: string
+  logoUrl?: string | null
+  address?: string | null
+  phoneNumber?: string | null
+  email?: string | null
+  website?: string | null
+  timezone?: string
+  planType?: string
+  maxStudents?: number
+  maxTeachers?: number
+  isActive?: boolean
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 interface SiteHeaderProps {
-  school: School;
-  locale: string;
+  school: School
+  locale: string
 }
 
 export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
-  const session = await auth();
-  const isAuthenticated = !!session?.user;
-  const dictionary = await getDictionary(locale as Locale);
+  const session = await auth()
+  const isAuthenticated = !!session?.user
+  const dictionary = await getDictionary(locale as Locale)
 
   // Transform nav items for MobileNav
-  const navItems = marketingConfig.mainNav.map(item => ({
+  const navItems = marketingConfig.mainNav.map((item) => ({
     href: item.href,
     label: item.title,
-    disabled: item.disabled
+    disabled: item.disabled,
   }))
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background">
-      <div className="flex h-14 items-center gap-2 md:gap-4 **:data-[slot=separator]:!h-4">
+    <header className="bg-background sticky top-0 z-50 w-full">
+      <div className="flex h-14 items-center gap-2 **:data-[slot=separator]:!h-4 md:gap-4">
         {/* Desktop: MainNav */}
-        <MainNav items={marketingConfig.mainNav} school={school} locale={locale} />
+        <MainNav
+          items={marketingConfig.mainNav}
+          school={school}
+          locale={locale}
+        />
         {/* Mobile: Popover-based menu */}
         <SiteMobileNav
           items={navItems}
@@ -70,7 +76,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
             <Button
               variant="secondary"
               size="sm"
-              className="px-4 text-muted-foreground"
+              className="text-muted-foreground px-4"
               asChild
             >
               <LogoutButton>Logout</LogoutButton>
@@ -80,7 +86,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
               href={`/${locale}/login`}
               className={cn(
                 buttonVariants({ variant: "secondary", size: "sm" }),
-                "px-4 text-muted-foreground"
+                "text-muted-foreground px-4"
               )}
             >
               Login
@@ -89,5 +95,5 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
         </nav>
       </div>
     </header>
-  );
+  )
 }

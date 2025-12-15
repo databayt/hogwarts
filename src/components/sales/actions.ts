@@ -1,26 +1,28 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { auth } from "@/auth";
-import { LeadStatus, LeadSource, LeadPriority, LeadType } from "@prisma/client";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { LeadPriority, LeadSource, LeadStatus, LeadType } from "@prisma/client"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import type { Lead, LeadAnalytics, LeadListResponse } from "./types"
 import {
-  createLeadSchema,
-  updateLeadSchema,
-  bulkUpdateSchema,
-  leadFilterSchema,
-  leadActivitySchema,
   aiExtractionInputSchema,
-  type CreateLeadInput,
-  type UpdateLeadInput,
-  type BulkUpdateInput,
-  type LeadFilterInput,
-  type LeadActivityInput,
+  bulkUpdateSchema,
+  createLeadSchema,
+  leadActivitySchema,
+  leadFilterSchema,
+  updateLeadSchema,
   type AIExtractionInput,
-} from "./validation";
-import type { Lead, LeadListResponse, LeadAnalytics } from "./types";
+  type BulkUpdateInput,
+  type CreateLeadInput,
+  type LeadActivityInput,
+  type LeadFilterInput,
+  type UpdateLeadInput,
+} from "./validation"
 
 // ============================================================================
 // Types
@@ -28,28 +30,28 @@ import type { Lead, LeadListResponse, LeadAnalytics } from "./types";
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const SALES_PATH = "/sales";
+const SALES_PATH = "/sales"
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
 async function getAuthContext() {
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    throw new Error("Missing school context");
+    throw new Error("Missing school context")
   }
 
-  const session = await auth();
-  const userId = session?.user?.id;
+  const session = await auth()
+  const userId = session?.user?.id
 
-  return { schoolId, userId };
+  return { schoolId, userId }
 }
 
 // ============================================================================
@@ -63,10 +65,10 @@ export async function createLead(
   input: CreateLeadInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId, userId } = await getAuthContext();
+    const { schoolId, userId } = await getAuthContext()
 
     // Validate input
-    const validated = createLeadSchema.parse(input);
+    const validated = createLeadSchema.parse(input)
 
     // Check for duplicate email within this school
     if (validated.email) {
@@ -77,13 +79,13 @@ export async function createLead(
             email: validated.email,
           },
         },
-      });
+      })
 
       if (existing) {
         return {
           success: false,
           error: "A lead with this email already exists",
-        };
+        }
       }
     }
 
@@ -114,25 +116,25 @@ export async function createLead(
         notes: validated.notes || null,
         tags: validated.tags || [],
       },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: { id: lead.id } };
+    return { success: true, data: { id: lead.id } }
   } catch (error) {
-    console.error("[createLead] Error:", error);
+    console.error("[createLead] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create lead",
-    };
+    }
   }
 }
 
@@ -144,18 +146,18 @@ export async function updateLead(
   input: UpdateLeadInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     // Validate input
-    const validated = updateLeadSchema.parse(input);
+    const validated = updateLeadSchema.parse(input)
 
     // Check lead exists and belongs to this school
     const existing = await db.lead.findFirst({
       where: { id, schoolId },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
     // Check for duplicate email if changing
@@ -166,13 +168,13 @@ export async function updateLead(
           email: validated.email,
           NOT: { id },
         },
-      });
+      })
 
       if (duplicate) {
         return {
           success: false,
           error: "A lead with this email already exists",
-        };
+        }
       }
     }
 
@@ -181,15 +183,21 @@ export async function updateLead(
       where: { id },
       data: {
         ...(validated.name !== undefined && { name: validated.name }),
-        ...(validated.email !== undefined && { email: validated.email || null }),
-        ...(validated.phone !== undefined && { phone: validated.phone || null }),
+        ...(validated.email !== undefined && {
+          email: validated.email || null,
+        }),
+        ...(validated.phone !== undefined && {
+          phone: validated.phone || null,
+        }),
         ...(validated.alternatePhone !== undefined && {
           alternatePhone: validated.alternatePhone || null,
         }),
         ...(validated.company !== undefined && {
           company: validated.company || null,
         }),
-        ...(validated.title !== undefined && { title: validated.title || null }),
+        ...(validated.title !== undefined && {
+          title: validated.title || null,
+        }),
         ...(validated.website !== undefined && {
           website: validated.website || null,
         }),
@@ -218,7 +226,9 @@ export async function updateLead(
           priority: validated.priority as LeadPriority,
         }),
         ...(validated.score !== undefined && { score: validated.score }),
-        ...(validated.verified !== undefined && { verified: validated.verified }),
+        ...(validated.verified !== undefined && {
+          verified: validated.verified,
+        }),
         ...(validated.assignedToId !== undefined && {
           assignedToId: validated.assignedToId,
         }),
@@ -228,29 +238,31 @@ export async function updateLead(
         ...(validated.nextFollowUpAt !== undefined && {
           nextFollowUpAt: validated.nextFollowUpAt,
         }),
-        ...(validated.notes !== undefined && { notes: validated.notes || null }),
+        ...(validated.notes !== undefined && {
+          notes: validated.notes || null,
+        }),
         ...(validated.tags !== undefined && { tags: validated.tags }),
       },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
-    revalidatePath(`${SALES_PATH}/${id}`);
+    revalidatePath(SALES_PATH)
+    revalidatePath(`${SALES_PATH}/${id}`)
 
-    return { success: true, data: { id: lead.id } };
+    return { success: true, data: { id: lead.id } }
   } catch (error) {
-    console.error("[updateLead] Error:", error);
+    console.error("[updateLead] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update lead",
-    };
+    }
   }
 }
 
@@ -259,31 +271,31 @@ export async function updateLead(
  */
 export async function deleteLead(id: string): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     // Check lead exists and belongs to this school
     const existing = await db.lead.findFirst({
       where: { id, schoolId },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
     await db.lead.delete({
       where: { id },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[deleteLead] Error:", error);
+    console.error("[deleteLead] Error:", error)
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete lead",
-    };
+    }
   }
 }
 
@@ -296,53 +308,56 @@ export async function getLeads(
   pageSize = 10
 ): Promise<ActionResponse<LeadListResponse>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     // Build where clause
-    const where: Record<string, unknown> = { schoolId };
+    const where: Record<string, unknown> = { schoolId }
 
     if (filters) {
-      const validated = leadFilterSchema.parse(filters);
+      const validated = leadFilterSchema.parse(filters)
 
       if (validated.search) {
         where.OR = [
           { name: { contains: validated.search, mode: "insensitive" } },
           { email: { contains: validated.search, mode: "insensitive" } },
           { company: { contains: validated.search, mode: "insensitive" } },
-        ];
+        ]
       }
 
-      if (validated.status) where.status = validated.status;
-      if (validated.source) where.source = validated.source;
-      if (validated.priority) where.priority = validated.priority;
-      if (validated.leadType) where.leadType = validated.leadType;
-      if (validated.assignedToId) where.assignedToId = validated.assignedToId;
-      if (validated.verified !== undefined) where.verified = validated.verified;
+      if (validated.status) where.status = validated.status
+      if (validated.source) where.source = validated.source
+      if (validated.priority) where.priority = validated.priority
+      if (validated.leadType) where.leadType = validated.leadType
+      if (validated.assignedToId) where.assignedToId = validated.assignedToId
+      if (validated.verified !== undefined) where.verified = validated.verified
 
-      if (validated.scoreMin !== undefined || validated.scoreMax !== undefined) {
+      if (
+        validated.scoreMin !== undefined ||
+        validated.scoreMax !== undefined
+      ) {
         where.score = {
           ...(validated.scoreMin !== undefined && { gte: validated.scoreMin }),
           ...(validated.scoreMax !== undefined && { lte: validated.scoreMax }),
-        };
+        }
       }
 
       if (validated.dateFrom || validated.dateTo) {
         where.createdAt = {
           ...(validated.dateFrom && { gte: validated.dateFrom }),
           ...(validated.dateTo && { lte: validated.dateTo }),
-        };
+        }
       }
 
-      if (validated.hasEmail) where.email = { not: null };
-      if (validated.hasPhone) where.phone = { not: null };
+      if (validated.hasEmail) where.email = { not: null }
+      if (validated.hasPhone) where.phone = { not: null }
 
       if (validated.tags && validated.tags.length > 0) {
-        where.tags = { hasSome: validated.tags };
+        where.tags = { hasSome: validated.tags }
       }
     }
 
     // Get total count
-    const total = await db.lead.count({ where });
+    const total = await db.lead.count({ where })
 
     // Get paginated leads
     const leads = await db.lead.findMany({
@@ -360,7 +375,7 @@ export async function getLeads(
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-    });
+    })
 
     return {
       success: true,
@@ -373,25 +388,23 @@ export async function getLeads(
           totalPages: Math.ceil(total / pageSize),
         },
       },
-    };
+    }
   } catch (error) {
-    console.error("[getLeads] Error:", error);
+    console.error("[getLeads] Error:", error)
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get leads",
-    };
+    }
   }
 }
 
 /**
  * Get a single lead by ID
  */
-export async function getLeadById(
-  id: string
-): Promise<ActionResponse<Lead>> {
+export async function getLeadById(id: string): Promise<ActionResponse<Lead>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     const lead = await db.lead.findFirst({
       where: { id, schoolId },
@@ -419,20 +432,20 @@ export async function getLeadById(
           take: 10,
         },
       },
-    });
+    })
 
     if (!lead) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
-    return { success: true, data: lead as Lead };
+    return { success: true, data: lead as Lead }
   } catch (error) {
-    console.error("[getLeadById] Error:", error);
+    console.error("[getLeadById] Error:", error)
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get lead",
-    };
+    }
   }
 }
 
@@ -447,9 +460,9 @@ export async function bulkUpdateLeads(
   input: BulkUpdateInput
 ): Promise<ActionResponse<{ updated: number }>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
-    const validated = bulkUpdateSchema.parse(input);
+    const validated = bulkUpdateSchema.parse(input)
 
     // Verify all leads belong to this school
     const leadsCount = await db.lead.count({
@@ -457,29 +470,29 @@ export async function bulkUpdateLeads(
         id: { in: validated.leadIds },
         schoolId,
       },
-    });
+    })
 
     if (leadsCount !== validated.leadIds.length) {
-      return { success: false, error: "Some leads not found or unauthorized" };
+      return { success: false, error: "Some leads not found or unauthorized" }
     }
 
     // Build update data
-    const updateData: Record<string, unknown> = {};
+    const updateData: Record<string, unknown> = {}
 
     if (validated.updates.status) {
-      updateData.status = validated.updates.status as LeadStatus;
+      updateData.status = validated.updates.status as LeadStatus
     }
     if (validated.updates.priority) {
-      updateData.priority = validated.updates.priority as LeadPriority;
+      updateData.priority = validated.updates.priority as LeadPriority
     }
     if (validated.updates.score !== undefined) {
-      updateData.score = validated.updates.score;
+      updateData.score = validated.updates.score
     }
     if (validated.updates.assignedToId !== undefined) {
-      updateData.assignedToId = validated.updates.assignedToId;
+      updateData.assignedToId = validated.updates.assignedToId
     }
     if (validated.updates.tags) {
-      updateData.tags = validated.updates.tags;
+      updateData.tags = validated.updates.tags
     }
 
     // Perform bulk update
@@ -489,25 +502,25 @@ export async function bulkUpdateLeads(
         schoolId,
       },
       data: updateData,
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: { updated: result.count } };
+    return { success: true, data: { updated: result.count } }
   } catch (error) {
-    console.error("[bulkUpdateLeads] Error:", error);
+    console.error("[bulkUpdateLeads] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update leads",
-    };
+    }
   }
 }
 
@@ -518,14 +531,17 @@ export async function bulkDeleteLeads(
   leadIds: string[]
 ): Promise<ActionResponse<{ deleted: number }>> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     if (leadIds.length === 0) {
-      return { success: false, error: "No leads selected" };
+      return { success: false, error: "No leads selected" }
     }
 
     if (leadIds.length > 100) {
-      return { success: false, error: "Maximum 100 leads can be deleted at once" };
+      return {
+        success: false,
+        error: "Maximum 100 leads can be deleted at once",
+      }
     }
 
     // Delete leads that belong to this school
@@ -534,18 +550,18 @@ export async function bulkDeleteLeads(
         id: { in: leadIds },
         schoolId,
       },
-    });
+    })
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    return { success: true, data: { deleted: result.count } };
+    return { success: true, data: { deleted: result.count } }
   } catch (error) {
-    console.error("[bulkDeleteLeads] Error:", error);
+    console.error("[bulkDeleteLeads] Error:", error)
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete leads",
-    };
+    }
   }
 }
 
@@ -560,21 +576,21 @@ export async function addLeadActivity(
   input: LeadActivityInput
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId, userId } = await getAuthContext();
+    const { schoolId, userId } = await getAuthContext()
 
     if (!userId) {
-      return { success: false, error: "User not authenticated" };
+      return { success: false, error: "User not authenticated" }
     }
 
-    const validated = leadActivitySchema.parse(input);
+    const validated = leadActivitySchema.parse(input)
 
     // Verify lead belongs to this school
     const lead = await db.lead.findFirst({
       where: { id: validated.leadId, schoolId },
-    });
+    })
 
     if (!lead) {
-      return { success: false, error: "Lead not found" };
+      return { success: false, error: "Lead not found" }
     }
 
     const activity = await db.leadActivity.create({
@@ -586,33 +602,33 @@ export async function addLeadActivity(
         metadata: validated.metadata as object | undefined,
         createdById: userId,
       },
-    });
+    })
 
     // Update lastContactedAt if this is a contact activity
     if (["email_sent", "call", "meeting"].includes(validated.type)) {
       await db.lead.update({
         where: { id: validated.leadId },
         data: { lastContactedAt: new Date() },
-      });
+      })
     }
 
-    revalidatePath(`${SALES_PATH}/${validated.leadId}`);
+    revalidatePath(`${SALES_PATH}/${validated.leadId}`)
 
-    return { success: true, data: { id: activity.id } };
+    return { success: true, data: { id: activity.id } }
   } catch (error) {
-    console.error("[addLeadActivity] Error:", error);
+    console.error("[addLeadActivity] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to add activity",
-    };
+    }
   }
 }
 
@@ -623,62 +639,64 @@ export async function addLeadActivity(
 /**
  * Get lead analytics
  */
-export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>> {
+export async function getLeadAnalytics(): Promise<
+  ActionResponse<LeadAnalytics>
+> {
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
     // Total leads
-    const totalLeads = await db.lead.count({ where: { schoolId } });
+    const totalLeads = await db.lead.count({ where: { schoolId } })
 
     // New leads this week
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
     const newLeadsThisWeek = await db.lead.count({
       where: {
         schoolId,
         createdAt: { gte: oneWeekAgo },
       },
-    });
+    })
 
     // Conversion rate (CLOSED_WON / total)
     const closedWon = await db.lead.count({
       where: { schoolId, status: "CLOSED_WON" },
-    });
-    const conversionRate = totalLeads > 0 ? (closedWon / totalLeads) * 100 : 0;
+    })
+    const conversionRate = totalLeads > 0 ? (closedWon / totalLeads) * 100 : 0
 
     // Average score
     const scoreResult = await db.lead.aggregate({
       where: { schoolId },
       _avg: { score: true },
-    });
-    const averageScore = scoreResult._avg.score || 0;
+    })
+    const averageScore = scoreResult._avg.score || 0
 
     // Status distribution
     const statusCounts = await db.lead.groupBy({
       by: ["status"],
       where: { schoolId },
       _count: true,
-    });
+    })
 
     const statusDistribution = statusCounts.map((item) => ({
       status: item.status as Lead["status"],
       count: item._count,
       percentage: totalLeads > 0 ? (item._count / totalLeads) * 100 : 0,
-    }));
+    }))
 
     // Source distribution
     const sourceCounts = await db.lead.groupBy({
       by: ["source"],
       where: { schoolId },
       _count: true,
-    });
+    })
 
     const topSources = sourceCounts.map((item) => ({
       source: item.source as Lead["source"],
       count: item._count,
       percentage: totalLeads > 0 ? (item._count / totalLeads) * 100 : 0,
-    }));
+    }))
 
     // Score distribution
     const scoreRanges = [
@@ -686,7 +704,7 @@ export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>>
       { range: "40-59 (Cool)", min: 40, max: 59 },
       { range: "60-79 (Warm)", min: 60, max: 79 },
       { range: "80-100 (Hot)", min: 80, max: 100 },
-    ];
+    ]
 
     const scoreDistribution = await Promise.all(
       scoreRanges.map(async ({ range, min, max }) => {
@@ -695,10 +713,10 @@ export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>>
             schoolId,
             score: { gte: min, lte: max },
           },
-        });
-        return { range, count };
+        })
+        return { range, count }
       })
-    );
+    )
 
     return {
       success: true,
@@ -711,14 +729,14 @@ export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>>
         statusDistribution,
         scoreDistribution,
       },
-    };
+    }
   } catch (error) {
-    console.error("[getLeadAnalytics] Error:", error);
+    console.error("[getLeadAnalytics] Error:", error)
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get analytics",
-    };
+    }
   }
 }
 
@@ -728,22 +746,22 @@ export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>>
 
 export interface AIExtractionResult {
   leads: Array<{
-    name: string;
-    email?: string;
-    company?: string;
-    title?: string;
-    phone?: string;
-    score: number;
-    confidence: number;
-  }>;
-  created: number;
-  duplicates: number;
-  duplicateEmails: string[];
-  feedbackMessage: string;
+    name: string
+    email?: string
+    company?: string
+    title?: string
+    phone?: string
+    score: number
+    confidence: number
+  }>
+  created: number
+  duplicates: number
+  duplicateEmails: string[]
+  feedbackMessage: string
   metadata: {
-    model: string;
-    processingTime: number;
-  };
+    model: string
+    processingTime: number
+  }
 }
 
 /**
@@ -752,37 +770,36 @@ export interface AIExtractionResult {
 export async function extractLeadsFromText(
   input: AIExtractionInput
 ): Promise<ActionResponse<AIExtractionResult>> {
-  const startTime = Date.now();
+  const startTime = Date.now()
 
   try {
-    const { schoolId } = await getAuthContext();
+    const { schoolId } = await getAuthContext()
 
-    const validated = aiExtractionInputSchema.parse(input);
-    const { rawText, source, model, options } = validated;
+    const validated = aiExtractionInputSchema.parse(input)
+    const { rawText, source, model, options } = validated
 
     // Import text extraction utilities
-    const { extractMultipleLeads, extractLeadFromText } = await import(
-      "@/lib/text-extraction"
-    );
+    const { extractMultipleLeads, extractLeadFromText } =
+      await import("@/lib/text-extraction")
 
     // Try pattern-based extraction first
-    let extractedLeads = extractMultipleLeads(rawText);
+    let extractedLeads = extractMultipleLeads(rawText)
 
     // If no leads found with multiple extraction, try single extraction
     if (extractedLeads.length === 0) {
-      const singleLead = extractLeadFromText(rawText);
+      const singleLead = extractLeadFromText(rawText)
       if (singleLead.name || singleLead.email || singleLead.company) {
-        extractedLeads = [singleLead];
+        extractedLeads = [singleLead]
       }
     }
 
     // If still no leads and AI is available, use AI extraction
     if (extractedLeads.length === 0 && model) {
       try {
-        const { generateObject } = await import("ai");
-        const { selectProvider } = await import("@/lib/ai/providers");
+        const { generateObject } = await import("ai")
+        const { selectProvider } = await import("@/lib/ai/providers")
 
-        const provider = selectProvider("extraction");
+        const provider = selectProvider("extraction")
 
         const result = await generateObject({
           model: provider,
@@ -798,7 +815,7 @@ export async function extractLeadsFromText(
               })
             ),
           }),
-        });
+        })
 
         extractedLeads = result.object.leads.map((l) => ({
           name: l.name,
@@ -806,9 +823,9 @@ export async function extractLeadsFromText(
           company: l.company,
           phone: l.phone,
           rawInput: rawText,
-        }));
+        }))
       } catch (aiError) {
-        console.warn("[extractLeadsFromText] AI extraction failed:", aiError);
+        console.warn("[extractLeadsFromText] AI extraction failed:", aiError)
         // Continue with pattern-based results
       }
     }
@@ -816,7 +833,7 @@ export async function extractLeadsFromText(
     // Filter out leads without meaningful data
     extractedLeads = extractedLeads.filter(
       (lead) => lead.name || lead.email || lead.company
-    );
+    )
 
     if (extractedLeads.length === 0) {
       return {
@@ -832,16 +849,16 @@ export async function extractLeadsFromText(
             processingTime: Date.now() - startTime,
           },
         },
-      };
+      }
     }
 
     // Check for duplicates and create leads
-    const createdLeads: AIExtractionResult["leads"] = [];
-    const duplicateEmails: string[] = [];
+    const createdLeads: AIExtractionResult["leads"] = []
+    const duplicateEmails: string[] = []
 
     for (const extracted of extractedLeads) {
       // Skip if no name
-      if (!extracted.name) continue;
+      if (!extracted.name) continue
 
       // Check for duplicate email
       if (extracted.email && options?.detectDuplicates !== false) {
@@ -850,22 +867,22 @@ export async function extractLeadsFromText(
             schoolId,
             email: extracted.email.toLowerCase(),
           },
-        });
+        })
 
         if (existing) {
-          duplicateEmails.push(extracted.email);
-          continue;
+          duplicateEmails.push(extracted.email)
+          continue
         }
       }
 
       // Calculate score based on completeness
-      let score = 50;
+      let score = 50
       if (options?.autoScore !== false) {
-        if (extracted.email) score += 15;
-        if (extracted.phone) score += 10;
-        if (extracted.company) score += 10;
-        if (extracted.website) score += 5;
-        score = Math.min(score, 100);
+        if (extracted.email) score += 15
+        if (extracted.phone) score += 10
+        if (extracted.company) score += 10
+        if (extracted.website) score += 5
+        score = Math.min(score, 100)
       }
 
       // Create the lead
@@ -888,7 +905,7 @@ export async function extractLeadsFromText(
           score,
           notes: extracted.notes || null,
         },
-      });
+      })
 
       createdLeads.push({
         name: lead.name,
@@ -897,12 +914,12 @@ export async function extractLeadsFromText(
         phone: lead.phone || undefined,
         score: lead.score,
         confidence: 0.8,
-      });
+      })
     }
 
-    revalidatePath(SALES_PATH);
+    revalidatePath(SALES_PATH)
 
-    const processingTime = Date.now() - startTime;
+    const processingTime = Date.now() - startTime
 
     return {
       success: true,
@@ -917,21 +934,20 @@ export async function extractLeadsFromText(
           processingTime,
         },
       },
-    };
+    }
   } catch (error) {
-    console.error("[extractLeadsFromText] Error:", error);
+    console.error("[extractLeadsFromText] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to extract leads",
-    };
+      error: error instanceof Error ? error.message : "Failed to extract leads",
+    }
   }
 }

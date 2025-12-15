@@ -1,7 +1,7 @@
-import { type Locale } from '@/components/internationalization/config'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,18 +15,28 @@ export default async function LessonsLayout({ children, params }: Props) {
 
   // Lessons page navigation (5 links - Create merged into All)
   const lessonsPages: PageNavItem[] = [
-    { name: d?.navigation?.all || 'All', href: `/${lang}/lessons` },
-    { name: d?.navigation?.curriculum || 'Curriculum', href: `/${lang}/lessons/curriculum` },
-    { name: d?.navigation?.resources || 'Resources', href: `/${lang}/lessons/resources` },
-    { name: d?.navigation?.analytics || 'Analytics', href: `/${lang}/lessons/analytics` },
-    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/lessons/settings` },
+    { name: d?.navigation?.all || "All", href: `/${lang}/lessons` },
+    {
+      name: d?.navigation?.curriculum || "Curriculum",
+      href: `/${lang}/lessons/curriculum`,
+    },
+    {
+      name: d?.navigation?.resources || "Resources",
+      href: `/${lang}/lessons/resources`,
+    },
+    {
+      name: d?.navigation?.analytics || "Analytics",
+      href: `/${lang}/lessons/analytics`,
+    },
+    {
+      name: d?.navigation?.settings || "Settings",
+      href: `/${lang}/lessons/settings`,
+    },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Lessons'}
-      />
+      <PageHeadingSetter title={d?.title || "Lessons"} />
       <PageNav pages={lessonsPages} />
       {children}
     </div>

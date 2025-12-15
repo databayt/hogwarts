@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { getSchoolLocation } from './actions'
-import { type LocationFormData } from './validation'
+import { useEffect, useState } from "react"
+
+import { getSchoolLocation } from "./actions"
+import { type LocationFormData } from "./validation"
 
 interface UseLocationReturn {
   data: LocationFormData | null
@@ -18,29 +19,29 @@ export function useLocation(schoolId: string): UseLocationReturn {
 
   const fetchLocation = async () => {
     if (!schoolId) {
-      setError('School ID is missing')
+      setError("School ID is missing")
       setLoading(false)
       return
     }
-    
+
     try {
       setLoading(true)
       setError(null)
       const result = await getSchoolLocation(schoolId)
-      
+
       if (result.success && result.data) {
         setData(result.data)
       } else if (result.success && !result.data) {
         // No location data yet, that's okay
         setData(null)
       } else {
-        setError(result.error || 'Failed to fetch location')
-        console.error('Location fetch error:', result.error)
+        setError(result.error || "Failed to fetch location")
+        console.error("Location fetch error:", result.error)
       }
     } catch (err: any) {
-      const errorMessage = err?.message || 'An unexpected error occurred'
+      const errorMessage = err?.message || "An unexpected error occurred"
       setError(errorMessage)
-      console.error('Error fetching location:', err)
+      console.error("Error fetching location:", err)
     } finally {
       setLoading(false)
     }
@@ -58,6 +59,6 @@ export function useLocation(schoolId: string): UseLocationReturn {
     data,
     loading,
     error,
-    refresh
+    refresh,
   }
-} 
+}

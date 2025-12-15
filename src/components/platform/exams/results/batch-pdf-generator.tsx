@@ -1,8 +1,19 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import React, { useEffect, useState } from "react"
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Download,
+  FileDown,
+  FileText,
+  LoaderCircle,
+  Users,
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -10,31 +21,31 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { Download, FileDown, LoaderCircle, Users, FileText, CircleCheck, CircleX, CircleAlert } from "lucide-react";
+} from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
+
 import {
+  cancelBatchJob,
+  downloadBatchZIP,
   generateBatchExamPDFs,
   getBatchProgress,
-  downloadBatchZIP,
-  cancelBatchJob,
   type BatchProgress,
-} from "./actions/batch-pdf";
+} from "./actions/batch-pdf"
 
 interface BatchPDFGeneratorProps {
-  examId: string;
-  examTitle: string;
-  totalStudents: number;
-  onComplete?: () => void;
+  examId: string
+  examTitle: string
+  totalStudents: number
+  onComplete?: () => void
 }
 
 export function BatchPDFGenerator({
@@ -43,11 +54,13 @@ export function BatchPDFGenerator({
   totalStudents,
   onComplete,
 }: BatchPDFGeneratorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [batchId, setBatchId] = useState<string | null>(null);
-  const [progress, setProgress] = useState<BatchProgress | null>(null);
-  const [template, setTemplate] = useState<"classic" | "modern" | "minimal">("modern");
+  const [isOpen, setIsOpen] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [batchId, setBatchId] = useState<string | null>(null)
+  const [progress, setProgress] = useState<BatchProgress | null>(null)
+  const [template, setTemplate] = useState<"classic" | "modern" | "minimal">(
+    "modern"
+  )
   const [options, setOptions] = useState({
     includeQuestionBreakdown: false,
     includeGradeDistribution: true,
@@ -55,153 +68,156 @@ export function BatchPDFGenerator({
     includeFeedback: false,
     includeSchoolLogo: true,
     includeSignatures: false,
-  });
-  const { toast } = useToast();
+  })
+  const { toast } = useToast()
 
   // Poll for progress updates
   useEffect(() => {
-    if (!batchId || !isGenerating) return;
+    if (!batchId || !isGenerating) return
 
     const interval = setInterval(async () => {
       try {
-        const result = await getBatchProgress(batchId);
+        const result = await getBatchProgress(batchId)
         if (result.success && result.data) {
-          setProgress(result.data);
+          setProgress(result.data)
 
-          if (result.data.status === "completed" || result.data.status === "failed") {
-            setIsGenerating(false);
+          if (
+            result.data.status === "completed" ||
+            result.data.status === "failed"
+          ) {
+            setIsGenerating(false)
 
             if (result.data.status === "completed") {
               toast({
                 title: "PDFs Generated Successfully",
                 description: `Generated ${result.data.result?.successCount} out of ${result.data.total} PDFs`,
-              });
+              })
 
               if (onComplete) {
-                onComplete();
+                onComplete()
               }
             } else {
               toast({
                 title: "Generation Failed",
                 description: result.data.message,
-              });
+              })
             }
           }
         }
       } catch (error) {
-        console.error("Error fetching progress:", error);
+        console.error("Error fetching progress:", error)
       }
-    }, 1000); // Poll every second
+    }, 1000) // Poll every second
 
-    return () => clearInterval(interval);
-  }, [batchId, isGenerating, toast, onComplete]);
+    return () => clearInterval(interval)
+  }, [batchId, isGenerating, toast, onComplete])
 
   const handleGenerate = async () => {
     try {
-      setIsGenerating(true);
+      setIsGenerating(true)
 
       const result = await generateBatchExamPDFs({
         examId,
         template,
         options,
-      });
+      })
 
       if (result.success && result.data) {
-        setBatchId(result.data.batchId);
+        setBatchId(result.data.batchId)
         toast({
           title: "Generation Started",
           description: "Generating PDFs in the background...",
-        });
+        })
       } else {
         toast({
           title: "Failed to Start",
-          description: ('error' in result ? result.error : null) || "Unknown error occurred",
-
-        });
-        setIsGenerating(false);
+          description:
+            ("error" in result ? result.error : null) ||
+            "Unknown error occurred",
+        })
+        setIsGenerating(false)
       }
     } catch (error) {
-      console.error("Error starting generation:", error);
+      console.error("Error starting generation:", error)
       toast({
         title: "Error",
         description: "Failed to start PDF generation",
-        
-      });
-      setIsGenerating(false);
+      })
+      setIsGenerating(false)
     }
-  };
+  }
 
   const handleDownload = async () => {
-    if (!batchId) return;
+    if (!batchId) return
 
     try {
-      const result = await downloadBatchZIP(batchId);
+      const result = await downloadBatchZIP(batchId)
 
       if (result.success && result.data) {
         // Convert base64 to blob and trigger download
-        const byteCharacters = atob(result.data.zipData);
-        const byteNumbers = new Array(byteCharacters.length);
+        const byteCharacters = atob(result.data.zipData)
+        const byteNumbers = new Array(byteCharacters.length)
 
         for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
         }
 
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: "application/zip" });
+        const byteArray = new Uint8Array(byteNumbers)
+        const blob = new Blob([byteArray], { type: "application/zip" })
 
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = result.data.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = result.data.filename
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
 
         toast({
           title: "Download Started",
           description: "Your ZIP file is being downloaded",
-        });
+        })
       } else {
         toast({
           title: "Download Failed",
-          description: ('error' in result ? result.error : null) || "Failed to download ZIP file",
-
-        });
+          description:
+            ("error" in result ? result.error : null) ||
+            "Failed to download ZIP file",
+        })
       }
     } catch (error) {
-      console.error("Error downloading ZIP:", error);
+      console.error("Error downloading ZIP:", error)
       toast({
         title: "Error",
         description: "Failed to download ZIP file",
-        
-      });
+      })
     }
-  };
+  }
 
   const handleCancel = async () => {
-    if (!batchId) return;
+    if (!batchId) return
 
     try {
-      const result = await cancelBatchJob(batchId);
+      const result = await cancelBatchJob(batchId)
 
       if (result.success) {
-        setIsGenerating(false);
-        setProgress(null);
-        setBatchId(null);
+        setIsGenerating(false)
+        setProgress(null)
+        setBatchId(null)
         toast({
           title: "Cancelled",
           description: "PDF generation has been cancelled",
-        });
+        })
       }
     } catch (error) {
-      console.error("Error cancelling job:", error);
+      console.error("Error cancelling job:", error)
     }
-  };
+  }
 
   const progressPercentage = progress
     ? Math.round((progress.current / progress.total) * 100)
-    : 0;
+    : 0
 
   return (
     <>
@@ -215,7 +231,8 @@ export function BatchPDFGenerator({
           <DialogHeader>
             <DialogTitle>Batch PDF Generation</DialogTitle>
             <DialogDescription>
-              Generate and download PDF results for all students in "{examTitle}"
+              Generate and download PDF results for all students in "{examTitle}
+              "
             </DialogDescription>
           </DialogHeader>
 
@@ -223,7 +240,10 @@ export function BatchPDFGenerator({
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="template">PDF Template</Label>
-                <Select value={template} onValueChange={(v: any) => setTemplate(v)}>
+                <Select
+                  value={template}
+                  onValueChange={(v: any) => setTemplate(v)}
+                >
                   <SelectTrigger id="template">
                     <SelectValue />
                   </SelectTrigger>
@@ -243,7 +263,10 @@ export function BatchPDFGenerator({
                     id="logo"
                     checked={options.includeSchoolLogo}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeSchoolLogo: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeSchoolLogo: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="logo" className="font-normal">
@@ -256,7 +279,10 @@ export function BatchPDFGenerator({
                     id="rank"
                     checked={options.includeClassRank}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeClassRank: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeClassRank: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="rank" className="font-normal">
@@ -269,7 +295,10 @@ export function BatchPDFGenerator({
                     id="distribution"
                     checked={options.includeGradeDistribution}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeGradeDistribution: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeGradeDistribution: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="distribution" className="font-normal">
@@ -282,7 +311,10 @@ export function BatchPDFGenerator({
                     id="breakdown"
                     checked={options.includeQuestionBreakdown}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeQuestionBreakdown: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeQuestionBreakdown: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="breakdown" className="font-normal">
@@ -295,7 +327,10 @@ export function BatchPDFGenerator({
                     id="feedback"
                     checked={options.includeFeedback}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeFeedback: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeFeedback: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="feedback" className="font-normal">
@@ -308,7 +343,10 @@ export function BatchPDFGenerator({
                     id="signatures"
                     checked={options.includeSignatures}
                     onCheckedChange={(checked) =>
-                      setOptions({ ...options, includeSignatures: checked as boolean })
+                      setOptions({
+                        ...options,
+                        includeSignatures: checked as boolean,
+                      })
                     }
                   />
                   <Label htmlFor="signatures" className="font-normal">
@@ -317,7 +355,7 @@ export function BatchPDFGenerator({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4" />
                 <span>This will generate {totalStudents} PDFs</span>
               </div>
@@ -343,17 +381,19 @@ export function BatchPDFGenerator({
                         {progress.status === "failed" && "Failed"}
                       </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {progress.current} / {progress.total}
                     </span>
                   </div>
 
                   <Progress value={progressPercentage} className="h-2" />
 
-                  <p className="text-sm text-muted-foreground">{progress.message}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {progress.message}
+                  </p>
 
                   {progress.status === "completed" && progress.result && (
-                    <div className="space-y-3 rounded-lg bg-muted p-3">
+                    <div className="bg-muted space-y-3 rounded-lg p-3">
                       <div className="flex items-center justify-between text-sm">
                         <span>Successfully generated:</span>
                         <span className="font-medium text-green-600">
@@ -419,5 +459,5 @@ export function BatchPDFGenerator({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

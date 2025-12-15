@@ -1,6 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
+
 import { Checkbox } from "@/components/ui/checkbox"
 
 /**

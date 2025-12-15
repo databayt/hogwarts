@@ -1,34 +1,69 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { SearchParams } from 'nuqs/server'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { getAllClassesCapacity, type ClassCapacityAnalytics } from '../actions'
-import { Users, AlertTriangle, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle,
+  TrendingUp,
+  Users,
+} from "lucide-react"
+import { SearchParams } from "nuqs/server"
+
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getAllClassesCapacity, type ClassCapacityAnalytics } from "../actions"
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
 }
 
-function getStatusBadge(status: ClassCapacityAnalytics['status']) {
+function getStatusBadge(status: ClassCapacityAnalytics["status"]) {
   switch (status) {
-    case 'full':
+    case "full":
       return <Badge variant="destructive">Full</Badge>
-    case 'near-full':
-      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">Near Full</Badge>
-    case 'under':
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">Under Capacity</Badge>
-    case 'optimal':
-      return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Optimal</Badge>
+    case "near-full":
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100"
+        >
+          Near Full
+        </Badge>
+      )
+    case "under":
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+        >
+          Under Capacity
+        </Badge>
+      )
+    case "optimal":
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+        >
+          Optimal
+        </Badge>
+      )
   }
 }
 
 function getProgressColor(percentageFull: number): string {
-  if (percentageFull >= 100) return 'bg-destructive'
-  if (percentageFull >= 85) return 'bg-amber-500'
-  if (percentageFull < 20) return 'bg-blue-500'
-  return 'bg-green-500'
+  if (percentageFull >= 100) return "bg-destructive"
+  if (percentageFull >= 85) return "bg-amber-500"
+  if (percentageFull < 20) return "bg-blue-500"
+  return "bg-green-500"
 }
 
 export default async function ClassCapacityContent({ dictionary }: Props) {
@@ -41,7 +76,9 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{d?.capacity?.title || 'Class Capacity Analysis'}</CardTitle>
+            <CardTitle>
+              {d?.capacity?.title || "Class Capacity Analysis"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-destructive">{result.error}</p>
@@ -59,10 +96,14 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{d?.capacity?.title || 'Class Capacity Analysis'}</CardTitle>
+            <CardTitle>
+              {d?.capacity?.title || "Class Capacity Analysis"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">No classes found. Create classes to view capacity analytics.</p>
+            <p className="text-muted-foreground">
+              No classes found. Create classes to view capacity analytics.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -76,11 +117,11 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
-            <Users className="size-4 text-muted-foreground" />
+            <Users className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.totalClasses}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {data.totalEnrolled} / {data.totalCapacity} total capacity
             </p>
           </CardContent>
@@ -88,8 +129,10 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Utilization</CardTitle>
-            <TrendingUp className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Average Utilization
+            </CardTitle>
+            <TrendingUp className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.averageUtilization}%</div>
@@ -100,11 +143,11 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Classes Full</CardTitle>
-            <AlertCircle className="size-4 text-destructive" />
+            <AlertCircle className="text-destructive size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.classesFull}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {data.classesNearFull} near full (85%+)
             </p>
           </CardContent>
@@ -112,12 +155,14 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Optimal Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Optimal Classes
+            </CardTitle>
             <CheckCircle className="size-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.classesOptimal}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {data.classesUnderCapacity} under minimum
             </p>
           </CardContent>
@@ -141,12 +186,14 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
               <span className="text-sm">Near Full: {data.classesNearFull}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="size-3 rounded-full bg-destructive" />
+              <div className="bg-destructive size-3 rounded-full" />
               <span className="text-sm">Full: {data.classesFull}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="size-3 rounded-full bg-blue-500" />
-              <span className="text-sm">Under Capacity: {data.classesUnderCapacity}</span>
+              <span className="text-sm">
+                Under Capacity: {data.classesUnderCapacity}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -155,7 +202,9 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
       {/* Classes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>{d?.capacity?.title || 'Class Capacity Details'}</CardTitle>
+          <CardTitle>
+            {d?.capacity?.title || "Class Capacity Details"}
+          </CardTitle>
           <CardDescription>Enrollment status for all classes</CardDescription>
         </CardHeader>
         <CardContent>
@@ -163,30 +212,52 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Class</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Subject</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Teacher</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Enrollment</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Capacity</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Class
+                  </th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Subject
+                  </th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Teacher
+                  </th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Enrollment
+                  </th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Capacity
+                  </th>
+                  <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data.classes.map((classItem) => (
                   <tr key={classItem.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium">{classItem.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{classItem.subjectName}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{classItem.teacherName}</td>
+                    <td className="text-muted-foreground px-4 py-3">
+                      {classItem.subjectName}
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3">
+                      {classItem.teacherName}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{classItem.currentEnrollment}</span>
-                        <span className="text-muted-foreground">/ {classItem.maxCapacity}</span>
+                        <span className="font-medium">
+                          {classItem.currentEnrollment}
+                        </span>
+                        <span className="text-muted-foreground">
+                          / {classItem.maxCapacity}
+                        </span>
                       </div>
                       <div className="mt-1 w-24">
-                        <div className="h-1.5 w-full rounded-full bg-muted">
+                        <div className="bg-muted h-1.5 w-full rounded-full">
                           <div
                             className={`h-1.5 rounded-full ${getProgressColor(classItem.percentageFull)}`}
-                            style={{ width: `${Math.min(100, classItem.percentageFull)}%` }}
+                            style={{
+                              width: `${Math.min(100, classItem.percentageFull)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -213,19 +284,25 @@ export default async function ClassCapacityContent({ dictionary }: Props) {
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle className="size-5 text-amber-500" />
-              <CardTitle className="text-amber-700 dark:text-amber-300">Capacity Alerts</CardTitle>
+              <CardTitle className="text-amber-700 dark:text-amber-300">
+                Capacity Alerts
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {data.classes
-                .filter(c => c.status === 'full' || c.status === 'near-full')
-                .map(classItem => (
-                  <div key={classItem.id} className="flex items-center justify-between rounded-lg border p-3">
+                .filter((c) => c.status === "full" || c.status === "near-full")
+                .map((classItem) => (
+                  <div
+                    key={classItem.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
                     <div>
                       <p className="font-medium">{classItem.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {classItem.currentEnrollment}/{classItem.maxCapacity} students ({classItem.percentageFull}%)
+                      <p className="text-muted-foreground text-sm">
+                        {classItem.currentEnrollment}/{classItem.maxCapacity}{" "}
+                        students ({classItem.percentageFull}%)
                       </p>
                     </div>
                     {getStatusBadge(classItem.status)}

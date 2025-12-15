@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
 import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
 import { SkeletonListCompact } from "@/components/ui/skeleton-list"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function DashboardLoading() {
   return (

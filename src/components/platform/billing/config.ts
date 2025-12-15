@@ -37,7 +37,7 @@ export const PAYMENT_METHOD_TYPES = {
     label: "Other",
     icon: "Wallet",
   },
-} as const;
+} as const
 
 // Card brands with colors
 export const CARD_BRANDS = {
@@ -49,7 +49,7 @@ export const CARD_BRANDS = {
   jcb: { label: "JCB", color: "blue", icon: "CreditCard" },
   unionpay: { label: "UnionPay", color: "red", icon: "CreditCard" },
   unknown: { label: "Unknown", color: "gray", icon: "CreditCard" },
-} as const;
+} as const
 
 // Billing event types with display info
 export const BILLING_EVENT_TYPES = {
@@ -123,7 +123,7 @@ export const BILLING_EVENT_TYPES = {
     color: "red",
     icon: "CreditCardOff",
   },
-} as const;
+} as const
 
 // Billing status with colors
 export const BILLING_STATUS = {
@@ -132,16 +132,20 @@ export const BILLING_STATUS = {
   PENDING: { label: "Pending", color: "yellow", variant: "outline" },
   CANCELLED: { label: "Cancelled", color: "gray", variant: "secondary" },
   PROCESSING: { label: "Processing", color: "blue", variant: "outline" },
-} as const;
+} as const
 
 // Invoice status with colors
 export const INVOICE_STATUS = {
   draft: { label: "Draft", color: "gray", variant: "outline" },
   open: { label: "Open", color: "blue", variant: "default" },
   paid: { label: "Paid", color: "green", variant: "default" },
-  uncollectible: { label: "Uncollectible", color: "orange", variant: "outline" },
+  uncollectible: {
+    label: "Uncollectible",
+    color: "orange",
+    variant: "outline",
+  },
   void: { label: "Void", color: "red", variant: "destructive" },
-} as const;
+} as const
 
 // Subscription status with colors
 export const SUBSCRIPTION_STATUS = {
@@ -150,11 +154,15 @@ export const SUBSCRIPTION_STATUS = {
   canceled: { label: "Canceled", color: "red", variant: "destructive" },
   cancelled: { label: "Cancelled", color: "red", variant: "destructive" },
   incomplete: { label: "Incomplete", color: "yellow", variant: "outline" },
-  incomplete_expired: { label: "Incomplete Expired", color: "red", variant: "destructive" },
+  incomplete_expired: {
+    label: "Incomplete Expired",
+    color: "red",
+    variant: "destructive",
+  },
   trialing: { label: "Trial", color: "blue", variant: "outline" },
   unpaid: { label: "Unpaid", color: "orange", variant: "destructive" },
   paused: { label: "Paused", color: "gray", variant: "secondary" },
-} as const;
+} as const
 
 // Credit note types
 export const CREDIT_TYPES = {
@@ -164,7 +172,7 @@ export const CREDIT_TYPES = {
   GOODWILL: { label: "Goodwill", color: "green", icon: "Heart" },
   COMPENSATION: { label: "Compensation", color: "orange", icon: "Receipt" },
   REFERRAL: { label: "Referral Bonus", color: "indigo", icon: "Users" },
-} as const;
+} as const
 
 // Credit status
 export const CREDIT_STATUS = {
@@ -172,38 +180,42 @@ export const CREDIT_STATUS = {
   EXPIRED: { label: "Expired", color: "gray", variant: "outline" },
   FULLY_USED: { label: "Fully Used", color: "blue", variant: "secondary" },
   CANCELLED: { label: "Cancelled", color: "red", variant: "destructive" },
-} as const;
+} as const
 
 // Usage warning thresholds
 export const USAGE_THRESHOLDS = {
   INFO: 70, // Show info at 70%
   WARNING: 85, // Show warning at 85%
   CRITICAL: 95, // Show critical at 95%
-} as const;
+} as const
 
 // Usage warning messages
 export const USAGE_WARNING_MESSAGES = {
   students: {
     INFO: "You're approaching your student limit",
     WARNING: "You're nearing your student limit - consider upgrading",
-    CRITICAL: "You're very close to your student limit - upgrade now to avoid disruption",
+    CRITICAL:
+      "You're very close to your student limit - upgrade now to avoid disruption",
   },
   teachers: {
     INFO: "You're approaching your teacher limit",
     WARNING: "You're nearing your teacher limit - consider upgrading",
-    CRITICAL: "You're very close to your teacher limit - upgrade now to avoid disruption",
+    CRITICAL:
+      "You're very close to your teacher limit - upgrade now to avoid disruption",
   },
   classes: {
     INFO: "You're approaching your class limit",
     WARNING: "You're nearing your class limit - consider upgrading",
-    CRITICAL: "You're very close to your class limit - upgrade now to avoid disruption",
+    CRITICAL:
+      "You're very close to your class limit - upgrade now to avoid disruption",
   },
   storage: {
     INFO: "You're approaching your storage limit",
     WARNING: "You're nearing your storage limit - consider upgrading",
-    CRITICAL: "You're very close to your storage limit - upgrade now to avoid disruption",
+    CRITICAL:
+      "You're very close to your storage limit - upgrade now to avoid disruption",
   },
-} as const;
+} as const
 
 // Currency symbols
 export const CURRENCY_SYMBOLS = {
@@ -217,7 +229,7 @@ export const CURRENCY_SYMBOLS = {
   CNY: "¥",
   SAR: "﷼",
   AED: "د.إ",
-} as const;
+} as const
 
 // Currency display names
 export const CURRENCIES = {
@@ -229,20 +241,20 @@ export const CURRENCIES = {
   AED: { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
   CAD: { code: "CAD", symbol: "CA$", name: "Canadian Dollar" },
   AUD: { code: "AUD", symbol: "A$", name: "Australian Dollar" },
-} as const;
+} as const
 
 // Supported billing intervals
 export const BILLING_INTERVALS = {
   monthly: { label: "Monthly", value: "monthly" },
   annual: { label: "Annual", value: "annual", discount: "Save 20%" },
-} as const;
+} as const
 
 // Payment retry configuration
 export const PAYMENT_RETRY_CONFIG = {
   MAX_RETRIES: 3,
   RETRY_INTERVALS: [3, 5, 7], // Days between retries
   DUNNING_PERIOD: 14, // Days before final cancellation
-} as const;
+} as const
 
 // Email notification templates
 export const EMAIL_TEMPLATES = {
@@ -253,7 +265,7 @@ export const EMAIL_TEMPLATES = {
   USAGE_WARNING: "usage-warning",
   INVOICE_CREATED: "invoice-created",
   CREDIT_APPLIED: "credit-applied",
-} as const;
+} as const
 
 // Feature flags for billing module
 export const BILLING_FEATURES = {
@@ -267,7 +279,7 @@ export const BILLING_FEATURES = {
   AUTO_BILLING_ENABLED: true,
   DUNNING_ENABLED: true,
   TAX_CALCULATION_ENABLED: true,
-} as const;
+} as const
 
 // Default billing preferences
 export const DEFAULT_BILLING_PREFERENCES = {
@@ -285,7 +297,7 @@ export const DEFAULT_BILLING_PREFERENCES = {
   currency: "USD",
   locale: "en",
   budgetAlertEnabled: false,
-} as const;
+} as const
 
 // Chart colors for analytics
 export const CHART_COLORS = {
@@ -296,13 +308,13 @@ export const CHART_COLORS = {
   info: "hsl(217, 91%, 60%)",
   purple: "hsl(271, 81%, 56%)",
   orange: "hsl(25, 95%, 53%)",
-} as const;
+} as const
 
 // Pagination defaults
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 20,
   PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
-} as const;
+} as const
 
 // Date range presets for filters
 export const DATE_RANGE_PRESETS = [
@@ -311,21 +323,26 @@ export const DATE_RANGE_PRESETS = [
   { label: "Last 90 days", days: 90 },
   { label: "Last 6 months", days: 180 },
   { label: "Last year", days: 365 },
-] as const;
+] as const
 
 // Export format options
 export const EXPORT_FORMATS = {
   CSV: { label: "CSV", extension: "csv", mimeType: "text/csv" },
-  EXCEL: { label: "Excel", extension: "xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+  EXCEL: {
+    label: "Excel",
+    extension: "xlsx",
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  },
   PDF: { label: "PDF", extension: "pdf", mimeType: "application/pdf" },
-} as const;
+} as const
 
 // Billing alert severity levels
 export const ALERT_SEVERITY = {
   INFO: { label: "Info", color: "blue", variant: "default" },
   WARNING: { label: "Warning", color: "yellow", variant: "outline" },
   ERROR: { label: "Error", color: "red", variant: "destructive" },
-} as const;
+} as const
 
 // Format currency helper
 export function formatCurrency(
@@ -338,7 +355,7 @@ export function formatCurrency(
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(amount / 100); // Convert cents to dollars
+  }).format(amount / 100) // Convert cents to dollars
 }
 
 // Format date helper
@@ -346,28 +363,33 @@ export function formatBillingDate(
   date: Date | string,
   locale: string = "en-US"
 ): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
+  const dateObj = typeof date === "string" ? new Date(date) : date
   return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(dateObj);
+  }).format(dateObj)
 }
 
 // Calculate usage percentage
-export function calculateUsagePercentage(current: number, limit: number): number {
-  if (limit === 0) return 0;
-  return Math.round((current / limit) * 100);
+export function calculateUsagePercentage(
+  current: number,
+  limit: number
+): number {
+  if (limit === 0) return 0
+  return Math.round((current / limit) * 100)
 }
 
 // Get usage severity
-export function getUsageSeverity(percentage: number): "info" | "warning" | "critical" {
-  if (percentage >= USAGE_THRESHOLDS.CRITICAL) return "critical";
-  if (percentage >= USAGE_THRESHOLDS.WARNING) return "warning";
-  return "info";
+export function getUsageSeverity(
+  percentage: number
+): "info" | "warning" | "critical" {
+  if (percentage >= USAGE_THRESHOLDS.CRITICAL) return "critical"
+  if (percentage >= USAGE_THRESHOLDS.WARNING) return "warning"
+  return "info"
 }
 
 // Determine if usage warning should be shown
 export function shouldShowUsageWarning(percentage: number): boolean {
-  return percentage >= USAGE_THRESHOLDS.INFO;
+  return percentage >= USAGE_THRESHOLDS.INFO
 }

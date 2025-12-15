@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface UseVideoScrollControlOptions {
   /** Intersection Observer threshold (0-1). Default: 0.4 */
@@ -56,7 +56,13 @@ export function useVideoScrollControl(
 
   // Smooth volume transition
   const animateVolume = useCallback(
-    (video: HTMLVideoElement, from: number, to: number, duration: number, onComplete?: () => void) => {
+    (
+      video: HTMLVideoElement,
+      from: number,
+      to: number,
+      duration: number,
+      onComplete?: () => void
+    ) => {
       cancelAnimation()
 
       const startTime = performance.now()

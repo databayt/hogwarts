@@ -1,7 +1,8 @@
 "use client"
 
-import Card from "./card"
 import { FileText } from "lucide-react"
+
+import Card from "./card"
 
 export function CardPreview() {
   return (
@@ -9,7 +10,7 @@ export function CardPreview() {
       id="example"
       title="Example Card"
       description="This is an example card component with an icon and hover effect."
-      icon={<FileText className="w-8 h-8" />}
+      icon={<FileText className="h-8 w-8" />}
       href="#"
     />
   )

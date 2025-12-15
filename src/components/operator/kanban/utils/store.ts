@@ -1,50 +1,51 @@
-import { create } from 'zustand';
-import { v4 as uuid } from 'uuid';
-import { persist } from 'zustand/middleware';
-import { UniqueIdentifier } from '@dnd-kit/core';
-import type { Column, Task, Status } from '../types';
+import { UniqueIdentifier } from "@dnd-kit/core"
+import { v4 as uuid } from "uuid"
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
+
+import type { Column, Status, Task } from "../types"
 
 // Re-export for backward compatibility
-export type { Task, Status };
+export type { Task, Status }
 
 const defaultCols = [
   {
-    id: 'TODO' as const,
-    title: 'Todo'
-  }
-] satisfies Column[];
+    id: "TODO" as const,
+    title: "Todo",
+  },
+] satisfies Column[]
 
-export type ColumnId = (typeof defaultCols)[number]['id'];
+export type ColumnId = (typeof defaultCols)[number]["id"]
 
 export type State = {
-  tasks: Task[];
-  columns: Column[];
-  draggedTask: string | null;
-};
+  tasks: Task[]
+  columns: Column[]
+  draggedTask: string | null
+}
 
 const initialTasks: Task[] = [
   {
-    id: 'task1',
-    status: 'TODO',
-    title: 'Project initiation and planning'
+    id: "task1",
+    status: "TODO",
+    title: "Project initiation and planning",
   },
   {
-    id: 'task2',
-    status: 'TODO',
-    title: 'Gather requirements from stakeholders'
-  }
-];
+    id: "task2",
+    status: "TODO",
+    title: "Gather requirements from stakeholders",
+  },
+]
 
 export type Actions = {
-  addTask: (title: string, description?: string) => void;
-  addCol: (title: string) => void;
-  dragTask: (id: string | null) => void;
-  removeTask: (title: string) => void;
-  removeCol: (id: UniqueIdentifier) => void;
-  setTasks: (updatedTask: Task[]) => void;
-  setCols: (cols: Column[]) => void;
-  updateCol: (id: UniqueIdentifier, newName: string) => void;
-};
+  addTask: (title: string, description?: string) => void
+  addCol: (title: string) => void
+  dragTask: (id: string | null) => void
+  removeTask: (title: string) => void
+  removeCol: (id: UniqueIdentifier) => void
+  setTasks: (updatedTask: Task[]) => void
+  setCols: (cols: Column[]) => void
+  updateCol: (id: UniqueIdentifier, newName: string) => void
+}
 
 export const useTaskStore = create<State & Actions>()(
   persist(
@@ -56,34 +57,34 @@ export const useTaskStore = create<State & Actions>()(
         set((state) => ({
           tasks: [
             ...state.tasks,
-            { id: uuid(), title, description, status: 'TODO' }
-          ]
+            { id: uuid(), title, description, status: "TODO" },
+          ],
         })),
       updateCol: (id: UniqueIdentifier, newName: string) =>
         set((state) => ({
           columns: state.columns.map((col) =>
             col.id === id ? { ...col, title: newName } : col
-          )
+          ),
         })),
       addCol: (title: string) =>
         set((state) => ({
           columns: [
             ...state.columns,
-            { title, id: state.columns.length ? title.toUpperCase() : 'TODO' }
-          ]
+            { title, id: state.columns.length ? title.toUpperCase() : "TODO" },
+          ],
         })),
       dragTask: (id: string | null) => set({ draggedTask: id }),
       removeTask: (id: string) =>
         set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== id)
+          tasks: state.tasks.filter((task) => task.id !== id),
         })),
       removeCol: (id: UniqueIdentifier) =>
         set((state) => ({
-          columns: state.columns.filter((col) => col.id !== id)
+          columns: state.columns.filter((col) => col.id !== id),
         })),
       setTasks: (newTasks: Task[]) => set({ tasks: newTasks }),
-      setCols: (newCols: Column[]) => set({ columns: newCols })
+      setCols: (newCols: Column[]) => set({ columns: newCols }),
     }),
-    { name: 'task-store', skipHydration: true }
+    { name: "task-store", skipHydration: true }
   )
-);
+)

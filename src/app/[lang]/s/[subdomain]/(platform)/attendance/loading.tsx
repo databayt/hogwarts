@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCard } from "@/components/ui/skeleton-card"
 import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
 
 export default function AttendanceLoading() {
   return (

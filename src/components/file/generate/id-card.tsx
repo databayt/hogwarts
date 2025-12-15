@@ -3,17 +3,18 @@
  * PDF template for student, teacher, staff, and parent ID cards
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { IdCardData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { IdCardData, TemplateStyle } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,15 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
 const createStyles = (locale: string = "en", cardType: string = "student") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   // Color scheme based on card type
   const colorSchemes: Record<string, { primary: string; secondary: string }> = {
@@ -61,9 +62,9 @@ const createStyles = (locale: string = "en", cardType: string = "student") => {
     teacher: { primary: "#166534", secondary: "#22c55e" },
     staff: { primary: "#9333ea", secondary: "#a855f7" },
     parent: { primary: "#0891b2", secondary: "#22d3ee" },
-  };
+  }
 
-  const colors = colorSchemes[cardType] || colorSchemes.student;
+  const colors = colorSchemes[cardType] || colorSchemes.student
 
   return StyleSheet.create({
     // Front of card
@@ -262,8 +263,8 @@ const createStyles = (locale: string = "en", cardType: string = "student") => {
       color: "#6b7280",
       textAlign: isRTL ? "right" : "left",
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // Helper Functions
@@ -274,22 +275,25 @@ const formatDate = (date: Date, locale: string): string => {
     year: "numeric",
     month: "short",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
 // ============================================================================
 // ID Card Template Component
 // ============================================================================
 
 interface IdCardTemplateProps {
-  data: IdCardData;
-  style?: TemplateStyle;
+  data: IdCardData
+  style?: TemplateStyle
 }
 
-export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale, data.cardType);
-  const isRTL = locale === "ar";
+export function IdCardTemplate({
+  data,
+  style = "photo-id",
+}: IdCardTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale, data.cardType)
+  const isRTL = locale === "ar"
 
   const labels = {
     student: isRTL ? "طالب" : "Student",
@@ -305,10 +309,12 @@ export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps
     validUntil: isRTL ? "صالحة حتى" : "Valid Until",
     emergencyContact: isRTL ? "جهة الاتصال للطوارئ" : "Emergency Contact",
     address: isRTL ? "العنوان" : "Address",
-    ifFound: isRTL ? "في حالة العثور على البطاقة" : "If found, please return to",
-  };
+    ifFound: isRTL
+      ? "في حالة العثور على البطاقة"
+      : "If found, please return to",
+  }
 
-  const cardTypeLabel = labels[data.cardType];
+  const cardTypeLabel = labels[data.cardType]
 
   return (
     <Document>
@@ -354,12 +360,13 @@ export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps
                 </View>
               )}
 
-              {(data.cardType === "teacher" || data.cardType === "staff") && data.department && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{labels.department}:</Text>
-                  <Text style={styles.infoValue}>{data.department}</Text>
-                </View>
-              )}
+              {(data.cardType === "teacher" || data.cardType === "staff") &&
+                data.department && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{labels.department}:</Text>
+                    <Text style={styles.infoValue}>{data.department}</Text>
+                  </View>
+                )}
 
               {data.cardType === "staff" && data.designation && (
                 <View style={styles.infoRow}>
@@ -368,12 +375,16 @@ export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps
                 </View>
               )}
 
-              {data.cardType === "parent" && data.childNames && data.childNames.length > 0 && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{labels.children}:</Text>
-                  <Text style={styles.infoValue}>{data.childNames.join(", ")}</Text>
-                </View>
-              )}
+              {data.cardType === "parent" &&
+                data.childNames &&
+                data.childNames.length > 0 && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>{labels.children}:</Text>
+                    <Text style={styles.infoValue}>
+                      {data.childNames.join(", ")}
+                    </Text>
+                  </View>
+                )}
 
               {data.bloodGroup && (
                 <View style={styles.infoRow}>
@@ -413,8 +424,12 @@ export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps
           {/* Emergency Contact */}
           {data.emergencyContact && (
             <View style={styles.emergencySection}>
-              <Text style={styles.emergencyTitle}>{labels.emergencyContact}</Text>
-              <Text style={styles.emergencyContact}>{data.emergencyContact}</Text>
+              <Text style={styles.emergencyTitle}>
+                {labels.emergencyContact}
+              </Text>
+              <Text style={styles.emergencyContact}>
+                {data.emergencyContact}
+              </Text>
             </View>
           )}
 
@@ -451,7 +466,7 @@ export function IdCardTemplate({ data, style = "photo-id" }: IdCardTemplateProps
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles as createIdCardStyles };
+export { createStyles as createIdCardStyles }

@@ -1,31 +1,47 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Calendar, Users, DoorOpen, Settings, TriangleAlert, FileText, RefreshCw } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { useEffect, useState } from "react"
 import {
+  Calendar,
+  DoorOpen,
+  FileText,
+  RefreshCw,
+  Settings,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  detectTimetableConflicts,
+  getClassesForSelection,
+  getRoomsForSelection,
+  getTeachersForSelection,
   getTermsForSelection,
   getTimetableByClass,
-  getTimetableByTeacher,
   getTimetableByRoom,
-  getClassesForSelection,
-  getTeachersForSelection,
-  getRoomsForSelection,
-  detectTimetableConflicts
-} from '../actions'
-import SimpleGrid from './simple-grid'
-import { ConflictsDrawer } from '../conflicts-drawer'
+  getTimetableByTeacher,
+} from "../actions"
+import { ConflictsDrawer } from "../conflicts-drawer"
+import SimpleGrid from "./simple-grid"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
   termId: string
   termInfo: {
@@ -48,7 +64,7 @@ interface Props {
   onTermChange: (termId: string) => void
 }
 
-type ViewMode = 'class' | 'teacher' | 'room'
+type ViewMode = "class" | "teacher" | "room"
 
 export default function AdminView({
   dictionary,
@@ -59,19 +75,25 @@ export default function AdminView({
   periods,
   lunchAfterPeriod,
   isLoading,
-  onTermChange
+  onTermChange,
 }: Props) {
   const d = dictionary?.timetable
-  const isRTL = lang === 'ar'
+  const isRTL = lang === "ar"
 
-  const [viewMode, setViewMode] = useState<ViewMode>('class')
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [viewMode, setViewMode] = useState<ViewMode>("class")
+  const [selectedId, setSelectedId] = useState<string>("")
 
   // Data lists for selectors
   const [terms, setTerms] = useState<Array<{ id: string; label: string }>>([])
-  const [classes, setClasses] = useState<Array<{ id: string; label: string }>>([])
-  const [teachers, setTeachers] = useState<Array<{ id: string; label: string }>>([])
-  const [rooms, setRooms] = useState<Array<{ id: string; label: string; capacity: number }>>([])
+  const [classes, setClasses] = useState<Array<{ id: string; label: string }>>(
+    []
+  )
+  const [teachers, setTeachers] = useState<
+    Array<{ id: string; label: string }>
+  >([])
+  const [rooms, setRooms] = useState<
+    Array<{ id: string; label: string; capacity: number }>
+  >([])
 
   // Timetable data
   const [slots, setSlots] = useState<any[]>([])
@@ -103,20 +125,20 @@ export default function AdminView({
   const loadSelectors = async () => {
     const [termsResult, roomsResult] = await Promise.all([
       getTermsForSelection(),
-      getRoomsForSelection()
+      getRoomsForSelection(),
     ])
     setTerms(termsResult.terms)
     setRooms(roomsResult.rooms)
   }
 
   const loadEntityList = async () => {
-    if (viewMode === 'class') {
+    if (viewMode === "class") {
       const result = await getClassesForSelection({ termId })
       setClasses(result.classes)
       if (result.classes.length > 0 && !selectedId) {
         setSelectedId(result.classes[0].id)
       }
-    } else if (viewMode === 'teacher') {
+    } else if (viewMode === "teacher") {
       const result = await getTeachersForSelection({ termId })
       setTeachers(result.teachers)
       if (result.teachers.length > 0 && !selectedId) {
@@ -129,13 +151,13 @@ export default function AdminView({
     setIsLoadingData(true)
     try {
       let result: any
-      if (viewMode === 'class') {
+      if (viewMode === "class") {
         result = await getTimetableByClass({ termId, classId: selectedId })
         setEntityInfo(result.classInfo)
-      } else if (viewMode === 'teacher') {
+      } else if (viewMode === "teacher") {
         result = await getTimetableByTeacher({ termId, teacherId: selectedId })
         setEntityInfo(result.teacherInfo)
-      } else if (viewMode === 'room') {
+      } else if (viewMode === "room") {
         result = await getTimetableByRoom({ termId, roomId: selectedId })
         setEntityInfo(result.roomInfo)
       }
@@ -153,19 +175,22 @@ export default function AdminView({
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
-    setSelectedId('') // Reset selection
+    setSelectedId("") // Reset selection
     setSlots([])
     setEntityInfo(null)
   }
 
   const getEntityList = () => {
     switch (viewMode) {
-      case 'class':
+      case "class":
         return classes
-      case 'teacher':
+      case "teacher":
         return teachers
-      case 'room':
-        return rooms.map(r => ({ id: r.id, label: `${r.label} (${r.capacity})` }))
+      case "room":
+        return rooms.map((r) => ({
+          id: r.id,
+          label: `${r.label} (${r.capacity})`,
+        }))
       default:
         return []
     }
@@ -173,11 +198,11 @@ export default function AdminView({
 
   const getViewIcon = () => {
     switch (viewMode) {
-      case 'class':
+      case "class":
         return <Calendar className="h-4 w-4" />
-      case 'teacher':
+      case "teacher":
         return <Users className="h-4 w-4" />
-      case 'room':
+      case "room":
         return <DoorOpen className="h-4 w-4" />
     }
   }
@@ -190,7 +215,7 @@ export default function AdminView({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">
-                {d?.title || 'Timetable Administration'}
+                {d?.title || "Timetable Administration"}
               </CardTitle>
               <Badge variant="outline">{termInfo.label}</Badge>
             </div>
@@ -202,7 +227,7 @@ export default function AdminView({
                   <SelectValue placeholder="Select term" />
                 </SelectTrigger>
                 <SelectContent>
-                  {terms.map(term => (
+                  {terms.map((term) => (
                     <SelectItem key={term.id} value={term.id}>
                       {term.label}
                     </SelectItem>
@@ -212,7 +237,7 @@ export default function AdminView({
 
               {/* Conflict Check */}
               <Button variant="outline" size="sm" onClick={checkConflicts}>
-                <TriangleAlert className="h-4 w-4 me-2" />
+                <TriangleAlert className="me-2 h-4 w-4" />
                 Check Conflicts
               </Button>
 
@@ -228,20 +253,23 @@ export default function AdminView({
 
         <CardContent>
           {/* View Mode Tabs */}
-          <Tabs value={viewMode} onValueChange={(v) => handleViewModeChange(v as ViewMode)}>
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => handleViewModeChange(v as ViewMode)}
+          >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <TabsList>
                 <TabsTrigger value="class" className="gap-2">
                   <Calendar className="h-4 w-4" />
-                  {d?.navigation?.byClass || 'By Class'}
+                  {d?.navigation?.byClass || "By Class"}
                 </TabsTrigger>
                 <TabsTrigger value="teacher" className="gap-2">
                   <Users className="h-4 w-4" />
-                  {d?.navigation?.byTeacher || 'By Teacher'}
+                  {d?.navigation?.byTeacher || "By Teacher"}
                 </TabsTrigger>
                 <TabsTrigger value="room" className="gap-2">
                   <DoorOpen className="h-4 w-4" />
-                  {d?.navigation?.byRoom || 'By Room'}
+                  {d?.navigation?.byRoom || "By Room"}
                 </TabsTrigger>
               </TabsList>
 
@@ -253,7 +281,7 @@ export default function AdminView({
                     <SelectValue placeholder={`Select ${viewMode}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    {getEntityList().map(item => (
+                    {getEntityList().map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.label}
                       </SelectItem>
@@ -267,7 +295,9 @@ export default function AdminView({
                   onClick={loadTimetable}
                   disabled={!selectedId || isLoadingData}
                 >
-                  <RefreshCw className={cn("h-4 w-4", isLoadingData && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("h-4 w-4", isLoadingData && "animate-spin")}
+                  />
                 </Button>
               </div>
             </div>
@@ -281,47 +311,43 @@ export default function AdminView({
           <CardContent className="pt-4">
             <div className="flex flex-wrap items-center gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  {viewMode === 'class' && 'Class'}
-                  {viewMode === 'teacher' && 'Teacher'}
-                  {viewMode === 'room' && 'Room'}
+                <p className="text-muted-foreground text-sm">
+                  {viewMode === "class" && "Class"}
+                  {viewMode === "teacher" && "Teacher"}
+                  {viewMode === "room" && "Room"}
                 </p>
                 <p className="font-semibold">
                   {entityInfo.name || entityInfo.label}
                 </p>
               </div>
 
-              {viewMode === 'teacher' && entityInfo.email && (
+              {viewMode === "teacher" && entityInfo.email && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-muted-foreground text-sm">Email</p>
                   <p className="text-sm">{entityInfo.email}</p>
                 </div>
               )}
 
-              {viewMode === 'room' && entityInfo.capacity && (
+              {viewMode === "room" && entityInfo.capacity && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Capacity</p>
+                  <p className="text-muted-foreground text-sm">Capacity</p>
                   <p className="text-sm">{entityInfo.capacity} students</p>
                 </div>
               )}
 
               {/* Workload stats for teacher view */}
-              {viewMode === 'teacher' && (
+              {viewMode === "teacher" && (
                 <>
-                  <Badge variant="secondary">
-                    {slots.length} periods/week
-                  </Badge>
+                  <Badge variant="secondary">{slots.length} periods/week</Badge>
                   <Badge variant="outline">
-                    {new Set(slots.map(s => s.classId)).size} classes
+                    {new Set(slots.map((s) => s.classId)).size} classes
                   </Badge>
                 </>
               )}
 
               {/* Utilization for room view */}
-              {viewMode === 'room' && (
-                <Badge variant="secondary">
-                  {slots.length} slots used
-                </Badge>
+              {viewMode === "room" && (
+                <Badge variant="secondary">{slots.length} slots used</Badge>
               )}
             </div>
           </CardContent>
@@ -343,7 +369,7 @@ export default function AdminView({
               viewMode={viewMode}
               editable={true}
               onSlotClick={(day, periodId, slot) => {
-                console.log('Slot clicked:', day, periodId, slot)
+                console.log("Slot clicked:", day, periodId, slot)
                 // TODO: Open slot editor dialog
               }}
             />
@@ -351,8 +377,8 @@ export default function AdminView({
         </Card>
       ) : (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <CardContent className="text-muted-foreground py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
             <p>Select a {viewMode} to view timetable</p>
           </CardContent>
         </Card>
@@ -364,7 +390,7 @@ export default function AdminView({
         open={showConflicts}
         onOpenChange={setShowConflicts}
         onApplySuggestion={(s) => {
-          console.log('Apply suggestion:', s)
+          console.log("Apply suggestion:", s)
           // TODO: Apply the suggestion
         }}
       />

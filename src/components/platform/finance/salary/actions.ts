@@ -6,22 +6,23 @@
  * Multi-tenant safe server actions for salary structure management
  * Includes: salary structures, allowances, deductions, and salary calculations
  */
-
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
 import {
-  salaryStructureSchema,
   salaryAllowanceSchema,
-  salaryDeductionSchema,
   salaryCalculatorSchema,
+  salaryDeductionSchema,
   salaryIncrementSchema,
-  type SalaryStructureInput,
+  salaryStructureSchema,
   type SalaryAllowanceInput,
-  type SalaryDeductionInput,
   type SalaryCalculatorInput,
+  type SalaryDeductionInput,
   type SalaryIncrementInput,
+  type SalaryStructureInput,
 } from "./validation"
 
 type ActionResult<T = void> = {
@@ -181,7 +182,9 @@ export async function createSalaryStructure(
         currency: (formData.currency as string) || "USD",
         payFrequency: (formData.payFrequency as any) || "MONTHLY",
         effectiveFrom: new Date(formData.effectiveFrom as string),
-        effectiveTo: formData.effectiveTo ? new Date(formData.effectiveTo as string) : null,
+        effectiveTo: formData.effectiveTo
+          ? new Date(formData.effectiveTo as string)
+          : null,
         isActive: true,
         notes: formData.notes as string | undefined,
       },
@@ -223,11 +226,18 @@ export async function updateSalaryStructure(
     await db.salaryStructure.update({
       where: { id: structureId },
       data: {
-        baseSalary: formData.baseSalary ? parseFloat(formData.baseSalary as string) : undefined,
+        baseSalary: formData.baseSalary
+          ? parseFloat(formData.baseSalary as string)
+          : undefined,
         currency: formData.currency as string | undefined,
         payFrequency: formData.payFrequency as any | undefined,
-        effectiveTo: formData.effectiveTo ? new Date(formData.effectiveTo as string) : undefined,
-        isActive: formData.isActive !== undefined ? (formData.isActive === "true") : undefined,
+        effectiveTo: formData.effectiveTo
+          ? new Date(formData.effectiveTo as string)
+          : undefined,
+        isActive:
+          formData.isActive !== undefined
+            ? formData.isActive === "true"
+            : undefined,
         notes: formData.notes as string | undefined,
       },
     })
@@ -331,9 +341,17 @@ export async function updateAllowance(
       where: { id: allowanceId, schoolId },
       data: {
         name: formData.name as string | undefined,
-        amount: formData.amount ? parseFloat(formData.amount as string) : undefined,
-        isTaxable: formData.isTaxable !== undefined ? (formData.isTaxable === "true") : undefined,
-        isRecurring: formData.isRecurring !== undefined ? (formData.isRecurring === "true") : undefined,
+        amount: formData.amount
+          ? parseFloat(formData.amount as string)
+          : undefined,
+        isTaxable:
+          formData.isTaxable !== undefined
+            ? formData.isTaxable === "true"
+            : undefined,
+        isRecurring:
+          formData.isRecurring !== undefined
+            ? formData.isRecurring === "true"
+            : undefined,
         description: formData.description as string | undefined,
       },
     })
@@ -433,9 +451,14 @@ export async function updateDeduction(
       where: { id: deductionId, schoolId },
       data: {
         name: formData.name as string | undefined,
-        amount: formData.amount ? parseFloat(formData.amount as string) : undefined,
+        amount: formData.amount
+          ? parseFloat(formData.amount as string)
+          : undefined,
         type: formData.type as any | undefined,
-        isRecurring: formData.isRecurring !== undefined ? (formData.isRecurring === "true") : undefined,
+        isRecurring:
+          formData.isRecurring !== undefined
+            ? formData.isRecurring === "true"
+            : undefined,
         description: formData.description as string | undefined,
       },
     })
@@ -577,7 +600,9 @@ export async function applySalaryIncrement(
     }
 
     const formData = Object.fromEntries(data)
-    const incrementType = formData.incrementType as "FIXED_AMOUNT" | "PERCENTAGE"
+    const incrementType = formData.incrementType as
+      | "FIXED_AMOUNT"
+      | "PERCENTAGE"
     const effectiveFrom = new Date(formData.effectiveFrom as string)
 
     const currentStructure = await db.salaryStructure.findFirst({
@@ -647,7 +672,13 @@ export async function getSalarySummary(): Promise<ActionResult<any>> {
       return { success: false, error: "Not authenticated" }
     }
 
-    const [totalStructures, activeStructures, totalAllowances, totalDeductions, avgSalary] = await Promise.all([
+    const [
+      totalStructures,
+      activeStructures,
+      totalAllowances,
+      totalDeductions,
+      avgSalary,
+    ] = await Promise.all([
       db.salaryStructure.count({ where: { schoolId } }),
       db.salaryStructure.count({ where: { schoolId, isActive: true } }),
       db.salaryAllowance.count({ where: { schoolId } }),

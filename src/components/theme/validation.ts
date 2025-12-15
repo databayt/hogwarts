@@ -4,16 +4,17 @@
  * Zod schemas for validating theme configurations.
  */
 
-import { z } from 'zod'
+import { z } from "zod"
 
 // OKLCH color validation regex
 // Format: oklch(L C H) or oklch(L C H / A)
-const oklchRegex = /^oklch\(\s*[\d.]+\s+[\d.]+\s+[\d.]+(?:\s*\/\s*[\d%]+)?\s*\)$/
+const oklchRegex =
+  /^oklch\(\s*[\d.]+\s+[\d.]+\s+[\d.]+(?:\s*\/\s*[\d%]+)?\s*\)$/
 
 // Zod schema for OKLCH color
 export const oklchColorSchema = z
   .string()
-  .regex(oklchRegex, 'Must be a valid OKLCH color (e.g., oklch(0.5 0.2 180))')
+  .regex(oklchRegex, "Must be a valid OKLCH color (e.g., oklch(0.5 0.2 180))")
 
 // Theme colors schema
 export const themeColorsSchema = z.object({
@@ -53,35 +54,41 @@ export const themeColorsSchema = z.object({
 
 // Theme radius schema
 export const themeRadiusSchema = z.object({
-  base: z.string().min(1, 'Base radius is required'),
-  sm: z.string().min(1, 'Small radius is required'),
-  md: z.string().min(1, 'Medium radius is required'),
-  lg: z.string().min(1, 'Large radius is required'),
-  xl: z.string().min(1, 'Extra large radius is required'),
+  base: z.string().min(1, "Base radius is required"),
+  sm: z.string().min(1, "Small radius is required"),
+  md: z.string().min(1, "Medium radius is required"),
+  lg: z.string().min(1, "Large radius is required"),
+  xl: z.string().min(1, "Extra large radius is required"),
 })
 
 // Theme fonts schema
 export const themeFontsSchema = z.object({
-  sans: z.string().min(1, 'Sans font is required'),
-  mono: z.string().min(1, 'Mono font is required'),
+  sans: z.string().min(1, "Sans font is required"),
+  mono: z.string().min(1, "Mono font is required"),
 })
 
 // Complete theme config schema
 export const themeConfigSchema = z.object({
-  name: z.string().min(1, 'Theme name is required').max(50, 'Theme name too long'),
-  description: z.string().max(200, 'Description too long').optional(),
+  name: z
+    .string()
+    .min(1, "Theme name is required")
+    .max(50, "Theme name too long"),
+  description: z.string().max(200, "Description too long").optional(),
   light: themeColorsSchema,
   dark: themeColorsSchema,
   radius: themeRadiusSchema,
   fonts: themeFontsSchema.optional(),
-  customCss: z.string().max(10000, 'Custom CSS too large').optional(),
+  customCss: z.string().max(10000, "Custom CSS too large").optional(),
 })
 
 // User theme data schema (for database)
 export const userThemeSchema = z.object({
   id: z.string().optional(),
   userId: z.string(),
-  name: z.string().min(1, 'Theme name is required').max(50, 'Theme name too long'),
+  name: z
+    .string()
+    .min(1, "Theme name is required")
+    .max(50, "Theme name too long"),
   isActive: z.boolean().default(false),
   isPreset: z.boolean().default(false),
   themeConfig: themeConfigSchema,
@@ -89,8 +96,8 @@ export const userThemeSchema = z.object({
 
 // Theme export schema
 export const themeExportSchema = z.object({
-  version: z.literal('1.0'),
-  name: z.string().min(1, 'Theme name is required'),
+  version: z.literal("1.0"),
+  name: z.string().min(1, "Theme name is required"),
   description: z.string().optional(),
   author: z.string().optional(),
   createdAt: z.string(),
@@ -99,20 +106,23 @@ export const themeExportSchema = z.object({
 
 // Form schemas for user actions
 export const saveThemeSchema = z.object({
-  name: z.string().min(1, 'Theme name is required').max(50, 'Theme name too long'),
+  name: z
+    .string()
+    .min(1, "Theme name is required")
+    .max(50, "Theme name too long"),
   themeConfig: themeConfigSchema,
 })
 
 export const activateThemeSchema = z.object({
-  themeId: z.string().min(1, 'Theme ID is required'),
+  themeId: z.string().min(1, "Theme ID is required"),
 })
 
 export const deleteThemeSchema = z.object({
-  themeId: z.string().min(1, 'Theme ID is required'),
+  themeId: z.string().min(1, "Theme ID is required"),
 })
 
 export const applyPresetSchema = z.object({
-  presetId: z.string().min(1, 'Preset ID is required'),
+  presetId: z.string().min(1, "Preset ID is required"),
 })
 
 // Type inference from schemas

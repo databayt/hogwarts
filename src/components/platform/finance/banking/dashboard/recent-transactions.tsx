@@ -1,19 +1,23 @@
-'use client'
+"use client"
 
-import { memo, useCallback, useMemo, useTransition } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { memo, useCallback, useMemo, useTransition } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { LoaderCircle } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { formatAmount, formatDateTime } from '@/components/platform/finance/banking/lib/utils'
-import { LoaderCircle } from "lucide-react"
+  TableRow,
+} from "@/components/ui/table"
+import {
+  formatAmount,
+  formatDateTime,
+} from "@/components/platform/finance/banking/lib/utils"
 
 interface RecentTransactionsListProps {
   transactions: any[]
@@ -30,7 +34,10 @@ interface TransactionRowProps {
  * TransactionRow - Memoized individual transaction row
  * Only re-renders when transaction data changes
  */
-const TransactionRow = memo(function TransactionRow({ transaction, dictionary }: TransactionRowProps) {
+const TransactionRow = memo(function TransactionRow({
+  transaction,
+  dictionary,
+}: TransactionRowProps) {
   const formattedAmount = useMemo(
     () => formatAmount(Math.abs(transaction.amount)),
     [transaction.amount]
@@ -41,11 +48,12 @@ const TransactionRow = memo(function TransactionRow({ transaction, dictionary }:
     [transaction.date]
   )
 
-  const amountColorClass = transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-  const statusVariant = transaction.pending ? 'secondary' : 'default'
+  const amountColorClass =
+    transaction.type === "credit" ? "text-green-600" : "text-red-600"
+  const statusVariant = transaction.pending ? "secondary" : "default"
   const statusText = transaction.pending
-    ? (dictionary?.pending || 'Pending')
-    : (dictionary?.completed || 'Completed')
+    ? dictionary?.pending || "Pending"
+    : dictionary?.completed || "Completed"
 
   return (
     <TableRow>
@@ -53,7 +61,7 @@ const TransactionRow = memo(function TransactionRow({ transaction, dictionary }:
         <div>
           <p className="font-medium">{transaction.name}</p>
           {transaction.merchantName && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {transaction.merchantName}
             </p>
           )}
@@ -65,17 +73,11 @@ const TransactionRow = memo(function TransactionRow({ transaction, dictionary }:
         </span>
       </TableCell>
       <TableCell>
-        <Badge variant={statusVariant}>
-          {statusText}
-        </Badge>
+        <Badge variant={statusVariant}>{statusText}</Badge>
       </TableCell>
-      <TableCell className="text-muted-foreground">
-        {formattedDate}
-      </TableCell>
+      <TableCell className="text-muted-foreground">{formattedDate}</TableCell>
       <TableCell>
-        <Badge variant="outline">
-          {transaction.category}
-        </Badge>
+        <Badge variant="outline">{transaction.category}</Badge>
       </TableCell>
     </TableRow>
   )
@@ -90,7 +92,7 @@ const TransactionRow = memo(function TransactionRow({ transaction, dictionary }:
 export const RecentTransactionsList = memo(function RecentTransactionsList({
   transactions = [],
   currentPage,
-  dictionary
+  dictionary,
 }: RecentTransactionsListProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -98,17 +100,17 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
   const [isPending, startTransition] = useTransition()
 
   // Get category from URL
-  const selectedCategory = searchParams.get('category')
+  const selectedCategory = searchParams.get("category")
 
   // Memoize filtered transactions to prevent recalculation on each render
   const filteredTransactions = useMemo(() => {
     if (!selectedCategory) return transactions
-    return transactions.filter(t => t.category === selectedCategory)
+    return transactions.filter((t) => t.category === selectedCategory)
   }, [transactions, selectedCategory])
 
   // Memoize categories array to prevent recalculation
   const categories = useMemo(
-    () => [...new Set(transactions?.map(t => t.category) || [])],
+    () => [...new Set(transactions?.map((t) => t.category) || [])],
     [transactions]
   )
 
@@ -124,9 +126,9 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
       startTransition(() => {
         const params = new URLSearchParams(searchParams.toString())
         if (category) {
-          params.set('category', category)
+          params.set("category", category)
         } else {
-          params.delete('category')
+          params.delete("category")
         }
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
       })
@@ -136,9 +138,9 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
 
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="py-12 text-center">
         <p className="text-muted-foreground mb-4">
-          {dictionary?.noTransactions || 'No transactions found'}
+          {dictionary?.noTransactions || "No transactions found"}
         </p>
       </div>
     )
@@ -148,14 +150,14 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
     <div className="space-y-4">
       {/* Category Filters */}
       {categories.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
             onClick={() => handleCategoryChange(null)}
             disabled={isPending}
           >
-            {dictionary?.all || 'All'}
+            {dictionary?.all || "All"}
           </Button>
           {categories.map((category: string) => (
             <Button
@@ -177,11 +179,11 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.transaction || 'Transaction'}</TableHead>
-              <TableHead>{dictionary?.amount || 'Amount'}</TableHead>
-              <TableHead>{dictionary?.status || 'Status'}</TableHead>
-              <TableHead>{dictionary?.date || 'Date'}</TableHead>
-              <TableHead>{dictionary?.category || 'Category'}</TableHead>
+              <TableHead>{dictionary?.transaction || "Transaction"}</TableHead>
+              <TableHead>{dictionary?.amount || "Amount"}</TableHead>
+              <TableHead>{dictionary?.status || "Status"}</TableHead>
+              <TableHead>{dictionary?.date || "Date"}</TableHead>
+              <TableHead>{dictionary?.category || "Category"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,8 +199,9 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
       </div>
 
       {filteredTransactions.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          {dictionary?.noMatchingTransactions || 'No matching transactions found'}
+        <div className="text-muted-foreground py-8 text-center">
+          {dictionary?.noMatchingTransactions ||
+            "No matching transactions found"}
         </div>
       )}
     </div>

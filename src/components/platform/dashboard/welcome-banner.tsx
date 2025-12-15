@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { Clock } from "lucide-react"
 import { motion } from "motion/react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
-import { Clock } from "lucide-react"
+
 import type { WelcomeBannerProps } from "./types"
 
 export function WelcomeBanner({
@@ -48,7 +50,7 @@ export function WelcomeBanner({
   return (
     <Card
       className={cn(
-        "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20",
+        "from-primary/10 via-primary/5 border-primary/20 bg-gradient-to-r to-transparent",
         className
       )}
     >
@@ -56,7 +58,7 @@ export function WelcomeBanner({
         <div className="flex items-center justify-between">
           <div>
             <motion.h2
-              className="text-2xl font-semibold text-foreground"
+              className="text-foreground text-2xl font-semibold"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -73,12 +75,14 @@ export function WelcomeBanner({
               {subtitle || `Welcome to your ${role || "dashboard"}`}
             </motion.p>
           </div>
-          <div className="text-right hidden sm:block">
-            <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="hidden text-right sm:block">
+            <div className="text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span className="text-2xl font-medium text-foreground">{currentTime}</span>
+              <span className="text-foreground text-2xl font-medium">
+                {currentTime}
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{currentDate}</p>
+            <p className="text-muted-foreground mt-1 text-sm">{currentDate}</p>
           </div>
         </div>
       </CardContent>

@@ -1,60 +1,66 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { requireOperator, requireNotImpersonating, logOperatorAudit } from "@/components/operator/lib/operator-auth";
-import type { Invoice } from "@prisma/client";
+import { revalidatePath } from "next/cache"
+import type { Invoice } from "@prisma/client"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import {
+  logOperatorAudit,
+  requireNotImpersonating,
+  requireOperator,
+} from "@/components/operator/lib/operator-auth"
 
 // ============= Type Definitions =============
 
 type ActionResult<T> =
   | { success: true; data: T }
-  | { success: false; error: Error };
+  | { success: false; error: Error }
 
 // ============= Validation Schemas =============
 
 const updateInvoiceStatusSchema = z.object({
   id: z.string().min(1),
-  status: z.enum(["paid", "void", "open", "uncollectible"])
-});
-
+  status: z.enum(["paid", "void", "open", "uncollectible"]),
+})
 
 // ============= Invoice Actions =============
 
-export async function invoiceUpdateStatus(
-  input: { id: string; status: "paid" | "void" | "open" | "uncollectible" }
-): Promise<ActionResult<Invoice>> {
+export async function invoiceUpdateStatus(input: {
+  id: string
+  status: "paid" | "void" | "open" | "uncollectible"
+}): Promise<ActionResult<Invoice>> {
   try {
-    const operator = await requireOperator();
-    await requireNotImpersonating();
+    const operator = await requireOperator()
+    await requireNotImpersonating()
 
-    const validated = updateInvoiceStatusSchema.parse(input);
+    const validated = updateInvoiceStatusSchema.parse(input)
 
     // Properly typed Prisma operation - no type assertion needed
     const invoice = await db.invoice.update({
       where: { id: validated.id },
       data: {
         status: validated.status,
-        updatedAt: new Date()
-      }
-    });
+        updatedAt: new Date(),
+      },
+    })
 
     await logOperatorAudit({
       userId: operator.userId,
       schoolId: invoice.schoolId,
-      action: `BILLING_INVOICE_${validated.status.toUpperCase()}`
-    });
+      action: `BILLING_INVOICE_${validated.status.toUpperCase()}`,
+    })
 
-    revalidatePath("/operator/billing");
+    revalidatePath("/operator/billing")
 
-    return { success: true, data: invoice };
+    return { success: true, data: invoice }
   } catch (error) {
-    console.error("Failed to update invoice status:", error);
+    console.error("Failed to update invoice status:", error)
     return {
       success: false,
-      error: error instanceof Error ? error : new Error("Failed to update invoice")
-    };
+      error:
+        error instanceof Error ? error : new Error("Failed to update invoice"),
+    }
   }
 }
 
@@ -64,26 +70,40 @@ export async function invoiceUpdateStatus(
 // ============= Get Invoices Action =============
 
 export async function getInvoices(input: {
-  page: number;
-  perPage: number;
-  status?: string;
-  search?: string;
+  page: number
+  perPage: number
+  status?: string
+  search?: string
 }) {
   try {
-    await requireOperator();
+    await requireOperator()
 
-    const offset = (input.page - 1) * input.perPage;
+    const offset = (input.page - 1) * input.perPage
     const where = {
-      ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+      ...(input.status && input.status !== "all"
+        ? { status: input.status }
+        : {}),
       ...(input.search
         ? {
             OR: [
-              { stripeInvoiceId: { contains: input.search, mode: "insensitive" as const } },
-              { school: { name: { contains: input.search, mode: "insensitive" as const } } }
-            ]
+              {
+                stripeInvoiceId: {
+                  contains: input.search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                school: {
+                  name: {
+                    contains: input.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            ],
           }
-        : {})
-    };
+        : {}),
+    }
 
     const [invoices, total] = await Promise.all([
       db.invoice.findMany({
@@ -92,24 +112,24 @@ export async function getInvoices(input: {
           school: {
             select: {
               id: true,
-              name: true
-            }
+              name: true,
+            },
           },
           receipts: {
             select: {
               id: true,
-              status: true
-            }
-          }
+              status: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip: offset,
-        take: input.perPage
+        take: input.perPage,
       }),
-      db.invoice.count({ where })
-    ]);
+      db.invoice.count({ where }),
+    ])
 
-    const rows = invoices.map(invoice => ({
+    const rows = invoices.map((invoice) => ({
       id: invoice.id,
       number: invoice.stripeInvoiceId,
       tenantName: invoice.school.name,
@@ -117,27 +137,31 @@ export async function getInvoices(input: {
       periodEnd: invoice.periodEnd?.toISOString() || null,
       amount: invoice.amountDue,
       status: invoice.status as "open" | "paid" | "void" | "uncollectible",
-      createdAt: invoice.createdAt.toISOString()
-    }));
+      createdAt: invoice.createdAt.toISOString(),
+    }))
 
-    return { success: true, data: rows, total };
+    return { success: true, data: rows, total }
   } catch (error) {
-    console.error("Failed to fetch invoices:", error);
+    console.error("Failed to fetch invoices:", error)
     return {
       success: false,
       error: {
-        message: error instanceof Error ? error.message : "Failed to fetch invoices",
+        message:
+          error instanceof Error ? error.message : "Failed to fetch invoices",
       },
       data: [],
       total: 0,
-    };
+    }
   }
 }
 
 // ============= CSV Export =============
 
-export async function getInvoicesCSV(filters?: { status?: string; search?: string }): Promise<string> {
-  await requireOperator();
+export async function getInvoicesCSV(filters?: {
+  status?: string
+  search?: string
+}): Promise<string> {
+  await requireOperator()
 
   const where = {
     ...(filters?.status && filters.status !== "all"
@@ -146,12 +170,24 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     ...(filters?.search
       ? {
           OR: [
-            { stripeInvoiceId: { contains: filters.search, mode: "insensitive" as const } },
-            { school: { name: { contains: filters.search, mode: "insensitive" as const } } }
-          ]
+            {
+              stripeInvoiceId: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              school: {
+                name: {
+                  contains: filters.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          ],
         }
-      : {})
-  };
+      : {}),
+  }
 
   const invoices = await db.invoice.findMany({
     where,
@@ -165,7 +201,7 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     },
     orderBy: { createdAt: "desc" },
     take: 10000, // Limit to prevent memory issues
-  });
+  })
 
   // CSV header
   const headers = [
@@ -179,7 +215,7 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     "Period End",
     "Created At",
     "Updated At",
-  ];
+  ]
 
   // CSV rows
   const rows = invoices.map((invoice) => [
@@ -193,33 +229,13 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     invoice.periodEnd?.toLocaleDateString() || "",
     invoice.createdAt.toLocaleDateString(),
     invoice.updatedAt.toLocaleDateString(),
-  ]);
+  ])
 
   // Combine into CSV
   const csv = [
     headers.join(","),
     ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-  ].join("\n");
+  ].join("\n")
 
-  return csv;
+  return csv
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

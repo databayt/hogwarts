@@ -5,11 +5,12 @@
  * Based on tweakcn's pattern with history management and checkpoints.
  */
 
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { ThemeEditorState } from '@/types/theme-editor'
-import { defaultThemeState } from '@/components/theme/config'
-import { getPresetThemeStyles } from '@/components/theme/theme-preset-helper'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
+
+import type { ThemeEditorState } from "@/types/theme-editor"
+import { defaultThemeState } from "@/components/theme/config"
+import { getPresetThemeStyles } from "@/components/theme/theme-preset-helper"
 
 const MAX_HISTORY_COUNT = 30
 const HISTORY_OVERRIDE_THRESHOLD_MS = 500 // 0.5 seconds
@@ -70,14 +71,20 @@ export const useEditorStore = create<EditorStore>()(
 
         const currentTime = Date.now()
         const lastHistoryEntry =
-          currentHistory.length > 0 ? currentHistory[currentHistory.length - 1] : null
+          currentHistory.length > 0
+            ? currentHistory[currentHistory.length - 1]
+            : null
 
         if (
           !lastHistoryEntry ||
-          currentTime - lastHistoryEntry.timestamp >= HISTORY_OVERRIDE_THRESHOLD_MS
+          currentTime - lastHistoryEntry.timestamp >=
+            HISTORY_OVERRIDE_THRESHOLD_MS
         ) {
           // Add a new history entry
-          currentHistory = [...currentHistory, { state: oldThemeState, timestamp: currentTime }]
+          currentHistory = [
+            ...currentHistory,
+            { state: oldThemeState, timestamp: currentTime },
+          ]
           currentFuture = []
         }
 
@@ -109,7 +116,10 @@ export const useEditorStore = create<EditorStore>()(
         }
 
         // Add to history
-        const newHistoryEntry = { state: currentThemeState, timestamp: currentTime }
+        const newHistoryEntry = {
+          state: currentThemeState,
+          timestamp: currentTime,
+        }
         const updatedHistory = [...oldHistory, newHistoryEntry]
         if (updatedHistory.length > MAX_HISTORY_COUNT) {
           updatedHistory.shift()
@@ -134,7 +144,10 @@ export const useEditorStore = create<EditorStore>()(
           const oldHistory = get().history
           const currentTime = Date.now()
 
-          const newHistoryEntry = { state: oldThemeState, timestamp: currentTime }
+          const newHistoryEntry = {
+            state: oldThemeState,
+            timestamp: currentTime,
+          }
           const updatedHistory = [...oldHistory, newHistoryEntry]
           if (updatedHistory.length > MAX_HISTORY_COUNT) {
             updatedHistory.shift()
@@ -149,7 +162,7 @@ export const useEditorStore = create<EditorStore>()(
             future: [],
           })
         } else {
-          console.warn('No theme checkpoint available to restore to.')
+          console.warn("No theme checkpoint available to restore to.")
         }
       },
 
@@ -157,7 +170,7 @@ export const useEditorStore = create<EditorStore>()(
         const currentThemeState = get().themeState
 
         // Get preset styles (or default if no preset)
-        const presetName = currentThemeState.preset ?? 'default'
+        const presetName = currentThemeState.preset ?? "default"
         const presetStyles = getPresetThemeStyles(presetName)
 
         const newThemeState: ThemeEditorState = {
@@ -181,7 +194,7 @@ export const useEditorStore = create<EditorStore>()(
 
       hasUnsavedChanges: () => {
         const themeState = get().themeState
-        const presetName = themeState.preset ?? 'default'
+        const presetName = themeState.preset ?? "default"
         const presetStyles = getPresetThemeStyles(presetName)
 
         const stylesChanged = !isDeepEqual(themeState.styles, presetStyles)
@@ -205,7 +218,10 @@ export const useEditorStore = create<EditorStore>()(
         const lastHistoryEntry = history[history.length - 1]
         const newHistory = history.slice(0, -1)
 
-        const newFutureEntry = { state: currentThemeState, timestamp: Date.now() }
+        const newFutureEntry = {
+          state: currentThemeState,
+          timestamp: Date.now(),
+        }
         const newFuture = [newFutureEntry, ...future]
 
         set({
@@ -231,7 +247,10 @@ export const useEditorStore = create<EditorStore>()(
 
         const currentThemeState = get().themeState
 
-        const newHistoryEntry = { state: currentThemeState, timestamp: Date.now() }
+        const newHistoryEntry = {
+          state: currentThemeState,
+          timestamp: Date.now(),
+        }
         const updatedHistory = [...history, newHistoryEntry]
         if (updatedHistory.length > MAX_HISTORY_COUNT) {
           updatedHistory.shift()
@@ -252,7 +271,7 @@ export const useEditorStore = create<EditorStore>()(
       canRedo: () => get().future.length > 0,
     }),
     {
-      name: 'theme-editor-storage',
+      name: "theme-editor-storage",
     }
   )
 )

@@ -11,6 +11,7 @@ Part of the [Exam Block System](../README.md) | [Results Block README](./README.
 ### Issue: Letter Grade Doesn't Match Percentage
 
 **Symptoms:**
+
 - Student scores 92%
 - Shows grade "B" instead of "A"
 
@@ -32,12 +33,14 @@ VALUES
 ### Issue: PDF Generation Fails
 
 **Symptoms:**
+
 - Click "Download PDF"
 - Error: "Failed to generate PDF"
 
 **Common Causes:**
 
 1. **Invalid data in template**
+
 ```typescript
 // ❌ BAD - Undefined data
 <Text>{student.name}</Text>
@@ -47,6 +50,7 @@ VALUES
 ```
 
 2. **Using HTML elements in PDF**
+
 ```typescript
 // ❌ BAD - div not allowed
 <View>
@@ -66,6 +70,7 @@ VALUES
 ### Issue: Class Rankings Incorrect with Ties
 
 **Symptoms:**
+
 - Two students both score 85%
 - Ranks show 1, 3 (skipping 2)
 
@@ -74,6 +79,7 @@ VALUES
 **Explanation:** This is correct tie-handling behavior. Rankings skip positions after ties.
 
 **Example:**
+
 - Score 95%: Rank 1
 - Score 95%: Rank 1 (tied)
 - Score 92%: Rank 3 (not 2)
@@ -83,16 +89,20 @@ VALUES
 ### Issue: Average Score Shows >100%
 
 **Symptoms:**
+
 - Class average shows 120%
 - Mathematically impossible
 
 **Root Cause:** Including absent students or calculation error
 
 **Solution:**
+
 ```typescript
 // ✅ CORRECT - Exclude absent
-const presentResults = results.filter(r => !r.isAbsent);
-const average = presentResults.reduce((sum, r) => sum + r.percentage, 0) / presentResults.length;
+const presentResults = results.filter((r) => !r.isAbsent)
+const average =
+  presentResults.reduce((sum, r) => sum + r.percentage, 0) /
+  presentResults.length
 ```
 
 ---
@@ -100,6 +110,7 @@ const average = presentResults.reduce((sum, r) => sum + r.percentage, 0) / prese
 ### Issue: PDF Shows Wrong Language
 
 **Symptoms:**
+
 - Request Arabic PDF
 - Shows English text
 
@@ -107,9 +118,9 @@ const average = presentResults.reduce((sum, r) => sum + r.percentage, 0) / prese
 
 ```typescript
 const pdf = await generateStudentPDF(examId, studentId, {
-  template: 'modern',
-  language: 'ar'  // ✅ Specify language
-});
+  template: "modern",
+  language: "ar", // ✅ Specify language
+})
 ```
 
 ---
@@ -117,6 +128,7 @@ const pdf = await generateStudentPDF(examId, studentId, {
 ### Issue: PDF Arabic Text Appears Disconnected
 
 **Symptoms:**
+
 - Arabic letters show separately: "م ح م د"
 - Should be connected: "محمد"
 
@@ -127,9 +139,9 @@ const pdf = await generateStudentPDF(examId, studentId, {
 ```typescript
 // lib/templates/modern.tsx
 Font.register({
-  family: 'Tajawal',  // ✅ Supports Arabic properly
-  src: '/fonts/Tajawal-Regular.ttf'
-});
+  family: "Tajawal", // ✅ Supports Arabic properly
+  src: "/fonts/Tajawal-Regular.ttf",
+})
 ```
 
 ---

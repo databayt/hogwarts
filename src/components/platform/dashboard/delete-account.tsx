@@ -1,19 +1,20 @@
-"use client";
+"use client"
 
-const siteConfig = { name: "Hogwarts" } as const;
-import { Button } from "@/components/ui/button";
-import { SectionColumns } from "@/components/platform/dashboard/section-columns";
-import { useDeleteAccountModal } from "@/components/marketing/pricing/modals/delete-account-modal";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { Button } from "@/components/ui/button"
+import { useDeleteAccountModal } from "@/components/marketing/pricing/modals/delete-account-modal"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
+import { SectionColumns } from "@/components/platform/dashboard/section-columns"
+
+const siteConfig = { name: "Hogwarts" } as const
 
 export function DeleteAccountSection() {
   const { setShowDeleteAccountModal, DeleteAccountModal } =
-    useDeleteAccountModal();
+    useDeleteAccountModal()
 
-  const userPaidPlan = true;
+  const userPaidPlan = true
 
   return (
-    <div className="bg-muted rounded-lg px-6 my-6">
+    <div className="bg-muted my-6 rounded-lg px-6">
       <DeleteAccountModal />
       <SectionColumns
         title="Delete Account"
@@ -33,7 +34,7 @@ export function DeleteAccountSection() {
                 </div>
               ) : null}
             </div>
-            <div className="text-balance text-sm text-muted-foreground">
+            <div className="text-muted-foreground text-sm text-balance">
               Permanently delete your {siteConfig.name} account
               {userPaidPlan ? " and your subscription" : ""}. This action cannot
               be undone - please proceed with caution.
@@ -52,5 +53,5 @@ export function DeleteAccountSection() {
         </div>
       </SectionColumns>
     </div>
-  );
+  )
 }

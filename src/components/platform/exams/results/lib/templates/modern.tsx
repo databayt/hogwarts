@@ -1,19 +1,20 @@
 // Modern PDF Template - Visual Design with Charts
 
-import React from "react";
+import React from "react"
 import {
   Document,
+  Image,
   Page,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  Image,
-} from "@react-pdf/renderer";
-import type { PDFResultData } from "../../types";
-import { formatPDFDate, formatPDFNumber } from "../pdf-generator";
+} from "@react-pdf/renderer"
+
+import type { PDFResultData } from "../../types"
+import { formatPDFDate, formatPDFNumber } from "../pdf-generator"
 
 interface ModernTemplateProps {
-  data: PDFResultData;
+  data: PDFResultData
 }
 
 // Modern, colorful styles
@@ -280,12 +281,12 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: "#9CA3AF",
   },
-});
+})
 
 export function ModernTemplate({ data }: ModernTemplateProps) {
-  const { student, exam, school, analytics, metadata } = data;
-  const passPercentage = (exam.passingMarks / exam.totalMarks) * 100;
-  const isPassing = student.percentage >= passPercentage;
+  const { student, exam, school, analytics, metadata } = data
+  const passPercentage = (exam.passingMarks / exam.totalMarks) * 100
+  const isPassing = student.percentage >= passPercentage
 
   return (
     <Document>
@@ -396,9 +397,7 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>
-                {student.grade || "N/A"}
-              </Text>
+              <Text style={styles.statValue}>{student.grade || "N/A"}</Text>
               <Text style={styles.statLabel}>Grade</Text>
             </View>
 
@@ -410,7 +409,12 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
             </View>
 
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: isPassing ? "#10B981" : "#EF4444" }]}>
+              <Text
+                style={[
+                  styles.statValue,
+                  { color: isPassing ? "#10B981" : "#EF4444" },
+                ]}
+              >
                 {isPassing ? "PASS" : "FAIL"}
               </Text>
               <Text style={styles.statLabel}>Status</Text>
@@ -456,31 +460,32 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
           )}
 
           {/* Question Breakdown */}
-          {student.questionBreakdown && student.questionBreakdown.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Question-wise Breakdown</Text>
-              {student.questionBreakdown.slice(0, 8).map((q) => (
-                <View key={q.questionNumber} style={styles.questionItem}>
-                  <View style={styles.questionNumber}>
-                    <Text style={styles.questionNumberText}>
-                      {q.questionNumber}
-                    </Text>
+          {student.questionBreakdown &&
+            student.questionBreakdown.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Question-wise Breakdown</Text>
+                {student.questionBreakdown.slice(0, 8).map((q) => (
+                  <View key={q.questionNumber} style={styles.questionItem}>
+                    <View style={styles.questionNumber}>
+                      <Text style={styles.questionNumberText}>
+                        {q.questionNumber}
+                      </Text>
+                    </View>
+                    <View style={styles.questionInfo}>
+                      <Text style={styles.questionType}>{q.questionType}</Text>
+                      <Text style={styles.questionPoints}>
+                        Max: {formatPDFNumber(q.maxPoints, "en")} points
+                      </Text>
+                    </View>
+                    <View style={styles.questionScore}>
+                      <Text style={styles.questionScoreValue}>
+                        {formatPDFNumber(q.pointsAwarded, "en")}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.questionInfo}>
-                    <Text style={styles.questionType}>{q.questionType}</Text>
-                    <Text style={styles.questionPoints}>
-                      Max: {formatPDFNumber(q.maxPoints, "en")} points
-                    </Text>
-                  </View>
-                  <View style={styles.questionScore}>
-                    <Text style={styles.questionScoreValue}>
-                      {formatPDFNumber(q.pointsAwarded, "en")}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
+                ))}
+              </View>
+            )}
         </View>
 
         {/* Footer */}
@@ -494,5 +499,5 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
         </View>
       </Page>
     </Document>
-  );
+  )
 }

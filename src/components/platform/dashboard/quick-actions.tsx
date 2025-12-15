@@ -1,15 +1,16 @@
-"use client";
+"use client"
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { AnthropicIcons } from "@/components/icons/anthropic";
-import Link from "next/link";
+import React from "react"
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
+import { AnthropicIcons } from "@/components/icons/anthropic"
 
 /**
  * QuickActions Component
@@ -22,11 +23,11 @@ import {
  */
 
 export interface QuickAction {
-  iconName: string; // Icon name as string (e.g., "FileText", "Users")
-  label: string;
-  description?: string; // Optional description shown on hover
-  href?: string;
-  onClick?: () => void;
+  iconName: string // Icon name as string (e.g., "FileText", "Users")
+  label: string
+  description?: string // Optional description shown on hover
+  href?: string
+  onClick?: () => void
 }
 
 // Card background colors (matching Quick Look section)
@@ -35,10 +36,13 @@ const cardColors = [
   { bg: "bg-[#6A9BCC]", text: "text-background" }, // Blue
   { bg: "bg-[#CBCADB]", text: "text-background" }, // Lavender
   { bg: "bg-[#BCD1CA]", text: "text-background" }, // Mint
-];
+]
 
 // Map icon names to Anthropic icon components
-const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
+const iconMap: Record<
+  string,
+  React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>
+> = {
   // Core Anthropic icons
   Checklist: AnthropicIcons.Checklist,
   TaskList: AnthropicIcons.TaskList,
@@ -69,48 +73,61 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hi
   Users: AnthropicIcons.Users,
   BarChart: AnthropicIcons.BarChart,
   // Mapped aliases
-  Settings: AnthropicIcons.Gear,           // Settings → Gear
-  UserPlus: AnthropicIcons.Users,          // Add user → Users
-  BarChart3: AnthropicIcons.BarChart,      // Analytics → BarChart
-  TrendingUp: AnthropicIcons.BarChart,     // Growth → BarChart
-  CheckCircle: AnthropicIcons.Checklist,   // Completion
-  BookOpen: AnthropicIcons.Book,           // Reading
-  Award: AnthropicIcons.Sparkle,           // Achievement
-  MessageSquare: AnthropicIcons.Chat,      // Communication
-  ClipboardList: AnthropicIcons.TaskList,  // Tasks
-  DollarSign: AnthropicIcons.Notebook,     // Finance
-  Receipt: AnthropicIcons.Notebook,        // Documents
-  GraduationCap: AnthropicIcons.Book,      // Education
-  Building: AnthropicIcons.Briefcase,      // Organization
-  Contact: AnthropicIcons.Chat,            // Contact
-};
-
-interface QuickActionsProps {
-  actions: QuickAction[];
-  locale?: string;
-  className?: string;
+  Settings: AnthropicIcons.Gear, // Settings → Gear
+  UserPlus: AnthropicIcons.Users, // Add user → Users
+  BarChart3: AnthropicIcons.BarChart, // Analytics → BarChart
+  TrendingUp: AnthropicIcons.BarChart, // Growth → BarChart
+  CheckCircle: AnthropicIcons.Checklist, // Completion
+  BookOpen: AnthropicIcons.Book, // Reading
+  Award: AnthropicIcons.Sparkle, // Achievement
+  MessageSquare: AnthropicIcons.Chat, // Communication
+  ClipboardList: AnthropicIcons.TaskList, // Tasks
+  DollarSign: AnthropicIcons.Notebook, // Finance
+  Receipt: AnthropicIcons.Notebook, // Documents
+  GraduationCap: AnthropicIcons.Book, // Education
+  Building: AnthropicIcons.Briefcase, // Organization
+  Contact: AnthropicIcons.Chat, // Contact
 }
 
-export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
+interface QuickActionsProps {
+  actions: QuickAction[]
+  locale?: string
+  className?: string
+}
+
+export function QuickActions({
+  actions,
+  locale = "en",
+  className,
+}: QuickActionsProps) {
   return (
     <TooltipProvider delayDuration={300}>
       <div className={cn("w-full", className)}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {actions.slice(0, 4).map((action, index) => {
             // Get icon component from map, fallback to Notebook if not found
-            const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook;
+            const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook
             // Cycle through colors for each card
-            const color = cardColors[index % cardColors.length];
+            const color = cardColors[index % cardColors.length]
 
             const content = (
-              <div className={cn(
-                "flex items-center gap-4 p-4 rounded-lg",
-                color.bg
-              )}>
-                <Icon className={cn("h-6 w-6 flex-shrink-0", color.text)} aria-hidden={true} />
-                <span className={cn("text-base font-semibold truncate", color.text)}>{action.label}</span>
+              <div
+                className={cn(
+                  "flex items-center gap-4 rounded-lg p-4",
+                  color.bg
+                )}
+              >
+                <Icon
+                  className={cn("h-6 w-6 flex-shrink-0", color.text)}
+                  aria-hidden={true}
+                />
+                <span
+                  className={cn("truncate text-base font-semibold", color.text)}
+                >
+                  {action.label}
+                </span>
               </div>
-            );
+            )
 
             const wrappedContent = action.description ? (
               <Tooltip>
@@ -118,14 +135,14 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
                   {action.href ? (
                     <Link
                       href={`/${locale}${action.href}`}
-                      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+                      className="focus-visible:ring-primary block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                     >
                       {content}
                     </Link>
                   ) : (
                     <button
                       onClick={action.onClick}
-                      className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+                      className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                       type="button"
                     >
                       {content}
@@ -139,28 +156,24 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             ) : action.href ? (
               <Link
                 href={`/${locale}${action.href}`}
-                className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+                className="focus-visible:ring-primary block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               >
                 {content}
               </Link>
             ) : (
               <button
                 onClick={action.onClick}
-                className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+                className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 type="button"
               >
                 {content}
               </button>
-            );
+            )
 
-            return (
-              <div key={`${action.label}-${index}`}>
-                {wrappedContent}
-              </div>
-            );
+            return <div key={`${action.label}-${index}`}>{wrappedContent}</div>
           })}
         </div>
       </div>
     </TooltipProvider>
-  );
+  )
 }

@@ -2,9 +2,10 @@
  * Timesheet Module - Type Definitions
  */
 
-import type { PeriodStatus, EntryStatus } from '@prisma/client'
-import type { timesheetSchema, timesheetEntrySchema } from './validation'
-import type { z } from 'zod'
+import type { EntryStatus, PeriodStatus } from "@prisma/client"
+import type { z } from "zod"
+
+import type { timesheetEntrySchema, timesheetSchema } from "./validation"
 
 export type TimesheetInput = z.infer<typeof timesheetSchema>
 export type TimesheetEntryInput = z.infer<typeof timesheetEntrySchema>

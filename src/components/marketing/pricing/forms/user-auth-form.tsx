@@ -1,25 +1,26 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import * as React from "react"
+import { useSearchParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { signIn } from "next-auth/react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import * as z from "zod"
 
-import { cn } from "@/lib/utils";
-import { userAuthSchema } from "../lib/validations/auth";
-import { buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Icons } from "../shared/icons";
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+import { userAuthSchema } from "../lib/validations/auth"
+import { Icons } from "../shared/icons"
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
-  type?: string;
+  type?: string
 }
 
-type FormData = z.infer<typeof userAuthSchema>;
+type FormData = z.infer<typeof userAuthSchema>
 
 export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
   const {
@@ -28,31 +29,31 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(userAuthSchema),
-  });
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [isGoogleLoading, setIsGoogleLoading] = React.useState<boolean>(false);
-  const searchParams = useSearchParams();
+  })
+  const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [isGoogleLoading, setIsGoogleLoading] = React.useState<boolean>(false)
+  const searchParams = useSearchParams()
 
   async function onSubmit(data: FormData) {
-    setIsLoading(true);
+    setIsLoading(true)
 
     const signInResult = await signIn("resend", {
       email: data.email.toLowerCase(),
       redirect: false,
       callbackUrl: searchParams?.get("from") || "/dashboard",
-    });
+    })
 
-    setIsLoading(false);
+    setIsLoading(false)
 
     if (!signInResult?.ok) {
       return toast.error("Something went wrong.", {
-        description: "Your sign in request failed. Please try again."
-      });
+        description: "Your sign in request failed. Please try again.",
+      })
     }
 
     return toast.success("Check your email", {
       description: "We sent you a login link. Be sure to check your spam too.",
-    });
+    })
   }
 
   return (
@@ -74,9 +75,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
               {...register("email")}
             />
             {errors?.email && (
-              <p className="px-1 muted text-red-600">
-                {errors.email.message}
-              </p>
+              <p className="muted px-1 text-red-600">{errors.email.message}</p>
             )}
           </div>
           <button className={cn(buttonVariants())} disabled={isLoading}>
@@ -92,7 +91,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+          <span className="bg-background text-muted-foreground px-2">
             Or continue with
           </span>
         </div>
@@ -101,8 +100,8 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
         type="button"
         className={cn(buttonVariants({ variant: "outline" }))}
         onClick={() => {
-          setIsGoogleLoading(true);
-          signIn("google");
+          setIsGoogleLoading(true)
+          signIn("google")
         }}
         disabled={isLoading || isGoogleLoading}
       >
@@ -114,5 +113,5 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
         Google
       </button>
     </div>
-  );
+  )
 }

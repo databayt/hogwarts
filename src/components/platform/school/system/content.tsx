@@ -1,18 +1,36 @@
-import type { Locale } from '@/components/internationalization/config'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import Link from "next/link"
+import {
+  Activity,
+  Archive,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Cpu,
+  Database,
+  Download,
+  FileText,
+  HardDrive,
+  MemoryStick,
+  RefreshCw,
+  Server,
+  Trash,
+  Wifi,
+  Zap,
+} from "lucide-react"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Server, Database, HardDrive, Activity, FileText, Download, RefreshCw, Trash, CircleAlert, CircleCheck, Zap, Clock, Cpu, MemoryStick, Wifi, Archive } from "lucide-react"
-import Link from 'next/link'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   dictionary: Dictionary
@@ -25,24 +43,24 @@ export default async function SystemContent({ dictionary, lang }: Props) {
   // Mock system health data (in production, this would come from real monitoring)
   const systemHealth = {
     database: {
-      status: 'healthy' as const,
+      status: "healthy" as const,
       connections: 12,
       responseTime: 45, // ms
       size: 256 * 1024 * 1024, // 256 MB
     },
     cache: {
-      status: 'healthy' as const,
+      status: "healthy" as const,
       hitRate: 92,
       memory: 128 * 1024 * 1024, // 128 MB
       keys: 1543,
     },
     storage: {
-      status: 'healthy' as const,
+      status: "healthy" as const,
       used: 2.5 * 1024 * 1024 * 1024, // 2.5 GB
       total: 10 * 1024 * 1024 * 1024, // 10 GB
     },
     api: {
-      status: 'healthy' as const,
+      status: "healthy" as const,
       requestsPerMinute: 245,
       errorRate: 0.3,
       uptime: 99.9,
@@ -54,7 +72,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
     memory: {
       used: 3.2 * 1024 * 1024 * 1024, // 3.2 GB
       total: 8 * 1024 * 1024 * 1024, // 8 GB
-    }
+    },
   }
 
   // Get audit log stats
@@ -69,35 +87,43 @@ export default async function SystemContent({ dictionary, lang }: Props) {
       todayLogs = 234
       criticalEvents = 3
     } catch (error) {
-      console.error('Error fetching system data:', error)
+      console.error("Error fetching system data:", error)
     }
   }
 
   const d = dictionary?.admin
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B'
+    if (bytes === 0) return "0 B"
     const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+    const sizes = ["B", "KB", "MB", "GB", "TB"]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-500'
-      case 'degraded': return 'text-yellow-500'
-      case 'down': return 'text-red-500'
-      default: return 'text-gray-500'
+      case "healthy":
+        return "text-green-500"
+      case "degraded":
+        return "text-yellow-500"
+      case "down":
+        return "text-red-500"
+      default:
+        return "text-gray-500"
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CircleCheck className="h-4 w-4 text-green-500" />
-      case 'degraded': return <CircleAlert className="h-4 w-4 text-yellow-500" />
-      case 'down': return <CircleAlert className="h-4 w-4 text-red-500" />
-      default: return <CircleAlert className="h-4 w-4 text-gray-500" />
+      case "healthy":
+        return <CircleCheck className="h-4 w-4 text-green-500" />
+      case "degraded":
+        return <CircleAlert className="h-4 w-4 text-yellow-500" />
+      case "down":
+        return <CircleAlert className="h-4 w-4 text-red-500" />
+      default:
+        return <CircleAlert className="h-4 w-4 text-gray-500" />
     }
   }
 
@@ -111,8 +137,10 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             {getStatusIcon(systemHealth.database.status)}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{systemHealth.database.responseTime}ms</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">
+              {systemHealth.database.responseTime}ms
+            </div>
+            <p className="text-muted-foreground text-xs">
               {systemHealth.database.connections} active connections
             </p>
           </CardContent>
@@ -124,8 +152,10 @@ export default async function SystemContent({ dictionary, lang }: Props) {
             {getStatusIcon(systemHealth.cache.status)}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{systemHealth.cache.hitRate}%</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold">
+              {systemHealth.cache.hitRate}%
+            </div>
+            <p className="text-muted-foreground text-xs">
               Hit rate ({systemHealth.cache.keys} keys)
             </p>
           </CardContent>
@@ -138,7 +168,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{systemHealth.api.uptime}%</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Uptime ({systemHealth.api.requestsPerMinute} req/min)
             </p>
           </CardContent>
@@ -151,9 +181,13 @@ export default async function SystemContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {((systemHealth.storage.used / systemHealth.storage.total) * 100).toFixed(0)}%
+              {(
+                (systemHealth.storage.used / systemHealth.storage.total) *
+                100
+              ).toFixed(0)}
+              %
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {formatBytes(systemHealth.storage.used)} used
             </p>
           </CardContent>
@@ -164,18 +198,16 @@ export default async function SystemContent({ dictionary, lang }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>Resource Usage</CardTitle>
-          <CardDescription>
-            Current system resource utilization
-          </CardDescription>
+          <CardDescription>Current system resource utilization</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-muted-foreground" />
+                <Cpu className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm font-medium">CPU Usage</span>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {systemHealth.cpu.usage}% ({systemHealth.cpu.cores} cores)
               </span>
             </div>
@@ -185,15 +217,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MemoryStick className="h-4 w-4 text-muted-foreground" />
+                <MemoryStick className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm font-medium">Memory Usage</span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {formatBytes(systemHealth.memory.used)} / {formatBytes(systemHealth.memory.total)}
+              <span className="text-muted-foreground text-sm">
+                {formatBytes(systemHealth.memory.used)} /{" "}
+                {formatBytes(systemHealth.memory.total)}
               </span>
             </div>
             <Progress
-              value={(systemHealth.memory.used / systemHealth.memory.total) * 100}
+              value={
+                (systemHealth.memory.used / systemHealth.memory.total) * 100
+              }
               className="h-2"
             />
           </div>
@@ -201,15 +236,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HardDrive className="h-4 w-4 text-muted-foreground" />
+                <HardDrive className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm font-medium">Storage Usage</span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {formatBytes(systemHealth.storage.used)} / {formatBytes(systemHealth.storage.total)}
+              <span className="text-muted-foreground text-sm">
+                {formatBytes(systemHealth.storage.used)} /{" "}
+                {formatBytes(systemHealth.storage.total)}
               </span>
             </div>
             <Progress
-              value={(systemHealth.storage.used / systemHealth.storage.total) * 100}
+              value={
+                (systemHealth.storage.used / systemHealth.storage.total) * 100
+              }
               className="h-2"
             />
           </div>
@@ -217,10 +255,10 @@ export default async function SystemContent({ dictionary, lang }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-muted-foreground" />
+                <Database className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm font-medium">Database Size</span>
               </div>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {formatBytes(systemHealth.database.size)}
               </span>
             </div>
@@ -238,16 +276,15 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         <Card className="border-primary/20 hover:border-primary/40 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
+              <FileText className="text-primary h-5 w-5" />
               Audit Logs
             </CardTitle>
-            <CardDescription>
-              System activity tracking
-            </CardDescription>
+            <CardDescription>System activity tracking</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              View and search through system audit logs, user activities, and security events.
+            <p className="text-muted-foreground text-sm">
+              View and search through system audit logs, user activities, and
+              security events.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild>
@@ -256,12 +293,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
                   View Audit Logs
                 </Link>
               </Button>
-              <div className="text-xs space-y-1 mt-2">
-                <p><span className="font-medium">Total:</span> {totalLogs.toLocaleString()} logs</p>
-                <p><span className="font-medium">Today:</span> {todayLogs} events</p>
+              <div className="mt-2 space-y-1 text-xs">
+                <p>
+                  <span className="font-medium">Total:</span>{" "}
+                  {totalLogs.toLocaleString()} logs
+                </p>
+                <p>
+                  <span className="font-medium">Today:</span> {todayLogs} events
+                </p>
                 {criticalEvents > 0 && (
                   <p className="text-red-600">
-                    <span className="font-medium">Critical:</span> {criticalEvents} events
+                    <span className="font-medium">Critical:</span>{" "}
+                    {criticalEvents} events
                   </p>
                 )}
               </div>
@@ -270,19 +313,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Backups */}
-        <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
+        <Card className="border-blue-500/20 transition-colors hover:border-blue-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Archive className="h-5 w-5 text-blue-500" />
               Backups
             </CardTitle>
-            <CardDescription>
-              Data backup management
-            </CardDescription>
+            <CardDescription>Data backup management</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Create, schedule, and restore database backups. Manage backup retention policies.
+            <p className="text-muted-foreground text-sm">
+              Create, schedule, and restore database backups. Manage backup
+              retention policies.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
@@ -301,19 +343,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Cache Management */}
-        <Card className="border-green-500/20 hover:border-green-500/40 transition-colors">
+        <Card className="border-green-500/20 transition-colors hover:border-green-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-green-500" />
               Cache Management
             </CardTitle>
-            <CardDescription>
-              Cache control and optimization
-            </CardDescription>
+            <CardDescription>Cache control and optimization</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Monitor cache performance, clear specific cache keys, or flush entire cache.
+            <p className="text-muted-foreground text-sm">
+              Monitor cache performance, clear specific cache keys, or flush
+              entire cache.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
@@ -331,19 +372,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* System Health */}
-        <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
+        <Card className="border-purple-500/20 transition-colors hover:border-purple-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-purple-500" />
               Health Monitoring
             </CardTitle>
-            <CardDescription>
-              Real-time system monitoring
-            </CardDescription>
+            <CardDescription>Real-time system monitoring</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Monitor system health, performance metrics, and set up alerts for critical issues.
+            <p className="text-muted-foreground text-sm">
+              Monitor system health, performance metrics, and set up alerts for
+              critical issues.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
@@ -357,19 +397,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Database Tools */}
-        <Card className="border-orange-500/20 hover:border-orange-500/40 transition-colors">
+        <Card className="border-orange-500/20 transition-colors hover:border-orange-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5 text-orange-500" />
               Database Tools
             </CardTitle>
-            <CardDescription>
-              Database maintenance utilities
-            </CardDescription>
+            <CardDescription>Database maintenance utilities</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Optimize tables, analyze query performance, and manage database connections.
+            <p className="text-muted-foreground text-sm">
+              Optimize tables, analyze query performance, and manage database
+              connections.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">
@@ -383,19 +422,18 @@ export default async function SystemContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* System Logs */}
-        <Card className="border-red-500/20 hover:border-red-500/40 transition-colors">
+        <Card className="border-red-500/20 transition-colors hover:border-red-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-red-500" />
               System Logs
             </CardTitle>
-            <CardDescription>
-              Application and error logs
-            </CardDescription>
+            <CardDescription>Application and error logs</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              View application logs, error logs, and debug information for troubleshooting.
+            <p className="text-muted-foreground text-sm">
+              View application logs, error logs, and debug information for
+              troubleshooting.
             </p>
             <div className="flex flex-col gap-2">
               <Button asChild variant="secondary">

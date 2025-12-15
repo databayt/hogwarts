@@ -4,8 +4,9 @@
  * Currency: SDG (Sudanese Pound) - Comboni School
  */
 
-import { FeeStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
-import type { SeedPrisma, StudentRef, ClassRef } from "./types";
+import { FeeStatus, PaymentMethod, PaymentStatus } from "@prisma/client"
+
+import type { ClassRef, SeedPrisma, StudentRef } from "./types"
 
 export async function seedFees(
   prisma: SeedPrisma,
@@ -13,34 +14,76 @@ export async function seedFees(
   classes: ClassRef[],
   students: StudentRef[]
 ): Promise<void> {
-  console.log("💰 Creating fee structures and payments (SDG - Sudanese Pound)...");
+  console.log(
+    "💰 Creating fee structures and payments (SDG - Sudanese Pound)..."
+  )
 
-  const academicYear = "2025-2026";
+  const academicYear = "2025-2026"
 
   // Fee structures in SDG (Sudanese Pound)
   // Comboni School - Quality private education fees
   const feeStructures = [
-    { name: "Secondary (Grade 10-12) Annual Fee | الرسوم السنوية للمرحلة الثانوية", tuition: 1200000, admission: 180000, registration: 48000, exam: 90000, library: 30000, lab: 72000, sports: 36000, total: 1656000 },
-    { name: "Intermediate (Grade 7-9) Annual Fee | الرسوم السنوية للمرحلة المتوسطة", tuition: 900000, admission: 150000, registration: 36000, exam: 72000, library: 24000, lab: 48000, sports: 30000, total: 1260000 },
-    { name: "Primary (Grade 1-6) Annual Fee | الرسوم السنوية للمرحلة الابتدائية", tuition: 720000, admission: 120000, registration: 30000, exam: 60000, library: 18000, lab: 30000, sports: 24000, total: 1002000 },
-    { name: "Kindergarten (KG1-KG2) Annual Fee | الرسوم السنوية للروضة", tuition: 600000, admission: 90000, registration: 24000, exam: 30000, library: 12000, lab: 0, sports: 18000, total: 774000 },
-  ];
+    {
+      name: "Secondary (Grade 10-12) Annual Fee | الرسوم السنوية للمرحلة الثانوية",
+      tuition: 1200000,
+      admission: 180000,
+      registration: 48000,
+      exam: 90000,
+      library: 30000,
+      lab: 72000,
+      sports: 36000,
+      total: 1656000,
+    },
+    {
+      name: "Intermediate (Grade 7-9) Annual Fee | الرسوم السنوية للمرحلة المتوسطة",
+      tuition: 900000,
+      admission: 150000,
+      registration: 36000,
+      exam: 72000,
+      library: 24000,
+      lab: 48000,
+      sports: 30000,
+      total: 1260000,
+    },
+    {
+      name: "Primary (Grade 1-6) Annual Fee | الرسوم السنوية للمرحلة الابتدائية",
+      tuition: 720000,
+      admission: 120000,
+      registration: 30000,
+      exam: 60000,
+      library: 18000,
+      lab: 30000,
+      sports: 24000,
+      total: 1002000,
+    },
+    {
+      name: "Kindergarten (KG1-KG2) Annual Fee | الرسوم السنوية للروضة",
+      tuition: 600000,
+      admission: 90000,
+      registration: 24000,
+      exam: 30000,
+      library: 12000,
+      lab: 0,
+      sports: 18000,
+      total: 774000,
+    },
+  ]
 
-  const createdStructures: { id: string; total: number }[] = [];
-  let structureCreatedCount = 0;
-  let structureSkippedCount = 0;
+  const createdStructures: { id: string; total: number }[] = []
+  let structureCreatedCount = 0
+  let structureSkippedCount = 0
 
   for (const [index, fs] of feeStructures.entries()) {
-    const structureName = `${fs.name} ${academicYear}`;
+    const structureName = `${fs.name} ${academicYear}`
 
     // Check if fee structure already exists
     const existing = await prisma.feeStructure.findFirst({
       where: { schoolId, name: structureName },
-    });
+    })
 
     if (existing) {
-      createdStructures.push({ id: existing.id, total: fs.total });
-      structureSkippedCount++;
+      createdStructures.push({ id: existing.id, total: fs.total })
+      structureSkippedCount++
     } else {
       const structure = await prisma.feeStructure.create({
         data: {
@@ -59,27 +102,32 @@ export async function seedFees(
           installments: 3,
           isActive: true,
         },
-      });
-      createdStructures.push({ id: structure.id, total: fs.total });
-      structureCreatedCount++;
+      })
+      createdStructures.push({ id: structure.id, total: fs.total })
+      structureCreatedCount++
     }
   }
 
-  let paymentCount = 0;
-  let assignmentCreatedCount = 0;
-  let assignmentSkippedCount = 0;
+  let paymentCount = 0
+  let assignmentCreatedCount = 0
+  let assignmentSkippedCount = 0
 
   for (let i = 0; i < Math.min(150, students.length); i++) {
-    const student = students[i];
-    const structure = createdStructures[i % createdStructures.length];
-    const isPaid = i < 100;
+    const student = students[i]
+    const structure = createdStructures[i % createdStructures.length]
+    const isPaid = i < 100
 
     // Check if fee assignment already exists
     const existingAssignment = await prisma.feeAssignment.findFirst({
-      where: { schoolId, studentId: student.id, feeStructureId: structure.id, academicYear },
-    });
+      where: {
+        schoolId,
+        studentId: student.id,
+        feeStructureId: structure.id,
+        academicYear,
+      },
+    })
 
-    let feeAssignment = existingAssignment;
+    let feeAssignment = existingAssignment
 
     if (!existingAssignment) {
       feeAssignment = await prisma.feeAssignment.create({
@@ -89,22 +137,26 @@ export async function seedFees(
           feeStructureId: structure.id,
           academicYear,
           finalAmount: structure.total.toString(),
-          status: isPaid ? FeeStatus.PAID : i < 120 ? FeeStatus.PARTIAL : FeeStatus.PENDING,
+          status: isPaid
+            ? FeeStatus.PAID
+            : i < 120
+              ? FeeStatus.PARTIAL
+              : FeeStatus.PENDING,
         },
-      });
-      assignmentCreatedCount++;
+      })
+      assignmentCreatedCount++
     } else {
-      assignmentSkippedCount++;
+      assignmentSkippedCount++
     }
 
     if ((isPaid || i < 120) && feeAssignment && !existingAssignment) {
-      const paymentAmount = isPaid ? structure.total : structure.total * 0.5;
-      const paymentNumber = `PAY-2025-${String(paymentCount + 1).padStart(5, "0")}`;
+      const paymentAmount = isPaid ? structure.total : structure.total * 0.5
+      const paymentNumber = `PAY-2025-${String(paymentCount + 1).padStart(5, "0")}`
 
       // Check if payment already exists
       const existingPayment = await prisma.payment.findFirst({
         where: { schoolId, paymentNumber },
-      });
+      })
 
       if (!existingPayment) {
         await prisma.payment.create({
@@ -115,17 +167,26 @@ export async function seedFees(
             paymentNumber,
             amount: paymentAmount.toString(),
             paymentDate: new Date(),
-            paymentMethod: i % 3 === 0 ? PaymentMethod.CASH : i % 3 === 1 ? PaymentMethod.BANK_TRANSFER : PaymentMethod.CHEQUE,
+            paymentMethod:
+              i % 3 === 0
+                ? PaymentMethod.CASH
+                : i % 3 === 1
+                  ? PaymentMethod.BANK_TRANSFER
+                  : PaymentMethod.CHEQUE,
             receiptNumber: `RCP-2025-${String(paymentCount + 1).padStart(5, "0")}`,
             status: PaymentStatus.SUCCESS,
           },
-        });
-        paymentCount++;
+        })
+        paymentCount++
       }
     }
   }
 
-  console.log(`   ✅ Fee structures: ${structureCreatedCount} new, ${structureSkippedCount} already existed`);
-  console.log(`   ✅ Fee assignments: ${assignmentCreatedCount} new, ${assignmentSkippedCount} already existed`);
-  console.log(`   ✅ Payments: ${paymentCount} new\n`);
+  console.log(
+    `   ✅ Fee structures: ${structureCreatedCount} new, ${structureSkippedCount} already existed`
+  )
+  console.log(
+    `   ✅ Fee assignments: ${assignmentCreatedCount} new, ${assignmentSkippedCount} already existed`
+  )
+  console.log(`   ✅ Payments: ${paymentCount} new\n`)
 }

@@ -5,12 +5,13 @@
  * Based on tweakcn's example section design.
  */
 
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useTheme as useNextTheme } from 'next-themes'
-import type { ThemePreset } from '@/types/theme-editor'
-import { addAlphaChannel } from '@/lib/color-converter'
+import { motion } from "framer-motion"
+import { useTheme as useNextTheme } from "next-themes"
+
+import type { ThemePreset } from "@/types/theme-editor"
+import { addAlphaChannel } from "@/lib/color-converter"
 
 interface ColorBoxProps {
   color: string
@@ -19,7 +20,7 @@ interface ColorBoxProps {
 function ColorBox({ color }: ColorBoxProps) {
   return (
     <div
-      className="h-3 w-3 rounded-sm border border-border/50"
+      className="border-border/50 h-3 w-3 rounded-sm border"
       style={{ backgroundColor: color }}
     />
   )
@@ -31,15 +32,19 @@ interface PresetButtonProps {
   isActive?: boolean
 }
 
-export function PresetButton({ preset, onApply, isActive = false }: PresetButtonProps) {
+export function PresetButton({
+  preset,
+  onApply,
+  isActive = false,
+}: PresetButtonProps) {
   const { resolvedTheme } = useNextTheme()
 
   // Extract colors based on current theme mode
-  const mode = resolvedTheme === 'dark' ? 'dark' : 'light'
+  const mode = resolvedTheme === "dark" ? "dark" : "light"
   const colors = preset.styles[mode] || preset.styles.light
-  const primaryColor = colors.primary || '#3b82f6'
-  const secondaryColor = colors.secondary || '#e5e7eb'
-  const accentColor = colors.accent || '#f3f4f6'
+  const primaryColor = colors.primary || "#3b82f6"
+  const secondaryColor = colors.secondary || "#e5e7eb"
+  const accentColor = colors.accent || "#f3f4f6"
 
   // Use color converter for proper opacity handling
   const backgroundColor = addAlphaChannel(primaryColor, 0.1)
@@ -47,10 +52,10 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
   // Format label: capitalize and replace dashes with spaces
   const formattedLabel = preset.label
     ? preset.label
-        .split('-')
+        .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-    : 'Untitled'
+        .join(" ")
+    : "Untitled"
 
   return (
     <motion.button
@@ -60,8 +65,8 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
       className="group relative flex flex-row items-center gap-2.5 rounded-lg border px-4 py-2.5 transition-shadow hover:shadow-md"
       style={{
         backgroundColor,
-        borderColor: isActive ? primaryColor : 'hsl(var(--border))',
-        borderWidth: isActive ? '2px' : '1px',
+        borderColor: isActive ? primaryColor : "hsl(var(--border))",
+        borderWidth: isActive ? "2px" : "1px",
       }}
     >
       {/* Color circles */}
@@ -72,14 +77,17 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
       </div>
 
       {/* Theme name */}
-      <span className="text-xs font-medium text-foreground/80 group-hover:text-foreground">
+      <span className="text-foreground/80 group-hover:text-foreground text-xs font-medium">
         {formattedLabel}
       </span>
 
       {/* Active indicator */}
       {isActive && (
         <div className="absolute end-2 top-2">
-          <div className="h-2 w-2 rounded-full" style={{ backgroundColor: primaryColor }} />
+          <div
+            className="h-2 w-2 rounded-full"
+            style={{ backgroundColor: primaryColor }}
+          />
         </div>
       )}
     </motion.button>

@@ -1,23 +1,24 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { userNameSchema } from "@/components/marketing/pricing/lib/validations/user";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { userNameSchema } from "@/components/marketing/pricing/lib/validations/user"
 
 export type FormData = {
-  name: string;
-};
+  name: string
+}
 
 export async function updateUserName(userId: string, data: FormData) {
   try {
     const session = await auth()
 
     if (!session?.user || session?.user.id !== userId) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized")
     }
 
-    const { name } = userNameSchema.parse(data);
+    const { name } = userNameSchema.parse(data)
 
     // Update the user name.
     await db.user.update({
@@ -29,8 +30,8 @@ export async function updateUserName(userId: string, data: FormData) {
       },
     })
 
-    revalidatePath('/lab/settings');
-    return { status: "success" };
+    revalidatePath("/lab/settings")
+    return { status: "success" }
   } catch (error) {
     // console.log(error)
     return { status: "error" }

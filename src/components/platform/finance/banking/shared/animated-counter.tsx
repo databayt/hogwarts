@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { memo } from 'react'
-import CountUp from 'react-countup'
+import { memo } from "react"
+import CountUp from "react-countup"
 
 interface AnimatedCounterProps {
   amount: number
@@ -23,12 +23,12 @@ interface AnimatedCounterProps {
  */
 export const AnimatedCounter = memo(function AnimatedCounter({
   amount,
-  prefix = '$',
+  prefix = "$",
   decimals = 2,
   duration = 2,
 }: AnimatedCounterProps) {
   // Validate amount to prevent NaN issues
-  const validAmount = typeof amount === 'number' && !isNaN(amount) ? amount : 0
+  const validAmount = typeof amount === "number" && !isNaN(amount) ? amount : 0
 
   return (
     <div className="w-full">

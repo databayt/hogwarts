@@ -1,9 +1,16 @@
-"use client";
+"use client"
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, PlusIcon } from "lucide-react";
-import Link from "next/link";
+import Link from "next/link"
+import { BookOpen, PlusIcon } from "lucide-react"
+
+import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export default function AdminCoursesContent() {
   return (
@@ -21,7 +28,7 @@ export default function AdminCoursesContent() {
       <Card>
         <CardContent className="py-10">
           <div className="text-center">
-            <BookOpen className="mx-auto size-12 text-muted-foreground mb-4" />
+            <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
             <h3>No courses yet</h3>
             <p className="muted mb-4">
               Create your first course to get started with Stream LMS
@@ -38,9 +45,9 @@ export default function AdminCoursesContent() {
       </Card>
 
       {/* Course Grid - Placeholder for future implementation */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {/* Course cards will be displayed here */}
       </div>
     </div>
-  );
+  )
 }

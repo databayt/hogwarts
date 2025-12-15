@@ -13,6 +13,7 @@ This document tracks known issues, bugs, workarounds, and technical debt in the 
 **Affects:** `question-bank/form.tsx`, `templates/form.tsx`
 
 **Problem:**
+
 ```typescript
 // Lines 168-172 in question-bank/form.tsx
 <SelectContent>
@@ -24,6 +25,7 @@ This document tracks known issues, bugs, workarounds, and technical debt in the 
 ```
 
 **Impact:**
+
 - Users cannot select their actual subjects
 - Hard to test with real school data
 - Subjects are not dynamic based on school
@@ -32,19 +34,22 @@ This document tracks known issues, bugs, workarounds, and technical debt in the 
 Use the hardcoded IDs: "subject-1", "subject-2", "subject-3"
 
 **Solution:**
+
 1. Create `getSubjects(schoolId)` server action in `actions.ts`:
+
    ```typescript
    export async function getSubjects(schoolId: string) {
      const subjects = await db.subject.findMany({
        where: { schoolId },
        select: { id: true, subjectName: true },
-       orderBy: { subjectName: 'asc' }
-     });
-     return subjects;
+       orderBy: { subjectName: "asc" },
+     })
+     return subjects
    }
    ```
 
 2. Update forms to fetch and display real subjects:
+
    ```typescript
    const [subjects, setSubjects] = useState<Subject[]>([]);
 
@@ -73,12 +78,14 @@ Use the hardcoded IDs: "subject-1", "subject-2", "subject-3"
 40% of components still use hardcoded English text instead of dictionary references.
 
 **Completed (60%):**
+
 - ✅ `content.tsx` (landing page)
 - ✅ `question-bank/form.tsx`
 - ✅ `question-bank/table.tsx`
 - ✅ `question-bank/content.tsx`
 
 **Remaining (40%):**
+
 - ⏳ `question-bank/columns.tsx` - Table headers, badges, actions
 - ⏳ `templates/form.tsx` - Form labels and placeholders
 - ⏳ `templates/columns.tsx` - Column headers
@@ -86,12 +93,14 @@ Use the hardcoded IDs: "subject-1", "subject-2", "subject-3"
 - ⏳ `templates/content.tsx` - Page headers
 
 **Impact:**
+
 - Arabic users see English text in some components
 - Inconsistent user experience across languages
 - Cannot fully test RTL layout
 
 **Solution:**
 Update each component to use dictionary references:
+
 ```typescript
 // Before
 <FormLabel>Template Name</FormLabel>
@@ -114,31 +123,33 @@ Update each component to use dictionary references:
 **Affects:** `util.ts` lines 270-280, 353-355
 
 **Problem:**
+
 ```typescript
 // Error: 'QuestionType' cannot be used as a value
-import type { QuestionType, DifficultyLevel } from '@prisma/client';
+import type { DifficultyLevel, QuestionType } from "@prisma/client"
 
 // Then used as value:
 const questionTypeOrder = {
-  [QuestionType.MULTIPLE_CHOICE]: 1,  // Error!
+  [QuestionType.MULTIPLE_CHOICE]: 1, // Error!
   [QuestionType.TRUE_FALSE]: 2,
   // ...
-};
+}
 ```
 
 **Impact:**
+
 - TypeScript compilation shows errors
 - Does NOT affect runtime (enums are transpiled correctly)
 - Clutters type checking output
 
 **Workaround:**
 Change `import type` to regular `import`:
+
 ```typescript
 // Change from:
-import type { QuestionType, DifficultyLevel } from '@prisma/client';
-
+import type { DifficultyLevel, QuestionType } from "@prisma/client"
 // To:
-import { QuestionType, DifficultyLevel } from '@prisma/client';
+import { DifficultyLevel, QuestionType } from "@prisma/client"
 ```
 
 **Solution:**
@@ -156,6 +167,7 @@ Apply workaround in `util.ts` at line 1.
 **Affects:** `question-bank/content.tsx`, `templates/content.tsx`
 
 **Problem:**
+
 ```typescript
 // Lines 60-72 in question-bank/content.tsx
 include: {
@@ -169,12 +181,14 @@ include: {
 ```
 
 **Error:**
+
 ```
 Property 'subject' does not exist on type '{ ... QuestionBank }'
 Property 'analytics' does not exist on type '{ ... QuestionBank }'
 ```
 
 **Impact:**
+
 - TypeScript errors during compilation
 - Runtime works fine (Prisma generates types correctly)
 - Type safety compromised in these files
@@ -197,6 +211,7 @@ Run `pnpm prisma format` to auto-generate missing relations.
 **Affects:** `question-bank/form.tsx` lines 316, 340; `templates/form.tsx` lines 188, 209
 
 **Problem:**
+
 ```typescript
 <Input
   type="number"
@@ -207,12 +222,14 @@ Run `pnpm prisma format` to auto-generate missing relations.
 ```
 
 **Impact:**
+
 - TypeScript errors
 - Functionality works correctly
 - Type safety issue
 
 **Solution:**
 Cast the onChange handler:
+
 ```typescript
 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
   field.onChange(parseFloat(e.target.value))
@@ -232,29 +249,32 @@ onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 **Affects:** All forms
 
 **Problem:**
+
 ```typescript
 // Line 129 in question-bank/form.tsx
 if (result.success) {
-  SuccessToast("Question created!");
-  closeModal();
-  window.location.reload();  // Full page reload
+  SuccessToast("Question created!")
+  closeModal()
+  window.location.reload() // Full page reload
 }
 ```
 
 **Impact:**
+
 - Poor UX - entire page reloads
 - Loses scroll position
 - Slow on poor connections
 
 **Better Approach:**
 Use optimistic updates or SWR revalidation:
+
 ```typescript
 if (result.success) {
-  SuccessToast("Question created!");
-  closeModal();
-  mutate(); // SWR revalidation
+  SuccessToast("Question created!")
+  closeModal()
+  mutate() // SWR revalidation
   // or
-  router.refresh(); // Next.js refresh
+  router.refresh() // Next.js refresh
 }
 ```
 
@@ -273,11 +293,13 @@ if (result.success) {
 Forms show loading spinner on submit button but no skeleton loading when opening modal.
 
 **Impact:**
+
 - Users see empty form briefly on modal open
 - Feels less polished
 
 **Solution:**
 Add skeleton loading:
+
 ```typescript
 {isLoading ? <SkeletonForm /> : <QuestionBankForm />}
 ```
@@ -297,6 +319,7 @@ Add skeleton loading:
 Distribution validation only happens on server.
 
 **Impact:**
+
 - User fills in distribution
 - Submits form
 - Server returns error
@@ -304,11 +327,12 @@ Distribution validation only happens on server.
 
 **Better Approach:**
 Add real-time validation:
+
 ```typescript
 const isValid = useMemo(() => {
-  const total = calculateTotalQuestions(distribution);
-  return total > 0 && total <= 100;
-}, [distribution]);
+  const total = calculateTotalQuestions(distribution)
+  return total > 0 && total <= 100
+}, [distribution])
 ```
 
 **Estimated Fix Time:** 20 minutes
@@ -325,22 +349,25 @@ const isValid = useMemo(() => {
 **Affects:** `validation.ts` line 212
 
 **Problem:**
+
 ```typescript
 // Zod discriminated union doesn't have .partial() method
-export const updateQuestionSchema = questionBankSchema.partial();
+export const updateQuestionSchema = questionBankSchema.partial()
 // Error: Property 'partial' does not exist
 ```
 
 **Workaround:**
 Define separate update schema:
+
 ```typescript
 export const updateQuestionSchema = z.object({
   id: z.string(),
   // ... all fields optional
-});
+})
 ```
 
 **Impact:**
+
 - More boilerplate code
 - Duplication between create/update schemas
 
@@ -359,11 +386,13 @@ export const updateQuestionSchema = z.object({
 No error boundaries wrap forms/tables. Errors crash entire page.
 
 **Impact:**
+
 - Poor error handling
 - Bad UX on unexpected errors
 
 **Solution:**
 Wrap components in error boundaries:
+
 ```typescript
 <ErrorBoundary fallback={<ErrorUI />}>
   <QuestionBankForm />
@@ -377,12 +406,12 @@ Wrap components in error boundaries:
 
 ## 📊 Issue Summary
 
-| Priority | Count | Status |
-|----------|-------|--------|
-| 🔴 Critical | 2 | 1 in progress, 1 pending |
-| 🟡 Medium | 4 | All documented |
-| 🟢 Low | 4 | All documented/design |
-| **Total** | **10** | **2 active, 8 documented** |
+| Priority    | Count  | Status                     |
+| ----------- | ------ | -------------------------- |
+| 🔴 Critical | 2      | 1 in progress, 1 pending   |
+| 🟡 Medium   | 4      | All documented             |
+| 🟢 Low      | 4      | All documented/design      |
+| **Total**   | **10** | **2 active, 8 documented** |
 
 ## 🎯 Recommended Fix Order
 

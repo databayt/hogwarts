@@ -3,22 +3,22 @@
  * Handles CDN URL generation, signed URLs, and content delivery optimization
  */
 
-import { createHmac } from "crypto";
+import { createHmac } from "crypto"
 
 export interface CDNConfig {
-  enabled: boolean;
-  domain?: string; // e.g., cdn.databayt.org or CloudFront domain
-  signedUrlsEnabled: boolean;
-  signedUrlExpiry: number; // seconds
-  signedUrlSecret?: string;
+  enabled: boolean
+  domain?: string // e.g., cdn.databayt.org or CloudFront domain
+  signedUrlsEnabled: boolean
+  signedUrlExpiry: number // seconds
+  signedUrlSecret?: string
 }
 
 export interface ImageTransformOptions {
-  width?: number;
-  height?: number;
-  quality?: number; // 1-100
-  format?: "webp" | "avif" | "jpeg" | "png";
-  fit?: "cover" | "contain" | "fill" | "inside" | "outside";
+  width?: number
+  height?: number
+  quality?: number // 1-100
+  format?: "webp" | "avif" | "jpeg" | "png"
+  fit?: "cover" | "contain" | "fill" | "inside" | "outside"
 }
 
 /**
@@ -31,7 +31,7 @@ export function getCDNConfig(): CDNConfig {
     signedUrlsEnabled: process.env.CDN_SIGNED_URLS === "true",
     signedUrlExpiry: parseInt(process.env.CDN_SIGNED_URL_EXPIRY || "3600"),
     signedUrlSecret: process.env.CDN_SIGNED_URL_SECRET,
-  };
+  }
 }
 
 /**
@@ -39,20 +39,20 @@ export function getCDNConfig(): CDNConfig {
  * Replaces storage domain with CDN domain for faster delivery
  */
 export function generateCDNUrl(storageUrl: string): string {
-  const config = getCDNConfig();
+  const config = getCDNConfig()
 
   if (!config.enabled || !config.domain) {
-    return storageUrl;
+    return storageUrl
   }
 
   try {
-    const url = new URL(storageUrl);
+    const url = new URL(storageUrl)
     // Replace storage domain with CDN domain
-    url.hostname = config.domain;
-    return url.toString();
+    url.hostname = config.domain
+    return url.toString()
   } catch {
     // If URL parsing fails, return original
-    return storageUrl;
+    return storageUrl
   }
 }
 
@@ -60,35 +60,32 @@ export function generateCDNUrl(storageUrl: string): string {
  * Generate signed URL with expiration
  * Prevents hotlinking and unauthorized access
  */
-export function generateSignedUrl(
-  url: string,
-  expirySeconds?: number
-): string {
-  const config = getCDNConfig();
+export function generateSignedUrl(url: string, expirySeconds?: number): string {
+  const config = getCDNConfig()
 
   if (!config.signedUrlsEnabled || !config.signedUrlSecret) {
-    return url;
+    return url
   }
 
-  const expiry = expirySeconds || config.signedUrlExpiry;
-  const expiresAt = Math.floor(Date.now() / 1000) + expiry;
+  const expiry = expirySeconds || config.signedUrlExpiry
+  const expiresAt = Math.floor(Date.now() / 1000) + expiry
 
   try {
-    const urlObj = new URL(url);
-    const pathAndQuery = urlObj.pathname + urlObj.search;
+    const urlObj = new URL(url)
+    const pathAndQuery = urlObj.pathname + urlObj.search
 
     // Create signature
-    const hmac = createHmac("sha256", config.signedUrlSecret);
-    hmac.update(`${pathAndQuery}${expiresAt}`);
-    const signature = hmac.digest("base64url");
+    const hmac = createHmac("sha256", config.signedUrlSecret)
+    hmac.update(`${pathAndQuery}${expiresAt}`)
+    const signature = hmac.digest("base64url")
 
     // Add signature and expiry to URL
-    urlObj.searchParams.set("signature", signature);
-    urlObj.searchParams.set("expires", expiresAt.toString());
+    urlObj.searchParams.set("signature", signature)
+    urlObj.searchParams.set("expires", expiresAt.toString())
 
-    return urlObj.toString();
+    return urlObj.toString()
   } catch {
-    return url;
+    return url
   }
 }
 
@@ -97,40 +94,40 @@ export function generateSignedUrl(
  * Server-side validation of signed URLs
  */
 export function verifySignedUrl(url: string): boolean {
-  const config = getCDNConfig();
+  const config = getCDNConfig()
 
   if (!config.signedUrlsEnabled || !config.signedUrlSecret) {
-    return true; // If signing not enabled, all URLs are valid
+    return true // If signing not enabled, all URLs are valid
   }
 
   try {
-    const urlObj = new URL(url);
-    const signature = urlObj.searchParams.get("signature");
-    const expires = urlObj.searchParams.get("expires");
+    const urlObj = new URL(url)
+    const signature = urlObj.searchParams.get("signature")
+    const expires = urlObj.searchParams.get("expires")
 
     if (!signature || !expires) {
-      return false;
+      return false
     }
 
     // Check expiry
-    const expiresAt = parseInt(expires);
-    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = parseInt(expires)
+    const now = Math.floor(Date.now() / 1000)
     if (expiresAt < now) {
-      return false; // Expired
+      return false // Expired
     }
 
     // Verify signature
-    urlObj.searchParams.delete("signature");
-    urlObj.searchParams.delete("expires");
-    const pathAndQuery = urlObj.pathname + urlObj.search;
+    urlObj.searchParams.delete("signature")
+    urlObj.searchParams.delete("expires")
+    const pathAndQuery = urlObj.pathname + urlObj.search
 
-    const hmac = createHmac("sha256", config.signedUrlSecret);
-    hmac.update(`${pathAndQuery}${expiresAt}`);
-    const expectedSignature = hmac.digest("base64url");
+    const hmac = createHmac("sha256", config.signedUrlSecret)
+    hmac.update(`${pathAndQuery}${expiresAt}`)
+    const expectedSignature = hmac.digest("base64url")
 
-    return signature === expectedSignature;
+    return signature === expectedSignature
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -142,25 +139,25 @@ export function generateOptimizedImageUrl(
   imageUrl: string,
   options: ImageTransformOptions = {}
 ): string {
-  const config = getCDNConfig();
+  const config = getCDNConfig()
 
   if (!config.enabled) {
-    return imageUrl;
+    return imageUrl
   }
 
   try {
-    const url = new URL(imageUrl);
+    const url = new URL(imageUrl)
 
     // Add transformation parameters
-    if (options.width) url.searchParams.set("w", options.width.toString());
-    if (options.height) url.searchParams.set("h", options.height.toString());
-    if (options.quality) url.searchParams.set("q", options.quality.toString());
-    if (options.format) url.searchParams.set("f", options.format);
-    if (options.fit) url.searchParams.set("fit", options.fit);
+    if (options.width) url.searchParams.set("w", options.width.toString())
+    if (options.height) url.searchParams.set("h", options.height.toString())
+    if (options.quality) url.searchParams.set("q", options.quality.toString())
+    if (options.format) url.searchParams.set("f", options.format)
+    if (options.fit) url.searchParams.set("fit", options.fit)
 
-    return url.toString();
+    return url.toString()
   } catch {
-    return imageUrl;
+    return imageUrl
   }
 }
 
@@ -174,10 +171,10 @@ export function generateResponsiveSrcSet(
 ): string {
   return widths
     .map((width) => {
-      const url = generateOptimizedImageUrl(imageUrl, { width, format: "webp" });
-      return `${url} ${width}w`;
+      const url = generateOptimizedImageUrl(imageUrl, { width, format: "webp" })
+      return `${url} ${width}w`
     })
-    .join(", ");
+    .join(", ")
 }
 
 /**
@@ -192,14 +189,14 @@ export function generateThumbnailUrl(
     sm: { width: 150, height: 150 },
     md: { width: 300, height: 300 },
     lg: { width: 600, height: 600 },
-  };
+  }
 
   return generateOptimizedImageUrl(imageUrl, {
     ...sizes[size],
     quality: 80,
     format: "webp",
     fit: "cover",
-  });
+  })
 }
 
 /**
@@ -209,7 +206,7 @@ export function generateThumbnailUrl(
 export function generatePrefetchLinks(urls: string[]): string {
   return urls
     .map((url) => `<link rel="prefetch" href="${url}" as="image" />`)
-    .join("\n");
+    .join("\n")
 }
 
 /**
@@ -220,14 +217,14 @@ export function getCacheControlHeaders(
   fileType: string,
   isPublic = false
 ): Record<string, string> {
-  const publicPrefix = isPublic ? "public" : "private";
+  const publicPrefix = isPublic ? "public" : "private"
 
   // Image files: cache for 1 year
   if (fileType.startsWith("image/")) {
     return {
       "Cache-Control": `${publicPrefix}, max-age=31536000, immutable`,
       "CDN-Cache-Control": "max-age=31536000",
-    };
+    }
   }
 
   // Video files: cache for 1 week
@@ -235,7 +232,7 @@ export function getCacheControlHeaders(
     return {
       "Cache-Control": `${publicPrefix}, max-age=604800`,
       "CDN-Cache-Control": "max-age=604800",
-    };
+    }
   }
 
   // Documents: cache for 1 day
@@ -247,14 +244,14 @@ export function getCacheControlHeaders(
     return {
       "Cache-Control": `${publicPrefix}, max-age=86400`,
       "CDN-Cache-Control": "max-age=86400",
-    };
+    }
   }
 
   // Default: cache for 1 hour
   return {
     "Cache-Control": `${publicPrefix}, max-age=3600`,
     "CDN-Cache-Control": "max-age=3600",
-  };
+  }
 }
 
 /**
@@ -262,10 +259,10 @@ export function getCacheControlHeaders(
  * Implementation depends on CDN provider (CloudFront, Vercel, etc.)
  */
 export async function purgeCDNCache(urls: string[]): Promise<void> {
-  const config = getCDNConfig();
+  const config = getCDNConfig()
 
   if (!config.enabled) {
-    return;
+    return
   }
 
   // Implementation depends on CDN provider
@@ -285,5 +282,5 @@ export async function purgeCDNCache(urls: string[]): Promise<void> {
   //   body: JSON.stringify({ urls }),
   // });
 
-  console.log(`[CDN] Would purge cache for ${urls.length} URLs`, urls);
+  console.log(`[CDN] Would purge cache for ${urls.length} URLs`, urls)
 }

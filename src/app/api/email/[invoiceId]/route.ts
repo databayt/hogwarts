@@ -23,10 +23,10 @@
  * @see /components/template/SendInvoiceEmail for template
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
 export async function POST() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 // import { auth } from "@/auth";
 // import { sendEmail } from "@/components/invoice/email.config";

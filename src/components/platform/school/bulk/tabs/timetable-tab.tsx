@@ -1,11 +1,18 @@
-'use client'
+"use client"
 
-import type { Locale } from '@/components/internationalization/config'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Upload, Download, Clock } from 'lucide-react'
+import { Clock, Download, Upload } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   dictionary: Dictionary
@@ -14,12 +21,13 @@ interface Props {
 
 export function TimetableTab({ dictionary, lang }: Props) {
   function downloadTemplate() {
-    const template = 'Day,Period,StartTime,EndTime,Subject,Teacher,Classroom,Class\nMonday,1,08:00,08:45,Mathematics,Mr. Ahmed,Room 101,Grade 10A\nMonday,2,08:50,09:35,English,Ms. Fatima,Room 102,Grade 10A'
-    const blob = new Blob([template], { type: 'text/csv' })
+    const template =
+      "Day,Period,StartTime,EndTime,Subject,Teacher,Classroom,Class\nMonday,1,08:00,08:45,Mathematics,Mr. Ahmed,Room 101,Grade 10A\nMonday,2,08:50,09:35,English,Ms. Fatima,Room 102,Grade 10A"
+    const blob = new Blob([template], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = 'timetable-template.csv'
+    a.download = "timetable-template.csv"
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -31,7 +39,7 @@ export function TimetableTab({ dictionary, lang }: Props) {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-muted-foreground" />
+            <Clock className="text-muted-foreground h-5 w-5" />
             <div>
               <CardTitle>Bulk Timetable Import</CardTitle>
               <CardDescription>
@@ -51,11 +59,7 @@ export function TimetableTab({ dictionary, lang }: Props) {
               Download Template
             </Button>
             <div className="flex-1">
-              <Input
-                type="file"
-                accept=".csv"
-                disabled
-              />
+              <Input type="file" accept=".csv" disabled />
             </div>
             <Button disabled>
               <Upload className="mr-2 h-4 w-4" />
@@ -64,17 +68,18 @@ export function TimetableTab({ dictionary, lang }: Props) {
           </div>
 
           <div className="rounded-md border p-4">
-            <h4 className="font-medium mb-2">CSV Format</h4>
-            <code className="text-sm text-muted-foreground block">
+            <h4 className="mb-2 font-medium">CSV Format</h4>
+            <code className="text-muted-foreground block text-sm">
               Day,Period,StartTime,EndTime,Subject,Teacher,Classroom,Class
             </code>
-            <p className="text-xs text-muted-foreground mt-2">
-              Day options: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
+            <p className="text-muted-foreground mt-2 text-xs">
+              Day options: Monday, Tuesday, Wednesday, Thursday, Friday,
+              Saturday
             </p>
           </div>
 
-          <div className="rounded-md bg-muted p-4 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="bg-muted rounded-md p-4 text-center">
+            <p className="text-muted-foreground text-sm">
               Bulk timetable import will be available in a future update.
             </p>
           </div>

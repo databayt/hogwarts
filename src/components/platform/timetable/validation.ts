@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod"
 
 /**
  * Timetable Validation Schemas
@@ -32,26 +32,26 @@ import { z } from 'zod'
 export const dayOfWeekSchema = z
   .number()
   .int()
-  .min(0, 'Day must be between 0 (Sunday) and 6 (Saturday)')
-  .max(6, 'Day must be between 0 (Sunday) and 6 (Saturday)')
+  .min(0, "Day must be between 0 (Sunday) and 6 (Saturday)")
+  .max(6, "Day must be between 0 (Sunday) and 6 (Saturday)")
 
 export const weekOffsetSchema = z
   .union([z.literal(0), z.literal(1)])
   .default(0)
-  .describe('0 = current week, 1 = next week')
+  .describe("0 = current week, 1 = next week")
 
 export const cuidSchema = z
   .string()
-  .min(1, 'ID is required')
-  .regex(/^c[a-z0-9]{24}$/, 'Invalid CUID format')
+  .min(1, "ID is required")
+  .regex(/^c[a-z0-9]{24}$/, "Invalid CUID format")
 
 export const workingDaysSchema = z
   .array(dayOfWeekSchema)
-  .min(1, 'At least one working day is required')
-  .max(7, 'Cannot have more than 7 working days')
+  .min(1, "At least one working day is required")
+  .max(7, "Cannot have more than 7 working days")
   .refine(
     (days) => new Set(days).size === days.length,
-    'Working days must be unique'
+    "Working days must be unique"
   )
 
 // ============================================================================
@@ -130,7 +130,7 @@ export const upsertSchoolWeekConfigSchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(10, 'Lunch period cannot be after period 10')
+    .max(10, "Lunch period cannot be after period 10")
     .nullable()
     .optional(),
   extraLunchRules: z
@@ -165,7 +165,7 @@ export const bulkUpsertTimetableSlotsSchema = z.object({
 
 export const exportTimetableSchema = z.object({
   termId: cuidSchema,
-  format: z.enum(['json', 'csv', 'pdf']).default('json'),
+  format: z.enum(["json", "csv", "pdf"]).default("json"),
   includeMetadata: z.boolean().default(true),
   filters: z
     .object({
@@ -179,7 +179,7 @@ export const exportTimetableSchema = z.object({
 
 export const importTimetableSchema = z.object({
   termId: cuidSchema,
-  format: z.enum(['json', 'csv']),
+  format: z.enum(["json", "csv"]),
   data: z.union([
     z.string(), // CSV string
     z.array(
@@ -193,7 +193,7 @@ export const importTimetableSchema = z.object({
       })
     ), // JSON array
   ]),
-  mode: z.enum(['merge', 'replace']).default('merge'),
+  mode: z.enum(["merge", "replace"]).default("merge"),
 })
 
 // ============================================================================
@@ -202,7 +202,7 @@ export const importTimetableSchema = z.object({
 
 export const resolveConflictSchema = z.object({
   conflictId: cuidSchema,
-  resolution: z.enum(['keep_first', 'keep_second', 'remove_both', 'reassign']),
+  resolution: z.enum(["keep_first", "keep_second", "remove_both", "reassign"]),
   reassignTo: z
     .object({
       teacherId: cuidSchema.optional(),
@@ -216,10 +216,10 @@ export const resolveConflictSchema = z.object({
 export const autoResolveConflictsSchema = z.object({
   termId: cuidSchema,
   strategy: z.enum([
-    'prefer_senior_teacher',
-    'prefer_larger_class',
-    'prefer_core_subjects',
-    'distribute_evenly',
+    "prefer_senior_teacher",
+    "prefer_larger_class",
+    "prefer_core_subjects",
+    "distribute_evenly",
   ]),
   dryRun: z.boolean().default(true),
 })
@@ -230,15 +230,15 @@ export const autoResolveConflictsSchema = z.object({
 
 export const getTimetableStatsSchema = z.object({
   termId: cuidSchema,
-  groupBy: z.enum(['teacher', 'class', 'subject', 'room']).optional(),
+  groupBy: z.enum(["teacher", "class", "subject", "room"]).optional(),
   metrics: z
     .array(
       z.enum([
-        'total_periods',
-        'utilization_rate',
-        'conflict_count',
-        'free_periods',
-        'back_to_back_classes',
+        "total_periods",
+        "utilization_rate",
+        "conflict_count",
+        "free_periods",
+        "back_to_back_classes",
       ])
     )
     .optional(),
@@ -251,12 +251,18 @@ export const getTimetableStatsSchema = z.object({
 export type GetWeeklyTimetableInput = z.infer<typeof getWeeklyTimetableSchema>
 export type UpsertTimetableSlotInput = z.infer<typeof upsertTimetableSlotSchema>
 export type DeleteTimetableSlotInput = z.infer<typeof deleteTimetableSlotSchema>
-export type UpsertSchoolWeekConfigInput = z.infer<typeof upsertSchoolWeekConfigSchema>
-export type BulkUpsertTimetableSlotsInput = z.infer<typeof bulkUpsertTimetableSlotsSchema>
+export type UpsertSchoolWeekConfigInput = z.infer<
+  typeof upsertSchoolWeekConfigSchema
+>
+export type BulkUpsertTimetableSlotsInput = z.infer<
+  typeof bulkUpsertTimetableSlotsSchema
+>
 export type ExportTimetableInput = z.infer<typeof exportTimetableSchema>
 export type ImportTimetableInput = z.infer<typeof importTimetableSchema>
 export type ResolveConflictInput = z.infer<typeof resolveConflictSchema>
-export type AutoResolveConflictsInput = z.infer<typeof autoResolveConflictsSchema>
+export type AutoResolveConflictsInput = z.infer<
+  typeof autoResolveConflictsSchema
+>
 export type GetTimetableStatsInput = z.infer<typeof getTimetableStatsSchema>
 export type SuggestFreeSlotsInput = z.infer<typeof suggestFreeSlotsSchema>
 
@@ -286,7 +292,11 @@ export const validateTeacherAvailability = (
   teacherId: string,
   dayOfWeek: number,
   periodId: string,
-  existingSlots: Array<{ teacherId: string; dayOfWeek: number; periodId: string }>
+  existingSlots: Array<{
+    teacherId: string
+    dayOfWeek: number
+    periodId: string
+  }>
 ): boolean => {
   const hasConflict = existingSlots.some(
     (slot) =>
@@ -307,7 +317,11 @@ export const validateRoomAvailability = (
   classroomId: string,
   dayOfWeek: number,
   periodId: string,
-  existingSlots: Array<{ classroomId: string; dayOfWeek: number; periodId: string }>
+  existingSlots: Array<{
+    classroomId: string
+    dayOfWeek: number
+    periodId: string
+  }>
 ): boolean => {
   const hasConflict = existingSlots.some(
     (slot) =>
@@ -392,7 +406,9 @@ export const validateTeacherTravelTime = (
   }>
 ): { isValid: boolean; message?: string } => {
   const teacherSlots = existingSlots
-    .filter((slot) => slot.teacherId === teacherId && slot.dayOfWeek === dayOfWeek)
+    .filter(
+      (slot) => slot.teacherId === teacherId && slot.dayOfWeek === dayOfWeek
+    )
     .sort((a, b) => a.periodOrder - b.periodOrder)
 
   // Check if this would create back-to-back classes in different rooms

@@ -3,7 +3,7 @@ title: "Icons"
 description: "Unified icon system with 60+ icons following shadcn patterns"
 ---
 
-import { Icons, AnthropicShowcase } from "@/components/icons"
+import { AnthropicShowcase, Icons } from "@/components/icons"
 
 # Icons
 
@@ -24,8 +24,8 @@ export function Example() {
   return (
     <div className="flex items-center gap-2">
       <Icons.github className="size-5" />
-      <Icons.react className="size-5 text-primary" />
-      <Icons.typescript className="size-5 icon-accent" />
+      <Icons.react className="text-primary size-5" />
+      <Icons.typescript className="icon-accent size-5" />
     </div>
   )
 }
@@ -33,14 +33,14 @@ export function Example() {
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Theme-aware** | Icons use `currentColor` - automatically adapt to light/dark mode |
-| **60+ icons** | Brand, UI, rating, and illustrative icons in one namespace |
-| **Tree-shakable** | Import individual icons for smaller bundles |
-| **Type-safe** | Full TypeScript support with `IconName` type |
-| **Semantic classes** | `.icon-primary`, `.icon-destructive`, etc. |
-| **Size utilities** | Modern `size-*` classes (size-4, size-5, size-6) |
+| Feature              | Description                                                       |
+| -------------------- | ----------------------------------------------------------------- |
+| **Theme-aware**      | Icons use `currentColor` - automatically adapt to light/dark mode |
+| **60+ icons**        | Brand, UI, rating, and illustrative icons in one namespace        |
+| **Tree-shakable**    | Import individual icons for smaller bundles                       |
+| **Type-safe**        | Full TypeScript support with `IconName` type                      |
+| **Semantic classes** | `.icon-primary`, `.icon-destructive`, etc.                        |
+| **Size utilities**   | Modern `size-*` classes (size-4, size-5, size-6)                  |
 
 ## Import Patterns
 
@@ -67,117 +67,117 @@ import { GitHubIcon, ReactIcon } from "@/components/icons"
 ```tsx
 import { Icon } from "@/components/icons"
 
-<Icon name="github" className="size-5" />
+;<Icon name="github" className="size-5" />
 ```
 
 ## Available Icons
 
 ### Integration Icons
 
-| Icon | Name | Usage |
-|------|------|-------|
-| `nextjs` | Next.js | `<Icons.nextjs />` |
-| `react` | React | `<Icons.react />` |
-| `typescript` | TypeScript | `<Icons.typescript />` |
+| Icon          | Name         | Usage                   |
+| ------------- | ------------ | ----------------------- |
+| `nextjs`      | Next.js      | `<Icons.nextjs />`      |
+| `react`       | React        | `<Icons.react />`       |
+| `typescript`  | TypeScript   | `<Icons.typescript />`  |
 | `tailwindcss` | Tailwind CSS | `<Icons.tailwindcss />` |
-| `shadcnui` | shadcn/ui | `<Icons.shadcnui />` |
-| `prisma` | Prisma | `<Icons.prisma />` |
-| `zod` | Zod | `<Icons.zod />` |
-| `github` | GitHub | `<Icons.github />` |
-| `git` | Git | `<Icons.git />` |
-| `figma` | Figma | `<Icons.figma />` |
-| `discord` | Discord | `<Icons.discord />` |
-| `framer` | Framer | `<Icons.framer />` |
+| `shadcnui`    | shadcn/ui    | `<Icons.shadcnui />`    |
+| `prisma`      | Prisma       | `<Icons.prisma />`      |
+| `zod`         | Zod          | `<Icons.zod />`         |
+| `github`      | GitHub       | `<Icons.github />`      |
+| `git`         | Git          | `<Icons.git />`         |
+| `figma`       | Figma        | `<Icons.figma />`       |
+| `discord`     | Discord      | `<Icons.discord />`     |
+| `framer`      | Framer       | `<Icons.framer />`      |
 
 ### Development Icons
 
-| Icon | Name | Usage |
-|------|------|-------|
-| `claude` | Claude AI | `<Icons.claude />` |
-| `mcp` | MCP | `<Icons.mcp />` |
-| `cursor` | Cursor | `<Icons.cursor />` |
-| `python` | Python | `<Icons.python />` |
-| `rust` | Rust | `<Icons.rust />` |
-| `r` | R Language | `<Icons.r />` |
+| Icon     | Name       | Usage              |
+| -------- | ---------- | ------------------ |
+| `claude` | Claude AI  | `<Icons.claude />` |
+| `mcp`    | MCP        | `<Icons.mcp />`    |
+| `cursor` | Cursor     | `<Icons.cursor />` |
+| `python` | Python     | `<Icons.python />` |
+| `rust`   | Rust       | `<Icons.rust />`   |
+| `r`      | R Language | `<Icons.r />`      |
 
 ### System Icons
 
-| Icon | Name | Usage |
-|------|------|-------|
-| `logo` | Platform Logo | `<Icons.logo />` |
-| `dashboard` | Dashboard | `<Icons.dashboard />` |
-| `authentication` | Auth | `<Icons.authentication />` |
-| `subscription` | Subscription | `<Icons.subscription />` |
-| `invoice` | Invoice | `<Icons.invoice />` |
-| `trash` | Delete | `<Icons.trash />` |
-| `notification` | Notification | `<Icons.notification />` |
+| Icon             | Name          | Usage                      |
+| ---------------- | ------------- | -------------------------- |
+| `logo`           | Platform Logo | `<Icons.logo />`           |
+| `dashboard`      | Dashboard     | `<Icons.dashboard />`      |
+| `authentication` | Auth          | `<Icons.authentication />` |
+| `subscription`   | Subscription  | `<Icons.subscription />`   |
+| `invoice`        | Invoice       | `<Icons.invoice />`        |
+| `trash`          | Delete        | `<Icons.trash />`          |
+| `notification`   | Notification  | `<Icons.notification />`   |
 
 ### Anthropic Icons
 
-<div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 my-6">
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+<div className="my-6 grid grid-cols-4 gap-4 sm:grid-cols-6 md:grid-cols-8">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicA className="size-8" />
-    <span className="text-xs text-muted-foreground">anthropicA</span>
+    <span className="text-muted-foreground text-xs">anthropicA</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicArrowRight className="size-8" />
-    <span className="text-xs text-muted-foreground">arrowRight</span>
+    <span className="text-muted-foreground text-xs">arrowRight</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicChevronDown className="size-8" />
-    <span className="text-xs text-muted-foreground">chevronDown</span>
+    <span className="text-muted-foreground text-xs">chevronDown</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicExternalLink className="size-8" />
-    <span className="text-xs text-muted-foreground">externalLink</span>
+    <span className="text-muted-foreground text-xs">externalLink</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicLinkedIn className="size-8" />
-    <span className="text-xs text-muted-foreground">linkedIn</span>
+    <span className="text-muted-foreground text-xs">linkedIn</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicPlay className="size-8" />
-    <span className="text-xs text-muted-foreground">play</span>
+    <span className="text-muted-foreground text-xs">play</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicYouTube className="size-8" />
-    <span className="text-xs text-muted-foreground">youTube</span>
+    <span className="text-muted-foreground text-xs">youTube</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicXTwitter className="size-8" />
-    <span className="text-xs text-muted-foreground">xTwitter</span>
+    <span className="text-muted-foreground text-xs">xTwitter</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicQuote className="size-8" />
-    <span className="text-xs text-muted-foreground">quote</span>
+    <span className="text-muted-foreground text-xs">quote</span>
   </div>
-  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+  <div className="bg-card flex flex-col items-center gap-2 rounded-lg border p-3">
     <Icons.anthropicHandsBuild className="size-8" />
-    <span className="text-xs text-muted-foreground">handsBuild</span>
+    <span className="text-muted-foreground text-xs">handsBuild</span>
   </div>
 </div>
 
-| Icon | Name | Usage |
-|------|------|-------|
-| `anthropicA` | Anthropic Logo | `<Icons.anthropicA />` |
-| `anthropicArrowRight` | Arrow Right | `<Icons.anthropicArrowRight />` |
-| `anthropicChevronDown` | Chevron Down | `<Icons.anthropicChevronDown />` |
-| `anthropicExternalLink` | External Link | `<Icons.anthropicExternalLink />` |
-| `anthropicLinkedIn` | LinkedIn | `<Icons.anthropicLinkedIn />` |
-| `anthropicPlay` | Play | `<Icons.anthropicPlay />` |
-| `anthropicYouTube` | YouTube | `<Icons.anthropicYouTube />` |
-| `anthropicXTwitter` | X/Twitter | `<Icons.anthropicXTwitter />` |
-| `anthropicQuote` | Quote | `<Icons.anthropicQuote />` |
-| `anthropicHandsBuild` | Hands Build | `<Icons.anthropicHandsBuild />` |
+| Icon                    | Name           | Usage                             |
+| ----------------------- | -------------- | --------------------------------- |
+| `anthropicA`            | Anthropic Logo | `<Icons.anthropicA />`            |
+| `anthropicArrowRight`   | Arrow Right    | `<Icons.anthropicArrowRight />`   |
+| `anthropicChevronDown`  | Chevron Down   | `<Icons.anthropicChevronDown />`  |
+| `anthropicExternalLink` | External Link  | `<Icons.anthropicExternalLink />` |
+| `anthropicLinkedIn`     | LinkedIn       | `<Icons.anthropicLinkedIn />`     |
+| `anthropicPlay`         | Play           | `<Icons.anthropicPlay />`         |
+| `anthropicYouTube`      | YouTube        | `<Icons.anthropicYouTube />`      |
+| `anthropicXTwitter`     | X/Twitter      | `<Icons.anthropicXTwitter />`     |
+| `anthropicQuote`        | Quote          | `<Icons.anthropicQuote />`        |
+| `anthropicHandsBuild`   | Hands Build    | `<Icons.anthropicHandsBuild />`   |
 
 ### Rating Icons
 
-| Icon | Name | Usage |
-|------|------|-------|
+| Icon        | Name      | Usage                 |
+| ----------- | --------- | --------------------- |
 | `excellent` | Excellent | `<Icons.excellent />` |
-| `good` | Good | `<Icons.good />` |
-| `average` | Average | `<Icons.average />` |
-| `poor` | Poor | `<Icons.poor />` |
+| `good`      | Good      | `<Icons.good />`      |
+| `average`   | Average   | `<Icons.average />`   |
+| `poor`      | Poor      | `<Icons.poor />`      |
 
 ## Styling
 
@@ -198,7 +198,7 @@ Icons inherit color from parent by default:
 
 ```tsx
 <div className="text-primary">
-  <Icons.github />  {/* Inherits text-primary */}
+  <Icons.github /> {/* Inherits text-primary */}
 </div>
 ```
 
@@ -249,13 +249,13 @@ src/components/icons/
 
 ### 1. Choose the Right Category
 
-| Category | Use For |
-|----------|---------|
-| `system.tsx` | Core UI icons (logo, dashboard, trash) |
-| `integrations.tsx` | Third-party brands (GitHub, Discord) |
-| `programming.tsx` | Languages (Python, Rust, TypeScript) |
-| `development.tsx` | Dev tools (Cursor, MCP, Claude) |
-| `anthropic.tsx` | Anthropic design system icons |
+| Category           | Use For                                |
+| ------------------ | -------------------------------------- |
+| `system.tsx`       | Core UI icons (logo, dashboard, trash) |
+| `integrations.tsx` | Third-party brands (GitHub, Discord)   |
+| `programming.tsx`  | Languages (Python, Rust, TypeScript)   |
+| `development.tsx`  | Dev tools (Cursor, MCP, Claude)        |
+| `anthropic.tsx`    | Anthropic design system icons          |
 
 ### 2. Add the Icon Component
 
@@ -319,9 +319,10 @@ For complex illustrative icons:
 
 ```tsx
 import Image from "next/image"
+
 import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
 
-<Image
+;<Image
   src={ANTHROPIC_ILLUSTRATIONS.category01}
   alt="Category illustration"
   width={200}
@@ -340,10 +341,11 @@ import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
 ANTHROPIC_ILLUSTRATIONS.handsBuild
 ANTHROPIC_ILLUSTRATIONS.handsStack
 ANTHROPIC_ILLUSTRATIONS.objectsPuzzle
-ANTHROPIC_ILLUSTRATIONS.category01  // through category14
+ANTHROPIC_ILLUSTRATIONS.category01 // through category14
 ```
 
 These use CSS variables for theming:
+
 - `--icon-dark` (default: #141413)
 - `--icon-light` (default: #FAF9F5)
 
@@ -368,8 +370,8 @@ const Icon = getIconForLanguage("rs")  // Returns RustIcon
 ```tsx
 import { getAllIconNames, getIconCount } from "@/components/icons"
 
-const names = getAllIconNames()  // ["logo", "github", "react", ...]
-const count = getIconCount()     // 60+
+const names = getAllIconNames() // ["logo", "github", "react", ...]
+const count = getIconCount() // 60+
 ```
 
 ### Type-Safe Icon Name

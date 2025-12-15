@@ -1,28 +1,34 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { ModalProvider } from "@/components/atom/modal/context";
-import { PageHeadingProvider } from "@/components/platform/context/page-heading-context";
-import { PageHeadingDisplay } from "@/components/platform/context/page-heading-display";
-import SaasHeader from "@/components/template/saas-header/content";
-import SaasSidebar from "@/components/template/saas-sidebar/content";
-import { isRTL as checkIsRTL, type Locale } from "@/components/internationalization/config";
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { ModalProvider } from "@/components/atom/modal/context"
+import {
+  isRTL as checkIsRTL,
+  type Locale,
+} from "@/components/internationalization/config"
+import { PageHeadingProvider } from "@/components/platform/context/page-heading-context"
+import { PageHeadingDisplay } from "@/components/platform/context/page-heading-display"
+import SaasHeader from "@/components/template/saas-header/content"
+import SaasSidebar from "@/components/template/saas-sidebar/content"
 
 interface OperatorLayoutProps {
-  children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+  children: React.ReactNode
+  params: Promise<{ lang: string }>
 }
 
 export default async function OperatorLayout({
   children,
   params,
 }: Readonly<OperatorLayoutProps>) {
-  const { lang } = await params;
-  const isRTL = checkIsRTL(lang as Locale);
+  const { lang } = await params
+  const isRTL = checkIsRTL(lang as Locale)
 
   return (
     <SidebarProvider>
       <ModalProvider>
         <PageHeadingProvider>
-          <div className="flex min-h-svh w-full flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div
+            className="flex min-h-svh w-full flex-col"
+            dir={isRTL ? "rtl" : "ltr"}
+          >
             <SaasHeader />
             <div className="flex pt-6">
               <SaasSidebar />
@@ -37,5 +43,5 @@ export default async function OperatorLayout({
         </PageHeadingProvider>
       </ModalProvider>
     </SidebarProvider>
-  );
+  )
 }

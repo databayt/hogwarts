@@ -9,30 +9,35 @@ The Fees module manages all student-related fees including tuition, registration
 ## Key Features
 
 ### 1. Fee Structure Management
+
 - Define fee types (tuition, registration, transportation, etc.)
 - Set amounts by year level, program, or custom criteria
 - Schedule recurring fees (monthly, quarterly, annually)
 - Early bird discounts and promotions
 
 ### 2. Payment Plans
+
 - Flexible installment schedules
 - Custom payment dates
 - Down payment requirements
 - Auto-generate invoices for installments
 
 ### 3. Late Fee Automation
+
 - Configurable grace periods
 - Percentage or fixed late fees
 - Automatic calculation and application
 - Waiver management with approval
 
 ### 4. Family Billing
+
 - Single invoice for multiple students
 - Family discounts (10% 2nd child, 20% 3rd+ child)
 - Split billing between guardians
 - Combined payment history
 
 ### 5. Payment Processing
+
 - Multiple payment methods (card, bank transfer, cash, check)
 - Online payment portal
 - Payment confirmation emails
@@ -41,6 +46,7 @@ The Fees module manages all student-related fees including tuition, registration
 ## Data Models
 
 ### FeeStructure
+
 ```typescript
 {
   id: string
@@ -59,6 +65,7 @@ The Fees module manages all student-related fees including tuition, registration
 ```
 
 ### StudentFee
+
 ```typescript
 {
   id: string
@@ -78,6 +85,7 @@ The Fees module manages all student-related fees including tuition, registration
 ```
 
 ### PaymentPlan
+
 ```typescript
 {
   id: string
@@ -94,6 +102,7 @@ The Fees module manages all student-related fees including tuition, registration
 ```
 
 ### PaymentInstallment
+
 ```typescript
 {
   id: string
@@ -108,6 +117,7 @@ The Fees module manages all student-related fees including tuition, registration
 ```
 
 ### FeePayment
+
 ```typescript
 {
   id: string
@@ -127,11 +137,13 @@ The Fees module manages all student-related fees including tuition, registration
 ### Fee Structure Management
 
 #### `createFeeStructureWithRBAC(data)`
+
 Creates a new fee structure.
 
 **Permissions Required:** `fees:create`
 
 **Example:**
+
 ```typescript
 const result = await createFeeStructureWithRBAC({
   name: "Grade 10 Tuition",
@@ -141,18 +153,20 @@ const result = await createFeeStructureWithRBAC({
   frequency: "ANNUALLY",
   applicableTo: "YEAR_LEVEL",
   yearLevels: ["Grade 10"],
-  effectiveFrom: new Date("2024-09-01")
+  effectiveFrom: new Date("2024-09-01"),
 })
 ```
 
 ### Student Fee Assignment
 
 #### `assignFeeToStudentWithRBAC(studentId, feeStructureId, dueDate)`
+
 Assigns a fee to a specific student.
 
 **Permissions Required:** `fees:create`
 
 **Example:**
+
 ```typescript
 const result = await assignFeeToStudentWithRBAC(
   "student_123",
@@ -162,11 +176,13 @@ const result = await assignFeeToStudentWithRBAC(
 ```
 
 #### `bulkAssignFeesWithRBAC(studentIds, feeStructureId, dueDate)`
+
 Assigns fees to multiple students at once.
 
 **Permissions Required:** `fees:create`
 
 **Example:**
+
 ```typescript
 const result = await bulkAssignFeesWithRBAC(
   ["student_1", "student_2", "student_3"],
@@ -181,27 +197,32 @@ console.log(`Failed: ${result.failed}`)
 ### Payment Plans
 
 #### `createPaymentPlanWithRBAC(data)`
+
 Creates a payment plan for a student fee.
 
 **Permissions Required:** `fees:create`
 
 **Example:**
+
 ```typescript
 const result = await createPaymentPlanWithRBAC({
   studentFeeId: "fee_789",
-  downPayment: 2000,       // $2,000 down
+  downPayment: 2000, // $2,000 down
   numberOfInstallments: 6, // 6 monthly installments
   frequency: "MONTHLY",
-  startDate: new Date("2024-10-01")
+  startDate: new Date("2024-10-01"),
 })
 
 if (result.success && result.data) {
-  console.log(`Plan created with ${result.data.installments.length} installments`)
+  console.log(
+    `Plan created with ${result.data.installments.length} installments`
+  )
   console.log(`Installment amount: $${result.data.installmentAmount}`)
 }
 ```
 
 **Calculation:**
+
 ```
 Total Fee: $8,000
 Down Payment: $2,000
@@ -213,18 +234,20 @@ Monthly Payment: $1,000
 ### Payment Processing
 
 #### `recordFeePaymentWithRBAC(data)`
+
 Records a payment for a student fee.
 
 **Permissions Required:** `fees:create`
 
 **Example:**
+
 ```typescript
 const result = await recordFeePaymentWithRBAC({
   studentFeeId: "fee_789",
   amount: 1000,
   paymentMethod: "BANK_TRANSFER",
   reference: "TXN-123456",
-  paymentDate: new Date()
+  paymentDate: new Date(),
 })
 
 if (result.success) {
@@ -234,6 +257,7 @@ if (result.success) {
 ```
 
 **Process:**
+
 1. Validates payment amount
 2. Updates student fee record
 3. Applies to installments (if payment plan)
@@ -244,11 +268,13 @@ if (result.success) {
 ### Late Fee Management
 
 #### `calculateAndApplyLateFees()`
+
 Automatically calculates and applies late fees to overdue fees.
 
 **Permissions Required:** `fees:process` (usually run by system cron job)
 
 **Configuration:**
+
 ```typescript
 {
   gracePeriodDays: 7,        // No late fee for first 7 days
@@ -259,6 +285,7 @@ Automatically calculates and applies late fees to overdue fees.
 ```
 
 **Example:**
+
 ```
 Fee Amount: $1,000
 Due Date: 2024-11-01
@@ -270,11 +297,13 @@ Total Due: $1,050
 ```
 
 #### `waiveLateFeeWithRBAC(studentFeeId, reason)`
+
 Waives late fee for a student (requires approval).
 
 **Permissions Required:** `fees:approve`
 
 **Example:**
+
 ```typescript
 const result = await waiveLateFeeWithRBAC(
   studentFeeId,
@@ -285,9 +314,11 @@ const result = await waiveLateFeeWithRBAC(
 ### Family Billing
 
 #### `generateFamilyInvoiceWithRBAC(guardianId)`
+
 Generates a combined invoice for all students in a family.
 
 **Returns:**
+
 ```typescript
 {
   guardianId: string
@@ -307,6 +338,7 @@ Generates a combined invoice for all students in a family.
 ```
 
 **Family Discount Calculation:**
+
 ```
 1st Child: Full price
 2nd Child: 10% discount
@@ -322,24 +354,25 @@ Savings: $2,400
 
 ## Fee Categories
 
-| Category | Description | Frequency | Typical Amount |
-|----------|-------------|-----------|----------------|
-| **TUITION** | Academic tuition | Annual/Monthly | $5,000-$15,000 |
-| **REGISTRATION** | Registration/enrollment | One-time | $500-$1,000 |
-| **TRANSPORTATION** | Bus service | Annual/Monthly | $500-$1,500 |
-| **MEALS** | Cafeteria/lunch | Monthly | $100-$300 |
-| **BOOKS** | Textbooks/materials | Annual | $300-$800 |
-| **UNIFORMS** | School uniforms | Annual | $200-$500 |
-| **ACTIVITIES** | Extracurricular | Per activity | $50-$500 |
-| **TECHNOLOGY** | Laptop/tablet rental | Annual | $300-$800 |
-| **EXAM** | Exam/assessment fees | Per exam | $50-$200 |
-| **LIBRARY** | Library card/services | Annual | $20-$50 |
-| **LAB** | Laboratory fees | Per semester | $100-$300 |
-| **OTHER** | Miscellaneous | Varies | Varies |
+| Category           | Description             | Frequency      | Typical Amount |
+| ------------------ | ----------------------- | -------------- | -------------- |
+| **TUITION**        | Academic tuition        | Annual/Monthly | $5,000-$15,000 |
+| **REGISTRATION**   | Registration/enrollment | One-time       | $500-$1,000    |
+| **TRANSPORTATION** | Bus service             | Annual/Monthly | $500-$1,500    |
+| **MEALS**          | Cafeteria/lunch         | Monthly        | $100-$300      |
+| **BOOKS**          | Textbooks/materials     | Annual         | $300-$800      |
+| **UNIFORMS**       | School uniforms         | Annual         | $200-$500      |
+| **ACTIVITIES**     | Extracurricular         | Per activity   | $50-$500       |
+| **TECHNOLOGY**     | Laptop/tablet rental    | Annual         | $300-$800      |
+| **EXAM**           | Exam/assessment fees    | Per exam       | $50-$200       |
+| **LIBRARY**        | Library card/services   | Annual         | $20-$50        |
+| **LAB**            | Laboratory fees         | Per semester   | $100-$300      |
+| **OTHER**          | Miscellaneous           | Varies         | Varies         |
 
 ## Workflow
 
 ### Annual Fee Setup
+
 ```
 1. Finance team defines fee structures
 2. Set amounts for each year level/program
@@ -356,6 +389,7 @@ Savings: $2,400
 ```
 
 ### Payment Collection
+
 ```
 1. Parent receives invoice/payment reminder
 2. Parent pays via online portal or in-person
@@ -366,6 +400,7 @@ Savings: $2,400
 ```
 
 ### Late Fee Processing
+
 ```
 1. Nightly cron job runs
 2. Identifies overdue fees (past grace period)
@@ -378,26 +413,31 @@ Savings: $2,400
 ## Integration with Other Modules
 
 ### Accounts Module
+
 - Revenue recognition for fee payments
 - Deferred revenue for advance payments
 - Bad debt write-offs
 
 ### Invoice Module
+
 - Generates invoices for fees
 - Links payments to invoices
 - Tracks payment status
 
 ### Receipt Module
+
 - Auto-generates receipts for payments
 - Digital and printable formats
 - Sequential receipt numbering
 
 ### Wallet Module
+
 - Parents can pay from digital wallet
 - Auto-debit for recurring fees
 - Refunds to wallet
 
 ### Banking Module
+
 - Records deposits from fee payments
 - Bank reconciliation
 - Cash flow tracking
@@ -406,44 +446,49 @@ Savings: $2,400
 
 ### Permissions
 
-| Role | View | Create | Edit | Delete | Process | Waive Fees |
-|------|------|--------|------|--------|---------|------------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (class) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STAFF** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STUDENT** | ✅ (own) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ✅ (kids) | ❌ | ❌ | ❌ | ✅ (pay) | ❌ |
+| Role           | View       | Create | Edit | Delete | Process  | Waive Fees |
+| -------------- | ---------- | ------ | ---- | ------ | -------- | ---------- |
+| **ADMIN**      | ✅         | ✅     | ✅   | ✅     | ✅       | ✅         |
+| **ACCOUNTANT** | ✅         | ✅     | ✅   | ✅     | ✅       | ✅         |
+| **TEACHER**    | ✅ (class) | ❌     | ❌   | ❌     | ❌       | ❌         |
+| **STAFF**      | ❌         | ❌     | ❌   | ❌     | ❌       | ❌         |
+| **STUDENT**    | ✅ (own)   | ❌     | ❌   | ❌     | ❌       | ❌         |
+| **GUARDIAN**   | ✅ (kids)  | ❌     | ❌   | ❌     | ✅ (pay) | ❌         |
 
 **Note:** Guardians can view and pay fees for their children.
 
 ## Best Practices
 
 ### 1. Clear Communication
+
 - Publish fee schedule before enrollment
 - Send reminders 7 days before due date
 - Provide multiple payment options
 - Offer financial aid information
 
 ### 2. Flexible Payment Options
+
 - Offer payment plans to all families
 - No penalty for early payment
 - Consider family discounts
 - Have financial hardship policy
 
 ### 3. Timely Processing
+
 - Record payments within 24 hours
 - Generate receipts immediately
 - Update balances in real-time
 - Reconcile daily
 
 ### 4. Late Fee Management
+
 - Provide grace period (7-14 days)
 - Send friendly reminders first
 - Apply late fees consistently
 - Have waiver policy for hardship
 
 ### 5. Year-End Procedures
+
 - Refund overpayments
 - Write off uncollectible balances
 - Generate tax receipts (if applicable)
@@ -485,27 +530,33 @@ Savings: $2,400
 ## Troubleshooting
 
 ### Payment Not Reflecting
+
 **Issue:** Parent paid but balance not updated
 
 **Solution:**
+
 - Check payment method used
 - Verify payment cleared (bank transfer)
 - Look for duplicate payments
 - Manual adjustment if confirmed
 
 ### Late Fee Incorrectly Applied
+
 **Issue:** Late fee added despite timely payment
 
 **Solution:**
+
 - Review payment date vs due date
 - Check grace period settings
 - Verify payment was recorded correctly
 - Waive late fee if error
 
 ### Payment Plan Not Generated
+
 **Issue:** Cannot create payment plan
 
 **Solution:**
+
 - Ensure fee is assigned to student
 - Verify fee hasn't been paid already
 - Check minimum down payment met

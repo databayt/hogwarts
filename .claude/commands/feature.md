@@ -28,11 +28,13 @@
 This command invokes the orchestrator agent with a **TDD-First Feature Development** workflow:
 
 ### Phase 1: Planning & Architecture (5 min)
+
 1. **Architecture Agent**: Design feature structure following mirror pattern
 2. **Multi-Tenant Agent**: Verify tenant isolation (schoolId scoping)
 3. **Security Agent**: Review security implications (OWASP, auth, validation)
 
 ### Phase 2: TDD - Write Tests First (10 min)
+
 4. **Test Agent**: Generate comprehensive test suite
    - Unit tests for components
    - Integration tests for server actions
@@ -41,6 +43,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 5. **Verify Tests Fail**: Run tests to confirm red state
 
 ### Phase 3: Implementation (20-40 min)
+
 6. **Tech Stack Agents** (parallel execution when possible):
    - **React Agent**: Component implementation
    - **Next.js Agent**: Pages, layouts, server components
@@ -51,6 +54,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 7. **API Agent**: Server actions with Zod validation
 
 ### Phase 4: Test Validation (iterative until pass)
+
 8. **Run Tests**: Execute test suite
 9. **If Tests Fail**:
    - Debug Agent analyzes failures
@@ -59,11 +63,12 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 10. **If Tests Pass**: Proceed to Phase 5
 
 ### Phase 5: Comprehensive Review (10 min)
+
 11. **Parallel Review Execution**:
     - **Architecture Agent**: Pattern enforcement (mirror pattern, component hierarchy)
     - **Security Agent**: Security violations (OWASP, input validation, XSS, CSRF)
     - **Performance Agent**: Performance issues (re-renders, bundle size, N+1 queries)
-    - **Typography Agent**: Semantic HTML enforcement (no hardcoded text-*/font-* classes)
+    - **Typography Agent**: Semantic HTML enforcement (no hardcoded text-_/font-_ classes)
     - **Multi-Tenant Agent**: Tenant isolation verification (schoolId in all queries)
     - **React Reviewer Agent**: React best practices (hooks, composition, props)
     - **TypeScript Agent**: Type safety violations (any usage, implicit types)
@@ -72,6 +77,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
     - **Prettier/ESLint**: Code formatting and style violations (auto-fixed)
 
 ### Phase 6: Build Verification (iterative until pass)
+
 12. **Next.js Agent**: Run production build
 13. **If Build Fails**:
     - Next.js Agent analyzes build errors
@@ -80,6 +86,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 14. **If Build Passes**: Proceed to Phase 7
 
 ### Phase 7: Commit & Push (with smart blocking)
+
 15. **Git-GitHub Agent**:
     - Create conventional commit message
     - Commit changes
@@ -89,6 +96,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
       - Feature branches: Warning only, allow override
 
 ### Phase 8: Documentation (automated)
+
 16. **Docs Manager Agent**:
     - Update feature-based README in component directory
     - Create/update GitHub issues for feature tracking
@@ -100,6 +108,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
 ## Quality Gates (Automated)
 
 ### Pre-Commit Checks (via PreToolUse hooks)
+
 - ✅ Tests pass for changed files
 - ✅ ESLint passes (quiet mode)
 - ✅ TypeScript type check passes (noEmit)
@@ -108,6 +117,7 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
   - Feature branch: WARNS but allows commit
 
 ### Pre-Push Checks (via PreToolUse hooks)
+
 - ✅ Full production build passes
 - ✅ Prettier format check passes
 - **Behavior**:
@@ -115,12 +125,13 @@ This command invokes the orchestrator agent with a **TDD-First Feature Developme
   - Feature branch: WARNS but allows push
 
 ### Comprehensive Review Checklist
+
 - ✅ Mirror pattern compliance (route ↔ component structure)
 - ✅ Component hierarchy (UI → Atoms → Templates → Blocks → Micro → Apps)
 - ✅ Multi-tenant safety (schoolId in all queries)
 - ✅ Security (OWASP Top 10, input validation, XSS, CSRF, SQL injection)
 - ✅ Performance (memoization, code splitting, N+1 queries)
-- ✅ Typography (semantic HTML, no hardcoded text-*/font-* classes)
+- ✅ Typography (semantic HTML, no hardcoded text-_/font-_ classes)
 - ✅ Tailwind (class order, cn() usage, RTL support)
 - ✅ TypeScript (no any, explicit types, strict mode)
 - ✅ i18n (Arabic & English translations complete)
@@ -202,16 +213,19 @@ Next Steps:
 ## Error Handling
 
 ### Tests Never Pass
+
 - After 3 iterations, Debug Agent performs deep analysis
 - Presents 5 Whys root cause analysis
 - Offers manual intervention option
 
 ### Build Never Passes
+
 - After 3 iterations, Next.js Agent performs deep analysis
 - Checks for common issues (missing dependencies, type errors, env vars)
 - Offers manual intervention option
 
 ### Review Violations
+
 - Lists all violations with file:line references
 - Automatically fixes auto-fixable issues (prettier, eslint, simple types)
 - Requests approval for complex refactoring
@@ -222,6 +236,7 @@ Next Steps:
 ## Configuration
 
 ### Required Agents
+
 - `/agents/orchestrate` - Master coordinator
 - `/agents/architecture` - Pattern enforcement
 - `/agents/test` - TDD & test generation
@@ -242,11 +257,13 @@ Next Steps:
 - `/agents/debug` - Error analysis (fallback)
 
 ### Required Hooks (settings.json)
+
 - **PostToolUse**: Auto-format on Write/Edit (already configured)
 - **PreToolUse**: Pre-commit tests/lint/type-check (to be added)
 - **PreToolUse**: Pre-push build verification (to be added)
 
 ### Environment Variables
+
 - `MULTI_TENANT=true` - Enables tenant safety checks
 - `I18N_LANGUAGES=en,ar` - Enables i18n validation
 
@@ -255,19 +272,23 @@ Next Steps:
 ## Best Practices
 
 ### When to Use This Command
+
 ✅ **USE for**:
+
 - New features with multiple components
 - Features requiring database changes
 - Features needing comprehensive testing
 - Features affecting multiple areas (auth, security, performance)
 
 ❌ **DON'T USE for**:
+
 - Simple bug fixes (use `/agents/debug` instead)
 - Documentation-only updates (use `/agents/docs-manager` instead)
 - Styling tweaks (use `/agents/tailwind` instead)
 - Single-file changes (use specific agent directly)
 
 ### Tips for Best Results
+
 1. **Be specific**: Provide detailed requirements in the feature description
 2. **Mention constraints**: Include technical requirements (WebSockets, specific libraries, etc.)
 3. **Trust the process**: Let the workflow run fully before manual intervention
@@ -291,23 +312,27 @@ Next Steps:
 ## Troubleshooting
 
 ### "Tests keep failing after 3 iterations"
+
 - Review Debug Agent analysis
 - Check test expectations vs actual implementation
 - Verify test data setup (database seeds, mocks)
 - Consider manual intervention for complex logic
 
 ### "Build keeps failing"
+
 - Review Next.js Agent analysis
 - Check for missing dependencies: `pnpm install`
 - Regenerate Prisma client: `pnpm prisma generate`
 - Verify environment variables in .env
 
 ### "Review finds too many violations"
+
 - Run `/fix-all` first to auto-fix simple issues
 - Address violations iteratively (security first, then patterns, then style)
 - Consider refactoring existing code if new feature follows patterns
 
 ### "Documentation not updating"
+
 - Verify Docs Manager Agent is available
 - Check file permissions in feature directory
 - Ensure GitHub token is configured for issue creation

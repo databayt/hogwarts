@@ -95,6 +95,7 @@ This guide documents the **automated TDD-first development workflows** for the H
 ```
 
 **Automated Actions**:
+
 1. **Architecture Agent**: Designs feature structure following mirror pattern
    - Route planning: `/s/[subdomain]/attendance`
    - Component structure: `src/components/platform/attendance/`
@@ -117,41 +118,42 @@ This guide documents the **automated TDD-first development workflows** for the H
 
 #### Phase 2: TDD - Write Tests First (10 min)
 
-**Automated Actions**:
-4. **Test Agent**: Generates comprehensive test suite (RED state)
-   - **Unit Tests**: Component tests for AttendanceCalendar, AttendanceTable, AttendanceForm
-   - **Integration Tests**: Server action tests for markAttendance, getAttendance
-   - **E2E Tests** (if applicable): User flow tests for marking attendance
-   - **Target**: 95%+ coverage
+**Automated Actions**: 4. **Test Agent**: Generates comprehensive test suite (RED state)
+
+- **Unit Tests**: Component tests for AttendanceCalendar, AttendanceTable, AttendanceForm
+- **Integration Tests**: Server action tests for markAttendance, getAttendance
+- **E2E Tests** (if applicable): User flow tests for marking attendance
+- **Target**: 95%+ coverage
 
 5. **Run Tests**: Verify all tests fail (expected behavior for TDD)
 
 **Output**: Comprehensive test suite in red state
 
 **Example Test Structure**:
+
 ```typescript
 // src/components/platform/attendance/content.test.tsx
-describe('AttendanceContent', () => {
-  it('should render attendance calendar', () => {
+describe("AttendanceContent", () => {
+  it("should render attendance calendar", () => {
     // Test implementation
   })
 
-  it('should allow bulk attendance marking', () => {
+  it("should allow bulk attendance marking", () => {
     // Test implementation
   })
 
-  it('should filter by date range', () => {
+  it("should filter by date range", () => {
     // Test implementation
   })
 })
 
 // src/components/platform/attendance/actions.test.ts
-describe('markAttendance', () => {
-  it('should mark student as present', async () => {
+describe("markAttendance", () => {
+  it("should mark student as present", async () => {
     // Test implementation - FAILS (not implemented yet)
   })
 
-  it('should scope by schoolId', async () => {
+  it("should scope by schoolId", async () => {
     // Test implementation - FAILS
   })
 })
@@ -161,16 +163,17 @@ describe('markAttendance', () => {
 
 #### Phase 3: Implementation (20-40 min - Iterative until GREEN)
 
-**Automated Actions**:
-6. **Tech Stack Agents** (parallel execution when possible):
-   - **React Agent**: Implements components (AttendanceCalendar, AttendanceTable, AttendanceForm)
-   - **Next.js Agent**: Creates pages, layouts, server components
-   - **Prisma Agent**: Updates database schema, creates migrations
-   - **TypeScript Agent**: Defines types, interfaces, validation
-   - **Tailwind Agent**: Applies styling with utility classes, RTL support
-   - **i18n Agent**: Adds Arabic and English translations
+**Automated Actions**: 6. **Tech Stack Agents** (parallel execution when possible):
+
+- **React Agent**: Implements components (AttendanceCalendar, AttendanceTable, AttendanceForm)
+- **Next.js Agent**: Creates pages, layouts, server components
+- **Prisma Agent**: Updates database schema, creates migrations
+- **TypeScript Agent**: Defines types, interfaces, validation
+- **Tailwind Agent**: Applies styling with utility classes, RTL support
+- **i18n Agent**: Adds Arabic and English translations
 
 7. **API Agent**: Creates server actions with Zod validation
+
    ```typescript
    // actions.ts
    "use server"
@@ -182,16 +185,17 @@ describe('markAttendance', () => {
      const validated = attendanceSchema.parse(Object.fromEntries(data))
 
      await db.attendance.create({
-       data: { ...validated, schoolId }
+       data: { ...validated, schoolId },
      })
 
-     revalidatePath('/attendance')
+     revalidatePath("/attendance")
    }
    ```
 
 **Output**: Fully implemented feature with all files created
 
 **File Structure Created**:
+
 ```
 src/
 ├── app/[lang]/s/[subdomain]/(platform)/attendance/
@@ -214,11 +218,11 @@ src/
 
 #### Phase 4: Test Validation (Iterative - Loop until PASS)
 
-**Automated Actions**:
-8. **Run Tests**: Execute test suite
-   ```bash
-   pnpm test src/components/platform/attendance/**/*.test.tsx
-   ```
+**Automated Actions**: 8. **Run Tests**: Execute test suite
+
+```bash
+pnpm test src/components/platform/attendance/**/*.test.tsx
+```
 
 9. **If Tests Fail**:
    - **Debug Agent**: Analyzes failures using 5 Whys technique
@@ -228,6 +232,7 @@ src/
 10. **If Tests Pass**: Proceed to Phase 5
 
 **Example Iteration**:
+
 ```
 Iteration 1:
 - 15 tests run, 3 failed
@@ -247,20 +252,21 @@ Iteration 2:
 
 #### Phase 5: Comprehensive Review (10 min - REFACTOR)
 
-**Automated Actions**:
-11. **Parallel Review Execution** (10 agents):
-   - **Architecture Agent**: Pattern enforcement (mirror pattern compliant)
-   - **Security Agent**: Security violations (OWASP compliance)
-   - **Performance Agent**: Performance issues (no N+1 queries, proper memoization)
-   - **Typography Agent**: Semantic HTML enforcement (no hardcoded text-*/font-*)
-   - **Multi-Tenant Agent**: Tenant isolation (all queries have schoolId)
-   - **React Reviewer Agent**: React best practices (hooks usage, composition)
-   - **TypeScript Agent**: Type safety (no any, strict mode)
-   - **Tailwind Agent**: Class order, RTL support, cn() usage
-   - **i18n Agent**: Translation completeness (100% coverage)
-   - **Auto-fix**: Prettier/ESLint (via PostToolUse hooks)
+**Automated Actions**: 11. **Parallel Review Execution** (10 agents):
+
+- **Architecture Agent**: Pattern enforcement (mirror pattern compliant)
+- **Security Agent**: Security violations (OWASP compliance)
+- **Performance Agent**: Performance issues (no N+1 queries, proper memoization)
+- **Typography Agent**: Semantic HTML enforcement (no hardcoded text-_/font-_)
+- **Multi-Tenant Agent**: Tenant isolation (all queries have schoolId)
+- **React Reviewer Agent**: React best practices (hooks usage, composition)
+- **TypeScript Agent**: Type safety (no any, strict mode)
+- **Tailwind Agent**: Class order, RTL support, cn() usage
+- **i18n Agent**: Translation completeness (100% coverage)
+- **Auto-fix**: Prettier/ESLint (via PostToolUse hooks)
 
 **Review Checklist**:
+
 - ✅ Mirror pattern compliance (route ↔ component)
 - ✅ Component hierarchy (UI → Atoms → Feature)
 - ✅ Multi-tenant safety (schoolId in ALL queries)
@@ -278,20 +284,22 @@ Iteration 2:
 
 #### Phase 6: Build Verification (Iterative - Loop until PASS)
 
-**Automated Actions**:
-12. **Next.js Agent**: Run production build
-   ```bash
-   pnpm build
-   ```
+**Automated Actions**: 12. **Next.js Agent**: Run production build
+
+```bash
+pnpm build
+```
 
 13. **If Build Fails**:
-   - **Next.js Agent**: Analyzes build errors
-   - **Relevant Tech Agent**: Fixes issues (type errors, missing imports, etc.)
-   - **Return to Step 12**: Re-run build
+
+- **Next.js Agent**: Analyzes build errors
+- **Relevant Tech Agent**: Fixes issues (type errors, missing imports, etc.)
+- **Return to Step 12**: Re-run build
 
 14. **If Build Passes**: Proceed to Phase 7
 
 **Build Checklist**:
+
 - ✅ TypeScript compilation passes (no type errors)
 - ✅ Linting passes (ESLint)
 - ✅ No circular dependencies
@@ -304,19 +312,21 @@ Iteration 2:
 
 #### Phase 7: Commit & Push (with Smart Blocking)
 
-**Automated Actions**:
-15. **Git-GitHub Agent**:
-   - Creates conventional commit message
-   - Commits changes
-   - Pushes to remote
+**Automated Actions**: 15. **Git-GitHub Agent**:
+
+- Creates conventional commit message
+- Commits changes
+- Pushes to remote
 
 **Smart Blocking** (via PreToolUse hooks):
+
 - **Main/master/production branches**: BLOCKS if quality checks fail
   - Pre-Commit: tests, eslint, tsc
   - Pre-Push: build, prettier
 - **Feature branches**: WARNS but allows commit/push
 
 **Example Commit**:
+
 ```bash
 feat(attendance): Add student attendance tracking with calendar view
 
@@ -336,14 +346,15 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 #### Phase 8: Documentation (Automated)
 
-**Automated Actions**:
-16. **Docs Manager Agent**:
-   - Updates feature-based README: `src/components/platform/attendance/README.md`
-   - Creates GitHub issue: #123 "Feature: Student Attendance Tracking"
-   - Updates main README.md (if significant feature)
-   - Generates changelog entry in CHANGELOG.md
+**Automated Actions**: 16. **Docs Manager Agent**:
+
+- Updates feature-based README: `src/components/platform/attendance/README.md`
+- Creates GitHub issue: #123 "Feature: Student Attendance Tracking"
+- Updates main README.md (if significant feature)
+- Generates changelog entry in CHANGELOG.md
 
 **README Template Includes**:
+
 - Feature overview
 - Architecture diagram (ASCII art)
 - File structure
@@ -357,6 +368,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - Troubleshooting guide
 
 **GitHub Issue Includes**:
+
 - Feature description
 - Implementation details
 - Technical stack
@@ -374,6 +386,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ### Success Metrics
 
 **Expected Output**:
+
 ```
 🎉 Feature Development Complete!
 
@@ -412,12 +425,14 @@ Next Steps:
 ```
 
 **Debug Agent Actions**:
+
 1. **Reproduce the issue**: Identify steps to trigger the bug
 2. **5 Whys Analysis**: Root cause investigation
 3. **Identify affected code**: File and line number references
 4. **Propose solution**: Fix strategy
 
 **Example 5 Whys**:
+
 ```
 Bug: Infinite loop in timetable rendering
 
@@ -450,6 +465,7 @@ Solution: Wrap object creation in useMemo hook
 ```
 
 **Test Example**:
+
 ```typescript
 // src/components/platform/timetable/content.test.tsx
 describe('TimetableContent - Bug Fixes', () => {
@@ -479,6 +495,7 @@ describe('TimetableContent - Bug Fixes', () => {
 ```
 
 **Fix Example**:
+
 ```typescript
 // Before (causes infinite loop)
 function TimetableContent({ timetable }) {
@@ -510,6 +527,7 @@ pnpm test src/components/platform/timetable/**/*.test.tsx
 ```
 
 **Verification Checklist**:
+
 - ✅ Regression test passes
 - ✅ No new bugs introduced
 - ✅ Performance not degraded
@@ -525,6 +543,7 @@ pnpm test src/components/platform/timetable/**/*.test.tsx
 ```
 
 **Commit Message**:
+
 ```
 fix(timetable): Prevent infinite loop in TimetableContent rendering
 
@@ -538,6 +557,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Documentation Update**:
+
 - Update README troubleshooting section
 - Close GitHub issue #456
 - Add changelog entry under "### Fixed"
@@ -562,6 +582,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Automated Actions**:
+
 - **10 agents execute in parallel**:
   1. Architecture (pattern compliance)
   2. Security (OWASP audit)
@@ -579,10 +600,12 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 #### Step 2: Review Report
 
 **Example Output**:
+
 ```markdown
 # Comprehensive Code Review Report
 
 ## Critical Issues (🚨 Must Fix Immediately)
+
 1. **Security**: Missing input validation in markAttendance action
    - File: src/components/platform/attendance/actions.ts:15
    - Fix: Add Zod schema validation before database insert
@@ -592,6 +615,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
    - Fix: Add `where: { schoolId }` to query
 
 ## Warnings (⚠️ Should Fix Before Merge)
+
 1. **Performance**: Missing memoization in AttendanceTable
    - File: src/components/platform/attendance/table.tsx:23
    - Fix: Wrap columns in useMemo
@@ -601,6 +625,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
    - Fix: Add tests for edge cases
 
 ## Style Issues (🎨 Fix for Consistency)
+
 1. **Typography**: Hardcoded text classes found
    - File: src/components/platform/attendance/content.tsx:67
    - Fix: Replace `text-2xl font-bold` with `<h2>`
@@ -610,16 +635,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>
    - Fix: Add translation to ar/attendance.json
 
 ## Suggestions (💡 Nice to Have)
+
 1. **Performance**: Consider virtualizing attendance table for large datasets
 2. **Accessibility**: Add keyboard navigation to calendar component
 
 ## Praise (✅ What's Done Well)
+
 - ✅ Excellent test coverage overall (92%)
 - ✅ Proper server-first architecture
 - ✅ Clean component composition
 - ✅ RTL support fully implemented
 
 ## Metrics
+
 - Test Coverage: 92% (target: 95%)
 - Security Score: Pass (after fixes)
 - Performance Score: Good
@@ -628,6 +656,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - TypeScript Strictness: Pass
 
 ## Overall Grade: B+
+
 ## Recommendation: Request Changes (fix critical issues + warnings)
 ```
 
@@ -651,12 +680,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 #### Step 4: Approve or Request Changes
 
 **If All Issues Fixed**:
+
 ```bash
 # Create pull request
 /agents/git-github -p "Create PR for attendance tracking feature"
 ```
 
 **If Issues Remain**:
+
 - Address issues iteratively
 - Re-run `/review` after each fix
 - Only create PR when overall grade is A or B+
@@ -684,6 +715,7 @@ pnpm test
 ```
 
 **Baseline Checklist**:
+
 - ✅ All tests passing
 - ✅ Current test coverage noted (e.g., 95%)
 - ✅ Current performance metrics noted
@@ -699,6 +731,7 @@ pnpm test
 ```
 
 **Refactoring Goals**:
+
 - Improve code readability
 - Reduce coupling
 - Increase modularity
@@ -706,15 +739,18 @@ pnpm test
 - Maintain/improve test coverage
 
 **Example Plan**:
+
 ```markdown
 ## Refactoring Plan: Timetable Components
 
 ### Current Issues
+
 1. TimetableContent component is 500+ lines (too large)
 2. Mixed concerns (data fetching, rendering, state management)
 3. Difficult to test (tight coupling)
 
 ### Proposed Changes
+
 1. Extract TimetableGrid component (150 lines)
 2. Extract TimetableHeader component (50 lines)
 3. Extract TimetableCell component (80 lines)
@@ -722,6 +758,7 @@ pnpm test
 5. Move state management to custom hook
 
 ### Expected Outcomes
+
 - 5 focused components (average 100 lines each)
 - Improved testability (unit tests for each component)
 - Better performance (memoization of sub-components)
@@ -751,6 +788,7 @@ pnpm test  # Verify tests still pass
 ```
 
 **Refactoring Rules**:
+
 1. **One change at a time**: Small, focused refactorings
 2. **Test after each change**: Ensure tests pass before next change
 3. **No functionality changes**: Only structure/organization changes
@@ -772,6 +810,7 @@ pnpm build
 ```
 
 **Verification Checklist**:
+
 - ✅ All tests passing (same or more tests)
 - ✅ Test coverage maintained or improved
 - ✅ Build succeeds
@@ -788,6 +827,7 @@ pnpm build
 ```
 
 **Commit Message**:
+
 ```
 refactor(timetable): Extract TimetableContent into smaller components
 
@@ -827,6 +867,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Automated Pre-Flight Checks**:
+
 1. ✅ All tests passing (100% pass rate)
 2. ✅ Build succeeds (no errors)
 3. ✅ No security violations
@@ -847,6 +888,7 @@ pnpm prisma migrate deploy
 ```
 
 **Migration Checklist**:
+
 - ✅ Backup database before migration
 - ✅ Test migration on staging first
 - ✅ Verify data integrity after migration
@@ -865,6 +907,7 @@ git push origin main  # Triggers Vercel production deploy
 ```
 
 **Vercel Deployment**:
+
 - Automatic via Vercel Git integration
 - Build logs available in Vercel dashboard
 - Preview URL generated for staging
@@ -883,6 +926,7 @@ pnpm test:e2e --grep "@smoke"
 ```
 
 **Smoke Test Checklist**:
+
 - ✅ Application loads without errors
 - ✅ Authentication works
 - ✅ Key features functional (critical user paths)
@@ -896,11 +940,13 @@ pnpm test:e2e --grep "@smoke"
 #### Step 5: Monitor & Rollback (if needed)
 
 **Monitoring Tools**:
+
 - **Vercel Analytics**: Traffic, performance, errors
 - **Sentry**: Error tracking and debugging
 - **Database**: Query performance and connection pool
 
 **Rollback Procedure** (if issues detected):
+
 ```bash
 # Revert to previous deployment
 git revert HEAD
@@ -947,6 +993,7 @@ git checkout -b hotfix/critical-bug-name
 ```
 
 **Hotfix Checklist** (streamlined):
+
 - ✅ Bug identified and reproduced
 - ✅ Root cause found
 - ✅ Minimal fix applied
@@ -954,6 +1001,7 @@ git checkout -b hotfix/critical-bug-name
 - ✅ Tests pass
 
 **Skip** (for speed):
+
 - ❌ Comprehensive review (defer to post-hotfix)
 - ❌ Full documentation update (defer to post-hotfix)
 - ❌ Performance optimization (unless root cause)
@@ -1050,6 +1098,7 @@ git push origin develop
 #### Step 3: Review Documentation Quality
 
 **Quality Checklist**:
+
 - ✅ Code examples are accurate and runnable
 - ✅ File paths are correct
 - ✅ External links work
@@ -1069,6 +1118,7 @@ git push origin develop
 ```
 
 **Commit Message**:
+
 ```
 docs(attendance): Update README with bulk actions API reference
 
@@ -1090,15 +1140,18 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 **Trigger**: `git commit`
 
 **Checks** (via PreToolUse hooks in settings.json):
+
 1. Run tests for changed files
 2. ESLint check
 3. TypeScript type check
 
 **Behavior**:
+
 - **Main/master/production branches**: BLOCKS commit if any check fails
 - **Feature branches**: WARNS but allows commit
 
 **Example Output**:
+
 ```bash
 $ git commit -m "feat: Add attendance feature"
 
@@ -1123,14 +1176,17 @@ Running TypeScript check...
 **Trigger**: `git push`
 
 **Checks** (via PreToolUse hooks in settings.json):
+
 1. Full production build
 2. Prettier format check
 
 **Behavior**:
+
 - **Main/master/production branches**: BLOCKS push if any check fails
 - **Feature branches**: WARNS but allows push
 
 **Example Output**:
+
 ```bash
 $ git push origin feature/attendance
 
@@ -1155,6 +1211,7 @@ Allowing push, but please fix errors before merging to main
 **Trigger**: `/review` command
 
 **10-Point Quality Checklist**:
+
 1. **Architecture**: Mirror pattern, component hierarchy, structure
 2. **Security**: OWASP Top 10, input validation, XSS, CSRF, SQL injection
 3. **Multi-Tenant**: schoolId scoping in ALL queries, unique constraints
@@ -1162,7 +1219,7 @@ Allowing push, but please fix errors before merging to main
 5. **Tests**: 95%+ coverage, unit, integration, E2E
 6. **React**: Best practices, hooks, composition, props
 7. **TypeScript**: No any, strict mode, explicit types
-8. **Typography**: Semantic HTML, no hardcoded text-*/font-* classes
+8. **Typography**: Semantic HTML, no hardcoded text-_/font-_ classes
 9. **Tailwind**: Class order, RTL support, cn() usage
 10. **i18n**: Arabic & English translations, dictionary keys, RTL layout
 
@@ -1177,6 +1234,7 @@ Allowing push, but please fix errors before merging to main
 **Symptoms**: Test suite fails repeatedly, Debug Agent cannot resolve
 
 **Solutions**:
+
 1. Check test data setup (database seeds, mocks)
 2. Verify test expectations vs actual implementation
 3. Review test isolation (tests may be affecting each other)
@@ -1190,6 +1248,7 @@ Allowing push, but please fix errors before merging to main
 **Symptoms**: Production build fails repeatedly after fixes
 
 **Solutions**:
+
 1. Regenerate Prisma client: `pnpm prisma generate`
 2. Clear Next.js cache: `rm -rf .next`
 3. Reinstall dependencies: `rm -rf node_modules && pnpm install`
@@ -1203,6 +1262,7 @@ Allowing push, but please fix errors before merging to main
 **Symptoms**: `/review` returns 20+ violations
 
 **Solutions**:
+
 1. Run `/fix-all` first to auto-fix simple issues
 2. Address violations iteratively:
    - Priority 1: Critical issues (security, multi-tenant)
@@ -1218,6 +1278,7 @@ Allowing push, but please fix errors before merging to main
 **Symptoms**: `/agents/docs-manager` doesn't create/update files
 
 **Solutions**:
+
 1. Verify file permissions in feature directory
 2. Check GitHub token: Ensure GITHUB_PERSONAL_ACCESS_TOKEN is set
 3. Review error messages from agent
@@ -1231,6 +1292,7 @@ Allowing push, but please fix errors before merging to main
 **Symptoms**: Commits/pushes allowed on main branch despite failing checks
 
 **Solutions**:
+
 1. Verify PreToolUse hooks configured in `.claude/settings.json`
 2. Check current branch: `git rev-parse --abbrev-ref HEAD`
 3. Review hook output for error messages
@@ -1243,24 +1305,24 @@ Allowing push, but please fix errors before merging to main
 
 ### Expected Productivity Gains
 
-| Workflow | Manual Time | Automated Time | Improvement |
-|----------|-------------|----------------|-------------|
-| Feature Development | 10-20 hours | 1-2 hours | **10x faster** |
-| Bug Fix | 2-4 hours | 15-45 min | **4x faster** |
-| Code Review | 1-2 hours | 10-15 min | **6x faster** |
-| Refactoring | 4-8 hours | 30-60 min | **8x faster** |
-| Documentation | 2-3 hours | 10-30 min | **6x faster** |
+| Workflow            | Manual Time | Automated Time | Improvement    |
+| ------------------- | ----------- | -------------- | -------------- |
+| Feature Development | 10-20 hours | 1-2 hours      | **10x faster** |
+| Bug Fix             | 2-4 hours   | 15-45 min      | **4x faster**  |
+| Code Review         | 1-2 hours   | 10-15 min      | **6x faster**  |
+| Refactoring         | 4-8 hours   | 30-60 min      | **8x faster**  |
+| Documentation       | 2-3 hours   | 10-30 min      | **6x faster**  |
 
 ### Quality Metrics
 
-| Metric | Target | Typical Result |
-|--------|--------|----------------|
-| Test Coverage | 95%+ | 95-98% |
-| Security Violations | 0 | 0-1 (minor) |
-| Pattern Compliance | 10/10 | 9-10/10 |
-| i18n Coverage | 100% | 98-100% |
-| Build Success Rate | 100% | 98-100% |
-| TypeScript Strictness | Pass | Pass |
+| Metric                | Target | Typical Result |
+| --------------------- | ------ | -------------- |
+| Test Coverage         | 95%+   | 95-98%         |
+| Security Violations   | 0      | 0-1 (minor)    |
+| Pattern Compliance    | 10/10  | 9-10/10        |
+| i18n Coverage         | 100%   | 98-100%        |
+| Build Success Rate    | 100%   | 98-100%        |
+| TypeScript Strictness | Pass   | Pass           |
 
 ---
 

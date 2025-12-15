@@ -1,58 +1,62 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Plus, Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DataTableViewOptions } from "@/components/table/data-table-view-options";
-import { ViewToggle } from "./view-toggle";
-import { ExportButton, type ExportFormat } from "./export-button";
-import type { Table } from "@tanstack/react-table";
-import type { ViewMode } from "@/hooks/use-platform-view";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import type { Column, Table } from "@tanstack/react-table"
+import { Plus, Search, X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import type { ViewMode } from "@/hooks/use-platform-view"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+// Simple filter component for select/multiSelect
+import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter"
+import { DataTableViewOptions } from "@/components/table/data-table-view-options"
+
+import { ExportButton, type ExportFormat } from "./export-button"
+import { ViewToggle } from "./view-toggle"
 
 interface PlatformToolbarProps<TData> {
   /** TanStack table instance (for table view) */
-  table?: Table<TData>;
+  table?: Table<TData>
   /** Current view mode */
-  view: ViewMode;
+  view: ViewMode
   /** Toggle view callback */
-  onToggleView: () => void;
+  onToggleView: () => void
   /** Search value */
-  searchValue?: string;
+  searchValue?: string
   /** Search change handler */
-  onSearchChange?: (value: string) => void;
+  onSearchChange?: (value: string) => void
   /** Search placeholder */
-  searchPlaceholder?: string;
+  searchPlaceholder?: string
   /** Create button click handler */
-  onCreate?: () => void;
+  onCreate?: () => void
   /** Export function */
-  getCSV?: (filters?: Record<string, unknown>) => Promise<string>;
+  getCSV?: (filters?: Record<string, unknown>) => Promise<string>
   /** Entity name for export filename */
-  entityName?: string;
+  entityName?: string
   /** Available export formats */
-  exportFormats?: ExportFormat[];
+  exportFormats?: ExportFormat[]
   /** Current filters for export */
-  filters?: Record<string, unknown>;
+  filters?: Record<string, unknown>
   /** Show column visibility toggle (table view only) */
-  showColumnToggle?: boolean;
+  showColumnToggle?: boolean
   /** Additional actions to render */
-  additionalActions?: React.ReactNode;
+  additionalActions?: React.ReactNode
   /** i18n translations */
   translations?: {
-    search?: string;
-    create?: string;
-    reset?: string;
-    tableView?: string;
-    gridView?: string;
-    switchToTable?: string;
-    switchToGrid?: string;
-    export?: string;
-    exportCSV?: string;
-    exporting?: string;
-  };
+    search?: string
+    create?: string
+    reset?: string
+    tableView?: string
+    gridView?: string
+    switchToTable?: string
+    switchToGrid?: string
+    export?: string
+    exportCSV?: string
+    exporting?: string
+  }
   /** Additional class names */
-  className?: string;
+  className?: string
 }
 
 export function PlatformToolbar<TData>({
@@ -83,39 +87,36 @@ export function PlatformToolbar<TData>({
     export: translations.export || "Export",
     exportCSV: translations.exportCSV || "Export CSV",
     exporting: translations.exporting || "Exporting...",
-  };
+  }
 
   // Check if there are active filters (from table state or search)
   const hasActiveFilters = React.useMemo(() => {
-    if (searchValue) return true;
+    if (searchValue) return true
     if (table) {
-      return table.getState().columnFilters.length > 0;
+      return table.getState().columnFilters.length > 0
     }
-    return false;
-  }, [searchValue, table]);
+    return false
+  }, [searchValue, table])
 
   const handleReset = React.useCallback(() => {
-    onSearchChange?.("");
+    onSearchChange?.("")
     if (table) {
-      table.resetColumnFilters();
+      table.resetColumnFilters()
     }
-  }, [onSearchChange, table]);
+  }, [onSearchChange, table])
 
   return (
     <div
       role="toolbar"
       aria-orientation="horizontal"
-      className={cn(
-        "flex w-full flex-wrap items-center gap-2 p-1",
-        className
-      )}
+      className={cn("flex w-full flex-wrap items-center gap-2 p-1", className)}
     >
       {/* Left side: Search and filters */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Search input */}
         {onSearchChange && (
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               placeholder={searchPlaceholder || t.search}
               value={searchValue}
@@ -132,8 +133,8 @@ export function PlatformToolbar<TData>({
               .getAllColumns()
               .filter((column) => column.getCanFilter())
               .map((column) => {
-                const meta = column.columnDef.meta;
-                if (!meta?.variant || meta.variant === "text") return null;
+                const meta = column.columnDef.meta
+                if (!meta?.variant || meta.variant === "text") return null
 
                 // Render select/multiSelect filters
                 return (
@@ -144,7 +145,7 @@ export function PlatformToolbar<TData>({
                     options={meta.options || []}
                     multiple={meta.variant === "multiSelect"}
                   />
-                );
+                )
               })}
           </>
         )}
@@ -157,7 +158,7 @@ export function PlatformToolbar<TData>({
             className="h-9 border-dashed"
             onClick={handleReset}
           >
-            <X className="h-4 w-4 mr-1" />
+            <X className="mr-1 h-4 w-4" />
             {t.reset}
           </Button>
         )}
@@ -217,18 +218,14 @@ export function PlatformToolbar<TData>({
         )}
       </div>
     </div>
-  );
+  )
 }
 
-// Simple filter component for select/multiSelect
-import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
-import type { Column } from "@tanstack/react-table";
-
 interface DataTableFilterProps<TData> {
-  column: Column<TData>;
-  title: string;
-  options: Array<{ label: string; value: string }>;
-  multiple?: boolean;
+  column: Column<TData>
+  title: string
+  options: Array<{ label: string; value: string }>
+  multiple?: boolean
 }
 
 function DataTableFilter<TData>({
@@ -244,5 +241,5 @@ function DataTableFilter<TData>({
       options={options as any}
       multiple={multiple}
     />
-  );
+  )
 }

@@ -2,8 +2,9 @@
 
 import { db } from "@/lib/db"
 import { currentUser } from "@/components/auth/auth"
-import type { ProfileData, ProfileType, ProfileContext } from "./types"
-import { getPermissionLevel, filterProfileData } from "./permissions"
+
+import { filterProfileData, getPermissionLevel } from "./permissions"
+import type { ProfileContext, ProfileData, ProfileType } from "./types"
 
 /**
  * Detect profile type based on which relation exists

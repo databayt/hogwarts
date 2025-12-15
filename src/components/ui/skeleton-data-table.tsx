@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonDataTable Component
@@ -69,7 +69,7 @@ export function SkeletonDataTable({
       <div className="overflow-hidden rounded-md border">
         <div className="w-full">
           {/* Table header */}
-          <div className="border-b bg-muted/50">
+          <div className="bg-muted/50 border-b">
             <div className="flex h-12 items-center px-2">
               {Array.from({ length: columns }).map((_, i) => (
                 <div
@@ -96,7 +96,7 @@ export function SkeletonDataTable({
             {Array.from({ length: rows }).map((_, rowIndex) => (
               <div
                 key={rowIndex}
-                className="flex items-center border-b px-2 h-[57px] last:border-b-0"
+                className="flex h-[57px] items-center border-b px-2 last:border-b-0"
               >
                 {Array.from({ length: columns }).map((_, colIndex) => (
                   <div

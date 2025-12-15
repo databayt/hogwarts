@@ -1,8 +1,8 @@
-import CommunicationContent from '@/components/platform/school/communication/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import CommunicationContent from "@/components/platform/school/communication/content"
 
-export const metadata = { title: 'School: Communication' }
+export const metadata = { title: "School: Communication" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

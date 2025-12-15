@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
 interface Props {
-  videoUrl: string;
-  title: string;
+  videoUrl: string
+  title: string
 }
 
 export default function BookVideo({ videoUrl, title }: Props) {
@@ -19,5 +19,5 @@ export default function BookVideo({ videoUrl, title }: Props) {
         />
       </div>
     </div>
-  );
+  )
 }

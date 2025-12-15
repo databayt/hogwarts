@@ -1,30 +1,37 @@
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { notFound } from "next/navigation";
-import { FileDown, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { notFound } from "next/navigation"
+import { FileDown, FileText } from "lucide-react"
 
-export const metadata = { title: "Batch PDF Generation" };
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+export const metadata = { title: "Batch PDF Generation" }
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string; id: string }>;
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function BatchPDFPage({ params }: Props) {
-  const { lang, id: examId } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id: examId } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return notFound();
+    return notFound()
   }
 
   const exam = await db.exam.findUnique({
@@ -38,13 +45,13 @@ export default async function BatchPDFPage({ params }: Props) {
         },
       },
     },
-  });
+  })
 
   if (!exam) {
-    return notFound();
+    return notFound()
   }
 
-  const d = dictionary?.results;
+  const d = dictionary?.results
 
   return (
     <PageContainer>
@@ -125,13 +132,16 @@ export default async function BatchPDFPage({ params }: Props) {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{d?.totalReports || "Total Reports"}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium">
+                  {d?.totalReports || "Total Reports"}
+                </p>
+                <p className="text-muted-foreground text-sm">
                   {exam._count.examResults} {d?.students || "students"}
                 </p>
               </div>
               <Badge variant="secondary">
-                {d?.estimatedSize || "Est. Size"}: {(exam._count.examResults * 0.5).toFixed(1)} MB
+                {d?.estimatedSize || "Est. Size"}:{" "}
+                {(exam._count.examResults * 0.5).toFixed(1)} MB
               </Badge>
             </div>
             <Button className="w-full" size="lg">
@@ -142,5 +152,5 @@ export default async function BatchPDFPage({ params }: Props) {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

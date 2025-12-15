@@ -15,9 +15,38 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import {
+  CircleAlert,
+  CircleCheckBig,
+  CircleX,
+  Copy,
+  ListFilter,
+  Search,
+  Shield,
+  UserMinus,
+  UserPlus,
+} from "lucide-react"
+import { toast } from "sonner"
+
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -35,31 +64,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { toast } from "sonner"
-import { Shield, UserPlus, UserMinus, Copy, Search, ListFilter, CircleCheckBig, CircleX, CircleAlert,  } from "lucide-react"
+import type {
+  FinanceAction,
+  FinanceModule,
+} from "@/components/platform/finance/lib/permissions"
+
 import {
+  bulkGrantPermissions,
+  bulkRevokePermissions,
+  copyPermissions,
   getAllUsersWithPermissions,
   getPermissionsByModule,
   grantPermission,
   revokePermission,
-  bulkGrantPermissions,
-  bulkRevokePermissions,
-  copyPermissions,
-  type UserPermissionSummary,
   type ModulePermissionSummary,
+  type UserPermissionSummary,
 } from "./actions"
-import type { FinanceAction, FinanceModule } from "@/components/platform/finance/lib/permissions"
 
 const FINANCE_MODULES: FinanceModule[] = [
   "invoice",
@@ -207,7 +228,7 @@ export function PermissionManagementContent() {
             <div>
               <Label>Search Users</Label>
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
                 <Input
                   placeholder="Name or email..."
                   value={searchTerm}
@@ -262,8 +283,12 @@ export function PermissionManagementContent() {
       {/* Tabs */}
       <Tabs defaultValue="users" className="w-full">
         <TabsList>
-          <TabsTrigger value="users">By User ({filteredUsers.length})</TabsTrigger>
-          <TabsTrigger value="modules">By Module ({modules.length})</TabsTrigger>
+          <TabsTrigger value="users">
+            By User ({filteredUsers.length})
+          </TabsTrigger>
+          <TabsTrigger value="modules">
+            By Module ({modules.length})
+          </TabsTrigger>
         </TabsList>
 
         {/* Users Tab */}
@@ -277,7 +302,7 @@ export function PermissionManagementContent() {
           ) : filteredUsers.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <CircleAlert className="h-12 w-12 text-muted-foreground mb-4" />
+                <CircleAlert className="text-muted-foreground mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">No users found</p>
               </CardContent>
             </Card>
@@ -349,11 +374,11 @@ function UserPermissionCard({
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Edit Permissions
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
                 <EditPermissionsDialog
                   user={user}
                   onClose={() => setEditDialogOpen(false)}
@@ -364,7 +389,7 @@ function UserPermissionCard({
             <Dialog open={copyDialogOpen} onOpenChange={setCopyDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="mr-2 h-4 w-4" />
                   Copy
                 </Button>
               </DialogTrigger>
@@ -381,14 +406,14 @@ function UserPermissionCard({
       </CardHeader>
       <CardContent>
         {user.permissions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No custom permissions. Using role-based defaults.
           </p>
         ) : (
           <div className="space-y-3">
             {user.permissions.map((perm) => (
               <div key={perm.module} className="flex items-start gap-2">
-                <strong className="text-sm min-w-[100px]">
+                <strong className="min-w-[100px] text-sm">
                   {MODULE_LABELS[perm.module]}:
                 </strong>
                 <div className="flex flex-wrap gap-1">
@@ -431,7 +456,7 @@ function ModulePermissionCard({
       </CardHeader>
       <CardContent>
         {!data || data.users.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No custom permissions for this module.
           </p>
         ) : (
@@ -449,7 +474,9 @@ function ModulePermissionCard({
                   <TableCell>
                     <div>
                       <div className="font-medium">{user.userName}</div>
-                      <small className="text-muted-foreground">{user.userEmail}</small>
+                      <small className="text-muted-foreground">
+                        {user.userEmail}
+                      </small>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -522,8 +549,10 @@ function EditPermissionsDialog({
     try {
       // OPTIMIZATION: Only send the delta (grants and revokes) to avoid unnecessary DB writes
       // This prevents updating unchanged permissions, reducing transaction load
-      const toGrant: Array<{ module: FinanceModule; action: FinanceAction }> = []
-      const toRevoke: Array<{ module: FinanceModule; action: FinanceAction }> = []
+      const toGrant: Array<{ module: FinanceModule; action: FinanceAction }> =
+        []
+      const toRevoke: Array<{ module: FinanceModule; action: FinanceAction }> =
+        []
 
       // Create a set of current permissions in "module:action" format for easy comparison
       const currentPerms = new Set(
@@ -545,7 +574,10 @@ function EditPermissionsDialog({
       for (const perm of newPerms) {
         if (!currentPerms.has(perm)) {
           const [module, action] = perm.split(":")
-          toGrant.push({ module: module as FinanceModule, action: action as FinanceAction })
+          toGrant.push({
+            module: module as FinanceModule,
+            action: action as FinanceAction,
+          })
         }
       }
 
@@ -554,7 +586,10 @@ function EditPermissionsDialog({
       for (const perm of currentPerms) {
         if (!newPerms.has(perm)) {
           const [module, action] = perm.split(":")
-          toRevoke.push({ module: module as FinanceModule, action: action as FinanceAction })
+          toRevoke.push({
+            module: module as FinanceModule,
+            action: action as FinanceAction,
+          })
         }
       }
 
@@ -616,7 +651,7 @@ function EditPermissionsDialog({
                     />
                     <Label
                       htmlFor={`${module}-${action}`}
-                      className="text-sm cursor-pointer"
+                      className="cursor-pointer text-sm"
                     >
                       {action}
                     </Label>
@@ -715,9 +750,9 @@ function CopyPermissionsDialog({
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold mb-2">Permissions to copy:</h4>
+          <h4 className="mb-2 text-sm font-semibold">Permissions to copy:</h4>
           {fromUser.permissions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               No custom permissions to copy
             </p>
           ) : (
@@ -739,7 +774,9 @@ function CopyPermissionsDialog({
         </Button>
         <Button
           onClick={handleCopy}
-          disabled={copying || !selectedUserId || fromUser.permissions.length === 0}
+          disabled={
+            copying || !selectedUserId || fromUser.permissions.length === 0
+          }
         >
           {copying ? "Copying..." : "Copy Permissions"}
         </Button>

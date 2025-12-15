@@ -1,11 +1,9 @@
 "use client"
 
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  XAxis,
-} from "recharts"
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -20,8 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+
 import type { AttendanceTrendChartProps } from "./types"
 
 const attendanceChartConfig = {
@@ -53,7 +50,10 @@ export function AttendanceTrendChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        <ChartContainer config={attendanceChartConfig} className="h-[200px] w-full">
+        <ChartContainer
+          config={attendanceChartConfig}
+          className="h-[200px] w-full"
+        >
           <AreaChart data={data} margin={{ left: 12, right: 12 }}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
@@ -63,7 +63,10 @@ export function AttendanceTrendChart({
               tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="dot" />}
+            />
             <Area
               dataKey="present"
               type="monotone"
@@ -87,12 +90,18 @@ export function AttendanceTrendChart({
         <CardFooter className="flex-col gap-2 text-sm">
           <div
             className={cn(
-              "flex items-center gap-2 font-medium leading-none",
-              trend >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"
+              "flex items-center gap-2 leading-none font-medium",
+              trend >= 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-destructive"
             )}
           >
             {trend >= 0 ? "Trending up" : "Trending down"} by {Math.abs(trend)}%
-            {trend >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+            {trend >= 0 ? (
+              <TrendingUp className="h-4 w-4" />
+            ) : (
+              <TrendingDown className="h-4 w-4" />
+            )}
           </div>
         </CardFooter>
       )}

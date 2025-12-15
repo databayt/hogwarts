@@ -1,11 +1,62 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback } from 'react';
-import { format, addDays, isPast, isFuture, isToday, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
-import { Calendar, MapPin, Users, Clock, DollarSign, Ticket, Share2, Pencil, Trash2, Copy, Eye, EyeOff, Send, Download, Upload, Plus, ListFilter, Search, ChevronLeft, ChevronRight, EllipsisVertical, Star, Bell, CircleCheck, CircleX, CircleAlert, Image as ImageIcon, Video, Music, Trophy, Briefcase, GraduationCap, Heart, Flag } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useCallback, useMemo, useState } from "react"
+import {
+  addDays,
+  differenceInDays,
+  eachDayOfInterval,
+  endOfMonth,
+  format,
+  isFuture,
+  isPast,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfMonth,
+} from "date-fns"
+import {
+  Bell,
+  Briefcase,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  Copy,
+  DollarSign,
+  Download,
+  EllipsisVertical,
+  Eye,
+  EyeOff,
+  Flag,
+  GraduationCap,
+  Heart,
+  Image as ImageIcon,
+  ListFilter,
+  MapPin,
+  Music,
+  Pencil,
+  Plus,
+  Search,
+  Send,
+  Share2,
+  Star,
+  Ticket,
+  Trash2,
+  Trophy,
+  Upload,
+  Users,
+  Video,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,23 +64,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -37,7 +72,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,99 +80,120 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Event {
-  id: string;
-  title: string;
-  description: string;
-  type: 'academic' | 'sports' | 'cultural' | 'workshop' | 'meeting' | 'holiday' | 'examination' | 'other';
-  category: 'mandatory' | 'optional' | 'invitation-only';
-  startDate: Date;
-  endDate: Date;
-  startTime: string;
-  endTime: string;
+  id: string
+  title: string
+  description: string
+  type:
+    | "academic"
+    | "sports"
+    | "cultural"
+    | "workshop"
+    | "meeting"
+    | "holiday"
+    | "examination"
+    | "other"
+  category: "mandatory" | "optional" | "invitation-only"
+  startDate: Date
+  endDate: Date
+  startTime: string
+  endTime: string
   location: {
-    venue: string;
-    address?: string;
-    capacity?: number;
-    virtualLink?: string;
-  };
+    venue: string
+    address?: string
+    capacity?: number
+    virtualLink?: string
+  }
   organizers: {
-    id: string;
-    name: string;
-    role: string;
-    avatar?: string;
-  }[];
+    id: string
+    name: string
+    role: string
+    avatar?: string
+  }[]
   attendees: {
-    targetAudience: ('students' | 'teachers' | 'parents' | 'staff' | 'public')[];
-    registered: number;
-    capacity?: number;
-    waitlist?: number;
-  };
-  status: 'draft' | 'published' | 'ongoing' | 'completed' | 'cancelled';
-  visibility: 'public' | 'private' | 'restricted';
+    targetAudience: ("students" | "teachers" | "parents" | "staff" | "public")[]
+    registered: number
+    capacity?: number
+    waitlist?: number
+  }
+  status: "draft" | "published" | "ongoing" | "completed" | "cancelled"
+  visibility: "public" | "private" | "restricted"
   registration: {
-    required: boolean;
-    deadline?: Date;
-    fee?: number;
-    paymentRequired?: boolean;
-  };
+    required: boolean
+    deadline?: Date
+    fee?: number
+    paymentRequired?: boolean
+  }
   attachments?: {
-    id: string;
-    name: string;
-    url: string;
-    type: string;
-  }[];
-  tags?: string[];
-  featured: boolean;
+    id: string
+    name: string
+    url: string
+    type: string
+  }[]
+  tags?: string[]
+  featured: boolean
   recurring?: {
-    pattern: 'daily' | 'weekly' | 'monthly';
-    interval: number;
-    endDate: Date;
-    exceptions?: Date[];
-  };
+    pattern: "daily" | "weekly" | "monthly"
+    interval: number
+    endDate: Date
+    exceptions?: Date[]
+  }
 }
 
 interface Registration {
-  id: string;
-  eventId: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  userType: 'student' | 'teacher' | 'parent' | 'staff' | 'guest';
-  registrationDate: Date;
-  status: 'confirmed' | 'pending' | 'waitlisted' | 'cancelled';
-  paymentStatus?: 'paid' | 'pending' | 'failed';
-  ticketNumber?: string;
-  checkInTime?: Date;
-  feedback?: string;
-  rating?: number;
+  id: string
+  eventId: string
+  userId: string
+  userName: string
+  userEmail: string
+  userType: "student" | "teacher" | "parent" | "staff" | "guest"
+  registrationDate: Date
+  status: "confirmed" | "pending" | "waitlisted" | "cancelled"
+  paymentStatus?: "paid" | "pending" | "failed"
+  ticketNumber?: string
+  checkInTime?: Date
+  feedback?: string
+  rating?: number
 }
 
 interface EventManagementProps {
-  events: Event[];
-  registrations: Registration[];
+  events: Event[]
+  registrations: Registration[]
   currentUser: {
-    id: string;
-    name: string;
-    role: string;
+    id: string
+    name: string
+    role: string
     permissions: {
-      canCreate: boolean;
-      canEdit: boolean;
-      canDelete: boolean;
-      canManageRegistrations: boolean;
-    };
-  };
-  onCreateEvent: (event: Omit<Event, 'id'>) => Promise<void>;
-  onUpdateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>;
-  onDeleteEvent: (eventId: string) => Promise<void>;
-  onRegister: (eventId: string, userData: any) => Promise<void>;
-  onCancelRegistration: (registrationId: string) => Promise<void>;
-  onCheckIn?: (registrationId: string) => Promise<void>;
-  onExportRegistrations?: (eventId: string) => void;
+      canCreate: boolean
+      canEdit: boolean
+      canDelete: boolean
+      canManageRegistrations: boolean
+    }
+  }
+  onCreateEvent: (event: Omit<Event, "id">) => Promise<void>
+  onUpdateEvent: (eventId: string, updates: Partial<Event>) => Promise<void>
+  onDeleteEvent: (eventId: string) => Promise<void>
+  onRegister: (eventId: string, userData: any) => Promise<void>
+  onCancelRegistration: (registrationId: string) => Promise<void>
+  onCheckIn?: (registrationId: string) => Promise<void>
+  onExportRegistrations?: (eventId: string) => void
 }
 
 const eventTypeIcons = {
@@ -149,26 +205,26 @@ const eventTypeIcons = {
   holiday: Flag,
   examination: Pencil,
   other: Calendar,
-};
+}
 
 const eventTypeColors = {
-  academic: 'bg-blue-100 text-blue-800',
-  sports: 'bg-green-100 text-green-800',
-  cultural: 'bg-purple-100 text-purple-800',
-  workshop: 'bg-yellow-100 text-yellow-800',
-  meeting: 'bg-gray-100 text-gray-800',
-  holiday: 'bg-red-100 text-red-800',
-  examination: 'bg-orange-100 text-orange-800',
-  other: 'bg-indigo-100 text-indigo-800',
-};
+  academic: "bg-blue-100 text-blue-800",
+  sports: "bg-green-100 text-green-800",
+  cultural: "bg-purple-100 text-purple-800",
+  workshop: "bg-yellow-100 text-yellow-800",
+  meeting: "bg-gray-100 text-gray-800",
+  holiday: "bg-red-100 text-red-800",
+  examination: "bg-orange-100 text-orange-800",
+  other: "bg-indigo-100 text-indigo-800",
+}
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800',
-  published: 'bg-blue-100 text-blue-800',
-  ongoing: 'bg-green-100 text-green-800',
-  completed: 'bg-gray-100 text-gray-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
+  draft: "bg-gray-100 text-gray-800",
+  published: "bg-blue-100 text-blue-800",
+  ongoing: "bg-green-100 text-green-800",
+  completed: "bg-gray-100 text-gray-800",
+  cancelled: "bg-red-100 text-red-800",
+}
 
 export function EventManagement({
   events,
@@ -182,120 +238,141 @@ export function EventManagement({
   onCheckIn,
   onExportRegistrations,
 }: EventManagementProps) {
-  const [selectedView, setSelectedView] = useState<'calendar' | 'list' | 'cards'>('cards');
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past' | 'my-events'>('upcoming');
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [registrationDialogOpen, setRegistrationDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedView, setSelectedView] = useState<
+    "calendar" | "list" | "cards"
+  >("cards")
+  const [selectedTab, setSelectedTab] = useState<
+    "upcoming" | "past" | "my-events"
+  >("upcoming")
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false)
+  const [registrationDialogOpen, setRegistrationDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedType, setSelectedType] = useState<string>("all")
+  const [selectedMonth, setSelectedMonth] = useState(new Date())
 
   // Filter events
   const filteredEvents = useMemo(() => {
-    let filtered = events;
+    let filtered = events
 
     // Tab filter
-    if (selectedTab === 'upcoming') {
-      filtered = filtered.filter(e => isFuture(e.startDate) || isToday(e.startDate));
-    } else if (selectedTab === 'past') {
-      filtered = filtered.filter(e => isPast(e.endDate) && !isToday(e.endDate));
-    } else if (selectedTab === 'my-events') {
+    if (selectedTab === "upcoming") {
+      filtered = filtered.filter(
+        (e) => isFuture(e.startDate) || isToday(e.startDate)
+      )
+    } else if (selectedTab === "past") {
+      filtered = filtered.filter(
+        (e) => isPast(e.endDate) && !isToday(e.endDate)
+      )
+    } else if (selectedTab === "my-events") {
       const myRegistrations = registrations
-        .filter(r => r.userId === currentUser.id)
-        .map(r => r.eventId);
-      filtered = filtered.filter(e =>
-        e.organizers.some(o => o.id === currentUser.id) ||
-        myRegistrations.includes(e.id)
-      );
+        .filter((r) => r.userId === currentUser.id)
+        .map((r) => r.eventId)
+      filtered = filtered.filter(
+        (e) =>
+          e.organizers.some((o) => o.id === currentUser.id) ||
+          myRegistrations.includes(e.id)
+      )
     }
 
     // Type filter
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(e => e.type === selectedType);
+    if (selectedType !== "all") {
+      filtered = filtered.filter((e) => e.type === selectedType)
     }
 
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(e =>
-        e.title.toLowerCase().includes(query) ||
-        e.description.toLowerCase().includes(query) ||
-        e.location.venue.toLowerCase().includes(query) ||
-        e.tags?.some(tag => tag.toLowerCase().includes(query))
-      );
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (e) =>
+          e.title.toLowerCase().includes(query) ||
+          e.description.toLowerCase().includes(query) ||
+          e.location.venue.toLowerCase().includes(query) ||
+          e.tags?.some((tag) => tag.toLowerCase().includes(query))
+      )
     }
 
     // Sort by date
     return filtered.sort((a, b) => {
-      if (a.featured && !b.featured) return -1;
-      if (!a.featured && b.featured) return 1;
-      return a.startDate.getTime() - b.startDate.getTime();
-    });
-  }, [events, registrations, currentUser.id, selectedTab, selectedType, searchQuery]);
+      if (a.featured && !b.featured) return -1
+      if (!a.featured && b.featured) return 1
+      return a.startDate.getTime() - b.startDate.getTime()
+    })
+  }, [
+    events,
+    registrations,
+    currentUser.id,
+    selectedTab,
+    selectedType,
+    searchQuery,
+  ])
 
   // Calendar days for calendar view
   const calendarDays = useMemo(() => {
-    const start = startOfMonth(selectedMonth);
-    const end = endOfMonth(selectedMonth);
-    const days = eachDayOfInterval({ start, end });
+    const start = startOfMonth(selectedMonth)
+    const end = endOfMonth(selectedMonth)
+    const days = eachDayOfInterval({ start, end })
 
     // Add padding for start of week
-    const startDay = start.getDay();
-    const paddingDays = [];
+    const startDay = start.getDay()
+    const paddingDays = []
     for (let i = 0; i < startDay; i++) {
-      paddingDays.push(null);
+      paddingDays.push(null)
     }
 
-    return [...paddingDays, ...days];
-  }, [selectedMonth]);
+    return [...paddingDays, ...days]
+  }, [selectedMonth])
 
   // Group events by date for calendar view
   const eventsByDate = useMemo(() => {
-    const grouped = new Map<string, Event[]>();
+    const grouped = new Map<string, Event[]>()
 
-    filteredEvents.forEach(event => {
-      let currentDate = new Date(event.startDate);
-      const endDate = new Date(event.endDate);
+    filteredEvents.forEach((event) => {
+      let currentDate = new Date(event.startDate)
+      const endDate = new Date(event.endDate)
 
       while (currentDate <= endDate) {
-        const dateStr = format(currentDate, 'yyyy-MM-dd');
+        const dateStr = format(currentDate, "yyyy-MM-dd")
         if (!grouped.has(dateStr)) {
-          grouped.set(dateStr, []);
+          grouped.set(dateStr, [])
         }
-        grouped.get(dateStr)?.push(event);
-        currentDate = addDays(currentDate, 1);
+        grouped.get(dateStr)?.push(event)
+        currentDate = addDays(currentDate, 1)
       }
-    });
+    })
 
-    return grouped;
-  }, [filteredEvents]);
+    return grouped
+  }, [filteredEvents])
 
   // Statistics
   const stats = useMemo(() => {
-    const upcoming = events.filter(e => isFuture(e.startDate)).length;
-    const thisMonth = events.filter(e =>
+    const upcoming = events.filter((e) => isFuture(e.startDate)).length
+    const thisMonth = events.filter((e) =>
       isSameMonth(e.startDate, new Date())
-    ).length;
-    const totalRegistrations = registrations.filter(r =>
-      r.status === 'confirmed'
-    ).length;
-    const myEvents = registrations.filter(r =>
-      r.userId === currentUser.id && r.status === 'confirmed'
-    ).length;
+    ).length
+    const totalRegistrations = registrations.filter(
+      (r) => r.status === "confirmed"
+    ).length
+    const myEvents = registrations.filter(
+      (r) => r.userId === currentUser.id && r.status === "confirmed"
+    ).length
 
-    return { upcoming, thisMonth, totalRegistrations, myEvents };
-  }, [events, registrations, currentUser.id]);
+    return { upcoming, thisMonth, totalRegistrations, myEvents }
+  }, [events, registrations, currentUser.id])
 
   // Get user registration for an event
-  const getUserRegistration = useCallback((eventId: string) => {
-    return registrations.find(r =>
-      r.eventId === eventId &&
-      r.userId === currentUser.id &&
-      r.status !== 'cancelled'
-    );
-  }, [registrations, currentUser.id]);
+  const getUserRegistration = useCallback(
+    (eventId: string) => {
+      return registrations.find(
+        (r) =>
+          r.eventId === eventId &&
+          r.userId === currentUser.id &&
+          r.status !== "cancelled"
+      )
+    },
+    [registrations, currentUser.id]
+  )
 
   const handleRegister = async (event: Event) => {
     try {
@@ -304,56 +381,56 @@ export function EventManagement({
         userName: currentUser.name,
         userEmail: `${currentUser.id}@school.edu`,
         userType: currentUser.role.toLowerCase(),
-      });
-      toast.success('Successfully registered for event');
-      setRegistrationDialogOpen(false);
+      })
+      toast.success("Successfully registered for event")
+      setRegistrationDialogOpen(false)
     } catch (error) {
-      toast.error('Failed to register for event');
+      toast.error("Failed to register for event")
     }
-  };
+  }
 
   const handleCancelRegistration = async (event: Event) => {
-    const registration = getUserRegistration(event.id);
-    if (!registration) return;
+    const registration = getUserRegistration(event.id)
+    if (!registration) return
 
     try {
-      await onCancelRegistration(registration.id);
-      toast.success('Registration cancelled');
+      await onCancelRegistration(registration.id)
+      toast.success("Registration cancelled")
     } catch (error) {
-      toast.error('Failed to cancel registration');
+      toast.error("Failed to cancel registration")
     }
-  };
+  }
 
   const getDaysUntilEvent = (date: Date) => {
-    const days = differenceInDays(date, new Date());
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Tomorrow';
-    if (days < 0) return 'Past';
-    return `In ${days} days`;
-  };
+    const days = differenceInDays(date, new Date())
+    if (days === 0) return "Today"
+    if (days === 1) return "Tomorrow"
+    if (days < 0) return "Past"
+    return `In ${days} days`
+  }
 
   const EventCard = ({ event }: { event: Event }) => {
-    const Icon = eventTypeIcons[event.type];
-    const registration = getUserRegistration(event.id);
-    const isRegistered = !!registration;
-    const isFull = event.attendees.capacity &&
-      event.attendees.registered >= event.attendees.capacity;
+    const Icon = eventTypeIcons[event.type]
+    const registration = getUserRegistration(event.id)
+    const isRegistered = !!registration
+    const isFull =
+      event.attendees.capacity &&
+      event.attendees.registered >= event.attendees.capacity
 
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className="transition-shadow hover:shadow-md">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className={cn(
-                "p-2 rounded-lg",
-                eventTypeColors[event.type]
-              )}>
+              <div
+                className={cn("rounded-lg p-2", eventTypeColors[event.type])}
+              >
                 <Icon className="h-5 w-5" />
               </div>
               <div>
                 <CardTitle className="text-lg">{event.title}</CardTitle>
                 <CardDescription className="mt-1">
-                  {format(event.startDate, 'MMM dd, yyyy')} at {event.startTime}
+                  {format(event.startDate, "MMM dd, yyyy")} at {event.startTime}
                 </CardDescription>
               </div>
             </div>
@@ -368,11 +445,11 @@ export function EventManagement({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground line-clamp-2">
+          <p className="text-muted-foreground line-clamp-2 text-sm">
             {event.description}
           </p>
 
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               <span>{event.location.venue}</span>
@@ -397,8 +474,9 @@ export function EventManagement({
                 <Badge variant="secondary">Free</Badge>
               )}
               {event.registration.deadline && (
-                <span className="text-xs text-muted-foreground">
-                  Registration closes {format(event.registration.deadline, 'MMM dd')}
+                <span className="text-muted-foreground text-xs">
+                  Registration closes{" "}
+                  {format(event.registration.deadline, "MMM dd")}
                 </span>
               )}
             </div>
@@ -406,7 +484,7 @@ export function EventManagement({
 
           {event.tags && event.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {event.tags.slice(0, 3).map(tag => (
+              {event.tags.slice(0, 3).map((tag) => (
                 <Badge key={tag} variant="outline" className="text-xs">
                   {tag}
                 </Badge>
@@ -420,7 +498,7 @@ export function EventManagement({
           )}
         </CardContent>
         <CardFooter className="pt-3">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <Badge variant="outline" className="text-xs">
               {getDaysUntilEvent(event.startDate)}
             </Badge>
@@ -429,43 +507,45 @@ export function EventManagement({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setSelectedEvent(event);
-                  setDetailsDialogOpen(true);
+                  setSelectedEvent(event)
+                  setDetailsDialogOpen(true)
                 }}
               >
                 <Eye className="h-4 w-4" />
               </Button>
-              {event.registration.required && (
-                isRegistered ? (
+              {event.registration.required &&
+                (isRegistered ? (
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => handleCancelRegistration(event)}
                   >
-                    <CircleCheck className="h-4 w-4 mr-1" />
+                    <CircleCheck className="mr-1 h-4 w-4" />
                     Registered
                   </Button>
                 ) : (
                   <Button
                     variant="default"
                     size="sm"
-                    disabled={isFull || isPast(event.registration.deadline || event.startDate)}
+                    disabled={
+                      isFull ||
+                      isPast(event.registration.deadline || event.startDate)
+                    }
                     onClick={() => {
-                      setSelectedEvent(event);
-                      setRegistrationDialogOpen(true);
+                      setSelectedEvent(event)
+                      setRegistrationDialogOpen(true)
                     }}
                   >
-                    <Ticket className="h-4 w-4 mr-1" />
-                    {isFull ? 'Full' : 'Register'}
+                    <Ticket className="mr-1 h-4 w-4" />
+                    {isFull ? "Full" : "Register"}
                   </Button>
-                )
-              )}
+                ))}
             </div>
           </div>
         </CardFooter>
       </Card>
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -475,11 +555,13 @@ export function EventManagement({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Event Management</CardTitle>
-              <CardDescription>School events, activities, and programs</CardDescription>
+              <CardDescription>
+                School events, activities, and programs
+              </CardDescription>
             </div>
             {currentUser.permissions.canCreate && (
               <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Create Event
               </Button>
             )}
@@ -488,7 +570,7 @@ export function EventManagement({
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Upcoming Events</CardDescription>
@@ -528,7 +610,7 @@ export function EventManagement({
 
       {/* Filters and View Options */}
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex flex-1 items-center gap-2">
           <Input
             placeholder="Search events..."
             value={searchQuery}
@@ -541,7 +623,7 @@ export function EventManagement({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              {Object.keys(eventTypeIcons).map(type => (
+              {Object.keys(eventTypeIcons).map((type) => (
                 <SelectItem key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </SelectItem>
@@ -552,23 +634,23 @@ export function EventManagement({
 
         <div className="flex gap-1">
           <Button
-            variant={selectedView === 'cards' ? 'default' : 'outline'}
+            variant={selectedView === "cards" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedView('cards')}
+            onClick={() => setSelectedView("cards")}
           >
             Cards
           </Button>
           <Button
-            variant={selectedView === 'list' ? 'default' : 'outline'}
+            variant={selectedView === "list" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedView('list')}
+            onClick={() => setSelectedView("list")}
           >
             List
           </Button>
           <Button
-            variant={selectedView === 'calendar' ? 'default' : 'outline'}
+            variant={selectedView === "calendar" ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedView('calendar')}
+            onClick={() => setSelectedView("calendar")}
           >
             Calendar
           </Button>
@@ -577,45 +659,56 @@ export function EventManagement({
 
       {/* Main Content */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
           <TabsTrigger value="past">Past Events</TabsTrigger>
           <TabsTrigger value="my-events">My Events</TabsTrigger>
         </TabsList>
 
         <TabsContent value={selectedTab} className="mt-4">
-          {selectedView === 'cards' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredEvents.map(event => (
+          {selectedView === "cards" && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
           )}
 
-          {selectedView === 'list' && (
+          {selectedView === "list" && (
             <Card>
               <CardContent className="p-0">
                 <div className="divide-y">
-                  {filteredEvents.map(event => {
-                    const Icon = eventTypeIcons[event.type];
-                    const registration = getUserRegistration(event.id);
+                  {filteredEvents.map((event) => {
+                    const Icon = eventTypeIcons[event.type]
+                    const registration = getUserRegistration(event.id)
 
                     return (
-                      <div key={event.id} className="p-4 hover:bg-muted/50 transition-colors">
+                      <div
+                        key={event.id}
+                        className="hover:bg-muted/50 p-4 transition-colors"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={cn("p-2 rounded-lg", eventTypeColors[event.type])}>
+                            <div
+                              className={cn(
+                                "rounded-lg p-2",
+                                eventTypeColors[event.type]
+                              )}
+                            >
                               <Icon className="h-4 w-4" />
                             </div>
                             <div>
                               <p className="font-medium">{event.title}</p>
-                              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                <span>{format(event.startDate, 'MMM dd, yyyy')}</span>
+                              <div className="text-muted-foreground flex items-center gap-3 text-sm">
+                                <span>
+                                  {format(event.startDate, "MMM dd, yyyy")}
+                                </span>
                                 <span>{event.startTime}</span>
                                 <span>{event.location.venue}</span>
                                 <Badge variant="outline" className="text-xs">
                                   {event.attendees.registered}
-                                  {event.attendees.capacity && ` / ${event.attendees.capacity}`}
+                                  {event.attendees.capacity &&
+                                    ` / ${event.attendees.capacity}`}
                                 </Badge>
                               </div>
                             </div>
@@ -628,8 +721,8 @@ export function EventManagement({
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setSelectedEvent(event);
-                                setDetailsDialogOpen(true);
+                                setSelectedEvent(event)
+                                setDetailsDialogOpen(true)
                               }}
                             >
                               View
@@ -637,23 +730,25 @@ export function EventManagement({
                           </div>
                         </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {selectedView === 'calendar' && (
+          {selectedView === "calendar" && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>{format(selectedMonth, 'MMMM yyyy')}</CardTitle>
+                  <CardTitle>{format(selectedMonth, "MMMM yyyy")}</CardTitle>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedMonth(prev => addDays(prev, -30))}
+                      onClick={() =>
+                        setSelectedMonth((prev) => addDays(prev, -30))
+                      }
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -667,7 +762,9 @@ export function EventManagement({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedMonth(prev => addDays(prev, 30))}
+                      onClick={() =>
+                        setSelectedMonth((prev) => addDays(prev, 30))
+                      }
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -675,58 +772,70 @@ export function EventManagement({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-7 gap-px bg-muted">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="bg-background p-2 text-center text-sm font-medium">
-                      {day}
-                    </div>
-                  ))}
+                <div className="bg-muted grid grid-cols-7 gap-px">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                    (day) => (
+                      <div
+                        key={day}
+                        className="bg-background p-2 text-center text-sm font-medium"
+                      >
+                        {day}
+                      </div>
+                    )
+                  )}
                   {calendarDays.map((day, index) => {
                     if (!day) {
-                      return <div key={`empty-${index}`} className="bg-background p-2 min-h-[80px]" />;
+                      return (
+                        <div
+                          key={`empty-${index}`}
+                          className="bg-background min-h-[80px] p-2"
+                        />
+                      )
                     }
 
-                    const dateStr = format(day, 'yyyy-MM-dd');
-                    const dayEvents = eventsByDate.get(dateStr) || [];
+                    const dateStr = format(day, "yyyy-MM-dd")
+                    const dayEvents = eventsByDate.get(dateStr) || []
 
                     return (
                       <div
                         key={day.toString()}
                         className={cn(
-                          "bg-background p-2 min-h-[80px] border",
+                          "bg-background min-h-[80px] border p-2",
                           isToday(day) && "bg-primary/5",
                           !isSameMonth(day, selectedMonth) && "opacity-50"
                         )}
                       >
-                        <div className="text-sm font-medium mb-1">{format(day, 'd')}</div>
+                        <div className="mb-1 text-sm font-medium">
+                          {format(day, "d")}
+                        </div>
                         <div className="space-y-1">
                           {dayEvents.slice(0, 2).map((event, idx) => {
-                            const Icon = eventTypeIcons[event.type];
+                            const Icon = eventTypeIcons[event.type]
                             return (
                               <div
                                 key={`${event.id}-${idx}`}
                                 className={cn(
-                                  "text-[10px] p-1 rounded flex items-center gap-1 cursor-pointer",
+                                  "flex cursor-pointer items-center gap-1 rounded p-1 text-[10px]",
                                   eventTypeColors[event.type]
                                 )}
                                 onClick={() => {
-                                  setSelectedEvent(event);
-                                  setDetailsDialogOpen(true);
+                                  setSelectedEvent(event)
+                                  setDetailsDialogOpen(true)
                                 }}
                               >
                                 <Icon className="h-2.5 w-2.5" />
                                 <span className="truncate">{event.title}</span>
                               </div>
-                            );
+                            )
                           })}
                           {dayEvents.length > 2 && (
-                            <div className="text-[10px] text-muted-foreground text-center">
+                            <div className="text-muted-foreground text-center text-[10px]">
                               +{dayEvents.length - 2} more
                             </div>
                           )}
                         </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </CardContent>
@@ -741,7 +850,8 @@ export function EventManagement({
           <DialogHeader>
             <DialogTitle>{selectedEvent?.title}</DialogTitle>
             <DialogDescription>
-              {selectedEvent && format(selectedEvent.startDate, 'MMMM dd, yyyy')}
+              {selectedEvent &&
+                format(selectedEvent.startDate, "MMMM dd, yyyy")}
             </DialogDescription>
           </DialogHeader>
 
@@ -750,13 +860,19 @@ export function EventManagement({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Type</Label>
-                  <Badge variant="outline" className={cn("mt-1", eventTypeColors[selectedEvent.type])}>
+                  <Badge
+                    variant="outline"
+                    className={cn("mt-1", eventTypeColors[selectedEvent.type])}
+                  >
                     {selectedEvent.type}
                   </Badge>
                 </div>
                 <div>
                   <Label>Status</Label>
-                  <Badge variant="outline" className={cn("mt-1", statusColors[selectedEvent.status])}>
+                  <Badge
+                    variant="outline"
+                    className={cn("mt-1", statusColors[selectedEvent.status])}
+                  >
                     {selectedEvent.status}
                   </Badge>
                 </div>
@@ -764,7 +880,7 @@ export function EventManagement({
 
               <div>
                 <Label>Description</Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-muted-foreground mt-1 text-sm">
                   {selectedEvent.description}
                 </p>
               </div>
@@ -772,8 +888,8 @@ export function EventManagement({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Date & Time</Label>
-                  <div className="text-sm mt-1">
-                    <p>{format(selectedEvent.startDate, 'MMMM dd, yyyy')}</p>
+                  <div className="mt-1 text-sm">
+                    <p>{format(selectedEvent.startDate, "MMMM dd, yyyy")}</p>
                     <p className="text-muted-foreground">
                       {selectedEvent.startTime} - {selectedEvent.endTime}
                     </p>
@@ -781,10 +897,12 @@ export function EventManagement({
                 </div>
                 <div>
                   <Label>Location</Label>
-                  <div className="text-sm mt-1">
+                  <div className="mt-1 text-sm">
                     <p>{selectedEvent.location.venue}</p>
                     {selectedEvent.location.address && (
-                      <p className="text-muted-foreground">{selectedEvent.location.address}</p>
+                      <p className="text-muted-foreground">
+                        {selectedEvent.location.address}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -793,19 +911,23 @@ export function EventManagement({
               <div>
                 <Label>Attendance</Label>
                 <div className="mt-2">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm">
                       {selectedEvent.attendees.registered} registered
                     </span>
                     {selectedEvent.attendees.capacity && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-muted-foreground text-sm">
                         Capacity: {selectedEvent.attendees.capacity}
                       </span>
                     )}
                   </div>
                   {selectedEvent.attendees.capacity && (
                     <Progress
-                      value={(selectedEvent.attendees.registered / selectedEvent.attendees.capacity) * 100}
+                      value={
+                        (selectedEvent.attendees.registered /
+                          selectedEvent.attendees.capacity) *
+                        100
+                      }
                       className="h-2"
                     />
                   )}
@@ -815,8 +937,8 @@ export function EventManagement({
               {selectedEvent.tags && selectedEvent.tags.length > 0 && (
                 <div>
                   <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedEvent.tags.map(tag => (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedEvent.tags.map((tag) => (
                       <Badge key={tag} variant="outline">
                         {tag}
                       </Badge>
@@ -828,14 +950,19 @@ export function EventManagement({
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDetailsDialogOpen(false)}
+            >
               Close
             </Button>
             {selectedEvent?.registration.required && (
-              <Button onClick={() => {
-                setDetailsDialogOpen(false);
-                setRegistrationDialogOpen(true);
-              }}>
+              <Button
+                onClick={() => {
+                  setDetailsDialogOpen(false)
+                  setRegistrationDialogOpen(true)
+                }}
+              >
                 Register Now
               </Button>
             )}
@@ -843,5 +970,5 @@ export function EventManagement({
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

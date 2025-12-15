@@ -1,19 +1,32 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { BookOpen, Users, DollarSign, TrendingUp } from "lucide-react";
-import Link from "next/link";
+import Link from "next/link"
+import { BookOpen, DollarSign, TrendingUp, Users } from "lucide-react"
+
+import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface Props {
-  dictionary: any;
-  lang: string;
-  schoolId: string | null;
-  userId: string;
-  userRole: string;
+  dictionary: any
+  lang: string
+  schoolId: string | null
+  userId: string
+  userRole: string
 }
 
-export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId, userRole }: Props) {
+export function StreamAdminDashboardContent({
+  dictionary,
+  lang,
+  schoolId,
+  userId,
+  userRole,
+}: Props) {
   return (
     <div className="space-y-6">
       <div>
@@ -28,44 +41,46 @@ export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
-            <BookOpen className="size-4 text-muted-foreground" />
+            <BookOpen className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">No courses yet</p>
+            <p className="text-muted-foreground text-xs">No courses yet</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Enrollments</CardTitle>
-            <Users className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Total Enrollments
+            </CardTitle>
+            <Users className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">No enrollments yet</p>
+            <p className="text-muted-foreground text-xs">No enrollments yet</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="size-4 text-muted-foreground" />
+            <DollarSign className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">$0</div>
-            <p className="text-xs text-muted-foreground">No revenue yet</p>
+            <p className="text-muted-foreground text-xs">No revenue yet</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Growth</CardTitle>
-            <TrendingUp className="size-4 text-muted-foreground" />
+            <TrendingUp className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">0%</div>
-            <p className="text-xs text-muted-foreground">No growth data</p>
+            <p className="text-muted-foreground text-xs">No growth data</p>
           </CardContent>
         </Card>
       </div>
@@ -79,11 +94,11 @@ export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center bg-muted rounded-lg">
-            <div className="text-center space-y-2">
-              <TrendingUp className="mx-auto size-12 text-muted-foreground" />
+          <div className="bg-muted flex h-[300px] items-center justify-center rounded-lg">
+            <div className="space-y-2 text-center">
+              <TrendingUp className="text-muted-foreground mx-auto size-12" />
               <p className="muted">Chart visualization placeholder</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Enrollment data will be displayed here
               </p>
             </div>
@@ -97,7 +112,9 @@ export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Recent Courses</CardTitle>
-              <CardDescription>Your most recently created courses</CardDescription>
+              <CardDescription>
+                Your most recently created courses
+              </CardDescription>
             </div>
             <Link
               className={buttonVariants({ variant: "outline" })}
@@ -108,8 +125,8 @@ export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-10">
-            <BookOpen className="mx-auto size-12 text-muted-foreground mb-4" />
+          <div className="py-10 text-center">
+            <BookOpen className="text-muted-foreground mx-auto mb-4 size-12" />
             <h3>No courses yet</h3>
             <p className="muted mb-4">
               Create your first course to get started
@@ -124,5 +141,5 @@ export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -12,15 +13,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 
 const FormSchema = z.object({
   email: z.string().email({
     message: "Enter a valid email.",
   }),
-});
+})
 
 export function NewsletterForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -28,10 +28,10 @@ export function NewsletterForm() {
     defaultValues: {
       email: "",
     },
-  });
+  })
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    form.reset();
+    form.reset()
     toast(
       <div>
         <div className="font-medium">You submitted the following values:</div>
@@ -39,7 +39,7 @@ export function NewsletterForm() {
           <code className="text-white">{JSON.stringify(data, null, 2)}</code>
         </pre>
       </div>
-    );
+    )
   }
 
   return (
@@ -66,10 +66,10 @@ export function NewsletterForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" size="sm" className="px-4 rounded-full">
+        <Button type="submit" size="sm" className="rounded-full px-4">
           Subscribe
         </Button>
       </form>
     </Form>
-  );
+  )
 }

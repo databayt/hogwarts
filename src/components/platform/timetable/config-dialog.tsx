@@ -1,17 +1,48 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useState, useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import config from './config.json'
+import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import config from "./config.json"
 import { useMediaQuery } from "./use-media-query"
 
 interface School {
@@ -39,7 +70,9 @@ interface ConfigDialogProps {
   onSave: (config: ClassConfig) => void
 }
 
-const API_URL = config.isDev ? config.development.apiUrl : config.production.apiUrl
+const API_URL = config.isDev
+  ? config.development.apiUrl
+  : config.production.apiUrl
 const DEBUG = config.isDev ? config.development.debug : config.production.debug
 const USE_LOCAL_JSON = Boolean((config as any).useLocalJson)
 
@@ -51,7 +84,7 @@ const log = (...args: any[]) => {
 
 function debounce<T extends (...args: any[]) => void>(
   fn: T,
-  waitMs = 500,
+  waitMs = 500
 ): (...args: Parameters<T>) => void {
   let timer: ReturnType<typeof setTimeout> | undefined
   return (...args: Parameters<T>) => {
@@ -60,7 +93,13 @@ function debounce<T extends (...args: any[]) => void>(
   }
 }
 
-export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, onSave }: ConfigDialogProps) {
+export function ConfigDialog({
+  open,
+  onOpenChange,
+  classConfig,
+  onConfigChange,
+  onSave,
+}: ConfigDialogProps) {
   const [tempConfig, setTempConfig] = useState(classConfig)
   const [schools, setSchools] = useState<School[]>([])
   const [openCombobox, setOpenCombobox] = useState(false)
@@ -73,9 +112,9 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
 
   // Update debug logs to use the log function
   useEffect(() => {
-    log('Schools updated:', schools)
-    log('Open combobox:', openCombobox)
-    log('Search value:', searchValue)
+    log("Schools updated:", schools)
+    log("Open combobox:", openCombobox)
+    log("Search value:", searchValue)
   }, [schools, openCombobox, searchValue])
 
   // Reset form when dialog opens
@@ -102,14 +141,14 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       if (isSearching || !tempConfig.schoolCode) {
-        setTempConfig(prev => ({
+        setTempConfig((prev) => ({
           ...prev,
-          school: '',
-          schoolCode: '',
-          grade: '',
-          class: ''
+          school: "",
+          schoolCode: "",
+          grade: "",
+          class: "",
         }))
-        setSearchValue('')
+        setSearchValue("")
       }
       setIsSearching(false)
     }
@@ -118,32 +157,32 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
   }
 
   const handleSearchValueChange = (value: string) => {
-    log('Search value changing from:', searchValue, 'to:', value)
+    log("Search value changing from:", searchValue, "to:", value)
     setSearchValue(value)
     setIsSearching(true)
     setOpenCombobox(true)
-    
+
     if (value.length < 2) {
-      log('Search value too short, clearing results')
+      log("Search value too short, clearing results")
       setSchools([])
       setError(null)
       return
     }
-    
-    log('Initiating search for:', value)
+
+    log("Initiating search for:", value)
     searchSchools(value)
   }
 
   const handleSchoolSelect = (schoolName: string) => {
-    const school = schools.find(s => s.SCHUL_NM === schoolName)
+    const school = schools.find((s) => s.SCHUL_NM === schoolName)
     if (!school) return
 
-    setTempConfig(prev => ({
+    setTempConfig((prev) => ({
       ...prev,
       school: schoolName,
       schoolCode: school.SD_SCHUL_CODE,
-      grade: '',
-      class: ''
+      grade: "",
+      class: "",
     }))
     setSearchValue(schoolName)
     setIsSearching(false)
@@ -151,14 +190,15 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
   }
 
   const getAvailableGrades = (schoolName: string) => {
-    const school = schools.find(s => s.SCHUL_NM === schoolName)
-    const isElementary = (
-      school?.SCHUL_KND_SC_NM === '초등학교' ||
-      school?.SCHUL_KND_SC_NM?.toLowerCase() === 'elementary school' ||
-      /초등학교$/.test(school?.SCHUL_NM || '') ||
-      /elementary school$/i.test(school?.SCHUL_NM || '')
-    )
-    return isElementary ? Array.from({ length: 6 }, (_, i) => (i + 1).toString()) : ['1', '2', '3']
+    const school = schools.find((s) => s.SCHUL_NM === schoolName)
+    const isElementary =
+      school?.SCHUL_KND_SC_NM === "초등학교" ||
+      school?.SCHUL_KND_SC_NM?.toLowerCase() === "elementary school" ||
+      /초등학교$/.test(school?.SCHUL_NM || "") ||
+      /elementary school$/i.test(school?.SCHUL_NM || "")
+    return isElementary
+      ? Array.from({ length: 6 }, (_, i) => (i + 1).toString())
+      : ["1", "2", "3"]
   }
 
   // Fetch available classes when school and grade are selected
@@ -170,57 +210,66 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           ? `/timetable/classes.json`
           : `${API_URL}/classes?grade=${grade}&schoolcode=${schoolCode}`
       )
-      if (!response.ok) throw new Error('Failed to load class list')
+      if (!response.ok) throw new Error("Failed to load class list")
       const data = await response.json()
       setAvailableClasses(Array.isArray(data) ? data : [])
       if (Array.isArray(data) && data.length === 0) {
-        setError('No classes found for the selected grade')
+        setError("No classes found for the selected grade")
       }
     } catch (error) {
-      console.error('Error fetching classes:', error)
+      console.error("Error fetching classes:", error)
       setAvailableClasses([])
-      setError(error instanceof Error ? error.message : 'An error occurred while loading classes')
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while loading classes"
+      )
     }
   }
 
   // Update searchSchools to use the log function
-  const searchSchools = useMemo(() =>
-    debounce(async (query: string) => {
-      log('Debounced search executing for:', query)
-      if (query.length < 2) {
-        setSchools([])
-        setError(null)
-        setIsSearching(false)
-        return
-      }
-      
-      setIsLoading(true)
-      setOpenCombobox(true)
-      try {
-        setError(null)
-        log('Fetching schools for query:', query)
-        const response = await fetch(
-          USE_LOCAL_JSON
-            ? `/timetable/schools.json`
-            : `${API_URL}/school?schoolname=${encodeURIComponent(query)}`
-        )
-        if (!response.ok) throw new Error('Failed to load school list')
-        const data = await response.json()
-        log('Search results received:', data)
-        setSchools(Array.isArray(data) ? data : [])
-        if (Array.isArray(data) && data.length === 0) {
-          setError('No results found')
+  const searchSchools = useMemo(
+    () =>
+      debounce(async (query: string) => {
+        log("Debounced search executing for:", query)
+        if (query.length < 2) {
+          setSchools([])
+          setError(null)
+          setIsSearching(false)
+          return
         }
-      } catch (error) {
-        console.error('Error fetching schools:', error)
-        setSchools([])
-        setError(error instanceof Error ? error.message : 'An error occurred while loading schools')
-      } finally {
-        setIsLoading(false)
-        setIsSearching(false)
+
+        setIsLoading(true)
         setOpenCombobox(true)
-      }
-    }, 500),
+        try {
+          setError(null)
+          log("Fetching schools for query:", query)
+          const response = await fetch(
+            USE_LOCAL_JSON
+              ? `/timetable/schools.json`
+              : `${API_URL}/school?schoolname=${encodeURIComponent(query)}`
+          )
+          if (!response.ok) throw new Error("Failed to load school list")
+          const data = await response.json()
+          log("Search results received:", data)
+          setSchools(Array.isArray(data) ? data : [])
+          if (Array.isArray(data) && data.length === 0) {
+            setError("No results found")
+          }
+        } catch (error) {
+          console.error("Error fetching schools:", error)
+          setSchools([])
+          setError(
+            error instanceof Error
+              ? error.message
+              : "An error occurred while loading schools"
+          )
+        } finally {
+          setIsLoading(false)
+          setIsSearching(false)
+          setOpenCombobox(true)
+        }
+      }, 500),
     []
   )
 
@@ -239,7 +288,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
               variant="outline"
               role="combobox"
               aria-expanded={openCombobox}
-              className="justify-between w-full"
+              className="w-full justify-between"
               onClick={() => {
                 setOpenCombobox(true)
               }}
@@ -252,48 +301,45 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             className="w-[var(--radix-popover-trigger-width)] p-0"
             align="start"
           >
-            <Command
-              filter={() => 1}
-              shouldFilter={false}
-            >
+            <Command filter={() => 1} shouldFilter={false}>
               <CommandInput
                 placeholder="Search school name..."
                 value={searchValue}
                 onValueChange={handleSearchValueChange}
               />
-              
+
               <CommandList>
                 {error ? (
-                  <p className="py-6 text-center muted">
-                    {error}
-                  </p>
+                  <p className="muted py-6 text-center">{error}</p>
                 ) : searchValue.length <= 1 ? (
-                  <CommandEmpty className="py-6 text-center muted">
+                  <CommandEmpty className="muted py-6 text-center">
                     학교 이름을 입력하세요
                   </CommandEmpty>
-                 ) : isLoading ? (
-                  <p className="py-6 text-center muted">Searching...</p>
+                ) : isLoading ? (
+                  <p className="muted py-6 text-center">Searching...</p>
                 ) : schools.length === 0 ? (
-                  <p className="py-6 text-center muted">No results</p>
+                  <p className="muted py-6 text-center">No results</p>
                 ) : (
                   <CommandGroup>
                     {schools.map((school) => (
-                        <CommandItem
-                          key={`${school.SCHUL_NM}-${school.SD_SCHUL_CODE}`}
-                          onSelect={() => handleSchoolSelect(school.SCHUL_NM)}
-                          className="cursor-pointer"
-                        >
-                          <Check
-                            className={cn(
-                              "me-2 h-4 w-4",
-                              tempConfig.school === school.SCHUL_NM ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {school.SCHUL_NM}
-                          <small className="ms-2 text-muted-foreground">
-                            ({school.ATPT_OFCDC_SC_NM})
-                          </small>
-                        </CommandItem>
+                      <CommandItem
+                        key={`${school.SCHUL_NM}-${school.SD_SCHUL_CODE}`}
+                        onSelect={() => handleSchoolSelect(school.SCHUL_NM)}
+                        className="cursor-pointer"
+                      >
+                        <Check
+                          className={cn(
+                            "me-2 h-4 w-4",
+                            tempConfig.school === school.SCHUL_NM
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        {school.SCHUL_NM}
+                        <small className="text-muted-foreground ms-2">
+                          ({school.ATPT_OFCDC_SC_NM})
+                        </small>
+                      </CommandItem>
                     ))}
                   </CommandGroup>
                 )}
@@ -301,11 +347,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             </Command>
           </PopoverContent>
         </Popover>
-        {error && (
-          <p className="muted mt-1">
-            {error}
-          </p>
-        )}
+        {error && <p className="muted mt-1">{error}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -314,20 +356,20 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           <Select
             disabled={!tempConfig.school || isSearching}
             value={tempConfig.grade}
-            onValueChange={(value) => setTempConfig({ ...tempConfig, grade: value, class: '' })}
+            onValueChange={(value) =>
+              setTempConfig({ ...tempConfig, grade: value, class: "" })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select grade" />
             </SelectTrigger>
             <SelectContent>
-              {tempConfig.school && getAvailableGrades(tempConfig.school).map((grade) => (
-                <SelectItem
-                  key={grade}
-                  value={grade}
-                >
-                   Grade {grade}
-                </SelectItem>
-              ))}
+              {tempConfig.school &&
+                getAvailableGrades(tempConfig.school).map((grade) => (
+                  <SelectItem key={grade} value={grade}>
+                    Grade {grade}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -337,17 +379,16 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           <Select
             disabled={!tempConfig.school || !tempConfig.grade || isSearching}
             value={tempConfig.class}
-            onValueChange={(value) => setTempConfig({ ...tempConfig, class: value })}
+            onValueChange={(value) =>
+              setTempConfig({ ...tempConfig, class: value })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
             <SelectContent>
               {availableClasses.map((classNum) => (
-                <SelectItem
-                  key={classNum}
-                  value={classNum}
-                >
+                <SelectItem key={classNum} value={classNum}>
                   Class {classNum}
                 </SelectItem>
               ))}
@@ -359,19 +400,23 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
       <div>
         <Label>Lunch after period</Label>
         <Select
-          disabled={!tempConfig.school || !tempConfig.grade || !tempConfig.class || isSearching}
+          disabled={
+            !tempConfig.school ||
+            !tempConfig.grade ||
+            !tempConfig.class ||
+            isSearching
+          }
           value={tempConfig.lunchAfter.toString()}
-          onValueChange={(value) => setTempConfig({ ...tempConfig, lunchAfter: parseInt(value) })}
+          onValueChange={(value) =>
+            setTempConfig({ ...tempConfig, lunchAfter: parseInt(value) })
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="Select lunch period" />
           </SelectTrigger>
           <SelectContent>
             {[3, 4, 5].map((period) => (
-              <SelectItem
-                key={period}
-                value={period.toString()}
-              >
+              <SelectItem key={period} value={period.toString()}>
                 After period {period}
               </SelectItem>
             ))}
@@ -385,8 +430,13 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             type="checkbox"
             id="showAllSubjects"
             checked={tempConfig.showAllSubjects}
-            onChange={(e) => setTempConfig({ ...tempConfig, showAllSubjects: e.target.checked })}
-            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
+            onChange={(e) =>
+              setTempConfig({
+                ...tempConfig,
+                showAllSubjects: e.target.checked,
+              })
+            }
+            className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
           />
           <Label htmlFor="showAllSubjects">
             Show all subjects in subject selection
@@ -398,18 +448,28 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             type="checkbox"
             id="displayFallbackData"
             checked={tempConfig.displayFallbackData}
-            onChange={(e) => setTempConfig({ ...tempConfig, displayFallbackData: e.target.checked })}
-            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
+            onChange={(e) =>
+              setTempConfig({
+                ...tempConfig,
+                displayFallbackData: e.target.checked,
+              })
+            }
+            className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
           />
           <Label htmlFor="displayFallbackData">
             Display fallback data when main data is unavailable
           </Label>
         </div>
       </div>
-      
-      <Button 
+
+      <Button
         onClick={() => onSave(tempConfig)}
-        disabled={!tempConfig.school || !tempConfig.grade || !tempConfig.class || isSearching}
+        disabled={
+          !tempConfig.school ||
+          !tempConfig.grade ||
+          !tempConfig.class ||
+          isSearching
+        }
         className="w-full sm:w-auto"
       >
         Save

@@ -1,12 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react"
+import { format } from "date-fns"
+import {
+  Award,
+  BarChart,
+  Calendar,
+  CircleCheck,
+  Clock,
+  Download,
+  FileText,
+  Medal,
+  Printer,
+  Target,
+  TrendingUp,
+  Trophy,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -14,82 +43,73 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FileText, Award, TrendingUp, Download, Printer, Trophy, Medal, Target, Calendar, Clock, CircleCheck } from "lucide-react"
-import { BarChart } from "lucide-react";
-import type { Student, Achievement } from "../registration/types";
-import { format } from "date-fns";
-import { toast } from "sonner";
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import type { Achievement, Student } from "../registration/types"
 
 interface AcademicRecord {
-  id: string;
-  studentId: string;
-  academicYearId: string;
-  termId: string;
-  subjects: SubjectGrade[];
-  totalMarks: number;
-  obtainedMarks: number;
-  percentage: number;
-  grade: string;
-  rank?: number;
-  attendance: number;
-  remarks?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  studentId: string
+  academicYearId: string
+  termId: string
+  subjects: SubjectGrade[]
+  totalMarks: number
+  obtainedMarks: number
+  percentage: number
+  grade: string
+  rank?: number
+  attendance: number
+  remarks?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface SubjectGrade {
-  subjectId: string;
-  subjectName: string;
-  subjectCode: string;
-  maxMarks: number;
-  obtainedMarks: number;
-  grade: string;
-  remarks?: string;
-  assignments: AssignmentGrade[];
-  exams: ExamGrade[];
+  subjectId: string
+  subjectName: string
+  subjectCode: string
+  maxMarks: number
+  obtainedMarks: number
+  grade: string
+  remarks?: string
+  assignments: AssignmentGrade[]
+  exams: ExamGrade[]
 }
 
 interface AssignmentGrade {
-  id: string;
-  name: string;
-  maxMarks: number;
-  obtainedMarks: number;
-  submittedDate: Date;
-  grade: string;
+  id: string
+  name: string
+  maxMarks: number
+  obtainedMarks: number
+  submittedDate: Date
+  grade: string
 }
 
 interface ExamGrade {
-  id: string;
-  examType: "MIDTERM" | "FINAL" | "QUIZ" | "PRACTICAL";
-  maxMarks: number;
-  obtainedMarks: number;
-  examDate: Date;
-  grade: string;
+  id: string
+  examType: "MIDTERM" | "FINAL" | "QUIZ" | "PRACTICAL"
+  maxMarks: number
+  obtainedMarks: number
+  examDate: Date
+  grade: string
 }
 
 interface Transcript {
-  student: Student;
-  academicRecords: AcademicRecord[];
-  cumulativeGPA: number;
-  totalCredits: number;
-  achievements: Achievement[];
-  generatedDate: Date;
+  student: Student
+  academicRecords: AcademicRecord[]
+  cumulativeGPA: number
+  totalCredits: number
+  achievements: Achievement[]
+  generatedDate: Date
 }
 
 interface AcademicRecordsProps {
-  student: Student;
-  academicRecords: AcademicRecord[];
-  achievements: Achievement[];
-  onGenerateTranscript?: () => void;
-  onDownloadReport?: (format: "pdf" | "excel") => void;
+  student: Student
+  academicRecords: AcademicRecord[]
+  achievements: Achievement[]
+  onGenerateTranscript?: () => void
+  onDownloadReport?: (format: "pdf" | "excel") => void
 }
 
 export function AcademicRecords({
@@ -99,63 +119,78 @@ export function AcademicRecords({
   onGenerateTranscript,
   onDownloadReport,
 }: AcademicRecordsProps) {
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedTerm, setSelectedTerm] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all")
+  const [selectedTerm, setSelectedTerm] = useState<string>("all")
 
   // ListFilter records based on selection
-  const filteredRecords = academicRecords.filter(record => {
-    const matchesYear = selectedYear === "all" || record.academicYearId === selectedYear;
-    const matchesTerm = selectedTerm === "all" || record.termId === selectedTerm;
-    return matchesYear && matchesTerm;
-  });
+  const filteredRecords = academicRecords.filter((record) => {
+    const matchesYear =
+      selectedYear === "all" || record.academicYearId === selectedYear
+    const matchesTerm = selectedTerm === "all" || record.termId === selectedTerm
+    return matchesYear && matchesTerm
+  })
 
   // Calculate statistics
   const stats = {
-    averagePercentage: filteredRecords.reduce((sum, r) => sum + r.percentage, 0) / filteredRecords.length || 0,
-    highestPercentage: Math.max(...filteredRecords.map(r => r.percentage)) || 0,
-    lowestPercentage: Math.min(...filteredRecords.map(r => r.percentage)) || 0,
-    averageAttendance: filteredRecords.reduce((sum, r) => sum + r.attendance, 0) / filteredRecords.length || 0,
+    averagePercentage:
+      filteredRecords.reduce((sum, r) => sum + r.percentage, 0) /
+        filteredRecords.length || 0,
+    highestPercentage:
+      Math.max(...filteredRecords.map((r) => r.percentage)) || 0,
+    lowestPercentage:
+      Math.min(...filteredRecords.map((r) => r.percentage)) || 0,
+    averageAttendance:
+      filteredRecords.reduce((sum, r) => sum + r.attendance, 0) /
+        filteredRecords.length || 0,
     totalAchievements: achievements.length,
-    recentAchievements: achievements.filter(a => {
-      const achievementDate = new Date(a.achievementDate);
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      return achievementDate > sixMonthsAgo;
+    recentAchievements: achievements.filter((a) => {
+      const achievementDate = new Date(a.achievementDate)
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+      return achievementDate > sixMonthsAgo
     }).length,
-  };
+  }
 
   const getGradeColor = (grade: string) => {
     switch (grade[0]) {
-      case "A": return "text-green-600";
-      case "B": return "text-blue-600";
-      case "C": return "text-yellow-600";
-      case "D": return "text-orange-600";
-      case "F": return "text-red-600";
-      default: return "text-gray-600";
+      case "A":
+        return "text-green-600"
+      case "B":
+        return "text-blue-600"
+      case "C":
+        return "text-yellow-600"
+      case "D":
+        return "text-orange-600"
+      case "F":
+        return "text-red-600"
+      default:
+        return "text-gray-600"
     }
-  };
+  }
 
   const getPercentageColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-600";
-    if (percentage >= 80) return "text-blue-600";
-    if (percentage >= 70) return "text-yellow-600";
-    if (percentage >= 60) return "text-orange-600";
-    return "text-red-600";
-  };
+    if (percentage >= 90) return "text-green-600"
+    if (percentage >= 80) return "text-blue-600"
+    if (percentage >= 70) return "text-yellow-600"
+    if (percentage >= 60) return "text-orange-600"
+    return "text-red-600"
+  }
 
   return (
     <div className="space-y-6">
       {/* Statistics Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-blue-500" />
               <div>
-                <p className={`text-2xl font-bold ${getPercentageColor(stats.averagePercentage)}`}>
+                <p
+                  className={`text-2xl font-bold ${getPercentageColor(stats.averagePercentage)}`}
+                >
                   {stats.averagePercentage.toFixed(1)}%
                 </p>
-                <p className="text-sm text-muted-foreground">Average Score</p>
+                <p className="text-muted-foreground text-sm">Average Score</p>
               </div>
             </div>
           </CardContent>
@@ -167,7 +202,9 @@ export function AcademicRecords({
               <Target className="h-8 w-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">{stats.highestPercentage}%</p>
-                <p className="text-sm text-muted-foreground">Best Performance</p>
+                <p className="text-muted-foreground text-sm">
+                  Best Performance
+                </p>
               </div>
             </div>
           </CardContent>
@@ -178,8 +215,10 @@ export function AcademicRecords({
             <div className="flex items-center gap-3">
               <Clock className="h-8 w-8 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold">{stats.averageAttendance.toFixed(1)}%</p>
-                <p className="text-sm text-muted-foreground">Attendance</p>
+                <p className="text-2xl font-bold">
+                  {stats.averageAttendance.toFixed(1)}%
+                </p>
+                <p className="text-muted-foreground text-sm">Attendance</p>
               </div>
             </div>
           </CardContent>
@@ -191,7 +230,7 @@ export function AcademicRecords({
               <Trophy className="h-8 w-8 text-yellow-500" />
               <div>
                 <p className="text-2xl font-bold">{stats.totalAchievements}</p>
-                <p className="text-sm text-muted-foreground">Achievements</p>
+                <p className="text-muted-foreground text-sm">Achievements</p>
               </div>
             </div>
           </CardContent>
@@ -199,21 +238,21 @@ export function AcademicRecords({
       </div>
 
       <Tabs defaultValue="grades" className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="grades">
-            <BarChart className="h-4 w-4 mr-2" />
+            <BarChart className="mr-2 h-4 w-4" />
             Grades
           </TabsTrigger>
           <TabsTrigger value="subjects">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             Subjects
           </TabsTrigger>
           <TabsTrigger value="achievements">
-            <Award className="h-4 w-4 mr-2" />
+            <Award className="mr-2 h-4 w-4" />
             Achievements
           </TabsTrigger>
           <TabsTrigger value="transcript">
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             Transcript
           </TabsTrigger>
         </TabsList>
@@ -271,12 +310,16 @@ export function AcademicRecords({
                 <TableBody>
                   {filteredRecords.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell className="font-medium">{record.academicYearId}</TableCell>
+                      <TableCell className="font-medium">
+                        {record.academicYearId}
+                      </TableCell>
                       <TableCell>{record.termId}</TableCell>
                       <TableCell>{record.totalMarks}</TableCell>
                       <TableCell>{record.obtainedMarks}</TableCell>
                       <TableCell>
-                        <span className={`font-medium ${getPercentageColor(record.percentage)}`}>
+                        <span
+                          className={`font-medium ${getPercentageColor(record.percentage)}`}
+                        >
                           {record.percentage.toFixed(1)}%
                         </span>
                       </TableCell>
@@ -288,7 +331,9 @@ export function AcademicRecords({
                       <TableCell>
                         {record.rank ? (
                           <Badge variant="outline">#{record.rank}</Badge>
-                        ) : "-"}
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
                       <TableCell>{record.attendance}%</TableCell>
                     </TableRow>
@@ -331,7 +376,9 @@ export function AcademicRecords({
           {filteredRecords.map((record) => (
             <Card key={record.id}>
               <CardHeader>
-                <CardTitle>{record.academicYearId} - {record.termId}</CardTitle>
+                <CardTitle>
+                  {record.academicYearId} - {record.termId}
+                </CardTitle>
                 <CardDescription>
                   Subject-wise performance breakdown
                 </CardDescription>
@@ -351,15 +398,20 @@ export function AcademicRecords({
                   </TableHeader>
                   <TableBody>
                     {record.subjects.map((subject) => {
-                      const percentage = (subject.obtainedMarks / subject.maxMarks) * 100;
+                      const percentage =
+                        (subject.obtainedMarks / subject.maxMarks) * 100
                       return (
                         <TableRow key={subject.subjectId}>
-                          <TableCell className="font-medium">{subject.subjectName}</TableCell>
+                          <TableCell className="font-medium">
+                            {subject.subjectName}
+                          </TableCell>
                           <TableCell>{subject.subjectCode}</TableCell>
                           <TableCell>{subject.maxMarks}</TableCell>
                           <TableCell>{subject.obtainedMarks}</TableCell>
                           <TableCell>
-                            <span className={`font-medium ${getPercentageColor(percentage)}`}>
+                            <span
+                              className={`font-medium ${getPercentageColor(percentage)}`}
+                            >
                               {percentage.toFixed(1)}%
                             </span>
                           </TableCell>
@@ -368,24 +420,28 @@ export function AcademicRecords({
                               {subject.grade}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
+                          <TableCell className="text-muted-foreground text-sm">
                             {subject.remarks || "-"}
                           </TableCell>
                         </TableRow>
-                      );
+                      )
                     })}
                   </TableBody>
                 </Table>
 
                 {/* Subject Performance Summary */}
-                <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                <div className="bg-muted/50 mt-4 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Overall Performance</p>
+                      <p className="text-muted-foreground text-sm">
+                        Overall Performance
+                      </p>
                       <p className="text-2xl font-bold">{record.grade}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Total Score</p>
+                      <p className="text-muted-foreground text-sm">
+                        Total Score
+                      </p>
                       <p className="text-xl font-medium">
                         {record.obtainedMarks}/{record.totalMarks}
                       </p>
@@ -408,9 +464,7 @@ export function AcademicRecords({
                     Academic and extracurricular achievements
                   </CardDescription>
                 </div>
-                <Badge variant="secondary">
-                  {achievements.length} Total
-                </Badge>
+                <Badge variant="secondary">{achievements.length} Total</Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -419,9 +473,9 @@ export function AcademicRecords({
                   {achievements.map((achievement) => (
                     <div
                       key={achievement.id}
-                      className="flex items-start gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="hover:bg-muted/50 flex items-start gap-4 rounded-lg border p-4 transition-colors"
                     >
-                      <div className="p-2 bg-yellow-100 rounded-full">
+                      <div className="rounded-full bg-yellow-100 p-2">
                         {achievement.category === "ACADEMIC" ? (
                           <Medal className="h-6 w-6 text-yellow-600" />
                         ) : achievement.category === "SPORTS" ? (
@@ -434,10 +488,10 @@ export function AcademicRecords({
                         <div className="flex items-start justify-between">
                           <div>
                             <h4 className="font-medium">{achievement.title}</h4>
-                            <p className="text-sm text-muted-foreground mt-1">
+                            <p className="text-muted-foreground mt-1 text-sm">
                               {achievement.description}
                             </p>
-                            <div className="flex items-center gap-3 mt-2">
+                            <div className="mt-2 flex items-center gap-3">
                               <Badge variant="outline">
                                 {achievement.category}
                               </Badge>
@@ -454,18 +508,25 @@ export function AcademicRecords({
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(achievement.achievementDate), "MMM dd, yyyy")}
+                            <p className="text-muted-foreground text-sm">
+                              {format(
+                                new Date(achievement.achievementDate),
+                                "MMM dd, yyyy"
+                              )}
                             </p>
                             {achievement.issuedBy && (
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-muted-foreground mt-1 text-xs">
                                 by {achievement.issuedBy}
                               </p>
                             )}
                           </div>
                         </div>
                         {achievement.certificateUrl && (
-                          <Button variant="link" size="sm" className="mt-2 p-0 h-auto">
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="mt-2 h-auto p-0"
+                          >
                             View Certificate
                           </Button>
                         )}
@@ -474,7 +535,7 @@ export function AcademicRecords({
                   ))}
 
                   {achievements.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-muted-foreground py-8 text-center">
                       No achievements recorded yet
                     </div>
                   )}
@@ -491,9 +552,12 @@ export function AcademicRecords({
                   <Medal className="h-6 w-6 text-blue-500" />
                   <div>
                     <p className="text-xl font-bold">
-                      {achievements.filter(a => a.category === "ACADEMIC").length}
+                      {
+                        achievements.filter((a) => a.category === "ACADEMIC")
+                          .length
+                      }
                     </p>
-                    <p className="text-sm text-muted-foreground">Academic</p>
+                    <p className="text-muted-foreground text-sm">Academic</p>
                   </div>
                 </div>
               </CardContent>
@@ -505,9 +569,12 @@ export function AcademicRecords({
                   <Trophy className="h-6 w-6 text-green-500" />
                   <div>
                     <p className="text-xl font-bold">
-                      {achievements.filter(a => a.category === "SPORTS").length}
+                      {
+                        achievements.filter((a) => a.category === "SPORTS")
+                          .length
+                      }
                     </p>
-                    <p className="text-sm text-muted-foreground">Sports</p>
+                    <p className="text-muted-foreground text-sm">Sports</p>
                   </div>
                 </div>
               </CardContent>
@@ -519,9 +586,16 @@ export function AcademicRecords({
                   <Award className="h-6 w-6 text-purple-500" />
                   <div>
                     <p className="text-xl font-bold">
-                      {achievements.filter(a => a.category !== "ACADEMIC" && a.category !== "SPORTS").length}
+                      {
+                        achievements.filter(
+                          (a) =>
+                            a.category !== "ACADEMIC" && a.category !== "SPORTS"
+                        ).length
+                      }
                     </p>
-                    <p className="text-sm text-muted-foreground">Extra-curricular</p>
+                    <p className="text-muted-foreground text-sm">
+                      Extra-curricular
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -541,16 +615,22 @@ export function AcademicRecords({
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => onDownloadReport?.("excel")}>
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button
+                    variant="outline"
+                    onClick={() => onDownloadReport?.("excel")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
                     Export Excel
                   </Button>
-                  <Button variant="outline" onClick={() => onDownloadReport?.("pdf")}>
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button
+                    variant="outline"
+                    onClick={() => onDownloadReport?.("pdf")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
                     Download PDF
                   </Button>
                   <Button onClick={onGenerateTranscript}>
-                    <Printer className="h-4 w-4 mr-2" />
+                    <Printer className="mr-2 h-4 w-4" />
                     Generate Transcript
                   </Button>
                 </div>
@@ -558,14 +638,14 @@ export function AcademicRecords({
             </CardHeader>
             <CardContent>
               {/* Transcript Preview */}
-              <div className="border rounded-lg p-6 space-y-6">
+              <div className="space-y-6 rounded-lg border p-6">
                 {/* Header */}
-                <div className="text-center border-b pb-4">
+                <div className="border-b pb-4 text-center">
                   <h3 className="text-xl font-bold">Academic Transcript</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     {student.givenName} {student.middleName} {student.surname}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {student.grNumber} | {student.email}
                   </p>
                 </div>
@@ -573,38 +653,56 @@ export function AcademicRecords({
                 {/* Academic Summary */}
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-medium mb-2">Academic Summary</h4>
+                    <h4 className="mb-2 font-medium">Academic Summary</h4>
                     <div className="space-y-1 text-sm">
                       <p>
-                        <span className="text-muted-foreground">Enrollment Date:</span>{" "}
-                        {student.enrollmentDate && format(new Date(student.enrollmentDate), "MMM dd, yyyy")}
+                        <span className="text-muted-foreground">
+                          Enrollment Date:
+                        </span>{" "}
+                        {student.enrollmentDate &&
+                          format(
+                            new Date(student.enrollmentDate),
+                            "MMM dd, yyyy"
+                          )}
                       </p>
                       <p>
-                        <span className="text-muted-foreground">Current Status:</span>{" "}
+                        <span className="text-muted-foreground">
+                          Current Status:
+                        </span>{" "}
                         <Badge variant="outline">{student.status}</Badge>
                       </p>
                       <p>
-                        <span className="text-muted-foreground">Total Terms:</span>{" "}
+                        <span className="text-muted-foreground">
+                          Total Terms:
+                        </span>{" "}
                         {academicRecords.length}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2">Performance Metrics</h4>
+                    <h4 className="mb-2 font-medium">Performance Metrics</h4>
                     <div className="space-y-1 text-sm">
                       <p>
-                        <span className="text-muted-foreground">Overall Average:</span>{" "}
-                        <span className={`font-medium ${getPercentageColor(stats.averagePercentage)}`}>
+                        <span className="text-muted-foreground">
+                          Overall Average:
+                        </span>{" "}
+                        <span
+                          className={`font-medium ${getPercentageColor(stats.averagePercentage)}`}
+                        >
                           {stats.averagePercentage.toFixed(2)}%
                         </span>
                       </p>
                       <p>
-                        <span className="text-muted-foreground">Best Performance:</span>{" "}
+                        <span className="text-muted-foreground">
+                          Best Performance:
+                        </span>{" "}
                         {stats.highestPercentage}%
                       </p>
                       <p>
-                        <span className="text-muted-foreground">Total Achievements:</span>{" "}
+                        <span className="text-muted-foreground">
+                          Total Achievements:
+                        </span>{" "}
                         {achievements.length}
                       </p>
                     </div>
@@ -613,7 +711,7 @@ export function AcademicRecords({
 
                 {/* Academic Records Table */}
                 <div>
-                  <h4 className="font-medium mb-3">Academic Records</h4>
+                  <h4 className="mb-3 font-medium">Academic Records</h4>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -630,7 +728,8 @@ export function AcademicRecords({
                           <TableCell>{record.academicYearId}</TableCell>
                           <TableCell>{record.termId}</TableCell>
                           <TableCell>
-                            {record.obtainedMarks}/{record.totalMarks} ({record.percentage.toFixed(1)}%)
+                            {record.obtainedMarks}/{record.totalMarks} (
+                            {record.percentage.toFixed(1)}%)
                           </TableCell>
                           <TableCell>
                             <Badge className={getGradeColor(record.grade)}>
@@ -645,9 +744,14 @@ export function AcademicRecords({
                 </div>
 
                 {/* Footer */}
-                <div className="border-t pt-4 text-center text-xs text-muted-foreground">
-                  <p>Generated on {format(new Date(), "MMMM dd, yyyy 'at' hh:mm a")}</p>
-                  <p className="mt-1">This is an official academic transcript</p>
+                <div className="text-muted-foreground border-t pt-4 text-center text-xs">
+                  <p>
+                    Generated on{" "}
+                    {format(new Date(), "MMMM dd, yyyy 'at' hh:mm a")}
+                  </p>
+                  <p className="mt-1">
+                    This is an official academic transcript
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -655,5 +759,5 @@ export function AcademicRecords({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

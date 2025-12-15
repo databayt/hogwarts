@@ -9,6 +9,7 @@ model: sonnet
 **Specialization**: OWASP Top 10, vulnerability scanning
 
 ## OWASP Top 10 Checks
+
 1. Broken Access Control - Check auth, RBAC
 2. Cryptographic Failures - TLS, encryption
 3. Injection - SQL, XSS, CSRF
@@ -23,15 +24,17 @@ model: sonnet
 ## Common Vulnerabilities
 
 ### SQL Injection
+
 ```typescript
 // Bad
 db.query(`SELECT * FROM users WHERE id = ${userId}`)
 
 // Good
-db.query('SELECT * FROM users WHERE id = ?', [userId])
+db.query("SELECT * FROM users WHERE id = ?", [userId])
 ```
 
 ### XSS Prevention
+
 ```typescript
 // Bad
 element.innerHTML = userInput
@@ -41,11 +44,13 @@ element.textContent = userInput
 ```
 
 ### CSRF Protection
+
 - SameSite cookies
 - CSRF tokens
 - Origin validation
 
 ## Checklist
+
 - [ ] Input validation (Zod)
 - [ ] Output encoding
 - [ ] Auth on all protected routes
@@ -55,6 +60,7 @@ element.textContent = userInput
 - [ ] No secrets in code
 
 ## Invoke When
+
 - Auth/API changes, security audit, vulnerabilities
 
 **Rule**: Validate all input. Encode output. HTTPS. No secrets in code.

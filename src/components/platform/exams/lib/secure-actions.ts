@@ -34,20 +34,20 @@
  * - Testable: Permission logic can be unit tested separately
  */
 
-"use server";
+"use server"
 
 import {
-  getPermissionContext,
-  validatePermission,
+  applyPermissionFilters,
+  canAccessAnalytics,
   canAccessExam,
-  canModifyExam,
   canAccessStudentResult,
   canManageQuestions,
-  canAccessAnalytics,
-  applyPermissionFilters,
+  canModifyExam,
+  getPermissionContext,
+  validatePermission,
   type Permission,
   type PermissionContext,
-} from "./permissions";
+} from "./permissions"
 
 /**
  * Wrap an action with permission check
@@ -56,57 +56,57 @@ export function secureAction<T extends (...args: any[]) => Promise<any>>(
   permission: Permission,
   action: T,
   options?: {
-    extractResourceId?: (args: Parameters<T>) => string | undefined;
+    extractResourceId?: (args: Parameters<T>) => string | undefined
     additionalCheck?: (
       context: PermissionContext,
       args: Parameters<T>
-    ) => Promise<boolean>;
+    ) => Promise<boolean>
   }
 ): T {
   return (async (...args: Parameters<T>) => {
     // Get permission context
-    const context = await getPermissionContext();
+    const context = await getPermissionContext()
     if (!context) {
       return {
         success: false,
         error: "Not authenticated",
         code: "UNAUTHORIZED",
-      };
+      }
     }
 
     // Extract resource ID if provided
-    const resourceId = options?.extractResourceId?.(args);
+    const resourceId = options?.extractResourceId?.(args)
 
     // Validate base permission
-    const validation = await validatePermission(permission, resourceId);
+    const validation = await validatePermission(permission, resourceId)
     if (!validation.allowed) {
       return {
         success: false,
         error: validation.reason || "Permission denied",
         code: "FORBIDDEN",
-      };
+      }
     }
 
     // Run additional check if provided
     if (options?.additionalCheck) {
-      const additionalAllowed = await options.additionalCheck(context, args);
+      const additionalAllowed = await options.additionalCheck(context, args)
       if (!additionalAllowed) {
         return {
           success: false,
           error: "You do not have access to this resource",
           code: "FORBIDDEN",
-        };
+        }
       }
     }
 
     // Execute the action
     try {
-      return await action(...args);
+      return await action(...args)
     } catch (error) {
-      console.error(`Error in secured action (${permission}):`, error);
-      throw error;
+      console.error(`Error in secured action (${permission}):`, error)
+      throw error
     }
-  }) as T;
+  }) as T
 }
 
 /**
@@ -130,27 +130,27 @@ export function secureQuery<T extends (...args: any[]) => Promise<any>>(
 ): T {
   return (async (...args: Parameters<T>) => {
     // Get permission context
-    const context = await getPermissionContext();
+    const context = await getPermissionContext()
     if (!context) {
       return {
         success: false,
         error: "Not authenticated",
         code: "UNAUTHORIZED",
-      };
+      }
     }
 
     // Validate base permission
-    const validation = await validatePermission(permission);
+    const validation = await validatePermission(permission)
     if (!validation.allowed) {
       return {
         success: false,
         error: validation.reason || "Permission denied",
         code: "FORBIDDEN",
-      };
+      }
     }
 
     // Get role-based filters (e.g., { schoolId: "xxx", teacherId: "yyy" })
-    const filters = await applyPermissionFilters(context, resource);
+    const filters = await applyPermissionFilters(context, resource)
 
     // Inject filters into WHERE clause of first argument
     // CRITICAL: This is what prevents cross-tenant data access
@@ -161,21 +161,21 @@ export function secureQuery<T extends (...args: any[]) => Promise<any>>(
           ...arg,
           where: {
             ...arg.where,
-            ...filters,  // Role-based filters override any user-provided filters
+            ...filters, // Role-based filters override any user-provided filters
           },
-        };
+        }
       }
-      return arg;
-    }) as Parameters<T>;
+      return arg
+    }) as Parameters<T>
 
     // Execute the action with modified filters
     try {
-      return await action(...modifiedArgs);
+      return await action(...modifiedArgs)
     } catch (error) {
-      console.error(`Error in secured query (${permission}):`, error);
-      throw error;
+      console.error(`Error in secured query (${permission}):`, error)
+      throw error
     }
-  }) as T;
+  }) as T
 }
 
 /**
@@ -189,21 +189,21 @@ export const secureExamAction = {
     secureAction("exam:read", action, {
       extractResourceId: (args) => {
         // Extract exam ID from first argument if it's an object with examId
-        const firstArg = args[0];
+        const firstArg = args[0]
         if (typeof firstArg === "object" && firstArg?.examId) {
-          return firstArg.examId;
+          return firstArg.examId
         }
         if (typeof firstArg === "string") {
-          return firstArg;
+          return firstArg
         }
-        return undefined;
+        return undefined
       },
       additionalCheck: async (context, args) => {
-        const examId = args[0]?.examId || args[0];
+        const examId = args[0]?.examId || args[0]
         if (examId) {
-          return canAccessExam(context, examId);
+          return canAccessExam(context, examId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -211,11 +211,11 @@ export const secureExamAction = {
     secureAction("exam:update", action, {
       extractResourceId: (args) => args[0]?.id || args[0],
       additionalCheck: async (context, args) => {
-        const examId = args[0]?.id || args[0];
+        const examId = args[0]?.id || args[0]
         if (examId) {
-          return canModifyExam(context, examId);
+          return canModifyExam(context, examId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -223,11 +223,11 @@ export const secureExamAction = {
     secureAction("exam:delete", action, {
       extractResourceId: (args) => args[0],
       additionalCheck: async (context, args) => {
-        const examId = args[0];
+        const examId = args[0]
         if (examId) {
-          return canModifyExam(context, examId);
+          return canModifyExam(context, examId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -235,14 +235,14 @@ export const secureExamAction = {
     secureAction("exam:publish", action, {
       extractResourceId: (args) => args[0],
       additionalCheck: async (context, args) => {
-        const examId = args[0];
+        const examId = args[0]
         if (examId) {
-          return canModifyExam(context, examId);
+          return canModifyExam(context, examId)
         }
-        return true;
+        return true
       },
     }),
-};
+}
 
 /**
  * Secure question-specific actions
@@ -251,11 +251,11 @@ export const secureQuestionAction = {
   create: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("question:create", action, {
       additionalCheck: async (context, args) => {
-        const subjectId = args[0]?.subjectId;
+        const subjectId = args[0]?.subjectId
         if (subjectId) {
-          return canManageQuestions(context, subjectId);
+          return canManageQuestions(context, subjectId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -266,11 +266,11 @@ export const secureQuestionAction = {
     secureAction("question:update", action, {
       extractResourceId: (args) => args[0]?.id || args[0],
       additionalCheck: async (context, args) => {
-        const subjectId = args[0]?.subjectId;
+        const subjectId = args[0]?.subjectId
         if (subjectId) {
-          return canManageQuestions(context, subjectId);
+          return canManageQuestions(context, subjectId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -279,9 +279,9 @@ export const secureQuestionAction = {
       extractResourceId: (args) => args[0],
       additionalCheck: async (ctx, args) => {
         // Check if user created the question or has admin rights
-        const context = await getPermissionContext();
-        if (!context) return false;
-        return ["DEVELOPER", "ADMIN", "TEACHER"].includes(context.userRole);
+        const context = await getPermissionContext()
+        if (!context) return false
+        return ["DEVELOPER", "ADMIN", "TEACHER"].includes(context.userRole)
       },
     }),
 
@@ -290,7 +290,7 @@ export const secureQuestionAction = {
 
   export: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("question:export", action),
-};
+}
 
 /**
  * Secure result-specific actions
@@ -302,11 +302,11 @@ export const secureResultAction = {
   read: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("result:read", action, {
       additionalCheck: async (context, args) => {
-        const studentId = args[0]?.studentId;
+        const studentId = args[0]?.studentId
         if (studentId) {
-          return canAccessStudentResult(context, studentId);
+          return canAccessStudentResult(context, studentId)
         }
-        return true;
+        return true
       },
     }),
 
@@ -321,7 +321,7 @@ export const secureResultAction = {
 
   batchGenerate: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("result:batch_generate", action),
-};
+}
 
 /**
  * Secure marking-specific actions
@@ -338,7 +338,7 @@ export const secureMarkingAction = {
 
   override: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("marking:override", action),
-};
+}
 
 /**
  * Secure analytics-specific actions
@@ -348,28 +348,32 @@ export const secureAnalyticsAction = {
     secureAction("analytics:read", action, {
       additionalCheck: async (context, args) => {
         // Determine scope from arguments
-        const firstArg = args[0];
-        if (!firstArg) return true;
+        const firstArg = args[0]
+        if (!firstArg) return true
 
         if (firstArg.examId) {
-          return canAccessExam(context, firstArg.examId);
+          return canAccessExam(context, firstArg.examId)
         }
 
         if (firstArg.studentId) {
-          return canAccessStudentResult(context, firstArg.studentId);
+          return canAccessStudentResult(context, firstArg.studentId)
         }
 
         if (firstArg.scope && firstArg.resourceId) {
-          return canAccessAnalytics(context, firstArg.scope, firstArg.resourceId);
+          return canAccessAnalytics(
+            context,
+            firstArg.scope,
+            firstArg.resourceId
+          )
         }
 
-        return true;
+        return true
       },
     }),
 
   export: <T extends (...args: any[]) => Promise<any>>(action: T) =>
     secureAction("analytics:export", action),
-};
+}
 
 /**
  * Secure template-specific actions
@@ -390,4 +394,4 @@ export const secureTemplateAction = {
     secureAction("template:delete", action, {
       extractResourceId: (args) => args[0],
     }),
-};
+}

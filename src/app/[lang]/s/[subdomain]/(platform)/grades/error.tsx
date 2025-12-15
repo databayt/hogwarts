@@ -24,7 +24,7 @@ export default function GradesError({ error, reset }: ErrorProps) {
         <AlertDescription className="mt-2 space-y-2">
           <p>An unexpected error occurred while loading grades.</p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

@@ -1,20 +1,22 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
+import { useRouter } from "next/navigation"
+import { AnimatePresence, motion } from "framer-motion"
 import { Bell } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
-import { useNotificationBell } from "./use-notifications"
-import { NotificationListScrollable } from "./list"
-import { useRouter } from "next/navigation"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { NotificationListScrollable } from "./list"
+import { useNotificationBell } from "./use-notifications"
 
 interface NotificationBellIconProps {
   locale?: "ar" | "en"
@@ -38,9 +40,12 @@ export function NotificationBellIcon({
     markAllAsRead,
   } = useNotificationBell()
 
-  const handleNotificationRead = useCallback((notificationId: string) => {
-    markAsRead(notificationId)
-  }, [markAsRead])
+  const handleNotificationRead = useCallback(
+    (notificationId: string) => {
+      markAsRead(notificationId)
+    },
+    [markAsRead]
+  )
 
   const handleNotificationDelete = useCallback(() => {
     // Optimistic update handled by the hook
@@ -84,7 +89,7 @@ export function NotificationBellIcon({
                 >
                   <Badge
                     variant="destructive"
-                    className="h-5 min-w-5 px-1 flex items-center justify-center text-xs font-semibold"
+                    className="flex h-5 min-w-5 items-center justify-center px-1 text-xs font-semibold"
                   >
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </Badge>
@@ -96,8 +101,10 @@ export function NotificationBellIcon({
             {showConnectionStatus && (
               <span
                 className={cn(
-                  "absolute bottom-0 ltr:right-0 rtl:left-0 h-2 w-2 rounded-full border-2 border-background transition-colors",
-                  isConnected ? "bg-emerald-500" : "bg-muted-foreground animate-pulse"
+                  "border-background absolute bottom-0 h-2 w-2 rounded-full border-2 transition-colors ltr:right-0 rtl:left-0",
+                  isConnected
+                    ? "bg-emerald-500"
+                    : "bg-muted-foreground animate-pulse"
                 )}
                 aria-label={
                   isConnected
@@ -110,7 +117,7 @@ export function NotificationBellIcon({
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[380px] sm:w-[420px] p-0 overflow-hidden"
+          className="w-[380px] overflow-hidden p-0 sm:w-[420px]"
           align="end"
           sideOffset={8}
         >
@@ -148,7 +155,10 @@ export function NotificationBellIconCompact({
     <Button
       variant="ghost"
       size="icon"
-      className={cn("relative transition-transform hover:scale-105 active:scale-95", className)}
+      className={cn(
+        "relative transition-transform hover:scale-105 active:scale-95",
+        className
+      )}
       onClick={handleClick}
       aria-label={
         unreadCount > 0
@@ -173,7 +183,7 @@ export function NotificationBellIconCompact({
           >
             <Badge
               variant="destructive"
-              className="h-5 min-w-5 px-1 flex items-center justify-center text-xs font-semibold"
+              className="flex h-5 min-w-5 items-center justify-center px-1 text-xs font-semibold"
             >
               {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>

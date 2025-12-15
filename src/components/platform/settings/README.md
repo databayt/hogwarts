@@ -6,20 +6,21 @@ The Settings feature enables administrators to configure school-wide preferences
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/school` | School Settings | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/school/academic` | Academic Year | **🔴 BLOCKED** |
-| `/[lang]/s/[subdomain]/(platform)/school/branding` | Branding | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/school/domain` | Custom Domain | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/school/members` | Team Members | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/school/notifications` | Notifications | ⏸️ Planned |
-| `/[lang]/s/[subdomain]/(platform)/school/billing` | Billing | ⏸️ Planned |
-| `/[lang]/s/[subdomain]/(platform)/school/danger` | Danger Zone | ✅ Ready |
+| URL                                                     | Page            | Status         |
+| ------------------------------------------------------- | --------------- | -------------- |
+| `/[lang]/s/[subdomain]/(platform)/school`               | School Settings | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/school/academic`      | Academic Year   | **🔴 BLOCKED** |
+| `/[lang]/s/[subdomain]/(platform)/school/branding`      | Branding        | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/school/domain`        | Custom Domain   | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/school/members`       | Team Members    | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/school/notifications` | Notifications   | ⏸️ Planned     |
+| `/[lang]/s/[subdomain]/(platform)/school/billing`       | Billing         | ⏸️ Planned     |
+| `/[lang]/s/[subdomain]/(platform)/school/danger`        | Danger Zone     | ✅ Ready       |
 
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 🏫 Configure school profile (name, logo)
 - 📅 Manage academic years and terms **← BLOCKED**
 - 🌍 Set locale (Arabic/English)
@@ -28,6 +29,7 @@ The Settings feature enables administrators to configure school-wide preferences
 - 🔐 Manage subdomain
 
 ### Current Implementation Status
+
 **🔴 BLOCKED - Academic Year Setup Incomplete**
 **Completion:** 60%
 
@@ -35,13 +37,14 @@ The Settings feature enables administrators to configure school-wide preferences
 
 ## Critical Blocker: Academic Year Setup
 
-| Property | Value |
-|----------|-------|
-| **URL** | `/school/academic` |
-| **Current State** | Models exist, CRUD UI/actions incomplete |
-| **Impact** | Cannot set active academic year for timetable, exams, results |
+| Property          | Value                                                         |
+| ----------------- | ------------------------------------------------------------- |
+| **URL**           | `/school/academic`                                            |
+| **Current State** | Models exist, CRUD UI/actions incomplete                      |
+| **Impact**        | Cannot set active academic year for timetable, exams, results |
 
 **Missing Implementation:**
+
 - `createAcademicYear` server action (partial)
 - `updateAcademicYear` server action (missing)
 - `deleteAcademicYear` server action (missing)
@@ -50,17 +53,20 @@ The Settings feature enables administrators to configure school-wide preferences
 - Period definitions (missing)
 
 **Prisma Models (Exist ✅):**
+
 - `SchoolYear` - Academic year model
 - `Term` - Terms within year
 - `Period` - Class periods
 
 **Files to Create/Modify:**
+
 - `src/components/platform/settings/academic-year/actions.ts`
 - `src/components/platform/settings/academic-year/form.tsx`
 
 ---
 
 **Completed:**
+
 - ✅ School profile management
 - ✅ Locale selection (ar/en)
 - ✅ Timezone configuration
@@ -68,9 +74,11 @@ The Settings feature enables administrators to configure school-wide preferences
 - ✅ Branding/logo
 
 **Blocked:**
+
 - 🔴 **Academic year configuration** ← Critical MVP blocker
 
 **Planned:**
+
 - ⏸️ Grading scale configuration
 - ⏸️ Email templates
 - ⏸️ Notification preferences
@@ -81,6 +89,7 @@ The Settings feature enables administrators to configure school-wide preferences
 ## Admin Workflows
 
 ### 1. Configure School Profile
+
 1. Navigate to `/settings`
 2. Update school information:
    - School name
@@ -89,6 +98,7 @@ The Settings feature enables administrators to configure school-wide preferences
 3. Save changes
 
 ### 2. Setup Academic Year
+
 1. Navigate to `/settings/academic-year`
 2. Create new academic year
 3. Define terms (Fall, Spring, Summer)
@@ -96,6 +106,7 @@ The Settings feature enables administrators to configure school-wide preferences
 5. Activate for current use
 
 ### 3. Configure Grading Scale
+
 1. Navigate to `/settings/grading`
 2. Set grade boundaries
 3. Configure GPA weights
@@ -106,6 +117,7 @@ The Settings feature enables administrators to configure school-wide preferences
 ## Integration with Other Features
 
 ### Links to All Features
+
 - Settings affect entire platform
 - Academic year used by timetable, results
 - Locale affects all UI translations
@@ -116,6 +128,7 @@ The Settings feature enables administrators to configure school-wide preferences
 ## Technical Implementation
 
 **Database Schema:**
+
 ```prisma
 model School {
   id            String   @id @default(cuid())
@@ -149,37 +162,44 @@ model SchoolYear {
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

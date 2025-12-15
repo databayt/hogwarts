@@ -53,7 +53,7 @@ model School {
 ```typescript
 // Correct - Always include schoolId
 const students = await prisma.student.findMany({
-  where: { schoolId: "school_123" }
+  where: { schoolId: "school_123" },
 })
 
 // Wrong - Missing schoolId (security risk)
@@ -74,91 +74,91 @@ Each model contains realistic sample data that demonstrates the relationships an
 
 Main tenant entities representing different schools in the multi-tenant system.
 
-| ID | School Name | Domain | Plan | Max Students | Active |
-|----|-------------|--------|------|--------------|--------|
-| `sch_001` | Hogwarts | hogwarts | premium | 1000 | Yes |
-| `sch_002` | Beauxbatons | beauxbatons | premium | 500 | Yes |
-| `sch_003` | Durmstrang | durmstrang | basic | 300 | Yes |
+| ID        | School Name | Domain      | Plan    | Max Students | Active |
+| --------- | ----------- | ----------- | ------- | ------------ | ------ |
+| `sch_001` | Hogwarts    | hogwarts    | premium | 1000         | Yes    |
+| `sch_002` | Beauxbatons | beauxbatons | premium | 500          | Yes    |
+| `sch_003` | Durmstrang  | durmstrang  | basic   | 300          | Yes    |
 
 ### Teacher
 
 Teaching staff with school-specific isolation and department assignments.
 
-| ID | School ID | First Name | Last Name | Email | Gender |
-|----|-----------|------------|-----------|-------|--------|
-| `tch_001` | `sch_001` | Minerva | McGonagall | m.mcg@hogwarts.edu | F |
-| `tch_002` | `sch_001` | Severus | Snape | s.snape@hogwarts.edu | M |
-| `tch_003` | `sch_001` | Rubeus | Hagrid | r.hagrid@hogwarts.edu | M |
+| ID        | School ID | First Name | Last Name  | Email                 | Gender |
+| --------- | --------- | ---------- | ---------- | --------------------- | ------ |
+| `tch_001` | `sch_001` | Minerva    | McGonagall | m.mcg@hogwarts.edu    | F      |
+| `tch_002` | `sch_001` | Severus    | Snape      | s.snape@hogwarts.edu  | M      |
+| `tch_003` | `sch_001` | Rubeus     | Hagrid     | r.hagrid@hogwarts.edu | M      |
 
 ### Student
 
 Student enrollment records with guardian relationships and year-level tracking.
 
-| ID | School ID | First Name | Middle | Last Name | Date of Birth | Gender |
-|----|-----------|------------|--------|-----------|---------------|--------|
-| `std_001` | `sch_001` | Harry | J | Potter | 1980-07-31 | M |
-| `std_002` | `sch_001` | Hermione | J | Granger | 1979-09-19 | F |
-| `std_003` | `sch_001` | Ron | B | Weasley | 1980-03-01 | M |
+| ID        | School ID | First Name | Middle | Last Name | Date of Birth | Gender |
+| --------- | --------- | ---------- | ------ | --------- | ------------- | ------ |
+| `std_001` | `sch_001` | Harry      | J      | Potter    | 1980-07-31    | M      |
+| `std_002` | `sch_001` | Hermione   | J      | Granger   | 1979-09-19    | F      |
+| `std_003` | `sch_001` | Ron        | B      | Weasley   | 1980-03-01    | M      |
 
 ### Department
 
 Academic departments organizing subjects and teacher assignments.
 
-| ID | School ID | Department Name |
-|----|-----------|-----------------|
+| ID        | School ID | Department Name |
+| --------- | --------- | --------------- |
 | `dep_001` | `sch_001` | Transfiguration |
-| `dep_002` | `sch_001` | Potions |
-| `dep_003` | `sch_001` | Creatures |
+| `dep_002` | `sch_001` | Potions         |
+| `dep_003` | `sch_001` | Creatures       |
 
 ### Subject
 
 Academic subjects within departments that form the basis of classes.
 
-| ID | School ID | Department ID | Subject Name |
-|----|-----------|---------------|--------------|
-| `sub_001` | `sch_001` | `dep_001` | Transfiguration |
-| `sub_002` | `sch_001` | `dep_002` | Potions |
-| `sub_003` | `sch_001` | `dep_003` | Creatures |
+| ID        | School ID | Department ID | Subject Name    |
+| --------- | --------- | ------------- | --------------- |
+| `sub_001` | `sch_001` | `dep_001`     | Transfiguration |
+| `sub_002` | `sch_001` | `dep_002`     | Potions         |
+| `sub_003` | `sch_001` | `dep_003`     | Creatures       |
 
 ### Classroom
 
 Physical classroom locations with capacity and type information.
 
-| ID | School ID | Room Name | Capacity | Type |
-|----|-----------|-----------|----------|------|
-| `cls_001` | `sch_001` | Great Hall | 400 | Hall |
-| `cls_002` | `sch_001` | Dungeon | 30 | Lab |
-| `cls_003` | `sch_001` | Room 101 | 35 | Class |
+| ID        | School ID | Room Name  | Capacity | Type  |
+| --------- | --------- | ---------- | -------- | ----- |
+| `cls_001` | `sch_001` | Great Hall | 400      | Hall  |
+| `cls_002` | `sch_001` | Dungeon    | 30       | Lab   |
+| `cls_003` | `sch_001` | Room 101   | 35       | Class |
 
 ### Assignment
 
 Assessment tasks including homework, quizzes, tests, and projects.
 
-| ID | School ID | Title | Type | Status | Points | Due Date |
-|----|-----------|-------|------|--------|--------|----------|
-| `asg_001` | `sch_001` | Essay | ESSAY | PUBLISHED | 100 | 2024-02-15 |
-| `asg_002` | `sch_001` | Quiz | QUIZ | COMPLETED | 50 | 2024-02-10 |
-| `asg_003` | `sch_001` | Project | PROJECT | IN_PROGRESS | 150 | 2024-02-20 |
+| ID        | School ID | Title   | Type    | Status      | Points | Due Date   |
+| --------- | --------- | ------- | ------- | ----------- | ------ | ---------- |
+| `asg_001` | `sch_001` | Essay   | ESSAY   | PUBLISHED   | 100    | 2024-02-15 |
+| `asg_002` | `sch_001` | Quiz    | QUIZ    | COMPLETED   | 50     | 2024-02-10 |
+| `asg_003` | `sch_001` | Project | PROJECT | IN_PROGRESS | 150    | 2024-02-20 |
 
 ### Attendance
 
 Daily attendance tracking per student per class with detailed status information.
 
-| ID | School ID | Student ID | Date | Status | Notes |
-|----|-----------|------------|------|--------|-------|
-| `att_001` | `sch_001` | `std_001` | 2024-02-08 | PRESENT | — |
-| `att_002` | `sch_001` | `std_002` | 2024-02-08 | PRESENT | — |
-| `att_003` | `sch_001` | `std_003` | 2024-02-08 | LATE | Late |
+| ID        | School ID | Student ID | Date       | Status  | Notes |
+| --------- | --------- | ---------- | ---------- | ------- | ----- |
+| `att_001` | `sch_001` | `std_001`  | 2024-02-08 | PRESENT | —     |
+| `att_002` | `sch_001` | `std_002`  | 2024-02-08 | PRESENT | —     |
+| `att_003` | `sch_001` | `std_003`  | 2024-02-08 | LATE    | Late  |
 
 ### User (Authentication)
 
 Multi-tenant user accounts with role-based access control and school isolation.
 
-| ID | Email | Role | School ID | Verified |
-|----|-------|------|-----------|----------|
-| `usr_001` | harry@hog.edu | STUDENT | `sch_001` | Yes |
-| `usr_002` | mcg@hog.edu | TEACHER | `sch_001` | Yes |
-| `usr_003` | admin@dev.com | DEVELOPER | null (all schools) | Yes |
+| ID        | Email         | Role      | School ID          | Verified |
+| --------- | ------------- | --------- | ------------------ | -------- |
+| `usr_001` | harry@hog.edu | STUDENT   | `sch_001`          | Yes      |
+| `usr_002` | mcg@hog.edu   | TEACHER   | `sch_001`          | Yes      |
+| `usr_003` | admin@dev.com | DEVELOPER | null (all schools) | Yes      |
 
 ## Subscription & Pricing
 
@@ -220,6 +220,7 @@ model AppliedDiscount {
 ```
 
 **Key Features:**
+
 - Tiered subscription plans with different limits and features
 - Flexible discount system supporting both percentage and fixed amounts
 - Usage tracking for limited-use discount codes
@@ -239,8 +240,8 @@ const tier = await prisma.subscriptionTier.create({
     maxStudents: 500,
     maxTeachers: 50,
     maxClasses: 100,
-    features: ["analytics", "api_access", "priority_support"]
-  }
+    features: ["analytics", "api_access", "priority_support"],
+  },
 })
 
 // Create a discount code
@@ -254,8 +255,8 @@ const discount = await prisma.discount.create({
     description: "New year promotion",
     validFrom: new Date(),
     validUntil: new Date("2024-12-31"),
-    maxUses: 100
-  }
+    maxUses: 100,
+  },
 })
 ```
 
@@ -318,6 +319,7 @@ model ComplianceLog {
 ```
 
 **Key Features:**
+
 - Comprehensive consent tracking with version control
 - Support for multiple document types and consent types
 - Audit trail with detailed event logging
@@ -339,9 +341,9 @@ const consent = await prisma.legalConsent.create({
     userAgent: "Mozilla/5.0...",
     metadata: {
       source: "onboarding",
-      platform: "web"
-    }
-  }
+      platform: "web",
+    },
+  },
 })
 
 // Log compliance event
@@ -352,10 +354,10 @@ await prisma.complianceLog.create({
     eventData: {
       documentType: "terms",
       version: "1.0.0",
-      consentId: consent.id
+      consentId: consent.id,
     },
-    userId: "user_456"
-  }
+    userId: "user_456",
+  },
 })
 ```
 
@@ -363,16 +365,16 @@ await prisma.complianceLog.create({
 
 The system supports **8 distinct user roles** with varying levels of access and school-specific constraints.
 
-| Role | Description | School Access | Typical Use Case |
-|------|-------------|---------------|------------------|
-| DEVELOPER | Platform administrator | All schools | System maintenance, cross-tenant operations |
-| ADMIN | School administrator | Single school | School management, user oversight |
-| TEACHER | Teaching staff | Single school | Class management, grading, attendance |
-| STUDENT | Enrolled students | Single school | Learning management, assignment submission |
-| GUARDIAN | Student parents/guardians | Single school | Monitor child's progress, communication |
-| ACCOUNTANT | Finance staff | Single school | Billing, financial reporting |
-| STAFF | General school staff | Single school | Administrative support |
-| USER | Default role | Single school | Base level access |
+| Role       | Description               | School Access | Typical Use Case                            |
+| ---------- | ------------------------- | ------------- | ------------------------------------------- |
+| DEVELOPER  | Platform administrator    | All schools   | System maintenance, cross-tenant operations |
+| ADMIN      | School administrator      | Single school | School management, user oversight           |
+| TEACHER    | Teaching staff            | Single school | Class management, grading, attendance       |
+| STUDENT    | Enrolled students         | Single school | Learning management, assignment submission  |
+| GUARDIAN   | Student parents/guardians | Single school | Monitor child's progress, communication     |
+| ACCOUNTANT | Finance staff             | Single school | Billing, financial reporting                |
+| STAFF      | General school staff      | Single school | Administrative support                      |
+| USER       | Default role              | Single school | Base level access                           |
 
 ## Security & Data Protection
 
@@ -386,7 +388,7 @@ export async function getStudents() {
   const schoolId = getSchoolId() // From middleware context
 
   return await prisma.student.findMany({
-    where: { schoolId }
+    where: { schoolId },
   })
 }
 ```
@@ -460,27 +462,30 @@ pnpm prisma db seed
 
 The seeding system creates **three sample schools** with complete datasets:
 
-| School | Domain | Description |
-|--------|--------|-------------|
-| Hogwarts | hogwarts.com | School of Witchcraft and Wizardry |
-| Beauxbatons | beauxbatons.com | Academy of Magic |
-| Durmstrang | durmstrang.com | Institute for Magical Learning |
+| School      | Domain          | Description                       |
+| ----------- | --------------- | --------------------------------- |
+| Hogwarts    | hogwarts.com    | School of Witchcraft and Wizardry |
+| Beauxbatons | beauxbatons.com | Academy of Magic                  |
+| Durmstrang  | durmstrang.com  | Institute for Magical Learning    |
 
 ### Sample Data Statistics
 
 **Hogwarts:**
+
 - Complete academic structure
 - 4 houses with qualified professors
 - 1000+ active students
 - Full magical curriculum
 
 **Beauxbatons:**
+
 - French academic system
 - 6 departments
 - 700+ students
 - Specialized courses
 
 **Durmstrang:**
+
 - Nordic education model
 - 5 faculties
 - 500+ students

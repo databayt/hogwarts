@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
-import { NotificationList } from "./list"
-import { useNotificationCenter } from "./use-notifications"
-import type { NotificationDTO } from "./types"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { NotificationList } from "./list"
+import type { NotificationDTO } from "./types"
+import { useNotificationCenter } from "./use-notifications"
 
 interface NotificationCenterClientProps {
   initialNotifications: NotificationDTO[]
@@ -29,9 +31,8 @@ export function NotificationCenterClient({
   } = useNotificationCenter()
 
   // Merge initial notifications with real-time updates
-  const [allNotifications, setAllNotifications] = useState<NotificationDTO[]>(
-    initialNotifications
-  )
+  const [allNotifications, setAllNotifications] =
+    useState<NotificationDTO[]>(initialNotifications)
 
   // Update local state when real-time notifications arrive
   useEffect(() => {
@@ -63,7 +64,9 @@ export function NotificationCenterClient({
     // Optimistic update
     setAllNotifications((prev) =>
       prev.map((n) =>
-        n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n
+        n.id === notificationId
+          ? { ...n, read: true, readAt: new Date().toISOString() }
+          : n
       )
     )
 
@@ -100,8 +103,8 @@ export function NotificationCenterClient({
     <div className="relative">
       {/* Connection indicator */}
       {!isConnected && (
-        <div className="absolute top-0 right-0 flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-muted-foreground animate-pulse" />
+        <div className="text-muted-foreground absolute top-0 right-0 flex items-center gap-2 text-xs">
+          <span className="bg-muted-foreground h-2 w-2 animate-pulse rounded-full" />
           <span>Connecting...</span>
         </div>
       )}

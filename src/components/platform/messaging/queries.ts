@@ -1,14 +1,16 @@
+import { ConversationType, MessageStatus, Prisma } from "@prisma/client"
+
 import { db } from "@/lib/db"
-import { Prisma, ConversationType, MessageStatus } from "@prisma/client"
+
 import type {
   ConversationFilters,
+  ConversationQueryParams,
+  ConversationSortParams,
   MessageFilters,
+  MessageQueryParams,
+  MessageSortParams,
   PaginationParams,
   SortParam,
-  ConversationQueryParams,
-  MessageQueryParams,
-  ConversationSortParams,
-  MessageSortParams,
 } from "./types"
 
 // Type aliases for cleaner code
@@ -208,8 +210,15 @@ export function buildConversationWhere(
 
   if (filters.search) {
     where.OR = [
-      { title: { contains: filters.search, mode: Prisma.QueryMode.insensitive } },
-      { description: { contains: filters.search, mode: Prisma.QueryMode.insensitive } },
+      {
+        title: { contains: filters.search, mode: Prisma.QueryMode.insensitive },
+      },
+      {
+        description: {
+          contains: filters.search,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
     ]
   }
 
@@ -247,7 +256,10 @@ export function buildMessageWhere(
   }
 
   if (filters.search) {
-    where.content = { contains: filters.search, mode: Prisma.QueryMode.insensitive }
+    where.content = {
+      contains: filters.search,
+      mode: Prisma.QueryMode.insensitive,
+    }
   }
 
   if (filters.startDate || filters.endDate) {
@@ -394,10 +406,10 @@ export async function getMessagesWithCursor(
   options: {
     cursor?: string // Message ID to start from
     take?: number // Number of messages to fetch
-    direction?: 'before' | 'after' // Fetch messages before or after cursor
+    direction?: "before" | "after" // Fetch messages before or after cursor
   } = {}
 ) {
-  const { cursor, take = 50, direction = 'before' } = options
+  const { cursor, take = 50, direction = "before" } = options
 
   // Build query
   const query: any = {
@@ -406,7 +418,7 @@ export async function getMessagesWithCursor(
       isDeleted: false, // Don't include deleted messages
     },
     orderBy: {
-      createdAt: direction === 'before' ? 'desc' : 'asc', // Oldest to newest for 'after', newest to oldest for 'before'
+      createdAt: direction === "before" ? "desc" : "asc", // Oldest to newest for 'after', newest to oldest for 'before'
     },
     take: take + 1, // Fetch one extra to determine if there are more
     select: messageListSelect,
@@ -428,7 +440,7 @@ export async function getMessagesWithCursor(
   const items = hasMore ? messages.slice(0, take) : messages
 
   // For 'before' direction, reverse to get chronological order (oldest first)
-  if (direction === 'before') {
+  if (direction === "before") {
     items.reverse()
   }
 
@@ -598,7 +610,10 @@ export async function getUnreadMessageCount(schoolId: string, userId: string) {
  * Alternative implementation using Prisma queries if raw SQL is not preferred.
  * Still optimized compared to the original N+1 approach.
  */
-export async function getUnreadMessageCountPrisma(schoolId: string, userId: string) {
+export async function getUnreadMessageCountPrisma(
+  schoolId: string,
+  userId: string
+) {
   // Get all user's conversation participations with unread message counts
   const participations = await db.conversationParticipant.findMany({
     where: {
@@ -631,7 +646,7 @@ export async function getUnreadMessageCountPrisma(schoolId: string, userId: stri
   for (const participation of participations) {
     const lastRead = participation.lastReadAt || new Date(0)
     unreadCount += participation.conversation.messages.filter(
-      msg => msg.createdAt > lastRead
+      (msg) => msg.createdAt > lastRead
     ).length
   }
 
@@ -655,7 +670,9 @@ export async function getUnreadCountsPerConversation(
     : ""
 
   // Single query to get all unread counts grouped by conversation
-  const results = await db.$queryRaw<{ conversationId: string; count: bigint }[]>`
+  const results = await db.$queryRaw<
+    { conversationId: string; count: bigint }[]
+  >`
     SELECT
       cp."conversationId",
       COUNT(m.id) as count

@@ -8,12 +8,13 @@
  * Uses findFirst + create pattern - safe to run multiple times (no deletes)
  */
 
-import type { SeedPrisma } from "./types";
 import {
   ConversationType,
   MessageStatus,
   ParticipantRole,
-} from "@prisma/client";
+} from "@prisma/client"
+
+import type { SeedPrisma } from "./types"
 
 // Bilingual message templates for parent-teacher conversations
 const MESSAGE_TEMPLATES = {
@@ -152,22 +153,24 @@ const MESSAGE_TEMPLATES = {
       },
     ],
   },
-};
+}
 
 export async function seedMessaging(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<void> {
-  console.log("💬 Creating parent-teacher conversations...");
+  console.log("💬 Creating parent-teacher conversations...")
 
   // Check for existing conversations
   const existingCount = await prisma.conversation.count({
     where: { schoolId },
-  });
+  })
 
   if (existingCount >= 20) {
-    console.log(`   ✅ Conversations already exist (${existingCount}), skipping\n`);
-    return;
+    console.log(
+      `   ✅ Conversations already exist (${existingCount}), skipping\n`
+    )
+    return
   }
 
   // Get teachers and guardians with user accounts
@@ -175,7 +178,7 @@ export async function seedMessaging(
     where: { schoolId, userId: { not: null } },
     select: { id: true, userId: true, givenName: true, surname: true },
     take: 20,
-  });
+  })
 
   const guardians = await prisma.guardian.findMany({
     where: { schoolId, userId: { not: null } },
@@ -190,31 +193,34 @@ export async function seedMessaging(
       },
     },
     take: 100,
-  });
+  })
 
   if (teachers.length === 0 || guardians.length === 0) {
-    console.log("   ⚠️  No teachers or guardians found, skipping messaging\n");
-    return;
+    console.log("   ⚠️  No teachers or guardians found, skipping messaging\n")
+    return
   }
 
-  let conversationCount = 0;
-  let messageCount = 0;
-  const now = new Date();
-  const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+  let conversationCount = 0
+  let messageCount = 0
+  const now = new Date()
+  const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
   // Create 50 direct conversations between parents and teachers
-  const topics = Object.keys(MESSAGE_TEMPLATES) as Array<keyof typeof MESSAGE_TEMPLATES>;
+  const topics = Object.keys(MESSAGE_TEMPLATES) as Array<
+    keyof typeof MESSAGE_TEMPLATES
+  >
 
   for (let i = 0; i < 50 && i < guardians.length; i++) {
-    const guardian = guardians[i];
-    const teacher = teachers[i % teachers.length];
-    const studentName = guardian.studentGuardians[0]?.student?.givenName || "Student";
+    const guardian = guardians[i]
+    const teacher = teachers[i % teachers.length]
+    const studentName =
+      guardian.studentGuardians[0]?.student?.givenName || "Student"
 
-    if (!guardian.userId || !teacher.userId) continue;
+    if (!guardian.userId || !teacher.userId) continue
 
     // Random topic
-    const topic = topics[Math.floor(Math.random() * topics.length)];
-    const templates = MESSAGE_TEMPLATES[topic];
+    const topic = topics[Math.floor(Math.random() * topics.length)]
+    const templates = MESSAGE_TEMPLATES[topic]
 
     // Create conversation
     const conversation = await prisma.conversation.create({
@@ -225,10 +231,11 @@ export async function seedMessaging(
         directParticipant1Id: guardian.userId,
         directParticipant2Id: teacher.userId,
         lastMessageAt: new Date(
-          threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+          threeMonthsAgo.getTime() +
+            Math.random() * (now.getTime() - threeMonthsAgo.getTime())
         ),
       },
-    });
+    })
 
     // Create participants
     await prisma.conversationParticipant.createMany({
@@ -249,29 +256,31 @@ export async function seedMessaging(
         },
       ],
       skipDuplicates: true,
-    });
+    })
 
-    conversationCount++;
+    conversationCount++
 
     // Create 3-8 messages per conversation
-    const messageCountForConv = 3 + Math.floor(Math.random() * 6);
-    const baseTime = new Date(conversation.lastMessageAt || now);
+    const messageCountForConv = 3 + Math.floor(Math.random() * 6)
+    const baseTime = new Date(conversation.lastMessageAt || now)
 
     for (let j = 0; j < messageCountForConv; j++) {
-      const isParent = j % 2 === 0;
-      const senderId = isParent ? guardian.userId : teacher.userId;
-      const msgTemplates = isParent ? templates.parent : templates.teacher;
-      const template = msgTemplates[Math.floor(Math.random() * msgTemplates.length)];
+      const isParent = j % 2 === 0
+      const senderId = isParent ? guardian.userId : teacher.userId
+      const msgTemplates = isParent ? templates.parent : templates.teacher
+      const template =
+        msgTemplates[Math.floor(Math.random() * msgTemplates.length)]
 
       // Use English or Arabic based on random selection
-      const useArabic = Math.random() > 0.5;
-      let content = useArabic ? template.ar : template.en;
-      content = content.replace(/{name}/g, studentName);
+      const useArabic = Math.random() > 0.5
+      let content = useArabic ? template.ar : template.en
+      content = content.replace(/{name}/g, studentName)
 
       // Calculate message time (earlier messages first)
       const messageTime = new Date(
-        baseTime.getTime() - (messageCountForConv - j) * 60 * 60 * 1000 * Math.random() * 24
-      );
+        baseTime.getTime() -
+          (messageCountForConv - j) * 60 * 60 * 1000 * Math.random() * 24
+      )
 
       await prisma.message.create({
         data: {
@@ -283,19 +292,21 @@ export async function seedMessaging(
           createdAt: messageTime,
           updatedAt: messageTime,
         },
-      });
+      })
 
-      messageCount++;
+      messageCount++
     }
 
     // Update conversation lastMessageAt
     await prisma.conversation.update({
       where: { id: conversation.id },
       data: { lastMessageAt: baseTime },
-    });
+    })
   }
 
-  console.log(`   ✅ Created ${conversationCount} conversations with ${messageCount} messages`);
-  console.log(`      - Topics: attendance, grades, behavior, homework, general`);
-  console.log(`      - Languages: Arabic and English (mixed)\n`);
+  console.log(
+    `   ✅ Created ${conversationCount} conversations with ${messageCount} messages`
+  )
+  console.log(`      - Topics: attendance, grades, behavior, homework, general`)
+  console.log(`      - Languages: Arabic and English (mixed)\n`)
 }

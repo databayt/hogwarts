@@ -7,9 +7,11 @@ import {
   RadialBar,
   RadialBarChart,
 } from "recharts"
+
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+
 import type { PerformanceGaugeProps } from "./types"
 
 const gaugeConfig = {
@@ -32,8 +34,11 @@ export function PerformanceGauge({
 
   return (
     <Card className={cn("flex flex-col", className)}>
-      <CardContent className="flex-1 pb-0 pt-6">
-        <ChartContainer config={gaugeConfig} className="mx-auto aspect-square max-h-[180px]">
+      <CardContent className="flex-1 pt-6 pb-0">
+        <ChartContainer
+          config={gaugeConfig}
+          className="mx-auto aspect-square max-h-[180px]"
+        >
           <RadialBarChart
             data={[{ value: percentage, fill: color }]}
             startAngle={-90}
@@ -54,11 +59,24 @@ export function PerformanceGauge({
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
                     return (
-                      <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                        <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-3xl font-bold">
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-3xl font-bold"
+                        >
                           {value}
                         </tspan>
-                        <tspan x={viewBox.cx} y={(viewBox.cy || 0) + 24} className="fill-muted-foreground text-sm">
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground text-sm"
+                        >
                           {label}
                         </tspan>
                       </text>
@@ -71,7 +89,7 @@ export function PerformanceGauge({
         </ChartContainer>
       </CardContent>
       {description && (
-        <CardFooter className="text-center text-sm text-muted-foreground">
+        <CardFooter className="text-muted-foreground text-center text-sm">
           {description}
         </CardFooter>
       )}

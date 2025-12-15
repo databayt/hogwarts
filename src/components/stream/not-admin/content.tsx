@@ -1,31 +1,32 @@
-import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link"
+import { ArrowLeft, ShieldX } from "lucide-react"
+
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, ShieldX } from "lucide-react";
-import Link from "next/link";
+} from "@/components/ui/card"
 
 interface Props {
-  dictionary: any;
-  lang: string;
-  subdomain: string;
+  dictionary: any
+  lang: string
+  subdomain: string
 }
 
 export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="max-w-md w-full">
+    <div className="flex min-h-screen items-center justify-center">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="bg-destructive/10 rounded-full p-4 w-fit mx-auto">
-            <ShieldX className="size-16 text-destructive" />
+          <div className="bg-destructive/10 mx-auto w-fit rounded-full p-4">
+            <ShieldX className="text-destructive size-16" />
           </div>
 
           <CardTitle className="text-2xl">Access Restricted</CardTitle>
-          <CardDescription className="max-w-xs mx-auto">
+          <CardDescription className="mx-auto max-w-xs">
             Hey! You are not an admin, which means you can&apos;t create any
             courses or stuff like that...
           </CardDescription>
@@ -43,5 +44,5 @@ export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

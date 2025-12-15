@@ -4,15 +4,15 @@
  * Part of the Hogwarts School Management System
  */
 
-const { createServer } = require('http')
-const { parse } = require('url')
-const next = require('next')
-const { WebSocketServer } = require('ws')
-const { Pool } = require('pg')
+const { createServer } = require("http")
+const { parse } = require("url")
+const next = require("next")
+const { WebSocketServer } = require("ws")
+const { Pool } = require("pg")
 
-const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
-const port = parseInt(process.env.PORT || '3000', 10)
+const dev = process.env.NODE_ENV !== "production"
+const hostname = "localhost"
+const port = parseInt(process.env.PORT || "3000", 10)
 
 // Initialize Next.js app
 const app = next({ dev, hostname, port })
@@ -45,7 +45,7 @@ async function startListening(schoolId) {
     await client.query(`LISTEN geo_event_${schoolId}`)
 
     // Handle notifications
-    client.on('notification', (msg) => {
+    client.on("notification", (msg) => {
       const { channel, payload } = msg
 
       // Broadcast to all WebSocket clients subscribed to this school
@@ -69,13 +69,15 @@ async function startListening(schoolId) {
     })
 
     // Handle client errors
-    client.on('error', (err) => {
+    client.on("error", (err) => {
       console.error(`PostgreSQL client error for school ${schoolId}:`, err)
       listenClients.delete(schoolId)
     })
 
     listenClients.set(schoolId, client)
-    console.log(`✓ Started listening to geo notifications for school: ${schoolId}`)
+    console.log(
+      `✓ Started listening to geo notifications for school: ${schoolId}`
+    )
   } catch (error) {
     console.error(`Error starting LISTEN for school ${schoolId}:`, error)
   }
@@ -93,7 +95,9 @@ async function stopListening(schoolId) {
     await client.query(`UNLISTEN geo_event_${schoolId}`)
     client.release()
     listenClients.delete(schoolId)
-    console.log(`✓ Stopped listening to geo notifications for school: ${schoolId}`)
+    console.log(
+      `✓ Stopped listening to geo notifications for school: ${schoolId}`
+    )
   } catch (error) {
     console.error(`Error stopping LISTEN for school ${schoolId}:`, error)
   }
@@ -146,19 +150,19 @@ app.prepare().then(() => {
   })
 
   // Initialize WebSocket server
-  const wss = new WebSocketServer({ server, path: '/api/geo/ws' })
+  const wss = new WebSocketServer({ server, path: "/api/geo/ws" })
 
-  wss.on('connection', (ws, req) => {
-    console.log('✓ New WebSocket connection established')
+  wss.on("connection", (ws, req) => {
+    console.log("✓ New WebSocket connection established")
 
     let currentSchoolId = null
 
     // Handle incoming messages
-    ws.on('message', (message) => {
+    ws.on("message", (message) => {
       try {
         const data = JSON.parse(message.toString())
 
-        if (data.type === 'subscribe' && data.schoolId) {
+        if (data.type === "subscribe" && data.schoolId) {
           // Unsubscribe from previous school if any
           if (currentSchoolId) {
             unsubscribe(ws, currentSchoolId)
@@ -171,61 +175,61 @@ app.prepare().then(() => {
           // Send confirmation
           ws.send(
             JSON.stringify({
-              type: 'subscribed',
+              type: "subscribed",
               schoolId: currentSchoolId,
               timestamp: new Date().toISOString(),
             })
           )
-        } else if (data.type === 'unsubscribe') {
+        } else if (data.type === "unsubscribe") {
           if (currentSchoolId) {
             unsubscribe(ws, currentSchoolId)
             currentSchoolId = null
 
             ws.send(
               JSON.stringify({
-                type: 'unsubscribed',
+                type: "unsubscribed",
                 timestamp: new Date().toISOString(),
               })
             )
           }
-        } else if (data.type === 'ping') {
+        } else if (data.type === "ping") {
           // Heartbeat/keep-alive
           ws.send(
             JSON.stringify({
-              type: 'pong',
+              type: "pong",
               timestamp: new Date().toISOString(),
             })
           )
         }
       } catch (error) {
-        console.error('Error processing WebSocket message:', error)
+        console.error("Error processing WebSocket message:", error)
         ws.send(
           JSON.stringify({
-            type: 'error',
-            error: 'Invalid message format',
+            type: "error",
+            error: "Invalid message format",
           })
         )
       }
     })
 
     // Handle WebSocket errors
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error)
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error)
     })
 
     // Handle WebSocket close
-    ws.on('close', () => {
+    ws.on("close", () => {
       if (currentSchoolId) {
         unsubscribe(ws, currentSchoolId)
       }
-      console.log('✓ WebSocket connection closed')
+      console.log("✓ WebSocket connection closed")
     })
 
     // Send welcome message
     ws.send(
       JSON.stringify({
-        type: 'welcome',
-        message: 'Connected to Hogwarts Geofence WebSocket Server',
+        type: "welcome",
+        message: "Connected to Hogwarts Geofence WebSocket Server",
         timestamp: new Date().toISOString(),
       })
     )
@@ -234,13 +238,15 @@ app.prepare().then(() => {
   server.listen(port, (err) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
-    console.log(`> WebSocket server ready at ws://${hostname}:${port}/api/geo/ws`)
-    console.log(`> Environment: ${dev ? 'development' : 'production'}`)
+    console.log(
+      `> WebSocket server ready at ws://${hostname}:${port}/api/geo/ws`
+    )
+    console.log(`> Environment: ${dev ? "development" : "production"}`)
   })
 
   // Graceful shutdown
-  process.on('SIGTERM', async () => {
-    console.log('SIGTERM signal received: closing HTTP server')
+  process.on("SIGTERM", async () => {
+    console.log("SIGTERM signal received: closing HTTP server")
 
     // Close all PostgreSQL LISTEN clients
     for (const [schoolId, client] of listenClients.entries()) {
@@ -258,12 +264,12 @@ app.prepare().then(() => {
 
     // Close WebSocket server
     wss.close(() => {
-      console.log('WebSocket server closed')
+      console.log("WebSocket server closed")
     })
 
     // Close HTTP server
     server.close(() => {
-      console.log('HTTP server closed')
+      console.log("HTTP server closed")
       process.exit(0)
     })
   })

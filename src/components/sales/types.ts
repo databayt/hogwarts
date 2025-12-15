@@ -4,209 +4,209 @@
  */
 
 import type {
-  LeadStatusKey,
-  LeadSourceKey,
   LeadPriorityKey,
+  LeadSourceKey,
+  LeadStatusKey,
   LeadTypeKey,
-} from './constants';
+} from "./constants"
 
 // Base lead type (matches Prisma model)
 export interface Lead {
-  id: string;
-  schoolId: string;
+  id: string
+  schoolId: string
 
   // Contact Information
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  alternatePhone?: string | null;
+  name: string
+  email?: string | null
+  phone?: string | null
+  alternatePhone?: string | null
 
   // Organization Details
-  company?: string | null;
-  title?: string | null;
-  website?: string | null;
-  linkedinUrl?: string | null;
+  company?: string | null
+  title?: string | null
+  website?: string | null
+  linkedinUrl?: string | null
 
   // Classification
-  leadType: LeadTypeKey;
-  industry?: string | null;
-  location?: string | null;
-  country?: string | null;
+  leadType: LeadTypeKey
+  industry?: string | null
+  location?: string | null
+  country?: string | null
 
   // Pipeline Status
-  status: LeadStatusKey;
-  source: LeadSourceKey;
-  priority: LeadPriorityKey;
+  status: LeadStatusKey
+  source: LeadSourceKey
+  priority: LeadPriorityKey
 
   // Scoring
-  score: number;
-  verified: boolean;
-  emailVerified: boolean;
-  phoneVerified: boolean;
+  score: number
+  verified: boolean
+  emailVerified: boolean
+  phoneVerified: boolean
 
   // Assignment
-  assignedToId?: string | null;
+  assignedToId?: string | null
   assignedTo?: {
-    id: string;
-    username?: string | null;
-    email?: string | null;
-    image?: string | null;
-  } | null;
+    id: string
+    username?: string | null
+    email?: string | null
+    image?: string | null
+  } | null
 
   // Activity Tracking
-  lastContactedAt?: Date | null;
-  nextFollowUpAt?: Date | null;
+  lastContactedAt?: Date | null
+  nextFollowUpAt?: Date | null
 
   // Notes and Tags
-  notes?: string | null;
-  tags: string[];
+  notes?: string | null
+  tags: string[]
 
   // Import Tracking
-  importId?: string | null;
-  importedAt?: Date | null;
+  importId?: string | null
+  importedAt?: Date | null
 
   // Metadata
-  metadata?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null
 
   // Timestamps
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Lead creation input (omit auto-generated fields)
 export type CreateLeadInput = Omit<
   Lead,
-  'id' | 'schoolId' | 'createdAt' | 'updatedAt' | 'assignedTo'
->;
+  "id" | "schoolId" | "createdAt" | "updatedAt" | "assignedTo"
+>
 
 // Lead update input (all fields optional)
-export type UpdateLeadInput = Partial<CreateLeadInput>;
+export type UpdateLeadInput = Partial<CreateLeadInput>
 
 // Lead filter options
 export interface LeadFilters {
-  search?: string;
-  status?: LeadStatusKey;
-  source?: LeadSourceKey;
-  priority?: LeadPriorityKey;
-  leadType?: LeadTypeKey;
-  scoreMin?: number;
-  scoreMax?: number;
-  dateFrom?: Date;
-  dateTo?: Date;
-  tags?: string[];
-  hasEmail?: boolean;
-  hasPhone?: boolean;
-  assignedToId?: string;
-  verified?: boolean;
+  search?: string
+  status?: LeadStatusKey
+  source?: LeadSourceKey
+  priority?: LeadPriorityKey
+  leadType?: LeadTypeKey
+  scoreMin?: number
+  scoreMax?: number
+  dateFrom?: Date
+  dateTo?: Date
+  tags?: string[]
+  hasEmail?: boolean
+  hasPhone?: boolean
+  assignedToId?: string
+  verified?: boolean
 }
 
 // Lead sort options
 export interface LeadSortOptions {
-  field: keyof Lead;
-  direction: 'asc' | 'desc';
+  field: keyof Lead
+  direction: "asc" | "desc"
 }
 
 // Pagination options
 export interface PaginationOptions {
-  page: number;
-  pageSize: number;
-  total?: number;
+  page: number
+  pageSize: number
+  total?: number
 }
 
 // Lead list response
 export interface LeadListResponse {
-  leads: Lead[];
+  leads: Lead[]
   pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
 }
 
 // Lead Activity type
 export interface LeadActivity {
-  id: string;
-  schoolId: string;
-  leadId: string;
-  type: string;
-  description: string;
-  metadata?: Record<string, unknown> | null;
-  createdById: string;
+  id: string
+  schoolId: string
+  leadId: string
+  type: string
+  description: string
+  metadata?: Record<string, unknown> | null
+  createdById: string
   createdBy?: {
-    id: string;
-    username?: string | null;
-    email?: string | null;
-    image?: string | null;
-  };
-  createdAt: Date;
+    id: string
+    username?: string | null
+    email?: string | null
+    image?: string | null
+  }
+  createdAt: Date
 }
 
 // Bulk operation types
 export interface BulkOperation {
-  type: 'update' | 'delete' | 'export' | 'tag';
-  leadIds: string[];
-  data?: Record<string, unknown>;
+  type: "update" | "delete" | "export" | "tag"
+  leadIds: string[]
+  data?: Record<string, unknown>
 }
 
 // Import/Export types
 export interface ImportResult {
-  success: number;
-  failed: number;
+  success: number
+  failed: number
   errors: Array<{
-    row: number;
-    reason: string;
-  }>;
+    row: number
+    reason: string
+  }>
 }
 
 export interface ExportOptions {
-  format: 'csv' | 'json' | 'xlsx';
-  fields?: (keyof Lead)[];
-  filters?: LeadFilters;
+  format: "csv" | "json" | "xlsx"
+  fields?: (keyof Lead)[]
+  filters?: LeadFilters
 }
 
 // Dashboard analytics
 export interface LeadAnalytics {
-  totalLeads: number;
-  newLeadsThisWeek: number;
-  conversionRate: number;
-  averageScore: number;
+  totalLeads: number
+  newLeadsThisWeek: number
+  conversionRate: number
+  averageScore: number
   topSources: Array<{
-    source: LeadSourceKey;
-    count: number;
-    percentage: number;
-  }>;
+    source: LeadSourceKey
+    count: number
+    percentage: number
+  }>
   statusDistribution: Array<{
-    status: LeadStatusKey;
-    count: number;
-    percentage: number;
-  }>;
+    status: LeadStatusKey
+    count: number
+    percentage: number
+  }>
   scoreDistribution: Array<{
-    range: string;
-    count: number;
-  }>;
+    range: string
+    count: number
+  }>
 }
 
 // Form state types
 export interface LeadFormState {
-  isSubmitting: boolean;
-  errors: Record<string, string>;
-  data: Partial<Lead>;
+  isSubmitting: boolean
+  errors: Record<string, string>
+  data: Partial<Lead>
 }
 
 // Table column visibility
 export interface ColumnVisibility {
-  [key: string]: boolean;
+  [key: string]: boolean
 }
 
 // Table row selection
 export interface RowSelection {
-  [key: string]: boolean;
+  [key: string]: boolean
 }
 
 // Search suggestions
 export interface SearchSuggestion {
-  type: 'lead' | 'company' | 'tag';
-  value: string;
-  metadata?: Record<string, unknown>;
+  type: "lead" | "company" | "tag"
+  value: string
+  metadata?: Record<string, unknown>
 }

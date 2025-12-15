@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import * as React from "react"
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import {
   Card,
@@ -9,26 +9,26 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/ui/chart"
 
 export interface InteractiveBarChartData {
-  date: string;
-  primary: number;
-  secondary: number;
+  date: string
+  primary: number
+  secondary: number
 }
 
 export interface InteractiveBarChartProps {
-  data?: InteractiveBarChartData[];
-  title?: string;
-  description?: string;
-  primaryLabel?: string;
-  secondaryLabel?: string;
+  data?: InteractiveBarChartData[]
+  title?: string
+  description?: string
+  primaryLabel?: string
+  secondaryLabel?: string
 }
 
 const defaultChartData = [
@@ -123,7 +123,7 @@ const defaultChartData = [
   { date: "2024-06-28", desktop: 149, mobile: 200 },
   { date: "2024-06-29", desktop: 103, mobile: 160 },
   { date: "2024-06-30", desktop: 446, mobile: 400 },
-];
+]
 
 const defaultChartConfig = {
   views: {
@@ -137,7 +137,7 @@ const defaultChartConfig = {
     label: "Mobile",
     color: "hsl(var(--chart-2))",
   },
-} satisfies ChartConfig;
+} satisfies ChartConfig
 
 export function InteractiveBarChart({
   data,
@@ -149,46 +149,51 @@ export function InteractiveBarChart({
   // Transform custom data to use primary/secondary keys if provided
   const chartData = React.useMemo(() => {
     if (data) {
-      return data.map(d => ({
+      return data.map((d) => ({
         date: d.date,
         primary: d.primary,
         secondary: d.secondary,
-      }));
+      }))
     }
-    return defaultChartData.map(d => ({
+    return defaultChartData.map((d) => ({
       date: d.date,
       primary: d.desktop,
       secondary: d.mobile,
-    }));
-  }, [data]);
+    }))
+  }, [data])
 
-  const chartConfig = React.useMemo(() => ({
-    views: {
-      label: "Total",
-    },
-    primary: {
-      label: primaryLabel,
-      color: "hsl(var(--chart-1))",
-    },
-    secondary: {
-      label: secondaryLabel,
-      color: "hsl(var(--chart-2))",
-    },
-  }) satisfies ChartConfig, [primaryLabel, secondaryLabel]);
+  const chartConfig = React.useMemo(
+    () =>
+      ({
+        views: {
+          label: "Total",
+        },
+        primary: {
+          label: primaryLabel,
+          color: "hsl(var(--chart-1))",
+        },
+        secondary: {
+          label: secondaryLabel,
+          color: "hsl(var(--chart-2))",
+        },
+      }) satisfies ChartConfig,
+    [primaryLabel, secondaryLabel]
+  )
 
-  const [activeChart, setActiveChart] =
-    React.useState<"primary" | "secondary">("primary");
+  const [activeChart, setActiveChart] = React.useState<"primary" | "secondary">(
+    "primary"
+  )
 
   const total = React.useMemo(
     () => ({
       primary: chartData.reduce((acc, curr) => acc + curr.primary, 0),
       secondary: chartData.reduce((acc, curr) => acc + curr.secondary, 0),
     }),
-    [chartData],
-  );
+    [chartData]
+  )
 
   return (
-    <Card className="border-none shadow-none bg-muted">
+    <Card className="bg-muted border-none shadow-none">
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <CardTitle>{title}</CardTitle>
@@ -200,17 +205,17 @@ export function InteractiveBarChart({
               <button
                 key={key}
                 data-active={activeChart === key}
-                className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
                 onClick={() => setActiveChart(key)}
               >
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {chartConfig[key].label}
                 </span>
-                <span className="text-lg font-bold leading-none sm:text-3xl">
+                <span className="text-lg leading-none font-bold sm:text-3xl">
                   {total[key].toLocaleString()}
                 </span>
               </button>
-            );
+            )
           })}
         </div>
       </CardHeader>
@@ -235,11 +240,11 @@ export function InteractiveBarChart({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value);
+                const date = new Date(value)
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
-                });
+                })
               }}
             />
             <ChartTooltip
@@ -252,7 +257,7 @@ export function InteractiveBarChart({
                       month: "short",
                       day: "numeric",
                       year: "numeric",
-                    });
+                    })
                   }}
                 />
               }
@@ -262,5 +267,5 @@ export function InteractiveBarChart({
         </ChartContainer>
       </CardContent>
     </Card>
-  );
+  )
 }

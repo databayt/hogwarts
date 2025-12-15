@@ -1,11 +1,13 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { getExamsSchema } from "../validation";
-import { arrayToCSV } from "@/components/file";
-import type { ExamExportData, ActionResponse } from "./types";
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { arrayToCSV } from "@/components/file"
+
+import { getExamsSchema } from "../validation"
+import type { ActionResponse, ExamExportData } from "./types"
 
 /**
  * Export exams to CSV format
@@ -14,12 +16,12 @@ export async function getExamsCSV(
   input?: Partial<z.infer<typeof getExamsSchema>>
 ): Promise<string> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      throw new Error("Missing school context");
+      throw new Error("Missing school context")
     }
 
-    const searchParams = getExamsSchema.parse(input ?? {});
+    const searchParams = getExamsSchema.parse(input ?? {})
 
     // Build where clause with filters
     const where: Record<string, unknown> = {
@@ -34,7 +36,7 @@ export async function getExamsCSV(
       ...(searchParams.examDate
         ? { examDate: new Date(searchParams.examDate) }
         : {}),
-    };
+    }
 
     // Fetch ALL exams matching filters (no pagination for export)
     const exams = await db.exam.findMany({
@@ -57,7 +59,7 @@ export async function getExamsCSV(
         },
       },
       orderBy: [{ examDate: "desc" }, { startTime: "asc" }],
-    });
+    })
 
     // Transform data for CSV export
     const exportData: ExamExportData[] = exams.map((exam) => ({
@@ -78,7 +80,7 @@ export async function getExamsCSV(
       status: exam.status || "",
       resultsEntered: exam._count.results,
       createdAt: new Date(exam.createdAt).toISOString().split("T")[0],
-    }));
+    }))
 
     // Define CSV columns
     const columns = [
@@ -97,12 +99,14 @@ export async function getExamsCSV(
       { key: "status" as const, label: "Status" },
       { key: "resultsEntered" as const, label: "Results Entered" },
       { key: "createdAt" as const, label: "Created Date" },
-    ];
+    ]
 
-    return arrayToCSV(exportData as unknown as Record<string, unknown>[], { columns });
+    return arrayToCSV(exportData as unknown as Record<string, unknown>[], {
+      columns,
+    })
   } catch (error) {
-    console.error("Error exporting exams to CSV:", error);
-    throw error;
+    console.error("Error exporting exams to CSV:", error)
+    throw error
   }
 }
 
@@ -110,19 +114,19 @@ export async function getExamsCSV(
  * Export exam results to CSV
  */
 export async function getExamResultsCSV(input: {
-  examId: string;
+  examId: string
 }): Promise<ActionResponse<string>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const { examId } = z.object({ examId: z.string().min(1) }).parse(input);
+    const { examId } = z.object({ examId: z.string().min(1) }).parse(input)
 
     // Get exam details
     const exam = await db.exam.findFirst({
@@ -132,14 +136,14 @@ export async function getExamResultsCSV(input: {
         class: { select: { name: true } },
         subject: { select: { subjectName: true } },
       },
-    });
+    })
 
     if (!exam) {
       return {
         success: false,
         error: "Exam not found",
         code: "EXAM_NOT_FOUND",
-      };
+      }
     }
 
     // Get results
@@ -156,7 +160,7 @@ export async function getExamResultsCSV(input: {
         },
       },
       orderBy: { marksObtained: "desc" },
-    });
+    })
 
     // Calculate ranks
     const resultsWithRank = results.map((result, index) => ({
@@ -171,7 +175,7 @@ export async function getExamResultsCSV(input: {
       grade: result.grade || "",
       isAbsent: result.isAbsent ? "Yes" : "No",
       remarks: result.remarks || "",
-    }));
+    }))
 
     // Define columns
     const columns = [
@@ -184,28 +188,29 @@ export async function getExamResultsCSV(input: {
       { key: "grade" as const, label: "Grade" },
       { key: "isAbsent" as const, label: "Absent" },
       { key: "remarks" as const, label: "Remarks" },
-    ];
+    ]
 
-    const csv = arrayToCSV(resultsWithRank, { columns });
+    const csv = arrayToCSV(resultsWithRank, { columns })
 
     // Add header with exam details
-    const header = `Exam Results Export\n` +
+    const header =
+      `Exam Results Export\n` +
       `Exam: ${exam.title}\n` +
       `Class: ${exam.class?.name || ""}\n` +
       `Subject: ${exam.subject?.subjectName || ""}\n` +
-      `Date: ${new Date().toISOString().split("T")[0]}\n\n`;
+      `Date: ${new Date().toISOString().split("T")[0]}\n\n`
 
     return {
       success: true,
       data: header + csv,
-    };
+    }
   } catch (error) {
-    console.error("Error exporting exam results:", error);
+    console.error("Error exporting exam results:", error)
     return {
       success: false,
       error: "Failed to export results",
       code: "EXPORT_FAILED",
-    };
+    }
   }
 }
 
@@ -213,36 +218,36 @@ export async function getExamResultsCSV(input: {
  * Export analytics summary to CSV
  */
 export async function getAnalyticsCSV(input: {
-  examId?: string;
-  classId?: string;
-  termId?: string;
+  examId?: string
+  classId?: string
+  termId?: string
 }): Promise<ActionResponse<string>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
     // Build query based on filters
     const where: Record<string, unknown> = {
       schoolId,
       status: "COMPLETED",
-    };
+    }
 
     if (input.examId) {
-      where.id = input.examId;
+      where.id = input.examId
     }
 
     if (input.classId) {
-      where.classId = input.classId;
+      where.classId = input.classId
     }
 
     if (input.termId) {
-      where.termId = input.termId;
+      where.termId = input.termId
     }
 
     // Get exams with results
@@ -259,26 +264,27 @@ export async function getAnalyticsCSV(input: {
           },
         },
       },
-    });
+    })
 
     // Calculate analytics for each exam
     const analyticsData = exams.map((exam) => {
-      const results = exam.examResults.filter((r) => !r.isAbsent);
-      const totalStudents = exam.examResults.length;
-      const presentStudents = results.length;
-      const absentStudents = totalStudents - presentStudents;
+      const results = exam.examResults.filter((r) => !r.isAbsent)
+      const totalStudents = exam.examResults.length
+      const presentStudents = results.length
+      const absentStudents = totalStudents - presentStudents
 
       const passedStudents = results.filter(
         (r) => r.marksObtained >= exam.passingMarks
-      ).length;
+      ).length
 
       const averageMarks =
         results.length > 0
-          ? results.reduce((sum, r) => sum + r.marksObtained, 0) / results.length
-          : 0;
+          ? results.reduce((sum, r) => sum + r.marksObtained, 0) /
+            results.length
+          : 0
 
       const passPercentage =
-        presentStudents > 0 ? (passedStudents / presentStudents) * 100 : 0;
+        presentStudents > 0 ? (passedStudents / presentStudents) * 100 : 0
 
       return {
         examTitle: exam.title,
@@ -294,8 +300,8 @@ export async function getAnalyticsCSV(input: {
         failedStudents: presentStudents - passedStudents,
         averageMarks: averageMarks.toFixed(2),
         passPercentage: passPercentage.toFixed(2),
-      };
-    });
+      }
+    })
 
     // Define columns
     const columns = [
@@ -310,21 +316,21 @@ export async function getAnalyticsCSV(input: {
       { key: "failedStudents" as const, label: "Failed" },
       { key: "averageMarks" as const, label: "Average Marks" },
       { key: "passPercentage" as const, label: "Pass %" },
-    ];
+    ]
 
-    const csv = arrayToCSV(analyticsData, { columns });
+    const csv = arrayToCSV(analyticsData, { columns })
 
     return {
       success: true,
       data: csv,
-    };
+    }
   } catch (error) {
-    console.error("Error exporting analytics:", error);
+    console.error("Error exporting analytics:", error)
     return {
       success: false,
       error: "Failed to export analytics",
       code: "EXPORT_FAILED",
-    };
+    }
   }
 }
 
@@ -334,31 +340,35 @@ export async function getAnalyticsCSV(input: {
  */
 export async function getExamsExportData(
   input?: Partial<z.infer<typeof getExamsSchema>>
-): Promise<ActionResponse<Array<{
-  id: string;
-  title: string;
-  description: string | null;
-  subjectName: string | null;
-  className: string | null;
-  examDate: Date;
-  startTime: string;
-  endTime: string;
-  duration: number;
-  totalMarks: number;
-  passingMarks: number;
-  examType: string;
-  status: string;
-  studentCount: number;
-  averageScore: number | null;
-  createdAt: Date;
-}>>> {
+): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      title: string
+      description: string | null
+      subjectName: string | null
+      className: string | null
+      examDate: Date
+      startTime: string
+      endTime: string
+      duration: number
+      totalMarks: number
+      passingMarks: number
+      examType: string
+      status: string
+      studentCount: number
+      averageScore: number | null
+      createdAt: Date
+    }>
+  >
+> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const searchParams = getExamsSchema.parse(input ?? {});
+    const searchParams = getExamsSchema.parse(input ?? {})
 
     // Build where clause with filters
     const where: Record<string, unknown> = {
@@ -373,7 +383,7 @@ export async function getExamsExportData(
       ...(searchParams.examDate
         ? { examDate: new Date(searchParams.examDate) }
         : {}),
-    };
+    }
 
     // Fetch ALL exams matching filters (no pagination for export)
     const exams = await db.exam.findMany({
@@ -397,15 +407,25 @@ export async function getExamsExportData(
         },
       },
       orderBy: [{ examDate: "desc" }, { startTime: "asc" }],
-    });
+    })
 
     // Transform data for export
     const exportData = exams.map((exam) => {
       // Calculate average score from results
-      const presentResults = exam.examResults.filter((r: { marksObtained: number; isAbsent: boolean }) => !r.isAbsent);
-      const averageScore = presentResults.length > 0
-        ? (presentResults.reduce((sum: number, r: { marksObtained: number }) => sum + r.marksObtained, 0) / presentResults.length / (exam.totalMarks || 100)) * 100
-        : null;
+      const presentResults = exam.examResults.filter(
+        (r: { marksObtained: number; isAbsent: boolean }) => !r.isAbsent
+      )
+      const averageScore =
+        presentResults.length > 0
+          ? (presentResults.reduce(
+              (sum: number, r: { marksObtained: number }) =>
+                sum + r.marksObtained,
+              0
+            ) /
+              presentResults.length /
+              (exam.totalMarks || 100)) *
+            100
+          : null
 
       return {
         id: exam.id,
@@ -424,15 +444,18 @@ export async function getExamsExportData(
         studentCount: exam.examResults.length,
         averageScore,
         createdAt: exam.createdAt,
-      };
-    });
+      }
+    })
 
-    return { success: true, data: exportData };
+    return { success: true, data: exportData }
   } catch (error) {
-    console.error("[getExamsExportData] Error:", error);
+    console.error("[getExamsExportData] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch exam export data",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch exam export data",
+    }
   }
 }

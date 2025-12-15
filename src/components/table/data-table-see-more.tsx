@@ -3,47 +3,48 @@
  * "See More" pagination controls to replace page flipping
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { Loader2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import type { SeeMorePaginationState } from "@/components/table/types";
-import { paginationConfig } from "@/components/table/config";
+} from "@/components/ui/select"
+import { paginationConfig } from "@/components/table/config"
+import type { SeeMorePaginationState } from "@/components/table/types"
 
 interface DataTableSeeMoreProps extends React.ComponentProps<"div"> {
   /**
    * Pagination state from useSeeMore hook
    */
-  seeMoreState: SeeMorePaginationState;
+  seeMoreState: SeeMorePaginationState
   /**
    * Handler for "See More" button click
    */
-  onSeeMore: () => void;
+  onSeeMore: () => void
   /**
    * Loading state
    */
-  isLoading?: boolean;
+  isLoading?: boolean
   /**
    * Batch size options for the dropdown
    */
-  batchSizeOptions?: readonly number[];
+  batchSizeOptions?: readonly number[]
   /**
    * Handler for batch size change
    */
-  onBatchSizeChange?: (batchSize: number) => void;
+  onBatchSizeChange?: (batchSize: number) => void
   /**
    * Number of selected rows
    */
-  selectedCount?: number;
+  selectedCount?: number
 }
 
 export function DataTableSeeMore({
@@ -56,20 +57,20 @@ export function DataTableSeeMore({
   className,
   ...props
 }: DataTableSeeMoreProps) {
-  const { loadedCount, batchSize, hasMore, total } = seeMoreState;
+  const { loadedCount, batchSize, hasMore, total } = seeMoreState
 
   return (
     <div
       className={cn(
         "flex w-full flex-col items-center justify-between gap-4 overflow-auto p-1",
-        className,
+        className
       )}
       {...props}
     >
       {/* Summary row */}
       <div className="flex w-full flex-col-reverse items-center justify-between gap-4 sm:flex-row">
         {/* Selection count */}
-        <div className="flex-1 whitespace-nowrap text-muted-foreground muted">
+        <div className="text-muted-foreground muted flex-1 whitespace-nowrap">
           {selectedCount > 0 ? (
             <>
               {selectedCount} of {loadedCount} row(s) selected
@@ -85,7 +86,9 @@ export function DataTableSeeMore({
         {/* Batch size selector */}
         {onBatchSizeChange && (
           <div className="flex items-center space-x-2">
-            <p className="whitespace-nowrap font-medium muted">Load per batch</p>
+            <p className="muted font-medium whitespace-nowrap">
+              Load per batch
+            </p>
             <Select
               value={`${batchSize}`}
               onValueChange={(value) => onBatchSizeChange(Number(value))}
@@ -135,7 +138,7 @@ export function DataTableSeeMore({
         </p>
       )}
     </div>
-  );
+  )
 }
 
 /**
@@ -148,13 +151,13 @@ export function DataTableSeeMoreSimple({
   className,
   ...props
 }: Omit<DataTableSeeMoreProps, "batchSizeOptions" | "onBatchSizeChange">) {
-  const { loadedCount, batchSize, hasMore, total } = seeMoreState;
+  const { loadedCount, batchSize, hasMore, total } = seeMoreState
 
   return (
     <div
       className={cn(
         "flex w-full flex-col items-center justify-center gap-3 p-4",
-        className,
+        className
       )}
       {...props}
     >
@@ -179,19 +182,15 @@ export function DataTableSeeMoreSimple({
               Loading...
             </>
           ) : (
-            <>
-              See More ({Math.min(batchSize, total! - loadedCount)} more)
-            </>
+            <>See More ({Math.min(batchSize, total! - loadedCount)} more)</>
           )}
         </Button>
       )}
 
       {/* End of list message */}
       {!hasMore && total! > 0 && (
-        <p className="text-muted-foreground text-sm">
-          ✓ All data loaded
-        </p>
+        <p className="text-muted-foreground text-sm">✓ All data loaded</p>
       )}
     </div>
-  );
+  )
 }

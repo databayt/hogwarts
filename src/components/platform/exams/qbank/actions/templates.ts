@@ -1,15 +1,17 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { examTemplateSchema } from "../validation";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { examTemplateSchema } from "../validation"
 import type {
   ActionResponse,
   CreateTemplateData,
-  TemplateWithStats,
   TemplateFilters,
-} from "./types";
+  TemplateWithStats,
+} from "./types"
 
 /**
  * Create a new exam template
@@ -18,29 +20,29 @@ export async function createTemplate(
   formData: FormData
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const userId = session.user.id;
+    const schoolId = session.user.schoolId
+    const userId = session.user.id
 
-    const data = Object.fromEntries(formData);
+    const data = Object.fromEntries(formData)
 
     // Parse JSON fields
     if (typeof data.distribution === "string") {
-      data.distribution = JSON.parse(data.distribution);
+      data.distribution = JSON.parse(data.distribution)
     }
     if (typeof data.bloomDistribution === "string" && data.bloomDistribution) {
-      data.bloomDistribution = JSON.parse(data.bloomDistribution);
+      data.bloomDistribution = JSON.parse(data.bloomDistribution)
     }
 
-    const validated = examTemplateSchema.parse(data);
+    const validated = examTemplateSchema.parse(data)
 
     // Verify subject exists and belongs to school
     const subject = await db.subject.findFirst({
@@ -48,14 +50,14 @@ export async function createTemplate(
         id: validated.subjectId,
         schoolId,
       },
-    });
+    })
 
     if (!subject) {
       return {
         success: false,
         error: "Subject not found",
         code: "SUBJECT_NOT_FOUND",
-      };
+      }
     }
 
     const template = await db.examTemplate.create({
@@ -64,17 +66,17 @@ export async function createTemplate(
         schoolId,
         createdBy: userId,
       },
-    });
+    })
 
-    revalidatePath("/exams/templates");
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams/templates")
+    revalidatePath("/exams/generate")
 
     return {
       success: true,
       data: { id: template.id },
-    };
+    }
   } catch (error) {
-    console.error("Create template error:", error);
+    console.error("Create template error:", error)
 
     if (error instanceof Error && error.message.includes("validation")) {
       return {
@@ -82,7 +84,7 @@ export async function createTemplate(
         error: "Invalid template data",
         code: "VALIDATION_ERROR",
         details: error.message,
-      };
+      }
     }
 
     return {
@@ -90,7 +92,7 @@ export async function createTemplate(
       error: "Failed to create template",
       code: "CREATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -102,27 +104,27 @@ export async function updateTemplate(
   formData: FormData
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const data = Object.fromEntries(formData);
+    const schoolId = session.user.schoolId
+    const data = Object.fromEntries(formData)
 
     // Parse JSON fields
     if (typeof data.distribution === "string") {
-      data.distribution = JSON.parse(data.distribution);
+      data.distribution = JSON.parse(data.distribution)
     }
     if (typeof data.bloomDistribution === "string" && data.bloomDistribution) {
-      data.bloomDistribution = JSON.parse(data.bloomDistribution);
+      data.bloomDistribution = JSON.parse(data.bloomDistribution)
     }
 
-    const validated = examTemplateSchema.parse(data);
+    const validated = examTemplateSchema.parse(data)
 
     // Update with schoolId scope
     await db.examTemplate.update({
@@ -134,21 +136,21 @@ export async function updateTemplate(
         ...validated,
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath("/exams/templates");
-    revalidatePath(`/exams/templates/${templateId}`);
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams/templates")
+    revalidatePath(`/exams/templates/${templateId}`)
+    revalidatePath("/exams/generate")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Update template error:", error);
+    console.error("Update template error:", error)
     return {
       success: false,
       error: "Failed to update template",
       code: "UPDATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -159,16 +161,16 @@ export async function deleteTemplate(
   templateId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Check if template is used in any generated exams
     const usageCount = await db.generatedExam.count({
@@ -176,14 +178,14 @@ export async function deleteTemplate(
         templateId,
         schoolId,
       },
-    });
+    })
 
     if (usageCount > 0) {
       return {
         success: false,
         error: `Cannot delete: template is used in ${usageCount} exam(s)`,
         code: "TEMPLATE_IN_USE",
-      };
+      }
     }
 
     // Delete with schoolId scope
@@ -192,28 +194,28 @@ export async function deleteTemplate(
         id: templateId,
         schoolId, // CRITICAL: Multi-tenant scope
       },
-    });
+    })
 
     if (deleted.count === 0) {
       return {
         success: false,
         error: "Template not found",
         code: "TEMPLATE_NOT_FOUND",
-      };
+      }
     }
 
-    revalidatePath("/exams/templates");
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams/templates")
+    revalidatePath("/exams/generate")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Delete template error:", error);
+    console.error("Delete template error:", error)
     return {
       success: false,
       error: "Failed to delete template",
       code: "DELETE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -224,12 +226,12 @@ export async function getTemplates(
   filters?: TemplateFilters
 ): Promise<TemplateWithStats[]> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
-      throw new Error("Unauthorized - No school context");
+      throw new Error("Unauthorized - No school context")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     const templates = await db.examTemplate.findMany({
       where: {
@@ -271,12 +273,12 @@ export async function getTemplates(
       orderBy: {
         createdAt: "desc",
       },
-    });
+    })
 
-    return templates;
+    return templates
   } catch (error) {
-    console.error("Get templates error:", error);
-    throw error;
+    console.error("Get templates error:", error)
+    throw error
   }
 }
 
@@ -287,12 +289,12 @@ export async function getTemplateById(
   templateId: string
 ): Promise<TemplateWithStats | null> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
-      throw new Error("Unauthorized - No school context");
+      throw new Error("Unauthorized - No school context")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     const template = await db.examTemplate.findFirst({
       where: {
@@ -312,12 +314,12 @@ export async function getTemplateById(
           },
         },
       },
-    });
+    })
 
-    return template;
+    return template
   } catch (error) {
-    console.error("Get template error:", error);
-    throw error;
+    console.error("Get template error:", error)
+    throw error
   }
 }
 
@@ -328,16 +330,16 @@ export async function toggleTemplateStatus(
   templateId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Get current status
     const template = await db.examTemplate.findFirst({
@@ -348,14 +350,14 @@ export async function toggleTemplateStatus(
       select: {
         isActive: true,
       },
-    });
+    })
 
     if (!template) {
       return {
         success: false,
         error: "Template not found",
         code: "TEMPLATE_NOT_FOUND",
-      };
+      }
     }
 
     // Toggle status
@@ -366,20 +368,20 @@ export async function toggleTemplateStatus(
       data: {
         isActive: !template.isActive,
       },
-    });
+    })
 
-    revalidatePath("/exams/templates");
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams/templates")
+    revalidatePath("/exams/generate")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Toggle template status error:", error);
+    console.error("Toggle template status error:", error)
     return {
       success: false,
       error: "Failed to update template status",
       code: "STATUS_UPDATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -390,17 +392,17 @@ export async function duplicateTemplate(
   templateId: string
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const userId = session.user.id;
+    const schoolId = session.user.schoolId
+    const userId = session.user.id
 
     // Get original template
     const original = await db.examTemplate.findFirst({
@@ -408,24 +410,19 @@ export async function duplicateTemplate(
         id: templateId,
         schoolId,
       },
-    });
+    })
 
     if (!original) {
       return {
         success: false,
         error: "Template not found",
         code: "TEMPLATE_NOT_FOUND",
-      };
+      }
     }
 
     // Destructure to exclude id and relation fields
-    const {
-      id,
-      school,
-      subject,
-      generatedExams,
-      ...templateData
-    } = original as any;
+    const { id, school, subject, generatedExams, ...templateData } =
+      original as any
 
     // Create duplicate
     const duplicate = await db.examTemplate.create({
@@ -439,21 +436,21 @@ export async function duplicateTemplate(
         // Keep same school context
         schoolId,
       },
-    });
+    })
 
-    revalidatePath("/exams/templates");
+    revalidatePath("/exams/templates")
 
     return {
       success: true,
       data: { id: duplicate.id },
-    };
+    }
   } catch (error) {
-    console.error("Duplicate template error:", error);
+    console.error("Duplicate template error:", error)
     return {
       success: false,
       error: "Failed to duplicate template",
       code: "DUPLICATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }

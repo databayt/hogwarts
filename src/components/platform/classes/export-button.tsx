@@ -3,14 +3,16 @@
  * Uses unified File Block ExportButton for multi-format exports
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
-import { ExportButton as UnifiedExportButton } from "@/components/file";
-import { CLASS_EXPORT_COLUMNS, type ClassExportData } from "./columns/export";
-import { getClassesExportData } from "./actions";
-import type { Locale } from "@/components/internationalization/config";
+import * as React from "react"
+import { useCallback, useEffect, useState } from "react"
+
+import { ExportButton as UnifiedExportButton } from "@/components/file"
+import type { Locale } from "@/components/internationalization/config"
+
+import { getClassesExportData } from "./actions"
+import { CLASS_EXPORT_COLUMNS, type ClassExportData } from "./columns/export"
 
 // ============================================================================
 // Types
@@ -19,32 +21,32 @@ import type { Locale } from "@/components/internationalization/config";
 interface ExportButtonProps {
   /** Optional filters to apply to export data */
   filters?: {
-    name?: string;
-    subjectId?: string;
-    teacherId?: string;
-    termId?: string;
-  };
+    name?: string
+    subjectId?: string
+    teacherId?: string
+    termId?: string
+  }
   /** Button variant */
-  variant?: "default" | "outline" | "ghost" | "secondary";
+  variant?: "default" | "outline" | "ghost" | "secondary"
   /** Button size */
-  size?: "default" | "sm" | "lg";
+  size?: "default" | "sm" | "lg"
   /** Current locale for i18n */
-  locale?: Locale;
+  locale?: Locale
   /** Custom label */
-  label?: string;
+  label?: string
   /** Export formats to enable */
-  formats?: ("csv" | "excel" | "pdf")[];
+  formats?: ("csv" | "excel" | "pdf")[]
   /** Show column selector dialog */
-  showColumnSelector?: boolean;
+  showColumnSelector?: boolean
   /** Dictionary for translations */
   dictionary?: {
-    export?: string;
-    exportAs?: string;
-    csv?: string;
-    excel?: string;
-    pdf?: string;
-    exporting?: string;
-  };
+    export?: string
+    exportAs?: string
+    csv?: string
+    excel?: string
+    pdf?: string
+    exporting?: string
+  }
 }
 
 // ============================================================================
@@ -61,32 +63,32 @@ export function ExportButton({
   showColumnSelector = false,
   dictionary,
 }: ExportButtonProps) {
-  const [data, setData] = useState<ClassExportData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<ClassExportData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch data for export
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const result = await getClassesExportData(filters);
+      const result = await getClassesExportData(filters)
       if (result.success && result.data) {
-        setData(result.data as ClassExportData[]);
+        setData(result.data as ClassExportData[])
       } else {
-        setError("error" in result ? result.error : "Failed to fetch data");
+        setError("error" in result ? result.error : "Failed to fetch data")
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch data");
+      setError(err instanceof Error ? err.message : "Failed to fetch data")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [filters]);
+  }, [filters])
 
   // Fetch on mount and filter changes
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData()
+  }, [fetchData])
 
   return (
     <UnifiedExportButton
@@ -94,7 +96,9 @@ export function ExportButton({
         filename: "classes",
         columns: CLASS_EXPORT_COLUMNS,
         locale,
-        title: dictionary?.export || (locale === "ar" ? "قائمة الفصول" : "Class List"),
+        title:
+          dictionary?.export ||
+          (locale === "ar" ? "قائمة الفصول" : "Class List"),
       }}
       data={data}
       formats={formats}
@@ -105,21 +109,24 @@ export function ExportButton({
       disabled={isLoading || data.length === 0}
       dictionary={{
         export: dictionary?.export || (locale === "ar" ? "تصدير" : "Export"),
-        exportAs: dictionary?.exportAs || (locale === "ar" ? "تصدير كـ" : "Export as"),
+        exportAs:
+          dictionary?.exportAs || (locale === "ar" ? "تصدير كـ" : "Export as"),
         csv: dictionary?.csv || "CSV",
         excel: dictionary?.excel || "Excel",
         pdf: dictionary?.pdf || "PDF",
-        exporting: dictionary?.exporting || (locale === "ar" ? "جاري التصدير..." : "Exporting..."),
+        exporting:
+          dictionary?.exporting ||
+          (locale === "ar" ? "جاري التصدير..." : "Exporting..."),
       }}
       onExportError={(err) => {
-        console.error("Export failed:", err);
+        console.error("Export failed:", err)
       }}
     />
-  );
+  )
 }
 
 // ============================================================================
 // Re-export for backwards compatibility
 // ============================================================================
 
-export { ExportButton as ClassExportButton };
+export { ExportButton as ClassExportButton }

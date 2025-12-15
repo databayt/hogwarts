@@ -1,11 +1,38 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { format, isToday, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
-import { QrCode, Scan, Users, Clock, Calendar, CircleCheck, CircleX, CircleAlert, Timer, TrendingUp, TrendingDown, Wifi, WifiOff, Download, Upload, RefreshCw } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import {
+  eachDayOfInterval,
+  endOfWeek,
+  format,
+  isToday,
+  startOfWeek,
+} from "date-fns"
+import {
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  Download,
+  QrCode,
+  RefreshCw,
+  Scan,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  Upload,
+  Users,
+  Wifi,
+  WifiOff,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,29 +40,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -43,56 +48,75 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Student {
-  id: string;
-  givenName: string;
-  surname: string;
-  studentId: string;
-  profileImageUrl?: string;
-  class: string;
+  id: string
+  givenName: string
+  surname: string
+  studentId: string
+  profileImageUrl?: string
+  class: string
 }
 
 interface AttendanceRecord {
-  id: string;
-  studentId: string;
-  date: Date;
-  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
-  checkInTime?: string;
-  checkOutTime?: string;
-  note?: string;
-  method?: 'MANUAL' | 'QR_CODE' | 'BIOMETRIC' | 'AUTO';
+  id: string
+  studentId: string
+  date: Date
+  status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED"
+  checkInTime?: string
+  checkOutTime?: string
+  note?: string
+  method?: "MANUAL" | "QR_CODE" | "BIOMETRIC" | "AUTO"
 }
 
 interface ClassSession {
-  id: string;
-  classId: string;
-  className: string;
-  subject: string;
-  startTime: string;
-  endTime: string;
-  date: Date;
+  id: string
+  classId: string
+  className: string
+  subject: string
+  startTime: string
+  endTime: string
+  date: Date
 }
 
 interface AttendanceTrackingProps {
-  session: ClassSession;
-  students: Student[];
-  attendanceRecords: AttendanceRecord[];
-  onMarkAttendance: (records: Omit<AttendanceRecord, 'id'>[]) => Promise<void>;
-  onGenerateQRCode?: (sessionId: string) => Promise<string>;
-  onScanQRCode?: (qrData: string, studentId: string) => Promise<void>;
-  enableQRCode?: boolean;
-  enableBulkUpload?: boolean;
+  session: ClassSession
+  students: Student[]
+  attendanceRecords: AttendanceRecord[]
+  onMarkAttendance: (records: Omit<AttendanceRecord, "id">[]) => Promise<void>
+  onGenerateQRCode?: (sessionId: string) => Promise<string>
+  onScanQRCode?: (qrData: string, studentId: string) => Promise<void>
+  enableQRCode?: boolean
+  enableBulkUpload?: boolean
 }
 
 const statusConfig = {
-  PRESENT: { color: 'bg-green-100 text-green-800', icon: CircleCheck },
-  ABSENT: { color: 'bg-red-100 text-red-800', icon: CircleX },
-  LATE: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  EXCUSED: { color: 'bg-blue-100 text-blue-800', icon: CircleAlert },
-};
+  PRESENT: { color: "bg-green-100 text-green-800", icon: CircleCheck },
+  ABSENT: { color: "bg-red-100 text-red-800", icon: CircleX },
+  LATE: { color: "bg-yellow-100 text-yellow-800", icon: Clock },
+  EXCUSED: { color: "bg-blue-100 text-blue-800", icon: CircleAlert },
+}
 
 export function AttendanceTracking({
   session,
@@ -104,62 +128,65 @@ export function AttendanceTracking({
   enableQRCode = true,
   enableBulkUpload = true,
 }: AttendanceTrackingProps) {
-  const [selectedTab, setSelectedTab] = useState<'manual' | 'qrcode' | 'bulk'>('manual');
-  const [attendanceData, setAttendanceData] = useState<Map<string, AttendanceRecord>>(new Map());
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [isLiveMode, setIsLiveMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [selectedTab, setSelectedTab] = useState<"manual" | "qrcode" | "bulk">(
+    "manual"
+  )
+  const [attendanceData, setAttendanceData] = useState<
+    Map<string, AttendanceRecord>
+  >(new Map())
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("")
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [isLiveMode, setIsLiveMode] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
 
   // Initialize attendance data
   useEffect(() => {
-    const dataMap = new Map<string, AttendanceRecord>();
+    const dataMap = new Map<string, AttendanceRecord>()
 
     // Add existing records
-    attendanceRecords.forEach(record => {
-      dataMap.set(record.studentId, record);
-    });
+    attendanceRecords.forEach((record) => {
+      dataMap.set(record.studentId, record)
+    })
 
     // Add default absent for missing students
-    students.forEach(student => {
+    students.forEach((student) => {
       if (!dataMap.has(student.id)) {
         dataMap.set(student.id, {
-          id: '',
+          id: "",
           studentId: student.id,
           date: session.date,
-          status: 'ABSENT',
-          method: 'MANUAL',
-        });
+          status: "ABSENT",
+          method: "MANUAL",
+        })
       }
-    });
+    })
 
-    setAttendanceData(dataMap);
-  }, [students, attendanceRecords, session.date]);
+    setAttendanceData(dataMap)
+  }, [students, attendanceRecords, session.date])
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled) return;
+    if (!autoSaveEnabled) return
 
     const timer = setTimeout(() => {
-      handleSaveAttendance(true);
-    }, 5000); // Auto-save after 5 seconds of inactivity
+      handleSaveAttendance(true)
+    }, 5000) // Auto-save after 5 seconds of inactivity
 
-    return () => clearTimeout(timer);
-  }, [attendanceData, autoSaveEnabled]);
+    return () => clearTimeout(timer)
+  }, [attendanceData, autoSaveEnabled])
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const records = Array.from(attendanceData.values());
-    const present = records.filter(r => r.status === 'PRESENT').length;
-    const absent = records.filter(r => r.status === 'ABSENT').length;
-    const late = records.filter(r => r.status === 'LATE').length;
-    const excused = records.filter(r => r.status === 'EXCUSED').length;
+    const records = Array.from(attendanceData.values())
+    const present = records.filter((r) => r.status === "PRESENT").length
+    const absent = records.filter((r) => r.status === "ABSENT").length
+    const late = records.filter((r) => r.status === "LATE").length
+    const excused = records.filter((r) => r.status === "EXCUSED").length
 
-    const attendanceRate = students.length > 0
-      ? ((present + late) / students.length) * 100
-      : 0;
+    const attendanceRate =
+      students.length > 0 ? ((present + late) / students.length) * 100 : 0
 
     return {
       total: students.length,
@@ -168,80 +195,92 @@ export function AttendanceTracking({
       late,
       excused,
       attendanceRate,
-      unmarked: students.length - records.filter(r => r.id).length,
-    };
-  }, [attendanceData, students]);
+      unmarked: students.length - records.filter((r) => r.id).length,
+    }
+  }, [attendanceData, students])
 
   // ListFilter students based on search
   const filteredStudents = useMemo(() => {
-    if (!searchQuery) return students;
+    if (!searchQuery) return students
 
-    const query = searchQuery.toLowerCase();
-    return students.filter(student => {
-      const fullName = `${student.givenName} ${student.surname}`.toLowerCase();
-      return fullName.includes(query) ||
-             student.studentId.toLowerCase().includes(query) ||
-             student.class.toLowerCase().includes(query);
-    });
-  }, [students, searchQuery]);
+    const query = searchQuery.toLowerCase()
+    return students.filter((student) => {
+      const fullName = `${student.givenName} ${student.surname}`.toLowerCase()
+      return (
+        fullName.includes(query) ||
+        student.studentId.toLowerCase().includes(query) ||
+        student.class.toLowerCase().includes(query)
+      )
+    })
+  }, [students, searchQuery])
 
-  const markAttendance = useCallback((studentId: string, status: AttendanceRecord['status'], note?: string) => {
-    setAttendanceData(prev => {
-      const newData = new Map(prev);
-      const existing = newData.get(studentId);
+  const markAttendance = useCallback(
+    (studentId: string, status: AttendanceRecord["status"], note?: string) => {
+      setAttendanceData((prev) => {
+        const newData = new Map(prev)
+        const existing = newData.get(studentId)
 
-      newData.set(studentId, {
-        ...existing!,
-        status,
-        note,
-        checkInTime: status === 'PRESENT' || status === 'LATE' ? format(new Date(), 'HH:mm') : undefined,
-        method: 'MANUAL',
-      });
-
-      return newData;
-    });
-
-    toast.success(`Marked ${status.toLowerCase()}`);
-  }, []);
-
-  const markAllStudents = useCallback((status: AttendanceRecord['status']) => {
-    setAttendanceData(prev => {
-      const newData = new Map(prev);
-
-      students.forEach(student => {
-        const existing = newData.get(student.id);
-        newData.set(student.id, {
+        newData.set(studentId, {
           ...existing!,
           status,
-          checkInTime: status === 'PRESENT' ? format(new Date(), 'HH:mm') : undefined,
-          method: 'MANUAL',
-        });
-      });
+          note,
+          checkInTime:
+            status === "PRESENT" || status === "LATE"
+              ? format(new Date(), "HH:mm")
+              : undefined,
+          method: "MANUAL",
+        })
 
-      return newData;
-    });
+        return newData
+      })
 
-    toast.success(`Marked all students as ${status.toLowerCase()}`);
-  }, [students]);
+      toast.success(`Marked ${status.toLowerCase()}`)
+    },
+    []
+  )
+
+  const markAllStudents = useCallback(
+    (status: AttendanceRecord["status"]) => {
+      setAttendanceData((prev) => {
+        const newData = new Map(prev)
+
+        students.forEach((student) => {
+          const existing = newData.get(student.id)
+          newData.set(student.id, {
+            ...existing!,
+            status,
+            checkInTime:
+              status === "PRESENT" ? format(new Date(), "HH:mm") : undefined,
+            method: "MANUAL",
+          })
+        })
+
+        return newData
+      })
+
+      toast.success(`Marked all students as ${status.toLowerCase()}`)
+    },
+    [students]
+  )
 
   const handleGenerateQRCode = async () => {
-    if (!onGenerateQRCode) return;
+    if (!onGenerateQRCode) return
 
     try {
-      const url = await onGenerateQRCode(session.id);
-      setQrCodeUrl(url);
-      setQrDialogOpen(true);
+      const url = await onGenerateQRCode(session.id)
+      setQrCodeUrl(url)
+      setQrDialogOpen(true)
     } catch (error) {
-      toast.error('Failed to generate QR code');
+      toast.error("Failed to generate QR code")
     }
-  };
+  }
 
   const handleSaveAttendance = async (isAutoSave = false) => {
-    setSaving(true);
+    setSaving(true)
     try {
       const records = Array.from(attendanceData.values())
-        .filter(r => r.studentId) // Only save valid records
-        .map(r => ({
+        .filter((r) => r.studentId) // Only save valid records
+        .map((r) => ({
           studentId: r.studentId,
           date: r.date,
           status: r.status,
@@ -249,93 +288,104 @@ export function AttendanceTracking({
           checkOutTime: r.checkOutTime,
           note: r.note,
           method: r.method,
-        }));
+        }))
 
-      await onMarkAttendance(records);
+      await onMarkAttendance(records)
 
       if (!isAutoSave) {
-        toast.success('Attendance saved successfully');
+        toast.success("Attendance saved successfully")
       }
     } catch (error) {
-      toast.error('Failed to save attendance');
+      toast.error("Failed to save attendance")
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const handleBulkUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const text = e.target?.result as string;
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
+        const text = e.target?.result as string
+        const lines = text.split("\n")
+        const headers = lines[0].split(",").map((h) => h.trim())
 
-        const studentIdIndex = headers.findIndex(h =>
-          h.toLowerCase().includes('student') && h.toLowerCase().includes('id')
-        );
-        const statusIndex = headers.findIndex(h => h.toLowerCase().includes('status'));
+        const studentIdIndex = headers.findIndex(
+          (h) =>
+            h.toLowerCase().includes("student") &&
+            h.toLowerCase().includes("id")
+        )
+        const statusIndex = headers.findIndex((h) =>
+          h.toLowerCase().includes("status")
+        )
 
         if (studentIdIndex === -1 || statusIndex === -1) {
-          toast.error('CSV must contain Student ID and Status columns');
-          return;
+          toast.error("CSV must contain Student ID and Status columns")
+          return
         }
 
-        const newData = new Map(attendanceData);
-        let updated = 0;
+        const newData = new Map(attendanceData)
+        let updated = 0
 
-        lines.slice(1).forEach(line => {
-          if (!line.trim()) return;
+        lines.slice(1).forEach((line) => {
+          if (!line.trim()) return
 
-          const values = line.split(',').map(v => v.trim());
-          const studentId = values[studentIdIndex];
-          const status = values[statusIndex].toUpperCase() as AttendanceRecord['status'];
+          const values = line.split(",").map((v) => v.trim())
+          const studentId = values[studentIdIndex]
+          const status = values[
+            statusIndex
+          ].toUpperCase() as AttendanceRecord["status"]
 
-          const student = students.find(s => s.studentId === studentId);
-          if (student && ['PRESENT', 'ABSENT', 'LATE', 'EXCUSED'].includes(status)) {
-            const existing = newData.get(student.id);
+          const student = students.find((s) => s.studentId === studentId)
+          if (
+            student &&
+            ["PRESENT", "ABSENT", "LATE", "EXCUSED"].includes(status)
+          ) {
+            const existing = newData.get(student.id)
             newData.set(student.id, {
               ...existing!,
               status,
-              method: 'MANUAL',
-            });
-            updated++;
+              method: "MANUAL",
+            })
+            updated++
           }
-        });
+        })
 
-        setAttendanceData(newData);
-        toast.success(`Updated attendance for ${updated} students`);
+        setAttendanceData(newData)
+        toast.success(`Updated attendance for ${updated} students`)
       } catch (error) {
-        toast.error('Failed to parse CSV file');
+        toast.error("Failed to parse CSV file")
       }
-    };
-    reader.readAsText(file);
-  };
+    }
+    reader.readAsText(file)
+  }
 
   const exportAttendance = () => {
-    const headers = ['Student ID', 'Name', 'Status', 'Check-in Time', 'Note'];
-    const rows = students.map(student => {
-      const record = attendanceData.get(student.id);
+    const headers = ["Student ID", "Name", "Status", "Check-in Time", "Note"]
+    const rows = students.map((student) => {
+      const record = attendanceData.get(student.id)
       return [
         student.studentId,
         `${student.givenName} ${student.surname}`,
-        record?.status || 'ABSENT',
-        record?.checkInTime || '',
-        record?.note || '',
-      ];
-    });
+        record?.status || "ABSENT",
+        record?.checkInTime || "",
+        record?.note || "",
+      ]
+    })
 
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `attendance_${session.className}_${format(session.date, 'yyyy-MM-dd')}.csv`;
-    a.click();
-  };
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `attendance_${session.className}_${format(session.date, "yyyy-MM-dd")}.csv`
+    a.click()
+  }
 
   return (
     <div className="space-y-6">
@@ -344,34 +394,34 @@ export function AttendanceTracking({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{session.className} - {session.subject}</CardTitle>
+              <CardTitle>
+                {session.className} - {session.subject}
+              </CardTitle>
               <CardDescription>
-                {format(session.date, 'EEEE, MMMM dd, yyyy')} • {session.startTime} - {session.endTime}
+                {format(session.date, "EEEE, MMMM dd, yyyy")} •{" "}
+                {session.startTime} - {session.endTime}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               {isLiveMode ? (
                 <Badge variant="default" className="animate-pulse">
-                  <Wifi className="h-3 w-3 mr-1" />
+                  <Wifi className="mr-1 h-3 w-3" />
                   Live Mode
                 </Badge>
               ) : (
                 <Badge variant="outline">
-                  <WifiOff className="h-3 w-3 mr-1" />
+                  <WifiOff className="mr-1 h-3 w-3" />
                   Offline
                 </Badge>
               )}
-              <Switch
-                checked={isLiveMode}
-                onCheckedChange={setIsLiveMode}
-              />
+              <Switch checked={isLiveMode} onCheckedChange={setIsLiveMode} />
             </div>
           </div>
         </CardHeader>
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Students</CardDescription>
@@ -386,7 +436,9 @@ export function AttendanceTracking({
             <CardDescription>Present</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.present}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.present}
+            </div>
           </CardContent>
         </Card>
 
@@ -395,7 +447,9 @@ export function AttendanceTracking({
             <CardDescription>Absent</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.absent}
+            </div>
           </CardContent>
         </Card>
 
@@ -404,7 +458,9 @@ export function AttendanceTracking({
             <CardDescription>Late</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.late}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.late}
+            </div>
           </CardContent>
         </Card>
 
@@ -413,7 +469,9 @@ export function AttendanceTracking({
             <CardDescription>Excused</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.excused}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {stats.excused}
+            </div>
           </CardContent>
         </Card>
 
@@ -422,7 +480,9 @@ export function AttendanceTracking({
             <CardDescription>Attendance Rate</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.attendanceRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">
+              {stats.attendanceRate.toFixed(1)}%
+            </div>
             <Progress value={stats.attendanceRate} className="mt-2 h-2" />
           </CardContent>
         </Card>
@@ -430,10 +490,12 @@ export function AttendanceTracking({
 
       {/* Attendance Interface */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="manual">Manual</TabsTrigger>
           {enableQRCode && <TabsTrigger value="qrcode">QR Code</TabsTrigger>}
-          {enableBulkUpload && <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>}
+          {enableBulkUpload && (
+            <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
+          )}
         </TabsList>
 
         {/* Manual Attendance */}
@@ -453,7 +515,7 @@ export function AttendanceTracking({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => markAllStudents('PRESENT')}
+                      onClick={() => markAllStudents("PRESENT")}
                     >
                       All Present
                     </Button>
@@ -480,9 +542,10 @@ export function AttendanceTracking({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredStudents.map(student => {
-                    const record = attendanceData.get(student.id);
-                    const StatusIcon = statusConfig[record?.status || 'ABSENT'].icon;
+                  {filteredStudents.map((student) => {
+                    const record = attendanceData.get(student.id)
+                    const StatusIcon =
+                      statusConfig[record?.status || "ABSENT"].icon
 
                     return (
                       <TableRow key={student.id}>
@@ -491,14 +554,17 @@ export function AttendanceTracking({
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={student.profileImageUrl} />
                               <AvatarFallback>
-                                {student.givenName[0]}{student.surname[0]}
+                                {student.givenName[0]}
+                                {student.surname[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">
                                 {student.givenName} {student.surname}
                               </p>
-                              <p className="text-xs text-muted-foreground">{student.class}</p>
+                              <p className="text-muted-foreground text-xs">
+                                {student.class}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
@@ -506,49 +572,71 @@ export function AttendanceTracking({
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={statusConfig[record?.status || 'ABSENT'].color}
+                            className={
+                              statusConfig[record?.status || "ABSENT"].color
+                            }
                           >
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {record?.status || 'ABSENT'}
+                            <StatusIcon className="mr-1 h-3 w-3" />
+                            {record?.status || "ABSENT"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {record?.checkInTime || '—'}
-                        </TableCell>
+                        <TableCell>{record?.checkInTime || "—"}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button
                               size="sm"
-                              variant={record?.status === 'PRESENT' ? 'default' : 'outline'}
-                              onClick={() => markAttendance(student.id, 'PRESENT')}
+                              variant={
+                                record?.status === "PRESENT"
+                                  ? "default"
+                                  : "outline"
+                              }
+                              onClick={() =>
+                                markAttendance(student.id, "PRESENT")
+                              }
                             >
                               P
                             </Button>
                             <Button
                               size="sm"
-                              variant={record?.status === 'ABSENT' ? 'destructive' : 'outline'}
-                              onClick={() => markAttendance(student.id, 'ABSENT')}
+                              variant={
+                                record?.status === "ABSENT"
+                                  ? "destructive"
+                                  : "outline"
+                              }
+                              onClick={() =>
+                                markAttendance(student.id, "ABSENT")
+                              }
                             >
                               A
                             </Button>
                             <Button
                               size="sm"
-                              variant={record?.status === 'LATE' ? 'secondary' : 'outline'}
-                              onClick={() => markAttendance(student.id, 'LATE')}
+                              variant={
+                                record?.status === "LATE"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                              onClick={() => markAttendance(student.id, "LATE")}
                             >
                               L
                             </Button>
                             <Button
                               size="sm"
-                              variant={record?.status === 'EXCUSED' ? 'secondary' : 'outline'}
-                              onClick={() => markAttendance(student.id, 'EXCUSED')}
+                              variant={
+                                record?.status === "EXCUSED"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                              onClick={() =>
+                                markAttendance(student.id, "EXCUSED")
+                              }
                             >
                               E
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    );
+                    )
                   })}
                 </TableBody>
               </Table>
@@ -561,15 +649,18 @@ export function AttendanceTracking({
                 />
                 <Label>Auto-save</Label>
               </div>
-              <Button onClick={() => handleSaveAttendance(false)} disabled={saving}>
+              <Button
+                onClick={() => handleSaveAttendance(false)}
+                disabled={saving}
+              >
                 {saving ? (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <CircleCheck className="h-4 w-4 mr-2" />
+                    <CircleCheck className="mr-2 h-4 w-4" />
                     Save Attendance
                   </>
                 )}
@@ -585,17 +676,16 @@ export function AttendanceTracking({
               <CardHeader>
                 <CardTitle>QR Code Attendance</CardTitle>
                 <CardDescription>
-                  Generate a QR code for students to scan and mark their attendance
+                  Generate a QR code for students to scan and mark their
+                  attendance
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col items-center py-8">
-                <QrCode className="h-32 w-32 text-muted-foreground mb-4" />
-                <Button onClick={handleGenerateQRCode}>
-                  Generate QR Code
-                </Button>
-                <p className="text-sm text-muted-foreground mt-4 text-center max-w-md">
-                  Students can scan the QR code with their mobile devices to automatically
-                  mark their attendance for this session.
+                <QrCode className="text-muted-foreground mb-4 h-32 w-32" />
+                <Button onClick={handleGenerateQRCode}>Generate QR Code</Button>
+                <p className="text-muted-foreground mt-4 max-w-md text-center text-sm">
+                  Students can scan the QR code with their mobile devices to
+                  automatically mark their attendance for this session.
                 </p>
               </CardContent>
             </Card>
@@ -614,8 +704,8 @@ export function AttendanceTracking({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                    <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <div className="rounded-lg border-2 border-dashed p-8 text-center">
+                    <Upload className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
                     <input
                       type="file"
                       accept=".csv"
@@ -628,18 +718,22 @@ export function AttendanceTracking({
                         Upload CSV File
                       </label>
                     </Button>
-                    <p className="text-sm text-muted-foreground mt-4">
+                    <p className="text-muted-foreground mt-4 text-sm">
                       CSV should contain Student ID and Status columns
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <h4 className="font-medium">CSV Format Example:</h4>
-                    <div className="bg-muted p-3 rounded font-mono text-xs">
-                      Student ID,Status<br />
-                      STU001,PRESENT<br />
-                      STU002,ABSENT<br />
-                      STU003,LATE<br />
+                    <div className="bg-muted rounded p-3 font-mono text-xs">
+                      Student ID,Status
+                      <br />
+                      STU001,PRESENT
+                      <br />
+                      STU002,ABSENT
+                      <br />
+                      STU003,LATE
+                      <br />
                       STU004,EXCUSED
                     </div>
                   </div>
@@ -661,11 +755,15 @@ export function AttendanceTracking({
           </DialogHeader>
           <div className="flex flex-col items-center py-8">
             {qrCodeUrl ? (
-              <img src={qrCodeUrl} alt="Attendance QR Code" className="w-64 h-64" />
+              <img
+                src={qrCodeUrl}
+                alt="Attendance QR Code"
+                className="h-64 w-64"
+              />
             ) : (
-              <div className="w-64 h-64 bg-muted animate-pulse rounded" />
+              <div className="bg-muted h-64 w-64 animate-pulse rounded" />
             )}
-            <p className="text-sm text-muted-foreground mt-4 text-center">
+            <p className="text-muted-foreground mt-4 text-center text-sm">
               Valid for: {session.startTime} - {session.endTime}
             </p>
             <Badge variant="outline" className="mt-2">
@@ -676,12 +774,10 @@ export function AttendanceTracking({
             <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
               Close
             </Button>
-            <Button onClick={() => window.print()}>
-              Print QR Code
-            </Button>
+            <Button onClick={() => window.print()}>Print QR Code</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

@@ -1,44 +1,61 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
-import { QrCode, Scan, Users, RefreshCw, Settings, CircleAlert } from "lucide-react";
-import { QRGenerator } from './qr-generator';
-import { QRScanner } from './qr-scanner';
-import { useAttendanceContext } from '../core/attendance-context';
-import { AttendanceStats } from '../core/attendance-stats';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
+import React, { useEffect, useState } from "react"
+import {
+  CircleAlert,
+  QrCode,
+  RefreshCw,
+  Scan,
+  Settings,
+  Users,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "@/components/ui/use-toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { useAttendanceContext } from "../core/attendance-context"
+import { AttendanceStats } from "../core/attendance-stats"
+import { QRGenerator } from "./qr-generator"
+import { QRScanner } from "./qr-scanner"
 
 interface QRCodeAttendanceContentProps {
-  dictionary?: Dictionary;
-  locale?: string;
-  schoolId: string;
+  dictionary?: Dictionary
+  locale?: string
+  schoolId: string
 }
 
 export default function QRCodeAttendanceContent({
   dictionary,
-  locale = 'en',
-  schoolId
+  locale = "en",
+  schoolId,
 }: QRCodeAttendanceContentProps) {
-  const [activeTab, setActiveTab] = useState<'generate' | 'scan' | 'manage'>('generate');
-  const [isTeacherMode, setIsTeacherMode] = useState(true); // Should come from auth/role
+  const [activeTab, setActiveTab] = useState<"generate" | "scan" | "manage">(
+    "generate"
+  )
+  const [isTeacherMode, setIsTeacherMode] = useState(true) // Should come from auth/role
   const {
     selectedClass,
     selectedDate,
     attendance,
     stats,
     fetchAttendance,
-    setCurrentMethod
-  } = useAttendanceContext();
+    setCurrentMethod,
+  } = useAttendanceContext()
 
   useEffect(() => {
     // Set the current method to QR_CODE when component mounts
-    setCurrentMethod('QR_CODE');
-  }, [setCurrentMethod]);
+    setCurrentMethod("QR_CODE")
+  }, [setCurrentMethod])
 
   useEffect(() => {
     // Fetch attendance when class or date changes
@@ -47,30 +64,30 @@ export default function QRCodeAttendanceContent({
         schoolId,
         classId: selectedClass,
         dateFrom: selectedDate,
-        dateTo: selectedDate
-      });
+        dateTo: selectedDate,
+      })
     }
-  }, [selectedClass, selectedDate, schoolId, fetchAttendance]);
+  }, [selectedClass, selectedDate, schoolId, fetchAttendance])
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-100 rounded-lg">
+          <div className="rounded-lg bg-purple-100 p-3">
             <QrCode className="h-6 w-6 text-purple-600" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">QR Code Attendance</h2>
             <p className="text-muted-foreground">
               {isTeacherMode
-                ? 'Generate QR codes for students to scan'
-                : 'Scan QR code to mark your attendance'}
+                ? "Generate QR codes for students to scan"
+                : "Scan QR code to mark your attendance"}
             </p>
           </div>
         </div>
         <Badge variant="outline" className="text-purple-600">
-          <QrCode className="h-3 w-3 mr-1" />
+          <QrCode className="mr-1 h-3 w-3" />
           QR Mode Active
         </Badge>
       </div>
@@ -88,15 +105,15 @@ export default function QRCodeAttendanceContent({
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="generate" disabled={!isTeacherMode}>
-            <QrCode className="h-4 w-4 mr-2" />
+            <QrCode className="mr-2 h-4 w-4" />
             Generate QR
           </TabsTrigger>
           <TabsTrigger value="scan">
-            <Scan className="h-4 w-4 mr-2" />
+            <Scan className="mr-2 h-4 w-4" />
             Scan QR
           </TabsTrigger>
           <TabsTrigger value="manage" disabled={!isTeacherMode}>
-            <Users className="h-4 w-4 mr-2" />
+            <Users className="mr-2 h-4 w-4" />
             Manage
           </TabsTrigger>
         </TabsList>
@@ -108,13 +125,14 @@ export default function QRCodeAttendanceContent({
               <CardHeader>
                 <CardTitle>No Class Selected</CardTitle>
                 <CardDescription>
-                  Please select a class from the dropdown above to generate QR codes
+                  Please select a class from the dropdown above to generate QR
+                  codes
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-4">
-                  <CircleAlert className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
+                <div className="py-4 text-center">
+                  <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+                  <p className="text-muted-foreground text-sm">
                     Select a class to continue
                   </p>
                 </div>
@@ -136,7 +154,7 @@ export default function QRCodeAttendanceContent({
               toast({
                 title: "QR Code Scanned",
                 description: `Attendance marked successfully`,
-              });
+              })
             }}
             dictionary={dictionary}
             locale={locale}
@@ -154,43 +172,55 @@ export default function QRCodeAttendanceContent({
             </CardHeader>
             <CardContent>
               {attendance.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                <div className="py-8 text-center">
+                  <Users className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
                   <p className="text-muted-foreground">
                     No QR scans recorded yet
                   </p>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Generate a QR code and share it with students
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {attendance
-                    .filter(record => record.method === 'QR_CODE')
-                    .map(record => (
+                    .filter((record) => record.method === "QR_CODE")
+                    .map((record) => (
                       <div
                         key={record.id}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary"
+                        className="bg-secondary flex items-center justify-between rounded-lg px-3 py-2"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
                             <span className="text-sm font-medium text-purple-600">
-                              {record.studentName?.charAt(0) || 'S'}
+                              {record.studentName?.charAt(0) || "S"}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">{record.studentName || 'Student'}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="font-medium">
+                              {record.studentName || "Student"}
+                            </p>
+                            <p className="text-muted-foreground text-sm">
                               ID: {record.studentId}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant={record.status === 'PRESENT' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={
+                              record.status === "PRESENT"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {record.status}
                           </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString() : ''}
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            {record.checkInTime
+                              ? new Date(
+                                  record.checkInTime
+                                ).toLocaleTimeString()
+                              : ""}
                           </p>
                         </div>
                       </div>
@@ -212,36 +242,36 @@ export default function QRCodeAttendanceContent({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Auto-refresh QR codes</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Generate new codes every 60 seconds
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   Configure
                 </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Require location verification</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Students must be within campus to scan
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="mr-2 h-4 w-4" />
                   Setup
                 </Button>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Prevent screenshot sharing</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Add security measures to prevent QR sharing
                   </p>
                 </div>
                 <Button size="sm" variant="outline">
-                  <CircleAlert className="h-4 w-4 mr-2" />
+                  <CircleAlert className="mr-2 h-4 w-4" />
                   Enable
                 </Button>
               </div>
@@ -250,5 +280,5 @@ export default function QRCodeAttendanceContent({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

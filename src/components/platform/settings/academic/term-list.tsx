@@ -1,14 +1,16 @@
 "use client"
 
 import * as React from "react"
+import { CalendarDays, Pencil, Star, Trash2 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Pencil, Trash2, CalendarDays, Star } from "lucide-react"
-import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
-import type { Term } from "./types"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { Term } from "./types"
 
 interface TermListProps {
   terms: Term[]
@@ -43,9 +45,9 @@ export function TermList({
     return (
       <div className="space-y-2" role="status" aria-label="Loading terms">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-lg border border-border p-4">
+          <div key={i} className="border-border rounded-lg border p-4">
             <div className="flex items-start justify-between gap-2">
-              <div className="space-y-2 flex-1">
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-3 w-36" />
               </div>
@@ -60,8 +62,11 @@ export function TermList({
   if (!selectedYearId) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="rounded-full bg-muted p-3 mb-4">
-          <CalendarDays className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <div className="bg-muted mb-4 rounded-full p-3">
+          <CalendarDays
+            className="text-muted-foreground h-6 w-6"
+            aria-hidden="true"
+          />
         </div>
         <p className="text-muted-foreground text-sm">
           {dict.selectYearFirst || "Select an academic year first"}
@@ -73,13 +78,16 @@ export function TermList({
   if (terms.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="rounded-full bg-muted p-3 mb-4">
-          <CalendarDays className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <div className="bg-muted mb-4 rounded-full p-3">
+          <CalendarDays
+            className="text-muted-foreground h-6 w-6"
+            aria-hidden="true"
+          />
         </div>
         <p className="text-muted-foreground text-sm">
           {dict.noTerms || "No terms configured"}
         </p>
-        <p className="text-muted-foreground text-xs mt-1">
+        <p className="text-muted-foreground mt-1 text-xs">
           {dict.addTermHint || "Add terms for this academic year"}
         </p>
       </div>
@@ -100,25 +108,25 @@ export function TermList({
           )}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1 min-w-0 flex-1">
+            <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
                 <h4 className="font-medium">
                   {dict.term || "Term"} {term.termNumber}
                 </h4>
                 {term.isActive && (
-                  <Badge className="text-xs gap-1">
+                  <Badge className="gap-1 text-xs">
                     <Star className="h-3 w-3" />
                     {dict.active || "Active"}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {formatDate(term.startDate)} - {formatDate(term.endDate)}
               </p>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               {!term.isActive && (
                 <Button
                   variant="ghost"
@@ -144,7 +152,7 @@ export function TermList({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive h-7 w-7"
                 onClick={() => onDeleteTerm(term.id)}
                 aria-label={`${dict.delete || "Delete"} ${dict.term || "Term"} ${term.termNumber}`}
                 title={`${dict.delete || "Delete"} ${dict.term || "Term"} ${term.termNumber}`}

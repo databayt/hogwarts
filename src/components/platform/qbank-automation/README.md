@@ -70,6 +70,7 @@ Specialized prompts for different question types and exam formats:
 - **Extensible** to other exam types (USMLE, SAT, GRE, etc.)
 
 **Features**:
+
 - Clinical scenario-based questions
 - Bloom's Taxonomy alignment
 - Difficulty calibration
@@ -80,19 +81,20 @@ Specialized prompts for different question types and exam formats:
 Claude AI integration for question generation:
 
 ```typescript
-import { generateQuestion } from './engine/question-generator'
+import { generateQuestion } from "./engine/question-generator"
 
 const question = await generateQuestion({
-  context: '...medical textbook excerpt...',
-  questionType: 'MULTIPLE_CHOICE',
-  difficulty: 'MEDIUM',
-  bloomLevel: 'APPLY',
-  examType: 'MRCP_PART_1',
-  subject: 'Cardiology',
+  context: "...medical textbook excerpt...",
+  questionType: "MULTIPLE_CHOICE",
+  difficulty: "MEDIUM",
+  bloomLevel: "APPLY",
+  examType: "MRCP_PART_1",
+  subject: "Cardiology",
 })
 ```
 
 **Features**:
+
 - Batch generation support
 - Rate limiting (500ms between requests)
 - Cost estimation
@@ -103,15 +105,16 @@ const question = await generateQuestion({
 Intelligent PDF processing:
 
 ```typescript
-import { parsePDFAndChunk } from './engine/pdf-parser'
+import { parsePDFAndChunk } from "./engine/pdf-parser"
 
 const { parseResult, chunks } = await parsePDFAndChunk(buffer, {
-  chunkSize: 1500,  // ~375 words
-  chunkOverlap: 300,  // ~75 words for context
+  chunkSize: 1500, // ~375 words
+  chunkOverlap: 300, // ~75 words for context
 })
 ```
 
 **Features**:
+
 - Text extraction with metadata
 - Semantic chunking (preserves paragraphs, sentences)
 - Section title extraction
@@ -122,7 +125,7 @@ const { parseResult, chunks } = await parsePDFAndChunk(buffer, {
 Automated quality scoring:
 
 ```typescript
-import { validateQuestion } from './engine/quality-validator'
+import { validateQuestion } from "./engine/quality-validator"
 
 const result = await validateQuestion(generatedQuestion)
 // {
@@ -135,6 +138,7 @@ const result = await validateQuestion(generatedQuestion)
 ```
 
 **Validation Checks**:
+
 - ✅ Question text (length, clarity)
 - ✅ Options (correctness, balance, duplicates)
 - ✅ Explanation (depth, teaching language)
@@ -143,6 +147,7 @@ const result = await validateQuestion(generatedQuestion)
 - ✅ Duplicate detection (semantic similarity)
 
 **Scoring Weights**:
+
 - Question Text: 25%
 - Options: 25%
 - Explanation: 20%
@@ -155,28 +160,33 @@ const result = await validateQuestion(generatedQuestion)
 Semantic search with vector embeddings:
 
 ```typescript
-import { generateEmbedding, findRelevantChunks } from './engine/embedding-service'
+import {
+  findRelevantChunks,
+  generateEmbedding,
+} from "./engine/embedding-service"
 
 // Generate embedding for text
-const embedding = await generateEmbedding('heart failure pathophysiology')
+const embedding = await generateEmbedding("heart failure pathophysiology")
 
 // Find relevant source chunks
 const chunks = await findRelevantChunks({
-  query: 'What are the symptoms of heart failure?',
-  subject: 'Cardiology',
-  examType: 'MRCP_PART_1',
+  query: "What are the symptoms of heart failure?",
+  subject: "Cardiology",
+  examType: "MRCP_PART_1",
   limit: 3,
   similarityThreshold: 0.7,
 })
 ```
 
 **Features**:
+
 - OpenAI text-embedding-3-small (1536 dimensions, $0.02/1M tokens)
 - Cosine similarity calculation
 - Batch embedding generation
 - Cost estimation
 
 **Note**: Requires PostgreSQL pgvector extension:
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
@@ -237,19 +247,22 @@ Run the seed script (to be created) to set up `community.databayt.org` school ac
 ```typescript
 // 1. Upload PDF source material
 const formData = new FormData()
-formData.append('file', pdfFile)
-formData.append('title', 'Basic Medical Sciences for MRCP Part 1')
-formData.append('subject', 'Medical Sciences')
-formData.append('examType', 'MRCP_PART_1')
-formData.append('attribution', 'Author: Philippa Easterbrook, Publisher: Oxford University Press')
+formData.append("file", pdfFile)
+formData.append("title", "Basic Medical Sciences for MRCP Part 1")
+formData.append("subject", "Medical Sciences")
+formData.append("examType", "MRCP_PART_1")
+formData.append(
+  "attribution",
+  "Author: Philippa Easterbrook, Publisher: Oxford University Press"
+)
 
 await uploadSourceMaterial(formData)
 
 // 2. Create generation job
 const job = await createGenerationJob({
   targetCount: 50,
-  examType: 'MRCP_PART_1',
-  subjects: ['Cardiology', 'Respiratory', 'Gastroenterology'],
+  examType: "MRCP_PART_1",
+  subjects: ["Cardiology", "Respiratory", "Gastroenterology"],
   distribution: {
     MULTIPLE_CHOICE: { EASY: 15, MEDIUM: 20, HARD: 10 },
     TRUE_FALSE: { EASY: 5 },
@@ -263,8 +276,8 @@ await executeGenerationJob(job.id)
 ### Example 2: Manual Question Generation
 
 ```typescript
-import { generateQuestion } from './engine/question-generator'
-import { validateQuestion } from './engine/quality-validator'
+import { validateQuestion } from "./engine/quality-validator"
+import { generateQuestion } from "./engine/question-generator"
 
 // Generate a single question
 const question = await generateQuestion({
@@ -272,11 +285,11 @@ const question = await generateQuestion({
     Heart failure is a clinical syndrome characterized by...
     Common symptoms include dyspnea, fatigue, and peripheral edema...
   `,
-  questionType: 'MULTIPLE_CHOICE',
-  difficulty: 'MEDIUM',
-  bloomLevel: 'APPLY',
-  examType: 'MRCP_PART_1',
-  subject: 'Cardiology',
+  questionType: "MULTIPLE_CHOICE",
+  difficulty: "MEDIUM",
+  bloomLevel: "APPLY",
+  examType: "MRCP_PART_1",
+  subject: "Cardiology",
 })
 
 // Validate quality
@@ -303,16 +316,16 @@ if (validation.passed) {
 // app/api/cron/generate-questions/route.ts
 export async function GET(request: Request) {
   // Verify cron secret
-  const authHeader = headers().get('authorization')
+  const authHeader = headers().get("authorization")
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse('Unauthorized', { status: 401 })
+    return new NextResponse("Unauthorized", { status: 401 })
   }
 
   // Trigger daily generation
   await createAndExecuteGenerationJob({
     targetCount: 100, // Generate 100 questions daily
-    examType: 'MRCP_PART_1',
-    subjects: ['Cardiology', 'Respiratory', 'Gastroenterology', 'Nephrology'],
+    examType: "MRCP_PART_1",
+    subjects: ["Cardiology", "Respiratory", "Gastroenterology", "Nephrology"],
     distribution: {
       MULTIPLE_CHOICE: { EASY: 30, MEDIUM: 40, HARD: 20 },
       TRUE_FALSE: { EASY: 10 },
@@ -324,12 +337,15 @@ export async function GET(request: Request) {
 ```
 
 **Vercel Cron Configuration** (`vercel.json`):
+
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/generate-questions",
-    "schedule": "0 2 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/generate-questions",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }
 ```
 
@@ -340,24 +356,29 @@ export async function GET(request: Request) {
 ### Question Generation
 
 **Claude 3.5 Sonnet Pricing**:
+
 - Input: $3/MTok
 - Output: $15/MTok
 
 **Per Question** (estimate):
+
 - Input: ~2,000 tokens (context + prompt)
 - Output: ~800 tokens (question + explanation)
 - Cost: **~$0.018 per question**
 
 **1,000 Questions**:
+
 - Total Cost: ~$18
 - Daily (100 questions): ~$1.80/day = ~$54/month
 
 ### Embeddings
 
 **OpenAI text-embedding-3-small Pricing**:
+
 - $0.02/1M tokens
 
 **Per Source Material** (300-page textbook):
+
 - ~75,000 words = ~100,000 tokens
 - Chunks: ~100 chunks × 500 tokens = 50,000 tokens
 - Cost: **~$0.001 per textbook**
@@ -368,7 +389,7 @@ export async function GET(request: Request) {
 - Embeddings: ~$0.01
 - **Total: ~$54/month**
 
-*Cost-effective for high-quality automated content generation!*
+_Cost-effective for high-quality automated content generation!_
 
 ---
 
@@ -472,6 +493,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 For Neon (managed PostgreSQL):
+
 ```sql
 -- pgvector is pre-installed, just enable it
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -520,7 +542,7 @@ Edit `engine/quality-validator.ts` to add new checks or adjust weights.
 Update `question-generator.ts` to support other models:
 
 ```typescript
-const aiModel = 'gpt-4-turbo-preview' // or custom model
+const aiModel = "gpt-4-turbo-preview" // or custom model
 ```
 
 ---
@@ -534,6 +556,7 @@ MIT License - Part of Hogwarts School Automation Platform
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: [hogwarts/issues](https://github.com/your-repo/hogwarts/issues)
 - Documentation: [Full docs](https://ed.databayt.org/docs/qbank-automation)
 - Community: `community.databayt.org`

@@ -20,7 +20,7 @@ Fixes #XXXX
 <!-- Add visual demos for UI changes. Show before/after if relevant. -->
 
 | Before | After |
-|--------|-------|
+| ------ | ----- |
 |        |       |
 
 ## Checklist

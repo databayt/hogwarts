@@ -14,8 +14,8 @@ Invoke these agents **in parallel** using the Task tool:
    - Validate Zod schemas match TypeScript types
 
 2. **Tailwind Agent** (`/agents/tailwind`)
-   - Check for hardcoded text-*/font-* classes (should use semantic HTML)
-   - Validate RTL-aware utilities (ms-*, me-*, ps-*, pe-*)
+   - Check for hardcoded text-_/font-_ classes (should use semantic HTML)
+   - Validate RTL-aware utilities (ms-_, me-_, ps-_, pe-_)
    - Ensure theme colors used (bg-background, text-foreground)
 
 3. **React Agent** (`/agents/react`)
@@ -47,6 +47,7 @@ Invoke these agents **in parallel** using the Task tool:
 ## Phase 4: Deploy Decision
 
 If all phases pass, ask user:
+
 - "Deploy to staging?" → Run `/deploy staging`
 - "Deploy to production?" → Run `/deploy production`
 - "Skip deployment" → End validation
@@ -79,6 +80,7 @@ If all phases pass, ask user:
 ## Quick Mode
 
 For faster validation (skip agents, run commands only):
+
 ```bash
 pnpm tsc --noEmit && pnpm lint && pnpm test && pnpm build
 ```

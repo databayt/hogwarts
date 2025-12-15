@@ -1,14 +1,15 @@
-import { ProfileContent } from '@/components/platform/profile/content'
-import { Suspense } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Suspense } from "react"
 
-export const metadata = { title: 'Dashboard: Profile' }
+import { Skeleton } from "@/components/ui/skeleton"
+import { ProfileContent } from "@/components/platform/profile/content"
+
+export const metadata = { title: "Dashboard: Profile" }
 
 function ProfileSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-48 w-full" />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-3">
           <Skeleton className="h-96 w-full" />
         </div>
@@ -27,5 +28,3 @@ export default async function Page() {
     </Suspense>
   )
 }
-
-

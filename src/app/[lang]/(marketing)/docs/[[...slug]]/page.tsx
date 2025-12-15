@@ -1,28 +1,33 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
-import { findNeighbour } from "fumadocs-core/page-tree"
-import type { Metadata } from "next"
+import { mdxComponents } from "@/mdx-components"
 import fm from "front-matter"
+import { findNeighbour } from "fumadocs-core/page-tree"
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 import z from "zod"
-import { docsSource, docsArabicSource } from "@/lib/source"
+
+import { docsArabicSource, docsSource } from "@/lib/source"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { DocsTableOfContents } from "@/components/docs/toc"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { mdxComponents } from "@/mdx-components"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 // Force rebuild: 2025-12-07
-export const runtime = "nodejs";
+export const runtime = "nodejs"
 export const revalidate = false
 export const dynamic = "force-static"
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  const enParams = docsSource.generateParams().map((p) => ({ ...p, lang: "en" }))
-  const arParams = docsArabicSource.generateParams().map((p) => ({ ...p, lang: "ar" }))
+  const enParams = docsSource
+    .generateParams()
+    .map((p) => ({ ...p, lang: "en" }))
+  const arParams = docsArabicSource
+    .generateParams()
+    .map((p) => ({ ...p, lang: "ar" }))
   return [...enParams, ...arParams]
 }
 
@@ -71,7 +76,7 @@ export default async function DocsPage(props: {
   const MDX = doc.body
   const neighbours = findNeighbour(source.pageTree, page.url)
 
-  const raw = await (page.data as any).exports?.getText?.("raw") || ""
+  const raw = (await (page.data as any).exports?.getText?.("raw")) || ""
   const pageUrl = `https://ed.databayt.org${page.url}`
 
   const { attributes } = fm(raw)
@@ -98,7 +103,11 @@ export default async function DocsPage(props: {
                   {doc.title}
                 </h1>
                 <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
-                  <DocsCopyPage page={raw} url={pageUrl} dictionary={dictionary} />
+                  <DocsCopyPage
+                    page={raw}
+                    url={pageUrl}
+                    dictionary={dictionary}
+                  />
                   {neighbours.previous && (
                     <Button
                       variant="secondary"
@@ -108,7 +117,9 @@ export default async function DocsPage(props: {
                     >
                       <Link href={neighbours.previous.url}>
                         <ArrowLeft />
-                        <span className="sr-only">{dictionary?.common?.previous || "Previous"}</span>
+                        <span className="sr-only">
+                          {dictionary?.common?.previous || "Previous"}
+                        </span>
                       </Link>
                     </Button>
                   )}
@@ -120,7 +131,9 @@ export default async function DocsPage(props: {
                       asChild
                     >
                       <Link href={neighbours.next.url}>
-                        <span className="sr-only">{dictionary?.common?.next || "Next"}</span>
+                        <span className="sr-only">
+                          {dictionary?.common?.next || "Next"}
+                        </span>
                         <ArrowRight />
                       </Link>
                     </Button>

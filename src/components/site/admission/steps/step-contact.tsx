@@ -1,46 +1,52 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
+
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { ApplicationFormData } from "../types";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ApplicationFormData } from "../types"
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
+  dictionary: Dictionary
+  lang: Locale
 }
 
 const COUNTRIES = [
   { value: "Sudan", labelEn: "Sudan", labelAr: "السودان" },
   { value: "Egypt", labelEn: "Egypt", labelAr: "مصر" },
-  { value: "Saudi Arabia", labelEn: "Saudi Arabia", labelAr: "المملكة العربية السعودية" },
+  {
+    value: "Saudi Arabia",
+    labelEn: "Saudi Arabia",
+    labelAr: "المملكة العربية السعودية",
+  },
   { value: "UAE", labelEn: "UAE", labelAr: "الإمارات العربية المتحدة" },
   { value: "Other", labelEn: "Other", labelAr: "أخرى" },
-];
+]
 
 export default function StepContact({ dictionary, lang }: Props) {
-  const { control } = useFormContext<ApplicationFormData>();
-  const isRTL = lang === "ar";
+  const { control } = useFormContext<ApplicationFormData>()
+  const isRTL = lang === "ar"
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Email */}
         <FormField
           control={control}
@@ -48,13 +54,16 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "البريد الإلكتروني" : "Email"} <span className="text-destructive">*</span>
+                {isRTL ? "البريد الإلكتروني" : "Email"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   type="email"
-                  placeholder={isRTL ? "example@email.com" : "example@email.com"}
+                  placeholder={
+                    isRTL ? "example@email.com" : "example@email.com"
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -69,7 +78,8 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "رقم الهاتف" : "Phone Number"} <span className="text-destructive">*</span>
+                {isRTL ? "رقم الهاتف" : "Phone Number"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -110,12 +120,15 @@ export default function StepContact({ dictionary, lang }: Props) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>
-              {isRTL ? "العنوان" : "Address"} <span className="text-destructive">*</span>
+              {isRTL ? "العنوان" : "Address"}{" "}
+              <span className="text-destructive">*</span>
             </FormLabel>
             <FormControl>
               <Textarea
                 {...field}
-                placeholder={isRTL ? "أدخل العنوان الكامل" : "Enter full address"}
+                placeholder={
+                  isRTL ? "أدخل العنوان الكامل" : "Enter full address"
+                }
                 rows={2}
               />
             </FormControl>
@@ -124,7 +137,7 @@ export default function StepContact({ dictionary, lang }: Props) {
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* City */}
         <FormField
           control={control}
@@ -132,7 +145,8 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "المدينة" : "City"} <span className="text-destructive">*</span>
+                {isRTL ? "المدينة" : "City"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -152,7 +166,8 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الولاية" : "State/Province"} <span className="text-destructive">*</span>
+                {isRTL ? "الولاية" : "State/Province"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
                 <Input
@@ -166,7 +181,7 @@ export default function StepContact({ dictionary, lang }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Postal Code */}
         <FormField
           control={control}
@@ -174,13 +189,11 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الرمز البريدي" : "Postal Code"} <span className="text-destructive">*</span>
+                {isRTL ? "الرمز البريدي" : "Postal Code"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  placeholder={isRTL ? "12345" : "12345"}
-                />
+                <Input {...field} placeholder={isRTL ? "12345" : "12345"} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -194,12 +207,18 @@ export default function StepContact({ dictionary, lang }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {isRTL ? "الدولة" : "Country"} <span className="text-destructive">*</span>
+                {isRTL ? "الدولة" : "Country"}{" "}
+                <span className="text-destructive">*</span>
               </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || "Sudan"}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value || "Sudan"}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={isRTL ? "اختر الدولة" : "Select country"} />
+                    <SelectValue
+                      placeholder={isRTL ? "اختر الدولة" : "Select country"}
+                    />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -216,5 +235,5 @@ export default function StepContact({ dictionary, lang }: Props) {
         />
       </div>
     </div>
-  );
+  )
 }

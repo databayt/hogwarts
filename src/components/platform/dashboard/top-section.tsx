@@ -1,27 +1,28 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import Link from "next/link"
 import {
-  Droplets,
-  Wind,
-  Thermometer,
-  RefreshCcw,
-  ArrowRight,
-  Repeat2,
-} from "lucide-react"
-import Icon from "@mdi/react"
-import {
-  mdiWeatherSunny,
-  mdiWeatherPartlyCloudy,
   mdiWeatherCloudy,
-  mdiWeatherRainy,
+  mdiWeatherPartlyCloudy,
   mdiWeatherPouring,
+  mdiWeatherRainy,
   mdiWeatherSnowy,
+  mdiWeatherSunny,
   mdiWeatherWindy,
 } from "@mdi/js"
-import Link from "next/link"
+import Icon from "@mdi/react"
+import {
+  ArrowRight,
+  Droplets,
+  RefreshCcw,
+  Repeat2,
+  Thermometer,
+  Wind,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 // ============================================================================
 // WEATHER HELPERS
@@ -37,8 +38,19 @@ const weatherIconMap: Record<string, string> = {
   windy: mdiWeatherWindy,
 }
 
-function WeatherIcon({ condition, className }: { condition: string; className?: string }) {
-  return <Icon path={weatherIconMap[condition] || mdiWeatherSunny} className={cn("size-6", className)} />
+function WeatherIcon({
+  condition,
+  className,
+}: {
+  condition: string
+  className?: string
+}) {
+  return (
+    <Icon
+      path={weatherIconMap[condition] || mdiWeatherSunny}
+      className={cn("size-6", className)}
+    />
+  )
 }
 
 // Mock weather data (would be replaced with real API in production)
@@ -66,7 +78,13 @@ const forecast = [
 // UPCOMING CLASS CARD
 // ============================================================================
 
-function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: string }) {
+function UpcomingClassCard({
+  locale,
+  subdomain,
+}: {
+  locale: string
+  subdomain: string
+}) {
   const [isFlipped, setIsFlipped] = useState(false)
 
   const upcomingClass = {
@@ -92,14 +110,16 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
           "relative h-full w-full",
           "[transform-style:preserve-3d]",
           "transition-all duration-700",
-          isFlipped ? "[transform:rotateY(180deg)]" : "[transform:rotateY(0deg)]"
+          isFlipped
+            ? "[transform:rotateY(180deg)]"
+            : "[transform:rotateY(0deg)]"
         )}
       >
         {/* Front of card */}
         <div
           className={cn(
             "absolute inset-0 h-full w-full",
-            "[backface-visibility:hidden] [transform:rotateY(0deg)]",
+            "[transform:rotateY(0deg)] [backface-visibility:hidden]",
             "overflow-hidden rounded-2xl",
             "bg-card",
             "border",
@@ -109,7 +129,7 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
             isFlipped ? "opacity-0" : "opacity-100"
           )}
         >
-          <div className="relative h-full overflow-hidden bg-gradient-to-b from-muted/50 to-background">
+          <div className="from-muted/50 to-background relative h-full overflow-hidden bg-gradient-to-b">
             <div className="absolute inset-0 flex items-start justify-center pt-16">
               <div className="relative flex h-[80px] w-[160px] items-center justify-center">
                 {[...Array(8)].map((_, i) => (
@@ -132,17 +152,17 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="absolute right-0 bottom-0 left-0 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1">
-                <h3 className="text-base font-semibold leading-snug tracking-tighter text-foreground">
+                <h3 className="text-foreground text-base leading-snug font-semibold tracking-tighter">
                   {upcomingClass.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {upcomingClass.subtitle}
                 </p>
               </div>
-              <Repeat2 className="h-4 w-4 text-primary" />
+              <Repeat2 className="text-primary h-4 w-4" />
             </div>
           </div>
         </div>
@@ -151,9 +171,9 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
         <div
           className={cn(
             "absolute inset-0 h-full w-full",
-            "[backface-visibility:hidden] [transform:rotateY(180deg)]",
+            "[transform:rotateY(180deg)] [backface-visibility:hidden]",
             "flex flex-col rounded-2xl border p-5",
-            "bg-gradient-to-b from-muted/50 to-background",
+            "from-muted/50 to-background bg-gradient-to-b",
             "shadow-sm",
             !isFlipped ? "opacity-0" : "opacity-100"
           )}
@@ -161,7 +181,9 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
           <div className="flex-1 space-y-4">
             <div className="space-y-1">
               <h3 className="text-base font-semibold">{upcomingClass.title}</h3>
-              <p className="text-sm text-muted-foreground">{upcomingClass.description}</p>
+              <p className="text-muted-foreground text-sm">
+                {upcomingClass.description}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -170,7 +192,9 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
                   key={detail.label}
                   className="flex items-center justify-between text-sm"
                   style={{
-                    transform: isFlipped ? "translateX(0)" : "translateX(-10px)",
+                    transform: isFlipped
+                      ? "translateX(0)"
+                      : "translateX(-10px)",
                     opacity: isFlipped ? 1 : 0,
                     transitionDelay: `${index * 100 + 200}ms`,
                   }}
@@ -185,10 +209,10 @@ function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: s
           <div className="mt-4 border-t pt-4">
             <Link
               href={`/${locale}/s/${subdomain}/timetable`}
-              className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-primary/10 transition-colors"
+              className="bg-muted/50 hover:bg-primary/10 flex items-center justify-between rounded-lg p-2 transition-colors"
             >
               <span className="text-sm font-medium">View Timetable</span>
-              <ArrowRight className="h-4 w-4 text-primary" />
+              <ArrowRight className="text-primary h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -209,36 +233,45 @@ export interface TopSectionProps {
 export function TopSection({ locale, subdomain }: TopSectionProps) {
   return (
     <section>
-      <div className="flex flex-wrap gap-8 items-start">
+      <div className="flex flex-wrap items-start gap-8">
         {/* Upcoming Class Card */}
         <UpcomingClassCard locale={locale} subdomain={subdomain} />
 
         {/* Weather */}
-        <div className="w-full max-w-sm h-[280px] flex flex-col justify-between">
+        <div className="flex h-[280px] w-full max-w-sm flex-col justify-between">
           <div>
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <p className="text-lg font-medium">{currentWeather.day}</p>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <WeatherIcon condition={currentWeather.condition} className="size-5" />
-                    <span className="text-sm">({currentWeather.conditionLabel})</span>
+                  <div className="text-muted-foreground flex items-center gap-1">
+                    <WeatherIcon
+                      condition={currentWeather.condition}
+                      className="size-5"
+                    />
+                    <span className="text-sm">
+                      ({currentWeather.conditionLabel})
+                    </span>
                   </div>
                 </div>
 
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Droplets className="size-4" />
                     <span>Humidity: {currentWeather.humidity}%</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="text-primary">Rain: {currentWeather.rainChance}%</span>
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <span className="text-primary">
+                      Rain: {currentWeather.rainChance}%
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Thermometer className="size-4" />
-                    <span>{currentWeather.temperature}° ({currentWeather.tempLow}°)</span>
+                    <span>
+                      {currentWeather.temperature}° ({currentWeather.tempLow}°)
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Wind className="size-4" />
                     <span>{currentWeather.windSpeed} km/h</span>
                   </div>
@@ -250,10 +283,15 @@ export function TopSection({ locale, subdomain }: TopSectionProps) {
               </Button>
             </div>
 
-            <div className="mt-4 flex justify-between rounded-lg bg-muted/50 p-3">
+            <div className="bg-muted/50 mt-4 flex justify-between rounded-lg p-3">
               {forecast.map((item) => (
-                <div key={item.day} className="flex flex-col items-center gap-1">
-                  <span className="text-xs text-muted-foreground">{item.day}</span>
+                <div
+                  key={item.day}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <span className="text-muted-foreground text-xs">
+                    {item.day}
+                  </span>
                   <WeatherIcon condition={item.condition} className="size-5" />
                   <span className="text-sm font-medium">{item.temp}°</span>
                 </div>

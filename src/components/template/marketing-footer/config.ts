@@ -5,8 +5,8 @@ export const footerSections = [
       { text: "Paradigm", href: "/about/paradigm" },
       { text: "Contributors", href: "/contribute" },
       { text: "Careers", href: "/about/careers" },
-      { text: "Investors", href: "/about/investors" }
-    ]
+      { text: "Investors", href: "/about/investors" },
+    ],
   },
   {
     title: "CONTRIBUTE",
@@ -17,8 +17,7 @@ export const footerSections = [
       { text: "Issues", href: "/contribute/issues" },
       { text: "Pull Requests", href: "/contribute/pull-requests" },
       { text: "Code of Conduct", href: "/contribute/code-of-conduct" },
-      
-    ]
+    ],
   },
   {
     title: "SOLUTION",
@@ -27,8 +26,8 @@ export const footerSections = [
       { text: "Integration", href: "/solutions/integration" },
       { text: "AI Agent", href: "/agent" },
       { text: "Features", href: "/features" },
-      { text: "Blockchain", href: "/blockchain" }
-    ]
+      { text: "Blockchain", href: "/blockchain" },
+    ],
   },
   {
     title: "SUPPORT",
@@ -36,11 +35,9 @@ export const footerSections = [
       { text: "Help Center", href: "/help" },
       { text: "FAQs", href: "/faqs" },
       { text: "Contact", href: "/contact" },
-      { text: "Sitemap", href: "/sitemap" }
-    ]
+      { text: "Sitemap", href: "/sitemap" },
+    ],
   },
- 
-  
 ] as const
 
 export const footerInfo = ["Sudan", "English", "$USD", "Light"] as const

@@ -1,23 +1,30 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Save, Settings, Bell, CreditCard, Calculator } from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import { useState } from "react"
+import { Bell, Calculator, CreditCard, Save, Settings } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
-  dictionary: Dictionary["school"];
-  lang: Locale;
+  dictionary: Dictionary["school"]
+  lang: Locale
 }
 
 export default function SettingsContent({ dictionary, lang }: Props) {
-  const t = dictionary.admission?.settings;
+  const t = dictionary.admission?.settings
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -30,12 +37,12 @@ export default function SettingsContent({ dictionary, lang }: Props) {
     academicWeight: 40,
     entranceWeight: 35,
     interviewWeight: 25,
-  });
+  })
 
   const handleSave = () => {
     // Save settings action would go here
-    console.log("Saving settings:", settings);
-  };
+    console.log("Saving settings:", settings)
+  }
 
   return (
     <div className="space-y-6">
@@ -47,21 +54,28 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             {t?.generalSettings || "General Settings"}
           </CardTitle>
           <CardDescription>
-            {t?.generalSettingsDescription || "Configure general admission settings"}
+            {t?.generalSettingsDescription ||
+              "Configure general admission settings"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t?.allowMultipleApplications || "Allow Multiple Applications"}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t?.allowMultipleApplicationsDesc || "Allow students to apply to multiple campaigns"}
+              <Label>
+                {t?.allowMultipleApplications || "Allow Multiple Applications"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {t?.allowMultipleApplicationsDesc ||
+                  "Allow students to apply to multiple campaigns"}
               </p>
             </div>
             <Switch
               checked={settings.allowMultipleApplications}
               onCheckedChange={(checked) =>
-                setSettings((s) => ({ ...s, allowMultipleApplications: checked }))
+                setSettings((s) => ({
+                  ...s,
+                  allowMultipleApplications: checked,
+                }))
               }
             />
           </div>
@@ -69,8 +83,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t?.requireDocuments || "Require Document Upload"}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t?.requireDocumentsDesc || "Require applicants to upload supporting documents"}
+              <p className="text-muted-foreground text-sm">
+                {t?.requireDocumentsDesc ||
+                  "Require applicants to upload supporting documents"}
               </p>
             </div>
             <Switch
@@ -124,15 +139,19 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             {t?.notificationSettings || "Notification Settings"}
           </CardTitle>
           <CardDescription>
-            {t?.notificationSettingsDescription || "Configure email and notification preferences"}
+            {t?.notificationSettingsDescription ||
+              "Configure email and notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>{t?.autoEmailNotifications || "Automatic Email Notifications"}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t?.autoEmailNotificationsDesc || "Send automatic status update emails to applicants"}
+              <Label>
+                {t?.autoEmailNotifications || "Automatic Email Notifications"}
+              </Label>
+              <p className="text-muted-foreground text-sm">
+                {t?.autoEmailNotificationsDesc ||
+                  "Send automatic status update emails to applicants"}
               </p>
             </div>
             <Switch
@@ -153,15 +172,17 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             {t?.paymentSettings || "Payment Settings"}
           </CardTitle>
           <CardDescription>
-            {t?.paymentSettingsDescription || "Configure payment and fee collection options"}
+            {t?.paymentSettingsDescription ||
+              "Configure payment and fee collection options"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>{t?.enableOnlinePayment || "Enable Online Payment"}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t?.enableOnlinePaymentDesc || "Allow applicants to pay fees online"}
+              <p className="text-muted-foreground text-sm">
+                {t?.enableOnlinePaymentDesc ||
+                  "Allow applicants to pay fees online"}
               </p>
             </div>
             <Switch
@@ -182,7 +203,8 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             {t?.meritCriteria || "Default Merit Criteria"}
           </CardTitle>
           <CardDescription>
-            {t?.meritCriteriaDescription || "Set default weights for merit calculation"}
+            {t?.meritCriteriaDescription ||
+              "Set default weights for merit calculation"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -190,7 +212,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>{t?.academicWeight || "Academic Weight"}</Label>
-                <span className="text-sm text-muted-foreground">{settings.academicWeight}%</span>
+                <span className="text-muted-foreground text-sm">
+                  {settings.academicWeight}%
+                </span>
               </div>
               <Slider
                 value={[settings.academicWeight]}
@@ -205,7 +229,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>{t?.entranceWeight || "Entrance Exam Weight"}</Label>
-                <span className="text-sm text-muted-foreground">{settings.entranceWeight}%</span>
+                <span className="text-muted-foreground text-sm">
+                  {settings.entranceWeight}%
+                </span>
               </div>
               <Slider
                 value={[settings.entranceWeight]}
@@ -220,7 +246,9 @@ export default function SettingsContent({ dictionary, lang }: Props) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <Label>{t?.interviewWeight || "Interview Weight"}</Label>
-                <span className="text-sm text-muted-foreground">{settings.interviewWeight}%</span>
+                <span className="text-muted-foreground text-sm">
+                  {settings.interviewWeight}%
+                </span>
               </div>
               <Slider
                 value={[settings.interviewWeight]}
@@ -232,10 +260,19 @@ export default function SettingsContent({ dictionary, lang }: Props) {
               />
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              Total: {settings.academicWeight + settings.entranceWeight + settings.interviewWeight}%
-              {settings.academicWeight + settings.entranceWeight + settings.interviewWeight !== 100 && (
-                <span className="text-destructive ml-2">(should equal 100%)</span>
+            <div className="text-muted-foreground text-sm">
+              Total:{" "}
+              {settings.academicWeight +
+                settings.entranceWeight +
+                settings.interviewWeight}
+              %
+              {settings.academicWeight +
+                settings.entranceWeight +
+                settings.interviewWeight !==
+                100 && (
+                <span className="text-destructive ml-2">
+                  (should equal 100%)
+                </span>
               )}
             </div>
           </div>
@@ -250,5 +287,5 @@ export default function SettingsContent({ dictionary, lang }: Props) {
         </Button>
       </div>
     </div>
-  );
+  )
 }

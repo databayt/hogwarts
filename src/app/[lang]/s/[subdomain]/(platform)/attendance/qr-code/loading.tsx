@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AttendanceQrCodeLoading() {
   return (
@@ -16,7 +16,7 @@ export default function AttendanceQrCodeLoading() {
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <Skeleton className="h-64 w-64 rounded-lg" />
-            <Skeleton className="h-4 w-32 mt-4" />
+            <Skeleton className="mt-4 h-4 w-32" />
           </CardContent>
         </Card>
         <Card>
@@ -25,7 +25,10 @@ export default function AttendanceQrCodeLoading() {
           </CardHeader>
           <CardContent className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b">
+              <div
+                key={i}
+                className="flex items-center justify-between border-b py-2"
+              >
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="space-y-1">

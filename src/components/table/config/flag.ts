@@ -1,6 +1,6 @@
-import { CommandIcon, FileSpreadsheetIcon } from "lucide-react";
+import { CommandIcon, FileSpreadsheetIcon } from "lucide-react"
 
-export type FlagConfig = typeof flagConfig;
+export type FlagConfig = typeof flagConfig
 
 export const flagConfig = {
   featureFlags: [
@@ -19,4 +19,4 @@ export const flagConfig = {
       tooltipDescription: "Linear like command palette for filtering rows.",
     },
   ],
-};
+}

@@ -3,36 +3,36 @@
  * Used with unified File Block ExportButton
  */
 
-import { createColumnHelpers, type ExportColumn } from "@/components/file";
+import { createColumnHelpers, type ExportColumn } from "@/components/file"
 
 // ============================================================================
 // Export Data Type
 // ============================================================================
 
 export interface ExamExportData {
-  id: string;
-  title: string;
-  description: string | null;
-  subjectName: string | null;
-  className: string | null;
-  examDate: Date;
-  startTime: string;
-  endTime: string;
-  duration: number;
-  totalMarks: number;
-  passingMarks: number;
-  examType: string;
-  status: string;
-  studentCount: number;
-  averageScore: number | null;
-  createdAt: Date;
+  id: string
+  title: string
+  description: string | null
+  subjectName: string | null
+  className: string | null
+  examDate: Date
+  startTime: string
+  endTime: string
+  duration: number
+  totalMarks: number
+  passingMarks: number
+  examType: string
+  status: string
+  studentCount: number
+  averageScore: number | null
+  createdAt: Date
 }
 
 // ============================================================================
 // Column Helpers
 // ============================================================================
 
-const { text, number, date } = createColumnHelpers<ExamExportData>();
+const { text, number, date } = createColumnHelpers<ExamExportData>()
 
 // ============================================================================
 // Export Columns
@@ -61,9 +61,12 @@ export const EXAM_EXPORT_COLUMNS: ExportColumn<ExamExportData>[] = [
         QUIZ: { en: "Quiz", ar: "اختبار قصير" },
         MONTHLY: { en: "Monthly", ar: "شهري" },
         PRACTICE: { en: "Practice", ar: "تدريبي" },
-      };
-      const type = typeMap[String(value)] || { en: String(value), ar: String(value) };
-      return locale === "ar" ? type.ar : type.en;
+      }
+      const type = typeMap[String(value)] || {
+        en: String(value),
+        ar: String(value),
+      }
+      return locale === "ar" ? type.ar : type.en
     },
   },
   {
@@ -79,9 +82,12 @@ export const EXAM_EXPORT_COLUMNS: ExportColumn<ExamExportData>[] = [
         COMPLETED: { en: "Completed", ar: "مكتمل" },
         GRADED: { en: "Graded", ar: "مصحح" },
         CANCELLED: { en: "Cancelled", ar: "ملغي" },
-      };
-      const status = statusMap[String(value)] || { en: String(value), ar: String(value) };
-      return locale === "ar" ? status.ar : status.en;
+      }
+      const status = statusMap[String(value)] || {
+        en: String(value),
+        ar: String(value),
+      }
+      return locale === "ar" ? status.ar : status.en
     },
   },
   number("studentCount", "Students", "عدد الطلاب"),
@@ -92,12 +98,12 @@ export const EXAM_EXPORT_COLUMNS: ExportColumn<ExamExportData>[] = [
     type: "percentage",
     align: "right",
     format: (value, _row, _locale) => {
-      if (value === null || value === undefined) return "-";
-      return `${Number(value).toFixed(1)}%`;
+      if (value === null || value === undefined) return "-"
+      return `${Number(value).toFixed(1)}%`
     },
   },
   date("createdAt", "Created Date", undefined, "تاريخ الإنشاء"),
-];
+]
 
 // ============================================================================
 // Compact Export Columns
@@ -121,9 +127,12 @@ export const EXAM_EXPORT_COLUMNS_COMPACT: ExportColumn<ExamExportData>[] = [
         COMPLETED: { en: "Completed", ar: "مكتمل" },
         GRADED: { en: "Graded", ar: "مصحح" },
         CANCELLED: { en: "Cancelled", ar: "ملغي" },
-      };
-      const status = statusMap[String(value)] || { en: String(value), ar: String(value) };
-      return locale === "ar" ? status.ar : status.en;
+      }
+      const status = statusMap[String(value)] || {
+        en: String(value),
+        ar: String(value),
+      }
+      return locale === "ar" ? status.ar : status.en
     },
   },
-];
+]

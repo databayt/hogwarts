@@ -69,21 +69,22 @@
  * - Support bulk guardian import/export from CSV
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import {
-  parentCreateSchema,
-  parentUpdateSchema,
+  createGuardianAndLinkSchema,
   getParentsSchema,
   linkGuardianSchema,
-  createGuardianAndLinkSchema,
-  updateGuardianLinkSchema,
+  parentCreateSchema,
+  parentUpdateSchema,
   unlinkGuardianSchema,
-} from "@/components/platform/parents/validation";
+  updateGuardianLinkSchema,
+} from "@/components/platform/parents/validation"
 
 // ============================================================================
 // Types
@@ -91,34 +92,34 @@ import {
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 type ParentSelectResult = {
-  id: string;
-  schoolId: string;
-  givenName: string;
-  surname: string;
-  emailAddress: string | null;
-  teacherId: string | null;
-  userId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  schoolId: string
+  givenName: string
+  surname: string
+  emailAddress: string | null
+  teacherId: string | null
+  userId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 type ParentListResult = {
-  id: string;
-  userId: string | null;
-  name: string;
-  emailAddress: string;
-  status: string;
-  createdAt: string;
-};
+  id: string
+  userId: string | null
+  name: string
+  emailAddress: string
+  status: string
+  createdAt: string
+}
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const PARENTS_PATH = "/parents";
+const PARENTS_PATH = "/parents"
 
 // ============================================================================
 // Mutations
@@ -134,13 +135,13 @@ export async function createParent(
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = parentCreateSchema.parse(input);
+    const parsed = parentCreateSchema.parse(input)
 
     // Create parent
     const row = await (db as any).guardian.create({
@@ -151,29 +152,29 @@ export async function createParent(
         emailAddress: parsed.emailAddress || null,
         userId: parsed.userId || null,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(PARENTS_PATH);
+    revalidatePath(PARENTS_PATH)
 
-    return { success: true, data: { id: row.id } };
+    return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createParent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create parent"
-    };
+      error: error instanceof Error ? error.message : "Failed to create parent",
+    }
   }
 }
 
@@ -187,49 +188,50 @@ export async function updateParent(
 ): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = parentUpdateSchema.parse(input);
-    const { id, ...rest } = parsed;
+    const parsed = parentUpdateSchema.parse(input)
+    const { id, ...rest } = parsed
 
     // Build update data object
-    const data: Record<string, unknown> = {};
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName;
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname;
-    if (typeof rest.emailAddress !== "undefined") data.emailAddress = rest.emailAddress || null;
-    if (typeof rest.userId !== "undefined") data.userId = rest.userId || null;
+    const data: Record<string, unknown> = {}
+    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
+    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.emailAddress !== "undefined")
+      data.emailAddress = rest.emailAddress || null
+    if (typeof rest.userId !== "undefined") data.userId = rest.userId || null
 
     // Update parent (using updateMany for tenant safety)
     await (db as any).guardian.updateMany({
       where: { id, schoolId },
-      data
-    });
+      data,
+    })
 
     // Revalidate cache
-    revalidatePath(PARENTS_PATH);
+    revalidatePath(PARENTS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateParent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update parent"
-    };
+      error: error instanceof Error ? error.message : "Failed to update parent",
+    }
   }
 }
 
@@ -238,45 +240,45 @@ export async function updateParent(
  * @param input - Parent ID
  * @returns Action response
  */
-export async function deleteParent(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteParent(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete parent (using deleteMany for tenant safety)
     await (db as any).guardian.deleteMany({
-      where: { id, schoolId }
-    });
+      where: { id, schoolId },
+    })
 
     // Revalidate cache
-    revalidatePath(PARENTS_PATH);
+    revalidatePath(PARENTS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteParent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete parent"
-    };
+      error: error instanceof Error ? error.message : "Failed to delete parent",
+    }
   }
 }
 
@@ -289,22 +291,22 @@ export async function deleteParent(
  * @param input - Parent ID
  * @returns Action response with parent data
  */
-export async function getParent(
-  input: { id: string }
-): Promise<ActionResponse<ParentSelectResult | null>> {
+export async function getParent(input: {
+  id: string
+}): Promise<ActionResponse<ParentSelectResult | null>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Check if guardian model exists
     if (!(db as any).guardian) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     // Fetch parent
@@ -321,26 +323,26 @@ export async function getParent(
         createdAt: true,
         updatedAt: true,
       },
-    });
+    })
 
-    return { success: true, data: parent };
+    return { success: true, data: parent }
   } catch (error) {
     console.error("[getParent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch parent"
-    };
+      error: error instanceof Error ? error.message : "Failed to fetch parent",
+    }
   }
 }
 
@@ -354,17 +356,17 @@ export async function getParents(
 ): Promise<ActionResponse<{ rows: ParentListResult[]; total: number }>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getParentsSchema.parse(input ?? {});
+    const sp = getParentsSchema.parse(input ?? {})
 
     // Check if guardian model exists
     if (!(db as any).guardian) {
-      return { success: true, data: { rows: [], total: 0 } };
+      return { success: true, data: { rows: [], total: 0 } }
     }
 
     // Build where clause
@@ -387,23 +389,24 @@ export async function getParents(
           : sp.status === "inactive"
             ? { userId: null }
             : {}
-          : {}),
-    };
+        : {}),
+    }
 
     // Build pagination
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
 
     // Build order by clause
-    const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-      : [{ createdAt: "desc" }];
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
       (db as any).guardian.findMany({ where, orderBy, skip, take }),
       (db as any).guardian.count({ where }),
-    ]);
+    ])
 
     // Map results
     const mapped: ParentListResult[] = (rows as Array<any>).map((p) => ({
@@ -413,26 +416,26 @@ export async function getParents(
       emailAddress: p.emailAddress || "-",
       status: p.userId ? "active" : "inactive",
       createdAt: (p.createdAt as Date).toISOString(),
-    }));
+    }))
 
-    return { success: true, data: { rows: mapped, total: count } };
+    return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {
     console.error("[getParents] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch parents"
-    };
+      error: error instanceof Error ? error.message : "Failed to fetch parents",
+    }
   }
 }
 
@@ -446,17 +449,17 @@ export async function getParentsCSV(
 ): Promise<ActionResponse<string>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getParentsSchema.parse(input ?? {});
+    const sp = getParentsSchema.parse(input ?? {})
 
     // Check if guardian model exists
     if (!(db as any).guardian) {
-      return { success: true, data: "" };
+      return { success: true, data: "" }
     }
 
     // Build where clause
@@ -476,17 +479,24 @@ export async function getParentsCSV(
           : sp.status === "inactive"
             ? { userId: null }
             : {}
-          : {}),
-    };
+        : {}),
+    }
 
     // Fetch all parents matching criteria
     const parents = await (db as any).guardian.findMany({
       where,
       orderBy: [{ createdAt: "desc" }],
-    });
+    })
 
     // Generate CSV
-    const headers = ["ID", "Given Name", "Surname", "Email", "Status", "Created"];
+    const headers = [
+      "ID",
+      "Given Name",
+      "Surname",
+      "Email",
+      "Status",
+      "Created",
+    ]
     const csvRows = (parents as Array<any>).map((p) =>
       [
         p.id,
@@ -496,28 +506,28 @@ export async function getParentsCSV(
         p.userId ? "Active" : "Inactive",
         new Date(p.createdAt).toISOString().split("T")[0],
       ].join(",")
-    );
+    )
 
-    const csv = [headers.join(","), ...csvRows].join("\n");
+    const csv = [headers.join(","), ...csvRows].join("\n")
 
-    return { success: true, data: csv };
+    return { success: true, data: csv }
   } catch (error) {
     console.error("[getParentsCSV] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to generate CSV"
-    };
+      error: error instanceof Error ? error.message : "Failed to generate CSV",
+    }
   }
 }
 
@@ -531,15 +541,15 @@ export async function getParentsCSV(
 async function getOrCreateGuardianType(schoolId: string, typeName: string) {
   let guardianType = await (db as any).guardianType.findFirst({
     where: { schoolId, name: typeName },
-  });
+  })
 
   if (!guardianType) {
     guardianType = await (db as any).guardianType.create({
       data: { schoolId, name: typeName },
-    });
+    })
   }
 
-  return guardianType;
+  return guardianType
 }
 
 /**
@@ -549,29 +559,29 @@ export async function linkGuardian(
   input: z.infer<typeof linkGuardianSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = linkGuardianSchema.parse(input);
+    const parsed = linkGuardianSchema.parse(input)
 
     // Verify guardian exists in this school
     const guardian = await (db as any).guardian.findFirst({
       where: { id: parsed.guardianId, schoolId },
-    });
+    })
 
     if (!guardian) {
-      return { success: false, error: "Guardian not found" };
+      return { success: false, error: "Guardian not found" }
     }
 
     // Verify student exists in this school
     const student = await (db as any).student.findFirst({
       where: { id: parsed.studentId, schoolId },
-    });
+    })
 
     if (!student) {
-      return { success: false, error: "Student not found" };
+      return { success: false, error: "Student not found" }
     }
 
     // Check if relationship already exists
@@ -581,10 +591,13 @@ export async function linkGuardian(
         studentId: parsed.studentId,
         guardianId: parsed.guardianId,
       },
-    });
+    })
 
     if (existing) {
-      return { success: false, error: "Guardian is already linked to this student" };
+      return {
+        success: false,
+        error: "Guardian is already linked to this student",
+      }
     }
 
     // If setting as primary, unset other primaries
@@ -592,7 +605,7 @@ export async function linkGuardian(
       await (db as any).studentGuardian.updateMany({
         where: { schoolId, studentId: parsed.studentId, isPrimary: true },
         data: { isPrimary: false },
-      });
+      })
     }
 
     // Create the relationship
@@ -607,25 +620,25 @@ export async function linkGuardian(
         workplace: parsed.workplace || null,
         notes: parsed.notes || null,
       },
-    });
+    })
 
-    revalidatePath(`/students/${parsed.studentId}`);
+    revalidatePath(`/students/${parsed.studentId}`)
 
-    return { success: true, data: { id: studentGuardian.id } };
+    return { success: true, data: { id: studentGuardian.id } }
   } catch (error) {
-    console.error("[linkGuardian] Error:", error);
+    console.error("[linkGuardian] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to link guardian",
-    };
+    }
   }
 }
 
@@ -636,31 +649,34 @@ export async function createGuardianAndLink(
   input: z.infer<typeof createGuardianAndLinkSchema>
 ): Promise<ActionResponse<{ guardianId: string; studentGuardianId: string }>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = createGuardianAndLinkSchema.parse(input);
+    const parsed = createGuardianAndLinkSchema.parse(input)
 
     // Verify student exists
     const student = await (db as any).student.findFirst({
       where: { id: parsed.studentId, schoolId },
-    });
+    })
 
     if (!student) {
-      return { success: false, error: "Student not found" };
+      return { success: false, error: "Student not found" }
     }
 
     // Get or create guardian type
-    const guardianType = await getOrCreateGuardianType(schoolId, parsed.guardianType);
+    const guardianType = await getOrCreateGuardianType(
+      schoolId,
+      parsed.guardianType
+    )
 
     // Check if guardian already exists by email (if provided)
-    let guardian = null;
+    let guardian = null
     if (parsed.emailAddress) {
       guardian = await (db as any).guardian.findFirst({
         where: { schoolId, emailAddress: parsed.emailAddress },
-      });
+      })
     }
 
     // Create guardian if not found
@@ -672,7 +688,7 @@ export async function createGuardianAndLink(
           surname: parsed.surname,
           emailAddress: parsed.emailAddress || null,
         },
-      });
+      })
 
       // Add phone number if provided
       if (parsed.phoneNumber) {
@@ -684,7 +700,7 @@ export async function createGuardianAndLink(
             phoneType: "mobile",
             isPrimary: true,
           },
-        });
+        })
       }
     }
 
@@ -695,10 +711,13 @@ export async function createGuardianAndLink(
         studentId: parsed.studentId,
         guardianId: guardian.id,
       },
-    });
+    })
 
     if (existingLink) {
-      return { success: false, error: "Guardian is already linked to this student" };
+      return {
+        success: false,
+        error: "Guardian is already linked to this student",
+      }
     }
 
     // If setting as primary, unset other primaries
@@ -706,7 +725,7 @@ export async function createGuardianAndLink(
       await (db as any).studentGuardian.updateMany({
         where: { schoolId, studentId: parsed.studentId, isPrimary: true },
         data: { isPrimary: false },
-      });
+      })
     }
 
     // Create the relationship
@@ -721,9 +740,9 @@ export async function createGuardianAndLink(
         workplace: parsed.workplace || null,
         notes: parsed.notes || null,
       },
-    });
+    })
 
-    revalidatePath(`/students/${parsed.studentId}`);
+    revalidatePath(`/students/${parsed.studentId}`)
 
     return {
       success: true,
@@ -731,21 +750,24 @@ export async function createGuardianAndLink(
         guardianId: guardian.id,
         studentGuardianId: studentGuardian.id,
       },
-    };
+    }
   } catch (error) {
-    console.error("[createGuardianAndLink] Error:", error);
+    console.error("[createGuardianAndLink] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create and link guardian",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create and link guardian",
+    }
   }
 }
 
@@ -756,20 +778,20 @@ export async function updateGuardianLink(
   input: z.infer<typeof updateGuardianLinkSchema>
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = updateGuardianLinkSchema.parse(input);
+    const parsed = updateGuardianLinkSchema.parse(input)
 
     // Verify relationship exists
     const existing = await (db as any).studentGuardian.findFirst({
       where: { id: parsed.studentGuardianId, schoolId },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Guardian relationship not found" };
+      return { success: false, error: "Guardian relationship not found" }
     }
 
     // If setting as primary, unset other primaries
@@ -782,39 +804,47 @@ export async function updateGuardianLink(
           NOT: { id: parsed.studentGuardianId },
         },
         data: { isPrimary: false },
-      });
+      })
     }
 
     // Build update data
-    const updateData: Record<string, unknown> = {};
-    if (typeof parsed.guardianTypeId !== "undefined") updateData.guardianTypeId = parsed.guardianTypeId;
-    if (typeof parsed.isPrimary !== "undefined") updateData.isPrimary = parsed.isPrimary;
-    if (typeof parsed.occupation !== "undefined") updateData.occupation = parsed.occupation || null;
-    if (typeof parsed.workplace !== "undefined") updateData.workplace = parsed.workplace || null;
-    if (typeof parsed.notes !== "undefined") updateData.notes = parsed.notes || null;
+    const updateData: Record<string, unknown> = {}
+    if (typeof parsed.guardianTypeId !== "undefined")
+      updateData.guardianTypeId = parsed.guardianTypeId
+    if (typeof parsed.isPrimary !== "undefined")
+      updateData.isPrimary = parsed.isPrimary
+    if (typeof parsed.occupation !== "undefined")
+      updateData.occupation = parsed.occupation || null
+    if (typeof parsed.workplace !== "undefined")
+      updateData.workplace = parsed.workplace || null
+    if (typeof parsed.notes !== "undefined")
+      updateData.notes = parsed.notes || null
 
     await (db as any).studentGuardian.update({
       where: { id: parsed.studentGuardianId },
       data: updateData,
-    });
+    })
 
-    revalidatePath(`/students/${existing.studentId}`);
+    revalidatePath(`/students/${existing.studentId}`)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[updateGuardianLink] Error:", error);
+    console.error("[updateGuardianLink] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update guardian link",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update guardian link",
+    }
   }
 }
 
@@ -825,111 +855,119 @@ export async function unlinkGuardian(
   input: z.infer<typeof unlinkGuardianSchema>
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = unlinkGuardianSchema.parse(input);
+    const parsed = unlinkGuardianSchema.parse(input)
 
     // Verify relationship exists and get student ID for revalidation
     const existing = await (db as any).studentGuardian.findFirst({
       where: { id: parsed.studentGuardianId, schoolId },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Guardian relationship not found" };
+      return { success: false, error: "Guardian relationship not found" }
     }
 
     // Delete the relationship
     await (db as any).studentGuardian.delete({
       where: { id: parsed.studentGuardianId },
-    });
+    })
 
-    revalidatePath(`/students/${existing.studentId}`);
+    revalidatePath(`/students/${existing.studentId}`)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[unlinkGuardian] Error:", error);
+    console.error("[unlinkGuardian] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`,
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to unlink guardian",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to unlink guardian",
+    }
   }
 }
 
 /**
  * Get guardian types for a school
  */
-export async function getGuardianTypes(): Promise<ActionResponse<Array<{ id: string; name: string }>>> {
+export async function getGuardianTypes(): Promise<
+  ActionResponse<Array<{ id: string; name: string }>>
+> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     const types = await (db as any).guardianType.findMany({
       where: { schoolId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    });
+    })
 
     // If no types exist, create default ones
     if (types.length === 0) {
-      const defaultTypes = ["father", "mother", "guardian", "other"];
+      const defaultTypes = ["father", "mother", "guardian", "other"]
       for (const typeName of defaultTypes) {
         await (db as any).guardianType.create({
           data: { schoolId, name: typeName },
-        });
+        })
       }
 
       const newTypes = await (db as any).guardianType.findMany({
         where: { schoolId },
         select: { id: true, name: true },
         orderBy: { name: "asc" },
-      });
+      })
 
-      return { success: true, data: newTypes };
+      return { success: true, data: newTypes }
     }
 
-    return { success: true, data: types };
+    return { success: true, data: types }
   } catch (error) {
-    console.error("[getGuardianTypes] Error:", error);
+    console.error("[getGuardianTypes] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch guardian types",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch guardian types",
+    }
   }
 }
 
 /**
  * Search for existing guardians to link
  */
-export async function searchGuardians(
-  query: string
-): Promise<ActionResponse<Array<{
-  id: string;
-  givenName: string;
-  surname: string;
-  emailAddress: string | null;
-  phoneNumber: string | null;
-}>>> {
+export async function searchGuardians(query: string): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      givenName: string
+      surname: string
+      emailAddress: string | null
+      phoneNumber: string | null
+    }>
+  >
+> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     if (!query || query.length < 2) {
-      return { success: true, data: [] };
+      return { success: true, data: [] }
     }
 
     const guardians = await (db as any).guardian.findMany({
@@ -948,7 +986,7 @@ export async function searchGuardians(
         },
       },
       take: 10,
-    });
+    })
 
     const mapped = guardians.map((g: any) => ({
       id: g.id,
@@ -956,14 +994,15 @@ export async function searchGuardians(
       surname: g.surname,
       emailAddress: g.emailAddress,
       phoneNumber: g.phoneNumbers?.[0]?.phoneNumber || null,
-    }));
+    }))
 
-    return { success: true, data: mapped };
+    return { success: true, data: mapped }
   } catch (error) {
-    console.error("[searchGuardians] Error:", error);
+    console.error("[searchGuardians] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to search guardians",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to search guardians",
+    }
   }
 }

@@ -1,9 +1,11 @@
-"use client";
+"use client"
 
-import type { Table } from "@tanstack/react-table";
-import { Check, ChevronsUpDown, Settings2 } from "lucide-react";
-import * as React from "react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import type { Table } from "@tanstack/react-table"
+import { Check, ChevronsUpDown, Settings2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -12,16 +14,15 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command";
+} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/popover"
 
 interface DataTableViewOptionsProps<TData> {
-  table: Table<TData>;
+  table: Table<TData>
 }
 
 export function DataTableViewOptions<TData>({
@@ -33,21 +34,21 @@ export function DataTableViewOptions<TData>({
         .getAllColumns()
         .filter(
           (column) =>
-            typeof column.accessorFn !== "undefined" && column.getCanHide(),
+            typeof column.accessorFn !== "undefined" && column.getCanHide()
         ),
-    [table],
-  );
+    [table]
+  )
 
   // Check if all columns are visible
   const allVisible = React.useMemo(
     () => columns.every((col) => col.getIsVisible()),
-    [columns],
-  );
+    [columns]
+  )
 
   // Toggle all columns visibility
   const toggleAll = React.useCallback(() => {
-    columns.forEach((col) => col.toggleVisibility(!allVisible));
-  }, [columns, allVisible]);
+    columns.forEach((col) => col.toggleVisibility(!allVisible))
+  }, [columns, allVisible])
 
   return (
     <Popover>
@@ -76,7 +77,7 @@ export function DataTableViewOptions<TData>({
                 <Check
                   className={cn(
                     "ml-auto size-4 shrink-0",
-                    allVisible ? "opacity-100" : "opacity-0",
+                    allVisible ? "opacity-100" : "opacity-0"
                   )}
                 />
               </CommandItem>
@@ -94,7 +95,7 @@ export function DataTableViewOptions<TData>({
                   <Check
                     className={cn(
                       "ml-auto size-4 shrink-0",
-                      column.getIsVisible() ? "opacity-100" : "opacity-0",
+                      column.getIsVisible() ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>
@@ -104,5 +105,5 @@ export function DataTableViewOptions<TData>({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

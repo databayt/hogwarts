@@ -1,30 +1,37 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useDictionary } from "@/components/internationalization/use-dictionary";
-import { BookCover } from "../book-cover";
-import type { Book } from "../types";
+import Link from "next/link"
+import { useParams } from "next/navigation"
+
+import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+import { BookCover } from "../book-cover"
+import type { Book } from "../types"
 
 interface Props {
-  title: string;
-  books: Book[];
-  containerClassName?: string;
-  showViewAll?: boolean;
+  title: string
+  books: Book[]
+  containerClassName?: string
+  showViewAll?: boolean
 }
 
-export default function BookList({ title, books, containerClassName, showViewAll = false }: Props) {
-  const params = useParams();
-  const locale = (params?.lang as string) || "ar";
-  const { dictionary } = useDictionary();
+export default function BookList({
+  title,
+  books,
+  containerClassName,
+  showViewAll = false,
+}: Props) {
+  const params = useParams()
+  const locale = (params?.lang as string) || "ar"
+  const { dictionary } = useDictionary()
 
-  if (books.length < 1) return null;
+  if (books.length < 1) return null
 
   return (
     <section className={containerClassName}>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-foreground text-2xl font-bold">{title}</h2>
         {showViewAll && (
           <Button variant="outline" size="sm" asChild>
             <Link href={`/${locale}/library/books`}>
@@ -34,15 +41,15 @@ export default function BookList({ title, books, containerClassName, showViewAll
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
+      <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
         {books.map((book) => (
           <Link
             key={book.id}
             href={`/${locale}/library/books/${book.id}`}
-            className="flex-shrink-0 w-32 sm:w-36 md:w-40 snap-start"
+            className="w-32 flex-shrink-0 snap-start sm:w-36 md:w-40"
           >
             <div
-              className="aspect-[2/3] rounded-md overflow-hidden"
+              className="aspect-[2/3] overflow-hidden rounded-md"
               style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
             >
               <BookCover
@@ -57,5 +64,5 @@ export default function BookList({ title, books, containerClassName, showViewAll
         ))}
       </div>
     </section>
-  );
+  )
 }

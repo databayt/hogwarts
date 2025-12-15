@@ -1,17 +1,17 @@
-import ImportContent from "@/components/onboarding/import/content";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ImportContent from "@/components/onboarding/import/content"
 
 export const metadata = {
   title: "Import Data",
-};
+}
 
 interface PageProps {
   params: Promise<{ lang: Locale }>
 }
 
 export default async function Import({ params }: PageProps) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
-  return <ImportContent dictionary={dictionary.school} />;
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return <ImportContent dictionary={dictionary.school} />
 }

@@ -1,17 +1,19 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { TermDetail, TermRow } from "./types"
 import {
+  getTermsSchema,
   termCreateSchema,
   termUpdateSchema,
-  getTermsSchema,
   type TermCreateInput,
   type TermUpdateInput,
 } from "./validation"
-import type { TermRow, TermDetail } from "./types"
 
 // ============================================================================
 // Types
@@ -55,7 +57,10 @@ export async function createTerm(
     })
 
     if (existing) {
-      return { success: false, error: `Term ${parsed.termNumber} already exists for this academic year` }
+      return {
+        success: false,
+        error: `Term ${parsed.termNumber} already exists for this academic year`,
+      }
     }
 
     const row = await db.term.create({
@@ -119,13 +124,17 @@ export async function updateTerm(
       })
 
       if (duplicate) {
-        return { success: false, error: `Term ${rest.termNumber} already exists for this academic year` }
+        return {
+          success: false,
+          error: `Term ${rest.termNumber} already exists for this academic year`,
+        }
       }
     }
 
     const data: Record<string, unknown> = {}
     if (typeof rest.yearId !== "undefined") data.yearId = rest.yearId
-    if (typeof rest.termNumber !== "undefined") data.termNumber = rest.termNumber
+    if (typeof rest.termNumber !== "undefined")
+      data.termNumber = rest.termNumber
     if (typeof rest.startDate !== "undefined") data.startDate = rest.startDate
     if (typeof rest.endDate !== "undefined") data.endDate = rest.endDate
     if (typeof rest.isActive !== "undefined") data.isActive = rest.isActive
@@ -151,9 +160,9 @@ export async function updateTerm(
   }
 }
 
-export async function deleteTerm(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteTerm(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -194,9 +203,9 @@ export async function deleteTerm(
 }
 
 // Set a term as active (deactivate all others)
-export async function setActiveTerm(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function setActiveTerm(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -234,7 +243,8 @@ export async function setActiveTerm(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to set active term",
+      error:
+        error instanceof Error ? error.message : "Failed to set active term",
     }
   }
 }
@@ -243,9 +253,9 @@ export async function setActiveTerm(
 // Queries
 // ============================================================================
 
-export async function getTerm(
-  input: { id: string }
-): Promise<ActionResponse<TermDetail | null>> {
+export async function getTerm(input: {
+  id: string
+}): Promise<ActionResponse<TermDetail | null>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -302,9 +312,15 @@ export async function getTerms(
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? ("desc" as const) : ("asc" as const) }))
-      : [{ schoolYear: { startDate: "desc" as const } }, { termNumber: "asc" as const }]
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({
+            [s.id]: s.desc ? ("desc" as const) : ("asc" as const),
+          }))
+        : [
+            { schoolYear: { startDate: "desc" as const } },
+            { termNumber: "asc" as const },
+          ]
 
     const [rows, count] = await Promise.all([
       db.term.findMany({
@@ -391,7 +407,8 @@ export async function getTermOptions(): Promise<
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch term options",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch term options",
     }
   }
 }

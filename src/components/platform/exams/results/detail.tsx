@@ -1,51 +1,69 @@
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import type { Locale } from "@/components/internationalization/config";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Download, ArrowLeft, FileText } from "lucide-react";
-import Link from "next/link";
-import { getExamResults, getExamAnalytics } from "./actions";
-import { formatPercentage, formatMarks, getRankSuffix } from "./utils";
+import Link from "next/link"
+import { ArrowLeft, Download, FileText } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+import { getExamAnalytics, getExamResults } from "./actions"
+import { formatMarks, formatPercentage, getRankSuffix } from "./utils"
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
-  examId: string;
+  dictionary: Dictionary
+  lang: Locale
+  examId: string
 }
 
-export default async function ResultDetailContent({ dictionary, lang, examId }: Props) {
+export default async function ResultDetailContent({
+  dictionary,
+  lang,
+  examId,
+}: Props) {
   // Fetch exam results and analytics
   const [resultsResponse, analyticsResponse] = await Promise.all([
-    getExamResults({ examId, includeAbsent: true, includeQuestionBreakdown: false }),
+    getExamResults({
+      examId,
+      includeAbsent: true,
+      includeQuestionBreakdown: false,
+    }),
     getExamAnalytics({ examId }),
-  ]);
+  ])
 
-  const r = dictionary?.results;
+  const r = dictionary?.results
 
   if (!resultsResponse.success || !resultsResponse.data) {
     return (
       <PageContainer>
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">{r?.messages?.failedToLoad || "Failed to load results"}</p>
+            <p className="text-muted-foreground">
+              {r?.messages?.failedToLoad || "Failed to load results"}
+            </p>
           </CardContent>
         </Card>
       </PageContainer>
-    );
+    )
   }
 
-  const results = resultsResponse.data;
-  const analytics = analyticsResponse.success ? analyticsResponse.data : null;
-  const summary = analytics?.summary;
+  const results = resultsResponse.data
+  const analytics = analyticsResponse.success ? analyticsResponse.data : null
+  const summary = analytics?.summary
 
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <PageHeadingSetter
-          title={summary?.examTitle || (r?.labels?.examResults || "Exam Results")}
+          title={summary?.examTitle || r?.labels?.examResults || "Exam Results"}
           description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? new Date(summary.examDate).toLocaleDateString() : ""}`}
         />
         <div className="flex items-center justify-between">
@@ -66,41 +84,51 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">{r?.statistics?.totalStudents || "Total Students"}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {r?.statistics?.totalStudents || "Total Students"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{summary.totalStudents}</div>
-                <p className="text-xs text-muted-foreground">
-                  {summary.presentStudents} {r?.labels?.present || "present"}, {summary.absentStudents} {r?.labels?.absent || "absent"}
+                <div className="text-2xl font-bold">
+                  {summary.totalStudents}
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {summary.presentStudents} {r?.labels?.present || "present"},{" "}
+                  {summary.absentStudents} {r?.labels?.absent || "absent"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">{r?.statistics?.passRate || "Pass Rate"}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {r?.statistics?.passRate || "Pass Rate"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {summary.presentStudents > 0
                     ? `${((summary.passedStudents / summary.presentStudents) * 100).toFixed(1)}%`
-                    : (r?.labels?.notAvailable || "N/A")}
+                    : r?.labels?.notAvailable || "N/A"}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {summary.passedStudents} {r?.labels?.passed || "passed"}, {summary.failedStudents} {r?.labels?.failed || "failed"}
+                <p className="text-muted-foreground text-xs">
+                  {summary.passedStudents} {r?.labels?.passed || "passed"},{" "}
+                  {summary.failedStudents} {r?.labels?.failed || "failed"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">{r?.statistics?.averageScore || "Average Score"}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {r?.statistics?.averageScore || "Average Score"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {formatPercentage(summary.averagePercentage)}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {formatMarks(summary.averageMarks, summary.totalMarks)}
                 </p>
               </CardContent>
@@ -108,13 +136,15 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">{r?.statistics?.scoreRange || "Score Range"}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {r?.statistics?.scoreRange || "Score Range"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {summary.lowestMarks} - {summary.highestMarks}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Out of {summary.totalMarks} marks
                 </p>
               </CardContent>
@@ -135,7 +165,7 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
               {results.map((result) => (
                 <div
                   key={result.id}
-                  className="flex items-center justify-between border rounded-lg p-4"
+                  className="flex items-center justify-between rounded-lg border p-4"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -144,7 +174,7 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
                       </Badge>
                       <div>
                         <h4 className="font-medium">{result.studentName}</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {result.studentId}
                         </p>
                       </div>
@@ -153,14 +183,16 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Marks</p>
+                      <p className="text-muted-foreground text-sm">Marks</p>
                       <p className="font-semibold">
                         {formatMarks(result.marksObtained, result.totalMarks)}
                       </p>
                     </div>
 
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Percentage</p>
+                      <p className="text-muted-foreground text-sm">
+                        Percentage
+                      </p>
                       <p className="font-semibold">
                         {formatPercentage(result.percentage)}
                       </p>
@@ -168,18 +200,19 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
 
                     {result.grade && (
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Grade</p>
+                        <p className="text-muted-foreground text-sm">Grade</p>
                         <Badge>{result.grade}</Badge>
                       </div>
                     )}
 
                     <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="text-muted-foreground text-sm">Status</p>
                       <Badge
                         variant={
                           result.isAbsent
                             ? "secondary"
-                            : result.marksObtained >= (summary?.passingMarks || 0)
+                            : result.marksObtained >=
+                                (summary?.passingMarks || 0)
                               ? "default"
                               : "destructive"
                         }
@@ -204,5 +237,5 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

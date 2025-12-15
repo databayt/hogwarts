@@ -1,33 +1,38 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { PaymentMethodSelector } from "@/components/billingsdk/payment-method-selector";
-import { PaymentCard } from "@/components/billingsdk/payment-card";
-import { PaymentSuccessDialog } from "@/components/billingsdk/payment-success-dialog";
-import type { PaymentCard as PaymentCardType } from "@/lib/billingsdk-config";
+import { useState } from "react"
 
-type PaymentMethod = "cards" | "digital-wallets" | "upi" | "bnpl-services";
+import type { PaymentCard as PaymentCardType } from "@/lib/billingsdk-config"
+import { PaymentCard } from "@/components/billingsdk/payment-card"
+import { PaymentMethodSelector } from "@/components/billingsdk/payment-method-selector"
+import { PaymentSuccessDialog } from "@/components/billingsdk/payment-success-dialog"
+
+type PaymentMethod = "cards" | "digital-wallets" | "upi" | "bnpl-services"
 
 interface FormData {
-  cardNumber?: string;
-  expiryDate?: string;
-  cvv?: string;
-  cardholderName?: string;
-  email?: string;
-  phone?: string;
-  upiId?: string;
-  income?: string;
+  cardNumber?: string
+  expiryDate?: string
+  cvv?: string
+  cardholderName?: string
+  email?: string
+  phone?: string
+  upiId?: string
+  income?: string
 }
 
 interface PaymentSectionProps {
-  savedCards: PaymentCardType[];
-  showPaymentForm?: boolean;
-  paymentAmount?: string;
-  paymentTitle?: string;
-  paymentDescription?: string;
-  onPaymentMethodSelect?: (method: PaymentMethod, data: FormData) => void;
-  onPay?: (data: { cardNumber: string; expiry: string; cvc: string }) => Promise<void>;
-  onPaymentSuccess?: () => void;
+  savedCards: PaymentCardType[]
+  showPaymentForm?: boolean
+  paymentAmount?: string
+  paymentTitle?: string
+  paymentDescription?: string
+  onPaymentMethodSelect?: (method: PaymentMethod, data: FormData) => void
+  onPay?: (data: {
+    cardNumber: string
+    expiry: string
+    cvc: string
+  }) => Promise<void>
+  onPaymentSuccess?: () => void
 }
 
 export function PaymentSection({
@@ -40,15 +45,19 @@ export function PaymentSection({
   onPay,
   onPaymentSuccess,
 }: PaymentSectionProps) {
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
-  const handlePaymentComplete = async (data: { cardNumber: string; expiry: string; cvc: string }) => {
+  const handlePaymentComplete = async (data: {
+    cardNumber: string
+    expiry: string
+    cvc: string
+  }) => {
     if (onPay) {
-      await onPay(data);
-      setShowSuccessDialog(true);
-      onPaymentSuccess?.();
+      await onPay(data)
+      setShowSuccessDialog(true)
+      onPaymentSuccess?.()
     }
-  };
+  }
 
   return (
     <section className="space-y-6">
@@ -61,9 +70,7 @@ export function PaymentSection({
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Payment Method Selector */}
-        <PaymentMethodSelector
-          onProceed={onPaymentMethodSelect}
-        />
+        <PaymentMethodSelector onProceed={onPaymentMethodSelect} />
 
         {/* Payment Card Form - shown when making a payment */}
         {showPaymentForm && (
@@ -93,19 +100,21 @@ export function PaymentSection({
             {savedCards.map((card) => (
               <div
                 key={card.id}
-                className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
+                className="bg-muted/50 flex items-center justify-between rounded-lg p-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="rounded bg-background p-2">
+                  <div className="bg-background rounded p-2">
                     <span className="text-sm font-semibold">{card.brand}</span>
                   </div>
                   <div>
                     <p className="font-mono text-sm">•••• {card.last4}</p>
-                    <p className="text-xs text-muted-foreground">Expires {card.expiry}</p>
+                    <p className="text-muted-foreground text-xs">
+                      Expires {card.expiry}
+                    </p>
                   </div>
                 </div>
                 {card.primary && (
-                  <span className="rounded bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                  <span className="bg-primary/10 text-primary rounded px-2 py-1 text-xs font-medium">
                     Primary
                   </span>
                 )}
@@ -129,5 +138,5 @@ export function PaymentSection({
         onBack={() => setShowSuccessDialog(false)}
       />
     </section>
-  );
+  )
 }

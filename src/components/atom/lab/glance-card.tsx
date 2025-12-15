@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface GlanceCardProps {
@@ -103,9 +105,9 @@ export function GlanceCard({
   return (
     <Card
       className={cn(
-        "transition-colors border",
+        "border transition-colors",
         variantClasses[variant],
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -126,9 +128,9 @@ export function GlanceCard({
             )}
 
             {/* Content */}
-            <div className="flex-1 min-w-0 space-y-0.5">
-              <p className="muted text-xs truncate">{label}</p>
-              <h4 className="font-semibold text-foreground truncate">
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <p className="muted truncate text-xs">{label}</p>
+              <h4 className="text-foreground truncate font-semibold">
                 {typeof value === "number" ? value.toLocaleString() : value}
                 {unit && <span className="muted ml-1">{unit}</span>}
               </h4>

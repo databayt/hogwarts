@@ -1,18 +1,24 @@
 "use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react"
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-import { getPeriodColumns, type PeriodColumnCallbacks } from "./columns"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
-import { PeriodForm } from "./form"
-import { getPeriods, deletePeriod } from "./actions"
-import { usePlatformData } from "@/hooks/use-platform-data"
-import { PlatformToolbar } from "@/components/platform/shared"
-import { useRouter } from "next/navigation"
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deletePeriod, getPeriods } from "./actions"
+import { getPeriodColumns, type PeriodColumnCallbacks } from "./columns"
+import { PeriodForm } from "./form"
 import type { PeriodRow } from "./types"
 
 interface PeriodTableProps {
@@ -44,26 +50,20 @@ export function PeriodTable({
   const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
-  const {
-    data,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<PeriodRow, { name?: string }>({
-    initialData,
-    total,
-    perPage,
-    fetcher: async (params) => {
-      const result = await getPeriods(params)
-      if (!result.success || !result.data) {
-        return { rows: [], total: 0 }
-      }
-      return { rows: result.data.rows, total: result.data.total }
-    },
-    filters: searchValue ? { name: searchValue } : undefined,
-  })
+  const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+    usePlatformData<PeriodRow, { name?: string }>({
+      initialData,
+      total,
+      perPage,
+      fetcher: async (params) => {
+        const result = await getPeriods(params)
+        if (!result.success || !result.data) {
+          return { rows: [], total: 0 }
+        }
+        return { rows: result.data.rows, total: result.data.total }
+      },
+      filters: searchValue ? { name: searchValue } : undefined,
+    })
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(

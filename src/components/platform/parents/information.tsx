@@ -1,16 +1,22 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { parentCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { ParentFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+import { ParentFormStepProps } from "./types"
+import { parentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: ParentFormStepProps) {
   return (
-    <div className="grid grid-cols-2 gap-8 w-full">
+    <div className="grid w-full grid-cols-2 gap-8">
       {/* Left Column - Names */}
       <div className="space-y-4">
         <FormField
@@ -41,9 +47,7 @@ export function InformationStep({ form, isView }: ParentFormStepProps) {
       </div>
 
       {/* Right Column - Empty for now, could add more fields later */}
-      <div className="space-y-4">
-        {/* Future fields could go here */}
-      </div>
+      <div className="space-y-4">{/* Future fields could go here */}</div>
     </div>
-  );
+  )
 }

@@ -3,8 +3,14 @@
  * Data validation utilities for imports
  */
 
-import { z } from "zod";
-import type { ImportColumn, ImportConfig, ImportRowError, ImportResult } from "./types";
+import { z } from "zod"
+
+import type {
+  ImportColumn,
+  ImportConfig,
+  ImportResult,
+  ImportRowError,
+} from "./types"
 
 // ============================================================================
 // Value Parsers
@@ -20,45 +26,45 @@ export function parseValue(
 ): unknown {
   // Use custom parser if provided
   if (column.parser) {
-    return column.parser(value, row);
+    return column.parser(value, row)
   }
 
   // Handle empty values
   if (value === "" || value === null || value === undefined) {
-    return column.defaultValue ?? null;
+    return column.defaultValue ?? null
   }
 
   // Parse based on type
   switch (column.type) {
     case "number": {
-      const num = parseFloat(value.replace(/,/g, ""));
-      return isNaN(num) ? null : num;
+      const num = parseFloat(value.replace(/,/g, ""))
+      return isNaN(num) ? null : num
     }
 
     case "boolean": {
-      const lower = value.toLowerCase().trim();
-      if (["true", "yes", "1", "نعم"].includes(lower)) return true;
-      if (["false", "no", "0", "لا"].includes(lower)) return false;
-      return null;
+      const lower = value.toLowerCase().trim()
+      if (["true", "yes", "1", "نعم"].includes(lower)) return true
+      if (["false", "no", "0", "لا"].includes(lower)) return false
+      return null
     }
 
     case "date": {
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? null : date;
+      const date = new Date(value)
+      return isNaN(date.getTime()) ? null : date
     }
 
     case "email": {
-      return value.toLowerCase().trim();
+      return value.toLowerCase().trim()
     }
 
     case "phone": {
       // Remove non-numeric characters except +
-      return value.replace(/[^\d+]/g, "");
+      return value.replace(/[^\d+]/g, "")
     }
 
     case "string":
     default:
-      return value.trim();
+      return value.trim()
   }
 }
 
@@ -76,38 +82,42 @@ export function validateValue(
   rowIndex: number
 ): ImportRowError | null {
   // Check required
-  if (column.required && (value === null || value === undefined || value === "")) {
+  if (
+    column.required &&
+    (value === null || value === undefined || value === "")
+  ) {
     return {
       row: rowIndex,
       column: column.key,
       value,
       message: `${column.label} is required`,
       type: "required",
-    };
+    }
   }
 
   // Skip validation if empty and not required
   if (value === null || value === undefined || value === "") {
-    return null;
+    return null
   }
 
   // Custom validator
   if (column.validator) {
-    const result = column.validator(value, row);
+    const result = column.validator(value, row)
     if (result !== true) {
       return {
         row: rowIndex,
         column: column.key,
         value,
-        message: typeof result === "string" ? result : `Invalid ${column.label}`,
+        message:
+          typeof result === "string" ? result : `Invalid ${column.label}`,
         type: "validation",
-      };
+      }
     }
   }
 
   // Zod schema validation
   if (column.schema) {
-    const result = column.schema.safeParse(value);
+    const result = column.schema.safeParse(value)
     if (!result.success) {
       return {
         row: rowIndex,
@@ -115,14 +125,14 @@ export function validateValue(
         value,
         message: result.error.issues[0]?.message || `Invalid ${column.label}`,
         type: "validation",
-      };
+      }
     }
   }
 
   // Type-specific validation
   switch (column.type) {
     case "email": {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(String(value))) {
         return {
           row: rowIndex,
@@ -130,13 +140,13 @@ export function validateValue(
           value,
           message: "Invalid email format",
           type: "validation",
-        };
+        }
       }
-      break;
+      break
     }
 
     case "phone": {
-      const phoneValue = String(value);
+      const phoneValue = String(value)
       if (phoneValue.length < 7 || phoneValue.length > 20) {
         return {
           row: rowIndex,
@@ -144,9 +154,9 @@ export function validateValue(
           value,
           message: "Invalid phone number format",
           type: "validation",
-        };
+        }
       }
-      break;
+      break
     }
 
     case "number": {
@@ -157,9 +167,9 @@ export function validateValue(
           value,
           message: "Invalid number format",
           type: "parsing",
-        };
+        }
       }
-      break;
+      break
     }
 
     case "date": {
@@ -170,13 +180,13 @@ export function validateValue(
           value,
           message: "Invalid date format",
           type: "parsing",
-        };
+        }
       }
-      break;
+      break
     }
   }
 
-  return null;
+  return null
 }
 
 // ============================================================================
@@ -192,32 +202,39 @@ export function processRow<T>(
   rowIndex: number,
   config: ImportConfig<T>
 ): { data: Partial<T> | null; errors: ImportRowError[] } {
-  const errors: ImportRowError[] = [];
-  const data: Record<string, unknown> = {};
+  const errors: ImportRowError[] = []
+  const data: Record<string, unknown> = {}
 
   // Parse all columns
   for (const column of columns) {
-    const rawValue = rawRow[column.header || column.key] ?? "";
-    const parsedValue = parseValue(rawValue, column as ImportColumn, rawRow);
+    const rawValue = rawRow[column.header || column.key] ?? ""
+    const parsedValue = parseValue(rawValue, column as ImportColumn, rawRow)
 
     // Apply transform if provided
-    const finalValue = column.transform ? column.transform(parsedValue) : parsedValue;
+    const finalValue = column.transform
+      ? column.transform(parsedValue)
+      : parsedValue
 
-    data[column.key] = finalValue;
+    data[column.key] = finalValue
 
     // Validate
-    const error = validateValue(finalValue, column as ImportColumn, data, rowIndex);
+    const error = validateValue(
+      finalValue,
+      column as ImportColumn,
+      data,
+      rowIndex
+    )
     if (error) {
-      errors.push(error);
+      errors.push(error)
       if (config.stopOnError) {
-        return { data: null, errors };
+        return { data: null, errors }
       }
     }
   }
 
   // Full row schema validation
   if (config.rowSchema && errors.length === 0) {
-    const result = config.rowSchema.safeParse(data);
+    const result = config.rowSchema.safeParse(data)
     if (!result.success) {
       for (const issue of result.error.issues) {
         errors.push({
@@ -225,10 +242,10 @@ export function processRow<T>(
           column: issue.path.join("."),
           message: issue.message,
           type: "validation",
-        });
+        })
       }
       if (config.stopOnError) {
-        return { data: null, errors };
+        return { data: null, errors }
       }
     }
   }
@@ -236,7 +253,7 @@ export function processRow<T>(
   return {
     data: errors.length === 0 ? (data as Partial<T>) : null,
     errors,
-  };
+  }
 }
 
 // ============================================================================
@@ -261,50 +278,50 @@ export function validateRows<T>(
     errors: [],
     duplicates: 0,
     warnings: [],
-  };
+  }
 
-  const seenKeys = new Set<string>();
-  let rowIndex = 0;
+  const seenKeys = new Set<string>()
+  let rowIndex = 0
 
   for (const rawRow of rows) {
-    rowIndex++;
+    rowIndex++
 
     // Check max rows
     if (config.maxRows && rowIndex > config.maxRows) {
-      result.warnings.push(`Stopped at row ${config.maxRows} (max rows limit)`);
-      break;
+      result.warnings.push(`Stopped at row ${config.maxRows} (max rows limit)`)
+      break
     }
 
     // Process row
-    const { data, errors } = processRow(rawRow, columns, rowIndex, config);
+    const { data, errors } = processRow(rawRow, columns, rowIndex, config)
 
     if (errors.length > 0) {
-      result.errors.push(...errors);
-      result.invalidRows++;
+      result.errors.push(...errors)
+      result.invalidRows++
 
       if (config.stopOnError) {
-        result.success = false;
-        return result;
+        result.success = false
+        return result
       }
-      continue;
+      continue
     }
 
     if (!data) {
-      result.invalidRows++;
-      continue;
+      result.invalidRows++
+      continue
     }
 
     // Check for duplicates
     if (config.uniqueKey && data[config.uniqueKey]) {
-      const keyValue = String(data[config.uniqueKey]);
+      const keyValue = String(data[config.uniqueKey])
 
       if (seenKeys.has(keyValue)) {
-        result.duplicates++;
+        result.duplicates++
 
         switch (config.duplicateHandling) {
           case "skip":
-            result.skippedRows++;
-            continue;
+            result.skippedRows++
+            continue
 
           case "error":
             result.errors.push({
@@ -313,35 +330,36 @@ export function validateRows<T>(
               value: keyValue,
               message: `Duplicate value: ${keyValue}`,
               type: "duplicate",
-            });
-            result.invalidRows++;
-            continue;
+            })
+            result.invalidRows++
+            continue
 
           case "update":
             // Replace existing
             const existingIndex = result.data.findIndex(
-              (d) => (d as Record<string, unknown>)[config.uniqueKey!] === keyValue
-            );
+              (d) =>
+                (d as Record<string, unknown>)[config.uniqueKey!] === keyValue
+            )
             if (existingIndex >= 0) {
-              result.data[existingIndex] = data as T;
+              result.data[existingIndex] = data as T
             }
-            continue;
+            continue
 
           default:
             // Allow duplicate
-            break;
+            break
         }
       }
 
-      seenKeys.add(keyValue);
+      seenKeys.add(keyValue)
     }
 
-    result.data.push(data as T);
-    result.validRows++;
+    result.data.push(data as T)
+    result.validRows++
   }
 
-  result.success = result.errors.length === 0;
-  return result;
+  result.success = result.errors.length === 0
+  return result
 }
 
 // ============================================================================
@@ -351,49 +369,62 @@ export function validateRows<T>(
 export const commonValidators = {
   required: (label: string) => (value: unknown) => {
     if (value === null || value === undefined || value === "") {
-      return `${label} is required`;
+      return `${label} is required`
     }
-    return true;
+    return true
   },
 
   email: (value: unknown) => {
-    if (!value) return true;
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(String(value)) || "Invalid email format";
+    if (!value) return true
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return regex.test(String(value)) || "Invalid email format"
   },
 
   phone: (value: unknown) => {
-    if (!value) return true;
-    const phone = String(value).replace(/[^\d+]/g, "");
-    return (phone.length >= 7 && phone.length <= 20) || "Invalid phone number";
+    if (!value) return true
+    const phone = String(value).replace(/[^\d+]/g, "")
+    return (phone.length >= 7 && phone.length <= 20) || "Invalid phone number"
   },
 
   minLength: (min: number, label: string) => (value: unknown) => {
-    if (!value) return true;
-    return String(value).length >= min || `${label} must be at least ${min} characters`;
+    if (!value) return true
+    return (
+      String(value).length >= min ||
+      `${label} must be at least ${min} characters`
+    )
   },
 
   maxLength: (max: number, label: string) => (value: unknown) => {
-    if (!value) return true;
-    return String(value).length <= max || `${label} must be at most ${max} characters`;
+    if (!value) return true
+    return (
+      String(value).length <= max ||
+      `${label} must be at most ${max} characters`
+    )
   },
 
   range: (min: number, max: number, label: string) => (value: unknown) => {
-    if (value === null || value === undefined) return true;
-    const num = Number(value);
-    return (num >= min && num <= max) || `${label} must be between ${min} and ${max}`;
+    if (value === null || value === undefined) return true
+    const num = Number(value)
+    return (
+      (num >= min && num <= max) || `${label} must be between ${min} and ${max}`
+    )
   },
 
   pattern: (regex: RegExp, message: string) => (value: unknown) => {
-    if (!value) return true;
-    return regex.test(String(value)) || message;
+    if (!value) return true
+    return regex.test(String(value)) || message
   },
 
-  oneOf: <V>(values: V[], label: string) => (value: unknown) => {
-    if (!value) return true;
-    return values.includes(value as V) || `${label} must be one of: ${values.join(", ")}`;
-  },
-};
+  oneOf:
+    <V>(values: V[], label: string) =>
+    (value: unknown) => {
+      if (!value) return true
+      return (
+        values.includes(value as V) ||
+        `${label} must be one of: ${values.join(", ")}`
+      )
+    },
+}
 
 // ============================================================================
 // Common Schemas
@@ -401,11 +432,15 @@ export const commonValidators = {
 
 export const commonSchemas = {
   email: z.string().email("Invalid email format"),
-  phone: z.string().min(7).max(20).regex(/^[\d+\-\s()]+$/, "Invalid phone format"),
+  phone: z
+    .string()
+    .min(7)
+    .max(20)
+    .regex(/^[\d+\-\s()]+$/, "Invalid phone format"),
   date: z.coerce.date(),
   positiveNumber: z.number().positive(),
   nonNegativeNumber: z.number().nonnegative(),
   percentage: z.number().min(0).max(100),
   uuid: z.string().uuid(),
   url: z.string().url(),
-};
+}

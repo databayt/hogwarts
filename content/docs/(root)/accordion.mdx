@@ -3,7 +3,12 @@ title: "Accordion"
 description: "Documentation for Accordion"
 ---
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 # Accordion
 
@@ -21,8 +26,8 @@ A vertically stacked set of interactive headings that each reveal a section of c
   <AccordionItem value="item-2">
     <AccordionTrigger>Is it styled?</AccordionTrigger>
     <AccordionContent>
-      Yes. It comes with default styles that matches the other
-      components&apos; aesthetic.
+      Yes. It comes with default styles that matches the other components&apos;
+      aesthetic.
     </AccordionContent>
   </AccordionItem>
   <AccordionItem value="item-3">
@@ -92,10 +97,10 @@ const AccordionContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Content
     ref={ref}
-    className="overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+    className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm transition-all"
     {...props}
   >
-    <div className={cn("pb-4 pt-0", className)}>{children}</div>
+    <div className={cn("pt-0 pb-4", className)}>{children}</div>
   </AccordionPrimitive.Content>
 ))
 
@@ -142,8 +147,8 @@ import {
   <AccordionItem value="item-2">
     <AccordionTrigger>Is it styled?</AccordionTrigger>
     <AccordionContent>
-      Yes. It comes with default styles that matches the other
-      components&apos; aesthetic.
+      Yes. It comes with default styles that matches the other components&apos;
+      aesthetic.
     </AccordionContent>
   </AccordionItem>
   <AccordionItem value="item-3">
@@ -166,8 +171,8 @@ import {
   <AccordionItem value="item-2">
     <AccordionTrigger>Is it styled?</AccordionTrigger>
     <AccordionContent>
-      Yes. It comes with default styles that matches the other
-      components&apos; aesthetic.
+      Yes. It comes with default styles that matches the other components&apos;
+      aesthetic.
     </AccordionContent>
   </AccordionItem>
   <AccordionItem value="item-3">
@@ -176,4 +181,4 @@ import {
       Yes. It&apos;s animated by default, but you can disable it if you prefer.
     </AccordionContent>
   </AccordionItem>
-</Accordion> 
+</Accordion>

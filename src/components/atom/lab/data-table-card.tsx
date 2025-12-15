@@ -1,8 +1,16 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -11,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface TableColumn {
@@ -151,7 +159,9 @@ export function DataTableCard({
               ) : (
                 <>
                   {title && <CardTitle>{title}</CardTitle>}
-                  {description && <CardDescription>{description}</CardDescription>}
+                  {description && (
+                    <CardDescription>{description}</CardDescription>
+                  )}
                 </>
               )}
             </div>
@@ -159,7 +169,12 @@ export function DataTableCard({
           </div>
         </CardHeader>
       )}
-      <CardContent className={cn(sizeClasses[size], (title || description || action) && "pt-0")}>
+      <CardContent
+        className={cn(
+          sizeClasses[size],
+          (title || description || action) && "pt-0"
+        )}
+      >
         {loading ? (
           <div className="space-y-3">
             <div className="flex gap-4">
@@ -180,7 +195,7 @@ export function DataTableCard({
             <p className="muted text-center">{emptyMessage}</p>
           </div>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="border-border overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -202,7 +217,7 @@ export function DataTableCard({
                   <TableRow
                     key={rowIndex}
                     className={cn(
-                      onRowClick && "cursor-pointer hover:bg-accent/50"
+                      onRowClick && "hover:bg-accent/50 cursor-pointer"
                     )}
                     onClick={() => onRowClick?.(row)}
                   >

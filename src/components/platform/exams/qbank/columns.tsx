@@ -1,9 +1,10 @@
-"use client";
+"use client"
 
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Button } from "@/components/ui/button";
-import { Ellipsis, Eye } from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table"
+import { Ellipsis, Eye } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,29 +12,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useModal } from "@/components/atom/modal/context";
-import { Badge } from "@/components/ui/badge";
-import type { QuestionBankRow } from "./types";
-import {
-  QUESTION_TYPES,
-  DIFFICULTY_LEVELS,
-  BLOOM_LEVELS,
-} from "./config";
+} from "@/components/ui/dropdown-menu"
+import { useModal } from "@/components/atom/modal/context"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-export type { QuestionBankRow };
+import { BLOOM_LEVELS, DIFFICULTY_LEVELS, QUESTION_TYPES } from "./config"
+import type { QuestionBankRow } from "./types"
+
+export type { QuestionBankRow }
 
 export interface QuestionBankColumnCallbacks {
-  onDelete?: (row: QuestionBankRow) => void;
+  onDelete?: (row: QuestionBankRow) => void
 }
 
 const getQuestionTypeBadge = (type: string) => {
-  const config = QUESTION_TYPES.find((qt) => qt.value === type);
-  return <Badge variant="outline">{config?.label || type}</Badge>;
-};
+  const config = QUESTION_TYPES.find((qt) => qt.value === type)
+  return <Badge variant="outline">{config?.label || type}</Badge>
+}
 
 const getDifficultyBadge = (difficulty: string) => {
-  const config = DIFFICULTY_LEVELS.find((dl) => dl.value === difficulty);
+  const config = DIFFICULTY_LEVELS.find((dl) => dl.value === difficulty)
   const variants: Record<
     string,
     "default" | "secondary" | "destructive" | "outline"
@@ -41,17 +39,17 @@ const getDifficultyBadge = (difficulty: string) => {
     EASY: "default",
     MEDIUM: "secondary",
     HARD: "destructive",
-  };
+  }
 
   return (
     <Badge variant={variants[difficulty] || "outline"}>
       {config?.label || difficulty}
     </Badge>
-  );
-};
+  )
+}
 
 const getBloomBadge = (bloomLevel: string) => {
-  const config = BLOOM_LEVELS.find((bl) => bl.value === bloomLevel);
+  const config = BLOOM_LEVELS.find((bl) => bl.value === bloomLevel)
   return (
     <Badge
       variant="outline"
@@ -60,8 +58,8 @@ const getBloomBadge = (bloomLevel: string) => {
     >
       {config?.label || bloomLevel}
     </Badge>
-  );
-};
+  )
+}
 
 const getSourceBadge = (source: string) => {
   const variants: Record<
@@ -71,16 +69,18 @@ const getSourceBadge = (source: string) => {
     MANUAL: "outline",
     AI: "secondary",
     IMPORTED: "default",
-  };
+  }
 
   return (
     <Badge variant={variants[source] || "outline"} className="text-xs">
       {source}
     </Badge>
-  );
-};
+  )
+}
 
-export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks): ColumnDef<QuestionBankRow>[] => [
+export const getQuestionBankColumns = (
+  callbacks?: QuestionBankColumnCallbacks
+): ColumnDef<QuestionBankRow>[] => [
   {
     accessorKey: "questionText",
     id: "questionText",
@@ -88,12 +88,12 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
       <DataTableColumnHeader column={column} title="Question" />
     ),
     cell: ({ getValue }) => {
-      const text = getValue<string>();
+      const text = getValue<string>()
       return (
         <div className="max-w-md">
           <p className="truncate text-sm">{text}</p>
         </div>
-      );
+      )
     },
     meta: { label: "Question", variant: "text" },
     enableColumnFilter: true,
@@ -165,7 +165,7 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
       <DataTableColumnHeader column={column} title="Points" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums font-medium">
+      <span className="text-xs font-medium tabular-nums">
         {getValue<number>()}
       </span>
     ),
@@ -196,7 +196,7 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
       <DataTableColumnHeader column={column} title="Used" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {getValue<number>()} times
       </span>
     ),
@@ -209,21 +209,22 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
       <DataTableColumnHeader column={column} title="Success Rate" />
     ),
     cell: ({ getValue }) => {
-      const rate = getValue<number | null>();
-      if (rate === null) return <span className="text-xs text-muted-foreground">-</span>;
+      const rate = getValue<number | null>()
+      if (rate === null)
+        return <span className="text-muted-foreground text-xs">-</span>
 
       const color =
         rate >= 80
           ? "text-green-600"
           : rate >= 50
             ? "text-yellow-600"
-            : "text-red-600";
+            : "text-red-600"
 
       return (
-        <span className={`text-xs tabular-nums font-medium ${color}`}>
+        <span className={`text-xs font-medium tabular-nums ${color}`}>
           {rate.toFixed(1)}%
         </span>
-      );
+      )
     },
     meta: { label: "Success Rate", variant: "text" },
   },
@@ -234,7 +235,7 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
@@ -244,20 +245,20 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
     cell: ({ row }) => {
-      const question = row.original;
-      const { openModal } = useModal();
+      const question = row.original
+      const { openModal } = useModal()
 
       const onView = () => {
         const qs =
-          typeof window !== "undefined" ? window.location.search || "" : "";
-        window.location.href = `/generate/questions/${question.id}${qs}`;
-      };
+          typeof window !== "undefined" ? window.location.search || "" : ""
+        window.location.href = `/generate/questions/${question.id}${qs}`
+      }
 
-      const onEdit = () => openModal(question.id);
+      const onEdit = () => openModal(question.id)
 
       const onDelete = () => {
-        callbacks?.onDelete?.(question);
-      };
+        callbacks?.onDelete?.(question)
+      }
 
       return (
         <DropdownMenu>
@@ -280,12 +281,12 @@ export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks):
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
     enableSorting: false,
     enableColumnFilter: false,
   },
-];
+]
 
 // NOTE: Do NOT export pre-generated columns. Always use getQuestionBankColumns()
 // inside useMemo in client components to avoid SSR hook issues.

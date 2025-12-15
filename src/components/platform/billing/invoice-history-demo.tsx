@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { InvoiceHistory } from "@/components/billingsdk/invoice-history";
+import { InvoiceHistory } from "@/components/billingsdk/invoice-history"
 
 const demoInvoices = [
   {
@@ -31,7 +31,7 @@ const demoInvoices = [
     status: "refunded" as const,
     description: "Starter Plan (Monthly)",
   },
-];
+]
 
 export function InvoiceHistoryDemo() {
   return (
@@ -41,5 +41,5 @@ export function InvoiceHistoryDemo() {
       invoices={demoInvoices}
       onDownload={(id) => console.log("Download invoice:", id)}
     />
-  );
+  )
 }

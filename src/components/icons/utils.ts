@@ -11,7 +11,7 @@ import {
   NAMING_CONVENTIONS,
   SVG_OPTIMIZATION,
 } from "./constants"
-import { IconCategory, ClipboardFormat } from "./types"
+import { ClipboardFormat, IconCategory } from "./types"
 import type {
   IconMetadata,
   IconRegistry,
@@ -36,21 +36,15 @@ export function validateIcon(svg: string): ValidationResult {
   if (!viewBox) {
     errors.push("Missing viewBox attribute")
   } else if (viewBox !== ANTHROPIC_STYLE_GUIDE.viewBox) {
-    errors.push(
-      `${ERROR_MESSAGES.INVALID_VIEWBOX} (found: ${viewBox})`
-    )
-    suggestions.push(
-      `Change viewBox to "${ANTHROPIC_STYLE_GUIDE.viewBox}"`
-    )
+    errors.push(`${ERROR_MESSAGES.INVALID_VIEWBOX} (found: ${viewBox})`)
+    suggestions.push(`Change viewBox to "${ANTHROPIC_STYLE_GUIDE.viewBox}"`)
   }
 
   // Check for forbidden elements
   for (const element of ANTHROPIC_STYLE_GUIDE.forbiddenElements) {
     const regex = new RegExp(`<${element}[\\s>]`, "i")
     if (regex.test(svg)) {
-      errors.push(
-        `${ERROR_MESSAGES.FORBIDDEN_ELEMENT}: <${element}>`
-      )
+      errors.push(`${ERROR_MESSAGES.FORBIDDEN_ELEMENT}: <${element}>`)
       suggestions.push(`Remove all <${element}> elements`)
     }
   }
@@ -59,21 +53,15 @@ export function validateIcon(svg: string): ValidationResult {
   const fileSize = new Blob([svg]).size
   if (fileSize > ANTHROPIC_STYLE_GUIDE.maxFileSize) {
     errors.push(
-      `${ERROR_MESSAGES.FILE_TOO_LARGE} (${Math.round(
-        fileSize / 1024
-      )}KB)`
+      `${ERROR_MESSAGES.FILE_TOO_LARGE} (${Math.round(fileSize / 1024)}KB)`
     )
     suggestions.push("Optimize SVG to reduce file size")
   }
 
   // Check for fill colors
   const colors = extractColors(svg)
-  const hasLightColor = colors.includes(
-    ANTHROPIC_STYLE_GUIDE.colors.light
-  )
-  const hasDarkColor = colors.includes(
-    ANTHROPIC_STYLE_GUIDE.colors.dark
-  )
+  const hasLightColor = colors.includes(ANTHROPIC_STYLE_GUIDE.colors.light)
+  const hasDarkColor = colors.includes(ANTHROPIC_STYLE_GUIDE.colors.dark)
 
   if (!hasLightColor && !hasDarkColor) {
     warnings.push(
@@ -112,9 +100,7 @@ export function validateIcon(svg: string): ValidationResult {
   // Check for external references
   if (svg.includes("xlink:href") || svg.includes("href=")) {
     warnings.push("Icon contains external references")
-    suggestions.push(
-      "Consider inlining all resources for better performance"
-    )
+    suggestions.push("Consider inlining all resources for better performance")
   }
 
   return {
@@ -168,10 +154,7 @@ export function sanitizeSvg(svg: string): string {
 
   // Remove forbidden elements
   for (const element of ANTHROPIC_STYLE_GUIDE.forbiddenElements) {
-    const regex = new RegExp(
-      `<${element}[\\s\\S]*?<\\/${element}>`,
-      "gi"
-    )
+    const regex = new RegExp(`<${element}[\\s\\S]*?<\\/${element}>`, "gi")
     sanitized = sanitized.replace(regex, "")
     // Also remove self-closing tags
     const selfClosingRegex = new RegExp(`<${element}[^>]*\\/>`, "gi")
@@ -330,9 +313,7 @@ export function searchIcons(
 /**
  * Get icon statistics
  */
-export function getIconStatistics(
-  registry: IconRegistry
-): IconStatistics {
+export function getIconStatistics(registry: IconRegistry): IconStatistics {
   const stats: IconStatistics = {
     total: registry.length,
     byCategory: {} as Record<IconCategory, number>,
@@ -457,9 +438,8 @@ export function optimizeSvg(svg: string): string {
   optimized = optimized.trim()
 
   // Round path precision
-  optimized = optimized.replace(
-    /\d+\.\d{3,}/g,
-    (match) => parseFloat(match).toFixed(SVG_OPTIMIZATION.floatPrecision)
+  optimized = optimized.replace(/\d+\.\d{3,}/g, (match) =>
+    parseFloat(match).toFixed(SVG_OPTIMIZATION.floatPrecision)
   )
 
   return optimized
@@ -468,10 +448,7 @@ export function optimizeSvg(svg: string): string {
 /**
  * Check if icon exists in registry
  */
-export function iconExists(
-  registry: IconRegistry,
-  id: string
-): boolean {
+export function iconExists(registry: IconRegistry, id: string): boolean {
   return registry.some((icon) => icon.id === id)
 }
 
@@ -494,7 +471,6 @@ export function getIconsByCategory(
 ): IconMetadata[] {
   return registry.filter(
     (icon) =>
-      icon.category === category ||
-      icon.secondaryCategories?.includes(category)
+      icon.category === category || icon.secondaryCategories?.includes(category)
   )
 }

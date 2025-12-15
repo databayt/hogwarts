@@ -1,32 +1,34 @@
-"use client";
+"use client"
 
-import { useState, useTransition, useCallback } from "react";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { useCallback, useState, useTransition } from "react"
+import Link from "next/link"
 import {
+  ArrowLeft,
   CheckCircle2,
-  Circle,
   ChevronLeft,
   ChevronRight,
+  Circle,
   FileDown,
-  Play,
   Loader2,
-  ArrowLeft,
-} from "lucide-react";
-import { toast } from "sonner";
-import { VideoPlayer } from "@/components/stream/shared/video-player";
-import { markLessonComplete, markLessonIncomplete } from "./actions";
-import type { LessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress";
+  Play,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import type { LessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress"
+import { VideoPlayer } from "@/components/stream/shared/video-player"
+
+import { markLessonComplete, markLessonIncomplete } from "./actions"
 
 interface StreamLessonContentProps {
-  dictionary: Record<string, unknown>;
-  lang: string;
-  schoolId: string | null;
-  subdomain: string;
-  lesson: LessonWithProgress;
+  dictionary: Record<string, unknown>
+  lang: string
+  schoolId: string | null
+  subdomain: string
+  lesson: LessonWithProgress
 }
 
 export function StreamLessonContent({
@@ -38,8 +40,8 @@ export function StreamLessonContent({
 }: StreamLessonContentProps) {
   const [isCompleted, setIsCompleted] = useState(
     lesson.progress?.isCompleted ?? false
-  );
-  const [isPending, startTransition] = useTransition();
+  )
+  const [isPending, startTransition] = useTransition()
 
   const handleToggleComplete = () => {
     startTransition(async () => {
@@ -48,62 +50,62 @@ export function StreamLessonContent({
           const result = await markLessonIncomplete(
             lesson.id,
             lesson.chapter.course.slug
-          );
+          )
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
-          setIsCompleted(false);
-          toast.success("Marked as incomplete");
+          setIsCompleted(false)
+          toast.success("Marked as incomplete")
         } else {
           const result = await markLessonComplete(
             lesson.id,
             lesson.chapter.course.slug
-          );
+          )
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
-          setIsCompleted(true);
-          toast.success("Marked as complete!");
+          setIsCompleted(true)
+          toast.success("Marked as complete!")
         }
       } catch {
-        toast.error("Failed to update progress");
+        toast.error("Failed to update progress")
       }
-    });
-  };
+    })
+  }
 
   // Auto-mark complete when video finishes
   const handleVideoComplete = useCallback(() => {
-    if (isCompleted) return; // Already completed, don't mark again
+    if (isCompleted) return // Already completed, don't mark again
 
     startTransition(async () => {
       try {
         const result = await markLessonComplete(
           lesson.id,
           lesson.chapter.course.slug
-        );
+        )
         if (result.status === "error") {
-          toast.error(result.message);
-          return;
+          toast.error(result.message)
+          return
         }
-        setIsCompleted(true);
-        toast.success("Lesson completed!");
+        setIsCompleted(true)
+        toast.success("Lesson completed!")
       } catch {
-        toast.error("Failed to mark lesson as complete");
+        toast.error("Failed to mark lesson as complete")
       }
-    });
-  }, [isCompleted, lesson.id, lesson.chapter.course.slug]);
+    })
+  }, [isCompleted, lesson.id, lesson.chapter.course.slug])
 
-  const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`;
+  const baseUrl = `/${lang}/s/${subdomain}/stream/dashboard/${lesson.chapter.course.slug}`
 
   return (
-    <div className="py-6 space-y-6">
+    <div className="space-y-6 py-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Link
           href={baseUrl}
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ArrowLeft className="size-4" />
           Back to Course
@@ -123,7 +125,7 @@ export function StreamLessonContent({
               {lesson.videoUrl.includes("youtube.com") ||
               lesson.videoUrl.includes("youtu.be") ? (
                 <iframe
-                  className="w-full h-full rounded-t-lg"
+                  className="h-full w-full rounded-t-lg"
                   src={getYouTubeEmbedUrl(lesson.videoUrl)}
                   title={lesson.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -131,7 +133,7 @@ export function StreamLessonContent({
                 />
               ) : lesson.videoUrl.includes("vimeo.com") ? (
                 <iframe
-                  className="w-full h-full rounded-t-lg"
+                  className="h-full w-full rounded-t-lg"
                   src={getVimeoEmbedUrl(lesson.videoUrl)}
                   title={lesson.title}
                   allow="autoplay; fullscreen; picture-in-picture"
@@ -142,14 +144,14 @@ export function StreamLessonContent({
                   url={lesson.videoUrl}
                   title={lesson.title}
                   onComplete={handleVideoComplete}
-                  className="w-full h-full rounded-t-lg"
+                  className="h-full w-full rounded-t-lg"
                 />
               )}
             </div>
           ) : (
-            <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+            <div className="bg-muted flex aspect-video items-center justify-center rounded-t-lg">
               <div className="text-center">
-                <Play className="size-12 mx-auto text-muted-foreground mb-2" />
+                <Play className="text-muted-foreground mx-auto mb-2 size-12" />
                 <p className="text-muted-foreground">No video available</p>
               </div>
             </div>
@@ -168,7 +170,7 @@ export function StreamLessonContent({
                   <Badge variant="secondary">Free Preview</Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {lesson.chapter.title} &bull; {lesson.chapter.course.title}
               </p>
             </div>
@@ -192,14 +194,14 @@ export function StreamLessonContent({
         <CardContent>
           {/* Description */}
           {lesson.description && (
-            <div className="prose dark:prose-invert max-w-none mb-6">
+            <div className="prose dark:prose-invert mb-6 max-w-none">
               <p>{lesson.description}</p>
             </div>
           )}
 
           {/* Duration */}
           {lesson.duration && (
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               Duration: {lesson.duration} minutes
             </p>
           )}
@@ -217,9 +219,9 @@ export function StreamLessonContent({
                       href={attachment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 rounded-md border hover:bg-accent transition-colors"
+                      className="hover:bg-accent flex items-center gap-2 rounded-md border p-2 transition-colors"
                     >
-                      <FileDown className="size-4 text-muted-foreground" />
+                      <FileDown className="text-muted-foreground size-4" />
                       <span className="text-sm">{attachment.name}</span>
                     </a>
                   ))}
@@ -237,7 +239,7 @@ export function StreamLessonContent({
             <Button variant="outline">
               <ChevronLeft className="mr-2 size-4" />
               <span className="hidden sm:inline">Previous:</span>{" "}
-              <span className="truncate max-w-[150px]">
+              <span className="max-w-[150px] truncate">
                 {lesson.previousLesson.title}
               </span>
             </Button>
@@ -250,7 +252,7 @@ export function StreamLessonContent({
           <Link href={`${baseUrl}/${lesson.nextLesson.id}`}>
             <Button>
               <span className="hidden sm:inline">Next:</span>{" "}
-              <span className="truncate max-w-[150px]">
+              <span className="max-w-[150px] truncate">
                 {lesson.nextLesson.title}
               </span>
               <ChevronRight className="ml-2 size-4" />
@@ -266,18 +268,18 @@ export function StreamLessonContent({
         )}
       </div>
     </div>
-  );
+  )
 }
 
 // Helper functions for video embedding
 function getYouTubeEmbedUrl(url: string): string {
   const videoId = url.match(
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-  )?.[1];
-  return videoId ? `https://www.youtube.com/embed/${videoId}` : url;
+  )?.[1]
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : url
 }
 
 function getVimeoEmbedUrl(url: string): string {
-  const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1];
-  return videoId ? `https://player.vimeo.com/video/${videoId}` : url;
+  const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1]
+  return videoId ? `https://player.vimeo.com/video/${videoId}` : url
 }

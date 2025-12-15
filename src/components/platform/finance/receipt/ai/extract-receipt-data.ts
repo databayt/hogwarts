@@ -4,13 +4,15 @@
  * Follows Hogwarts server action pattern
  */
 
-'use server'
+"use server"
 
-import { anthropic } from '@ai-sdk/anthropic'
-import { generateObject } from 'ai'
-import { db } from '@/lib/db'
-import { logger } from '@/lib/logger'
-import { extractedReceiptDataSchema } from '../validation'
+import { anthropic } from "@ai-sdk/anthropic"
+import { generateObject } from "ai"
+
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
+
+import { extractedReceiptDataSchema } from "../validation"
 
 /**
  * Extract structured data from receipt image/PDF using Claude 3.5 Sonnet
@@ -22,29 +24,29 @@ export async function extractReceiptData(receiptId: string, fileUrl: string) {
     // Update status to processing
     await db.expenseReceipt.update({
       where: { id: receiptId },
-      data: { status: 'processing' },
+      data: { status: "processing" },
     })
 
-    logger.info('Starting receipt data extraction', {
-      action: 'extract_receipt_data',
+    logger.info("Starting receipt data extraction", {
+      action: "extract_receipt_data",
       receiptId,
       fileUrl,
     })
 
     // Extract data using Vercel AI SDK with Claude 3.5 Sonnet
     const result = await generateObject({
-      model: anthropic('claude-3-5-sonnet-20241022'),
+      model: anthropic("claude-3-5-sonnet-20241022"),
       schema: extractedReceiptDataSchema,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: [
             {
-              type: 'image',
+              type: "image",
               image: fileUrl,
             },
             {
-              type: 'text',
+              type: "text",
               text: `Extract all information from this receipt and return structured JSON data.
 
 Instructions:
@@ -62,8 +64,8 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
       ],
     })
 
-    logger.info('Receipt data extraction completed', {
-      action: 'extract_receipt_data_success',
+    logger.info("Receipt data extraction completed", {
+      action: "extract_receipt_data_success",
       receiptId,
       merchantName: result.object.merchantName,
       itemCount: result.object.items.length,
@@ -81,13 +83,13 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
         currency: result.object.currency,
         receiptSummary: result.object.receiptSummary,
         items: result.object.items,
-        status: 'processed',
+        status: "processed",
         processedAt: new Date(),
       },
     })
 
-    logger.info('Receipt database updated successfully', {
-      action: 'receipt_db_update',
+    logger.info("Receipt database updated successfully", {
+      action: "receipt_db_update",
       receiptId,
     })
 
@@ -97,10 +99,10 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
     }
   } catch (error) {
     logger.error(
-      'Receipt data extraction failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Receipt data extraction failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'extract_receipt_data_error',
+        action: "extract_receipt_data_error",
         receiptId,
       }
     )
@@ -109,13 +111,13 @@ If any information is not clearly visible, use empty string or 0 for numbers.`,
     await db.expenseReceipt.update({
       where: { id: receiptId },
       data: {
-        status: 'error',
+        status: "error",
       },
     })
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Extraction failed',
+      error: error instanceof Error ? error.message : "Extraction failed",
     }
   }
 }
@@ -132,27 +134,27 @@ export async function retryExtraction(receiptId: string) {
     })
 
     if (!receipt) {
-      throw new Error('Receipt not found')
+      throw new Error("Receipt not found")
     }
 
-    if (receipt.status !== 'error' && receipt.status !== 'pending') {
-      throw new Error('Can only retry failed or pending receipts')
+    if (receipt.status !== "error" && receipt.status !== "pending") {
+      throw new Error("Can only retry failed or pending receipts")
     }
 
     return await extractReceiptData(receipt.id, receipt.fileUrl)
   } catch (error) {
     logger.error(
-      'Receipt extraction retry failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Receipt extraction retry failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'retry_extraction_error',
+        action: "retry_extraction_error",
         receiptId,
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Retry failed',
+      error: error instanceof Error ? error.message : "Retry failed",
     }
   }
 }

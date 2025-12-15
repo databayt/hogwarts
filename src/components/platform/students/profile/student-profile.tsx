@@ -1,13 +1,38 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { User, Calendar, Phone, Mail, MapPin, Heart, School, FileText, Award, TriangleAlert, BookOpen, CreditCard, Pencil, Download, Printer, Share2, EllipsisVertical } from "lucide-react";
+import { useState } from "react"
+import { format } from "date-fns"
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  CreditCard,
+  Download,
+  EllipsisVertical,
+  FileText,
+  Heart,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Printer,
+  School,
+  Share2,
+  TriangleAlert,
+  User,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,26 +40,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import type { Student } from "../registration/types"
+import { AcademicTab } from "./tabs/academic-tab"
+import { AchievementsTab } from "./tabs/achievements-tab"
+import { AttendanceTab } from "./tabs/attendance-tab"
+import { DocumentsTab } from "./tabs/documents-tab"
+import { FeesTab } from "./tabs/fees-tab"
+import { GuardianTab } from "./tabs/guardian-tab"
+import { HealthTab } from "./tabs/health-tab"
 // Import tab components
-import { PersonalTab } from "./tabs/personal-tab";
-import { AcademicTab } from "./tabs/academic-tab";
-import { GuardianTab } from "./tabs/guardian-tab";
-import { DocumentsTab } from "./tabs/documents-tab";
-import { HealthTab } from "./tabs/health-tab";
-import { AchievementsTab } from "./tabs/achievements-tab";
-import { AttendanceTab } from "./tabs/attendance-tab";
-import { FeesTab } from "./tabs/fees-tab";
-
-import type { Student } from "../registration/types";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { PersonalTab } from "./tabs/personal-tab"
 
 interface StudentProfileProps {
-  student: Student;
-  dictionary?: any;
-  onEdit?: () => void;
+  student: Student
+  dictionary?: any
+  onEdit?: () => void
 }
 
 const statusColors = {
@@ -44,7 +68,7 @@ const statusColors = {
   GRADUATED: "bg-primary",
   TRANSFERRED: "bg-chart-4", // Yellow/accent semantic token
   DROPPED_OUT: "bg-destructive",
-};
+}
 
 const statusLabels = {
   ACTIVE: "Active",
@@ -53,58 +77,70 @@ const statusLabels = {
   GRADUATED: "Graduated",
   TRANSFERRED: "Transferred",
   DROPPED_OUT: "Dropped Out",
-};
+}
 
-export function StudentProfile({ student, dictionary, onEdit }: StudentProfileProps) {
-  const [activeTab, setActiveTab] = useState("personal");
+export function StudentProfile({
+  student,
+  dictionary,
+  onEdit,
+}: StudentProfileProps) {
+  const [activeTab, setActiveTab] = useState("personal")
 
   const getInitials = () => {
-    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase();
-  };
+    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase()
+  }
 
   const getFullName = () => {
     return [student.givenName, student.middleName, student.surname]
       .filter(Boolean)
-      .join(" ");
-  };
+      .join(" ")
+  }
 
   const getAge = () => {
-    if (!student.dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(student.dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (!student.dateOfBirth) return null
+    const today = new Date()
+    const birthDate = new Date(student.dateOfBirth)
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--
     }
-    return age;
-  };
+    return age
+  }
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.print()
+  }
 
   const handleDownload = () => {
     // Implement PDF download functionality
-    console.log("Download student profile as PDF");
-  };
+    console.log("Download student profile as PDF")
+  }
 
   const handleShare = () => {
     // Implement share functionality
-    console.log("Share student profile");
-  };
+    console.log("Share student profile")
+  }
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col gap-6 md:flex-row">
             {/* Profile Photo */}
             <div className="flex-shrink-0">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={student.profilePhotoUrl || undefined} alt={getFullName()} />
-                <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+                <AvatarImage
+                  src={student.profilePhotoUrl || undefined}
+                  alt={getFullName()}
+                />
+                <AvatarFallback className="text-2xl">
+                  {getInitials()}
+                </AvatarFallback>
               </Avatar>
             </div>
 
@@ -114,11 +150,13 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
                 <div>
                   <h2 className="flex items-center gap-2">
                     {getFullName()}
-                    <Badge className={cn(statusColors[student.status], "text-white")}>
+                    <Badge
+                      className={cn(statusColors[student.status], "text-white")}
+                    >
                       {statusLabels[student.status]}
                     </Badge>
                   </h2>
-                  <div className="flex items-center gap-4 text-muted-foreground mt-2">
+                  <div className="text-muted-foreground mt-2 flex items-center gap-4">
                     {student.grNumber && (
                       <span className="flex items-center gap-1">
                         <FileText className="h-4 w-4" />
@@ -137,7 +175,7 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={onEdit}>
-                    <Pencil className="h-4 w-4 mr-2" />
+                    <Pencil className="mr-2 h-4 w-4" />
                     Pencil
                   </Button>
                   <DropdownMenu>
@@ -150,15 +188,15 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handlePrint}>
-                        <Printer className="h-4 w-4 mr-2" />
+                        <Printer className="mr-2 h-4 w-4" />
                         Print Profile
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleDownload}>
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="mr-2 h-4 w-4" />
                         Download PDF
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={handleShare}>
-                        <Share2 className="h-4 w-4 mr-2" />
+                        <Share2 className="mr-2 h-4 w-4" />
                         Share Profile
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -171,24 +209,30 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
               </div>
 
               {/* Quick Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Date of Birth</p>
+                  <p className="text-muted-foreground text-sm">Date of Birth</p>
                   <p className="font-medium">
-                    {student.dateOfBirth ? format(new Date(student.dateOfBirth), "dd MMM yyyy") : "-"}
+                    {student.dateOfBirth
+                      ? format(new Date(student.dateOfBirth), "dd MMM yyyy")
+                      : "-"}
                   </p>
-                  {getAge() && <p className="text-xs text-muted-foreground">{getAge()} years old</p>}
+                  {getAge() && (
+                    <p className="text-muted-foreground text-xs">
+                      {getAge()} years old
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Gender</p>
+                  <p className="text-muted-foreground text-sm">Gender</p>
                   <p className="font-medium">{student.gender || "-"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Blood Group</p>
+                  <p className="text-muted-foreground text-sm">Blood Group</p>
                   <p className="font-medium">{student.bloodGroup || "-"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Nationality</p>
+                  <p className="text-muted-foreground text-sm">Nationality</p>
                   <p className="font-medium">{student.nationality || "-"}</p>
                 </div>
               </div>
@@ -214,7 +258,7 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
                   </a>
                 )}
                 {student.city && (
-                  <span className="flex items-center gap-1 text-muted-foreground">
+                  <span className="text-muted-foreground flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
                     {[student.city, student.state, student.country]
                       .filter(Boolean)
@@ -225,11 +269,12 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
 
               {/* Emergency Contact */}
               {student.emergencyContactName && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 dark:bg-red-950/20">
                   <TriangleAlert className="h-4 w-4 text-red-600" />
                   <div className="text-sm">
                     <span className="font-medium">Emergency Contact:</span>{" "}
-                    {student.emergencyContactName} ({student.emergencyContactRelation}) -{" "}
+                    {student.emergencyContactName} (
+                    {student.emergencyContactRelation}) -{" "}
                     <a
                       href={`tel:${student.emergencyContactPhone}`}
                       className="text-blue-600 hover:underline"
@@ -247,62 +292,66 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
       {/* Tabs Section */}
       <Card>
         <CardContent className="p-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start rounded-none border-b h-auto p-0 bg-transparent">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
               <TabsTrigger
                 value="personal"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <User className="h-4 w-4 mr-2" />
+                <User className="mr-2 h-4 w-4" />
                 Personal
               </TabsTrigger>
               <TabsTrigger
                 value="academic"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <School className="h-4 w-4 mr-2" />
+                <School className="mr-2 h-4 w-4" />
                 Academic
               </TabsTrigger>
               <TabsTrigger
                 value="guardian"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <User className="h-4 w-4 mr-2" />
+                <User className="mr-2 h-4 w-4" />
                 Guardians
               </TabsTrigger>
               <TabsTrigger
                 value="documents"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="mr-2 h-4 w-4" />
                 Documents
               </TabsTrigger>
               <TabsTrigger
                 value="health"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Heart className="h-4 w-4 mr-2" />
+                <Heart className="mr-2 h-4 w-4" />
                 Health
               </TabsTrigger>
               <TabsTrigger
                 value="achievements"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Award className="h-4 w-4 mr-2" />
+                <Award className="mr-2 h-4 w-4" />
                 Achievements
               </TabsTrigger>
               <TabsTrigger
                 value="attendance"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <Calendar className="h-4 w-4 mr-2" />
+                <Calendar className="mr-2 h-4 w-4" />
                 Attendance
               </TabsTrigger>
               <TabsTrigger
                 value="fees"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent"
               >
-                <CreditCard className="h-4 w-4 mr-2" />
+                <CreditCard className="mr-2 h-4 w-4" />
                 Fees
               </TabsTrigger>
             </TabsList>
@@ -344,5 +393,5 @@ export function StudentProfile({ student, dictionary, onEdit }: StudentProfilePr
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

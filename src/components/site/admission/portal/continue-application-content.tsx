@@ -1,13 +1,22 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -15,30 +24,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Loader2 } from "lucide-react";
-import { AnthropicIcons } from "@/components/icons/anthropic";
-import { toast } from "sonner";
-import Link from "next/link";
-import type { School } from "../../types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { resumeApplicationSession } from "../actions";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { AnthropicIcons } from "@/components/icons/anthropic"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { School } from "../../types"
+import { resumeApplicationSession } from "../actions"
 
 interface Props {
-  school: School;
-  dictionary: Dictionary;
-  lang: Locale;
-  subdomain: string;
-  initialToken?: string;
+  school: School
+  dictionary: Dictionary
+  lang: Locale
+  subdomain: string
+  initialToken?: string
 }
 
 const continueSchema = z.object({
   email: z.string().email("Invalid email address"),
   sessionToken: z.string().optional(),
-});
+})
 
-type ContinueFormData = z.infer<typeof continueSchema>;
+type ContinueFormData = z.infer<typeof continueSchema>
 
 export default function ContinueApplicationContent({
   school,
@@ -47,9 +55,9 @@ export default function ContinueApplicationContent({
   subdomain,
   initialToken,
 }: Props) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const isRTL = lang === "ar";
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const isRTL = lang === "ar"
 
   const form = useForm<ContinueFormData>({
     resolver: zodResolver(continueSchema),
@@ -57,43 +65,50 @@ export default function ContinueApplicationContent({
       email: "",
       sessionToken: initialToken || "",
     },
-  });
+  })
 
   const onSubmit = async (data: ContinueFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const result = await resumeApplicationSession(data.sessionToken || "");
+      const result = await resumeApplicationSession(data.sessionToken || "")
 
       if (result.success && result.data) {
         // Redirect to the application form with the session token
-        const campaignId = (result.data.formData as { campaignId?: string })?.campaignId || result.data.campaignId;
+        const campaignId =
+          (result.data.formData as { campaignId?: string })?.campaignId ||
+          result.data.campaignId
         if (campaignId) {
-          router.push(
-            `/${lang}/apply/${campaignId}?token=${data.sessionToken}`
-          );
+          router.push(`/${lang}/apply/${campaignId}?token=${data.sessionToken}`)
         } else {
-          toast.error(isRTL ? "لم يتم العثور على الحملة" : "Campaign not found");
+          toast.error(isRTL ? "لم يتم العثور على الحملة" : "Campaign not found")
         }
       } else {
-        toast.error(result.error || (isRTL ? "لم يتم العثور على طلب محفوظ" : "No saved application found"));
+        toast.error(
+          result.error ||
+            (isRTL
+              ? "لم يتم العثور على طلب محفوظ"
+              : "No saved application found")
+        )
       }
     } catch (error) {
-      toast.error(isRTL ? "فشل في استئناف الطلب" : "Failed to resume application");
+      toast.error(
+        isRTL ? "فشل في استئناف الطلب" : "Failed to resume application"
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-          <AnthropicIcons.Archive className="h-8 w-8 text-primary" />
+        <div className="bg-primary/10 mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full">
+          <AnthropicIcons.Archive className="text-primary h-8 w-8" />
         </div>
         <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "استئناف طلبك" : "Continue Your Application"}
         </h1>
-        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
+        <p className="text-muted-foreground mx-auto mt-3 max-w-md leading-relaxed">
           {isRTL
             ? "أدخل بريدك الإلكتروني لاستئناف طلبك المحفوظ"
             : "Enter your email to resume your saved application"}
@@ -139,12 +154,18 @@ export default function ContinueApplicationContent({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        {isRTL ? "رمز الجلسة (اختياري)" : "Session Token (Optional)"}
+                        {isRTL
+                          ? "رمز الجلسة (اختياري)"
+                          : "Session Token (Optional)"}
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder={isRTL ? "أدخل رمز الجلسة إذا كان لديك" : "Enter session token if you have one"}
+                          placeholder={
+                            isRTL
+                              ? "أدخل رمز الجلسة إذا كان لديك"
+                              : "Enter session token if you have one"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -153,16 +174,20 @@ export default function ContinueApplicationContent({
                 />
               )}
 
-              <Button type="submit" className="w-full group" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="group w-full"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                    <Loader2 className="me-2 h-4 w-4 animate-spin" />
                     {isRTL ? "جارٍ البحث..." : "Searching..."}
                   </>
                 ) : (
                   <>
                     {isRTL ? "استئناف الطلب" : "Resume Application"}
-                    <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                    <AnthropicIcons.ArrowRight className="ms-2 h-4 w-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </>
                 )}
               </Button>
@@ -171,8 +196,8 @@ export default function ContinueApplicationContent({
         </CardContent>
       </Card>
 
-      <div className="text-center space-y-4">
-        <p className="text-sm text-muted-foreground">
+      <div className="space-y-4 text-center">
+        <p className="text-muted-foreground text-sm">
           {isRTL ? "ليس لديك طلب محفوظ؟" : "Don't have a saved application?"}
         </p>
         <Link href={`/${lang}/apply`}>
@@ -185,12 +210,12 @@ export default function ContinueApplicationContent({
       <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <AnthropicIcons.Checklist className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <AnthropicIcons.Checklist className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
             <div>
-              <h3 className="font-medium mb-2">
+              <h3 className="mb-2 font-medium">
                 {isRTL ? "معلومات مهمة" : "Important Information"}
               </h3>
-              <ul className="text-sm text-muted-foreground space-y-2">
+              <ul className="text-muted-foreground space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
                   {isRTL
@@ -215,5 +240,5 @@ export default function ContinueApplicationContent({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -4,13 +4,14 @@
 
 Phase 2 focuses on **school configuration features** required before academic operations can begin. Based on codebase exploration:
 
-| Task | Status | Action Required |
-|------|--------|-----------------|
-| P2.1 School Profile Management | ✅ **ALREADY COMPLETE** | None - exists in Settings General tab |
-| P2.2 Academic Year Setup | ⏳ Schema Only | Build UI + Actions |
-| P2.3 Grade Levels & Departments | ⏳ Schema Only | Build UI + Actions |
+| Task                            | Status                  | Action Required                       |
+| ------------------------------- | ----------------------- | ------------------------------------- |
+| P2.1 School Profile Management  | ✅ **ALREADY COMPLETE** | None - exists in Settings General tab |
+| P2.2 Academic Year Setup        | ⏳ Schema Only          | Build UI + Actions                    |
+| P2.3 Grade Levels & Departments | ⏳ Schema Only          | Build UI + Actions                    |
 
 **Design Guidelines (Per User Request):**
+
 - Follow Anthropic design patterns (https://www.anthropic.com)
 - Use icons from `components/icons/anthropic.tsx`
 - Use shadcn/ui and its ecosystem
@@ -23,6 +24,7 @@ Phase 2 focuses on **school configuration features** required before academic op
 **Location:** `src/components/platform/settings/content.tsx`
 
 Already implemented features:
+
 - School name editing
 - Timezone selection (20 MENA + international zones)
 - Locale selection (ar/en)
@@ -38,6 +40,7 @@ Already implemented features:
 ### Overview
 
 Create UI for managing:
+
 1. **SchoolYear** - Academic years (e.g., "2024-2025")
 2. **Term** - Semesters/quarters within a year
 3. **Period** - Daily time slots (e.g., "Period 1: 8:00-8:45")
@@ -153,11 +156,13 @@ export async function bulkCreatePeriods(input: BulkPeriodInput)
 
 ```typescript
 // validation.ts
-export const yearSchema = z.object({
-  yearName: z.string().min(1, "Year name required"),
-  startDate: z.date(),
-  endDate: z.date(),
-}).refine(d => d.endDate > d.startDate, "End date must be after start");
+export const yearSchema = z
+  .object({
+    yearName: z.string().min(1, "Year name required"),
+    startDate: z.date(),
+    endDate: z.date(),
+  })
+  .refine((d) => d.endDate > d.startDate, "End date must be after start")
 
 export const termSchema = z.object({
   yearId: z.string().min(1),
@@ -165,14 +170,14 @@ export const termSchema = z.object({
   termName: z.string().optional(),
   startDate: z.date(),
   endDate: z.date(),
-});
+})
 
 export const periodSchema = z.object({
   yearId: z.string().min(1),
   name: z.string().min(1, "Period name required"),
   startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time"),
   endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time"),
-});
+})
 ```
 
 ---
@@ -182,6 +187,7 @@ export const periodSchema = z.object({
 ### Overview
 
 Create UI for managing:
+
 1. **YearLevel** - Grade levels (K, 1, 2... 12)
 2. **Department** - Academic departments (Math, Science, Languages...)
 
@@ -260,25 +266,31 @@ export async function updateYearLevel(input: UpdateLevelInput)
 export async function deleteYearLevel(input: { id: string })
 export async function reorderYearLevels(input: ReorderInput)
 export async function getYearLevels()
-export async function applyLevelTemplate(input: { template: "k12" | "primary" | "secondary" })
+export async function applyLevelTemplate(input: {
+  template: "k12" | "primary" | "secondary"
+})
 
 // Departments
 export async function createDepartment(input: CreateDeptInput)
 export async function updateDepartment(input: UpdateDeptInput)
 export async function deleteDepartment(input: { id: string })
 export async function getDepartments()
-export async function applyDepartmentTemplate(input: { template: "standard" | "stem" | "arts" })
+export async function applyDepartmentTemplate(input: {
+  template: "standard" | "stem" | "arts"
+})
 ```
 
 ### Templates
 
 **Grade Level Templates:**
+
 - K-12 (Kindergarten through Grade 12)
 - Primary (K-6)
 - Secondary (7-12)
 - British System (Year 1-13)
 
 **Department Templates:**
+
 - Standard (Math, Science, Languages, Social Studies, Arts, PE)
 - STEM Focus (Math, Physics, Chemistry, Biology, Computer Science, Engineering)
 - Arts Focus (Visual Arts, Music, Drama, Dance, Media Arts)
@@ -339,6 +351,7 @@ Badge variants: default, secondary, outline, destructive
 ## Components to Use
 
 From shadcn/ui:
+
 - `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`
 - `Button` (default, outline, ghost, destructive variants)
 - `Input`, `Label`, `Select`, `Switch`
@@ -349,6 +362,7 @@ From shadcn/ui:
 - `Skeleton` for loading states
 
 From Anthropic icons:
+
 - Calendar icon for dates
 - Settings icon for configuration
 - Plus icon for add actions
@@ -359,6 +373,7 @@ From Anthropic icons:
 ## Files to Create
 
 ### P2.2 Academic Year Setup
+
 ```
 NEW: src/app/[lang]/s/[subdomain]/(platform)/settings/academic/page.tsx
 NEW: src/app/[lang]/s/[subdomain]/(platform)/settings/academic/loading.tsx
@@ -376,6 +391,7 @@ NEW: src/components/platform/settings/academic/period-list.tsx
 ```
 
 ### P2.3 Organization Structure
+
 ```
 NEW: src/app/[lang]/s/[subdomain]/(platform)/settings/organization/page.tsx
 NEW: src/app/[lang]/s/[subdomain]/(platform)/settings/organization/loading.tsx
@@ -392,6 +408,7 @@ NEW: src/components/platform/settings/organization/template-selector.tsx
 ```
 
 ### Navigation Update
+
 ```
 EDIT: src/components/platform/settings/content-enhanced.tsx (add tabs)
 ```

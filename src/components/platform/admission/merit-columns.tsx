@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { useRouter } from "next/navigation"
+import { ColumnDef } from "@tanstack/react-table"
+import { Ellipsis } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,66 +13,68 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+} from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type MeritRow = {
-  id: string;
-  applicationNumber: string;
-  applicantName: string;
-  firstName: string;
-  lastName: string;
-  applyingForClass: string;
-  category: string | null;
-  status: string;
-  meritScore: string | null;
-  meritRank: number | null;
-  entranceScore: string | null;
-  interviewScore: string | null;
-  campaignName: string;
-  campaignId: string;
-};
+  id: string
+  applicationNumber: string
+  applicantName: string
+  firstName: string
+  lastName: string
+  applyingForClass: string
+  category: string | null
+  status: string
+  meritScore: string | null
+  meritRank: number | null
+  entranceScore: string | null
+  interviewScore: string | null
+  campaignName: string
+  campaignId: string
+}
 
 const getStatusVariant = (status: string) => {
   switch (status) {
     case "SELECTED":
-      return "default";
+      return "default"
     case "WAITLISTED":
-      return "secondary";
+      return "secondary"
     case "REJECTED":
-      return "destructive";
+      return "destructive"
     default:
-      return "outline";
+      return "outline"
   }
-};
+}
 
 export const getMeritColumns = (
   dictionary: Dictionary["school"]["admission"],
   locale: Locale
 ): ColumnDef<MeritRow>[] => {
-  const t = dictionary;
+  const t = dictionary
 
   return [
     {
       accessorKey: "meritRank",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.rank || "Rank"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.rank || "Rank"}
+        />
       ),
       cell: ({ getValue }) => {
-        const rank = getValue<number | null>();
-        return (
-          <span className="font-bold text-lg tabular-nums">
-            #{rank}
-          </span>
-        );
+        const rank = getValue<number | null>()
+        return <span className="text-lg font-bold tabular-nums">#{rank}</span>
       },
     },
     {
       accessorKey: "applicantName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.applicant || "Applicant"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.applicant || "Applicant"}
+        />
       ),
       meta: { label: t?.columns?.applicant || "Applicant", variant: "text" },
       enableColumnFilter: true,
@@ -79,24 +82,32 @@ export const getMeritColumns = (
     {
       accessorKey: "applicationNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.applicationNumber || "Application #"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.applicationNumber || "Application #"}
+        />
       ),
       cell: ({ getValue }) => (
-        <span className="font-mono text-sm text-muted-foreground">{getValue<string>()}</span>
+        <span className="text-muted-foreground font-mono text-sm">
+          {getValue<string>()}
+        </span>
       ),
     },
     {
       accessorKey: "category",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.category || "Category"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.category || "Category"}
+        />
       ),
       cell: ({ getValue }) => {
-        const category = getValue<string | null>();
+        const category = getValue<string | null>()
         return category ? (
           <Badge variant="outline">{category}</Badge>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
       meta: {
         label: t?.columns?.category || "Category",
@@ -114,15 +125,20 @@ export const getMeritColumns = (
     {
       accessorKey: "meritScore",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.score || "Merit Score"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.score || "Merit Score"}
+        />
       ),
       cell: ({ getValue }) => {
-        const score = getValue<string | null>();
+        const score = getValue<string | null>()
         return score ? (
-          <span className="font-semibold tabular-nums">{parseFloat(score).toFixed(2)}</span>
+          <span className="font-semibold tabular-nums">
+            {parseFloat(score).toFixed(2)}
+          </span>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
     },
     {
@@ -131,12 +147,14 @@ export const getMeritColumns = (
         <DataTableColumnHeader column={column} title="Entrance" />
       ),
       cell: ({ getValue }) => {
-        const score = getValue<string | null>();
+        const score = getValue<string | null>()
         return score ? (
-          <span className="text-sm tabular-nums">{parseFloat(score).toFixed(1)}</span>
+          <span className="text-sm tabular-nums">
+            {parseFloat(score).toFixed(1)}
+          </span>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
     },
     {
@@ -145,29 +163,37 @@ export const getMeritColumns = (
         <DataTableColumnHeader column={column} title="Interview" />
       ),
       cell: ({ getValue }) => {
-        const score = getValue<string | null>();
+        const score = getValue<string | null>()
         return score ? (
-          <span className="text-sm tabular-nums">{parseFloat(score).toFixed(1)}</span>
+          <span className="text-sm tabular-nums">
+            {parseFloat(score).toFixed(1)}
+          </span>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.status || "Status"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.status || "Status"}
+        />
       ),
       cell: ({ getValue }) => {
-        const status = getValue<string>();
-        const label = t?.status?.[status as keyof typeof t.status] || status;
-        return <Badge variant={getStatusVariant(status)}>{label}</Badge>;
+        const status = getValue<string>()
+        const label = t?.status?.[status as keyof typeof t.status] || status
+        return <Badge variant={getStatusVariant(status)}>{label}</Badge>
       },
       meta: {
         label: t?.columns?.status || "Status",
         variant: "select",
         options: [
-          { label: t?.status?.SHORTLISTED || "Shortlisted", value: "SHORTLISTED" },
+          {
+            label: t?.status?.SHORTLISTED || "Shortlisted",
+            value: "SHORTLISTED",
+          },
           { label: t?.status?.SELECTED || "Selected", value: "SELECTED" },
           { label: t?.status?.WAITLISTED || "Waitlisted", value: "WAITLISTED" },
           { label: t?.status?.REJECTED || "Rejected", value: "REJECTED" },
@@ -178,14 +204,16 @@ export const getMeritColumns = (
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">{t?.columns?.actions || "Actions"}</span>,
+      header: () => (
+        <span className="sr-only">{t?.columns?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
-        const merit = row.original;
-        const router = useRouter();
+        const merit = row.original
+        const router = useRouter()
 
         const onView = () => {
-          router.push(`/admission/applications/${merit.id}`);
-        };
+          router.push(`/admission/applications/${merit.id}`)
+        }
 
         return (
           <DropdownMenu>
@@ -196,7 +224,9 @@ export const getMeritColumns = (
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t?.columns?.actions || "Actions"}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {t?.columns?.actions || "Actions"}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onView}>
                 {t?.meritList?.viewApplication || "View Application"}
@@ -212,10 +242,10 @@ export const getMeritColumns = (
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        );
+        )
       },
       enableSorting: false,
       enableColumnFilter: false,
     },
-  ];
-};
+  ]
+}

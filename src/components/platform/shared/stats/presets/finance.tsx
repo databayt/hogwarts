@@ -1,10 +1,22 @@
 "use client"
 
 import * as React from "react"
-import { DollarSign, TrendingUp, CircleAlert, Wallet, Receipt, CreditCard } from "lucide-react"
-import { TrendingStats } from "../trending-stats"
+import {
+  CircleAlert,
+  CreditCard,
+  DollarSign,
+  Receipt,
+  TrendingUp,
+  Wallet,
+} from "lucide-react"
+
 import { ProgressStats, ProgressStatStacked } from "../progress-stats"
-import type { TrendingStatItem, FinanceStatsData, StatsDictionary } from "../types"
+import { TrendingStats } from "../trending-stats"
+import type {
+  FinanceStatsData,
+  StatsDictionary,
+  TrendingStatItem,
+} from "../types"
 
 interface FinanceStatsProps {
   /** Finance data */
@@ -60,32 +72,47 @@ export function FinanceStats({
 
   const items: TrendingStatItem[] = [
     ...(data.totalRevenue !== undefined
-      ? [{
-          label: labels.totalRevenue || "Total Revenue",
-          value: formatCurrency(data.totalRevenue),
-          change: data.revenueChange,
-          changeType: (data.revenueChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
-          icon: <DollarSign className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.totalRevenue || "Total Revenue",
+            value: formatCurrency(data.totalRevenue),
+            change: data.revenueChange,
+            changeType:
+              (data.revenueChange ?? 0) >= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.outstanding !== undefined
-      ? [{
-          label: labels.outstanding || "Outstanding",
-          value: formatCurrency(data.outstanding),
-          change: data.outstandingChange,
-          // For outstanding, negative change is good
-          changeType: (data.outstandingChange ?? 0) <= 0 ? "positive" as const : "negative" as const,
-          icon: <CircleAlert className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.outstanding || "Outstanding",
+            value: formatCurrency(data.outstanding),
+            change: data.outstandingChange,
+            // For outstanding, negative change is good
+            changeType:
+              (data.outstandingChange ?? 0) <= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <CircleAlert className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.collectionRate !== undefined
-      ? [{
-          label: labels.collectionRate || "Collection Rate",
-          value: `${data.collectionRate}%`,
-          change: data.collectionChange,
-          changeType: (data.collectionChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
-          icon: <TrendingUp className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.collectionRate || "Collection Rate",
+            value: `${data.collectionRate}%`,
+            change: data.collectionChange,
+            changeType:
+              (data.collectionChange ?? 0) >= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.custom || []),
   ]
@@ -217,7 +244,7 @@ export function RevenueBreakdown({
   currency = "$",
   className,
 }: RevenueBreakdownProps) {
-  const items = categories.map(cat => ({
+  const items = categories.map((cat) => ({
     label: cat.label,
     value: cat.amount,
     color: cat.color,
@@ -283,14 +310,24 @@ export function CollectionProgress({
           value: formatCurrency(collected),
           limit: formatCurrency(target),
           percentage: collectionRate,
-          variant: collectionRate >= 80 ? "success" : collectionRate >= 60 ? "warning" : "danger",
+          variant:
+            collectionRate >= 80
+              ? "success"
+              : collectionRate >= 60
+                ? "warning"
+                : "danger",
         },
         {
           label: dictionary?.outstanding || "Outstanding",
           value: formatCurrency(outstanding),
           limit: formatCurrency(target),
           percentage: outstandingRate,
-          variant: outstandingRate <= 20 ? "success" : outstandingRate <= 40 ? "warning" : "danger",
+          variant:
+            outstandingRate <= 20
+              ? "success"
+              : outstandingRate <= 40
+                ? "warning"
+                : "danger",
         },
       ]}
       grid={{ mobile: 1, tablet: 2, desktop: 2 }}

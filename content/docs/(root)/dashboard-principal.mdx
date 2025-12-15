@@ -49,13 +49,13 @@ The principal dashboard follows a **multi-section layout**:
 
 Hero section with 5 key metrics using `PrincipalDashboardStats`:
 
-| Metric | Description | Visual |
-|--------|-------------|--------|
-| Overall Score | Composite school performance | Large number |
-| Academic Score | Academic achievement percentage | Progress bar |
-| Attendance | Average attendance rate | Progress bar |
-| Discipline Score | Behavioral compliance | Progress bar |
-| Parent Satisfaction | Survey results | Progress bar |
+| Metric              | Description                     | Visual       |
+| ------------------- | ------------------------------- | ------------ |
+| Overall Score       | Composite school performance    | Large number |
+| Academic Score      | Academic achievement percentage | Progress bar |
+| Attendance          | Average attendance rate         | Progress bar |
+| Discipline Score    | Behavioral compliance           | Progress bar |
+| Parent Satisfaction | Survey results                  | Progress bar |
 
 ```tsx
 <PrincipalDashboardStats
@@ -73,29 +73,32 @@ Hero section with 5 key metrics using `PrincipalDashboardStats`:
 Conditional display when alerts exist:
 
 ```tsx
-{criticalAlerts.length > 0 && (
-  <Card>
-    <CardHeader>
-      <CardTitle className="flex items-center space-x-2">
-        <TriangleAlert className="h-5 w-5 text-destructive" />
-        <span>Critical Alerts</span>
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      {criticalAlerts.map((alert) => (
-        <AlertRow
-          type={alert.type}
-          message={alert.message}
-          severity={alert.severity}
-          action={alert.action}
-        />
-      ))}
-    </CardContent>
-  </Card>
-)}
+{
+  criticalAlerts.length > 0 && (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <TriangleAlert className="text-destructive h-5 w-5" />
+          <span>Critical Alerts</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {criticalAlerts.map((alert) => (
+          <AlertRow
+            type={alert.type}
+            message={alert.message}
+            severity={alert.severity}
+            action={alert.action}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
 ```
 
 Severity levels:
+
 - **critical** / **high**: Red destructive badge
 - **medium** / **low**: Amber warning badge
 
@@ -103,24 +106,25 @@ Severity levels:
 
 List of scheduled priorities with status:
 
-| Field | Display |
-|-------|---------|
-| Priority | Task description |
-| Time | Scheduled time |
-| Status | Badge (scheduled, completed, etc.) |
+| Field    | Display                            |
+| -------- | ---------------------------------- |
+| Priority | Task description                   |
+| Time     | Scheduled time                     |
+| Status   | Badge (scheduled, completed, etc.) |
 
 ## Academic Performance Trends
 
 Subject-wise performance tracking:
 
-| Field | Display |
-|-------|---------|
-| Subject | Subject name |
-| Current Average | Percentage |
-| Trend | Arrow indicator (up/down/stable) |
-| Improvement | Change percentage |
+| Field           | Display                          |
+| --------------- | -------------------------------- |
+| Subject         | Subject name                     |
+| Current Average | Percentage                       |
+| Trend           | Arrow indicator (up/down/stable) |
+| Improvement     | Change percentage                |
 
 Trend badges:
+
 - **up**: Default badge with ↗
 - **down**: Destructive badge with ↘
 - **stable**: Secondary badge with →
@@ -133,15 +137,15 @@ Trend badges:
 <div className="grid grid-cols-3 gap-4 text-center">
   <div>
     <p className="text-2xl font-bold">{totalIncidents}</p>
-    <p className="text-xs text-muted-foreground">Total Incidents</p>
+    <p className="text-muted-foreground text-xs">Total Incidents</p>
   </div>
   <div>
     <p className="text-2xl font-bold text-emerald-600">{resolved}</p>
-    <p className="text-xs text-muted-foreground">Resolved</p>
+    <p className="text-muted-foreground text-xs">Resolved</p>
   </div>
   <div>
     <p className="text-2xl font-bold text-amber-600">{pending}</p>
-    <p className="text-xs text-muted-foreground">Pending</p>
+    <p className="text-muted-foreground text-xs">Pending</p>
   </div>
 </div>
 ```
@@ -152,24 +156,24 @@ Includes "Top Issues" badges section.
 
 Teacher evaluation tracking:
 
-| Field | Display |
-|-------|---------|
-| Teacher | Staff name |
-| Department | Department name |
-| Status | in-progress, pending, completed |
-| Due Date | Formatted date |
+| Field      | Display                         |
+| ---------- | ------------------------------- |
+| Teacher    | Staff name                      |
+| Department | Department name                 |
+| Status     | in-progress, pending, completed |
+| Due Date   | Formatted date                  |
 
 ## Budget Status
 
 Financial metrics display:
 
-| Metric | Format |
-|--------|--------|
-| Allocated | $X.XM |
-| Spent | $X.XM (destructive color) |
-| Remaining | $XXK (emerald color) |
+| Metric      | Format                       |
+| ----------- | ---------------------------- |
+| Allocated   | $X.XM                        |
+| Spent       | $X.XM (destructive color)    |
+| Remaining   | $XXK (emerald color)         |
 | Utilization | Progress bar with percentage |
-| Projections | Status text |
+| Projections | Status text                  |
 
 ## Parent Feedback
 
@@ -186,11 +190,13 @@ Financial metrics display:
 Two-column layout:
 
 **Monthly Highlights**:
+
 - Impact badge (high/medium/low)
 - Highlight title
 - Description
 
 **Goal Progress**:
+
 - Goal name
 - Target vs Current
 - Progress bar
@@ -199,29 +205,29 @@ Two-column layout:
 
 Upcoming meetings list:
 
-| Field | Display |
-|-------|---------|
-| Topic | Meeting subject |
-| Date | Formatted date |
-| Status | confirmed/tentative badge |
-| Attendees | Count |
+| Field     | Display                   |
+| --------- | ------------------------- |
+| Topic     | Meeting subject           |
+| Date      | Formatted date            |
+| Status    | confirmed/tentative badge |
+| Attendees | Count                     |
 
 ## Financial Health
 
 3-column grid:
 
-| Metric | Style |
-|--------|-------|
+| Metric          | Style              |
+| --------------- | ------------------ |
 | Collection Rate | Emerald percentage |
-| Budget Status | Status badge |
-| Year to Date | Dollar amount |
+| Budget Status   | Status badge       |
+| Year to Date    | Dollar amount      |
 
 ## Data Fetching
 
 Uses `getPrincipalDashboardData()` from `actions/principal.ts`:
 
 ```tsx
-const dashboardData = await getPrincipalDashboardData();
+const dashboardData = await getPrincipalDashboardData()
 
 const {
   performanceScorecard,
@@ -235,56 +241,56 @@ const {
   goalProgress,
   boardMeetings,
   monthlyHighlights,
-} = dashboardData;
+} = dashboardData
 ```
 
 ## Quick Actions
 
 6 actions configured for PRINCIPAL role:
 
-| Action | Icon | Destination |
-|--------|------|-------------|
-| Reports | FileText | /reports |
-| Staff | Users | /staff |
-| Announce | Bell | /announcements |
-| Approvals | CheckCircle | /approvals |
-| Performance | BarChart3 | /performance |
-| Events | Calendar | /events |
+| Action      | Icon        | Destination    |
+| ----------- | ----------- | -------------- |
+| Reports     | FileText    | /reports       |
+| Staff       | Users       | /staff         |
+| Announce    | Bell        | /announcements |
+| Approvals   | CheckCircle | /approvals     |
+| Performance | BarChart3   | /performance   |
+| Events      | Calendar    | /events        |
 
 ## Error Handling
 
 ```tsx
 try {
-  dashboardData = await getPrincipalDashboardData();
+  dashboardData = await getPrincipalDashboardData()
 } catch (error) {
   return (
     <DashboardSectionError
       title={t.dashboardUnavailable}
       message={t.unableToLoadData}
     />
-  );
+  )
 }
 ```
 
 ## Multi-Tenant Scoping
 
 ```tsx
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 
 // Get school domain for URL construction
 const school = await db.school.findUnique({
   where: { id: schoolId },
   select: { domain: true },
-});
+})
 ```
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `dashboards/principal-dashboard.tsx` | Dashboard component |
-| `actions/principal.ts` | Server actions |
-| `shared/stats.tsx` | PrincipalDashboardStats component |
+| File                                 | Purpose                           |
+| ------------------------------------ | --------------------------------- |
+| `dashboards/principal-dashboard.tsx` | Dashboard component               |
+| `actions/principal.ts`               | Server actions                    |
+| `shared/stats.tsx`                   | PrincipalDashboardStats component |
 
 ## Internationalization
 

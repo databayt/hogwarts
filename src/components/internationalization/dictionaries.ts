@@ -1,98 +1,127 @@
-import "server-only";
-import type { Locale } from "./config";
+import "server-only"
+
+import type { Locale } from "./config"
 
 // We enumerate all dictionaries here for better linting and typescript support
 const generalDictionaries = {
-  "en": () => import("./en.json").then((module) => module.default),
-  "ar": () => import("./ar.json").then((module) => module.default),
-} as const;
+  en: () => import("./en.json").then((module) => module.default),
+  ar: () => import("./ar.json").then((module) => module.default),
+} as const
 
 const schoolDictionaries = {
-  "en": () => import("./school-en.json").then((module) => module.default),
-  "ar": () => import("./school-ar.json").then((module) => module.default),
-} as const;
+  en: () => import("./school-en.json").then((module) => module.default),
+  ar: () => import("./school-ar.json").then((module) => module.default),
+} as const
 
 const streamDictionaries = {
-  "en": () => import("./stream-en.json").then((module) => module.default),
-  "ar": () => import("./stream-ar.json").then((module) => module.default),
-} as const;
+  en: () => import("./stream-en.json").then((module) => module.default),
+  ar: () => import("./stream-ar.json").then((module) => module.default),
+} as const
 
 const operatorDictionaries = {
-  "en": () => import("./operator-en.json").then((module) => module.default),
-  "ar": () => import("./operator-ar.json").then((module) => module.default),
-} as const;
+  en: () => import("./operator-en.json").then((module) => module.default),
+  ar: () => import("./operator-ar.json").then((module) => module.default),
+} as const
 
 // Library module dictionaries
 const libraryDictionaries = {
-  "en": () => import("./dictionaries/en/library.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/library.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/library.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/library.json").then((module) => module.default),
+} as const
 
 // Banking module dictionaries
 const bankingDictionaries = {
-  "en": () => import("./dictionaries/en/banking.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/banking.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/banking.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/banking.json").then((module) => module.default),
+} as const
 
 // Marking module dictionaries (Auto-Marking System)
 const markingDictionaries = {
-  "en": () => import("./dictionaries/en/marking.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/marking.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/marking.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/marking.json").then((module) => module.default),
+} as const
 
 // Auto-Generate Exams module dictionaries
 const generateDictionaries = {
-  "en": () => import("./dictionaries/en/generate.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/generate.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/generate.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/generate.json").then((module) => module.default),
+} as const
 
 // Results module dictionaries
 const resultsDictionaries = {
-  "en": () => import("./dictionaries/en/results.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/results.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/results.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/results.json").then((module) => module.default),
+} as const
 
 // Finance module dictionaries
 const financeDictionaries = {
-  "en": () => import("./dictionaries/en/finance.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/finance.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/finance.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/finance.json").then((module) => module.default),
+} as const
 
 // Admin module dictionaries
 const adminDictionaries = {
-  "en": () => import("./dictionaries/en/admin.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/admin.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/admin.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/admin.json").then((module) => module.default),
+} as const
 
 // Profile module dictionaries
 const profileDictionaries = {
-  "en": () => import("./dictionaries/en/profile.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/profile.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/profile.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/profile.json").then((module) => module.default),
+} as const
 
 // Notifications module dictionaries
 const notificationsDictionaries = {
-  "en": () => import("./dictionaries/en/notifications.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/notifications.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/notifications.json").then(
+      (module) => module.default
+    ),
+  ar: () =>
+    import("./dictionaries/ar/notifications.json").then(
+      (module) => module.default
+    ),
+} as const
 
 // Messages module dictionaries (validation, toast, errors)
 const messagesDictionaries = {
-  "en": () => import("./dictionaries/en/messages.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/messages.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/messages.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/messages.json").then((module) => module.default),
+} as const
 
 // Lab module dictionaries
 const labDictionaries = {
-  "en": () => import("./dictionaries/en/lab.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/lab.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/lab.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/lab.json").then((module) => module.default),
+} as const
 
 // Sales module dictionaries (B2B CRM/Leads)
 const salesDictionaries = {
-  "en": () => import("./dictionaries/en/sales.json").then((module) => module.default),
-  "ar": () => import("./dictionaries/ar/sales.json").then((module) => module.default),
-} as const;
+  en: () =>
+    import("./dictionaries/en/sales.json").then((module) => module.default),
+  ar: () =>
+    import("./dictionaries/ar/sales.json").then((module) => module.default),
+} as const
 
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
@@ -104,13 +133,14 @@ const salesDictionaries = {
  */
 export const getMarketingDictionary = async (locale: Locale) => {
   try {
-    const general = await (generalDictionaries[locale]?.() ?? generalDictionaries["en"]());
-    return general;
+    const general = await (generalDictionaries[locale]?.() ??
+      generalDictionaries["en"]())
+    return general
   } catch (error) {
-    console.warn(`Failed to load marketing dictionary for locale: ${locale}`);
-    return await generalDictionaries["en"]();
+    console.warn(`Failed to load marketing dictionary for locale: ${locale}`)
+    return await generalDictionaries["en"]()
   }
-};
+}
 
 /**
  * Platform core pages - general + school + operator + messages
@@ -123,19 +153,21 @@ export const getPlatformCoreDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, messages };
+    ])
+    return { ...general, ...school, ...operator, messages }
   } catch (error) {
-    console.warn(`Failed to load platform core dictionary for locale: ${locale}`);
+    console.warn(
+      `Failed to load platform core dictionary for locale: ${locale}`
+    )
     const [general, school, operator, messages] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       messagesDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, messages };
+    ])
+    return { ...general, ...school, ...operator, messages }
   }
-};
+}
 
 /**
  * Stream pages - platform core + stream
@@ -148,19 +180,19 @@ export const getStreamDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, ...stream };
+    ])
+    return { ...general, ...school, ...operator, ...stream }
   } catch (error) {
-    console.warn(`Failed to load stream dictionary for locale: ${locale}`);
+    console.warn(`Failed to load stream dictionary for locale: ${locale}`)
     const [general, school, operator, stream] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       streamDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, ...stream };
+    ])
+    return { ...general, ...school, ...operator, ...stream }
   }
-};
+}
 
 /**
  * Library pages - platform core + library
@@ -173,19 +205,19 @@ export const getLibraryDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       libraryDictionaries[locale]?.() ?? libraryDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, library };
+    ])
+    return { ...general, ...school, ...operator, library }
   } catch (error) {
-    console.warn(`Failed to load library dictionary for locale: ${locale}`);
+    console.warn(`Failed to load library dictionary for locale: ${locale}`)
     const [general, school, operator, library] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       libraryDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, library };
+    ])
+    return { ...general, ...school, ...operator, library }
   }
-};
+}
 
 /**
  * Banking pages - platform core + banking
@@ -198,19 +230,19 @@ export const getBankingDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       bankingDictionaries[locale]?.() ?? bankingDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, banking };
+    ])
+    return { ...general, ...school, ...operator, banking }
   } catch (error) {
-    console.warn(`Failed to load banking dictionary for locale: ${locale}`);
+    console.warn(`Failed to load banking dictionary for locale: ${locale}`)
     const [general, school, operator, banking] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       bankingDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, banking };
+    ])
+    return { ...general, ...school, ...operator, banking }
   }
-};
+}
 
 /**
  * Finance pages - platform core + finance
@@ -223,19 +255,19 @@ export const getFinanceDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, finance };
+    ])
+    return { ...general, ...school, ...operator, finance }
   } catch (error) {
-    console.warn(`Failed to load finance dictionary for locale: ${locale}`);
+    console.warn(`Failed to load finance dictionary for locale: ${locale}`)
     const [general, school, operator, finance] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       financeDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, finance };
+    ])
+    return { ...general, ...school, ...operator, finance }
   }
-};
+}
 
 /**
  * Admin pages - platform core + admin
@@ -248,19 +280,19 @@ export const getAdminDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, admin };
+    ])
+    return { ...general, ...school, ...operator, admin }
   } catch (error) {
-    console.warn(`Failed to load admin dictionary for locale: ${locale}`);
+    console.warn(`Failed to load admin dictionary for locale: ${locale}`)
     const [general, school, operator, admin] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       adminDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, admin };
+    ])
+    return { ...general, ...school, ...operator, admin }
   }
-};
+}
 
 /**
  * Exam pages - platform core + marking + generate + results
@@ -268,28 +300,30 @@ export const getAdminDictionary = async (locale: Locale) => {
  */
 export const getExamDictionary = async (locale: Locale) => {
   try {
-    const [general, school, operator, marking, generate, results] = await Promise.all([
-      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      markingDictionaries[locale]?.() ?? markingDictionaries["en"](),
-      generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
-      resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, marking, generate, results };
+    const [general, school, operator, marking, generate, results] =
+      await Promise.all([
+        generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+        schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+        operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+        markingDictionaries[locale]?.() ?? markingDictionaries["en"](),
+        generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
+        resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
+      ])
+    return { ...general, ...school, ...operator, marking, generate, results }
   } catch (error) {
-    console.warn(`Failed to load exam dictionary for locale: ${locale}`);
-    const [general, school, operator, marking, generate, results] = await Promise.all([
-      generalDictionaries["en"](),
-      schoolDictionaries["en"](),
-      operatorDictionaries["en"](),
-      markingDictionaries["en"](),
-      generateDictionaries["en"](),
-      resultsDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, marking, generate, results };
+    console.warn(`Failed to load exam dictionary for locale: ${locale}`)
+    const [general, school, operator, marking, generate, results] =
+      await Promise.all([
+        generalDictionaries["en"](),
+        schoolDictionaries["en"](),
+        operatorDictionaries["en"](),
+        markingDictionaries["en"](),
+        generateDictionaries["en"](),
+        resultsDictionaries["en"](),
+      ])
+    return { ...general, ...school, ...operator, marking, generate, results }
   }
-};
+}
 
 /**
  * Notification pages - platform core + notifications
@@ -301,20 +335,21 @@ export const getNotificationDictionary = async (locale: Locale) => {
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
-      notificationsDictionaries[locale]?.() ?? notificationsDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, notifications };
+      notificationsDictionaries[locale]?.() ??
+        notificationsDictionaries["en"](),
+    ])
+    return { ...general, ...school, ...operator, notifications }
   } catch (error) {
-    console.warn(`Failed to load notification dictionary for locale: ${locale}`);
+    console.warn(`Failed to load notification dictionary for locale: ${locale}`)
     const [general, school, operator, notifications] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       notificationsDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, notifications };
+    ])
+    return { ...general, ...school, ...operator, notifications }
   }
-};
+}
 
 /**
  * Sales pages - platform core + sales
@@ -327,19 +362,19 @@ export const getSalesDictionary = async (locale: Locale) => {
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
       salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, sales };
+    ])
+    return { ...general, ...school, ...operator, sales }
   } catch (error) {
-    console.warn(`Failed to load sales dictionary for locale: ${locale}`);
+    console.warn(`Failed to load sales dictionary for locale: ${locale}`)
     const [general, school, operator, sales] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       operatorDictionaries["en"](),
       salesDictionaries["en"](),
-    ]);
-    return { ...general, ...school, ...operator, sales };
+    ])
+    return { ...general, ...school, ...operator, sales }
   }
-};
+}
 
 // ============================================================================
 // Full Dictionary Loader (Default)
@@ -352,7 +387,24 @@ export const getSalesDictionary = async (locale: Locale) => {
 export const getDictionary = async (locale: Locale) => {
   try {
     // Load all dictionaries
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile, notifications, messages, lab, sales] = await Promise.all([
+    const [
+      general,
+      school,
+      stream,
+      operator,
+      library,
+      banking,
+      marking,
+      generate,
+      results,
+      finance,
+      admin,
+      profile,
+      notifications,
+      messages,
+      lab,
+      sales,
+    ] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
@@ -365,17 +417,54 @@ export const getDictionary = async (locale: Locale) => {
       financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
       adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
       profileDictionaries[locale]?.() ?? profileDictionaries["en"](),
-      notificationsDictionaries[locale]?.() ?? notificationsDictionaries["en"](),
+      notificationsDictionaries[locale]?.() ??
+        notificationsDictionaries["en"](),
       messagesDictionaries[locale]?.() ?? messagesDictionaries["en"](),
       labDictionaries[locale]?.() ?? labDictionaries["en"](),
-      salesDictionaries[locale]?.() ?? salesDictionaries["en"]()
-    ]);
+      salesDictionaries[locale]?.() ?? salesDictionaries["en"](),
+    ])
 
     // Merge dictionaries with module-specific keys nested under their respective namespaces
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile, notifications, messages, lab, sales };
+    return {
+      ...general,
+      ...school,
+      ...stream,
+      ...operator,
+      library,
+      banking,
+      marking,
+      generate,
+      results,
+      finance,
+      admin,
+      profile,
+      notifications,
+      messages,
+      lab,
+      sales,
+    }
   } catch (error) {
-    console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile, notifications, messages, lab, sales] = await Promise.all([
+    console.warn(
+      `Failed to load dictionary for locale: ${locale}. Falling back to en.`
+    )
+    const [
+      general,
+      school,
+      stream,
+      operator,
+      library,
+      banking,
+      marking,
+      generate,
+      results,
+      finance,
+      admin,
+      profile,
+      notifications,
+      messages,
+      lab,
+      sales,
+    ] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       streamDictionaries["en"](),
@@ -391,15 +480,32 @@ export const getDictionary = async (locale: Locale) => {
       notificationsDictionaries["en"](),
       messagesDictionaries["en"](),
       labDictionaries["en"](),
-      salesDictionaries["en"]()
-    ]);
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile, notifications, messages, lab, sales };
+      salesDictionaries["en"](),
+    ])
+    return {
+      ...general,
+      ...school,
+      ...stream,
+      ...operator,
+      library,
+      banking,
+      marking,
+      generate,
+      results,
+      finance,
+      admin,
+      profile,
+      notifications,
+      messages,
+      lab,
+      sales,
+    }
   }
-};
+}
 
 // ============================================================================
 // Type Helpers
 // ============================================================================
 
 // Main dictionary type (used throughout the app)
-export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
+export type Dictionary = Awaited<ReturnType<typeof getDictionary>>

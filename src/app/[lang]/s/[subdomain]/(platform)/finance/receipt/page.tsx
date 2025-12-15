@@ -3,18 +3,20 @@
  * Follows Hogwarts page pattern - server component that fetches data and passes to content component
  */
 
-import { ReceiptsContent } from '@/components/platform/finance/receipt/content'
-import { getReceipts } from '@/components/platform/finance/receipt/actions'
+import { getReceipts } from "@/components/platform/finance/receipt/actions"
+import { ReceiptsContent } from "@/components/platform/finance/receipt/content"
 
 export const metadata = {
-  title: 'Receipts | Expense Tracker',
-  description: 'Manage and track your expense receipts with AI-powered extraction',
+  title: "Receipts | Expense Tracker",
+  description:
+    "Manage and track your expense receipts with AI-powered extraction",
 }
 
 export default async function ReceiptsPage() {
   // Fetch receipts on the server
   const result = await getReceipts({ limit: 50 })
-  const initialReceipts = result.success && result.data ? result.data.receipts : []
+  const initialReceipts =
+    result.success && result.data ? result.data.receipts : []
 
   return (
     <div className="py-8">

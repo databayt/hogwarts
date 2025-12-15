@@ -1,15 +1,19 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
+
+import { db } from "@/lib/db"
 
 /**
  * Fetches a lesson by ID for admin editing
  * Multi-tenant: Scoped by schoolId through course relationship
  */
-export async function adminGetLesson(lessonId: string, schoolId: string | null) {
+export async function adminGetLesson(
+  lessonId: string,
+  schoolId: string | null
+) {
   if (!schoolId) {
-    notFound();
+    notFound()
   }
 
   const lesson = await db.streamLesson.findFirst({
@@ -29,11 +33,11 @@ export async function adminGetLesson(lessonId: string, schoolId: string | null) 
       },
       attachments: true,
     },
-  });
+  })
 
   if (!lesson) {
-    notFound();
+    notFound()
   }
 
-  return lesson;
+  return lesson
 }

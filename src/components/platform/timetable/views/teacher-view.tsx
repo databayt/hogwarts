@@ -1,20 +1,35 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Clock, Calendar, BookOpen, Users, TriangleAlert, TrendingUp } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { getTimetableByTeacher, getTodaySchedule } from '../actions'
-import SimpleGrid from './simple-grid'
+import { useEffect, useState } from "react"
+import {
+  BookOpen,
+  Calendar,
+  Clock,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getTimetableByTeacher, getTodaySchedule } from "../actions"
+import SimpleGrid from "./simple-grid"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
   termId: string
   termInfo: {
@@ -37,7 +52,15 @@ interface Props {
   teacherId?: string
 }
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+]
 
 export default function TeacherView({
   dictionary,
@@ -48,12 +71,12 @@ export default function TeacherView({
   periods,
   lunchAfterPeriod,
   isLoading,
-  teacherId
+  teacherId,
 }: Props) {
   const d = dictionary?.timetable
-  const isRTL = lang === 'ar'
+  const isRTL = lang === "ar"
 
-  const [viewTab, setViewTab] = useState<'today' | 'week'>('today')
+  const [viewTab, setViewTab] = useState<"today" | "week">("today")
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,7 +100,7 @@ export default function TeacherView({
 
   const loadData = async () => {
     if (!teacherId) {
-      setError('Teacher profile not linked to your account')
+      setError("Teacher profile not linked to your account")
       return
     }
 
@@ -87,7 +110,7 @@ export default function TeacherView({
     try {
       const [weeklyResult, todayResult] = await Promise.all([
         getTimetableByTeacher({ termId, teacherId }),
-        getTodaySchedule()
+        getTodaySchedule(),
       ])
 
       setSlots(weeklyResult.slots)
@@ -96,7 +119,7 @@ export default function TeacherView({
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load schedule')
+      setError(err instanceof Error ? err.message : "Failed to load schedule")
     } finally {
       setIsLoadingData(false)
     }
@@ -104,7 +127,7 @@ export default function TeacherView({
 
   const formatTime = (date: Date | string) => {
     const d = new Date(date)
-    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`
+    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
   }
 
   // Get current/next class
@@ -127,11 +150,14 @@ export default function TeacherView({
       const startTotalMinutes = startHour * 60 + startMinute
       const endTotalMinutes = endHour * 60 + endMinute
 
-      if (currentTotalMinutes >= startTotalMinutes && currentTotalMinutes < endTotalMinutes) {
-        return { type: 'current', item }
+      if (
+        currentTotalMinutes >= startTotalMinutes &&
+        currentTotalMinutes < endTotalMinutes
+      ) {
+        return { type: "current", item }
       }
       if (currentTotalMinutes < startTotalMinutes) {
-        return { type: 'next', item }
+        return { type: "next", item }
       }
     }
     return null
@@ -157,10 +183,10 @@ export default function TeacherView({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {d?.title || 'My Teaching Schedule'}
+                {d?.title || "My Teaching Schedule"}
               </CardTitle>
               <CardDescription>
-                {teacherInfo?.name || 'Loading...'}
+                {teacherInfo?.name || "Loading..."}
               </CardDescription>
             </div>
 
@@ -173,20 +199,20 @@ export default function TeacherView({
         {workload && (
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
+                <Calendar className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.daysPerWeek}</strong> days/week
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
+                <Clock className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.periodsPerWeek}</strong> periods/week
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
+                <BookOpen className="text-muted-foreground h-4 w-4" />
                 <span className="text-sm">
                   <strong>{workload.classesTeaching}</strong> classes
                 </span>
@@ -198,34 +224,46 @@ export default function TeacherView({
 
       {/* Current/Next Class Card */}
       {currentClassInfo && !isLoadingData && (
-        <Card className={cn(
-          "border-2",
-          currentClassInfo.type === 'current' ? "border-green-500 bg-green-50 dark:bg-green-950/20" : "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-        )}>
+        <Card
+          className={cn(
+            "border-2",
+            currentClassInfo.type === "current"
+              ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+              : "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+          )}
+        >
           <CardContent className="pt-4">
             <div className="flex items-center gap-4">
-              <div className={cn(
-                "p-3 rounded-full",
-                currentClassInfo.type === 'current' ? "bg-green-500" : "bg-blue-500"
-              )}>
+              <div
+                className={cn(
+                  "rounded-full p-3",
+                  currentClassInfo.type === "current"
+                    ? "bg-green-500"
+                    : "bg-blue-500"
+                )}
+              >
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {currentClassInfo.type === 'current' ? 'Currently Teaching' : 'Next Class'}
+                <p className="text-muted-foreground text-sm">
+                  {currentClassInfo.type === "current"
+                    ? "Currently Teaching"
+                    : "Next Class"}
                 </p>
                 <p className="text-lg font-semibold">
-                  {currentClassInfo.item.subject || currentClassInfo.item.className}
+                  {currentClassInfo.item.subject ||
+                    currentClassInfo.item.className}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {currentClassInfo.item.className} • {currentClassInfo.item.room}
+                <p className="text-muted-foreground text-sm">
+                  {currentClassInfo.item.className} •{" "}
+                  {currentClassInfo.item.room}
                 </p>
               </div>
               <div className="text-end">
                 <p className="text-2xl font-bold">
                   {formatTime(currentClassInfo.item.startTime)}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   - {formatTime(currentClassInfo.item.endTime)}
                 </p>
               </div>
@@ -235,7 +273,10 @@ export default function TeacherView({
       )}
 
       {/* View Tabs */}
-      <Tabs value={viewTab} onValueChange={(v) => setViewTab(v as 'today' | 'week')}>
+      <Tabs
+        value={viewTab}
+        onValueChange={(v) => setViewTab(v as "today" | "week")}
+      >
         <TabsList>
           <TabsTrigger value="today" className="gap-2">
             <Clock className="h-4 w-4" />
@@ -253,8 +294,8 @@ export default function TeacherView({
             <Skeleton className="h-64 w-full rounded-lg" />
           ) : todaySchedule.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <CardContent className="text-muted-foreground py-12 text-center">
+                <Calendar className="mx-auto mb-4 h-12 w-12 opacity-50" />
                 <p>No classes scheduled for today</p>
               </CardContent>
             </Card>
@@ -266,7 +307,9 @@ export default function TeacherView({
                   className={cn(
                     "transition-colors",
                     item.isBreak && "bg-muted/50 border-dashed",
-                    currentClassInfo?.item === item && currentClassInfo?.type === 'current' && "border-green-500 bg-green-50 dark:bg-green-950/20"
+                    currentClassInfo?.item === item &&
+                      currentClassInfo?.type === "current" &&
+                      "border-green-500 bg-green-50 dark:bg-green-950/20"
                   )}
                 >
                   <CardContent className="py-3">
@@ -275,23 +318,23 @@ export default function TeacherView({
                         <p className="font-mono font-semibold">
                           {formatTime(item.startTime)}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {formatTime(item.endTime)}
                         </p>
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">
-                          {item.isBreak ? item.periodName : (item.subject || item.className || 'Free Period')}
+                          {item.isBreak
+                            ? item.periodName
+                            : item.subject || item.className || "Free Period"}
                         </p>
                         {!item.isBreak && item.className && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {item.className} {item.room && `• ${item.room}`}
                           </p>
                         )}
                       </div>
-                      {item.isBreak && (
-                        <Badge variant="secondary">Break</Badge>
-                      )}
+                      {item.isBreak && <Badge variant="secondary">Break</Badge>}
                     </div>
                   </CardContent>
                 </Card>

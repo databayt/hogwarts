@@ -1,58 +1,58 @@
-'use client';
+"use client"
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react"
 
-export type CrudMode = 'create' | 'edit' | 'view' | 'delete';
+export type CrudMode = "create" | "edit" | "view" | "delete"
 
 export interface CrudModalState<T = any> {
   /** Whether the modal is open */
-  open: boolean;
+  open: boolean
   /** Current CRUD mode */
-  mode: CrudMode | null;
+  mode: CrudMode | null
   /** Data being edited/viewed */
-  data: T | null;
+  data: T | null
   /** Loading state */
-  loading: boolean;
+  loading: boolean
 }
 
 export interface UseCrudModalOptions<T = any> {
   /** Callback when modal opens */
-  onOpen?: (mode: CrudMode, data?: T) => void;
+  onOpen?: (mode: CrudMode, data?: T) => void
   /** Callback when modal closes */
-  onClose?: () => void;
+  onClose?: () => void
   /** Callback on successful operation */
-  onSuccess?: (mode: CrudMode, data?: T) => void;
+  onSuccess?: (mode: CrudMode, data?: T) => void
   /** Callback on error */
-  onError?: (error: Error) => void;
+  onError?: (error: Error) => void
 }
 
 export interface UseCrudModalReturn<T = any> {
   /** Current modal state */
-  state: CrudModalState<T>;
+  state: CrudModalState<T>
   /** Open modal for creating */
-  openCreate: () => void;
+  openCreate: () => void
   /** Open modal for editing */
-  openEdit: (data: T) => void;
+  openEdit: (data: T) => void
   /** Open modal for viewing */
-  openView: (data: T) => void;
+  openView: (data: T) => void
   /** Open modal for deleting */
-  openDelete: (data: T) => void;
+  openDelete: (data: T) => void
   /** Close the modal */
-  close: () => void;
+  close: () => void
   /** Set loading state */
-  setLoading: (loading: boolean) => void;
+  setLoading: (loading: boolean) => void
   /** Handle successful operation */
-  handleSuccess: (data?: T) => void;
+  handleSuccess: (data?: T) => void
   /** Handle error */
-  handleError: (error: Error) => void;
+  handleError: (error: Error) => void
   /** Check if in create mode */
-  isCreate: boolean;
+  isCreate: boolean
   /** Check if in edit mode */
-  isEdit: boolean;
+  isEdit: boolean
   /** Check if in view mode */
-  isView: boolean;
+  isView: boolean
   /** Check if in delete mode */
-  isDelete: boolean;
+  isDelete: boolean
 }
 
 /**
@@ -65,64 +65,82 @@ export function useCrudModal<T = any>(
     open: false,
     mode: null,
     data: null,
-    loading: false
-  });
+    loading: false,
+  })
 
-  const openModal = useCallback((mode: CrudMode, data?: T) => {
-    setState({
-      open: true,
-      mode,
-      data: data || null,
-      loading: false
-    });
-    options.onOpen?.(mode, data);
-  }, [options]);
+  const openModal = useCallback(
+    (mode: CrudMode, data?: T) => {
+      setState({
+        open: true,
+        mode,
+        data: data || null,
+        loading: false,
+      })
+      options.onOpen?.(mode, data)
+    },
+    [options]
+  )
 
   const openCreate = useCallback(() => {
-    openModal('create');
-  }, [openModal]);
+    openModal("create")
+  }, [openModal])
 
-  const openEdit = useCallback((data: T) => {
-    openModal('edit', data);
-  }, [openModal]);
+  const openEdit = useCallback(
+    (data: T) => {
+      openModal("edit", data)
+    },
+    [openModal]
+  )
 
-  const openView = useCallback((data: T) => {
-    openModal('view', data);
-  }, [openModal]);
+  const openView = useCallback(
+    (data: T) => {
+      openModal("view", data)
+    },
+    [openModal]
+  )
 
-  const openDelete = useCallback((data: T) => {
-    openModal('delete', data);
-  }, [openModal]);
+  const openDelete = useCallback(
+    (data: T) => {
+      openModal("delete", data)
+    },
+    [openModal]
+  )
 
   const close = useCallback(() => {
-    setState(prev => ({ ...prev, open: false }));
+    setState((prev) => ({ ...prev, open: false }))
     // Reset state after animation
     setTimeout(() => {
       setState({
         open: false,
         mode: null,
         data: null,
-        loading: false
-      });
-    }, 200);
-    options.onClose?.();
-  }, [options]);
+        loading: false,
+      })
+    }, 200)
+    options.onClose?.()
+  }, [options])
 
   const setLoading = useCallback((loading: boolean) => {
-    setState(prev => ({ ...prev, loading }));
-  }, []);
+    setState((prev) => ({ ...prev, loading }))
+  }, [])
 
-  const handleSuccess = useCallback((data?: T) => {
-    if (state.mode) {
-      options.onSuccess?.(state.mode, data || state.data || undefined);
-    }
-    close();
-  }, [state.mode, state.data, options, close]);
+  const handleSuccess = useCallback(
+    (data?: T) => {
+      if (state.mode) {
+        options.onSuccess?.(state.mode, data || state.data || undefined)
+      }
+      close()
+    },
+    [state.mode, state.data, options, close]
+  )
 
-  const handleError = useCallback((error: Error) => {
-    options.onError?.(error);
-    setLoading(false);
-  }, [options, setLoading]);
+  const handleError = useCallback(
+    (error: Error) => {
+      options.onError?.(error)
+      setLoading(false)
+    },
+    [options, setLoading]
+  )
 
   return {
     state,
@@ -134,9 +152,9 @@ export function useCrudModal<T = any>(
     setLoading,
     handleSuccess,
     handleError,
-    isCreate: state.mode === 'create',
-    isEdit: state.mode === 'edit',
-    isView: state.mode === 'view',
-    isDelete: state.mode === 'delete'
-  };
+    isCreate: state.mode === "create",
+    isEdit: state.mode === "edit",
+    isView: state.mode === "view",
+    isDelete: state.mode === "delete",
+  }
 }

@@ -1,14 +1,14 @@
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs"
 
-const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN;
+const SENTRY_DSN = process.env.NEXT_PUBLIC_SENTRY_DSN
 
 if (SENTRY_DSN) {
   Sentry.init({
     dsn: SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || "development",
 
     // Performance monitoring
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
     // Capture replay for error sessions
     integrations: [
@@ -26,20 +26,22 @@ if (SENTRY_DSN) {
     beforeSend(event, hint) {
       // Remove sensitive data from error messages
       if (event.request?.cookies) {
-        delete event.request.cookies;
+        delete event.request.cookies
       }
 
       // Filter out specific errors
-      const error = hint.originalException;
-      if (error && typeof error === 'object' && 'message' in error) {
+      const error = hint.originalException
+      if (error && typeof error === "object" && "message" in error) {
         // Don't send network errors in development
-        if (process.env.NODE_ENV !== 'production' &&
-            String(error.message).includes('NetworkError')) {
-          return null;
+        if (
+          process.env.NODE_ENV !== "production" &&
+          String(error.message).includes("NetworkError")
+        ) {
+          return null
         }
       }
 
-      return event;
+      return event
     },
-  });
+  })
 }

@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import React from 'react';
+import React from "react"
 
 interface StepHeaderProps {
-  stepNumber?: number;
-  title: string;
-  description?: string;
-  illustration?: React.ReactNode;
-  dictionary?: any;
+  stepNumber?: number
+  title: string
+  description?: string
+  illustration?: React.ReactNode
+  dictionary?: any
 }
 
 const StepHeader: React.FC<StepHeaderProps> = ({
@@ -15,26 +15,26 @@ const StepHeader: React.FC<StepHeaderProps> = ({
   title,
   description,
   illustration,
-  dictionary
+  dictionary,
 }) => {
-  const dict = dictionary?.onboarding || {};
+  const dict = dictionary?.onboarding || {}
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-6 lg:gap-12">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-12">
         {/* Left Side - Content */}
         <div className="space-y-4 sm:space-y-6">
           {stepNumber && (
-            <div className="text-sm sm:text-base font-medium text-muted-foreground">
-              {dict.step || 'Step'} {stepNumber}
+            <div className="text-muted-foreground text-sm font-medium sm:text-base">
+              {dict.step || "Step"} {stepNumber}
             </div>
           )}
-          
-          <h1 className="text-4xl font-bold text-foreground leading-tight">
+
+          <h1 className="text-foreground text-4xl leading-tight font-bold">
             {title}
           </h1>
-          
+
           {description && (
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground text-sm leading-relaxed sm:text-base lg:text-lg">
               {description}
             </p>
           )}
@@ -42,15 +42,13 @@ const StepHeader: React.FC<StepHeaderProps> = ({
 
         {/* Right Side - Illustration */}
         {illustration && (
-          <div className="block lg:block order-first lg:order-last">
-            <div className="relative">
-              {illustration}
-            </div>
+          <div className="order-first block lg:order-last lg:block">
+            <div className="relative">{illustration}</div>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default StepHeader; 
+export default StepHeader

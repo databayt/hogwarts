@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import {
-  updateUserRole,
-  getSchoolUsers,
-  exportSchoolData,
-} from "../actions"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import { exportSchoolData, getSchoolUsers, updateUserRole } from "../actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({
@@ -17,13 +17,15 @@ vi.mock("@/lib/db", () => ({
     school: {
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      user: {
-        updateMany: vi.fn(),
-        findMany: vi.fn(),
-        count: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        user: {
+          updateMany: vi.fn(),
+          findMany: vi.fn(),
+          count: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -34,9 +36,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Settings Actions", () => {
   const mockSchoolId = "school-123"
@@ -109,7 +108,12 @@ describe("Settings Actions", () => {
     it("fetches users scoped to schoolId", async () => {
       const mockUsers = [
         { id: "1", name: "John Doe", role: "TEACHER", schoolId: mockSchoolId },
-        { id: "2", name: "Jane Smith", role: "STUDENT", schoolId: mockSchoolId },
+        {
+          id: "2",
+          name: "Jane Smith",
+          role: "STUDENT",
+          schoolId: mockSchoolId,
+        },
       ]
 
       vi.mocked(db.user.findMany).mockResolvedValue(mockUsers as any)

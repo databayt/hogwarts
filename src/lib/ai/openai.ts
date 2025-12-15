@@ -39,7 +39,13 @@
  */
 
 import OpenAI from "openai"
-import type { RubricWithCriteria, AIGradeResult, OCRProcessResult } from "@/components/platform/exams/mark/types"
+
+import type {
+  AIGradeResult,
+  OCRProcessResult,
+  RubricWithCriteria,
+} from "@/components/platform/exams/mark/types"
+
 import { aiRateLimiter } from "./rate-limiter"
 
 // Initialize OpenAI client
@@ -72,7 +78,8 @@ export async function gradeEssayWithAI(
   params: GradeEssayParams
 ): Promise<AIGradeResult> {
   try {
-    const { questionText, studentAnswer, rubric, maxPoints, sampleAnswer } = params
+    const { questionText, studentAnswer, rubric, maxPoints, sampleAnswer } =
+      params
 
     // Build rubric criteria description
     const criteriaDescription = rubric.criteria
@@ -117,23 +124,24 @@ ${studentAnswer}
 
     // Use rate limiter to manage API calls
     const response = await aiRateLimiter.enqueue(
-      () => openai.chat.completions.create({
-        model: AI_CONFIG.GRADING_MODEL,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert educational assessor who grades student work fairly and consistently using provided rubrics.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        response_format: { type: "json_object" },
-        temperature: AI_CONFIG.TEMPERATURE,
-        max_tokens: AI_CONFIG.MAX_TOKENS,
-      }),
+      () =>
+        openai.chat.completions.create({
+          model: AI_CONFIG.GRADING_MODEL,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an expert educational assessor who grades student work fairly and consistently using provided rubrics.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: AI_CONFIG.TEMPERATURE,
+          max_tokens: AI_CONFIG.MAX_TOKENS,
+        }),
       1 // Priority: 1 (essays are high priority)
     )
 
@@ -177,7 +185,8 @@ ${studentAnswer}
       aiScore: 0,
       aiConfidence: 0,
       aiReasoning: "Error occurred during AI grading",
-      suggestedFeedback: "Unable to grade automatically. Please grade manually.",
+      suggestedFeedback:
+        "Unable to grade automatically. Please grade manually.",
       needsReview: true,
       error: error instanceof Error ? error.message : "Unknown error",
     }
@@ -198,7 +207,13 @@ export async function gradeShortAnswerWithAI(
   params: GradeShortAnswerParams
 ): Promise<AIGradeResult> {
   try {
-    const { questionText, studentAnswer, acceptedAnswers, sampleAnswer, maxPoints } = params
+    const {
+      questionText,
+      studentAnswer,
+      acceptedAnswers,
+      sampleAnswer,
+      maxPoints,
+    } = params
 
     const prompt = `You are an expert educational assessor. Grade this short answer question.
 
@@ -276,7 +291,8 @@ ${studentAnswer}
       aiScore: 0,
       aiConfidence: 0,
       aiReasoning: "Error occurred during AI grading",
-      suggestedFeedback: "Unable to grade automatically. Please grade manually.",
+      suggestedFeedback:
+        "Unable to grade automatically. Please grade manually.",
       needsReview: true,
       error: error instanceof Error ? error.message : "Unknown error",
     }
@@ -383,7 +399,14 @@ export async function generateQuestionsWithAI(
   params: GenerateQuestionParams
 ): Promise<{ success: boolean; questions: any[]; error?: string }> {
   try {
-    const { subject, topic, difficulty, bloomLevel, questionType, count = 1 } = params
+    const {
+      subject,
+      topic,
+      difficulty,
+      bloomLevel,
+      questionType,
+      count = 1,
+    } = params
 
     const prompt = `Generate ${count} ${difficulty.toLowerCase()} ${questionType.replace("_", " ").toLowerCase()} question(s) for ${subject} on the topic of "${topic}" at Bloom's ${bloomLevel} level.
 

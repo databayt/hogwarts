@@ -1,19 +1,32 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { eventCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { EventFormStepProps } from "./types";
-import { TARGET_AUDIENCES } from "./config";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
+
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { TARGET_AUDIENCES } from "./config"
+import { EventFormStepProps } from "./types"
+import { eventCreateSchema } from "./validation"
 
 export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       {/* Organizer */}
       <FormField
         control={form.control}
@@ -21,10 +34,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input 
-                placeholder="Event organizer (e.g., Teacher Name, Department)" 
-                disabled={isView} 
-                {...field} 
+              <Input
+                placeholder="Event organizer (e.g., Teacher Name, Department)"
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -38,7 +51,11 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
         name="targetAudience"
         render={({ field }) => (
           <FormItem>
-            <Select onValueChange={field.onChange} value={field.value || ""} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || ""}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select target audience" />
@@ -64,12 +81,16 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input 
-                type="number" 
-                placeholder="Maximum number of attendees (optional)" 
-                disabled={isView} 
+              <Input
+                type="number"
+                placeholder="Maximum number of attendees (optional)"
+                disabled={isView}
                 {...field}
-                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                onChange={(e) =>
+                  field.onChange(
+                    e.target.value ? parseInt(e.target.value) : undefined
+                  )
+                }
               />
             </FormControl>
             <FormMessage />
@@ -83,7 +104,7 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           control={form.control}
           name="isPublic"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-y-0 space-x-3">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -92,10 +113,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Public Event
                 </label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   This event is open to the public
                 </p>
               </div>
@@ -107,7 +128,7 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
           control={form.control}
           name="registrationRequired"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-y-0 space-x-3">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -116,10 +137,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Registration Required
                 </label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Attendees must register to attend this event
                 </p>
               </div>
@@ -135,10 +156,10 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea 
-                placeholder="Additional notes or special instructions (optional)" 
-                disabled={isView} 
-                {...field} 
+              <Textarea
+                placeholder="Additional notes or special instructions (optional)"
+                disabled={isView}
+                {...field}
                 rows={4}
               />
             </FormControl>
@@ -147,5 +168,5 @@ export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { PaymentCard } from "@/components/billingsdk/payment-card";
+import { PaymentCard } from "@/components/billingsdk/payment-card"
 
 export function PaymentCardDemo() {
   return (
@@ -18,8 +18,8 @@ export function PaymentCardDemo() {
         { text: "PCI compliant" },
       ]}
       onPay={async (data) => {
-        console.log("Payment submitted:", data);
+        console.log("Payment submitted:", data)
       }}
     />
-  );
+  )
 }

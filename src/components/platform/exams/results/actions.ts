@@ -1,44 +1,49 @@
-"use server";
+"use server"
 
 // Results Block Server Actions - Optimized for N+1 Query Prevention
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import type {
-  StudentResultDTO,
-  ResultSummary,
-  ResultAnalytics,
-  PDFResultData,
-} from "./types";
 import {
-  generateSinglePDFSchema,
-  batchPDFRequestSchema,
-  getResultsSchema,
-  getAnalyticsSchema,
-} from "./validation";
-import {
-  calculateMarkSummation,
-  calculateRanks,
-  calculateGradeDistribution,
-  calculateClassAverage,
-  calculateClassAveragePercentage,
-  calculateHighestMarks,
-  calculateLowestMarks,
-  identifyTopPerformers,
-  identifyNeedsAttention,
-} from "./lib/calculator";
-import { generatePDF, generatePDFFileName, applyPDFDefaults } from "./lib/pdf-generator";
-import { renderTemplate } from "./lib/templates";
-import {
+  cacheKeys,
   gradeBoundaryCache,
+  invalidateCache,
   schoolBrandingCache,
   schoolCache,
-  cacheKeys,
-  invalidateCache,
   warmCache,
-} from "@/lib/cache/exam-cache";
+} from "@/lib/cache/exam-cache"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import {
+  calculateClassAverage,
+  calculateClassAveragePercentage,
+  calculateGradeDistribution,
+  calculateHighestMarks,
+  calculateLowestMarks,
+  calculateMarkSummation,
+  calculateRanks,
+  identifyNeedsAttention,
+  identifyTopPerformers,
+} from "./lib/calculator"
+import {
+  applyPDFDefaults,
+  generatePDF,
+  generatePDFFileName,
+} from "./lib/pdf-generator"
+import { renderTemplate } from "./lib/templates"
+import type {
+  PDFResultData,
+  ResultAnalytics,
+  ResultSummary,
+  StudentResultDTO,
+} from "./types"
+import {
+  batchPDFRequestSchema,
+  generateSinglePDFSchema,
+  getAnalyticsSchema,
+  getResultsSchema,
+} from "./validation"
 
 // Note: CSV import/export and batch PDF functions are available in separate files:
 // - ./actions/csv-import-export (exportExamResultsToCSV, importExamResultsFromCSV, generateResultImportTemplate)
@@ -50,11 +55,11 @@ import {
  */
 export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
   try {
-    const { schoolId } = await getTenantContext();
-    if (!schoolId) throw new Error("Missing school context");
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) throw new Error("Missing school context")
 
     const { examId, includeAbsent, includeQuestionBreakdown } =
-      getResultsSchema.parse(input);
+      getResultsSchema.parse(input)
 
     // Fetch exam with all necessary relations in a single query
     const exam = await db.exam.findFirst({
@@ -100,108 +105,114 @@ export async function getExamResults(input: z.infer<typeof getResultsSchema>) {
           },
         }),
       },
-    });
+    })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" };
+      return { success: false, error: "Exam not found" }
     }
 
     // Get grade boundaries from cache or database
-    const cacheKey = cacheKeys.gradeBoundaries(schoolId);
-    let boundaries = gradeBoundaryCache.get(cacheKey);
+    const cacheKey = cacheKeys.gradeBoundaries(schoolId)
+    let boundaries = gradeBoundaryCache.get(cacheKey)
 
     if (!boundaries) {
       // Fetch from database if not cached
       boundaries = await db.gradeBoundary.findMany({
         where: { schoolId },
         orderBy: { minScore: "desc" },
-      });
+      })
 
       // Store in cache for future use
       if (boundaries.length > 0) {
-        gradeBoundaryCache.set(cacheKey, boundaries);
+        gradeBoundaryCache.set(cacheKey, boundaries)
       }
     }
 
     // Create boundary lookup map for O(1) access
     const boundaryMap = new Map(
       boundaries.map((b) => {
-        const key = `${Number(b.minScore)}-${Number(b.maxScore)}`;
-        return [key, b];
+        const key = `${Number(b.minScore)}-${Number(b.maxScore)}`
+        return [key, b]
       })
-    );
+    )
 
     // Transform results with optimized boundary lookup
-    let results: StudentResultDTO[] = exam.examResults.map((result): StudentResultDTO => {
-      // Find matching boundary efficiently
-      const boundary = boundaries.find(
-        (b) =>
-          result.percentage >= Number(b.minScore) &&
-          result.percentage <= Number(b.maxScore)
-      );
+    let results: StudentResultDTO[] = exam.examResults.map(
+      (result): StudentResultDTO => {
+        // Find matching boundary efficiently
+        const boundary = boundaries.find(
+          (b) =>
+            result.percentage >= Number(b.minScore) &&
+            result.percentage <= Number(b.maxScore)
+        )
 
-      return {
-        id: result.id,
-        studentId: result.student.studentId || "",
-        studentName: `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
-        marksObtained: result.marksObtained,
-        totalMarks: result.totalMarks,
-        percentage: result.percentage,
-        grade: result.grade,
-        gpa: boundary ? Number(boundary.gpaValue) : null,
-        rank: 0, // Will be calculated below
-        isAbsent: result.isAbsent,
-        remarks: result.remarks,
-      };
-    });
+        return {
+          id: result.id,
+          studentId: result.student.studentId || "",
+          studentName:
+            `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
+          marksObtained: result.marksObtained,
+          totalMarks: result.totalMarks,
+          percentage: result.percentage,
+          grade: result.grade,
+          gpa: boundary ? Number(boundary.gpaValue) : null,
+          rank: 0, // Will be calculated below
+          isAbsent: result.isAbsent,
+          remarks: result.remarks,
+        }
+      }
+    )
 
     // Calculate ranks
-    results = calculateRanks(results);
+    results = calculateRanks(results)
 
     // Add question breakdown if requested (using pre-fetched data)
     if (includeQuestionBreakdown && exam.markingResults) {
       // Group marking results by student for O(1) lookup
-      const markingResultsByStudent = exam.markingResults.reduce((acc, mr) => {
-        if (!acc[mr.studentId]) {
-          acc[mr.studentId] = [];
-        }
-        acc[mr.studentId].push(mr);
-        return acc;
-      }, {} as Record<string, typeof exam.markingResults>);
+      const markingResultsByStudent = exam.markingResults.reduce(
+        (acc, mr) => {
+          if (!acc[mr.studentId]) {
+            acc[mr.studentId] = []
+          }
+          acc[mr.studentId].push(mr)
+          return acc
+        },
+        {} as Record<string, typeof exam.markingResults>
+      )
 
       // Add question breakdown to each result
       results = results.map((result) => {
-        const studentMarkingResults = markingResultsByStudent[result.id] || [];
+        const studentMarkingResults = markingResultsByStudent[result.id] || []
 
         if (studentMarkingResults.length > 0) {
           result.questionBreakdown = studentMarkingResults.map((mr, index) => {
-            const question = (mr as any).question;
+            const question = (mr as any).question
             return {
               questionNumber: index + 1,
-              questionText: question?.questionText || '',
-              questionType: question?.questionType || 'ESSAY',
+              questionText: question?.questionText || "",
+              questionType: question?.questionType || "ESSAY",
               maxPoints: Number(mr.maxPoints),
               pointsAwarded: Number(mr.pointsAwarded),
               isCorrect: mr.pointsAwarded === mr.maxPoints,
               feedback: mr.feedback,
-            };
-          });
+            }
+          })
         }
 
-        return result;
-      });
+        return result
+      })
     }
 
     return {
       success: true,
       data: results,
-    };
+    }
   } catch (error) {
-    console.error("Get exam results error:", error);
+    console.error("Get exam results error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -212,10 +223,10 @@ export async function getExamAnalytics(
   input: z.infer<typeof getAnalyticsSchema>
 ) {
   try {
-    const { schoolId } = await getTenantContext();
-    if (!schoolId) throw new Error("Missing school context");
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) throw new Error("Missing school context")
 
-    const { examId } = getAnalyticsSchema.parse(input);
+    const { examId } = getAnalyticsSchema.parse(input)
 
     // Fetch all data in a single optimized query
     const exam = await db.exam.findFirst({
@@ -258,26 +269,26 @@ export async function getExamAnalytics(
           },
         },
       },
-    });
+    })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" };
+      return { success: false, error: "Exam not found" }
     }
 
     // Get grade boundaries from cache or database
-    const boundariesCacheKey = cacheKeys.gradeBoundaries(schoolId);
-    let boundaries = gradeBoundaryCache.get(boundariesCacheKey);
+    const boundariesCacheKey = cacheKeys.gradeBoundaries(schoolId)
+    let boundaries = gradeBoundaryCache.get(boundariesCacheKey)
 
     if (!boundaries) {
       // Fetch from database if not cached
       boundaries = await db.gradeBoundary.findMany({
         where: { schoolId },
         orderBy: { minScore: "desc" },
-      });
+      })
 
       // Store in cache for future use
       if (boundaries.length > 0) {
-        gradeBoundaryCache.set(boundariesCacheKey, boundaries);
+        gradeBoundaryCache.set(boundariesCacheKey, boundaries)
       }
     }
 
@@ -287,12 +298,13 @@ export async function getExamAnalytics(
         (b) =>
           result.percentage >= Number(b.minScore) &&
           result.percentage <= Number(b.maxScore)
-      );
+      )
 
       return {
         id: result.id,
         studentId: result.student.studentId || "",
-        studentName: `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
+        studentName:
+          `${result.student.givenName} ${result.student.middleName || ""} ${result.student.surname}`.trim(),
         marksObtained: result.marksObtained,
         totalMarks: result.totalMarks,
         percentage: result.percentage,
@@ -301,11 +313,11 @@ export async function getExamAnalytics(
         rank: 0,
         isAbsent: result.isAbsent,
         remarks: result.remarks,
-      };
-    });
+      }
+    })
 
     // Calculate ranks
-    const rankedResults = calculateRanks(results);
+    const rankedResults = calculateRanks(results)
 
     // Calculate summary statistics
     const summary: ResultSummary = {
@@ -330,21 +342,21 @@ export async function getExamAnalytics(
       highestMarks: calculateHighestMarks(rankedResults),
       lowestMarks: calculateLowestMarks(rankedResults),
       gradeDistribution: calculateGradeDistribution(rankedResults),
-    };
+    }
 
     // Calculate grade distribution with details
     const gradeDistribution = Object.entries(summary.gradeDistribution).map(
       ([grade, count]) => {
-        const boundary = boundaries.find((b) => b.grade === grade);
+        const boundary = boundaries.find((b) => b.grade === grade)
         return {
           grade,
           count,
           percentage: (count / summary.presentStudents) * 100,
           gpaValue: boundary ? Number(boundary.gpaValue) : 0,
           color: getGradeColor(grade),
-        };
+        }
       }
-    );
+    )
 
     // Calculate performance trends
     const performanceTrends = [
@@ -355,26 +367,30 @@ export async function getExamAnalytics(
       },
       {
         range: "80-89",
-        count: rankedResults.filter((r) => r.percentage >= 80 && r.percentage < 90)
-          .length,
+        count: rankedResults.filter(
+          (r) => r.percentage >= 80 && r.percentage < 90
+        ).length,
         percentage: 0,
       },
       {
         range: "70-79",
-        count: rankedResults.filter((r) => r.percentage >= 70 && r.percentage < 80)
-          .length,
+        count: rankedResults.filter(
+          (r) => r.percentage >= 70 && r.percentage < 80
+        ).length,
         percentage: 0,
       },
       {
         range: "60-69",
-        count: rankedResults.filter((r) => r.percentage >= 60 && r.percentage < 70)
-          .length,
+        count: rankedResults.filter(
+          (r) => r.percentage >= 60 && r.percentage < 70
+        ).length,
         percentage: 0,
       },
       {
         range: "50-59",
-        count: rankedResults.filter((r) => r.percentage >= 50 && r.percentage < 60)
-          .length,
+        count: rankedResults.filter(
+          (r) => r.percentage >= 50 && r.percentage < 60
+        ).length,
         percentage: 0,
       },
       {
@@ -384,15 +400,17 @@ export async function getExamAnalytics(
       },
     ].map((trend) => ({
       ...trend,
-      percentage: summary.presentStudents > 0
-        ? (trend.count / summary.presentStudents) * 100
-        : 0,
-    }));
+      percentage:
+        summary.presentStudents > 0
+          ? (trend.count / summary.presentStudents) * 100
+          : 0,
+    }))
 
     // Calculate question analytics from marking results
-    const questionAnalytics = exam.markingResults.length > 0
-      ? calculateQuestionAnalytics(exam.markingResults)
-      : [];
+    const questionAnalytics =
+      exam.markingResults.length > 0
+        ? calculateQuestionAnalytics(exam.markingResults)
+        : []
 
     const analytics: ResultAnalytics = {
       examId,
@@ -402,18 +420,18 @@ export async function getExamAnalytics(
       topPerformers: identifyTopPerformers(rankedResults, 5),
       needsAttention: identifyNeedsAttention(rankedResults, 50, 5),
       questionAnalytics,
-    };
+    }
 
     return {
       success: true,
       data: analytics,
-    };
+    }
   } catch (error) {
-    console.error("Get exam analytics error:", error);
+    console.error("Get exam analytics error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -424,20 +442,20 @@ export async function generateStudentPDF(
   input: z.infer<typeof generateSinglePDFSchema>
 ) {
   try {
-    const { schoolId } = await getTenantContext();
-    if (!schoolId) throw new Error("Missing school context");
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) throw new Error("Missing school context")
 
-    const parsed = generateSinglePDFSchema.parse(input);
-    const options = applyPDFDefaults(parsed.options);
+    const parsed = generateSinglePDFSchema.parse(input)
+    const options = applyPDFDefaults(parsed.options)
 
     // Try to get cached data first
-    const schoolCacheKey = cacheKeys.school(schoolId);
-    const brandingCacheKey = cacheKeys.schoolBranding(schoolId);
-    const boundariesCacheKey = cacheKeys.gradeBoundaries(schoolId);
+    const schoolCacheKey = cacheKeys.school(schoolId)
+    const brandingCacheKey = cacheKeys.schoolBranding(schoolId)
+    const boundariesCacheKey = cacheKeys.gradeBoundaries(schoolId)
 
-    const cachedSchool = schoolCache.get(schoolCacheKey);
-    const cachedBranding = schoolBrandingCache.get(brandingCacheKey);
-    const cachedBoundaries = gradeBoundaryCache.get(boundariesCacheKey);
+    const cachedSchool = schoolCache.get(schoolCacheKey)
+    const cachedBranding = schoolBrandingCache.get(brandingCacheKey)
+    const cachedBoundaries = gradeBoundaryCache.get(boundariesCacheKey)
 
     // Fetch all necessary data, using cache where available
     const [examData, school, boundaries] = await Promise.all([
@@ -450,7 +468,7 @@ export async function generateStudentPDF(
           examResults: {
             where: {
               studentId: parsed.studentId,
-              schoolId
+              schoolId,
             },
             include: {
               student: {
@@ -469,7 +487,7 @@ export async function generateStudentPDF(
             markingResults: {
               where: {
                 studentId: parsed.studentId,
-                schoolId
+                schoolId,
               },
               select: {
                 questionId: true,
@@ -492,54 +510,59 @@ export async function generateStudentPDF(
       // Get school with branding (from cache if available)
       cachedSchool && cachedBranding
         ? Promise.resolve({ ...cachedSchool, branding: cachedBranding })
-        : db.school.findFirst({
-            where: { id: schoolId },
-            include: {
-              branding: true,
-            },
-          }).then(result => {
-            // Cache the results
-            if (result) {
-              schoolCache.set(schoolCacheKey, result);
-              if (result.branding) {
-                schoolBrandingCache.set(brandingCacheKey, result.branding);
+        : db.school
+            .findFirst({
+              where: { id: schoolId },
+              include: {
+                branding: true,
+              },
+            })
+            .then((result) => {
+              // Cache the results
+              if (result) {
+                schoolCache.set(schoolCacheKey, result)
+                if (result.branding) {
+                  schoolBrandingCache.set(brandingCacheKey, result.branding)
+                }
               }
-            }
-            return result;
-          }),
+              return result
+            }),
       // Get grade boundaries (from cache if available)
       cachedBoundaries
         ? Promise.resolve(cachedBoundaries)
-        : db.gradeBoundary.findMany({
-            where: { schoolId },
-            orderBy: { minScore: "desc" },
-          }).then(result => {
-            // Cache the results
-            if (result.length > 0) {
-              gradeBoundaryCache.set(boundariesCacheKey, result);
-            }
-            return result;
-          }),
-    ]);
+        : db.gradeBoundary
+            .findMany({
+              where: { schoolId },
+              orderBy: { minScore: "desc" },
+            })
+            .then((result) => {
+              // Cache the results
+              if (result.length > 0) {
+                gradeBoundaryCache.set(boundariesCacheKey, result)
+              }
+              return result
+            }),
+    ])
 
     if (!examData || !school || examData.examResults.length === 0) {
-      return { success: false, error: "Data not found" };
+      return { success: false, error: "Data not found" }
     }
 
-    const studentExamResult = examData.examResults[0];
+    const studentExamResult = examData.examResults[0]
 
     // Find grade boundary for GPA
     const boundary = boundaries.find(
       (b) =>
         studentExamResult.percentage >= Number(b.minScore) &&
         studentExamResult.percentage <= Number(b.maxScore)
-    );
+    )
 
     // Transform to StudentResultDTO
     const studentResult: StudentResultDTO = {
       id: studentExamResult.id,
       studentId: studentExamResult.student.studentId || "",
-      studentName: `${studentExamResult.student.givenName} ${studentExamResult.student.middleName || ""} ${studentExamResult.student.surname}`.trim(),
+      studentName:
+        `${studentExamResult.student.givenName} ${studentExamResult.student.middleName || ""} ${studentExamResult.student.surname}`.trim(),
       marksObtained: studentExamResult.marksObtained,
       totalMarks: studentExamResult.totalMarks,
       percentage: studentExamResult.percentage,
@@ -548,26 +571,28 @@ export async function generateStudentPDF(
       rank: 0, // Will be calculated if needed
       isAbsent: studentExamResult.isAbsent,
       remarks: studentExamResult.remarks,
-    };
+    }
 
     // Add question breakdown if available
     if (options.includeQuestionBreakdown && examData.markingResults) {
-      studentResult.questionBreakdown = examData.markingResults.map((mr, index) => {
-        const question = (mr as any).question;
-        return {
-          questionNumber: index + 1,
-          questionText: question?.questionText || '',
-          questionType: question?.questionType || 'ESSAY',
-          maxPoints: Number(mr.maxPoints),
-          pointsAwarded: Number(mr.pointsAwarded),
-          isCorrect: mr.pointsAwarded === mr.maxPoints,
-          feedback: mr.feedback,
-        };
-      });
+      studentResult.questionBreakdown = examData.markingResults.map(
+        (mr, index) => {
+          const question = (mr as any).question
+          return {
+            questionNumber: index + 1,
+            questionText: question?.questionText || "",
+            questionType: question?.questionType || "ESSAY",
+            maxPoints: Number(mr.maxPoints),
+            pointsAwarded: Number(mr.pointsAwarded),
+            isCorrect: mr.pointsAwarded === mr.maxPoints,
+            feedback: mr.feedback,
+          }
+        }
+      )
     }
 
     // Get analytics if needed (optimized to reuse data)
-    let analytics = undefined;
+    let analytics = undefined
     if (options.includeClassAnalytics) {
       // Get all exam results for ranking and analytics
       const allResults = await db.examResult.findMany({
@@ -584,16 +609,18 @@ export async function generateStudentPDF(
           grade: true,
         },
         orderBy: { marksObtained: "desc" },
-      });
+      })
 
       // Calculate rank
-      const rank = allResults.findIndex((r) => r.id === studentExamResult.id) + 1;
-      studentResult.rank = rank;
+      const rank =
+        allResults.findIndex((r) => r.id === studentExamResult.id) + 1
+      studentResult.rank = rank
 
       // Calculate class statistics
-      const classAverage = allResults.reduce((sum, r) => sum + r.percentage, 0) / allResults.length;
+      const classAverage =
+        allResults.reduce((sum, r) => sum + r.percentage, 0) / allResults.length
       const gradeDistribution = calculateGradeDistribution(
-        allResults.map(r => ({
+        allResults.map((r) => ({
           ...r,
           id: r.id,
           studentId: "",
@@ -603,22 +630,24 @@ export async function generateStudentPDF(
           isAbsent: false,
           remarks: null,
         }))
-      );
+      )
 
       analytics = {
         classAverage,
         classRank: rank,
         totalStudents: allResults.length,
-        gradeDistribution: Object.entries(gradeDistribution).map(([grade, count]) => ({
-          grade,
-          count,
-          percentage: (count / allResults.length) * 100,
-          gpaValue: boundaries.find(b => b.grade === grade)
-            ? Number(boundaries.find(b => b.grade === grade)!.gpaValue)
-            : 0,
-          color: getGradeColor(grade),
-        })),
-      };
+        gradeDistribution: Object.entries(gradeDistribution).map(
+          ([grade, count]) => ({
+            grade,
+            count,
+            percentage: (count / allResults.length) * 100,
+            gpaValue: boundaries.find((b) => b.grade === grade)
+              ? Number(boundaries.find((b) => b.grade === grade)!.gpaValue)
+              : 0,
+            color: getGradeColor(grade),
+          })
+        ),
+      }
     }
 
     // Prepare PDF data
@@ -646,28 +675,28 @@ export async function generateStudentPDF(
         schoolName: school.name,
         academicYear: new Date().getFullYear().toString(),
       },
-    };
+    }
 
     // Generate PDF
-    const templateComponent = renderTemplate(options.template, pdfData);
+    const templateComponent = renderTemplate(options.template, pdfData)
     const fileName = generatePDFFileName(
       studentResult.studentName,
       examData.title,
       options.template
-    );
+    )
 
-    const result = await generatePDF(templateComponent, fileName);
+    const result = await generatePDF(templateComponent, fileName)
 
     return {
       success: result.success,
       data: result,
-    };
+    }
   } catch (error) {
-    console.error("Generate student PDF error:", error);
+    console.error("Generate student PDF error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -676,35 +705,38 @@ export async function generateStudentPDF(
  */
 function calculateQuestionAnalytics(markingResults: any[]): any[] {
   // Group by question
-  const questionGroups = markingResults.reduce((acc, mr) => {
-    const qId = mr.questionId;
-    if (!acc[qId]) {
-      acc[qId] = {
-        question: mr.question,
-        attempts: [],
-      };
-    }
-    acc[qId].attempts.push({
-      pointsAwarded: Number(mr.pointsAwarded),
-      maxPoints: Number(mr.maxPoints),
-    });
-    return acc;
-  }, {} as Record<string, any>);
+  const questionGroups = markingResults.reduce(
+    (acc, mr) => {
+      const qId = mr.questionId
+      if (!acc[qId]) {
+        acc[qId] = {
+          question: mr.question,
+          attempts: [],
+        }
+      }
+      acc[qId].attempts.push({
+        pointsAwarded: Number(mr.pointsAwarded),
+        maxPoints: Number(mr.maxPoints),
+      })
+      return acc
+    },
+    {} as Record<string, any>
+  )
 
   // Calculate analytics for each question
   return Object.values(questionGroups).map((group: any) => {
-    const totalAttempts = group.attempts.length;
+    const totalAttempts = group.attempts.length
     const correctAttempts = group.attempts.filter(
       (a: any) => a.pointsAwarded === a.maxPoints
-    ).length;
+    ).length
     const totalPoints = group.attempts.reduce(
       (sum: number, a: any) => sum + a.pointsAwarded,
       0
-    );
+    )
     const maxPossiblePoints = group.attempts.reduce(
       (sum: number, a: any) => sum + a.maxPoints,
       0
-    );
+    )
 
     return {
       questionId: group.question.id,
@@ -719,8 +751,8 @@ function calculateQuestionAnalytics(markingResults: any[]): any[] {
       averageScore: totalPoints / totalAttempts,
       maxPoints: group.question.points,
       averagePercentage: (totalPoints / maxPossiblePoints) * 100,
-    };
-  });
+    }
+  })
 }
 
 /**
@@ -736,7 +768,7 @@ function getGradeColor(grade: string): string {
     C: "#F59E0B",
     D: "#F97316",
     F: "#EF4444",
-  };
+  }
 
-  return colors[grade] || "#6B7280";
+  return colors[grade] || "#6B7280"
 }

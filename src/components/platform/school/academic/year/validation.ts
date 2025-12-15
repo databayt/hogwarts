@@ -2,7 +2,10 @@ import { z } from "zod"
 
 // Base schema for school year - without refinement for extend compatibility
 export const schoolYearBaseSchema = z.object({
-  yearName: z.string().min(1, "Year name is required").max(50, "Year name is too long"),
+  yearName: z
+    .string()
+    .min(1, "Year name is required")
+    .max(50, "Year name is too long"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
 })
@@ -17,20 +20,23 @@ export const schoolYearCreateSchema = schoolYearBaseSchema.refine(
 )
 
 // Update schema - extend base first, then refine
-export const schoolYearUpdateSchema = schoolYearBaseSchema.extend({
-  id: z.string().min(1, "Required"),
-}).partial({ yearName: true, startDate: true, endDate: true }).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.endDate > data.startDate
+export const schoolYearUpdateSchema = schoolYearBaseSchema
+  .extend({
+    id: z.string().min(1, "Required"),
+  })
+  .partial({ yearName: true, startDate: true, endDate: true })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.endDate > data.startDate
+      }
+      return true
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
     }
-    return true
-  },
-  {
-    message: "End date must be after start date",
-    path: ["endDate"],
-  }
-)
+  )
 
 // List schema with sorting and pagination
 export const sortItemSchema = z.object({

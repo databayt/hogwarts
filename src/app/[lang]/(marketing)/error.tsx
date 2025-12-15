@@ -8,21 +8,21 @@ export default function MarketingError({
   reset: () => void
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
-      <div className="text-center space-y-4">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 p-8">
+      <div className="space-y-4 text-center">
         <h2 className="text-2xl font-semibold">Something went wrong</h2>
         <p className="text-muted-foreground max-w-md">
           We encountered an issue loading this page. Please try again.
         </p>
         {error.digest && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Error ID: {error.digest}
           </p>
         )}
       </div>
       <button
         onClick={reset}
-        className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-2 transition-colors"
       >
         Try again
       </button>

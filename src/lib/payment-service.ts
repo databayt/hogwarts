@@ -24,98 +24,98 @@
  * 4. Set up webhook endpoint for subscription events
  */
 
-import { logger } from '@/lib/logger';
-import { db } from '@/lib/db';
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 // === TYPE DEFINITIONS ===
 
 export interface PaymentMethod {
-  id: string;
-  type: 'card' | 'bank_account';
-  last4: string;
-  brand?: string;
-  expiryMonth?: number;
-  expiryYear?: number;
-  isDefault: boolean;
+  id: string
+  type: "card" | "bank_account"
+  last4: string
+  brand?: string
+  expiryMonth?: number
+  expiryYear?: number
+  isDefault: boolean
 }
 
 export interface Subscription {
-  id: string;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
-  planId: string;
-  planName: string;
-  amount: number;
-  currency: string;
-  interval: 'month' | 'year';
-  currentPeriodEnd: Date;
-  cancelAtPeriodEnd: boolean;
+  id: string
+  status: "active" | "trialing" | "past_due" | "canceled" | "unpaid"
+  planId: string
+  planName: string
+  amount: number
+  currency: string
+  interval: "month" | "year"
+  currentPeriodEnd: Date
+  cancelAtPeriodEnd: boolean
 }
 
 export interface Invoice {
-  id: string;
-  number: string;
-  status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
-  amount: number;
-  currency: string;
-  dueDate?: Date;
-  paidAt?: Date;
-  pdfUrl?: string;
+  id: string
+  number: string
+  status: "draft" | "open" | "paid" | "void" | "uncollectible"
+  amount: number
+  currency: string
+  dueDate?: Date
+  paidAt?: Date
+  pdfUrl?: string
 }
 
 export interface PricingPlan {
-  id: string;
-  name: string;
-  description: string;
-  amount: number;
-  currency: string;
-  interval: 'month' | 'year';
-  features: string[];
-  metadata?: Record<string, any>;
+  id: string
+  name: string
+  description: string
+  amount: number
+  currency: string
+  interval: "month" | "year"
+  features: string[]
+  metadata?: Record<string, any>
 }
 
 export interface CheckoutSession {
-  id: string;
-  url: string;
-  expiresAt: Date;
+  id: string
+  url: string
+  expiresAt: Date
 }
 
 export interface PaymentResult {
-  success: boolean;
-  paymentIntentId?: string;
-  clientSecret?: string;
-  error?: string;
+  success: boolean
+  paymentIntentId?: string
+  clientSecret?: string
+  error?: string
 }
 
 export interface CustomerData {
-  email: string;
-  name: string;
-  schoolId: string;
-  metadata?: Record<string, string>;
+  email: string
+  name: string
+  schoolId: string
+  metadata?: Record<string, string>
 }
 
 // === CONFIGURATION ===
 
 interface PaymentConfig {
-  stripeSecretKey?: string;
-  stripePublishableKey?: string;
-  webhookSecret?: string;
-  currency: string;
-  taxRates?: string[];
+  stripeSecretKey?: string
+  stripePublishableKey?: string
+  webhookSecret?: string
+  currency: string
+  taxRates?: string[]
 }
 
 const config: PaymentConfig = {
   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-  currency: process.env.STRIPE_CURRENCY || 'usd',
-  taxRates: process.env.STRIPE_TAX_RATES?.split(',') || [],
-};
+  currency: process.env.STRIPE_CURRENCY || "usd",
+  taxRates: process.env.STRIPE_TAX_RATES?.split(",") || [],
+}
 
 // === MAIN SERVICE CLASS ===
 
 class PaymentService {
-  private stripe: any = null;
-  private isConfigured: boolean = false;
+  private stripe: any = null
+  private isConfigured: boolean = false
 
   constructor(config: PaymentConfig) {
     if (config.stripeSecretKey) {
@@ -126,19 +126,24 @@ class PaymentService {
       //   typescript: true,
       // });
       // this.isConfigured = true;
-      
-      logger.info('Stripe integration ready (pending library installation)');
+
+      logger.info("Stripe integration ready (pending library installation)")
     } else {
-      logger.warn('Stripe not configured - payment features disabled');
+      logger.warn("Stripe not configured - payment features disabled")
     }
   }
 
   /**
    * Create or retrieve a Stripe customer
    */
-  async createCustomer(data: CustomerData): Promise<{ customerId?: string; error?: string }> {
+  async createCustomer(
+    data: CustomerData
+  ): Promise<{ customerId?: string; error?: string }> {
     if (!this.isConfigured) {
-      return { error: 'Stripe is not configured. Set STRIPE_SECRET_KEY in environment.' };
+      return {
+        error:
+          "Stripe is not configured. Set STRIPE_SECRET_KEY in environment.",
+      }
     }
 
     try {
@@ -165,10 +170,16 @@ class PaymentService {
       return { customerId: customer.id };
       */
 
-      return { error: 'Stripe customer creation not implemented. Install stripe package: pnpm add stripe' };
+      return {
+        error:
+          "Stripe customer creation not implemented. Install stripe package: pnpm add stripe",
+      }
     } catch (error) {
-      logger.error('Failed to create Stripe customer', error as Error);
-      return { error: error instanceof Error ? error.message : 'Failed to create customer' };
+      logger.error("Failed to create Stripe customer", error as Error)
+      return {
+        error:
+          error instanceof Error ? error.message : "Failed to create customer",
+      }
     }
   }
 
@@ -182,7 +193,7 @@ class PaymentService {
     cancelUrl: string
   ): Promise<CheckoutSession | { error: string }> {
     if (!this.isConfigured) {
-      return { error: 'Stripe is not configured' };
+      return { error: "Stripe is not configured" }
     }
 
     try {
@@ -214,10 +225,15 @@ class PaymentService {
       };
       */
 
-      return { error: 'Stripe checkout not implemented. Install stripe package.' };
+      return {
+        error: "Stripe checkout not implemented. Install stripe package.",
+      }
     } catch (error) {
-      logger.error('Failed to create checkout session', error as Error);
-      return { error: error instanceof Error ? error.message : 'Failed to create checkout' };
+      logger.error("Failed to create checkout session", error as Error)
+      return {
+        error:
+          error instanceof Error ? error.message : "Failed to create checkout",
+      }
     }
   }
 
@@ -232,8 +248,8 @@ class PaymentService {
     if (!this.isConfigured) {
       return {
         success: false,
-        error: 'Stripe is not configured',
-      };
+        error: "Stripe is not configured",
+      }
     }
 
     try {
@@ -257,14 +273,15 @@ class PaymentService {
 
       return {
         success: false,
-        error: 'Payment intent creation not implemented',
-      };
+        error: "Payment intent creation not implemented",
+      }
     } catch (error) {
-      logger.error('Failed to create payment intent', error as Error);
+      logger.error("Failed to create payment intent", error as Error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create payment',
-      };
+        error:
+          error instanceof Error ? error.message : "Failed to create payment",
+      }
     }
   }
 
@@ -273,7 +290,7 @@ class PaymentService {
    */
   async getSubscriptions(customerId: string): Promise<Subscription[]> {
     if (!this.isConfigured) {
-      return [];
+      return []
     }
 
     try {
@@ -297,10 +314,10 @@ class PaymentService {
       }));
       */
 
-      return [];
+      return []
     } catch (error) {
-      logger.error('Failed to get subscriptions', error as Error);
-      return [];
+      logger.error("Failed to get subscriptions", error as Error)
+      return []
     }
   }
 
@@ -312,7 +329,7 @@ class PaymentService {
     immediately: boolean = false
   ): Promise<{ success: boolean; error?: string }> {
     if (!this.isConfigured) {
-      return { success: false, error: 'Stripe is not configured' };
+      return { success: false, error: "Stripe is not configured" }
     }
 
     try {
@@ -329,22 +346,28 @@ class PaymentService {
       return { success: true };
       */
 
-      return { success: false, error: 'Subscription cancellation not implemented' };
-    } catch (error) {
-      logger.error('Failed to cancel subscription', error as Error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to cancel',
-      };
+        error: "Subscription cancellation not implemented",
+      }
+    } catch (error) {
+      logger.error("Failed to cancel subscription", error as Error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to cancel",
+      }
     }
   }
 
   /**
    * Get customer's invoices
    */
-  async getInvoices(customerId: string, limit: number = 10): Promise<Invoice[]> {
+  async getInvoices(
+    customerId: string,
+    limit: number = 10
+  ): Promise<Invoice[]> {
     if (!this.isConfigured) {
-      return [];
+      return []
     }
 
     try {
@@ -369,10 +392,10 @@ class PaymentService {
       }));
       */
 
-      return [];
+      return []
     } catch (error) {
-      logger.error('Failed to get invoices', error as Error);
-      return [];
+      logger.error("Failed to get invoices", error as Error)
+      return []
     }
   }
 
@@ -384,7 +407,7 @@ class PaymentService {
     signature: string
   ): Promise<{ success: boolean; error?: string }> {
     if (!this.isConfigured || !config.webhookSecret) {
-      return { success: false, error: 'Webhook not configured' };
+      return { success: false, error: "Webhook not configured" }
     }
 
     try {
@@ -421,58 +444,59 @@ class PaymentService {
       return { success: true };
       */
 
-      return { success: false, error: 'Webhook handling not implemented' };
+      return { success: false, error: "Webhook handling not implemented" }
     } catch (error) {
-      logger.error('Webhook processing failed', error as Error);
+      logger.error("Webhook processing failed", error as Error)
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Webhook failed',
-      };
+        error: error instanceof Error ? error.message : "Webhook failed",
+      }
     }
   }
 
   // === PRIVATE WEBHOOK HANDLERS ===
 
   private async handlePaymentSuccess(paymentIntent: any): Promise<void> {
-    logger.info('Payment succeeded', {
+    logger.info("Payment succeeded", {
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount / 100,
-    });
+    })
 
     try {
       // Get school ID from payment metadata
-      const schoolId = paymentIntent.metadata?.schoolId;
+      const schoolId = paymentIntent.metadata?.schoolId
       if (!schoolId) {
-        logger.error('No schoolId in payment metadata', { paymentIntent });
-        return;
+        logger.error("No schoolId in payment metadata", { paymentIntent })
+        return
       }
 
       // Payment records are tracked in Stripe
       // No local payment model exists in the database
       // TODO: Add payment model if local payment history is needed
-      logger.info('Payment succeeded', {
+      logger.info("Payment succeeded", {
         schoolId,
         paymentIntentId: paymentIntent.id,
         amount: paymentIntent.amount / 100,
         currency: paymentIntent.currency,
-      });
+      })
 
       // Update school status if needed
       await db.school.update({
         where: { id: schoolId },
         data: {
           isActive: true, // Ensure school is active after payment
-        }
-      });
+        },
+      })
 
       // Get school details for email
       const school = await db.school.findUnique({
-        where: { id: schoolId }
-      });
+        where: { id: schoolId },
+      })
 
       // Send confirmation email if we have customer email from Stripe
-      const customerEmail = paymentIntent.receipt_email ||
-                           paymentIntent.charges?.data[0]?.billing_details?.email;
+      const customerEmail =
+        paymentIntent.receipt_email ||
+        paymentIntent.charges?.data[0]?.billing_details?.email
 
       if (customerEmail && school) {
         await this.sendPaymentConfirmationEmail({
@@ -480,35 +504,38 @@ class PaymentService {
           schoolName: school.name,
           amount: paymentIntent.amount / 100,
           currency: paymentIntent.currency,
-          invoiceUrl: paymentIntent.charges?.data[0]?.receipt_url
-        });
+          invoiceUrl: paymentIntent.charges?.data[0]?.receipt_url,
+        })
       }
 
-      logger.info('Payment success handled', { schoolId, paymentIntentId: paymentIntent.id });
+      logger.info("Payment success handled", {
+        schoolId,
+        paymentIntentId: paymentIntent.id,
+      })
     } catch (error) {
-      logger.error('Error handling payment success', { error, paymentIntent });
-      throw error;
+      logger.error("Error handling payment success", { error, paymentIntent })
+      throw error
     }
   }
 
   private async handlePaymentFailure(paymentIntent: any): Promise<void> {
-    logger.warn('Payment failed', {
+    logger.warn("Payment failed", {
       paymentIntentId: paymentIntent.id,
       error: paymentIntent.last_payment_error?.message,
-    });
+    })
 
     try {
-      const schoolId = paymentIntent.metadata?.schoolId;
-      if (!schoolId) return;
+      const schoolId = paymentIntent.metadata?.schoolId
+      if (!schoolId) return
 
       // Log failed payment attempt
-      logger.error('Payment failed', {
+      logger.error("Payment failed", {
         schoolId,
         paymentIntentId: paymentIntent.id,
         amount: paymentIntent.amount / 100,
         currency: paymentIntent.currency,
         error: paymentIntent.last_payment_error?.message,
-      });
+      })
 
       // Since we don't have a payment model, we can't count failed payments
       // Just log the failure for now
@@ -516,12 +543,13 @@ class PaymentService {
 
       // Send failure notification
       const school = await db.school.findUnique({
-        where: { id: schoolId }
-      });
+        where: { id: schoolId },
+      })
 
       // Get customer email from Stripe
-      const customerEmail = paymentIntent.receipt_email ||
-                           paymentIntent.charges?.data[0]?.billing_details?.email;
+      const customerEmail =
+        paymentIntent.receipt_email ||
+        paymentIntent.charges?.data[0]?.billing_details?.email
 
       if (customerEmail && school) {
         await this.sendPaymentFailureEmail({
@@ -530,98 +558,106 @@ class PaymentService {
           amount: paymentIntent.amount / 100,
           currency: paymentIntent.currency,
           error: paymentIntent.last_payment_error?.message,
-          retryUrl: `${process.env.NEXT_PUBLIC_APP_URL}/billing/retry?payment=${paymentIntent.id}`
-        });
+          retryUrl: `${process.env.NEXT_PUBLIC_APP_URL}/billing/retry?payment=${paymentIntent.id}`,
+        })
       }
 
       // Schedule retry attempt (if applicable)
       // Since we don't track failed payments locally, we rely on Stripe's retry logic
       // Stripe will automatically retry failed payments based on the subscription settings
-
     } catch (error) {
-      logger.error('Error handling payment failure', { error, paymentIntent });
+      logger.error("Error handling payment failure", { error, paymentIntent })
     }
   }
 
   private async handleSubscriptionUpdate(subscription: any): Promise<void> {
-    logger.info('Subscription updated', {
+    logger.info("Subscription updated", {
       subscriptionId: subscription.id,
       status: subscription.status,
-    });
+    })
 
     try {
-      const schoolId = subscription.metadata?.schoolId;
-      if (!schoolId) return;
+      const schoolId = subscription.metadata?.schoolId
+      if (!schoolId) return
 
       // Map Stripe status to our status
       const statusMap: Record<string, string> = {
-        'active': 'ACTIVE',
-        'past_due': 'AT_RISK',
-        'unpaid': 'SUSPENDED',
-        'canceled': 'CANCELLED',
-        'incomplete': 'PENDING',
-        'incomplete_expired': 'EXPIRED',
-        'trialing': 'TRIAL',
-      };
+        active: "ACTIVE",
+        past_due: "AT_RISK",
+        unpaid: "SUSPENDED",
+        canceled: "CANCELLED",
+        incomplete: "PENDING",
+        incomplete_expired: "EXPIRED",
+        trialing: "TRIAL",
+      }
 
-      const newStatus = statusMap[subscription.status] || 'PENDING';
+      const newStatus = statusMap[subscription.status] || "PENDING"
 
       // Update school subscription status
       // Only update fields that exist in the School model
       await db.school.update({
         where: { id: schoolId },
         data: {
-          isActive: newStatus === 'ACTIVE',
-          planType: subscription.items.data[0]?.price?.metadata?.tier || 'basic',
-        }
-      });
+          isActive: newStatus === "ACTIVE",
+          planType:
+            subscription.items.data[0]?.price?.metadata?.tier || "basic",
+        },
+      })
 
       // Log full subscription details since we can't store them in the database
-      logger.info('Subscription details from Stripe', {
+      logger.info("Subscription details from Stripe", {
         schoolId,
         subscriptionId: subscription.id,
         status: newStatus,
         periodStart: new Date(subscription.current_period_start * 1000),
         periodEnd: new Date(subscription.current_period_end * 1000),
-      });
+      })
 
-      logger.info('Subscription updated in database', { schoolId, status: newStatus });
+      logger.info("Subscription updated in database", {
+        schoolId,
+        status: newStatus,
+      })
     } catch (error) {
-      logger.error('Error handling subscription update', { error, subscription });
+      logger.error("Error handling subscription update", {
+        error,
+        subscription,
+      })
     }
   }
 
-  private async handleSubscriptionCancellation(subscription: any): Promise<void> {
-    logger.info('Subscription canceled', {
+  private async handleSubscriptionCancellation(
+    subscription: any
+  ): Promise<void> {
+    logger.info("Subscription canceled", {
       subscriptionId: subscription.id,
-    });
+    })
 
     try {
-      const schoolId = subscription.metadata?.schoolId;
-      if (!schoolId) return;
+      const schoolId = subscription.metadata?.schoolId
+      if (!schoolId) return
 
       // Update school status
       await db.school.update({
         where: { id: schoolId },
         data: {
           isActive: false, // Deactivate school when subscription is cancelled
-        }
-      });
+        },
+      })
 
       // Log cancellation details
-      logger.info('Subscription cancellation details', {
+      logger.info("Subscription cancellation details", {
         schoolId,
         subscriptionId: subscription.id,
         cancelledAt: new Date(subscription.canceled_at * 1000),
-      });
+      })
 
       // Send cancellation email
       const school = await db.school.findUnique({
-        where: { id: schoolId }
-      });
+        where: { id: schoolId },
+      })
 
       // Get customer email from subscription
-      const customerEmail = subscription.customer_email;
+      const customerEmail = subscription.customer_email
 
       if (customerEmail && school) {
         await this.sendSubscriptionCancellationEmail({
@@ -629,24 +665,29 @@ class PaymentService {
           schoolName: school.name,
           endDate: new Date(subscription.current_period_end * 1000),
           reason: subscription.cancellation_details?.reason,
-        });
+        })
       }
 
-      logger.info('Subscription cancellation handled', { schoolId });
+      logger.info("Subscription cancellation handled", { schoolId })
     } catch (error) {
-      logger.error('Error handling subscription cancellation', { error, subscription });
+      logger.error("Error handling subscription cancellation", {
+        error,
+        subscription,
+      })
     }
   }
 
   private async handleInvoicePaid(invoice: any): Promise<void> {
-    logger.info('Invoice paid', {
+    logger.info("Invoice paid", {
       invoiceId: invoice.id,
       amount: invoice.amount_paid / 100,
-    });
+    })
 
     try {
-      const schoolId = invoice.metadata?.schoolId || invoice.subscription_details?.metadata?.schoolId;
-      if (!schoolId) return;
+      const schoolId =
+        invoice.metadata?.schoolId ||
+        invoice.subscription_details?.metadata?.schoolId
+      if (!schoolId) return
 
       // Create invoice record with correct field names
       await db.invoice.create({
@@ -656,20 +697,22 @@ class PaymentService {
           amountDue: Math.round(invoice.amount_due / 100),
           amountPaid: Math.round(invoice.amount_paid / 100),
           currency: invoice.currency,
-          status: invoice.status || 'paid',
+          status: invoice.status || "paid",
           periodStart: new Date(invoice.period_start * 1000),
           periodEnd: new Date(invoice.period_end * 1000),
-        }
-      });
+        },
+      })
 
       // Log additional invoice details that can't be stored
-      logger.info('Invoice details from Stripe', {
+      logger.info("Invoice details from Stripe", {
         schoolId,
         invoiceId: invoice.id,
         invoiceUrl: invoice.hosted_invoice_url,
         pdfUrl: invoice.invoice_pdf,
-        paidAt: invoice.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : null,
-      });
+        paidAt: invoice.status_transitions?.paid_at
+          ? new Date(invoice.status_transitions.paid_at * 1000)
+          : null,
+      })
 
       // School model doesn't have payment tracking fields
       // Just ensure school is active after successful payment
@@ -677,16 +720,16 @@ class PaymentService {
         where: { id: schoolId },
         data: {
           isActive: true,
-        }
-      });
+        },
+      })
 
       // Send invoice receipt
       const school = await db.school.findUnique({
-        where: { id: schoolId }
-      });
+        where: { id: schoolId },
+      })
 
       // Get customer email from invoice
-      const customerEmail = invoice.customer_email;
+      const customerEmail = invoice.customer_email
 
       if (customerEmail && school) {
         await this.sendInvoiceReceiptEmail({
@@ -696,118 +739,127 @@ class PaymentService {
           currency: invoice.currency,
           invoiceUrl: invoice.hosted_invoice_url,
           pdfUrl: invoice.invoice_pdf,
-        });
+        })
       }
 
-      logger.info('Invoice payment recorded', { schoolId, invoiceId: invoice.id });
+      logger.info("Invoice payment recorded", {
+        schoolId,
+        invoiceId: invoice.id,
+      })
     } catch (error) {
-      logger.error('Error handling invoice payment', { error, invoice });
+      logger.error("Error handling invoice payment", { error, invoice })
     }
   }
 
   // === EMAIL NOTIFICATION METHODS ===
 
   private async sendPaymentConfirmationEmail(params: {
-    to: string;
-    schoolName: string;
-    amount: number;
-    currency: string;
-    invoiceUrl?: string;
+    to: string
+    schoolName: string
+    amount: number
+    currency: string
+    invoiceUrl?: string
   }): Promise<void> {
     try {
       // Implementation would use your email service (SendGrid, SES, etc.)
-      logger.info('Sending payment confirmation email', { to: params.to });
+      logger.info("Sending payment confirmation email", { to: params.to })
       // await emailService.send({...})
     } catch (error) {
-      logger.error('Failed to send payment confirmation email', { error, params });
+      logger.error("Failed to send payment confirmation email", {
+        error,
+        params,
+      })
     }
   }
 
   private async sendPaymentFailureEmail(params: {
-    to: string;
-    schoolName: string;
-    amount: number;
-    currency: string;
-    error: string;
-    retryUrl: string;
+    to: string
+    schoolName: string
+    amount: number
+    currency: string
+    error: string
+    retryUrl: string
   }): Promise<void> {
     try {
-      logger.info('Sending payment failure email', { to: params.to });
+      logger.info("Sending payment failure email", { to: params.to })
       // await emailService.send({...})
     } catch (error) {
-      logger.error('Failed to send payment failure email', { error, params });
+      logger.error("Failed to send payment failure email", { error, params })
     }
   }
 
   private async sendSubscriptionCancellationEmail(params: {
-    to: string;
-    schoolName: string;
-    endDate: Date;
-    reason?: string;
+    to: string
+    schoolName: string
+    endDate: Date
+    reason?: string
   }): Promise<void> {
     try {
-      logger.info('Sending subscription cancellation email', { to: params.to });
+      logger.info("Sending subscription cancellation email", { to: params.to })
       // await emailService.send({...})
     } catch (error) {
-      logger.error('Failed to send cancellation email', { error, params });
+      logger.error("Failed to send cancellation email", { error, params })
     }
   }
 
   private async sendInvoiceReceiptEmail(params: {
-    to: string;
-    schoolName: string;
-    amount: number;
-    currency: string;
-    invoiceUrl: string;
-    pdfUrl: string;
+    to: string
+    schoolName: string
+    amount: number
+    currency: string
+    invoiceUrl: string
+    pdfUrl: string
   }): Promise<void> {
     try {
-      logger.info('Sending invoice receipt email', { to: params.to });
+      logger.info("Sending invoice receipt email", { to: params.to })
       // await emailService.send({...})
     } catch (error) {
-      logger.error('Failed to send invoice receipt email', { error, params });
+      logger.error("Failed to send invoice receipt email", { error, params })
     }
   }
 
-  private async schedulePaymentRetry(paymentIntent: any, attemptNumber: number): Promise<void> {
+  private async schedulePaymentRetry(
+    paymentIntent: any,
+    attemptNumber: number
+  ): Promise<void> {
     try {
       // Schedule retry with exponential backoff
-      const delayHours = Math.pow(2, attemptNumber) * 24; // 2 days, 4 days, 8 days
-      const retryDate = new Date(Date.now() + delayHours * 60 * 60 * 1000);
+      const delayHours = Math.pow(2, attemptNumber) * 24 // 2 days, 4 days, 8 days
+      const retryDate = new Date(Date.now() + delayHours * 60 * 60 * 1000)
 
-      logger.info('Scheduling payment retry', {
+      logger.info("Scheduling payment retry", {
         paymentIntentId: paymentIntent.id,
         attemptNumber,
-        retryDate
-      });
+        retryDate,
+      })
 
       // In production, this would use a job queue like BullMQ or similar
       // await jobQueue.schedule('retryPayment', { paymentIntentId: paymentIntent.id }, retryDate);
     } catch (error) {
-      logger.error('Failed to schedule payment retry', { error, paymentIntent });
+      logger.error("Failed to schedule payment retry", { error, paymentIntent })
     }
   }
 }
 
 // === SINGLETON INSTANCE ===
 
-export const paymentService = new PaymentService(config);
+export const paymentService = new PaymentService(config)
 
 // === PRICING PLANS ===
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
-    id: 'starter',
-    name: 'Starter Plan',
-    description: 'Perfect for small schools',
+    id: "starter",
+    name: "Starter Plan",
+    description: "Perfect for small schools",
     amount: 99,
-    currency: 'usd',
-    interval: 'month',
+    currency: "usd",
+    interval: "month",
     features: [
-      'Up to 100 students',
-      'Up to 10 teachers',
-      'Basic features',
-      'Email support',
+      "Up to 100 students",
+      "Up to 10 teachers",
+      "Basic features",
+      "Email support",
     ],
     metadata: {
       maxStudents: 100,
@@ -815,18 +867,18 @@ export const PRICING_PLANS: PricingPlan[] = [
     },
   },
   {
-    id: 'professional',
-    name: 'Professional Plan',
-    description: 'For growing schools',
+    id: "professional",
+    name: "Professional Plan",
+    description: "For growing schools",
     amount: 299,
-    currency: 'usd',
-    interval: 'month',
+    currency: "usd",
+    interval: "month",
     features: [
-      'Up to 500 students',
-      'Up to 50 teachers',
-      'Advanced features',
-      'Priority support',
-      'Custom branding',
+      "Up to 500 students",
+      "Up to 50 teachers",
+      "Advanced features",
+      "Priority support",
+      "Custom branding",
     ],
     metadata: {
       maxStudents: 500,
@@ -834,42 +886,42 @@ export const PRICING_PLANS: PricingPlan[] = [
     },
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise Plan',
-    description: 'For large institutions',
+    id: "enterprise",
+    name: "Enterprise Plan",
+    description: "For large institutions",
     amount: 999,
-    currency: 'usd',
-    interval: 'month',
+    currency: "usd",
+    interval: "month",
     features: [
-      'Unlimited students',
-      'Unlimited teachers',
-      'All features',
-      'Dedicated support',
-      'Custom integrations',
-      'SLA guarantee',
+      "Unlimited students",
+      "Unlimited teachers",
+      "All features",
+      "Dedicated support",
+      "Custom integrations",
+      "SLA guarantee",
     ],
     metadata: {
       maxStudents: -1, // unlimited
       maxTeachers: -1,
     },
   },
-];
+]
 
 // === UTILITY FUNCTIONS ===
 
 /**
  * Format amount for display
  */
-export function formatAmount(amount: number, currency: string = 'usd'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+export function formatAmount(amount: number, currency: string = "usd"): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency: currency.toUpperCase(),
-  }).format(amount);
+  }).format(amount)
 }
 
 /**
  * Get plan by ID
  */
 export function getPlanById(planId: string): PricingPlan | undefined {
-  return PRICING_PLANS.find(plan => plan.id === planId);
+  return PRICING_PLANS.find((plan) => plan.id === planId)
 }

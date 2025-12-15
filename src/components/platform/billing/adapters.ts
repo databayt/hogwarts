@@ -4,17 +4,23 @@
  * Transforms existing Prisma/database types to BillingSDK component props.
  */
 
-import type { Invoice, BillingPaymentMethod, UsageMetrics } from "@prisma/client";
 import type {
-  Plan,
+  BillingPaymentMethod,
+  Invoice,
+  UsageMetrics,
+} from "@prisma/client"
+
+import type {
+  ChargeItem,
   CurrentPlan,
   InvoiceItem,
-  UsageResource,
-  ChargeItem,
   PaymentCard,
-} from "@/lib/billingsdk-config";
-import { plans, getPlanById } from "@/lib/billingsdk-config";
-import type { SubscriptionWithTier } from "./types";
+  Plan,
+  UsageResource,
+} from "@/lib/billingsdk-config"
+import { getPlanById, plans } from "@/lib/billingsdk-config"
+
+import type { SubscriptionWithTier } from "./types"
 
 // ========== Subscription Adapters ==========
 
@@ -22,10 +28,12 @@ import type { SubscriptionWithTier } from "./types";
  * Convert DB subscription to BillingSDK CurrentPlan
  */
 export function toCurrentPlan(subscription: SubscriptionWithTier): CurrentPlan {
-  const planId = subscription.subscriptionTier?.name?.toLowerCase() || "hobby";
-  const plan = getPlanById(planId) || plans[0];
+  const planId = subscription.subscriptionTier?.name?.toLowerCase() || "hobby"
+  const plan = getPlanById(planId) || plans[0]
 
-  const billingType = subscription.stripePriceId?.includes("yearly") ? "yearly" : "monthly";
+  const billingType = subscription.stripePriceId?.includes("yearly")
+    ? "yearly"
+    : "monthly"
 
   const statusMap: Record<string, CurrentPlan["status"]> = {
     active: "active",
@@ -36,7 +44,7 @@ export function toCurrentPlan(subscription: SubscriptionWithTier): CurrentPlan {
     unpaid: "past_due",
     incomplete: "inactive",
     incomplete_expired: "inactive",
-  };
+  }
 
   return {
     plan,
@@ -47,15 +55,15 @@ export function toCurrentPlan(subscription: SubscriptionWithTier): CurrentPlan {
       : "N/A",
     paymentMethod: "Credit Card", // Default - can be enhanced with actual payment method
     status: statusMap[subscription.status] || "active",
-  };
+  }
 }
 
 /**
  * Get plan from subscription tier name
  */
 export function getPlanFromTier(tierName: string): Plan {
-  const planId = tierName.toLowerCase();
-  return getPlanById(planId) || plans[0];
+  const planId = tierName.toLowerCase()
+  return getPlanById(planId) || plans[0]
 }
 
 // ========== Invoice Adapters ==========
@@ -71,7 +79,7 @@ export function toInvoiceItems(invoices: Invoice[]): InvoiceItem[] {
     status: mapInvoiceStatus(invoice.status),
     invoiceUrl: undefined, // PDF URL from Stripe would be fetched separately
     description: `Invoice #${invoice.stripeInvoiceId?.slice(-8) || invoice.id.slice(-8)}`,
-  }));
+  }))
 }
 
 function mapInvoiceStatus(status: string): InvoiceItem["status"] {
@@ -82,8 +90,8 @@ function mapInvoiceStatus(status: string): InvoiceItem["status"] {
     uncollectible: "void",
     draft: "open",
     refunded: "refunded",
-  };
-  return statusMap[status] || "open";
+  }
+  return statusMap[status] || "open"
 }
 
 // ========== Usage Adapters ==========
@@ -93,7 +101,12 @@ function mapInvoiceStatus(status: string): InvoiceItem["status"] {
  */
 export function toUsageResources(
   metrics: UsageMetrics | null,
-  limits: { students: number; teachers: number; classes: number; storage: number }
+  limits: {
+    students: number
+    teachers: number
+    classes: number
+    storage: number
+  }
 ): UsageResource[] {
   if (!metrics) {
     return [
@@ -101,7 +114,7 @@ export function toUsageResources(
       { name: "Teachers", used: 0, limit: limits.teachers, unit: "users" },
       { name: "Classes", used: 0, limit: limits.classes, unit: "classes" },
       { name: "Storage", used: 0, limit: limits.storage, unit: "MB" },
-    ];
+    ]
   }
 
   return [
@@ -109,31 +122,43 @@ export function toUsageResources(
       name: "Students",
       used: metrics.currentStudents,
       limit: limits.students === -1 ? 999999 : limits.students,
-      percentage: limits.students === -1 ? 0 : Math.round((metrics.currentStudents / limits.students) * 100),
+      percentage:
+        limits.students === -1
+          ? 0
+          : Math.round((metrics.currentStudents / limits.students) * 100),
       unit: "users",
     },
     {
       name: "Teachers",
       used: metrics.currentTeachers,
       limit: limits.teachers === -1 ? 999999 : limits.teachers,
-      percentage: limits.teachers === -1 ? 0 : Math.round((metrics.currentTeachers / limits.teachers) * 100),
+      percentage:
+        limits.teachers === -1
+          ? 0
+          : Math.round((metrics.currentTeachers / limits.teachers) * 100),
       unit: "users",
     },
     {
       name: "Classes",
       used: metrics.currentClasses,
       limit: limits.classes === -1 ? 999999 : limits.classes,
-      percentage: limits.classes === -1 ? 0 : Math.round((metrics.currentClasses / limits.classes) * 100),
+      percentage:
+        limits.classes === -1
+          ? 0
+          : Math.round((metrics.currentClasses / limits.classes) * 100),
       unit: "classes",
     },
     {
       name: "Storage",
       used: metrics.currentStorage,
       limit: limits.storage === -1 ? 999999 : limits.storage,
-      percentage: limits.storage === -1 ? 0 : Math.round((metrics.currentStorage / limits.storage) * 100),
+      percentage:
+        limits.storage === -1
+          ? 0
+          : Math.round((metrics.currentStorage / limits.storage) * 100),
       unit: "MB",
     },
-  ];
+  ]
 }
 
 // ========== Payment Method Adapters ==========
@@ -146,11 +171,12 @@ export function toPaymentCards(methods: BillingPaymentMethod[]): PaymentCard[] {
     id: method.id,
     last4: method.cardLast4 || "****",
     brand: method.cardBrand || "Card",
-    expiry: method.cardExpMonth && method.cardExpYear
-      ? `${String(method.cardExpMonth).padStart(2, '0')}/${String(method.cardExpYear).slice(-2)}`
-      : "**/**",
+    expiry:
+      method.cardExpMonth && method.cardExpYear
+        ? `${String(method.cardExpMonth).padStart(2, "0")}/${String(method.cardExpYear).slice(-2)}`
+        : "**/**",
     primary: method.isDefault,
-  }));
+  }))
 }
 
 // ========== Charge Adapters ==========
@@ -160,11 +186,15 @@ export function toPaymentCards(methods: BillingPaymentMethod[]): PaymentCard[] {
  */
 export function toUpcomingCharges(
   subscription: SubscriptionWithTier,
-  additionalCharges: Array<{ description: string; amount: number; type: ChargeItem["type"] }> = []
+  additionalCharges: Array<{
+    description: string
+    amount: number
+    type: ChargeItem["type"]
+  }> = []
 ): ChargeItem[] {
   const billingDate = subscription.currentPeriodEnd
     ? formatDate(subscription.currentPeriodEnd)
-    : formatDate(new Date());
+    : formatDate(new Date())
 
   const baseCharge: ChargeItem = {
     id: "base_subscription",
@@ -172,9 +202,9 @@ export function toUpcomingCharges(
     amount: formatCurrency(subscription.subscriptionTier?.monthlyPrice || 0),
     date: billingDate,
     type: "recurring",
-  };
+  }
 
-  const charges: ChargeItem[] = [baseCharge];
+  const charges: ChargeItem[] = [baseCharge]
 
   // Add any additional charges (prorated, one-time, etc.)
   additionalCharges.forEach((charge, index) => {
@@ -184,10 +214,10 @@ export function toUpcomingCharges(
       amount: formatCurrency(charge.amount),
       date: billingDate,
       type: charge.type,
-    });
-  });
+    })
+  })
 
-  return charges;
+  return charges
 }
 
 /**
@@ -195,10 +225,10 @@ export function toUpcomingCharges(
  */
 export function calculateTotal(charges: ChargeItem[]): string {
   const total = charges.reduce((sum, charge) => {
-    const amount = parseFloat(charge.amount.replace(/[^0-9.-]+/g, ""));
-    return sum + (isNaN(amount) ? 0 : amount);
-  }, 0);
-  return formatCurrency(total * 100); // Convert to cents for formatCurrency
+    const amount = parseFloat(charge.amount.replace(/[^0-9.-]+/g, ""))
+    return sum + (isNaN(amount) ? 0 : amount)
+  }, 0)
+  return formatCurrency(total * 100) // Convert to cents for formatCurrency
 }
 
 // ========== Utility Functions ==========
@@ -207,24 +237,24 @@ export function calculateTotal(charges: ChargeItem[]): string {
  * Format date for display
  */
 export function formatDate(date: Date | string | null): string {
-  if (!date) return "N/A";
-  const d = typeof date === "string" ? new Date(date) : date;
+  if (!date) return "N/A"
+  const d = typeof date === "string" ? new Date(date) : date
   return d.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
+  })
 }
 
 /**
  * Format currency (amount in cents to display string)
  */
 export function formatCurrency(amountInCents: number): string {
-  const amount = amountInCents / 100;
+  const amount = amountInCents / 100
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount);
+  }).format(amount)
 }
 
 /**
@@ -234,32 +264,34 @@ export function formatDollars(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(amount);
+  }).format(amount)
 }
 
 /**
  * Calculate days until date
  */
 export function daysUntil(date: Date | string | null): number {
-  if (!date) return 0;
-  const target = typeof date === "string" ? new Date(date) : date;
-  const now = new Date();
-  const diff = target.getTime() - now.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  if (!date) return 0
+  const target = typeof date === "string" ? new Date(date) : date
+  const now = new Date()
+  const diff = target.getTime() - now.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
 /**
  * Check if subscription is on trial
  */
 export function isOnTrial(subscription: SubscriptionWithTier): boolean {
-  return subscription.status === "trialing";
+  return subscription.status === "trialing"
 }
 
 /**
  * Get trial end date if on trial
  */
-export function getTrialEndDate(subscription: SubscriptionWithTier): Date | null {
-  if (subscription.status !== "trialing") return null;
+export function getTrialEndDate(
+  subscription: SubscriptionWithTier
+): Date | null {
+  if (subscription.status !== "trialing") return null
   // Assuming trial ends at current period end during trial
-  return subscription.currentPeriodEnd;
+  return subscription.currentPeriodEnd
 }

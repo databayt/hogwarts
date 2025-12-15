@@ -1,25 +1,24 @@
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Image from "next/image"
+import Link from "next/link"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 
 interface Props {
-  userId: string;
+  userId: string
 }
 
 export default async function LibraryMyProfileContent({ userId }: Props) {
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2 className="mb-4">School context not found</h2>
-        <p className="muted">
-          Unable to load profile. Please contact support.
-        </p>
+        <p className="muted">Unable to load profile. Please contact support.</p>
       </div>
-    );
+    )
   }
 
   // Fetch user's borrow records
@@ -35,15 +34,15 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
       borrowDate: "desc",
     },
     take: 50,
-  });
+  })
 
   const activeBorrows = borrowRecords.filter(
     (record) => record.status === "BORROWED"
-  );
+  )
 
   const borrowHistory = borrowRecords.filter(
     (record) => record.status === "RETURNED"
-  );
+  )
 
   return (
     <div className="library-profile-container">
@@ -56,9 +55,7 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
         </h2>
 
         {activeBorrows.length === 0 ? (
-          <p className="muted">
-            You haven't borrowed any books yet
-          </p>
+          <p className="muted">You haven't borrowed any books yet</p>
         ) : (
           <div className="library-profile-grid">
             {activeBorrows.map((record) => (
@@ -75,9 +72,7 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
 
                 <div className="library-profile-card-content">
                   <h5>{record.book.title}</h5>
-                  <p className="muted">
-                    by {record.book.author}
-                  </p>
+                  <p className="muted">by {record.book.author}</p>
 
                   <div className="library-profile-card-meta">
                     <small>
@@ -90,9 +85,7 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
                     </small>
 
                     {new Date(record.dueDate) < new Date() && (
-                      <small className="text-destructive">
-                        Overdue!
-                      </small>
+                      <small className="text-destructive">Overdue!</small>
                     )}
                   </div>
 
@@ -132,24 +125,24 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
 
                 <div className="library-profile-history-content">
                   <h6>{record.book.title}</h6>
-                  <p className="muted">
-                    by {record.book.author}
-                  </p>
+                  <p className="muted">by {record.book.author}</p>
 
                   <div className="library-profile-history-dates">
                     <small className="muted">
-                      Borrowed: {new Date(record.borrowDate).toLocaleDateString()}
+                      Borrowed:{" "}
+                      {new Date(record.borrowDate).toLocaleDateString()}
                     </small>
                     <small className="muted">
-                      Returned: {record.returnDate ? new Date(record.returnDate).toLocaleDateString() : "N/A"}
+                      Returned:{" "}
+                      {record.returnDate
+                        ? new Date(record.returnDate).toLocaleDateString()
+                        : "N/A"}
                     </small>
                   </div>
                 </div>
 
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/library/books/${record.book.id}`}>
-                    View
-                  </Link>
+                  <Link href={`/library/books/${record.book.id}`}>View</Link>
                 </Button>
               </div>
             ))}
@@ -157,5 +150,5 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
         )}
       </section>
     </div>
-  );
+  )
 }

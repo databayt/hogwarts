@@ -7,42 +7,60 @@ description: "MVP implementation roadmap for Hogwarts School Automation Platform
 
 A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single platform.
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 not-prose">
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Infrastructure</h3>
-    <p className="text-sm text-muted-foreground">Multi-tenant architecture, subdomain routing, and core technical setup.</p>
+<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Infrastructure</h3>
+    <p className="text-muted-foreground text-sm">
+      Multi-tenant architecture, subdomain routing, and core technical setup.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Authentication</h3>
-    <p className="text-sm text-muted-foreground">User management, role-based access control, and secure auth flows.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Authentication</h3>
+    <p className="text-muted-foreground text-sm">
+      User management, role-based access control, and secure auth flows.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Configuration</h3>
-    <p className="text-sm text-muted-foreground">School profile, academic structure, branding, and settings.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Configuration</h3>
+    <p className="text-muted-foreground text-sm">
+      School profile, academic structure, branding, and settings.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Student</h3>
-    <p className="text-sm text-muted-foreground">Student lifecycle from enrollment to graduation with profiles.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Student</h3>
+    <p className="text-muted-foreground text-sm">
+      Student lifecycle from enrollment to graduation with profiles.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Listings</h3>
-    <p className="text-sm text-muted-foreground">Subjects, classes, teachers, parents, and staff records.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Listings</h3>
+    <p className="text-muted-foreground text-sm">
+      Subjects, classes, teachers, parents, and staff records.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Attendance</h3>
-    <p className="text-sm text-muted-foreground">Daily attendance tracking, reports, and absence management.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Attendance</h3>
+    <p className="text-muted-foreground text-sm">
+      Daily attendance tracking, reports, and absence management.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Exam</h3>
-    <p className="text-sm text-muted-foreground">Exam scheduling, grading, results, and report cards.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Exam</h3>
+    <p className="text-muted-foreground text-sm">
+      Exam scheduling, grading, results, and report cards.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Timetable</h3>
-    <p className="text-sm text-muted-foreground">Class scheduling, period management, and conflict detection.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Timetable</h3>
+    <p className="text-muted-foreground text-sm">
+      Class scheduling, period management, and conflict detection.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h3 className="text-base font-medium mb-2">Admission</h3>
-    <p className="text-sm text-muted-foreground">Application processing, enrollment workflow, and registration management.</p>
+  <div className="rounded-lg border p-6">
+    <h3 className="mb-2 text-base font-medium">Admission</h3>
+    <p className="text-muted-foreground text-sm">
+      Application processing, enrollment workflow, and registration management.
+    </p>
   </div>
 </div>
 
@@ -53,11 +71,25 @@ A school can enroll students, manage classes, track attendance, grade assignment
 Set up the core foundation where each school gets its own subdomain with isolated data.
 Great for learning multi-tenant apps, middleware, and how to keep data separate and secure.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">15 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">high</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">15 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+    high
+  </span>
 </div>
 
 - Multi-tenant database schema with schoolId scoping <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-purple-500/20 text-purple-700 dark:text-purple-400 rounded font-medium">prisma</span>
@@ -83,11 +115,25 @@ Great for learning multi-tenant apps, middleware, and how to keep data separate 
 Build secure login with email, password, and social providers plus user roles for teachers, students, and parents.
 Perfect for learning tokens, protected routes, and modern auth patterns.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">18 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">high</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">18 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+    high
+  </span>
 </div>
 
 - NextAuth v5 configured with JWT strategy <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded font-medium">auth</span>
@@ -116,11 +162,25 @@ Perfect for learning tokens, protected routes, and modern auth patterns.
 Let each school customize their look with logos, colors, and branding that matches their identity.
 A great way to learn form handling, file uploads, and theme systems.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">12 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/settings/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/settings/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">medium</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">12 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/settings/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/settings/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
+    medium
+  </span>
 </div>
 
 - School profile creation and management <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-gray-500/20 text-gray-700 dark:text-gray-400 rounded font-medium">backlog</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-orange-500/20 text-orange-700 dark:text-orange-400 rounded font-medium">priority</span>
@@ -143,11 +203,25 @@ A great way to learn form handling, file uploads, and theme systems.
 Manage the full student journey from enrollment to graduation with rich profiles and guardian links.
 Ideal for learning complex forms, data relationships, and handling lots of records efficiently.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">20 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/students/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/students/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">high</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">20 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/students/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/students/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+    high
+  </span>
 </div>
 
 - Student enrollment form working <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">crud</span>
@@ -178,11 +252,25 @@ Ideal for learning complex forms, data relationships, and handling lots of recor
 Keep track of subjects, classes, teachers, parents, and staff with profile pages and data tables.
 Perfect for mastering crud operations and understanding how entities relate to each other.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">18 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/subjects/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/subjects/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">high</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">18 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/subjects/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/subjects/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+    high
+  </span>
 </div>
 
 - Subject catalog creation <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">crud</span>
@@ -211,11 +299,25 @@ Perfect for mastering crud operations and understanding how entities relate to e
 Track who shows up each day with simple marking or options like qr codes and location check-ins.
 Great for learning real-time updates, data visualization, and notification systems.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">12 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/attendance/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/attendance/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">high</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">12 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/attendance/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/attendance/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-red-500/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400">
+    high
+  </span>
 </div>
 
 - Daily attendance marking interface <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">ui</span>
@@ -238,11 +340,25 @@ Great for learning real-time updates, data visualization, and notification syste
 Handle exams from scheduling to grading, calculating averages, and generating report cards as pdfs.
 A fun way to learn pdf generation, grade calculations, and working with educational data.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">15 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/exams/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/exams/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">medium</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">15 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/exams/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/exams/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
+    medium
+  </span>
 </div>
 
 - Exam creation and scheduling <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">in progress</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">crud</span>
@@ -268,11 +384,25 @@ A fun way to learn pdf generation, grade calculations, and working with educatio
 Build a visual schedule builder with drag and drop, preventing double-booking of teachers or rooms.
 Excellent for learning drag-and-drop interfaces and solving real scheduling problems.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">12 stories</span>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/timetable/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/timetable/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">medium</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">12 stories</span>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/timetable/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/timetable/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-yellow-500/20 px-2 py-1 text-xs font-medium text-yellow-700 dark:text-yellow-400">
+    medium
+  </span>
 </div>
 
 - Visual timetable builder <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">ui</span>
@@ -295,12 +425,31 @@ Excellent for learning drag-and-drop interfaces and solving real scheduling prob
 Guide new students through applications from filling out forms to getting accepted and enrolled.
 A great introduction to workflow systems and state machines in real applications.
 
-<div className="flex gap-2 mt-4 mb-4 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">15 stories</span>
-  <a href="/docs/admission" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">docs</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/admission/README.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">readme</a>
-  <a href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/admission/ISSUE.md" target="_blank" className="px-2 py-1 text-xs bg-muted rounded hover:bg-muted/80">issue</a>
-  <span className="px-2 py-1 text-xs bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">production</span>
+<div className="not-prose mt-4 mb-4 flex gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">15 stories</span>
+  <a
+    href="/docs/admission"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    docs
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/admission/README.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    readme
+  </a>
+  <a
+    href="https://github.com/databayt/hogwarts/blob/main/src/components/platform/admission/ISSUE.md"
+    target="_blank"
+    className="bg-muted hover:bg-muted/80 rounded px-2 py-1 text-xs"
+  >
+    issue
+  </a>
+  <span className="rounded bg-green-500/20 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-400">
+    production
+  </span>
 </div>
 
 - Public application portal (no account required) <span className="ml-2 px-1.5 py-0.5 text-[10px] bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">done</span> <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded font-medium">ui</span>

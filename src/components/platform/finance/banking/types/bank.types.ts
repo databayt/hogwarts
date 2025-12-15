@@ -3,45 +3,53 @@
  * Following TypeScript 5.x best practices with strict typing
  */
 
-import type { Decimal } from '@prisma/client/runtime/library'
-import type { BankAccount as PrismaBankAccount, Transaction as PrismaTransaction, Transfer as PrismaTransfer } from '@prisma/client'
+import type {
+  BankAccount as PrismaBankAccount,
+  Transaction as PrismaTransaction,
+  Transfer as PrismaTransfer,
+} from "@prisma/client"
+import type { Decimal } from "@prisma/client/runtime/library"
 
 // ============================================================================
 // Base Types & Enums
 // ============================================================================
 
 export const BankAccountType = {
-  DEPOSITORY: 'depository',
-  CREDIT: 'credit',
-  LOAN: 'loan',
-  INVESTMENT: 'investment',
+  DEPOSITORY: "depository",
+  CREDIT: "credit",
+  LOAN: "loan",
+  INVESTMENT: "investment",
 } as const
 
-export type BankAccountType = typeof BankAccountType[keyof typeof BankAccountType]
+export type BankAccountType =
+  (typeof BankAccountType)[keyof typeof BankAccountType]
 
 export const TransactionType = {
-  DEBIT: 'debit',
-  CREDIT: 'credit',
+  DEBIT: "debit",
+  CREDIT: "credit",
 } as const
 
-export type TransactionType = typeof TransactionType[keyof typeof TransactionType]
+export type TransactionType =
+  (typeof TransactionType)[keyof typeof TransactionType]
 
 export const PaymentChannel = {
-  ONLINE: 'online',
-  IN_STORE: 'in_store',
-  OTHER: 'other',
+  ONLINE: "online",
+  IN_STORE: "in_store",
+  OTHER: "other",
 } as const
 
-export type PaymentChannel = typeof PaymentChannel[keyof typeof PaymentChannel]
+export type PaymentChannel =
+  (typeof PaymentChannel)[keyof typeof PaymentChannel]
 
 export const TransferStatus = {
-  PENDING: 'pending',
-  COMPLETED: 'completed',
-  FAILED: 'failed',
-  CANCELLED: 'cancelled',
+  PENDING: "pending",
+  COMPLETED: "completed",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
 } as const
 
-export type TransferStatus = typeof TransferStatus[keyof typeof TransferStatus]
+export type TransferStatus =
+  (typeof TransferStatus)[keyof typeof TransferStatus]
 
 // ============================================================================
 // Domain Models
@@ -160,15 +168,15 @@ export interface AccountOverview {
  * Transaction with bank account details
  */
 export interface TransactionWithAccount extends Transaction {
-  bankAccount: Pick<BankAccount, 'id' | 'name' | 'mask' | 'type'>
+  bankAccount: Pick<BankAccount, "id" | "name" | "mask" | "type">
 }
 
 /**
  * Transfer with bank details
  */
 export interface TransferWithBanks extends Transfer {
-  senderBank: Pick<BankAccount, 'id' | 'name' | 'mask'>
-  receiverBank: Pick<BankAccount, 'id' | 'name' | 'mask'>
+  senderBank: Pick<BankAccount, "id" | "name" | "mask">
+  receiverBank: Pick<BankAccount, "id" | "name" | "mask">
 }
 
 // ============================================================================
@@ -178,16 +186,19 @@ export interface TransferWithBanks extends Transfer {
 /**
  * Converts Prisma Decimal fields to numbers
  */
-export type SerializedBankAccount = Omit<PrismaBankAccount, 'currentBalance' | 'availableBalance'> & {
+export type SerializedBankAccount = Omit<
+  PrismaBankAccount,
+  "currentBalance" | "availableBalance"
+> & {
   currentBalance: number
   availableBalance: number
 }
 
-export type SerializedTransaction = Omit<PrismaTransaction, 'amount'> & {
+export type SerializedTransaction = Omit<PrismaTransaction, "amount"> & {
   amount: number
 }
 
-export type SerializedTransfer = Omit<PrismaTransfer, 'amount'> & {
+export type SerializedTransfer = Omit<PrismaTransfer, "amount"> & {
   amount: number
 }
 
@@ -239,7 +250,7 @@ export interface PaginationOptions {
   page: number
   limit: number
   sortBy?: string
-  sortOrder?: 'asc' | 'desc'
+  sortOrder?: "asc" | "desc"
 }
 
 /**
@@ -262,33 +273,33 @@ export interface PaginatedResponse<T> {
 
 export function isBankAccount(value: unknown): value is BankAccount {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'id' in value &&
-    'accountId' in value &&
-    'currentBalance' in value
+    "id" in value &&
+    "accountId" in value &&
+    "currentBalance" in value
   )
 }
 
 export function isTransaction(value: unknown): value is Transaction {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'id' in value &&
-    'bankAccountId' in value &&
-    'amount' in value &&
-    'type' in value
+    "id" in value &&
+    "bankAccountId" in value &&
+    "amount" in value &&
+    "type" in value
   )
 }
 
 export function isTransfer(value: unknown): value is Transfer {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'id' in value &&
-    'senderBankId' in value &&
-    'receiverBankId' in value &&
-    'status' in value
+    "id" in value &&
+    "senderBankId" in value &&
+    "receiverBankId" in value &&
+    "status" in value
   )
 }
 
@@ -296,10 +307,10 @@ export function isTransfer(value: unknown): value is Transfer {
 // Branded Types for Domain Safety
 // ============================================================================
 
-export type AccountId = string & { readonly __brand: 'AccountId' }
-export type UserId = string & { readonly __brand: 'UserId' }
-export type TransactionId = string & { readonly __brand: 'TransactionId' }
-export type TransferId = string & { readonly __brand: 'TransferId' }
+export type AccountId = string & { readonly __brand: "AccountId" }
+export type UserId = string & { readonly __brand: "UserId" }
+export type TransactionId = string & { readonly __brand: "TransactionId" }
+export type TransferId = string & { readonly __brand: "TransferId" }
 
 export function createAccountId(id: string): AccountId {
   return id as AccountId

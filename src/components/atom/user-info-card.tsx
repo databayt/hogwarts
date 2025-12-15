@@ -1,12 +1,9 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export interface UserInfoCardProps extends React.ComponentProps<"div"> {
   name: string
@@ -40,8 +37,8 @@ export function UserInfoCard({
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium leading-none">{name}</p>
-        <p className="truncate text-sm text-muted-foreground">{email}</p>
+        <p className="truncate text-sm leading-none font-medium">{name}</p>
+        <p className="text-muted-foreground truncate text-sm">{email}</p>
       </div>
     </div>
   )

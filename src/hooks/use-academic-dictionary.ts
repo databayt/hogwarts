@@ -1,4 +1,5 @@
 import { useMemo } from "react"
+
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 /**
@@ -81,7 +82,9 @@ export interface AcademicDictionary {
  * return <h1>{dict.academicYears || "Academic Years"}</h1>
  * ```
  */
-export function useAcademicDictionary(dictionary?: Dictionary): AcademicDictionary {
+export function useAcademicDictionary(
+  dictionary?: Dictionary
+): AcademicDictionary {
   return useMemo(() => {
     if (!dictionary?.school) return {}
     const school = dictionary.school as Record<string, unknown>
@@ -94,7 +97,9 @@ export function useAcademicDictionary(dictionary?: Dictionary): AcademicDictiona
  * Non-hook version for server components.
  * Use this when you need the dictionary in a server component.
  */
-export function getAcademicDictionary(dictionary?: Dictionary): AcademicDictionary {
+export function getAcademicDictionary(
+  dictionary?: Dictionary
+): AcademicDictionary {
   if (!dictionary?.school) return {}
   const school = dictionary.school as Record<string, unknown>
   if (!school.academic) return {}

@@ -1,17 +1,34 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { User, Mail, Calendar, Briefcase, GraduationCap, BookOpen, Building, Phone, MapPin, FileText, Award, CircleCheck, CircleAlert, Clock, Star } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format } from "date-fns"
+import {
+  Award,
+  BookOpen,
+  Briefcase,
+  Building,
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  FileText,
+  GraduationCap,
+  Mail,
+  MapPin,
+  Phone,
+  Star,
+  User,
+} from "lucide-react"
+import { type UseFormReturn } from "react-hook-form"
 
-import { TeacherFormStepProps } from "./types";
-import { EMPLOYMENT_STATUS_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "./config";
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+
+import { EMPLOYMENT_STATUS_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "./config"
+import { TeacherFormStepProps } from "./types"
 
 // Mock subjects data - should match the one in expertise.tsx
 const AVAILABLE_SUBJECTS = [
@@ -28,10 +45,13 @@ const AVAILABLE_SUBJECTS = [
   { id: "sub11", name: "Physical Education" },
   { id: "sub12", name: "Art" },
   { id: "sub13", name: "Music" },
-];
+]
 
-export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep?: (step: number) => void }) {
-  const values = form.watch();
+export function ReviewStep({
+  form,
+  isView,
+}: TeacherFormStepProps & { onEditStep?: (step: number) => void }) {
+  const values = form.watch()
 
   const getCompletionStatus = () => {
     const sections = {
@@ -41,29 +61,37 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
       qualifications: values.qualifications && values.qualifications.length > 0,
       experience: values.experiences && values.experiences.length > 0,
       expertise: values.subjectExpertise && values.subjectExpertise.length > 0,
-    };
+    }
 
-    const completed = Object.values(sections).filter(Boolean).length;
-    const total = Object.keys(sections).length;
+    const completed = Object.values(sections).filter(Boolean).length
+    const total = Object.keys(sections).length
 
-    return { sections, completed, total, percentage: (completed / total) * 100 };
-  };
+    return { sections, completed, total, percentage: (completed / total) * 100 }
+  }
 
-  const status = getCompletionStatus();
+  const status = getCompletionStatus()
 
   const formatDate = (date: Date | string | undefined) => {
-    if (!date) return "Not specified";
+    if (!date) return "Not specified"
     try {
-      return format(new Date(date), "MMM dd, yyyy");
+      return format(new Date(date), "MMM dd, yyyy")
     } catch {
-      return "Invalid date";
+      return "Invalid date"
     }
-  };
+  }
 
-  const SectionHeader = ({ icon: Icon, title, complete }: { icon: any; title: string; complete: boolean }) => (
+  const SectionHeader = ({
+    icon: Icon,
+    title,
+    complete,
+  }: {
+    icon: any
+    title: string
+    complete: boolean
+  }) => (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground h-4 w-4" />
         <h3 className="font-semibold">{title}</h3>
       </div>
       {complete ? (
@@ -72,17 +100,25 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
         <CircleAlert className="h-4 w-4 text-yellow-500" />
       )}
     </div>
-  );
+  )
 
-  const InfoRow = ({ label, value, icon: Icon }: { label: string; value: any; icon?: any }) => (
+  const InfoRow = ({
+    label,
+    value,
+    icon: Icon,
+  }: {
+    label: string
+    value: any
+    icon?: any
+  }) => (
     <div className="flex items-start gap-2">
-      {Icon && <Icon className="h-4 w-4 text-muted-foreground mt-0.5" />}
+      {Icon && <Icon className="text-muted-foreground mt-0.5 h-4 w-4" />}
       <div className="flex-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-sm">{label}</p>
         <p className="font-medium">{value || "Not specified"}</p>
       </div>
     </div>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -95,9 +131,11 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Profile Completion</span>
-              <span className="text-sm font-medium">{status.completed}/{status.total} sections</span>
+              <span className="text-sm font-medium">
+                {status.completed}/{status.total} sections
+              </span>
             </div>
-            <div className="w-full bg-secondary rounded-full h-2">
+            <div className="bg-secondary h-2 w-full rounded-full">
               <div
                 className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${status.percentage}%` }}
@@ -109,7 +147,7 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
                   {complete ? (
                     <CircleCheck className="h-3 w-3 text-green-500" />
                   ) : (
-                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <Clock className="text-muted-foreground h-3 w-3" />
                   )}
                   <span className="text-xs capitalize">{key}</span>
                 </div>
@@ -124,14 +162,29 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           {/* Basic Information */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={User} title="Basic Information" complete={status.sections.basic} />
+              <SectionHeader
+                icon={User}
+                title="Basic Information"
+                complete={status.sections.basic}
+              />
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow label="Given Name" value={values.givenName} />
                 <InfoRow label="Surname" value={values.surname} />
-                <InfoRow label="Gender" value={values.gender ? values.gender.charAt(0).toUpperCase() + values.gender.slice(1) : null} />
-                <InfoRow label="Date of Birth" value={formatDate(values.birthDate)} />
+                <InfoRow
+                  label="Gender"
+                  value={
+                    values.gender
+                      ? values.gender.charAt(0).toUpperCase() +
+                        values.gender.slice(1)
+                      : null
+                  }
+                />
+                <InfoRow
+                  label="Date of Birth"
+                  value={formatDate(values.birthDate)}
+                />
               </div>
             </CardContent>
           </Card>
@@ -139,38 +192,73 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           {/* Contact Details */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={Mail} title="Contact Details" complete={status.sections.contact} />
+              <SectionHeader
+                icon={Mail}
+                title="Contact Details"
+                complete={status.sections.contact}
+              />
             </CardHeader>
             <CardContent>
-              <InfoRow label="Email Address" value={values.emailAddress} icon={Mail} />
+              <InfoRow
+                label="Email Address"
+                value={values.emailAddress}
+                icon={Mail}
+              />
             </CardContent>
           </Card>
 
           {/* Employment Details */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={Briefcase} title="Employment Details" complete={status.sections.employment} />
+              <SectionHeader
+                icon={Briefcase}
+                title="Employment Details"
+                complete={status.sections.employment}
+              />
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow label="Employee ID" value={values.employeeId} />
-                <InfoRow label="Joining Date" value={formatDate(values.joiningDate)} />
+                <InfoRow
+                  label="Joining Date"
+                  value={formatDate(values.joiningDate)}
+                />
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Employment Status</p>
-                  <Badge variant={values.employmentStatus === "ACTIVE" ? "default" : "secondary"}>
-                    {EMPLOYMENT_STATUS_OPTIONS.find(opt => opt.value === values.employmentStatus)?.label || "Not specified"}
+                  <p className="text-muted-foreground mb-1 text-sm">
+                    Employment Status
+                  </p>
+                  <Badge
+                    variant={
+                      values.employmentStatus === "ACTIVE"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {EMPLOYMENT_STATUS_OPTIONS.find(
+                      (opt) => opt.value === values.employmentStatus
+                    )?.label || "Not specified"}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Employment Type</p>
+                  <p className="text-muted-foreground mb-1 text-sm">
+                    Employment Type
+                  </p>
                   <Badge variant="outline">
-                    {EMPLOYMENT_TYPE_OPTIONS.find(opt => opt.value === values.employmentType)?.label || "Not specified"}
+                    {EMPLOYMENT_TYPE_OPTIONS.find(
+                      (opt) => opt.value === values.employmentType
+                    )?.label || "Not specified"}
                   </Badge>
                 </div>
                 {values.employmentType === "CONTRACT" && (
                   <>
-                    <InfoRow label="Contract Start" value={formatDate(values.contractStartDate)} />
-                    <InfoRow label="Contract End" value={formatDate(values.contractEndDate)} />
+                    <InfoRow
+                      label="Contract Start"
+                      value={formatDate(values.contractStartDate)}
+                    />
+                    <InfoRow
+                      label="Contract End"
+                      value={formatDate(values.contractEndDate)}
+                    />
                   </>
                 )}
               </div>
@@ -180,22 +268,27 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           {/* Qualifications */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={GraduationCap} title="Qualifications" complete={status.sections.qualifications} />
+              <SectionHeader
+                icon={GraduationCap}
+                title="Qualifications"
+                complete={status.sections.qualifications}
+              />
             </CardHeader>
             <CardContent>
               {values.qualifications && values.qualifications.length > 0 ? (
                 <div className="space-y-3">
                   {values.qualifications.map((qual, index) => (
-                    <div key={index} className="border-s-2 border-primary ps-3">
+                    <div key={index} className="border-primary border-s-2 ps-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-medium">{qual.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">
                             {qual.institution} {qual.major && `• ${qual.major}`}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             Obtained: {formatDate(qual.dateObtained)}
-                            {qual.expiryDate && ` • Expires: ${formatDate(qual.expiryDate)}`}
+                            {qual.expiryDate &&
+                              ` • Expires: ${formatDate(qual.expiryDate)}`}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs">
@@ -206,7 +299,9 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No qualifications added</p>
+                <p className="text-muted-foreground text-sm">
+                  No qualifications added
+                </p>
               )}
             </CardContent>
           </Card>
@@ -214,30 +309,43 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           {/* Experience */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={Building} title="Experience" complete={status.sections.experience} />
+              <SectionHeader
+                icon={Building}
+                title="Experience"
+                complete={status.sections.experience}
+              />
             </CardHeader>
             <CardContent>
               {values.experiences && values.experiences.length > 0 ? (
                 <div className="space-y-3">
                   {values.experiences.map((exp, index) => (
-                    <div key={index} className="border-s-2 border-primary ps-3">
+                    <div key={index} className="border-primary border-s-2 ps-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-medium">{exp.position}</p>
-                          <p className="text-sm text-muted-foreground">{exp.institution}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(exp.startDate)} - {exp.isCurrent ? "Present" : formatDate(exp.endDate)}
+                          <p className="text-muted-foreground text-sm">
+                            {exp.institution}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatDate(exp.startDate)} -{" "}
+                            {exp.isCurrent
+                              ? "Present"
+                              : formatDate(exp.endDate)}
                           </p>
                         </div>
                         {exp.isCurrent && (
-                          <Badge variant="default" className="text-xs">Current</Badge>
+                          <Badge variant="default" className="text-xs">
+                            Current
+                          </Badge>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No experience added</p>
+                <p className="text-muted-foreground text-sm">
+                  No experience added
+                </p>
               )}
             </CardContent>
           </Card>
@@ -245,28 +353,44 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
           {/* Subject Expertise */}
           <Card>
             <CardHeader className="pb-3">
-              <SectionHeader icon={BookOpen} title="Subject Expertise" complete={status.sections.expertise} />
+              <SectionHeader
+                icon={BookOpen}
+                title="Subject Expertise"
+                complete={status.sections.expertise}
+              />
             </CardHeader>
             <CardContent>
               {values.subjectExpertise && values.subjectExpertise.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {values.subjectExpertise.map((exp, index) => {
-                    const subject = AVAILABLE_SUBJECTS.find(s => s.id === exp.subjectId);
+                    const subject = AVAILABLE_SUBJECTS.find(
+                      (s) => s.id === exp.subjectId
+                    )
                     return (
                       <Badge
                         key={index}
-                        variant={exp.expertiseLevel === "PRIMARY" ? "default" : "secondary"}
+                        variant={
+                          exp.expertiseLevel === "PRIMARY"
+                            ? "default"
+                            : "secondary"
+                        }
                         className="gap-1"
                       >
-                        {exp.expertiseLevel === "PRIMARY" && <Star className="h-3 w-3" />}
-                        {exp.expertiseLevel === "CERTIFIED" && <Award className="h-3 w-3" />}
+                        {exp.expertiseLevel === "PRIMARY" && (
+                          <Star className="h-3 w-3" />
+                        )}
+                        {exp.expertiseLevel === "CERTIFIED" && (
+                          <Award className="h-3 w-3" />
+                        )}
                         {subject?.name || exp.subjectId}
                       </Badge>
-                    );
+                    )
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No subjects specified</p>
+                <p className="text-muted-foreground text-sm">
+                  No subjects specified
+                </p>
               )}
             </CardContent>
           </Card>
@@ -274,17 +398,23 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
       </ScrollArea>
 
       {/* Action Summary */}
-      <Card className={cn(
-        "border-2",
-        status.percentage === 100 ? "border-green-500 bg-green-50" : "border-yellow-500 bg-yellow-50"
-      )}>
+      <Card
+        className={cn(
+          "border-2",
+          status.percentage === 100
+            ? "border-green-500 bg-green-50"
+            : "border-yellow-500 bg-yellow-50"
+        )}
+      >
         <CardContent className="pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {status.percentage === 100 ? (
                 <>
                   <CircleCheck className="h-5 w-5 text-green-500" />
-                  <span className="font-medium text-green-700">Profile Complete</span>
+                  <span className="font-medium text-green-700">
+                    Profile Complete
+                  </span>
                 </>
               ) : (
                 <>
@@ -295,12 +425,18 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
                 </>
               )}
             </div>
-            {!status.sections.basic && <Badge variant="outline">Missing: Basic Info</Badge>}
-            {!status.sections.contact && <Badge variant="outline">Missing: Contact</Badge>}
-            {!status.sections.employment && <Badge variant="outline">Missing: Employment</Badge>}
+            {!status.sections.basic && (
+              <Badge variant="outline">Missing: Basic Info</Badge>
+            )}
+            {!status.sections.contact && (
+              <Badge variant="outline">Missing: Contact</Badge>
+            )}
+            {!status.sections.employment && (
+              <Badge variant="outline">Missing: Employment</Badge>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

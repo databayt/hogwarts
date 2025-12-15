@@ -1,9 +1,10 @@
 import { UserRole } from "@prisma/client"
+
 import type {
-  ProfileData,
-  ProfileContext,
-  PermissionLevel,
   FilteredProfileData,
+  PermissionLevel,
+  ProfileContext,
+  ProfileData,
 } from "./types"
 
 /**

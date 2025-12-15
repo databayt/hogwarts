@@ -1,11 +1,19 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface Task {
@@ -154,13 +162,14 @@ export function TaskListCard({
   // Calculate completion percentage
   const completedCount = tasks.filter((t) => t.completed).length
   const totalCount = tasks.length
-  const completionPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+  const completionPercentage =
+    totalCount > 0 ? (completedCount / totalCount) * 100 : 0
 
   return (
     <Card className={cn("transition-colors", className)}>
       <CardHeader className={cn(sizeClasses[size], "pb-3")}>
         <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1 flex-1">
+          <div className="flex-1 space-y-1">
             {loading ? (
               <>
                 <Skeleton className="h-5 w-32" />
@@ -169,7 +178,9 @@ export function TaskListCard({
             ) : (
               <>
                 <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
+                {description && (
+                  <CardDescription>{description}</CardDescription>
+                )}
                 {!description && showProgress && totalCount > 0 && (
                   <CardDescription>
                     {completedCount} of {totalCount} completed
@@ -183,7 +194,7 @@ export function TaskListCard({
         {showProgress && !loading && totalCount > 0 && (
           <Progress
             value={completionPercentage}
-            className="h-2 mt-3"
+            className="mt-3 h-2"
             aria-label={`Task completion: ${Math.round(completionPercentage)}%`}
           />
         )}
@@ -193,7 +204,7 @@ export function TaskListCard({
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-start gap-3">
-                <Skeleton className="h-5 w-5 rounded shrink-0" />
+                <Skeleton className="h-5 w-5 shrink-0 rounded" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-full" />
                   <Skeleton className="h-3 w-3/4" />
@@ -210,7 +221,7 @@ export function TaskListCard({
             {displayedTasks.map((task) => (
               <div
                 key={task.id}
-                className="flex items-start gap-3 group p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                className="group hover:bg-accent/50 flex items-start gap-3 rounded-lg p-2 transition-colors"
               >
                 <Checkbox
                   id={task.id}
@@ -218,12 +229,12 @@ export function TaskListCard({
                   onCheckedChange={() => onToggle?.(task.id)}
                   className="mt-0.5"
                 />
-                <div className="flex-1 min-w-0 space-y-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <label
                     htmlFor={task.id}
                     className={cn(
-                      "font-medium text-foreground leading-none cursor-pointer",
-                      task.completed && "line-through text-muted-foreground"
+                      "text-foreground cursor-pointer leading-none font-medium",
+                      task.completed && "text-muted-foreground line-through"
                     )}
                   >
                     {task.title}
@@ -244,8 +255,15 @@ export function TaskListCard({
                         <span className="muted">{task.dueDate}</span>
                       )}
                       {task.priority && (
-                        <span className={cn("font-medium", priorityColors[task.priority])}>
-                          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} priority
+                        <span
+                          className={cn(
+                            "font-medium",
+                            priorityColors[task.priority]
+                          )}
+                        >
+                          {task.priority.charAt(0).toUpperCase() +
+                            task.priority.slice(1)}{" "}
+                          priority
                         </span>
                       )}
                     </div>

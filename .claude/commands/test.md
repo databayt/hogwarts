@@ -11,6 +11,7 @@ Test file: $1
 4. Report results
 
 Target: 95%+ coverage with all test types:
+
 - Render tests
 - Interaction tests
 - Edge cases

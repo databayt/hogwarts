@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function DomainsLoading() {
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Header skeleton */}
       <div>
-        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="mb-2 h-8 w-48" />
         <Skeleton className="h-4 w-80" />
       </div>
 
@@ -19,7 +19,7 @@ export default function DomainsLoading() {
               {i === 2 && <Skeleton className="h-5 w-20" />}
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-16 mb-1" />
+              <Skeleton className="mb-1 h-8 w-16" />
               <Skeleton className="h-3 w-32" />
             </CardContent>
           </Card>
@@ -54,5 +54,5 @@ export default function DomainsLoading() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

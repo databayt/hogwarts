@@ -2,28 +2,29 @@
  * Reports Module - Type Definitions
  */
 
-import type { AccountType } from '@prisma/client'
-import type { reportRequestSchema } from './validation'
-import type { z } from 'zod'
+import type { AccountType } from "@prisma/client"
+import type { z } from "zod"
+
+import type { reportRequestSchema } from "./validation"
 
 export type ReportRequestInput = z.infer<typeof reportRequestSchema>
 
 export type ReportType =
-  | 'BALANCE_SHEET'
-  | 'INCOME_STATEMENT'
-  | 'CASH_FLOW'
-  | 'TRIAL_BALANCE'
-  | 'GENERAL_LEDGER'
-  | 'EXPENSE_ANALYSIS'
-  | 'REVENUE_ANALYSIS'
-  | 'BUDGET_VARIANCE'
+  | "BALANCE_SHEET"
+  | "INCOME_STATEMENT"
+  | "CASH_FLOW"
+  | "TRIAL_BALANCE"
+  | "GENERAL_LEDGER"
+  | "EXPENSE_ANALYSIS"
+  | "REVENUE_ANALYSIS"
+  | "BUDGET_VARIANCE"
 
 export interface ReportRequest {
   type: ReportType
   startDate: Date
   endDate: Date
   fiscalYearId?: string
-  format: 'PDF' | 'EXCEL' | 'CSV'
+  format: "PDF" | "EXCEL" | "CSV"
   parameters?: Record<string, any>
 }
 
@@ -86,7 +87,7 @@ export interface TrialBalanceEntry {
 export interface CashFlowItem {
   description: string
   amount: number
-  type: 'INFLOW' | 'OUTFLOW'
+  type: "INFLOW" | "OUTFLOW"
 }
 
 export interface ReportActionResult {

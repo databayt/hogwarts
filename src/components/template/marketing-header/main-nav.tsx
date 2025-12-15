@@ -1,11 +1,13 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { siteConfig } from "./config"
+
 import { cn } from "@/lib/utils"
-import Image from "next/image"
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { siteConfig } from "./config"
 
 interface MainNavProps {
   dictionary?: Dictionary
@@ -16,9 +18,18 @@ export function MainNav({ dictionary }: MainNavProps) {
 
   return (
     <div className="me-4 hidden md:flex">
-      <Link href="/" className="me-4 flex items-center gap-2 text-foreground lg:me-6">
+      <Link
+        href="/"
+        className="text-foreground me-4 flex items-center gap-2 lg:me-6"
+      >
         <div className="pt-0.5">
-          <Image src="/logo.png" alt="Hogwarts Logo" width={18} height={18} className="dark:invert" />
+          <Image
+            src="/logo.png"
+            alt="Hogwarts Logo"
+            width={18}
+            height={18}
+            className="dark:invert"
+          />
         </div>
         <h6 className="hidden font-bold lg:inline-block">
           {dictionary?.navigation?.brandName || siteConfig.name}
@@ -28,7 +39,7 @@ export function MainNav({ dictionary }: MainNavProps) {
         <Link
           href="/features"
           className={cn(
-            "text-sm text-muted-foreground transition-colors hover:text-foreground",
+            "text-muted-foreground hover:text-foreground text-sm transition-colors",
             pathname?.startsWith("/features") && "text-foreground"
           )}
         >
@@ -37,7 +48,7 @@ export function MainNav({ dictionary }: MainNavProps) {
         <Link
           href="/blog"
           className={cn(
-            "text-sm text-muted-foreground transition-colors hover:text-foreground",
+            "text-muted-foreground hover:text-foreground text-sm transition-colors",
             pathname?.startsWith("/blog") && "text-foreground"
           )}
         >
@@ -46,7 +57,7 @@ export function MainNav({ dictionary }: MainNavProps) {
         <Link
           href="/pricing"
           className={cn(
-            "text-sm text-muted-foreground transition-colors hover:text-foreground",
+            "text-muted-foreground hover:text-foreground text-sm transition-colors",
             pathname?.startsWith("/pricing") && "text-foreground"
           )}
         >
@@ -55,11 +66,13 @@ export function MainNav({ dictionary }: MainNavProps) {
         <Link
           href="/docs"
           className={cn(
-            "text-sm text-muted-foreground transition-colors hover:text-foreground",
+            "text-muted-foreground hover:text-foreground text-sm transition-colors",
             pathname?.startsWith("/docs") && "text-foreground"
           )}
         >
-          <span>{dictionary?.navigation?.documentation || "Documentation"}</span>
+          <span>
+            {dictionary?.navigation?.documentation || "Documentation"}
+          </span>
         </Link>
       </nav>
     </div>

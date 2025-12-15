@@ -10,6 +10,7 @@ Track production readiness and implementation progress for the Fees module.
 ## Current Status
 
 **Planning Stage Features ⏸️**
+
 - [ ] Fee structure configuration
 - [ ] Payment collection system
 - [ ] Outstanding tracking
@@ -23,6 +24,7 @@ Track production readiness and implementation progress for the Fees module.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [ ] Create and manage fee structures
 - [ ] Configure fee components (tuition, lab, library, etc.)
 - [ ] Set payment schedules and installments
@@ -36,6 +38,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Automated reminders
 
 ### Fee Structure Management
+
 - [ ] Course-wise fee configuration
 - [ ] Category-wise pricing (Regular/NRI)
 - [ ] Component breakdown
@@ -46,6 +49,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Fee revision handling
 
 ### Payment Processing
+
 - [ ] Multiple payment methods
 - [ ] Online payment gateway
 - [ ] Offline payment recording
@@ -56,6 +60,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Bulk payment processing
 
 ### Outstanding Management
+
 - [ ] Real-time outstanding calculation
 - [ ] Defaulter identification
 - [ ] Reminder scheduling
@@ -65,6 +70,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Collection follow-up
 
 ### Scholarship & Discounts
+
 - [ ] Scholarship scheme creation
 - [ ] Eligibility criteria definition
 - [ ] Merit-based discounts
@@ -75,6 +81,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Scholarship renewal
 
 ### Role-Based Access
+
 - [ ] Admin full fee management
 - [ ] Accountant collection and reporting
 - [ ] Student view and pay fees
@@ -83,6 +90,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Staff limited collection rights
 
 ### Data Integrity
+
 - [ ] Multi-tenant scoping (schoolId)
 - [ ] Transaction atomicity
 - [ ] Payment reconciliation
@@ -98,6 +106,7 @@ Track production readiness and implementation progress for the Fees module.
 ### Critical Issues (Priority 1) 🔴
 
 **Payment Gateway Integration**
+
 - [ ] Stripe integration for international
 - [ ] Razorpay for Indian payments
 - [ ] PayPal integration
@@ -109,6 +118,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Payment reconciliation
 
 **Fee Structure Configuration**
+
 - [ ] Dynamic component creation
 - [ ] Formula-based calculations
 - [ ] Conditional fee application
@@ -119,6 +129,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Migration between structures
 
 **Financial Security**
+
 - [ ] PCI DSS compliance
 - [ ] Encryption for sensitive data
 - [ ] Secure payment tokenization
@@ -131,6 +142,7 @@ Track production readiness and implementation progress for the Fees module.
 ### High Priority (Priority 2) 🟡
 
 **Reporting System**
+
 - [ ] Daily collection reports
 - [ ] Outstanding analysis
 - [ ] Class-wise collection
@@ -143,6 +155,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Report export (PDF/Excel)
 
 **Communication Features**
+
 - [ ] Automated payment reminders
 - [ ] Receipt email/SMS
 - [ ] Outstanding notifications
@@ -153,6 +166,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] WhatsApp integration
 
 **Refund Management**
+
 - [ ] Refund request workflow
 - [ ] Approval hierarchy
 - [ ] Refund calculation rules
@@ -165,6 +179,7 @@ Track production readiness and implementation progress for the Fees module.
 ### Nice to Have (Priority 3) 🟢
 
 **Advanced Features**
+
 - [ ] Recurring payment setup
 - [ ] Auto-debit mandates
 - [ ] Payment plans/EMI
@@ -177,6 +192,7 @@ Track production readiness and implementation progress for the Fees module.
 - [ ] Mobile payment app
 
 **Integration Enhancements**
+
 - [ ] Accounting software sync
 - [ ] Bank statement import
 - [ ] GST/Tax compliance
@@ -191,6 +207,7 @@ Track production readiness and implementation progress for the Fees module.
 ## Database & Schema
 
 ### Current Schema (Proposed)
+
 ```prisma
 model FeeStructure {
   id              String      @id @default(cuid())
@@ -282,6 +299,7 @@ model Payment {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `FeeComponent` model for reusable components
 - [ ] Add `PaymentGatewayConfig` for multi-gateway support
 - [ ] Add `FeeReminder` model for tracking reminders
@@ -296,6 +314,7 @@ model Payment {
 ## Server Actions
 
 ### Actions to Implement
+
 - [ ] `createFeeStructure(data)` - Create fee structure
 - [ ] `assignFeeStructure(studentIds, structureId)` - Bulk assignment
 - [ ] `collectPayment(data)` - Process payment
@@ -313,6 +332,7 @@ model Payment {
 - [ ] `verifyOnlinePayment(transactionId)` - Verify gateway payment
 
 ### Action Patterns
+
 ```typescript
 "use server"
 
@@ -332,8 +352,8 @@ export async function collectPayment(data: FormData) {
         schoolId,
         receiptNumber,
         collectedBy: session.user.id,
-        status: 'SUCCESS'
-      }
+        status: "SUCCESS",
+      },
     })
 
     // Update student fee account
@@ -343,20 +363,20 @@ export async function collectPayment(data: FormData) {
         paidAmount: { increment: validated.amount },
         outstandingAmount: { decrement: validated.amount },
         lastPaymentDate: new Date(),
-        status: calculateStatus(/* ... */)
-      }
+        status: calculateStatus(/* ... */),
+      },
     })
 
     // Log transaction for audit
     await tx.auditLog.create({
       data: {
         schoolId,
-        action: 'PAYMENT_COLLECTED',
-        entityType: 'Payment',
+        action: "PAYMENT_COLLECTED",
+        entityType: "Payment",
         entityId: payment.id,
         userId: session.user.id,
-        metadata: { amount: validated.amount }
-      }
+        metadata: { amount: validated.amount },
+      },
     })
 
     return { payment, studentFee }
@@ -365,10 +385,10 @@ export async function collectPayment(data: FormData) {
   // Send receipt via email
   await sendPaymentReceipt(result.payment)
 
-  revalidatePath('/fees/collection')
+  revalidatePath("/fees/collection")
   return {
     success: true,
-    receiptNumber: result.payment.receiptNumber
+    receiptNumber: result.payment.receiptNumber,
   }
 }
 ```
@@ -380,6 +400,7 @@ export async function collectPayment(data: FormData) {
 ### Components to Create
 
 #### Core Components
+
 - [ ] `fee-structure-form.tsx` - Structure configuration
 - [ ] `fee-structure-list.tsx` - Structure management
 - [ ] `payment-form.tsx` - Payment collection interface
@@ -396,6 +417,7 @@ export async function collectPayment(data: FormData) {
 - [ ] `payment-gateway-config.tsx` - Gateway setup
 
 #### Supporting Components
+
 - [ ] `fee-component-editor.tsx` - Component configuration
 - [ ] `installment-scheduler.tsx` - Payment schedule
 - [ ] `late-fee-calculator.tsx` - Penalty calculation
@@ -408,16 +430,17 @@ export async function collectPayment(data: FormData) {
 - [ ] `bulk-payment-uploader.tsx` - Bulk processing
 
 ### Component Patterns
+
 ```tsx
 // Payment collection with validation
 export function PaymentForm({ studentFee }: { studentFee: StudentFee }) {
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CASH")
   const form = useForm({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       studentFeeId: studentFee.id,
-      amount: studentFee.outstandingAmount
-    }
+      amount: studentFee.outstandingAmount,
+    },
   })
 
   const onSubmit = async (data: PaymentFormData) => {
@@ -433,8 +456,8 @@ export function PaymentForm({ studentFee }: { studentFee: StudentFee }) {
     <Form {...form}>
       <AmountInput />
       <PaymentMethodSelector />
-      {paymentMethod === 'CHEQUE' && <ChequeDetails />}
-      {paymentMethod === 'ONLINE' && <OnlinePaymentGateway />}
+      {paymentMethod === "CHEQUE" && <ChequeDetails />}
+      {paymentMethod === "ONLINE" && <OnlinePaymentGateway />}
       <ReceiptOptions />
     </Form>
   )
@@ -446,6 +469,7 @@ export function PaymentForm({ studentFee }: { studentFee: StudentFee }) {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test fee calculation logic
 - [ ] Test installment generation
 - [ ] Test late fee calculation
@@ -455,6 +479,7 @@ export function PaymentForm({ studentFee }: { studentFee: StudentFee }) {
 - [ ] Test payment validation
 
 ### Integration Tests
+
 - [ ] Test payment collection flow
 - [ ] Test gateway integration
 - [ ] Test receipt generation
@@ -464,6 +489,7 @@ export function PaymentForm({ studentFee }: { studentFee: StudentFee }) {
 - [ ] Test multi-tenant isolation
 
 ### E2E Tests (Playwright)
+
 - [ ] Test fee structure creation
 - [ ] Test payment collection
 - [ ] Test online payment flow
@@ -564,6 +590,7 @@ pnpm fees:reports          # Generate financial reports
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

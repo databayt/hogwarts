@@ -3,6 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarContent,
@@ -10,23 +12,24 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { docsConfig } from "@/components/template/docs-sidebar/config"
 import type { SidebarNavItem } from "@/components/template/docs-sidebar/config"
 
 // Flatten the nested navigation structure into a single list
-function flattenNavItems(items: SidebarNavItem[]): { title: string; href: string }[] {
+function flattenNavItems(
+  items: SidebarNavItem[]
+): { title: string; href: string }[] {
   const flattened: { title: string; href: string }[] = []
 
   function flatten(items: SidebarNavItem[]) {
-    items.forEach(item => {
+    items.forEach((item) => {
       // Add the item if it has an href
       if (item.href) {
         flattened.push({
           title: item.title,
-          href: item.href
+          href: item.href,
         })
       }
 
@@ -41,13 +44,15 @@ function flattenNavItems(items: SidebarNavItem[]): { title: string; href: string
   return flattened
 }
 
-export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function DocsSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
 
   // Flatten all navigation items into a single list
-  const flatNavItems = React.useMemo(() =>
-    flattenNavItems(docsConfig.sidebarNav),
+  const flatNavItems = React.useMemo(
+    () => flattenNavItems(docsConfig.sidebarNav),
     []
   )
 
@@ -56,16 +61,19 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
   }, [setOpenMobile])
 
   return (
-    <Sidebar
-      {...props}
-      className="w-56"
-    >
+    <Sidebar {...props} className="w-56">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/docs" className="flex items-center" onClick={handleLinkClick}>
-                <span className="font-medium text-base text-foreground px-1">Documentation</span>
+              <Link
+                href="/docs"
+                className="flex items-center"
+                onClick={handleLinkClick}
+              >
+                <span className="text-foreground px-1 text-base font-medium">
+                  Documentation
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -87,7 +95,9 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                       onClick={handleLinkClick}
                     >
                       <Link href={item.href}>
-                        <span className="text-sm font-normal">{item.title}</span>
+                        <span className="text-sm font-normal">
+                          {item.title}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

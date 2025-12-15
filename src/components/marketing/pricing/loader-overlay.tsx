@@ -1,7 +1,8 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import Loading from '@/components/atom/loading'
+import { useState } from "react"
+
+import Loading from "@/components/atom/loading"
 
 export default function PricingLoaderOverlay() {
   const [isVisible, setIsVisible] = useState(true)
@@ -10,5 +11,3 @@ export default function PricingLoaderOverlay() {
 
   return <Loading onComplete={() => setIsVisible(false)} />
 }
-
-

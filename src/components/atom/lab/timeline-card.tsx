@@ -1,8 +1,10 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
+
 import type { CardSize } from "./types"
 
 interface TimelineCardProps {
@@ -83,26 +85,28 @@ export function TimelineCard({
       <Card
         className={cn(
           "transition-colors",
-          isInteractive && "cursor-pointer hover:bg-accent/50"
+          isInteractive && "hover:bg-accent/50 cursor-pointer"
         )}
         onClick={onClick}
       >
         <CardContent className={cn("flex gap-3", sizeClasses[size])}>
           {/* Icon with connector */}
           <div className="relative shrink-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background">
-              {icon || <div className="h-2 w-2 rounded-full bg-primary" />}
+            <div className="border-border bg-background flex h-10 w-10 items-center justify-center rounded-full border">
+              {icon || <div className="bg-primary h-2 w-2 rounded-full" />}
             </div>
             {showConnector && (
-              <div className="absolute left-1/2 top-10 h-full w-px -translate-x-1/2 bg-border" />
+              <div className="bg-border absolute top-10 left-1/2 h-full w-px -translate-x-1/2" />
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-start justify-between gap-2">
-              <h5 className="font-medium text-foreground">{title}</h5>
-              <time className="muted shrink-0 whitespace-nowrap">{timestamp}</time>
+              <h5 className="text-foreground font-medium">{title}</h5>
+              <time className="muted shrink-0 whitespace-nowrap">
+                {timestamp}
+              </time>
             </div>
             {description && <p className="muted">{description}</p>}
           </div>

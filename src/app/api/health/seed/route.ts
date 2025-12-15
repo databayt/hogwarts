@@ -34,8 +34,10 @@
  * @see prisma/seeds/ensure-demo.ts for seeding script
  */
 
-import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+
+import { db } from "@/lib/db"
+
 export async function GET() {
   try {
     const demoSchool = await db.school.findUnique({
@@ -46,7 +48,7 @@ export async function GET() {
         domain: true,
         isActive: true,
       },
-    });
+    })
 
     if (!demoSchool) {
       return NextResponse.json(
@@ -56,7 +58,7 @@ export async function GET() {
           suggestion: "Run: tsx prisma/seeds/ensure-demo.ts",
         },
         { status: 503 }
-      );
+      )
     }
 
     // Get counts separately
@@ -64,7 +66,7 @@ export async function GET() {
       db.student.count({ where: { schoolId: demoSchool.id } }),
       db.teacher.count({ where: { schoolId: demoSchool.id } }),
       db.user.count({ where: { schoolId: demoSchool.id } }),
-    ]);
+    ])
 
     return NextResponse.json({
       status: "healthy",
@@ -80,9 +82,9 @@ export async function GET() {
         users: userCount,
       },
       timestamp: new Date().toISOString(),
-    });
+    })
   } catch (error) {
-    console.error("Health check error:", error);
+    console.error("Health check error:", error)
     return NextResponse.json(
       {
         status: "error",
@@ -90,6 +92,6 @@ export async function GET() {
         error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 503 }
-    );
+    )
   }
 }

@@ -18,6 +18,7 @@ model: sonnet
 - Optimization: Turbopack, Images, fonts, scripts
 
 ### Server Component Pattern
+
 ```typescript
 // app/[lang]/s/[subdomain]/(platform)/students/page.tsx
 export default async function StudentsPage() {
@@ -33,6 +34,7 @@ export default async function StudentsPage() {
 ```
 
 ### Server Action Pattern
+
 ```typescript
 "use server"
 
@@ -43,10 +45,10 @@ export async function createItem(formData: FormData) {
   const validated = schema.parse(Object.fromEntries(formData))
 
   await db.model.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
-  revalidatePath('/items')
+  revalidatePath("/items")
 }
 ```
 
@@ -59,6 +61,7 @@ export async function createItem(formData: FormData) {
 - Server Components integration
 
 ### Performance Pattern
+
 ```typescript
 const ExpensiveComponent = React.memo(({ data }) => {
   return <div>{/* rendering */}</div>
@@ -75,6 +78,7 @@ const handleClick = useCallback(() => {
 ```
 
 ### Custom Hook Pattern
+
 ```typescript
 export function useStudents(schoolId: string) {
   const [students, setStudents] = useState<Student[]>([])
@@ -97,15 +101,17 @@ export function useStudents(schoolId: string) {
 - Type-safe patterns
 
 ### Zod to TypeScript
+
 ```typescript
 const schema = z.object({
   name: z.string(),
-  email: z.string().email()
+  email: z.string().email(),
 })
 type User = z.infer<typeof schema>
 ```
 
 ### Action Result Type
+
 ```typescript
 type ActionResult<T = void> =
   | { success: true; data: T }
@@ -115,29 +121,34 @@ type ActionResult<T = void> =
 ## Checklists
 
 ### Server Components (default)
+
 - [ ] Async data fetching
 - [ ] Include schoolId in queries
 - [ ] error.tsx and loading.tsx
 - [ ] Metadata configured
 
 ### Client Components (when needed)
+
 - [ ] "use client" directive
 - [ ] Uses hooks/interactivity
 - [ ] Minimized bundle
 
 ### Server Actions
+
 - [ ] "use server" directive
 - [ ] Zod validation
 - [ ] Include schoolId
 - [ ] revalidatePath() or redirect()
 
 ### Performance
+
 - [ ] React.memo for expensive components
 - [ ] useMemo for expensive calculations
 - [ ] useCallback for event handlers
 - [ ] Lazy loading with React.lazy
 
 ### TypeScript
+
 - [ ] No any types
 - [ ] Proper function return types
 - [ ] Interface for objects

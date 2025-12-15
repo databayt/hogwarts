@@ -103,6 +103,7 @@ npx shadcn@latest init
 ```
 
 Follow the prompts:
+
 - Style: New York
 - Color: Slate
 - CSS variables: Yes
@@ -152,6 +153,7 @@ The UI Factory is enhanced with specialized MCP servers that automate quality va
 Automates Quality Gate #3 (Accessibility) with WCAG 2.1 AA compliance checking.
 
 **Capabilities:**
+
 - Automated accessibility audits using axe-core
 - WCAG 2.1 AA compliance verification
 - HTML snippet analysis with violations
@@ -159,6 +161,7 @@ Automates Quality Gate #3 (Accessibility) with WCAG 2.1 AA compliance checking.
 - Detailed accessibility reports
 
 **Usage:**
+
 ```bash
 # Ask Claude to audit a page or component
 "Audit the accessibility of the button component"
@@ -167,10 +170,12 @@ Automates Quality Gate #3 (Accessibility) with WCAG 2.1 AA compliance checking.
 ```
 
 **Tools Available:**
+
 - `audit_webpage(url, includeHtml?, tags?)` - Detailed accessibility check
 - `get_summary(url)` - Overview of accessibility concerns
 
 **Integration with UI Factory:**
+
 - Automatically validates components during `/ui-generate`
 - Runs as part of `/ui-validate` quality checks
 - Pre-commit hook integration for accessibility gates
@@ -180,6 +185,7 @@ Automates Quality Gate #3 (Accessibility) with WCAG 2.1 AA compliance checking.
 Automates component documentation and visual verification through Storybook integration.
 
 **Capabilities:**
+
 - Auto-generate Storybook stories for components
 - Extract component props and metadata
 - Capture component screenshots for AI analysis
@@ -187,6 +193,7 @@ Automates component documentation and visual verification through Storybook inte
 - Custom tool creation for Storybook pages
 
 **Configuration:**
+
 ```json
 {
   "env": {
@@ -196,6 +203,7 @@ Automates component documentation and visual verification through Storybook inte
 ```
 
 **Usage:**
+
 ```bash
 # Start Storybook (if not running)
 pnpm storybook
@@ -208,11 +216,13 @@ pnpm storybook
 ```
 
 **Tools Available:**
+
 - `getComponentList()` - List all Storybook components
 - `getComponentsProps(components[])` - Get detailed props for multiple components
 - Custom tools for extracting information from Storybook pages
 
 **Integration with UI Factory:**
+
 - Automatically generates stories during `/ui-generate`
 - Validates component variants in `/ui-validate`
 - Provides visual documentation for generated components
@@ -222,6 +232,7 @@ pnpm storybook
 Analyzes React components and design tokens for accurate styling recommendations.
 
 **Capabilities:**
+
 - React component file analysis
 - Design token validation and extraction
 - Component property recommendations
@@ -229,6 +240,7 @@ Analyzes React components and design tokens for accurate styling recommendations
 - Design system compliance verification
 
 **Usage:**
+
 ```bash
 # Ask Claude to analyze components
 "Analyze the design tokens in src/components/ui/button.tsx"
@@ -237,6 +249,7 @@ Analyzes React components and design tokens for accurate styling recommendations
 ```
 
 **Integration with UI Factory:**
+
 - Validates semantic token usage (Quality Gate #1)
 - Provides component styling recommendations
 - Ensures design system consistency
@@ -250,6 +263,7 @@ Analyzes React components and design tokens for accurate styling recommendations
 ```
 
 **Behind the scenes:**
+
 1. **shadcn MCP** - Selects appropriate Radix UI primitives
 2. **Component Generation** - Creates TypeScript component
 3. **a11y MCP** - Validates WCAG 2.1 AA compliance
@@ -274,6 +288,7 @@ Analyzes React components and design tokens for accurate styling recommendations
 ```
 
 **The a11y MCP:**
+
 1. Scans component for violations
 2. Reports specific WCAG failures
 3. Provides fix suggestions
@@ -295,6 +310,7 @@ Analyzes React components and design tokens for accurate styling recommendations
 ```
 
 **The storybook MCP:**
+
 1. Analyzes component props
 2. Generates story with all variants
 3. Adds interactive controls
@@ -303,15 +319,15 @@ Analyzes React components and design tokens for accurate styling recommendations
 
 ### Quality Gates with MCP Automation
 
-| Gate | MCP Server | Automation Level |
-|------|------------|------------------|
-| 1. Semantic Tokens | design-system-analyzer | 95% automated |
-| 2. Semantic HTML | Built-in validator | 90% automated |
-| 3. Accessibility | **a11y-mcp** | **100% automated** |
-| 4. Internationalization | Built-in validator | 60% automated |
-| 5. TypeScript | Built-in TypeScript | 50% automated |
-| 6. Testing | Built-in test generator | 30% automated |
-| 7. Documentation | **storybook-mcp** | **95% automated** |
+| Gate                    | MCP Server              | Automation Level   |
+| ----------------------- | ----------------------- | ------------------ |
+| 1. Semantic Tokens      | design-system-analyzer  | 95% automated      |
+| 2. Semantic HTML        | Built-in validator      | 90% automated      |
+| 3. Accessibility        | **a11y-mcp**            | **100% automated** |
+| 4. Internationalization | Built-in validator      | 60% automated      |
+| 5. TypeScript           | Built-in TypeScript     | 50% automated      |
+| 6. Testing              | Built-in test generator | 30% automated      |
+| 7. Documentation        | **storybook-mcp**       | **95% automated**  |
 
 ### MCP Server Status
 
@@ -566,13 +582,13 @@ Copy 20+ showcase components from shadcn/ui v4 repository.
 
 **Components Included:**
 
-| Category | Components |
-|----------|-----------|
-| **Form Components** | field-demo, field-checkbox, field-choice-card, field-slider, notion-prompt-form |
-| **Input Groups** | input-group-demo, input-group-button, input-group-textarea, button-group-demo, button-group-popover |
-| **Display** | item-demo, item-avatar, empty-avatar-group, empty-input-group |
-| **Feedback** | spinner-badge, spinner-empty |
-| **Settings** | appearance-settings |
+| Category            | Components                                                                                          |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| **Form Components** | field-demo, field-checkbox, field-choice-card, field-slider, notion-prompt-form                     |
+| **Input Groups**    | input-group-demo, input-group-button, input-group-textarea, button-group-demo, button-group-popover |
+| **Display**         | item-demo, item-avatar, empty-avatar-group, empty-input-group                                       |
+| **Feedback**        | spinner-badge, spinner-empty                                                                        |
+| **Settings**        | appearance-settings                                                                                 |
 
 **Example Output:**
 
@@ -610,11 +626,11 @@ Next steps:
 
 ```tsx
 // ❌ BAD
-bg-white
-bg-gray-50
-text-black
-dark:bg-gray-900
-bg-blue-500
+bg - white
+bg - gray - 50
+text - black
+dark: bg - gray - 900
+bg - blue - 500
 ```
 
 **Correct:**
@@ -629,6 +645,7 @@ bg-primary
 ```
 
 **Why:** Semantic tokens enable:
+
 - Automatic theme switching
 - Consistent color palette
 - Easier maintenance
@@ -661,6 +678,7 @@ bg-primary
 ```
 
 **Why:** Semantic HTML provides:
+
 - Better accessibility (screen readers)
 - Improved SEO
 - Cleaner code
@@ -762,8 +780,8 @@ const dictionary = await getDictionary(params.lang)
 ```tsx
 // ❌ BAD
 const data: any = await fetch(url)
-function Component(props) { }
-let value  // implicit any
+function Component(props) {}
+let value // implicit any
 ```
 
 **Correct:**
@@ -774,13 +792,13 @@ interface Data {
   id: string
   name: string
 }
-const data: Data = await fetch(url).then(r => r.json())
+const data: Data = await fetch(url).then((r) => r.json())
 
 interface ComponentProps {
   name: string
   variant?: "default" | "ghost"
 }
-function Component({ name, variant = "default" }: ComponentProps) { }
+function Component({ name, variant = "default" }: ComponentProps) {}
 ```
 
 ---
@@ -792,27 +810,27 @@ function Component({ name, variant = "default" }: ComponentProps) { }
 **Required Test Categories:**
 
 ```tsx
-describe('ComponentName', () => {
-  describe('Rendering', () => {
-    it('renders with default props')
-    it('renders all variants')
-    it('handles empty/null data')
+describe("ComponentName", () => {
+  describe("Rendering", () => {
+    it("renders with default props")
+    it("renders all variants")
+    it("handles empty/null data")
   })
 
-  describe('Interactions', () => {
-    it('handles user events')
-    it('prevents events when disabled')
+  describe("Interactions", () => {
+    it("handles user events")
+    it("prevents events when disabled")
   })
 
-  describe('Accessibility', () => {
-    it('has proper ARIA attributes')
-    it('supports keyboard navigation')
-    it('manages focus correctly')
+  describe("Accessibility", () => {
+    it("has proper ARIA attributes")
+    it("supports keyboard navigation")
+    it("manages focus correctly")
   })
 
-  describe('Edge Cases', () => {
-    it('handles errors gracefully')
-    it('validates input')
+  describe("Edge Cases", () => {
+    it("handles errors gracefully")
+    it("validates input")
   })
 })
 ```
@@ -832,7 +850,7 @@ pnpm test -- --coverage
 
 **Template:**
 
-```tsx
+````tsx
 /**
  * ComponentName - Brief one-line description
  *
@@ -857,7 +875,7 @@ pnpm test -- --coverage
  * </ComponentName>
  * ```
  */
-```
+````
 
 ---
 
@@ -911,46 +929,46 @@ shadcn/ui is built on Radix UI primitives for accessibility.
 
 ### Available Primitives
 
-| Primitive | Use Case | shadcn Component |
-|-----------|----------|------------------|
-| `@radix-ui/react-dialog` | Modals, dialogs | Dialog, Sheet |
-| `@radix-ui/react-dropdown-menu` | Dropdowns | DropdownMenu |
-| `@radix-ui/react-tooltip` | Tooltips | Tooltip |
-| `@radix-ui/react-popover` | Popovers | Popover |
-| `@radix-ui/react-select` | Select inputs | Select |
-| `@radix-ui/react-tabs` | Tabs | Tabs |
-| `@radix-ui/react-accordion` | Accordions | Accordion |
-| `@radix-ui/react-checkbox` | Checkboxes | Checkbox |
-| `@radix-ui/react-radio-group` | Radio groups | RadioGroup |
-| `@radix-ui/react-switch` | Toggles | Switch |
-| `@radix-ui/react-slider` | Sliders | Slider |
-| `@radix-ui/react-progress` | Progress bars | Progress |
-| `@radix-ui/react-toast` | Notifications | Toast |
-| `@radix-ui/react-alert-dialog` | Confirmations | AlertDialog |
-| `@radix-ui/react-hover-card` | Hover cards | HoverCard |
-| `@radix-ui/react-navigation-menu` | Navigation | NavigationMenu |
-| `@radix-ui/react-context-menu` | Context menus | ContextMenu |
-| `@radix-ui/react-menubar` | Menubars | Menubar |
-| `@radix-ui/react-scroll-area` | Scroll areas | ScrollArea |
-| `@radix-ui/react-separator` | Separators | Separator |
+| Primitive                         | Use Case        | shadcn Component |
+| --------------------------------- | --------------- | ---------------- |
+| `@radix-ui/react-dialog`          | Modals, dialogs | Dialog, Sheet    |
+| `@radix-ui/react-dropdown-menu`   | Dropdowns       | DropdownMenu     |
+| `@radix-ui/react-tooltip`         | Tooltips        | Tooltip          |
+| `@radix-ui/react-popover`         | Popovers        | Popover          |
+| `@radix-ui/react-select`          | Select inputs   | Select           |
+| `@radix-ui/react-tabs`            | Tabs            | Tabs             |
+| `@radix-ui/react-accordion`       | Accordions      | Accordion        |
+| `@radix-ui/react-checkbox`        | Checkboxes      | Checkbox         |
+| `@radix-ui/react-radio-group`     | Radio groups    | RadioGroup       |
+| `@radix-ui/react-switch`          | Toggles         | Switch           |
+| `@radix-ui/react-slider`          | Sliders         | Slider           |
+| `@radix-ui/react-progress`        | Progress bars   | Progress         |
+| `@radix-ui/react-toast`           | Notifications   | Toast            |
+| `@radix-ui/react-alert-dialog`    | Confirmations   | AlertDialog      |
+| `@radix-ui/react-hover-card`      | Hover cards     | HoverCard        |
+| `@radix-ui/react-navigation-menu` | Navigation      | NavigationMenu   |
+| `@radix-ui/react-context-menu`    | Context menus   | ContextMenu      |
+| `@radix-ui/react-menubar`         | Menubars        | Menubar          |
+| `@radix-ui/react-scroll-area`     | Scroll areas    | ScrollArea       |
+| `@radix-ui/react-separator`       | Separators      | Separator        |
 
 ### Selection Guide
 
-| Component Type | Recommended Primitive |
-|----------------|----------------------|
+| Component Type       | Recommended Primitive                 |
+| -------------------- | ------------------------------------- |
 | Form with validation | Form (no Radix, uses react-hook-form) |
-| Modal dialog | Dialog |
-| Side drawer | Sheet (Dialog variant) |
-| Action menu | DropdownMenu |
-| Info tooltip | Tooltip |
-| Contextual info | Popover |
-| Multi-choice | Select or RadioGroup |
-| Binary choice | Switch or Checkbox |
-| Multi-page content | Tabs |
-| Expandable content | Accordion |
-| Notifications | Toast |
-| Destructive actions | AlertDialog |
-| Preview on hover | HoverCard |
+| Modal dialog         | Dialog                                |
+| Side drawer          | Sheet (Dialog variant)                |
+| Action menu          | DropdownMenu                          |
+| Info tooltip         | Tooltip                               |
+| Contextual info      | Popover                               |
+| Multi-choice         | Select or RadioGroup                  |
+| Binary choice        | Switch or Checkbox                    |
+| Multi-page content   | Tabs                                  |
+| Expandable content   | Accordion                             |
+| Notifications        | Toast                                 |
+| Destructive actions  | AlertDialog                           |
+| Preview on hover     | HoverCard                             |
 
 **Documentation:** https://www.radix-ui.com/primitives
 
@@ -964,15 +982,15 @@ shadcn/ui is built on Radix UI primitives for accessibility.
 interface ValidationReport {
   component: string
   passed: boolean
-  score: number  // 0-100
+  score: number // 0-100
   gates: {
-    semanticTokens: GateResult      // Critical
-    semanticHTML: GateResult         // Critical
-    accessibility: GateResult        // High
+    semanticTokens: GateResult // Critical
+    semanticHTML: GateResult // Critical
+    accessibility: GateResult // High
     internationalization: GateResult // High
-    typescript: GateResult           // Medium
-    testing: GateResult              // Medium
-    documentation: GateResult        // Low
+    typescript: GateResult // Medium
+    testing: GateResult // Medium
+    documentation: GateResult // Low
   }
 }
 
@@ -984,7 +1002,7 @@ interface GateResult {
 
 interface Violation {
   gate: string
-  severity: 'critical' | 'high' | 'medium' | 'low'
+  severity: "critical" | "high" | "medium" | "low"
   message: string
   line?: number
   column?: number
@@ -994,24 +1012,24 @@ interface Violation {
 
 ### Severity Levels
 
-| Severity | Impact | Action |
-|----------|--------|--------|
-| **Critical** | Breaks theme switching or accessibility | MUST fix before commit |
-| **High** | Degrades UX or violates standards | SHOULD fix before commit |
-| **Medium** | Technical debt or maintenance issue | Fix before production |
-| **Low** | Documentation or nice-to-have | Fix when convenient |
+| Severity     | Impact                                  | Action                   |
+| ------------ | --------------------------------------- | ------------------------ |
+| **Critical** | Breaks theme switching or accessibility | MUST fix before commit   |
+| **High**     | Degrades UX or violates standards       | SHOULD fix before commit |
+| **Medium**   | Technical debt or maintenance issue     | Fix before production    |
+| **Low**      | Documentation or nice-to-have           | Fix when convenient      |
 
 ### Auto-Fix Capabilities
 
-| Violation | Auto-Fix Success Rate |
-|-----------|----------------------|
-| Hardcoded colors → Semantic tokens | 95% |
-| Typography utilities → Semantic HTML | 90% |
-| Missing ARIA labels | 70% |
-| Hardcoded text → i18n | 60% |
-| TypeScript errors | 50% |
-| Missing tests | 30% |
-| Missing documentation | 20% |
+| Violation                            | Auto-Fix Success Rate |
+| ------------------------------------ | --------------------- |
+| Hardcoded colors → Semantic tokens   | 95%                   |
+| Typography utilities → Semantic HTML | 90%                   |
+| Missing ARIA labels                  | 70%                   |
+| Hardcoded text → i18n                | 60%                   |
+| TypeScript errors                    | 50%                   |
+| Missing tests                        | 30%                   |
+| Missing documentation                | 20%                   |
 
 ---
 

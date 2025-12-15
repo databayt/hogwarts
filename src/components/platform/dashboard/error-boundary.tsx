@@ -1,15 +1,16 @@
-"use client";
+"use client"
 
-import React from "react";
-import { CircleAlert, RefreshCw, House } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React from "react"
+import { CircleAlert, House, RefreshCw } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: React.ErrorInfo;
+  hasError: boolean
+  error?: Error
+  errorInfo?: React.ErrorInfo
 }
 
 /**
@@ -18,51 +19,64 @@ interface ErrorBoundaryState {
  */
 export class DashboardErrorBoundary extends React.Component<
   {
-    children: React.ReactNode;
-    fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+    children: React.ReactNode
+    fallback?: React.ComponentType<{ error: Error; reset: () => void }>
   },
   ErrorBoundaryState
 > {
   constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
+    super(props)
+    this.state = { hasError: false }
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to monitoring service (e.g., Sentry)
-    console.error("Dashboard error caught:", error, errorInfo);
+    console.error("Dashboard error caught:", error, errorInfo)
 
     // In production, send to error tracking service
-    if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+    if (
+      typeof window !== "undefined" &&
+      window.location.hostname !== "localhost"
+    ) {
       // TODO: Send to Sentry or error tracking service
     }
 
     this.setState({
       error,
       errorInfo,
-    });
+    })
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
-    window.location.reload();
-  };
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
+    window.location.reload()
+  }
 
   render() {
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) {
-        const FallbackComponent = this.props.fallback;
-        return <FallbackComponent error={this.state.error} reset={this.handleReset} />;
+        const FallbackComponent = this.props.fallback
+        return (
+          <FallbackComponent
+            error={this.state.error}
+            reset={this.handleReset}
+          />
+        )
       }
 
-      return <DefaultErrorFallback error={this.state.error} reset={this.handleReset} />;
+      return (
+        <DefaultErrorFallback
+          error={this.state.error}
+          reset={this.handleReset}
+        />
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
@@ -73,10 +87,10 @@ export function DefaultErrorFallback({
   error,
   reset,
 }: {
-  error: Error;
-  reset: () => void;
+  error: Error
+  reset: () => void
 }) {
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const isDevelopment = process.env.NODE_ENV === "development"
 
   return (
     <div className="space-y-6">
@@ -84,24 +98,29 @@ export function DefaultErrorFallback({
         <CircleAlert className="h-4 w-4" />
         <AlertTitle>Dashboard Error</AlertTitle>
         <AlertDescription>
-          We encountered an error while loading your dashboard. Please try refreshing the page.
+          We encountered an error while loading your dashboard. Please try
+          refreshing the page.
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-destructive">Something went wrong</CardTitle>
+          <CardTitle className="text-destructive">
+            Something went wrong
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            An unexpected error occurred while loading your dashboard. Our team has been notified
-            and is working to resolve the issue.
+          <p className="text-muted-foreground text-sm">
+            An unexpected error occurred while loading your dashboard. Our team
+            has been notified and is working to resolve the issue.
           </p>
 
           {isDevelopment && error && (
-            <div className="mt-4 p-4 bg-muted rounded-lg">
-              <p className="font-mono text-xs mb-2 font-semibold">Error Details:</p>
-              <pre className="font-mono text-xs overflow-auto">
+            <div className="bg-muted mt-4 rounded-lg p-4">
+              <p className="mb-2 font-mono text-xs font-semibold">
+                Error Details:
+              </p>
+              <pre className="overflow-auto font-mono text-xs">
                 {error.message}
                 {error.stack && (
                   <>
@@ -129,7 +148,7 @@ export function DefaultErrorFallback({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 /**
@@ -140,18 +159,18 @@ export function DashboardSectionError({
   message = "This section couldn't be loaded. Please try again.",
   onRetry,
 }: {
-  title?: string;
-  message?: string;
-  onRetry?: () => void;
+  title?: string
+  message?: string
+  onRetry?: () => void
 }) {
   return (
     <Card className="border-destructive/50">
       <CardContent className="pt-6">
         <div className="flex flex-col items-center justify-center space-y-4 py-8">
-          <CircleAlert className="h-8 w-8 text-destructive/70" />
-          <div className="text-center space-y-2">
+          <CircleAlert className="text-destructive/70 h-8 w-8" />
+          <div className="space-y-2 text-center">
             <h3 className="font-semibold">{title}</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">{message}</p>
+            <p className="text-muted-foreground max-w-sm text-sm">{message}</p>
           </div>
           {onRetry && (
             <Button onClick={onRetry} variant="outline" size="sm">
@@ -162,24 +181,24 @@ export function DashboardSectionError({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
  * Hook for error handling in lab components
  */
 export function useDashboardError() {
-  const [error, setError] = React.useState<Error | null>(null);
+  const [error, setError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
     if (error) {
       // Log to monitoring service
-      console.error("Dashboard component error:", error);
+      console.error("Dashboard component error:", error)
       // Could trigger toast notification here
     }
-  }, [error]);
+  }, [error])
 
-  const clearError = () => setError(null);
+  const clearError = () => setError(null)
 
-  return { error, setError, clearError };
+  return { error, setError, clearError }
 }

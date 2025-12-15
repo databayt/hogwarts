@@ -1,14 +1,27 @@
-import type { Locale } from "@/components/internationalization/config"
 import type { ElementType } from "react"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Calendar, Clock, BookOpen, ChevronRight, CircleAlert } from "lucide-react";
 import Link from "next/link"
+import { addDays, differenceInDays, format } from "date-fns"
+import {
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  CircleAlert,
+  Clock,
+} from "lucide-react"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { format, differenceInDays, addDays } from "date-fns"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 // Short labels for exam types - keep badges compact
 const examTypeLabels: Record<string, string> = {
@@ -27,7 +40,10 @@ interface Props {
   lang: Locale
 }
 
-export default async function UpcomingExamsContent({ dictionary, lang }: Props) {
+export default async function UpcomingExamsContent({
+  dictionary,
+  lang,
+}: Props) {
   const { schoolId } = await getTenantContext()
 
   let upcomingExams: Array<{
@@ -85,40 +101,44 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
   const examDict = dictionary?.school?.exams
   const d = {
     labels: {
-      today: 'Today',
-      tomorrow: 'Tomorrow',
-      daysLeft: 'days',
-      marks: 'marks',
+      today: "Today",
+      tomorrow: "Tomorrow",
+      daysLeft: "days",
+      marks: "marks",
     },
     stats: {
-      total: examDict?.upcomingExams || 'Upcoming',
-      today: 'Today',
-      tomorrow: 'Tomorrow',
-      thisWeek: 'This Week',
+      total: examDict?.upcomingExams || "Upcoming",
+      today: "Today",
+      tomorrow: "Tomorrow",
+      thisWeek: "This Week",
     },
     empty: {
-      title: 'No Upcoming Exams',
-      description: 'There are no exams scheduled in the near future.',
+      title: "No Upcoming Exams",
+      description: "There are no exams scheduled in the near future.",
     },
     sections: {
       today: "Today's Exams",
-      tomorrow: 'Tomorrow',
-      thisWeek: 'This Week',
-      later: 'Coming Up',
+      tomorrow: "Tomorrow",
+      thisWeek: "This Week",
+      later: "Coming Up",
     },
     actions: {
-      viewDetails: 'View Details',
-      scheduleExam: examDict?.createExam || 'Schedule an Exam',
+      viewDetails: "View Details",
+      scheduleExam: examDict?.createExam || "Schedule an Exam",
     },
   }
 
   // Group exams by urgency
   const todayExams = upcomingExams.filter((e) => e.daysUntil === 0)
   const tomorrowExams = upcomingExams.filter((e) => e.daysUntil === 1)
-  const thisWeekExams = upcomingExams.filter((e) => e.daysUntil > 1 && e.daysUntil <= 7)
+  const thisWeekExams = upcomingExams.filter(
+    (e) => e.daysUntil > 1 && e.daysUntil <= 7
+  )
   const laterExams = upcomingExams.filter((e) => e.daysUntil > 7)
 
-  const getUrgencyVariant = (daysUntil: number): "destructive" | "secondary" | "outline" => {
+  const getUrgencyVariant = (
+    daysUntil: number
+  ): "destructive" | "secondary" | "outline" => {
     if (daysUntil === 0) return "destructive"
     if (daysUntil === 1) return "secondary"
     return "outline"
@@ -132,8 +152,8 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
     return format(addDays(new Date(), daysUntil), "MMM d")
   }
 
-  const ExamCard = ({ exam }: { exam: typeof upcomingExams[0] }) => (
-    <Card className="hover:shadow-md transition-shadow">
+  const ExamCard = ({ exam }: { exam: (typeof upcomingExams)[0] }) => (
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -149,11 +169,11 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             <span>{format(exam.examDate, "EEE, MMM d, yyyy")}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2">
             <Clock className="h-4 w-4" />
             <span>
               {exam.startTime} - {exam.endTime} ({exam.duration} min)
@@ -163,7 +183,9 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm">
-            <Badge variant="outline">{examTypeLabels[exam.examType] || exam.examType}</Badge>
+            <Badge variant="outline">
+              {examTypeLabels[exam.examType] || exam.examType}
+            </Badge>
             <span className="text-muted-foreground">
               {exam.totalMarks} {d?.labels?.marks || "marks"}
             </span>
@@ -194,7 +216,9 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
 
     return (
       <div className="space-y-4">
-        <div className={`flex items-center gap-2 ${urgent ? "text-destructive" : ""}`}>
+        <div
+          className={`flex items-center gap-2 ${urgent ? "text-destructive" : ""}`}
+        >
           <Icon className="h-5 w-5" />
           <h2 className="font-semibold">
             {title} ({exams.length})
@@ -258,12 +282,13 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
       {upcomingExams.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">
+            <Calendar className="text-muted-foreground mb-4 h-12 w-12" />
+            <h3 className="mb-2 text-lg font-semibold">
               {d?.empty?.title || "No Upcoming Exams"}
             </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {d?.empty?.description || "There are no exams scheduled in the near future."}
+            <p className="text-muted-foreground mb-4 text-sm">
+              {d?.empty?.description ||
+                "There are no exams scheduled in the near future."}
             </p>
             <Button asChild>
               <Link href={`/${lang}/exams/new`}>

@@ -1,10 +1,12 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { createQuestionSchema } from "../validation";
-import type { ActionResponse, CreateQuestionInput } from "./types";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { createQuestionSchema } from "../validation"
+import type { ActionResponse, CreateQuestionInput } from "./types"
 
 /**
  * Create a new question in the question bank
@@ -13,31 +15,34 @@ export async function createQuestion(
   data: FormData
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const session = await auth();
-    const schoolId = session?.user?.schoolId;
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const formData = Object.fromEntries(data);
+    const formData = Object.fromEntries(data)
 
     // Parse JSON fields
     if (formData.options && typeof formData.options === "string") {
-      formData.options = JSON.parse(formData.options);
+      formData.options = JSON.parse(formData.options)
     }
     if (formData.tags && typeof formData.tags === "string") {
-      formData.tags = JSON.parse(formData.tags);
+      formData.tags = JSON.parse(formData.tags)
     }
-    if (formData.acceptedAnswers && typeof formData.acceptedAnswers === "string") {
-      formData.acceptedAnswers = JSON.parse(formData.acceptedAnswers);
+    if (
+      formData.acceptedAnswers &&
+      typeof formData.acceptedAnswers === "string"
+    ) {
+      formData.acceptedAnswers = JSON.parse(formData.acceptedAnswers)
     }
 
-    const validated = createQuestionSchema.parse(formData);
+    const validated = createQuestionSchema.parse(formData)
 
     const question = await db.questionBank.create({
       data: {
@@ -57,17 +62,17 @@ export async function createQuestion(
         source: "MANUAL",
         createdBy: session.user.id!,
       },
-    });
+    })
 
-    revalidatePath("/exams/mark");
-    revalidatePath("/exams/qbank");
+    revalidatePath("/exams/mark")
+    revalidatePath("/exams/qbank")
 
     return {
       success: true,
-      data: { id: question.id }
-    };
+      data: { id: question.id },
+    }
   } catch (error) {
-    console.error("Create question error:", error);
+    console.error("Create question error:", error)
 
     if (error instanceof Error && error.message.includes("validation")) {
       return {
@@ -75,7 +80,7 @@ export async function createQuestion(
         error: "Invalid question data",
         code: "VALIDATION_ERROR",
         details: error.message,
-      };
+      }
     }
 
     return {
@@ -83,7 +88,7 @@ export async function createQuestion(
       error: "Failed to create question",
       code: "CREATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -95,41 +100,44 @@ export async function updateQuestion(
   data: FormData
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    const schoolId = session?.user?.schoolId;
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
     // Verify question exists and belongs to school
     const existingQuestion = await db.questionBank.findFirst({
       where: { id, schoolId },
-    });
+    })
 
     if (!existingQuestion) {
       return {
         success: false,
         error: "Question not found",
         code: "QUESTION_NOT_FOUND",
-      };
+      }
     }
 
-    const formData = Object.fromEntries(data);
+    const formData = Object.fromEntries(data)
 
     // Parse JSON fields
     if (formData.options && typeof formData.options === "string") {
-      formData.options = JSON.parse(formData.options);
+      formData.options = JSON.parse(formData.options)
     }
     if (formData.tags && typeof formData.tags === "string") {
-      formData.tags = JSON.parse(formData.tags);
+      formData.tags = JSON.parse(formData.tags)
     }
-    if (formData.acceptedAnswers && typeof formData.acceptedAnswers === "string") {
-      formData.acceptedAnswers = JSON.parse(formData.acceptedAnswers);
+    if (
+      formData.acceptedAnswers &&
+      typeof formData.acceptedAnswers === "string"
+    ) {
+      formData.acceptedAnswers = JSON.parse(formData.acceptedAnswers)
     }
 
     // Update the question
@@ -139,21 +147,21 @@ export async function updateQuestion(
         ...formData,
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath("/exams/mark");
-    revalidatePath("/exams/qbank");
-    revalidatePath(`/exams/qbank/${id}`);
+    revalidatePath("/exams/mark")
+    revalidatePath("/exams/qbank")
+    revalidatePath(`/exams/qbank/${id}`)
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Update question error:", error);
+    console.error("Update question error:", error)
     return {
       success: false,
       error: "Failed to update question",
       code: "UPDATE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -163,15 +171,15 @@ export async function updateQuestion(
  */
 export async function deleteQuestion(id: string): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    const schoolId = session?.user?.schoolId;
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
     // Check if question is used in any exams
@@ -180,14 +188,14 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
         questionId: id,
         generatedExam: { schoolId },
       },
-    });
+    })
 
     if (usageCount > 0) {
       return {
         success: false,
         error: `Cannot delete - question is used in ${usageCount} exam(s)`,
         code: "QUESTION_IN_USE",
-      };
+      }
     }
 
     // Check if question has any student answers
@@ -196,14 +204,14 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
         questionId: id,
         schoolId,
       },
-    });
+    })
 
     if (answerCount > 0) {
       return {
         success: false,
         error: `Cannot delete - question has ${answerCount} student answer(s)`,
         code: "HAS_STUDENT_ANSWERS",
-      };
+      }
     }
 
     // Delete associated rubrics first
@@ -214,39 +222,39 @@ export async function deleteQuestion(id: string): Promise<ActionResponse> {
           schoolId,
         },
       },
-    });
+    })
 
     await db.rubric.deleteMany({
       where: {
         questionId: id,
         schoolId,
       },
-    });
+    })
 
     // Delete the question
     const deleted = await db.questionBank.deleteMany({
       where: { id, schoolId },
-    });
+    })
 
     if (deleted.count === 0) {
       return {
         success: false,
         error: "Question not found",
         code: "QUESTION_NOT_FOUND",
-      };
+      }
     }
 
-    revalidatePath("/exams/mark");
-    revalidatePath("/exams/qbank");
+    revalidatePath("/exams/mark")
+    revalidatePath("/exams/qbank")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Delete question error:", error);
+    console.error("Delete question error:", error)
     return {
       success: false,
       error: "Failed to delete question",
       code: "DELETE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }

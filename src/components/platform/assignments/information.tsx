@@ -1,18 +1,33 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { assignmentCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { AssignmentFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { AssignmentFormStepProps } from "./types"
+import { assignmentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: AssignmentFormStepProps) {
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
+  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
 
   useEffect(() => {
     const loadClasses = async () => {
@@ -22,17 +37,17 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         setClasses([
           { id: "cls_001", name: "Transfiguration 101" },
           { id: "cls_002", name: "Potions 101" },
-          { id: "cls_003", name: "Creatures 101" }
-        ]);
+          { id: "cls_003", name: "Creatures 101" },
+        ])
       } catch (error) {
-        console.error("Failed to load classes:", error);
+        console.error("Failed to load classes:", error)
       }
-    };
-    loadClasses();
-  }, []);
+    }
+    loadClasses()
+  }, [])
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="title"
@@ -40,7 +55,11 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
           <FormItem>
             <FormLabel>Assignment Title</FormLabel>
             <FormControl>
-              <Input placeholder="Enter assignment title" disabled={isView} {...field} />
+              <Input
+                placeholder="Enter assignment title"
+                disabled={isView}
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -54,11 +73,11 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Enter assignment description..." 
+              <Textarea
+                placeholder="Enter assignment description..."
                 className="min-h-[100px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -72,7 +91,11 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Class</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select class" />
@@ -91,5 +114,5 @@ export function InformationStep({ form, isView }: AssignmentFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

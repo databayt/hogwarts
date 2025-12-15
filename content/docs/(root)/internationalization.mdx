@@ -9,10 +9,10 @@ This application provides full internationalization support with Arabic (RTL) as
 
 ### Supported Languages
 
-| Locale | Name | Direction | Flag | Currency | Default |
-|--------|------|-----------|------|----------|---------|
-| `ar` | Arabic | RTL | SA | SAR | Yes |
-| `en` | English | LTR | US | USD | No |
+| Locale | Name    | Direction | Flag | Currency | Default |
+| ------ | ------- | --------- | ---- | -------- | ------- |
+| `ar`   | Arabic  | RTL       | SA   | SAR      | Yes     |
+| `en`   | English | LTR       | US   | USD      | No      |
 
 ### Key Features
 
@@ -29,36 +29,37 @@ This application provides full internationalization support with Arabic (RTL) as
 ### Server Components
 
 ```tsx
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 export default async function Page({ params }: { params: { lang: string } }) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang as Locale);
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
 
   return (
     <div>
       <h1>{dictionary.common.home}</h1>
       <p>{dictionary.common.loading}</p>
     </div>
-  );
+  )
 }
 ```
 
 ### Client Components
 
 ```tsx
-"use client";
-import { useLocale } from "@/components/internationalization/use-locale";
+"use client"
+
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export function LocaleIndicator() {
-  const { locale, isRTL, localeConfig } = useLocale();
+  const { locale, isRTL, localeConfig } = useLocale()
 
   return (
     <span className={isRTL ? "text-end" : "text-start"}>
       {localeConfig.flag} {localeConfig.nativeName}
     </span>
-  );
+  )
 }
 ```
 
@@ -71,6 +72,7 @@ For user-generated content (announcements, notifications, etc.), use separate fi
 ### Pattern 1: Dual Database Fields
 
 **Prisma Schema:**
+
 ```prisma
 model Announcement {
   id       String @id @default(cuid())
@@ -87,36 +89,42 @@ model Announcement {
 ```
 
 **Usage in Components:**
+
 ```tsx
-import { getLocalizedText } from "@/lib/i18n-content";
-import type { Locale } from "@/components/internationalization/config";
+import { getLocalizedText } from "@/lib/i18n-content"
+import type { Locale } from "@/components/internationalization/config"
 
 interface Props {
   announcement: {
-    titleEn: string | null;
-    titleAr: string | null;
-    bodyEn: string | null;
-    bodyAr: string | null;
-  };
-  lang: Locale;
+    titleEn: string | null
+    titleAr: string | null
+    bodyEn: string | null
+    bodyAr: string | null
+  }
+  lang: Locale
 }
 
 export function AnnouncementCard({ announcement, lang }: Props) {
-  const title = getLocalizedText(lang, announcement.titleEn, announcement.titleAr);
-  const body = getLocalizedText(lang, announcement.bodyEn, announcement.bodyAr);
+  const title = getLocalizedText(
+    lang,
+    announcement.titleEn,
+    announcement.titleAr
+  )
+  const body = getLocalizedText(lang, announcement.bodyEn, announcement.bodyAr)
 
   return (
     <article>
       <h2>{title}</h2>
       <p>{body}</p>
     </article>
-  );
+  )
 }
 ```
 
 ### Pattern 2: JSON Storage
 
 **Prisma Schema:**
+
 ```prisma
 model Notification {
   id      String @id @default(cuid())
@@ -127,28 +135,31 @@ model Notification {
 ```
 
 **Usage:**
-```tsx
-import { getLocalizedFromJSON } from "@/lib/i18n-content";
 
-const title = getLocalizedFromJSON(lang, notification.title);
+```tsx
+import { getLocalizedFromJSON } from "@/lib/i18n-content"
+
+const title = getLocalizedFromJSON(lang, notification.title)
 ```
 
 ### Bilingual Form Pattern
 
 ```tsx
-"use client";
-import { useForm } from "react-hook-form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+"use client"
+
+import { useForm } from "react-hook-form"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface BilingualFormData {
-  titleEn: string;
-  titleAr: string;
-  bodyEn: string;
-  bodyAr: string;
+  titleEn: string
+  titleAr: string
+  bodyEn: string
+  bodyAr: string
 }
 
 export function BilingualContentForm() {
-  const form = useForm<BilingualFormData>();
+  const form = useForm<BilingualFormData>()
 
   return (
     <Tabs defaultValue="ar">
@@ -167,7 +178,7 @@ export function BilingualContentForm() {
         <Textarea {...form.register("bodyEn")} placeholder="Content" />
       </TabsContent>
     </Tabs>
-  );
+  )
 }
 ```
 
@@ -176,24 +187,30 @@ export function BilingualContentForm() {
 Location: `src/lib/i18n-content.ts`
 
 ```ts
-import { getLocalizedText, getLocalizedFromObject, getLocalizedFromJSON } from "@/lib/i18n-content";
-
-// From dual fields
-const title = getLocalizedText(locale, item.titleEn, item.titleAr);
-
-// From BilingualText object
-const text = getLocalizedFromObject(locale, { en: "Hello", ar: "مرحبا" });
-
-// From JSON database field
-const message = getLocalizedFromJSON(locale, dbField);
-
 // Check completion status
-import { getBilingualStatus } from "@/lib/i18n-content";
-const { complete, missingEn, missingAr } = getBilingualStatus(item.title);
 
 // Convert legacy content during migration
-import { convertToBilingual, detectLanguage } from "@/lib/i18n-content";
-const bilingual = convertToBilingual("مرحبا بالعالم"); // { en: "", ar: "مرحبا بالعالم" }
+import {
+  convertToBilingual,
+  detectLanguage,
+  getBilingualStatus,
+  getLocalizedFromJSON,
+  getLocalizedFromObject,
+  getLocalizedText,
+} from "@/lib/i18n-content"
+
+// From dual fields
+const title = getLocalizedText(locale, item.titleEn, item.titleAr)
+
+// From BilingualText object
+const text = getLocalizedFromObject(locale, { en: "Hello", ar: "مرحبا" })
+
+// From JSON database field
+const message = getLocalizedFromJSON(locale, dbField)
+
+const { complete, missingEn, missingAr } = getBilingualStatus(item.title)
+
+const bilingual = convertToBilingual("مرحبا بالعالم") // { en: "", ar: "مرحبا بالعالم" }
 ```
 
 ---
@@ -206,33 +223,33 @@ Location: `src/components/internationalization/config.ts`
 
 ```ts
 export const i18n = {
-  defaultLocale: 'ar',
-  locales: ['en', 'ar'],
-} as const;
+  defaultLocale: "ar",
+  locales: ["en", "ar"],
+} as const
 
-export type Locale = (typeof i18n)['locales'][number];
+export type Locale = (typeof i18n)["locales"][number]
 
 export const localeConfig = {
-  'en': {
-    name: 'English',
-    nativeName: 'English',
-    dir: 'ltr',
-    flag: '🇺🇸',
-    dateFormat: 'MM/dd/yyyy',
-    currency: 'USD',
+  en: {
+    name: "English",
+    nativeName: "English",
+    dir: "ltr",
+    flag: "🇺🇸",
+    dateFormat: "MM/dd/yyyy",
+    currency: "USD",
   },
-  'ar': {
-    name: 'Arabic',
-    nativeName: 'العربية',
-    dir: 'rtl',
-    flag: '🇸🇦',
-    dateFormat: 'dd/MM/yyyy',
-    currency: 'SAR',
+  ar: {
+    name: "Arabic",
+    nativeName: "العربية",
+    dir: "rtl",
+    flag: "🇸🇦",
+    dateFormat: "dd/MM/yyyy",
+    currency: "SAR",
   },
-} as const;
+} as const
 
 export function isRTL(locale: Locale): boolean {
-  return localeConfig[locale]?.dir === 'rtl';
+  return localeConfig[locale]?.dir === "rtl"
 }
 ```
 
@@ -248,16 +265,17 @@ The system uses **route-specific dictionary loaders** for optimized bundle sizes
 
 ```ts
 // Marketing pages - lightweight
-import { getMarketingDictionary } from "@/components/internationalization/dictionaries";
-
 // Platform core - general + school + operator
-import { getPlatformCoreDictionary } from "@/components/internationalization/dictionaries";
 
 // Finance pages - includes finance module
-import { getFinanceDictionary } from "@/components/internationalization/dictionaries";
 
 // Full dictionary - all translations (use sparingly)
-import { getDictionary } from "@/components/internationalization/dictionaries";
+import {
+  getDictionary,
+  getFinanceDictionary,
+  getMarketingDictionary,
+  getPlatformCoreDictionary,
+} from "@/components/internationalization/dictionaries"
 ```
 
 ### Translation Files Structure
@@ -289,14 +307,14 @@ src/components/internationalization/
 ### Type-Safe Usage
 
 ```tsx
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
-  dictionary: Dictionary['school'];
+  dictionary: Dictionary["school"]
 }
 
 export function StudentList({ dictionary }: Props) {
-  return <h1>{dictionary.students.title}</h1>;
+  return <h1>{dictionary.students.title}</h1>
 }
 ```
 
@@ -308,22 +326,23 @@ export function StudentList({ dictionary }: Props) {
 
 Always use **logical CSS properties** instead of physical directions. These automatically adapt to RTL/LTR:
 
-| Physical (Avoid) | Logical (Use) | Description |
-|------------------|---------------|-------------|
-| `ml-*` | `ms-*` | Margin inline-start |
-| `mr-*` | `me-*` | Margin inline-end |
-| `pl-*` | `ps-*` | Padding inline-start |
-| `pr-*` | `pe-*` | Padding inline-end |
-| `left-*` | `start-*` | Position start |
-| `right-*` | `end-*` | Position end |
-| `text-left` | `text-start` | Text alignment start |
-| `text-right` | `text-end` | Text alignment end |
-| `border-l-*` | `border-s-*` | Border start |
-| `border-r-*` | `border-e-*` | Border end |
-| `rounded-l-*` | `rounded-s-*` | Border radius start |
-| `rounded-r-*` | `rounded-e-*` | Border radius end |
+| Physical (Avoid) | Logical (Use) | Description          |
+| ---------------- | ------------- | -------------------- |
+| `ml-*`           | `ms-*`        | Margin inline-start  |
+| `mr-*`           | `me-*`        | Margin inline-end    |
+| `pl-*`           | `ps-*`        | Padding inline-start |
+| `pr-*`           | `pe-*`        | Padding inline-end   |
+| `left-*`         | `start-*`     | Position start       |
+| `right-*`        | `end-*`       | Position end         |
+| `text-left`      | `text-start`  | Text alignment start |
+| `text-right`     | `text-end`    | Text alignment end   |
+| `border-l-*`     | `border-s-*`  | Border start         |
+| `border-r-*`     | `border-e-*`  | Border end           |
+| `rounded-l-*`    | `rounded-s-*` | Border radius start  |
+| `rounded-r-*`    | `rounded-e-*` | Border radius end    |
 
 **Example:**
+
 ```tsx
 // ❌ Wrong - physical properties don't adapt
 <div className="ml-4 pr-2 text-left border-l-2">
@@ -338,23 +357,26 @@ The root layout sets direction based on locale:
 
 ```tsx
 // src/app/[lang]/layout.tsx
-import { localeConfig, type Locale } from "@/components/internationalization/config";
+import {
+  localeConfig,
+  type Locale,
+} from "@/components/internationalization/config"
 
 export default async function RootLayout({
   children,
   params,
 }: {
-  children: React.ReactNode;
-  params: { lang: string };
+  children: React.ReactNode
+  params: { lang: string }
 }) {
-  const { lang } = await params as { lang: Locale };
-  const config = localeConfig[lang];
+  const { lang } = (await params) as { lang: Locale }
+  const config = localeConfig[lang]
 
   return (
     <html lang={lang} dir={config.dir}>
       <body>{children}</body>
     </html>
-  );
+  )
 }
 ```
 
@@ -380,52 +402,56 @@ Only use `rtl:` variants for cases that **cannot** be solved with logical proper
 ### useLocale Hook
 
 ```tsx
-"use client";
-import { useLocale } from "@/components/internationalization/use-locale";
+"use client"
+
+import { useLocale } from "@/components/internationalization/use-locale"
 
 export function MyComponent() {
-  const { locale, isRTL, localeConfig } = useLocale();
+  const { locale, isRTL, localeConfig } = useLocale()
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'}>
+    <div dir={isRTL ? "rtl" : "ltr"}>
       <p>Current: {localeConfig.nativeName}</p>
       <p>Direction: {localeConfig.dir}</p>
     </div>
-  );
+  )
 }
 ```
 
 ### useDictionary Hook
 
 ```tsx
-"use client";
-import { useDictionary } from "@/components/internationalization/use-dictionary";
+"use client"
+
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export function ClientComponent() {
-  const { dictionary, isLoading } = useDictionary();
+  const { dictionary, isLoading } = useDictionary()
 
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <Spinner />
 
-  return <h1>{dictionary?.common.welcome}</h1>;
+  return <h1>{dictionary?.common.welcome}</h1>
 }
 ```
 
 ### useSwitchLocaleHref Hook
 
 ```tsx
-"use client";
-import { useSwitchLocaleHref } from "@/components/internationalization/use-locale";
-import Link from "next/link";
+"use client"
+
+import Link from "next/link"
+
+import { useSwitchLocaleHref } from "@/components/internationalization/use-locale"
 
 export function LanguageSwitcher() {
-  const switchLocaleHref = useSwitchLocaleHref();
+  const switchLocaleHref = useSwitchLocaleHref()
 
   return (
     <nav className="flex gap-2">
       <Link href={switchLocaleHref("ar")}>العربية</Link>
       <Link href={switchLocaleHref("en")}>English</Link>
     </nav>
-  );
+  )
 }
 ```
 
@@ -438,34 +464,34 @@ export function LanguageSwitcher() {
 ```tsx
 // Format with locale-aware separators
 const formatter = new Intl.NumberFormat(locale, {
-  style: 'decimal',
+  style: "decimal",
   maximumFractionDigits: 2,
-});
-formatter.format(1234567); // ar: "١٬٢٣٤٬٥٦٧" | en: "1,234,567"
+})
+formatter.format(1234567) // ar: "١٬٢٣٤٬٥٦٧" | en: "1,234,567"
 
 // Currency formatting
 const currencyFormatter = new Intl.NumberFormat(locale, {
-  style: 'currency',
-  currency: locale === 'ar' ? 'SAR' : 'USD',
-});
-currencyFormatter.format(99.99); // ar: "٩٩٫٩٩ ر.س" | en: "$99.99"
+  style: "currency",
+  currency: locale === "ar" ? "SAR" : "USD",
+})
+currencyFormatter.format(99.99) // ar: "٩٩٫٩٩ ر.س" | en: "$99.99"
 ```
 
 ### Date Formatting
 
 ```tsx
 const dateFormatter = new Intl.DateTimeFormat(locale, {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
-dateFormatter.format(new Date()); // ar: "١ ديسمبر ٢٠٢٥" | en: "December 1, 2025"
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})
+dateFormatter.format(new Date()) // ar: "١ ديسمبر ٢٠٢٥" | en: "December 1, 2025"
 
 // Relative time
 const relativeFormatter = new Intl.RelativeTimeFormat(locale, {
-  numeric: 'auto',
-});
-relativeFormatter.format(-2, 'day'); // ar: "منذ يومين" | en: "2 days ago"
+  numeric: "auto",
+})
+relativeFormatter.format(-2, "day") // ar: "منذ يومين" | en: "2 days ago"
 ```
 
 ### Arabic Pluralization
@@ -479,14 +505,14 @@ function arabicPlural(
   dual: string,
   plural: string
 ): string {
-  if (count === 1) return singular;
-  if (count === 2) return dual;
-  return plural;
+  if (count === 1) return singular
+  if (count === 2) return dual
+  return plural
 }
 
 // Usage
-arabicPlural(count, "طالب", "طالبان", "طلاب");  // student/students
-arabicPlural(count, "يوم", "يومان", "أيام");     // day/days
+arabicPlural(count, "طالب", "طالبان", "طلاب") // student/students
+arabicPlural(count, "يوم", "يومان", "أيام") // day/days
 ```
 
 ---
@@ -531,16 +557,16 @@ arabicPlural(count, "يوم", "يومان", "أيام");     // day/days
 ### Converting Legacy Content
 
 ```ts
-import { convertToBilingual, detectLanguage } from "@/lib/i18n-content";
+import { convertToBilingual, detectLanguage } from "@/lib/i18n-content"
 
 // Migrate existing single-field content
 async function migrateAnnouncements() {
-  const announcements = await db.announcement.findMany();
+  const announcements = await db.announcement.findMany()
 
   for (const ann of announcements) {
-    const lang = detectLanguage(ann.title);
-    const titleBilingual = convertToBilingual(ann.title, lang);
-    const bodyBilingual = convertToBilingual(ann.body, lang);
+    const lang = detectLanguage(ann.title)
+    const titleBilingual = convertToBilingual(ann.title, lang)
+    const bodyBilingual = convertToBilingual(ann.body, lang)
 
     await db.announcement.update({
       where: { id: ann.id },
@@ -550,7 +576,7 @@ async function migrateAnnouncements() {
         bodyEn: bodyBilingual.en,
         bodyAr: bodyBilingual.ar,
       },
-    });
+    })
   }
 }
 ```

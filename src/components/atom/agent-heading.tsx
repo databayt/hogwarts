@@ -1,34 +1,32 @@
-'use client';
+"use client"
 
 interface AgentHeadingProps {
-  title: string;
-  scrollTarget?: string;
-  scrollText?: string;
+  title: string
+  scrollTarget?: string
+  scrollText?: string
 }
 
 export default function AgentHeading({
   title,
-  scrollTarget = 'content',
-  scrollText = 'explore existing data'
+  scrollTarget = "content",
+  scrollText = "explore existing data",
 }: AgentHeadingProps) {
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {title}
-      </h1>
-      <p className="text-lg text-muted-foreground">
-        Process data, or{' '}
+      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <p className="text-muted-foreground text-lg">
+        Process data, or{" "}
         <button
           onClick={() => {
             document.getElementById(scrollTarget)?.scrollIntoView({
-              behavior: 'smooth'
-            });
+              behavior: "smooth",
+            })
           }}
-          className="text-primary hover:underline inline"
+          className="text-primary inline hover:underline"
         >
           {scrollText} →
         </button>
       </p>
     </div>
-  );
+  )
 }

@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { IconWrapper } from "./icon-wrapper"
 import { ProgressStat } from "./progress-stat"
 import type { CardSize } from "./types"
@@ -96,7 +98,7 @@ export function ProgressCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}

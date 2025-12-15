@@ -1,40 +1,48 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useDeferredValue, useTransition } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import type { MeritRow } from "./merit-columns";
-import { getMeritColumns } from "./merit-columns";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
 import {
-  PlatformToolbar,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+  useTransition,
+} from "react"
+import { useRouter } from "next/navigation"
+import { Award, Clock, RefreshCw, TrendingUp, Users } from "lucide-react"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, Users, Clock, TrendingUp, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getMeritListData, generateMeritList } from "./actions";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { generateMeritList, getMeritListData } from "./actions"
+import type { MeritRow } from "./merit-columns"
+import { getMeritColumns } from "./merit-columns"
 
 interface MeritTableProps {
-  initialData: MeritRow[];
-  total: number;
-  dictionary: Dictionary["school"]["admission"];
-  lang: Locale;
-  perPage?: number;
-  campaignId?: string;
+  initialData: MeritRow[]
+  total: number
+  dictionary: Dictionary["school"]["admission"]
+  lang: Locale
+  perPage?: number
+  campaignId?: string
   stats: {
-    totalRanked: number;
-    selected: number;
-    waitlisted: number;
-    avgScore: number;
-  };
+    totalRanked: number
+    selected: number
+    waitlisted: number
+    avgScore: number
+  }
 }
 
 export function MeritTable({
@@ -46,19 +54,19 @@ export function MeritTable({
   campaignId,
   stats,
 }: MeritTableProps) {
-  const t = dictionary;
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const t = dictionary
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
-  const [searchInput, setSearchInput] = useState("");
-  const deferredSearch = useDeferredValue(searchInput);
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const [searchInput, setSearchInput] = useState("")
+  const deferredSearch = useDeferredValue(searchInput)
 
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
-    if (campaignId) f.campaignId = campaignId;
-    return f;
-  }, [campaignId]);
+    const f: Record<string, unknown> = {}
+    if (campaignId) f.campaignId = campaignId
+    return f
+  }, [campaignId])
 
   const {
     data,
@@ -75,16 +83,19 @@ export function MeritTable({
       const result = await getMeritListData({
         ...params,
         campaignId: campaignId || undefined,
-      });
+      })
       if (result.success) {
-        return { rows: result.data.rows as MeritRow[], total: result.data.total };
+        return {
+          rows: result.data.rows as MeritRow[],
+          total: result.data.total,
+        }
       }
-      return { rows: [], total: 0 };
+      return { rows: [], total: 0 }
     },
     filters,
-  });
+  })
 
-  const columns = useMemo(() => getMeritColumns(t, lang), [t, lang]);
+  const columns = useMemo(() => getMeritColumns(t, lang), [t, lang])
 
   const { table } = useDataTable<MeritRow>({
     data,
@@ -97,39 +108,39 @@ export function MeritTable({
         pageSize: data.length || perPage,
       },
     },
-  });
+  })
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-  }, []);
+    setSearchInput(value)
+  }, [])
 
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/admission/applications/${id}`);
+      router.push(`/admission/applications/${id}`)
     },
     [router]
-  );
+  )
 
   const handleGenerateMeritList = useCallback(() => {
-    if (!campaignId) return;
+    if (!campaignId) return
     startTransition(async () => {
-      await generateMeritList({ campaignId });
-      refresh();
-    });
-  }, [campaignId, refresh]);
+      await generateMeritList({ campaignId })
+      refresh()
+    })
+  }, [campaignId, refresh])
 
   const getStatusBadge = (status: string) => {
-    const label = t?.status?.[status as keyof typeof t.status] || status;
+    const label = t?.status?.[status as keyof typeof t.status] || status
     const variant =
       status === "SELECTED"
         ? "default"
         : status === "WAITLISTED"
-        ? "secondary"
-        : status === "REJECTED"
-        ? "destructive"
-        : "outline";
-    return { label, variant: variant as any };
-  };
+          ? "secondary"
+          : status === "REJECTED"
+            ? "destructive"
+            : "outline"
+    return { label, variant: variant as any }
+  }
 
   const toolbarTranslations = {
     search: t?.columns?.applicant || "Search applicants...",
@@ -140,7 +151,7 @@ export function MeritTable({
     export: "Export",
     exportCSV: "Export CSV",
     exporting: "Exporting...",
-  };
+  }
 
   return (
     <>
@@ -151,7 +162,7 @@ export function MeritTable({
             <CardTitle className="text-sm font-medium">
               {t?.meritList?.totalRanked || "Total Ranked"}
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalRanked}</div>
@@ -162,10 +173,12 @@ export function MeritTable({
             <CardTitle className="text-sm font-medium">
               {t?.meritList?.selected || "Selected"}
             </CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+            <Award className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.selected}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.selected}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -173,10 +186,12 @@ export function MeritTable({
             <CardTitle className="text-sm font-medium">
               {t?.meritList?.waitlisted || "Waitlisted"}
             </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.waitlisted}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.waitlisted}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -184,10 +199,12 @@ export function MeritTable({
             <CardTitle className="text-sm font-medium">
               {t?.meritList?.avgScore || "Avg Score"}
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.avgScore.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {stats.avgScore.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -196,7 +213,9 @@ export function MeritTable({
       {campaignId && (
         <div className="flex justify-end">
           <Button onClick={handleGenerateMeritList} disabled={isPending}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isPending ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
+            />
             {isPending
               ? t?.meritList?.generating || "Generating..."
               : t?.meritList?.generateMeritList || "Generate Merit List"}
@@ -227,14 +246,19 @@ export function MeritTable({
         <>
           {data.length === 0 ? (
             <GridEmptyState
-              title={t?.meritList?.noRankedApplications || "No ranked applications"}
-              description={t?.meritList?.noRankedDescription || "Generate a merit list to see ranked applications"}
+              title={
+                t?.meritList?.noRankedApplications || "No ranked applications"
+              }
+              description={
+                t?.meritList?.noRankedDescription ||
+                "Generate a merit list to see ranked applications"
+              }
               icon={<Award className="h-12 w-12" />}
             />
           ) : (
             <GridContainer columns={3}>
               {data.map((merit) => {
-                const statusBadge = getStatusBadge(merit.status);
+                const statusBadge = getStatusBadge(merit.status)
                 return (
                   <GridCard
                     key={merit.id}
@@ -263,7 +287,7 @@ export function MeritTable({
                     actionsLabel={t?.columns?.actions || "Actions"}
                     onClick={() => handleView(merit.id)}
                   >
-                    <div className="flex gap-2 mt-2">
+                    <div className="mt-2 flex gap-2">
                       {merit.entranceScore && (
                         <Badge variant="outline" className="text-xs">
                           Entrance: {parseFloat(merit.entranceScore).toFixed(1)}
@@ -271,22 +295,23 @@ export function MeritTable({
                       )}
                       {merit.interviewScore && (
                         <Badge variant="outline" className="text-xs">
-                          Interview: {parseFloat(merit.interviewScore).toFixed(1)}
+                          Interview:{" "}
+                          {parseFloat(merit.interviewScore).toFixed(1)}
                         </Badge>
                       )}
                     </div>
                   </GridCard>
-                );
+                )
               })}
             </GridContainer>
           )}
 
           {hasMore && (
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={loadMore}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading ? "Loading..." : "Load More"}
               </button>
@@ -295,5 +320,5 @@ export function MeritTable({
         </>
       )}
     </>
-  );
+  )
 }

@@ -1,5 +1,5 @@
 // Re-export the production-ready timetable content
-export { TimetableContent } from './content-production'
+export { TimetableContent } from "./content-production"
 
 // Keep the legacy implementation below for reference
 /*

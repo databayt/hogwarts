@@ -1,29 +1,38 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { differenceInDays, isToday, isTomorrow } from "date-fns"
+import {
+  Bell,
+  Calendar,
+  ChevronRight,
+  FileText,
+  Trophy,
+  Users,
+} from "lucide-react"
+
+import { getTenantContext } from "@/lib/tenant-context"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ChevronRight, Calendar, Users, Trophy, FileText, Bell } from "lucide-react"
-import { isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { ParentDashboardStats } from "@/components/platform/shared/stats"
+
 import { getParentDashboardData, getQuickLookData } from "./actions"
-import { getWeatherData } from "./weather-actions"
+import { ActivityRings } from "./activity-rings"
+import { AnnouncementCard } from "./announcement-card"
+import { ChartSection } from "./chart-section"
+import { ComparisonLineChart } from "./comparison-chart"
+import { EmptyState } from "./empty-state"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { MetricCard } from "./metric-card"
+import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { getTenantContext } from "@/lib/tenant-context"
-import { ParentDashboardStats } from "@/components/platform/shared/stats"
-import { MetricCard } from "./metric-card"
-import { ActivityRings } from "./activity-rings"
-import { ProgressCard } from "./progress-card"
-import { AnnouncementCard } from "./announcement-card"
-import { EmptyState } from "./empty-state"
-import { ComparisonLineChart } from "./comparison-chart"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { InvoiceHistorySection } from "./invoice-history-section"
-import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
-import Link from "next/link"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
+import { getWeatherData } from "./weather-actions"
 
 interface ParentDashboardProps {
   user: {
@@ -37,7 +46,11 @@ interface ParentDashboardProps {
   locale?: string
 }
 
-export async function ParentDashboard({ user, dictionary, locale = "en" }: ParentDashboardProps) {
+export async function ParentDashboard({
+  user,
+  dictionary,
+  locale = "en",
+}: ParentDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
     // Fetch real data from server action with error handling
@@ -61,7 +74,8 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
             <CardContent className="p-6">
               <h3 className="mb-4">Unable to Load Dashboard</h3>
               <p className="text-muted-foreground">
-                There was an error loading the dashboard data. Please try refreshing the page.
+                There was an error loading the dashboard data. Please try
+                refreshing the page.
               </p>
             </CardContent>
           </Card>
@@ -128,7 +142,8 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
     // Calculate average grade
     const averageGrade =
       data.recentGrades.length > 0
-        ? data.recentGrades.reduce((sum, g) => sum + g.percentage, 0) / data.recentGrades.length
+        ? data.recentGrades.reduce((sum, g) => sum + g.percentage, 0) /
+          data.recentGrades.length
         : 0
 
     // Activity rings for children's progress
@@ -144,16 +159,29 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
       {
         label: "Grades",
         value: averageGrade,
-        color: averageGrade >= 80 ? "#22c55e" : averageGrade >= 60 ? "#3b82f6" : "#ef4444",
+        color:
+          averageGrade >= 80
+            ? "#22c55e"
+            : averageGrade >= 60
+              ? "#3b82f6"
+              : "#ef4444",
         current: Math.round(averageGrade),
         target: 100,
         unit: "%",
       },
       {
         label: "Tasks",
-        value: Math.max(0, 100 - data.upcomingAssignments.filter((a) => a.status === "NOT_SUBMITTED").length * 20),
+        value: Math.max(
+          0,
+          100 -
+            data.upcomingAssignments.filter((a) => a.status === "NOT_SUBMITTED")
+              .length *
+              20
+        ),
         color: "#8b5cf6",
-        current: data.upcomingAssignments.filter((a) => a.status !== "NOT_SUBMITTED").length,
+        current: data.upcomingAssignments.filter(
+          (a) => a.status !== "NOT_SUBMITTED"
+        ).length,
         target: data.upcomingAssignments.length || 1,
         unit: "done",
       },
@@ -168,14 +196,20 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
     ]
 
     // Count pending assignments
-    const pendingAssignments = data.upcomingAssignments.filter((a) => a.status === "NOT_SUBMITTED").length
+    const pendingAssignments = data.upcomingAssignments.filter(
+      (a) => a.status === "NOT_SUBMITTED"
+    ).length
 
     return (
       <div className="space-y-6">
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming role="GUARDIAN" locale={locale} subdomain={school?.domain || ""} />
+          <Upcoming
+            role="GUARDIAN"
+            locale={locale}
+            subdomain={school?.domain || ""}
+          />
           <Weather
             current={weatherData?.current}
             forecast={weatherData?.forecast}
@@ -184,13 +218,20 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
+        <QuickLookSection
+          locale={locale}
+          subdomain={school?.domain || ""}
+          data={quickLookData}
+        />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("GUARDIAN", school?.domain ?? undefined)}
+            actions={getQuickActionsByRole(
+              "GUARDIAN",
+              school?.domain ?? undefined
+            )}
             locale={locale}
           />
         </section>
@@ -206,21 +247,32 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
 
         {/* ============ PARENT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <MetricCard title="Children" value={data.children.length} iconName="Users" iconColor="text-blue-500" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <MetricCard
+            title="Children"
+            value={data.children.length}
+            iconName="Users"
+            iconColor="text-blue-500"
+          />
           <MetricCard
             title="Attendance"
             value={`${data.attendanceSummary.percentage.toFixed(0)}%`}
             description={`${data.attendanceSummary.presentDays}/${data.attendanceSummary.totalDays} days`}
             iconName="Calendar"
-            iconColor={data.attendanceSummary.percentage >= 85 ? "text-green-500" : "text-amber-500"}
+            iconColor={
+              data.attendanceSummary.percentage >= 85
+                ? "text-green-500"
+                : "text-amber-500"
+            }
             href={`/${locale}/s/${school?.domain}/attendance`}
           />
           <MetricCard
             title="Pending Tasks"
             value={pendingAssignments}
             iconName="FileText"
-            iconColor={pendingAssignments > 3 ? "text-destructive" : "text-purple-500"}
+            iconColor={
+              pendingAssignments > 3 ? "text-destructive" : "text-purple-500"
+            }
             href={`/${locale}/s/${school?.domain}/assignments`}
           />
           <MetricCard
@@ -233,21 +285,33 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         </div>
 
         {/* Attendance Progress Card */}
-        <Card className="bg-gradient-to-r from-primary/5 via-transparent to-transparent">
+        <Card className="from-primary/5 bg-gradient-to-r via-transparent to-transparent">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
+                <Calendar className="text-primary h-4 w-4" />
                 <span className="font-medium">Overall Attendance</span>
               </div>
-              <Badge variant={data.attendanceSummary.percentage >= 90 ? "default" : "secondary"}>
-                {data.attendanceSummary.percentage >= 90 ? "Excellent" : "Keep Going!"}
+              <Badge
+                variant={
+                  data.attendanceSummary.percentage >= 90
+                    ? "default"
+                    : "secondary"
+                }
+              >
+                {data.attendanceSummary.percentage >= 90
+                  ? "Excellent"
+                  : "Keep Going!"}
               </Badge>
             </div>
-            <Progress value={data.attendanceSummary.percentage} className="h-3" />
-            <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+            <Progress
+              value={data.attendanceSummary.percentage}
+              className="h-3"
+            />
+            <div className="text-muted-foreground mt-2 flex justify-between text-sm">
               <span>
-                {data.attendanceSummary.presentDays} {dashDict.labels.daysPresent}
+                {data.attendanceSummary.presentDays}{" "}
+                {dashDict.labels.daysPresent}
               </span>
               <span>Target: 90%</span>
             </div>
@@ -259,7 +323,7 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
           {/* Children Overview */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Users className="h-4 w-4" />
                 {dashDict.sections.childrenOverview}
               </CardTitle>
@@ -267,33 +331,57 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
             <CardContent className="space-y-4">
               {data.children.length > 0 ? (
                 data.children.map((child) => (
-                  <div key={child.id} className="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
+                  <div
+                    key={child.id}
+                    className="hover:bg-muted/50 rounded-lg border p-4 transition-colors"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
                         <p className="font-semibold">{child.name}</p>
-                        <p className="text-sm text-muted-foreground">{child.studentId}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {child.studentId}
+                        </p>
                       </div>
                       <Badge variant="outline">
-                        {averageGrade >= 80 ? "Excellent" : averageGrade >= 60 ? "Good" : "Needs Attention"}
+                        {averageGrade >= 80
+                          ? "Excellent"
+                          : averageGrade >= 60
+                            ? "Good"
+                            : "Needs Attention"}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Attendance</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Progress value={data.attendanceSummary.percentage} className="flex-1 h-2" />
-                          <span className="text-sm font-medium">{data.attendanceSummary.percentage.toFixed(0)}%</span>
+                        <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                          Attendance
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Progress
+                            value={data.attendanceSummary.percentage}
+                            className="h-2 flex-1"
+                          />
+                          <span className="text-sm font-medium">
+                            {data.attendanceSummary.percentage.toFixed(0)}%
+                          </span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg Grade</p>
-                        <p className="text-lg font-bold mt-1">
-                          {averageGrade > 0 ? `${averageGrade.toFixed(0)}%` : "N/A"}
+                        <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                          Avg Grade
+                        </p>
+                        <p className="mt-1 text-lg font-bold">
+                          {averageGrade > 0
+                            ? `${averageGrade.toFixed(0)}%`
+                            : "N/A"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Tasks Due</p>
-                        <p className="text-lg font-bold mt-1">{pendingAssignments}</p>
+                        <p className="text-muted-foreground text-xs tracking-wide uppercase">
+                          Tasks Due
+                        </p>
+                        <p className="mt-1 text-lg font-bold">
+                          {pendingAssignments}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -317,13 +405,13 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
           {/* Recent Grades */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Trophy className="h-4 w-4" />
                 {dashDict.sections.recentGrades}
               </CardTitle>
               <Link
                 href={`/${locale}/s/${school?.domain}/grades`}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
+                className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4" />
               </Link>
@@ -333,11 +421,13 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                 data.recentGrades.slice(0, 4).map((grade) => (
                   <div
                     key={grade.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{grade.examTitle}</p>
-                      <p className="text-sm text-muted-foreground">{grade.subject}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{grade.examTitle}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {grade.subject}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold">
@@ -345,7 +435,11 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                       </p>
                       <Badge
                         variant={
-                          grade.percentage >= 80 ? "default" : grade.percentage >= 60 ? "secondary" : "destructive"
+                          grade.percentage >= 80
+                            ? "default"
+                            : grade.percentage >= 60
+                              ? "secondary"
+                              : "destructive"
                         }
                         className={
                           grade.percentage >= 80
@@ -353,7 +447,8 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                             : ""
                         }
                       >
-                        {grade.percentage.toFixed(0)}%{grade.grade ? ` • ${grade.grade}` : ""}
+                        {grade.percentage.toFixed(0)}%
+                        {grade.grade ? ` • ${grade.grade}` : ""}
                       </Badge>
                     </div>
                   </div>
@@ -371,11 +466,15 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
           {/* Upcoming Assignments */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <FileText className="h-4 w-4" />
                 {dashDict.sections.upcomingAssignments}
               </CardTitle>
-              <Badge variant={pendingAssignments > 0 ? "destructive" : "secondary"}>{pendingAssignments} pending</Badge>
+              <Badge
+                variant={pendingAssignments > 0 ? "destructive" : "secondary"}
+              >
+                {pendingAssignments} pending
+              </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
               {data.upcomingAssignments.length > 0 ? (
@@ -389,11 +488,13 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                   return (
                     <div
                       key={assignment.id}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{assignment.title}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">
+                          {assignment.title}
+                        </p>
+                        <p className="text-muted-foreground text-sm">
                           {assignment.subject} • {assignment.className}
                         </p>
                       </div>
@@ -407,9 +508,11 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                                 : "secondary"
                           }
                         >
-                          {assignment.status === "NOT_SUBMITTED" ? dashDict.labels.pending : assignment.status}
+                          {assignment.status === "NOT_SUBMITTED"
+                            ? dashDict.labels.pending
+                            : assignment.status}
                         </Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-muted-foreground mt-1 text-xs">
                           {isOverdue
                             ? "Overdue"
                             : isDueToday
@@ -423,7 +526,11 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
                   )
                 })
               ) : (
-                <EmptyState iconName="FileText" title={dashDict.labels.noAssignments} description="All caught up!" />
+                <EmptyState
+                  iconName="FileText"
+                  title={dashDict.labels.noAssignments}
+                  description="All caught up!"
+                />
               )}
             </CardContent>
           </Card>
@@ -431,7 +538,7 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
           {/* School Announcements */}
           <Card className="md:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Bell className="h-4 w-4" />
                 {dashDict.sections.announcements}
               </CardTitle>
@@ -440,15 +547,19 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 {data.announcements.length > 0 ? (
-                  data.announcements.slice(0, 4).map((announcement, index) => (
-                    <AnnouncementCard
-                      key={announcement.id}
-                      title={announcement.title}
-                      content={announcement.body || "Click to view full announcement"}
-                      date={announcement.createdAt}
-                      priority={index === 0 ? "high" : "normal"}
-                    />
-                  ))
+                  data.announcements
+                    .slice(0, 4)
+                    .map((announcement, index) => (
+                      <AnnouncementCard
+                        key={announcement.id}
+                        title={announcement.title}
+                        content={
+                          announcement.body || "Click to view full announcement"
+                        }
+                        date={announcement.createdAt}
+                        priority={index === 0 ? "high" : "normal"}
+                      />
+                    ))
                 ) : (
                   <div className="md:col-span-2">
                     <EmptyState
@@ -484,21 +595,34 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
           />
           <ProgressCard
             title="Assignments Completed"
-            current={data.upcomingAssignments.filter((a) => a.status !== "NOT_SUBMITTED").length}
+            current={
+              data.upcomingAssignments.filter(
+                (a) => a.status !== "NOT_SUBMITTED"
+              ).length
+            }
             total={data.upcomingAssignments.length || 1}
             unit="tasks"
             iconName="FileText"
             showPercentage
           />
-          <ProgressCard title="Term Progress" current={12} total={16} unit="weeks" iconName="Clock" showPercentage />
+          <ProgressCard
+            title="Term Progress"
+            current={12}
+            total={16}
+            unit="weeks"
+            iconName="Clock"
+            showPercentage
+          />
         </div>
       </div>
     )
   } catch (renderError) {
     // Catch any rendering errors and log them
     console.error("[ParentDashboard] Rendering error:", renderError)
-    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
-    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    const errorMessage =
+      renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack =
+      renderError instanceof Error ? renderError.stack : undefined
     console.error("[ParentDashboard] Error message:", errorMessage)
     console.error("[ParentDashboard] Error stack:", errorStack)
     return (
@@ -506,8 +630,12 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4">Dashboard Rendering Error</h3>
-            <p className="text-muted-foreground mb-2">An error occurred while rendering the dashboard.</p>
-            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">{errorMessage}</pre>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
+              {errorMessage}
+            </pre>
           </CardContent>
         </Card>
       </div>

@@ -55,6 +55,7 @@ src/app/globals.css
 Access theme settings via: **Settings → Appearance**
 
 Features:
+
 - Browse 160+ preset themes
 - Apply themes with one click
 - Import/export custom themes
@@ -78,44 +79,44 @@ Features:
 
 #### 2. Available Semantic Tokens
 
-| Token | Usage | Example |
-|-------|-------|---------|
-| `background` | Page/card backgrounds | `bg-background` |
-| `foreground` | Primary text | `text-foreground` |
-| `muted` | Muted backgrounds | `bg-muted` |
-| `muted-foreground` | Secondary text | `text-muted-foreground` |
-| `primary` | Primary actions | `bg-primary` |
-| `primary-foreground` | Text on primary | `text-primary-foreground` |
-| `secondary` | Secondary actions | `bg-secondary` |
-| `accent` | Accent backgrounds | `bg-accent` |
-| `destructive` | Errors/warnings | `bg-destructive` |
-| `border` | Border colors | `border-border` |
-| `input` | Input borders | `border-input` |
-| `ring` | Focus rings | `ring-ring` |
-| `card` | Card backgrounds | `bg-card` |
-| `popover` | Popover backgrounds | `bg-popover` |
+| Token                | Usage                 | Example                   |
+| -------------------- | --------------------- | ------------------------- |
+| `background`         | Page/card backgrounds | `bg-background`           |
+| `foreground`         | Primary text          | `text-foreground`         |
+| `muted`              | Muted backgrounds     | `bg-muted`                |
+| `muted-foreground`   | Secondary text        | `text-muted-foreground`   |
+| `primary`            | Primary actions       | `bg-primary`              |
+| `primary-foreground` | Text on primary       | `text-primary-foreground` |
+| `secondary`          | Secondary actions     | `bg-secondary`            |
+| `accent`             | Accent backgrounds    | `bg-accent`               |
+| `destructive`        | Errors/warnings       | `bg-destructive`          |
+| `border`             | Border colors         | `border-border`           |
+| `input`              | Input borders         | `border-input`            |
+| `ring`               | Focus rings           | `ring-ring`               |
+| `card`               | Card backgrounds      | `bg-card`                 |
+| `popover`            | Popover backgrounds   | `bg-popover`              |
 
 **Sidebar Tokens:**
+
 - `sidebar`, `sidebar-foreground`, `sidebar-primary`, `sidebar-accent`, etc.
 
 **Chart Tokens:**
+
 - `chart-1`, `chart-2`, `chart-3`, `chart-4`, `chart-5`
 
 #### 3. Using Theme Hooks
 
 ```tsx
-'use client'
+"use client"
 
-import { useUserTheme, useThemeOperations } from '@/components/theme/use-theme'
+import { useThemeOperations, useUserTheme } from "@/components/theme/use-theme"
 
 function MyComponent() {
   const { themeState, applyThemePreset } = useUserTheme()
   const { saveTheme, deleteTheme } = useThemeOperations()
 
   return (
-    <button onClick={() => applyThemePreset('zinc')}>
-      Apply Zinc Theme
-    </button>
+    <button onClick={() => applyThemePreset("zinc")}>Apply Zinc Theme</button>
   )
 }
 ```
@@ -124,37 +125,37 @@ function MyComponent() {
 
 ```tsx
 import {
-  parseOKLCH,
   checkContrast,
+  ensureContrast,
   generateColorScale,
   generateSemanticPalette,
-  ensureContrast
-} from '@/lib/theme-utils'
+  parseOKLCH,
+} from "@/lib/theme-utils"
 
 // Parse OKLCH color
-const color = parseOKLCH('oklch(0.5 0.2 200)')
+const color = parseOKLCH("oklch(0.5 0.2 200)")
 // { l: 0.5, c: 0.2, h: 200 }
 
 // Check WCAG contrast
 const result = checkContrast(
-  'oklch(0.2 0 0)', // Dark foreground
-  'oklch(1 0 0)'    // Light background
+  "oklch(0.2 0 0)", // Dark foreground
+  "oklch(1 0 0)" // Light background
 )
 // { ratio: 15.2, level: 'AAA', passes: { normalAAA: true, ... } }
 
 // Generate color scale
-const scale = generateColorScale('oklch(0.58 0.2 200)')
+const scale = generateColorScale("oklch(0.58 0.2 200)")
 // { 50: 'oklch(...)', 100: 'oklch(...)', ..., 950: 'oklch(...)' }
 
 // Generate semantic palette from primary color
-const palette = generateSemanticPalette('oklch(0.5 0.2 264)')
+const palette = generateSemanticPalette("oklch(0.5 0.2 264)")
 // { primary, secondary, accent, destructive, muted, success, warning, info }
 
 // Ensure WCAG AA contrast (4.5:1)
 const adjusted = ensureContrast(
-  'oklch(0.6 0.1 200)', // Foreground
-  'oklch(0.7 0 0)',     // Background
-  4.5                   // Target ratio
+  "oklch(0.6 0.1 200)", // Foreground
+  "oklch(0.7 0 0)", // Background
+  4.5 // Target ratio
 )
 // Returns adjusted foreground color with sufficient contrast
 ```
@@ -169,9 +170,9 @@ Access theme editor state.
 
 ```tsx
 const {
-  themeState,           // Current theme configuration
-  setThemeState,        // Update theme state
-  applyThemePreset      // Apply preset by name
+  themeState, // Current theme configuration
+  setThemeState, // Update theme state
+  applyThemePreset, // Apply preset by name
 } = useUserTheme()
 ```
 
@@ -181,11 +182,11 @@ Perform theme CRUD operations.
 
 ```tsx
 const {
-  applyTheme,    // (state: ThemeEditorState) => void
-  saveTheme,     // (name: string) => Promise<void>
+  applyTheme, // (state: ThemeEditorState) => void
+  saveTheme, // (name: string) => Promise<void>
   activateTheme, // (themeId: string) => Promise<void>
-  deleteTheme,   // (themeId: string) => Promise<void>
-  isPending      // boolean - operation in progress
+  deleteTheme, // (themeId: string) => Promise<void>
+  isPending, // boolean - operation in progress
 } = useThemeOperations()
 ```
 
@@ -195,10 +196,10 @@ Import/export theme JSON files.
 
 ```tsx
 const {
-  exportTheme,   // (themeName: string) => Promise<void>
-  importTheme,   // (file: File) => Promise<ThemeEditorState | null>
-  isExporting,   // boolean
-  isImporting    // boolean
+  exportTheme, // (themeName: string) => Promise<void>
+  importTheme, // (file: File) => Promise<ThemeEditorState | null>
+  isExporting, // boolean
+  isImporting, // boolean
 } = useThemeImportExport()
 ```
 
@@ -208,9 +209,9 @@ Fetch available preset themes.
 
 ```tsx
 const {
-  presets,      // ThemePreset[]
-  isLoading,    // boolean
-  fetchPresets  // () => Promise<void>
+  presets, // ThemePreset[]
+  isLoading, // boolean
+  fetchPresets, // () => Promise<void>
 } = usePresetThemes()
 ```
 
@@ -224,8 +225,8 @@ Save user theme to database.
 
 ```tsx
 const formData = new FormData()
-formData.append('name', 'My Theme')
-formData.append('themeConfig', JSON.stringify(themeState))
+formData.append("name", "My Theme")
+formData.append("themeConfig", JSON.stringify(themeState))
 
 const result = await saveUserTheme(formData)
 // { success: true, theme: {...} } | { error: string }
@@ -237,7 +238,7 @@ Set theme as active for current user.
 
 ```tsx
 const formData = new FormData()
-formData.append('themeId', 'theme-uuid')
+formData.append("themeId", "theme-uuid")
 
 await activateUserTheme(formData)
 ```
@@ -248,7 +249,7 @@ Delete user theme from database.
 
 ```tsx
 const formData = new FormData()
-formData.append('themeId', 'theme-uuid')
+formData.append("themeId", "theme-uuid")
 
 await deleteUserTheme(formData)
 ```
@@ -258,18 +259,21 @@ await deleteUserTheme(formData)
 ### OKLCH Color Space
 
 OKLCH (Lightness, Chroma, Hue) provides:
+
 - **Perceptual uniformity**: Equal changes = equal visual differences
 - **Predictable lightness**: Adjust `l` without hue shifts
 - **Wide gamut**: Access more vivid colors than sRGB
 - **Better accessibility**: More accurate contrast calculations
 
 Format: `oklch(L C H / A)`
+
 - **L**: Lightness (0-1, where 0=black, 1=white)
 - **C**: Chroma/saturation (0-0.4 typically)
 - **H**: Hue (0-360 degrees)
 - **A**: Alpha/opacity (0-1, optional)
 
 Examples:
+
 ```css
 oklch(0.5 0.2 200)        /* Mid-blue */
 oklch(0.8 0.1 120)        /* Light green */
@@ -303,6 +307,7 @@ Calculate WCAG 2.1 contrast ratio between two OKLCH colors.
 Check WCAG compliance.
 
 Returns:
+
 ```tsx
 {
   ratio: number,          // Contrast ratio (1-21)
@@ -422,12 +427,12 @@ interface ThemeStyleProps {
 ### 2. Check Contrast for Custom Colors
 
 ```tsx
-import { checkContrast } from '@/lib/theme-utils'
+import { checkContrast } from "@/lib/theme-utils"
 
 // Always validate custom color combinations
 const result = checkContrast(foregroundColor, backgroundColor)
-if (result.level === 'FAIL') {
-  console.warn('Insufficient contrast!')
+if (result.level === "FAIL") {
+  console.warn("Insufficient contrast!")
 }
 ```
 
@@ -435,19 +440,20 @@ if (result.level === 'FAIL') {
 
 ```tsx
 // Start with a preset, then customize
-const baseTheme = getPresetThemeStyles('zinc')
+const baseTheme = getPresetThemeStyles("zinc")
 const customTheme = {
   ...baseTheme,
   light: {
     ...baseTheme.light,
-    primary: 'oklch(0.5 0.25 280)' // Custom primary color
-  }
+    primary: "oklch(0.5 0.25 280)", // Custom primary color
+  },
 }
 ```
 
 ### 4. Persist Theme Preferences
 
 Themes are automatically persisted:
+
 - **Zustand persist middleware**: localStorage
 - **Database**: User preferences table
 - **Session**: Current active theme
@@ -457,8 +463,8 @@ Themes are automatically persisted:
 ```tsx
 // Always define both light and dark variants
 const myTheme = {
-  light: { primary: 'oklch(0.5 0.2 264)' },
-  dark: { primary: 'oklch(0.7 0.15 264)' }  // Lighter for dark mode
+  light: { primary: "oklch(0.5 0.2 264)" },
+  dark: { primary: "oklch(0.7 0.15 264)" }, // Lighter for dark mode
 }
 ```
 
@@ -491,7 +497,7 @@ const myTheme = {
 
 ```tsx
 // src/app/layout.tsx
-import { ThemeProvider } from '@/components/theme/theme-provider'
+import { ThemeProvider } from "@/components/theme/theme-provider"
 
 export default function RootLayout({ children }) {
   return (
@@ -549,6 +555,7 @@ model UserTheme {
 ### Adding New Semantic Tokens
 
 1. **Update `src/app/globals.css`**:
+
 ```css
 :root {
   --my-new-token: oklch(0.5 0.2 200);
@@ -560,6 +567,7 @@ model UserTheme {
 ```
 
 2. **Update `@theme inline` mapping**:
+
 ```css
 @theme inline {
   --color-my-new-token: var(--my-new-token);
@@ -567,18 +575,20 @@ model UserTheme {
 ```
 
 3. **Update TypeScript types** in `src/types/theme-editor.ts`:
+
 ```typescript
 interface ThemeStyleProps {
   // ... existing tokens
-  'my-new-token': string
+  "my-new-token": string
 }
 ```
 
 4. **Add to default configs** in `src/components/theme/config.ts`:
+
 ```typescript
 export const defaultLightThemeStyles = {
   // ... existing
-  'my-new-token': 'oklch(0.5 0.2 200)'
+  "my-new-token": "oklch(0.5 0.2 200)",
 }
 ```
 
@@ -590,23 +600,23 @@ Edit `src/components/theme/presets.ts`:
 export const themePresets = {
   // ... existing presets
 
-  'my-preset': {
-    label: 'My Preset',
+  "my-preset": {
+    label: "My Preset",
     styles: {
       light: {
-        background: 'oklch(1 0 0)',
-        foreground: 'oklch(0.2 0 0)',
-        primary: 'oklch(0.5 0.25 280)',
+        background: "oklch(1 0 0)",
+        foreground: "oklch(0.2 0 0)",
+        primary: "oklch(0.5 0.25 280)",
         // ... all required tokens
       },
       dark: {
-        background: 'oklch(0.15 0 0)',
-        foreground: 'oklch(0.95 0 0)',
-        primary: 'oklch(0.7 0.2 280)',
+        background: "oklch(0.15 0 0)",
+        foreground: "oklch(0.95 0 0)",
+        primary: "oklch(0.7 0.2 280)",
         // ... all required tokens
-      }
-    }
-  }
+      },
+    },
+  },
 }
 ```
 
@@ -645,6 +655,7 @@ pnpm test:e2e tests/e2e/theme-switching.spec.ts
 See [ISSUE.md](./ISSUE.md) for common issues and solutions.
 
 Quick fixes:
+
 - **Theme not applying**: Clear localStorage and reload
 - **Contrast issues**: Use `ensureContrast()` utility
 - **Preset not found**: Check preset name spelling

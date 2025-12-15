@@ -1,6 +1,7 @@
 "use client"
 
 import { Bot, ChevronDown } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -40,7 +41,7 @@ export function ShadcnButtonGroupPopover() {
               placeholder="Describe your task in natural language."
               className="min-h-[100px]"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               The Copilot will run in the background and create a pull request
               for you to review.
             </p>

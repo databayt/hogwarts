@@ -1,8 +1,9 @@
 "use client"
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+
 import { type Locale } from "@/components/internationalization/config"
 
 interface AdminAuthGuardProps {
@@ -18,7 +19,10 @@ export function AdminAuthGuard({ children, lang }: AdminAuthGuardProps) {
     if (status === "loading") return
 
     // Only allow ADMIN or DEVELOPER roles to access admin panel
-    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "DEVELOPER")) {
+    if (
+      !session ||
+      (session.user.role !== "ADMIN" && session.user.role !== "DEVELOPER")
+    ) {
       router.push(`/${lang}/unauthorized`)
     }
   }, [session, status, router, lang])
@@ -26,14 +30,17 @@ export function AdminAuthGuard({ children, lang }: AdminAuthGuardProps) {
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
       </div>
     )
   }
 
   // Only render children if user is authorized
-  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "DEVELOPER")) {
+  if (
+    !session ||
+    (session.user.role !== "ADMIN" && session.user.role !== "DEVELOPER")
+  ) {
     return null
   }
 

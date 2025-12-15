@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { SkeletonDataTable } from '@/components/ui/skeleton-data-table'
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function ClassesCapacityLoading() {
   return (

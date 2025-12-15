@@ -1,93 +1,93 @@
-"use client";
+"use client"
 
-import { SelectTrigger } from "@radix-ui/react-select";
-import type { Table } from "@tanstack/react-table";
-import { ArrowUp, CheckCircle2, Download, Trash2 } from "lucide-react";
-import * as React from "react";
-import { toast } from "sonner";
-import {
-  DataTableActionBar,
-  DataTableActionBarAction,
-  DataTableActionBarSelection,
-} from "@/components/table/data-table-action-bar";
+import * as React from "react"
+import type { Task } from "@prisma/client"
+import { SelectTrigger } from "@radix-ui/react-select"
+import type { Table } from "@tanstack/react-table"
+import { ArrowUp, CheckCircle2, Download, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import type { Task } from "@prisma/client";
-import { exportTableToCSV } from "@/components/table/lib/export";
-import { deleteTasks, updateTasks } from "../_lib/actions";
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import {
+  DataTableActionBar,
+  DataTableActionBarAction,
+  DataTableActionBarSelection,
+} from "@/components/table/data-table-action-bar"
+import { exportTableToCSV } from "@/components/table/lib/export"
 
-type Action = "update-status" | "update-priority" | "export" | "delete";
+import { deleteTasks, updateTasks } from "../_lib/actions"
+
+type Action = "update-status" | "update-priority" | "export" | "delete"
 
 interface TasksTableActionBarProps {
-  table: Table<Task>;
+  table: Table<Task>
 }
 
 export function TasksTableActionBar({ table }: TasksTableActionBarProps) {
-  const rows = table.getFilteredSelectedRowModel().rows;
-  const [isPending, startTransition] = React.useTransition();
-  const [currentAction, setCurrentAction] = React.useState<Action | null>(null);
+  const rows = table.getFilteredSelectedRowModel().rows
+  const [isPending, startTransition] = React.useTransition()
+  const [currentAction, setCurrentAction] = React.useState<Action | null>(null)
 
   const getIsActionPending = React.useCallback(
     (action: Action) => isPending && currentAction === action,
-    [isPending, currentAction],
-  );
+    [isPending, currentAction]
+  )
 
   const onTaskUpdate = React.useCallback(
     ({
       field,
       value,
     }: {
-      field: "status" | "priority";
-      value: Task["status"] | Task["priority"];
+      field: "status" | "priority"
+      value: Task["status"] | Task["priority"]
     }) => {
-      setCurrentAction(
-        field === "status" ? "update-status" : "update-priority",
-      );
+      setCurrentAction(field === "status" ? "update-status" : "update-priority")
       startTransition(async () => {
         const { error } = await updateTasks({
           ids: rows.map((row) => row.original.id),
           [field]: value,
-        });
+        })
 
         if (error) {
-          toast.error(error);
-          return;
+          toast.error(error)
+          return
         }
-        toast.success("Tasks updated");
-      });
+        toast.success("Tasks updated")
+      })
     },
-    [rows],
-  );
+    [rows]
+  )
 
   const onTaskExport = React.useCallback(() => {
-    setCurrentAction("export");
+    setCurrentAction("export")
     startTransition(() => {
       exportTableToCSV(table, {
         excludeColumns: ["select", "actions"],
         onlySelected: true,
-      });
-    });
-  }, [table]);
+      })
+    })
+  }, [table])
 
   const onTaskDelete = React.useCallback(() => {
-    setCurrentAction("delete");
+    setCurrentAction("delete")
     startTransition(async () => {
       const { error } = await deleteTasks({
         ids: rows.map((row) => row.original.id),
-      });
+      })
 
       if (error) {
-        toast.error(error);
-        return;
+        toast.error(error)
+        return
       }
-      table.toggleAllRowsSelected(false);
-    });
-  }, [rows, table]);
+      table.toggleAllRowsSelected(false)
+    })
+  }, [rows, table])
 
   return (
     <DataTableActionBar table={table} visible={rows.length > 0}>
@@ -113,11 +113,17 @@ export function TasksTableActionBar({ table }: TasksTableActionBarProps) {
           </SelectTrigger>
           <SelectContent align="center">
             <SelectGroup>
-              {(["todo", "in_progress", "done", "canceled"] as const).map((status) => (
-                <SelectItem key={status} value={status} className="capitalize">
-                  {status}
-                </SelectItem>
-              ))}
+              {(["todo", "in_progress", "done", "canceled"] as const).map(
+                (status) => (
+                  <SelectItem
+                    key={status}
+                    value={status}
+                    className="capitalize"
+                  >
+                    {status}
+                  </SelectItem>
+                )
+              )}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -167,5 +173,5 @@ export function TasksTableActionBar({ table }: TasksTableActionBarProps) {
         </DataTableActionBarAction>
       </div>
     </DataTableActionBar>
-  );
+  )
 }

@@ -44,16 +44,17 @@ Key files:
 
 ### How to Use Everywhere (Pattern)
 
-1) Define your columns
+1. Define your columns
 
 ```tsx
-import type { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header"
 import type { Student } from "@prisma/client"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header"
 
 export function getStudentColumns(): ColumnDef<Student>[] {
   return [
-    { id: "select", /* checkbox column like tasks */ },
+    { id: "select" /* checkbox column like tasks */ },
     {
       id: "name",
       accessorKey: "name",
@@ -88,12 +89,12 @@ export function getStudentColumns(): ColumnDef<Student>[] {
       meta: { label: "Enrolled", variant: "dateRange" },
       enableColumnFilter: true,
     },
-    { id: "actions", /* domain actions */ },
+    { id: "actions" /* domain actions */ },
   ]
 }
 ```
 
-2) Build a server query
+2. Build a server query
 
 Use the URL-parsed filters/sorts to build a DB query. For Prisma, use `filterColumns` or a generalized version per model.
 
@@ -102,7 +103,7 @@ import { filterColumns } from "@/components/table/lib/prisma-filter-columns"
 
 export async function getStudents({ page, perPage, sorting, filters }: Params) {
   const where = filterColumns({ filters, joinOperator: "and" }) // customize for Student model
-  const orderBy = sorting.map(s => ({ [s.id]: s.desc ? "desc" : "asc" }))
+  const orderBy = sorting.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
 
   const [data, total] = await Promise.all([
     prisma.student.findMany({
@@ -118,13 +119,19 @@ export async function getStudents({ page, perPage, sorting, filters }: Params) {
 }
 ```
 
-3) Compose the page
+3. Compose the page
 
 ```tsx
-import { useDataTable } from "@/components/table/hooks/use-data-table"
 import { DataTable } from "@/components/table/data-table/data-table"
+import { useDataTable } from "@/components/table/hooks/use-data-table"
 
-export default function StudentsTable({ data, pageCount }: { data: Student[], pageCount: number }) {
+export default function StudentsTable({
+  data,
+  pageCount,
+}: {
+  data: Student[]
+  pageCount: number
+}) {
   const columns = React.useMemo(() => getStudentColumns(), [])
   const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data,
@@ -183,21 +190,32 @@ This table block is designed for a shared, central database and logic layer whil
 
 End-to-end flow:
 
-1) User opens a list URL with optional filters/sort (e.g., `/students?page=2&sort=name:asc`).
-2) Middleware or route loader resolves `schoolId` from subdomain (e.g., `hogwarts.hogwarts.app`).
-3) Server function builds Prisma `where/orderBy` from URL and enforces `{ schoolId }`.
-4) Data and `pageCount` returned to the table; UI renders with consistent toolbar/filters.
+1. User opens a list URL with optional filters/sort (e.g., `/students?page=2&sort=name:asc`).
+2. Middleware or route loader resolves `schoolId` from subdomain (e.g., `hogwarts.hogwarts.app`).
+3. Server function builds Prisma `where/orderBy` from URL and enforces `{ schoolId }`.
+4. Data and `pageCount` returned to the table; UI renders with consistent toolbar/filters.
 
 Example (Prisma, tenant-scoped):
 
 ```ts
-export async function getStudents({ schoolId, page, perPage, sorting, filters }: Params) {
+export async function getStudents({
+  schoolId,
+  page,
+  perPage,
+  sorting,
+  filters,
+}: Params) {
   const whereBase = filterColumns({ filters, joinOperator: "and" })
   const where = { ...whereBase, schoolId }
   const orderBy = sorting.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
 
   const [data, total] = await Promise.all([
-    prisma.student.findMany({ where, orderBy, skip: (page - 1) * perPage, take: perPage }),
+    prisma.student.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * perPage,
+      take: perPage,
+    }),
     prisma.student.count({ where }),
   ])
   return { data, pageCount: Math.ceil(total / perPage) }
@@ -236,5 +254,3 @@ Tie-ins with other docs:
 ---
 
 This block is designed to be copied and configured per list with minimal code. Follow the pattern above, keep tenant scoping first, and reuse the shared operators/filters for a consistent UX across all tables.
-
-

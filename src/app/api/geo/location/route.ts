@@ -44,11 +44,16 @@
  * @see /components/platform/attendance/geofencee/actions.ts
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import { submitLocation } from '@/components/platform/attendance/geofencee/actions'
-import { RATE_LIMITS, rateLimit, createRateLimitHeaders } from '@/lib/rate-limit'
-import type { LocationInput } from '@/components/platform/attendance/geofencee/validation'
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+
+import {
+  createRateLimitHeaders,
+  RATE_LIMITS,
+  rateLimit,
+} from "@/lib/rate-limit"
+import { submitLocation } from "@/components/platform/attendance/geofencee/actions"
+import type { LocationInput } from "@/components/platform/attendance/geofencee/validation"
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await rateLimit(
       request,
       RATE_LIMITS.GEO_LOCATION,
-      'geo-location'
+      "geo-location"
     )
 
     if (rateLimitResponse) {
@@ -66,10 +71,7 @@ export async function POST(request: NextRequest) {
     // 2. Authenticate user
     const session = await auth()
     if (!session?.user?.schoolId || !session.user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // 3. Parse request body
@@ -79,10 +81,7 @@ export async function POST(request: NextRequest) {
     const result = await submitLocation(body as LocationInput)
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: result.error }, { status: 400 })
     }
 
     // 5. Return success response with rate limit headers
@@ -101,11 +100,11 @@ export async function POST(request: NextRequest) {
       { status: 200, headers }
     )
   } catch (error) {
-    console.error('Error in /api/geo/location:', error)
+    console.error("Error in /api/geo/location:", error)
     return NextResponse.json(
       {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     )
@@ -113,4 +112,4 @@ export async function POST(request: NextRequest) {
 }
 
 // Disable static generation for this route
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"

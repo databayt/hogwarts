@@ -26,6 +26,7 @@ You are tasked with generating a new icon for the Hogwarts icon system using AI-
 ### 1. Gather Requirements
 
 Ask the user:
+
 - **Icon concept**: What should the icon represent?
 - **Category**: Hands/People/Objects/Abstract/Letters/Scenes
 - **Style preference**: Simple/Complex, Geometric/Organic
@@ -36,17 +37,20 @@ Ask the user:
 Choose appropriate generation method:
 
 **Option A: Browser-based SVG Editor**
+
 - Use browser MCP to open SVG editor (e.g., SVGator, Figma web)
 - Guide user through creation process
 - Export SVG with correct specifications
 
 **Option B: Code-based Generation**
+
 - Generate SVG paths programmatically
 - Use geometric primitives (circles, rectangles, paths)
 - Calculate coordinates for 1000x1000 canvas
 - Assemble valid SVG structure
 
 **Option C: Template-based**
+
 - Start from similar existing icon
 - Modify paths and shapes
 - Adjust to match new concept
@@ -64,6 +68,7 @@ Create valid SVG following this template:
 ```
 
 **Path Guidelines**:
+
 - Use `M` (moveto), `L` (lineto), `C` (cubic bezier), `Z` (closepath)
 - Keep paths clean and minimal
 - Light color (#FAF9F5) for backgrounds/fills
@@ -72,6 +77,7 @@ Create valid SVG following this template:
 ### 4. Validate Generated Icon
 
 Run validation checks:
+
 - ✅ ViewBox is `0 0 1000 1000` or `0 0 1680 1260`
 - ✅ Only colors used are `#FAF9F5` and `#141413`
 - ✅ Root svg has `fill="none"`
@@ -84,6 +90,7 @@ Run validation checks:
 Follow pattern: `{Category}-{Description}.svg`
 
 Examples:
+
 - `Hands-Gesture-06.svg`
 - `Abstract-Waves-01.svg`
 - `Letter-A-Modern-01.svg`
@@ -151,6 +158,7 @@ Would you like me to:
 ## Common Path Calculations
 
 For 1000x1000 canvas:
+
 - **Center**: (500, 500)
 - **Quadrants**: (250, 250), (750, 250), (250, 750), (750, 750)
 - **Margins**: Use 100px padding (100, 100) to (900, 900)
@@ -159,6 +167,7 @@ For 1000x1000 canvas:
 ## Error Handling
 
 If generation fails:
+
 1. Validate path syntax
 2. Check color values
 3. Ensure viewBox is correct

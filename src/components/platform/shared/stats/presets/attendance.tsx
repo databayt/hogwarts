@@ -1,10 +1,22 @@
 "use client"
 
 import * as React from "react"
-import { Users, UserCheck, UserX, Clock, ShieldCheck, Stethoscope } from "lucide-react"
-import { TrendingStats } from "../trending-stats"
+import {
+  Clock,
+  ShieldCheck,
+  Stethoscope,
+  UserCheck,
+  Users,
+  UserX,
+} from "lucide-react"
+
 import { ProgressStats, ProgressStatStacked } from "../progress-stats"
-import type { TrendingStatItem, AttendanceStatsData, StatsDictionary } from "../types"
+import { TrendingStats } from "../trending-stats"
+import type {
+  AttendanceStatsData,
+  StatsDictionary,
+  TrendingStatItem,
+} from "../types"
 
 interface AttendanceStatsProps {
   /** Attendance data */
@@ -42,7 +54,8 @@ export function AttendanceStats({
   className,
 }: AttendanceStatsProps) {
   const labels = dictionary?.labels || {}
-  const rate = data.rate ?? (data.total > 0 ? (data.present / data.total) * 100 : 0)
+  const rate =
+    data.rate ?? (data.total > 0 ? (data.present / data.total) * 100 : 0)
 
   const formatValue = (count: number) => {
     if (showPercentages && data.total > 0) {
@@ -70,19 +83,24 @@ export function AttendanceStats({
       variant: data.absent > 0 ? "danger" : "default",
     },
     ...(data.late !== undefined
-      ? [{
-          label: labels.late || "Late",
-          value: formatValue(data.late),
-          icon: <Clock className="h-4 w-4" />,
-          variant: data.late > 0 ? "warning" as const : "default" as const,
-        }]
+      ? [
+          {
+            label: labels.late || "Late",
+            value: formatValue(data.late),
+            icon: <Clock className="h-4 w-4" />,
+            variant:
+              data.late > 0 ? ("warning" as const) : ("default" as const),
+          },
+        ]
       : []),
     ...(data.excused !== undefined
-      ? [{
-          label: labels.excused || "Excused",
-          value: formatValue(data.excused),
-          icon: <ShieldCheck className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.excused || "Excused",
+            value: formatValue(data.excused),
+            icon: <ShieldCheck className="h-4 w-4" />,
+          },
+        ]
       : []),
   ]
 
@@ -95,7 +113,7 @@ export function AttendanceStats({
       grid={{
         mobile: 2,
         tablet: 3,
-        desktop: items.length > 4 ? 4 : items.length as 2 | 3 | 4,
+        desktop: items.length > 4 ? 4 : (items.length as 2 | 3 | 4),
       }}
     />
   )
@@ -155,25 +173,31 @@ export function AttendanceBreakdown({
       color: "bg-destructive",
     },
     ...(late > 0
-      ? [{
-          label: dictionary?.late || "Late",
-          value: late,
-          color: "bg-amber-500",
-        }]
+      ? [
+          {
+            label: dictionary?.late || "Late",
+            value: late,
+            color: "bg-amber-500",
+          },
+        ]
       : []),
     ...(excused > 0
-      ? [{
-          label: dictionary?.excused || "Excused",
-          value: excused,
-          color: "bg-blue-500",
-        }]
+      ? [
+          {
+            label: dictionary?.excused || "Excused",
+            value: excused,
+            color: "bg-blue-500",
+          },
+        ]
       : []),
     ...(sick > 0
-      ? [{
-          label: dictionary?.sick || "Sick",
-          value: sick,
-          color: "bg-purple-500",
-        }]
+      ? [
+          {
+            label: dictionary?.sick || "Sick",
+            value: sick,
+            color: "bg-purple-500",
+          },
+        ]
       : []),
   ]
 
@@ -228,10 +252,16 @@ export function AttendanceRate({
           value: `${rate.toFixed(1)}%`,
           limit: `${target}%`,
           percentage: rate,
-          variant: rate >= target ? "success" : rate >= target - 10 ? "warning" : "danger",
-          status: change !== undefined
-            ? `${change >= 0 ? "+" : ""}${change.toFixed(1)}% ${dictionary?.vsLastPeriod || "vs last period"}`
-            : undefined,
+          variant:
+            rate >= target
+              ? "success"
+              : rate >= target - 10
+                ? "warning"
+                : "danger",
+          status:
+            change !== undefined
+              ? `${change >= 0 ? "+" : ""}${change.toFixed(1)}% ${dictionary?.vsLastPeriod || "vs last period"}`
+              : undefined,
         },
       ]}
       grid={{ mobile: 1, tablet: 1, desktop: 1 }}
@@ -263,11 +293,16 @@ export function ClassAttendanceComparison({
   title = "Class Attendance",
   className,
 }: ClassAttendanceComparisonProps) {
-  const items = classes.map(cls => ({
+  const items = classes.map((cls) => ({
     label: cls.name,
     value: `${cls.rate.toFixed(1)}%`,
     percentage: cls.rate,
-    variant: cls.rate >= target ? "success" as const : cls.rate >= target - 10 ? "warning" as const : "danger" as const,
+    variant:
+      cls.rate >= target
+        ? ("success" as const)
+        : cls.rate >= target - 10
+          ? ("warning" as const)
+          : ("danger" as const),
   }))
 
   return (

@@ -73,36 +73,39 @@ src/components/platform/students/
 
 ```typescript
 // actions.test.ts
-import { describe, it, expect, vi } from 'vitest'
-import { createStudent } from './actions'
-import { mockPrisma, mockTenantContext } from '@/test/mocks'
-import { createMockStudent } from '@/test/factories'
+import { createMockStudent } from "@/test/factories"
+import { mockPrisma, mockTenantContext } from "@/test/mocks"
+import { describe, expect, it, vi } from "vitest"
+
+import { createStudent } from "./actions"
 
 // Mock dependencies
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
-  getTenantContext: mockTenantContext()
+vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
+  getTenantContext: mockTenantContext(),
 }))
 
-describe('students/actions', () => {
-  it('createStudent creates a new student record', async () => {
+describe("students/actions", () => {
+  it("createStudent creates a new student record", async () => {
     // Arrange
-    const mockStudent = createMockStudent({ firstName: 'John' })
+    const mockStudent = createMockStudent({ firstName: "John" })
     const prisma = mockPrisma()
     prisma.student.create.mockResolvedValue(mockStudent)
 
     // Act
     const result = await createStudent({
-      firstName: 'John',
-      lastName: 'Doe',
-      dateOfBirth: new Date('2010-01-01')
+      firstName: "John",
+      lastName: "Doe",
+      dateOfBirth: new Date("2010-01-01"),
     })
 
     // Assert
     expect(result.success).toBe(true)
-    expect(result.data).toEqual(expect.objectContaining({
-      firstName: 'John'
-    }))
+    expect(result.data).toEqual(
+      expect.objectContaining({
+        firstName: "John",
+      })
+    )
   })
 })
 ```
@@ -122,18 +125,18 @@ pnpm test src/components/platform/students/actions.test.ts
 **File**: `vitest.config.ts`
 
 ```typescript
-import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import tsconfigPaths from "vite-tsconfig-paths"
+import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
-    globals: true,              // No need to import describe, it, expect
-    environment: "jsdom",        // Simulates browser DOM
-    setupFiles: ['./src/test/setup.ts'],  // Global test setup
+    globals: true, // No need to import describe, it, expect
+    environment: "jsdom", // Simulates browser DOM
+    setupFiles: ["./src/test/setup.ts"], // Global test setup
     include: [
-      "src/**/*.test.{ts,tsx}",  // Include all test files
+      "src/**/*.test.{ts,tsx}", // Include all test files
     ],
     coverage: {
       provider: "v8",
@@ -142,8 +145,8 @@ export default defineConfig({
         lines: 80,
         functions: 80,
         branches: 80,
-        statements: 80
-      }
+        statements: 80,
+      },
     },
   },
 })
@@ -151,14 +154,14 @@ export default defineConfig({
 
 ### Key Configuration Options
 
-| Option | Value | Purpose |
-|--------|-------|---------|
-| `globals` | `true` | No need to import `describe`, `it`, `expect` |
-| `environment` | `jsdom` | Simulates browser DOM for component tests |
-| `setupFiles` | `./src/test/setup.ts` | Runs before all tests |
-| `include` | `src/**/*.test.{ts,tsx}` | Test file pattern |
-| `coverage.provider` | `v8` | Fast native coverage |
-| `coverage.thresholds` | `80%` | Minimum coverage requirements |
+| Option                | Value                    | Purpose                                      |
+| --------------------- | ------------------------ | -------------------------------------------- |
+| `globals`             | `true`                   | No need to import `describe`, `it`, `expect` |
+| `environment`         | `jsdom`                  | Simulates browser DOM for component tests    |
+| `setupFiles`          | `./src/test/setup.ts`    | Runs before all tests                        |
+| `include`             | `src/**/*.test.{ts,tsx}` | Test file pattern                            |
+| `coverage.provider`   | `v8`                     | Fast native coverage                         |
+| `coverage.thresholds` | `80%`                    | Minimum coverage requirements                |
 
 ### TypeScript Configuration
 
@@ -176,6 +179,7 @@ Tests use the same TypeScript configuration as the main project:
 ```
 
 This enables:
+
 - ✅ Path aliases (`@/components/*`, `@/lib/*`)
 - ✅ Strict type checking
 - ✅ Full IntelliSense in tests
@@ -191,82 +195,85 @@ Server actions are **the most common test type** in this project (~10 test files
 #### Standard Pattern
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createItem, updateItem, deleteItem } from './actions'
-import { mockPrisma, mockTenantContext, mockNextCache } from '@/test/mocks'
-import { createMockItem } from '@/test/factories'
+import { createMockItem } from "@/test/factories"
+import { mockNextCache, mockPrisma, mockTenantContext } from "@/test/mocks"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { createItem, deleteItem, updateItem } from "./actions"
 
 // Mock database
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
+vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
 
 // Mock authentication/tenant context
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
-  getTenantContext: mockTenantContext({ schoolId: 's1', role: 'ADMIN' })
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
+  getTenantContext: mockTenantContext({ schoolId: "s1", role: "ADMIN" }),
 }))
 
 // Mock Next.js cache functions
-vi.mock('next/cache', () => mockNextCache())
+vi.mock("next/cache", () => mockNextCache())
 
-describe('items/actions', () => {
+describe("items/actions", () => {
   const prisma = mockPrisma()
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe('createItem', () => {
-    it('creates a new item with tenant scoping', async () => {
+  describe("createItem", () => {
+    it("creates a new item with tenant scoping", async () => {
       // Arrange
-      const mockItem = createMockItem({ name: 'Test Item', schoolId: 's1' })
+      const mockItem = createMockItem({ name: "Test Item", schoolId: "s1" })
       prisma.item.create.mockResolvedValue(mockItem)
 
       // Act
       const result = await createItem({
-        name: 'Test Item',
-        description: 'Test Description'
+        name: "Test Item",
+        description: "Test Description",
       })
 
       // Assert
       expect(result.success).toBe(true)
-      expect(result.data).toEqual(expect.objectContaining({
-        name: 'Test Item',
-        schoolId: 's1'  // ✅ CRITICAL: Verify tenant scoping
-      }))
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          name: "Test Item",
+          schoolId: "s1", // ✅ CRITICAL: Verify tenant scoping
+        })
+      )
 
       // Verify Prisma was called correctly
       expect(prisma.item.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          name: 'Test Item',
-          schoolId: 's1'  // ✅ CRITICAL: Verify schoolId in create
-        })
+          name: "Test Item",
+          schoolId: "s1", // ✅ CRITICAL: Verify schoolId in create
+        }),
       })
     })
 
-    it('returns error on database failure', async () => {
+    it("returns error on database failure", async () => {
       // Arrange
-      prisma.item.create.mockRejectedValue(new Error('Database error'))
+      prisma.item.create.mockRejectedValue(new Error("Database error"))
 
       // Act
       const result = await createItem({
-        name: 'Test Item'
+        name: "Test Item",
       })
 
       // Assert
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Database error')
+      expect(result.error).toContain("Database error")
     })
   })
 
-  describe('updateItem', () => {
-    it('updates item with tenant isolation', async () => {
+  describe("updateItem", () => {
+    it("updates item with tenant isolation", async () => {
       // Arrange
-      const mockItem = createMockItem({ id: 'i1', schoolId: 's1' })
+      const mockItem = createMockItem({ id: "i1", schoolId: "s1" })
       prisma.item.update.mockResolvedValue(mockItem)
 
       // Act
       const result = await updateItem({
-        id: 'i1',
-        name: 'Updated Name'
+        id: "i1",
+        name: "Updated Name",
       })
 
       // Assert
@@ -275,26 +282,26 @@ describe('items/actions', () => {
       // ✅ CRITICAL: Verify where clause includes schoolId
       const whereClause = prisma.item.update.mock.calls[0]?.[0]?.where
       expect(whereClause).toEqual({
-        id: 'i1',
-        schoolId: 's1'  // ✅ Prevents cross-tenant updates
+        id: "i1",
+        schoolId: "s1", // ✅ Prevents cross-tenant updates
       })
     })
   })
 
-  describe('deleteItem', () => {
-    it('deletes item with tenant isolation', async () => {
+  describe("deleteItem", () => {
+    it("deletes item with tenant isolation", async () => {
       // Arrange
       prisma.item.delete.mockResolvedValue(createMockItem())
 
       // Act
-      const result = await deleteItem({ id: 'i1' })
+      const result = await deleteItem({ id: "i1" })
 
       // Assert
       expect(result.success).toBe(true)
 
       // ✅ CRITICAL: Verify where clause includes schoolId
       const whereClause = prisma.item.delete.mock.calls[0]?.[0]?.where
-      expect(whereClause?.schoolId).toBe('s1')
+      expect(whereClause?.schoolId).toBe("s1")
     })
   })
 })
@@ -305,16 +312,17 @@ describe('items/actions', () => {
 **File**: `src/components/platform/announcements/__tests__/actions.test.ts`
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { createAnnouncement } from '../actions'
+import { describe, expect, it, vi } from "vitest"
+
+import { createAnnouncement } from "../actions"
 
 const getTenantContext = vi.fn()
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
   getTenantContext,
 }))
 
 const mockCreate = vi.fn()
-vi.mock('@/lib/db', () => ({
+vi.mock("@/lib/db", () => ({
   db: {
     announcement: {
       create: mockCreate,
@@ -322,25 +330,25 @@ vi.mock('@/lib/db', () => ({
   },
 }))
 
-describe('announcements/actions', () => {
-  it('createAnnouncement creates with schoolId', async () => {
-    getTenantContext.mockResolvedValue({ schoolId: 's1', role: 'ADMIN' })
+describe("announcements/actions", () => {
+  it("createAnnouncement creates with schoolId", async () => {
+    getTenantContext.mockResolvedValue({ schoolId: "s1", role: "ADMIN" })
     mockCreate.mockResolvedValue({
-      id: 'a1',
-      schoolId: 's1',
-      title: 'Test',
-      content: 'Content',
+      id: "a1",
+      schoolId: "s1",
+      title: "Test",
+      content: "Content",
     })
 
     const res = await createAnnouncement({
-      title: 'Test',
-      content: 'Content',
+      title: "Test",
+      content: "Content",
     })
 
     expect(res).toEqual({
       success: true,
       data: expect.objectContaining({
-        schoolId: 's1',  // ✅ Verified
+        schoolId: "s1", // ✅ Verified
       }),
     })
   })
@@ -537,43 +545,44 @@ describe('WelcomeMessage', () => {
 **⚠️ CRITICAL**: Column definitions that use hooks MUST be generated in client components, not server components.
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { render } from '@/test/utils'
-import { getColumns } from './columns'
-import { createMockStudent } from '@/test/factories'
+import { createMockStudent } from "@/test/factories"
+import { render } from "@/test/utils"
+import { describe, expect, it } from "vitest"
 
-describe('students/columns', () => {
-  it('returns correct column structure', () => {
+import { getColumns } from "./columns"
+
+describe("students/columns", () => {
+  it("returns correct column structure", () => {
     // Act
     const columns = getColumns()
 
     // Assert
     expect(columns).toHaveLength(5)
     expect(columns[0]).toMatchObject({
-      accessorKey: 'studentId',
-      meta: { label: 'Student ID' }
+      accessorKey: "studentId",
+      meta: { label: "Student ID" },
     })
   })
 
-  it('includes sortable metadata', () => {
+  it("includes sortable metadata", () => {
     // Act
     const columns = getColumns()
 
     // Assert
-    const nameColumn = columns.find(col => col.accessorKey === 'name')
+    const nameColumn = columns.find((col) => col.accessorKey === "name")
     expect(nameColumn?.meta?.sortable).toBe(true)
   })
 
-  it('includes filterable metadata', () => {
+  it("includes filterable metadata", () => {
     // Act
     const columns = getColumns()
 
     // Assert
-    const statusColumn = columns.find(col => col.accessorKey === 'status')
+    const statusColumn = columns.find((col) => col.accessorKey === "status")
     expect(statusColumn?.meta?.filterable).toBe(true)
     expect(statusColumn?.meta?.filterOptions).toEqual([
-      { label: 'Active', value: 'active' },
-      { label: 'Inactive', value: 'inactive' }
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
     ])
   })
 })
@@ -599,26 +608,27 @@ describe('students/columns', () => {
 #### Standard Pattern
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getStudents, updateStudent } from './actions'
-import { mockPrisma, mockTenantContext } from '@/test/mocks'
+import { mockPrisma, mockTenantContext } from "@/test/mocks"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const getTenantContext = mockTenantContext({ schoolId: 's1', role: 'ADMIN' })
+import { getStudents, updateStudent } from "./actions"
 
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
-  getTenantContext
+const getTenantContext = mockTenantContext({ schoolId: "s1", role: "ADMIN" })
+
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
+  getTenantContext,
 }))
 
 const prisma = mockPrisma()
-vi.mock('@/lib/db', () => ({ db: prisma }))
+vi.mock("@/lib/db", () => ({ db: prisma }))
 
-describe('Multi-Tenant Isolation', () => {
+describe("Multi-Tenant Isolation", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe('getStudents', () => {
-    it('scopes query by schoolId', async () => {
+  describe("getStudents", () => {
+    it("scopes query by schoolId", async () => {
       // Arrange
       prisma.student.findMany.mockResolvedValue([])
 
@@ -627,15 +637,15 @@ describe('Multi-Tenant Isolation', () => {
 
       // Assert - ✅ CRITICAL: Verify where clause
       const whereClause = prisma.student.findMany.mock.calls[0]?.[0]?.where
-      expect(whereClause?.schoolId).toBe('s1')
+      expect(whereClause?.schoolId).toBe("s1")
     })
 
-    it('prevents cross-tenant access', async () => {
+    it("prevents cross-tenant access", async () => {
       // Arrange - User belongs to school s1
-      getTenantContext.mockResolvedValueOnce({ schoolId: 's1', role: 'ADMIN' })
+      getTenantContext.mockResolvedValueOnce({ schoolId: "s1", role: "ADMIN" })
       prisma.student.findMany.mockResolvedValue([
-        { id: 'st1', schoolId: 's1', name: 'Student 1' },
-        { id: 'st2', schoolId: 's1', name: 'Student 2' }
+        { id: "st1", schoolId: "s1", name: "Student 1" },
+        { id: "st2", schoolId: "s1", name: "Student 2" },
       ])
 
       // Act
@@ -643,93 +653,93 @@ describe('Multi-Tenant Isolation', () => {
 
       // Assert - Only s1 students returned
       expect(result.data).toHaveLength(2)
-      expect(result.data?.every(s => s.schoolId === 's1')).toBe(true)
+      expect(result.data?.every((s) => s.schoolId === "s1")).toBe(true)
 
       // ✅ CRITICAL: s2 students must NOT be accessible
-      expect(result.data?.some(s => s.schoolId === 's2')).toBe(false)
+      expect(result.data?.some((s) => s.schoolId === "s2")).toBe(false)
     })
   })
 
-  describe('updateStudent', () => {
-    it('scopes update by schoolId', async () => {
+  describe("updateStudent", () => {
+    it("scopes update by schoolId", async () => {
       // Arrange
       prisma.student.update.mockResolvedValue({
-        id: 'st1',
-        schoolId: 's1',
-        firstName: 'Updated'
+        id: "st1",
+        schoolId: "s1",
+        firstName: "Updated",
       })
 
       // Act
       await updateStudent({
-        id: 'st1',
-        firstName: 'Updated'
+        id: "st1",
+        firstName: "Updated",
       })
 
       // Assert - ✅ CRITICAL: Verify where clause includes schoolId
       const call = prisma.student.update.mock.calls[0]?.[0]
       expect(call?.where).toEqual({
-        id: 'st1',
-        schoolId: 's1'  // ✅ Prevents cross-tenant updates
+        id: "st1",
+        schoolId: "s1", // ✅ Prevents cross-tenant updates
       })
     })
 
-    it('blocks update attempts on other tenants', async () => {
+    it("blocks update attempts on other tenants", async () => {
       // Arrange - User belongs to s1, tries to update s2 student
-      getTenantContext.mockResolvedValueOnce({ schoolId: 's1', role: 'ADMIN' })
-      prisma.student.update.mockRejectedValue(new Error('Record not found'))
+      getTenantContext.mockResolvedValueOnce({ schoolId: "s1", role: "ADMIN" })
+      prisma.student.update.mockRejectedValue(new Error("Record not found"))
 
       // Act
       const result = await updateStudent({
-        id: 'st-belongs-to-s2',  // This student belongs to another school
-        firstName: 'Malicious Update'
+        id: "st-belongs-to-s2", // This student belongs to another school
+        firstName: "Malicious Update",
       })
 
       // Assert - Operation fails
       expect(result.success).toBe(false)
-      expect(result.error).toContain('not found')
+      expect(result.error).toContain("not found")
     })
   })
 
-  describe('Role-Based Authorization', () => {
-    it('allows ADMIN role to perform actions', async () => {
+  describe("Role-Based Authorization", () => {
+    it("allows ADMIN role to perform actions", async () => {
       // Arrange
       getTenantContext.mockResolvedValueOnce({
-        schoolId: 's1',
-        role: 'ADMIN'
+        schoolId: "s1",
+        role: "ADMIN",
       })
       prisma.student.create.mockResolvedValue({
-        id: 'st1',
-        schoolId: 's1'
+        id: "st1",
+        schoolId: "s1",
       })
 
       // Act
-      const result = await createStudent({ firstName: 'John' })
+      const result = await createStudent({ firstName: "John" })
 
       // Assert
       expect(result.success).toBe(true)
     })
 
-    it('blocks TEACHER role from admin actions', async () => {
+    it("blocks TEACHER role from admin actions", async () => {
       // Arrange
       getTenantContext.mockResolvedValueOnce({
-        schoolId: 's1',
-        role: 'TEACHER'  // Teachers cannot create students
+        schoolId: "s1",
+        role: "TEACHER", // Teachers cannot create students
       })
 
       // Act
-      const result = await createStudent({ firstName: 'John' })
+      const result = await createStudent({ firstName: "John" })
 
       // Assert
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Unauthorized')
+      expect(result.error).toContain("Unauthorized")
     })
   })
 
-  describe('Unique Constraints', () => {
-    it('enforces uniqueness within tenant only', async () => {
+  describe("Unique Constraints", () => {
+    it("enforces uniqueness within tenant only", async () => {
       // Arrange - Two schools can have same email
-      const s1Student = { id: 'st1', schoolId: 's1', email: 'john@test.com' }
-      const s2Student = { id: 'st2', schoolId: 's2', email: 'john@test.com' }
+      const s1Student = { id: "st1", schoolId: "s1", email: "john@test.com" }
+      const s2Student = { id: "st2", schoolId: "s2", email: "john@test.com" }
 
       // Both should be allowed (different schools)
       prisma.student.create
@@ -737,29 +747,35 @@ describe('Multi-Tenant Isolation', () => {
         .mockResolvedValueOnce(s2Student)
 
       // Act
-      const result1 = await createStudent({ email: 'john@test.com', schoolId: 's1' })
-      const result2 = await createStudent({ email: 'john@test.com', schoolId: 's2' })
+      const result1 = await createStudent({
+        email: "john@test.com",
+        schoolId: "s1",
+      })
+      const result2 = await createStudent({
+        email: "john@test.com",
+        schoolId: "s2",
+      })
 
       // Assert - Both succeed
       expect(result1.success).toBe(true)
       expect(result2.success).toBe(true)
     })
 
-    it('prevents duplicates within same tenant', async () => {
+    it("prevents duplicates within same tenant", async () => {
       // Arrange - Same email in same school
       prisma.student.create.mockRejectedValue(
-        new Error('Unique constraint failed')
+        new Error("Unique constraint failed")
       )
 
       // Act
       const result = await createStudent({
-        email: 'duplicate@test.com',
-        schoolId: 's1'
+        email: "duplicate@test.com",
+        schoolId: "s1",
       })
 
       // Assert
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Unique constraint')
+      expect(result.error).toContain("Unique constraint")
     })
   })
 })
@@ -770,37 +786,40 @@ describe('Multi-Tenant Isolation', () => {
 **File**: `src/components/platform/timetable/isolation.test.ts`
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { getWeeklyTimetable, upsertTimetableSlot } from './actions'
+import { describe, expect, it, vi } from "vitest"
+
+import { getWeeklyTimetable, upsertTimetableSlot } from "./actions"
 
 const getTenantContext = vi.fn()
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
   getTenantContext,
 }))
 
 const timetableFindMany = vi.fn()
 const timetableUpsert = vi.fn()
-vi.mock('@/lib/db', () => ({
+vi.mock("@/lib/db", () => ({
   db: { timetable: { findMany: timetableFindMany, upsert: timetableUpsert } },
 }))
 
-describe('Timetable Multi-Tenant Isolation', () => {
-  it('scopes weekly timetable query by schoolId', async () => {
-    getTenantContext.mockResolvedValue({ schoolId: 's1', role: 'ADMIN' })
+describe("Timetable Multi-Tenant Isolation", () => {
+  it("scopes weekly timetable query by schoolId", async () => {
+    getTenantContext.mockResolvedValue({ schoolId: "s1", role: "ADMIN" })
     timetableFindMany.mockResolvedValue([])
 
-    await getWeeklyTimetable({ termId: 't1' })
+    await getWeeklyTimetable({ termId: "t1" })
 
     const call = timetableFindMany.mock.calls[0]?.[0]
-    expect(call?.where?.schoolId).toBe('s1')  // ✅ Verified
+    expect(call?.where?.schoolId).toBe("s1") // ✅ Verified
   })
 
-  it('enforces role-based access for upsert', async () => {
-    getTenantContext.mockResolvedValue({ schoolId: 's1', role: 'TEACHER' })
+  it("enforces role-based access for upsert", async () => {
+    getTenantContext.mockResolvedValue({ schoolId: "s1", role: "TEACHER" })
 
-    const result = await upsertTimetableSlot({ /* params */ })
+    const result = await upsertTimetableSlot({
+      /* params */
+    })
 
-    expect(result instanceof Response).toBe(true)  // Blocked
+    expect(result instanceof Response).toBe(true) // Blocked
   })
 })
 ```
@@ -824,46 +843,47 @@ Zod schemas enforce data validation. Test both valid and invalid inputs.
 #### Standard Pattern
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { studentSchema } from './validation'
+import { describe, expect, it } from "vitest"
 
-describe('Student Validation Schema', () => {
-  describe('Valid Inputs', () => {
-    it('accepts valid student data', () => {
+import { studentSchema } from "./validation"
+
+describe("Student Validation Schema", () => {
+  describe("Valid Inputs", () => {
+    it("accepts valid student data", () => {
       // Arrange
       const validData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: new Date('2010-01-01'),
-        email: 'john@test.com',
-        gender: 'male'
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: new Date("2010-01-01"),
+        email: "john@test.com",
+        gender: "male",
       }
 
       // Act & Assert
       expect(() => studentSchema.parse(validData)).not.toThrow()
     })
 
-    it('trims whitespace from strings', () => {
+    it("trims whitespace from strings", () => {
       // Arrange
       const data = {
-        firstName: '  John  ',
-        lastName: '  Doe  '
+        firstName: "  John  ",
+        lastName: "  Doe  ",
       }
 
       // Act
       const result = studentSchema.parse(data)
 
       // Assert
-      expect(result.firstName).toBe('John')
-      expect(result.lastName).toBe('Doe')
+      expect(result.firstName).toBe("John")
+      expect(result.lastName).toBe("Doe")
     })
 
-    it('coerces date strings to Date objects', () => {
+    it("coerces date strings to Date objects", () => {
       // Arrange
       const data = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: '2010-01-01'  // String input
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: "2010-01-01", // String input
       }
 
       // Act
@@ -874,39 +894,39 @@ describe('Student Validation Schema', () => {
     })
   })
 
-  describe('Invalid Inputs', () => {
-    it('rejects missing required fields', () => {
+  describe("Invalid Inputs", () => {
+    it("rejects missing required fields", () => {
       // Arrange
       const invalidData = {
-        lastName: 'Doe'  // Missing firstName
+        lastName: "Doe", // Missing firstName
       }
 
       // Act & Assert
       expect(() => studentSchema.parse(invalidData)).toThrow()
     })
 
-    it('rejects invalid email format', () => {
+    it("rejects invalid email format", () => {
       // Arrange
       const invalidData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'invalid-email'
+        firstName: "John",
+        lastName: "Doe",
+        email: "invalid-email",
       }
 
       // Act & Assert
       const result = studentSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].path).toEqual(['email'])
-        expect(result.error.issues[0].message).toContain('Invalid email')
+        expect(result.error.issues[0].path).toEqual(["email"])
+        expect(result.error.issues[0].message).toContain("Invalid email")
       }
     })
 
-    it('rejects too short strings', () => {
+    it("rejects too short strings", () => {
       // Arrange
       const invalidData = {
-        firstName: 'J',  // Too short (min 2)
-        lastName: 'Doe'
+        firstName: "J", // Too short (min 2)
+        lastName: "Doe",
       }
 
       // Act
@@ -915,19 +935,19 @@ describe('Student Validation Schema', () => {
       // Assert
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toContain('at least 2')
+        expect(result.error.issues[0].message).toContain("at least 2")
       }
     })
 
-    it('rejects future dates of birth', () => {
+    it("rejects future dates of birth", () => {
       // Arrange
       const futureDate = new Date()
       futureDate.setFullYear(futureDate.getFullYear() + 1)
 
       const invalidData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: futureDate
+        firstName: "John",
+        lastName: "Doe",
+        dateOfBirth: futureDate,
       }
 
       // Act
@@ -938,11 +958,11 @@ describe('Student Validation Schema', () => {
     })
   })
 
-  describe('Edge Cases', () => {
-    it('handles null vs undefined for optional fields', () => {
+  describe("Edge Cases", () => {
+    it("handles null vs undefined for optional fields", () => {
       // Arrange
-      const data1 = { firstName: 'John', lastName: 'Doe', phone: null }
-      const data2 = { firstName: 'John', lastName: 'Doe', phone: undefined }
+      const data1 = { firstName: "John", lastName: "Doe", phone: null }
+      const data2 = { firstName: "John", lastName: "Doe", phone: undefined }
 
       // Act
       const result1 = studentSchema.parse(data1)
@@ -953,11 +973,11 @@ describe('Student Validation Schema', () => {
       expect(result2.phone).toBeUndefined()
     })
 
-    it('handles empty strings', () => {
+    it("handles empty strings", () => {
       // Arrange
       const data = {
-        firstName: '',
-        lastName: 'Doe'
+        firstName: "",
+        lastName: "Doe",
       }
 
       // Act
@@ -975,25 +995,26 @@ describe('Student Validation Schema', () => {
 **File**: `src/lib/typography-validator.test.ts`
 
 ```typescript
-import { describe, it, expect } from 'vitest'
-import { validateTypography } from './typography-validator'
+import { describe, expect, it } from "vitest"
 
-describe('Typography Validator', () => {
-  it('detects hardcoded text-* classes', () => {
+import { validateTypography } from "./typography-validator"
+
+describe("Typography Validator", () => {
+  it("detects hardcoded text-* classes", () => {
     const html = '<div className="text-2xl font-bold">Title</div>'
     const violations = validateTypography(html)
 
     expect(violations).toHaveLength(1)
     expect(violations[0]).toMatchObject({
-      type: 'hardcoded-typography',
-      element: 'div',
-      classes: ['text-2xl', 'font-bold'],
-      suggestion: 'Use <h3> instead'
+      type: "hardcoded-typography",
+      element: "div",
+      classes: ["text-2xl", "font-bold"],
+      suggestion: "Use <h3> instead",
     })
   })
 
-  it('allows semantic HTML', () => {
-    const html = '<h2>Title</h2><p>Paragraph</p>'
+  it("allows semantic HTML", () => {
+    const html = "<h2>Title</h2><p>Paragraph</p>"
     const violations = validateTypography(html)
 
     expect(violations).toHaveLength(0)
@@ -1019,31 +1040,33 @@ Query functions fetch data from the database. Test that Prisma args are construc
 #### Standard Pattern
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import * as dbMod from '@/lib/db'
-import { getStudents } from './queries'
+import { describe, expect, it, vi } from "vitest"
 
-describe('Student Queries', () => {
-  it('constructs correct Prisma args from filters', async () => {
+import * as dbMod from "@/lib/db"
+
+import { getStudents } from "./queries"
+
+describe("Student Queries", () => {
+  it("constructs correct Prisma args from filters", async () => {
     // Arrange
     const mockFindMany = vi.fn().mockResolvedValue([])
     const mockCount = vi.fn().mockResolvedValue(0)
 
-    vi.spyOn(dbMod, 'db', 'get').mockReturnValue({
-      $transaction: (fns: any[]) => Promise.all(fns.map(fn => fn)),
+    vi.spyOn(dbMod, "db", "get").mockReturnValue({
+      $transaction: (fns: any[]) => Promise.all(fns.map((fn) => fn)),
       student: {
         findMany: mockFindMany,
-        count: mockCount
-      }
+        count: mockCount,
+      },
     } as any)
 
     // Act
     await getStudents({
       page: 2,
       perPage: 20,
-      search: 'john',
-      isActive: 'true',
-      sort: [{ id: 'createdAt', desc: true }]
+      search: "john",
+      isActive: "true",
+      sort: [{ id: "createdAt", desc: true }],
     })
 
     // Assert - Verify Prisma args
@@ -1054,47 +1077,44 @@ describe('Student Queries', () => {
         schoolId: expect.any(String),
         isActive: true,
         OR: [
-          { firstName: { contains: 'john', mode: 'insensitive' } },
-          { lastName: { contains: 'john', mode: 'insensitive' } },
-          { email: { contains: 'john', mode: 'insensitive' } }
-        ]
+          { firstName: { contains: "john", mode: "insensitive" } },
+          { lastName: { contains: "john", mode: "insensitive" } },
+          { email: { contains: "john", mode: "insensitive" } },
+        ],
       },
-      orderBy: [{ createdAt: 'desc' }],
+      orderBy: [{ createdAt: "desc" }],
       take: 20,
-      skip: 20  // page 2 = skip 20
+      skip: 20, // page 2 = skip 20
     })
   })
 
-  it('handles multiple sort columns', async () => {
+  it("handles multiple sort columns", async () => {
     // Arrange
     const mockFindMany = vi.fn().mockResolvedValue([])
-    vi.spyOn(dbMod, 'db', 'get').mockReturnValue({
-      $transaction: (fns: any[]) => Promise.all(fns.map(fn => fn)),
-      student: { findMany: mockFindMany, count: vi.fn() }
+    vi.spyOn(dbMod, "db", "get").mockReturnValue({
+      $transaction: (fns: any[]) => Promise.all(fns.map((fn) => fn)),
+      student: { findMany: mockFindMany, count: vi.fn() },
     } as any)
 
     // Act
     await getStudents({
       sort: [
-        { id: 'lastName', desc: false },
-        { id: 'firstName', desc: false }
-      ]
+        { id: "lastName", desc: false },
+        { id: "firstName", desc: false },
+      ],
     })
 
     // Assert
     const args = mockFindMany.mock.calls[0]?.[0]
-    expect(args.orderBy).toEqual([
-      { lastName: 'asc' },
-      { firstName: 'asc' }
-    ])
+    expect(args.orderBy).toEqual([{ lastName: "asc" }, { firstName: "asc" }])
   })
 
-  it('includes related data when specified', async () => {
+  it("includes related data when specified", async () => {
     // Arrange
     const mockFindMany = vi.fn().mockResolvedValue([])
-    vi.spyOn(dbMod, 'db', 'get').mockReturnValue({
-      $transaction: (fns: any[]) => Promise.all(fns.map(fn => fn)),
-      student: { findMany: mockFindMany, count: vi.fn() }
+    vi.spyOn(dbMod, "db", "get").mockReturnValue({
+      $transaction: (fns: any[]) => Promise.all(fns.map((fn) => fn)),
+      student: { findMany: mockFindMany, count: vi.fn() },
     } as any)
 
     // Act
@@ -1104,7 +1124,7 @@ describe('Student Queries', () => {
     const args = mockFindMany.mock.calls[0]?.[0]
     expect(args.include).toEqual({
       user: true,
-      yearLevel: true
+      yearLevel: true,
     })
   })
 })
@@ -1130,11 +1150,11 @@ describe('Student Queries', () => {
 Runs automatically before all tests:
 
 ```typescript
-import { expect, afterEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup } from "@testing-library/react"
+import { afterEach, expect, vi } from "vitest"
 
 afterEach(() => {
-  cleanup()          // Unmount React components
+  cleanup() // Unmount React components
   vi.clearAllMocks() // Clear all mocks
 })
 ```
@@ -1167,24 +1187,24 @@ Pre-configured mocks for common dependencies:
 
 ```typescript
 import {
+  mockNextCache,
+  mockNextCookies,
+  mockNextHeaders,
   mockPrisma,
   mockSession,
   mockTenantContext,
-  mockNextHeaders,
-  mockNextCookies,
-  mockNextCache,
-  setupNextMocks
-} from '@/test/mocks'
+  setupNextMocks,
+} from "@/test/mocks"
 
 // Mock Prisma
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
+vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
 
 // Mock authentication
-vi.mock('@/auth', () => ({ auth: vi.fn().mockResolvedValue(mockSession()) }))
+vi.mock("@/auth", () => ({ auth: vi.fn().mockResolvedValue(mockSession()) }))
 
 // Mock tenant context
-vi.mock('@/components/platform/operator/lib/tenant', () => ({
-  getTenantContext: mockTenantContext({ schoolId: 's1' })
+vi.mock("@/components/platform/operator/lib/tenant", () => ({
+  getTenantContext: mockTenantContext({ schoolId: "s1" }),
 }))
 
 // Mock all Next.js APIs at once
@@ -1199,26 +1219,26 @@ Create consistent test data:
 
 ```typescript
 import {
-  createMockSchool,
-  createMockUser,
-  createMockTeacher,
-  createMockStudent,
-  createMockClass,
   createBatch,
-  createSchoolWithEntities
-} from '@/test/factories'
+  createMockClass,
+  createMockSchool,
+  createMockStudent,
+  createMockTeacher,
+  createMockUser,
+  createSchoolWithEntities,
+} from "@/test/factories"
 
 // Single entity
-const school = createMockSchool({ name: 'My School' })
+const school = createMockSchool({ name: "My School" })
 const student = createMockStudent({ schoolId: school.id })
 
 // Batch creation
-const students = createBatch(createMockStudent, 20, { schoolId: 's1' })
+const students = createBatch(createMockStudent, 20, { schoolId: "s1" })
 
 // Related entities
 const { school, admin, teachers, students } = createSchoolWithEntities({
   teacherCount: 5,
-  studentCount: 20
+  studentCount: 20,
 })
 ```
 
@@ -1285,24 +1305,25 @@ describe('Student List Integration', () => {
 ### Testing with Transactions
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { enrollStudent } from './actions'
-import { mockPrisma } from '@/test/mocks'
+import { mockPrisma } from "@/test/mocks"
+import { describe, expect, it, vi } from "vitest"
 
-describe('Transaction Tests', () => {
-  it('enrolls student with transaction', async () => {
+import { enrollStudent } from "./actions"
+
+describe("Transaction Tests", () => {
+  it("enrolls student with transaction", async () => {
     // Arrange
     const prisma = mockPrisma()
-    vi.mock('@/lib/db', () => ({ db: prisma }))
+    vi.mock("@/lib/db", () => ({ db: prisma }))
 
     const transactionMock = vi.fn().mockImplementation(async (callback) => {
       const txClient = {
         student: {
-          update: vi.fn().mockResolvedValue({ id: 'st1', isEnrolled: true })
+          update: vi.fn().mockResolvedValue({ id: "st1", isEnrolled: true }),
         },
         class: {
-          update: vi.fn().mockResolvedValue({ id: 'c1', studentCount: 21 })
-        }
+          update: vi.fn().mockResolvedValue({ id: "c1", studentCount: 21 }),
+        },
       }
       return callback(txClient)
     })
@@ -1311,8 +1332,8 @@ describe('Transaction Tests', () => {
 
     // Act
     const result = await enrollStudent({
-      studentId: 'st1',
-      classId: 'c1'
+      studentId: "st1",
+      classId: "c1",
     })
 
     // Assert
@@ -1320,20 +1341,20 @@ describe('Transaction Tests', () => {
     expect(transactionMock).toHaveBeenCalled()
   })
 
-  it('rolls back transaction on error', async () => {
+  it("rolls back transaction on error", async () => {
     // Arrange
     const prisma = mockPrisma()
-    prisma.$transaction.mockRejectedValue(new Error('Transaction failed'))
+    prisma.$transaction.mockRejectedValue(new Error("Transaction failed"))
 
     // Act
     const result = await enrollStudent({
-      studentId: 'st1',
-      classId: 'c1'
+      studentId: "st1",
+      classId: "c1",
     })
 
     // Assert
     expect(result.success).toBe(false)
-    expect(result.error).toContain('Transaction failed')
+    expect(result.error).toContain("Transaction failed")
   })
 })
 ```
@@ -1393,30 +1414,30 @@ describe('File Upload Tests', () => {
 **File**: `e2e/auth.spec.ts`
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { expect, test } from "@playwright/test"
 
-test.describe('Authentication', () => {
-  test('user can login', async ({ page }) => {
+test.describe("Authentication", () => {
+  test("user can login", async ({ page }) => {
     // Navigate to login page
-    await page.goto('/login')
+    await page.goto("/login")
 
     // Fill in credentials
-    await page.fill('[name="email"]', 'admin@test.com')
-    await page.fill('[name="password"]', 'password123')
+    await page.fill('[name="email"]', "admin@test.com")
+    await page.fill('[name="password"]', "password123")
 
     // Submit form
     await page.click('button[type="submit"]')
 
     // Verify redirect to lab
     await expect(page).toHaveURL(/\/dashboard/)
-    await expect(page.getByText('Welcome back')).toBeVisible()
+    await expect(page.getByText("Welcome back")).toBeVisible()
   })
 
-  test('shows error for invalid credentials', async ({ page }) => {
-    await page.goto('/login')
+  test("shows error for invalid credentials", async ({ page }) => {
+    await page.goto("/login")
 
-    await page.fill('[name="email"]', 'wrong@test.com')
-    await page.fill('[name="password"]', 'wrongpassword')
+    await page.fill('[name="email"]', "wrong@test.com")
+    await page.fill('[name="password"]', "wrongpassword")
     await page.click('button[type="submit"]')
 
     await expect(page.getByText(/invalid credentials/i)).toBeVisible()
@@ -1451,16 +1472,17 @@ src/components/platform/students/
 **Pattern**: `describe('module/feature') → it('does something')`
 
 ```typescript
-describe('students/actions', () => {
-  describe('createStudent', () => {
-    it('creates a new student with tenant scoping', async () => {})
-    it('validates required fields', async () => {})
-    it('returns error on database failure', async () => {})
+describe("students/actions", () => {
+  describe("createStudent", () => {
+    it("creates a new student with tenant scoping", async () => {})
+    it("validates required fields", async () => {})
+    it("returns error on database failure", async () => {})
   })
 })
 ```
 
 **Guidelines**:
+
 - Use clear, descriptive names
 - Start with action verb: "creates", "validates", "returns"
 - Include context: "with tenant scoping", "on database failure"
@@ -1469,39 +1491,39 @@ describe('students/actions', () => {
 ### Arrange-Act-Assert Pattern
 
 ```typescript
-it('test name', async () => {
+it("test name", async () => {
   // Arrange - Set up test data and mocks
   const student = createMockStudent()
   const prisma = mockPrisma()
   prisma.student.create.mockResolvedValue(student)
 
   // Act - Execute the code under test
-  const result = await createStudent({ firstName: 'John' })
+  const result = await createStudent({ firstName: "John" })
 
   // Assert - Verify the results
   expect(result.success).toBe(true)
-  expect(result.data).toEqual(expect.objectContaining({ firstName: 'John' }))
+  expect(result.data).toEqual(expect.objectContaining({ firstName: "John" }))
 })
 ```
 
 ### DRY Principle with beforeEach
 
 ```typescript
-describe('students/actions', () => {
+describe("students/actions", () => {
   let prisma: ReturnType<typeof mockPrisma>
 
   beforeEach(() => {
     prisma = mockPrisma()
-    vi.mock('@/lib/db', () => ({ db: prisma }))
+    vi.mock("@/lib/db", () => ({ db: prisma }))
     vi.clearAllMocks()
   })
 
-  it('test 1', async () => {
+  it("test 1", async () => {
     prisma.student.create.mockResolvedValue(createMockStudent())
     // ...
   })
 
-  it('test 2', async () => {
+  it("test 2", async () => {
     prisma.student.update.mockResolvedValue(createMockStudent())
     // ...
   })
@@ -1515,27 +1537,27 @@ describe('students/actions', () => {
 ```typescript
 let studentId: string
 
-it('creates student', async () => {
-  const result = await createStudent({ firstName: 'John' })
-  studentId = result.data.id  // Shared state
+it("creates student", async () => {
+  const result = await createStudent({ firstName: "John" })
+  studentId = result.data.id // Shared state
 })
 
-it('updates student', async () => {
-  await updateStudent({ id: studentId, firstName: 'Jane' })  // Depends on previous test
+it("updates student", async () => {
+  await updateStudent({ id: studentId, firstName: "Jane" }) // Depends on previous test
 })
 ```
 
 **✅ Good**: Tests are independent
 
 ```typescript
-it('creates student', async () => {
-  const result = await createStudent({ firstName: 'John' })
+it("creates student", async () => {
+  const result = await createStudent({ firstName: "John" })
   expect(result.success).toBe(true)
 })
 
-it('updates student', async () => {
-  const student = createMockStudent({ id: 'st1' })  // Fresh data
-  const result = await updateStudent({ id: 'st1', firstName: 'Jane' })
+it("updates student", async () => {
+  const student = createMockStudent({ id: "st1" }) // Fresh data
+  const result = await updateStudent({ id: "st1", firstName: "Jane" })
   expect(result.success).toBe(true)
 })
 ```
@@ -1545,8 +1567,8 @@ it('updates student', async () => {
 **❌ Bad**: Testing multiple things
 
 ```typescript
-it('creates student and sends email and logs event', async () => {
-  const result = await createStudent({ firstName: 'John' })
+it("creates student and sends email and logs event", async () => {
+  const result = await createStudent({ firstName: "John" })
   expect(result.success).toBe(true)
   expect(emailService.send).toHaveBeenCalled()
   expect(auditLog.create).toHaveBeenCalled()
@@ -1556,37 +1578,37 @@ it('creates student and sends email and logs event', async () => {
 **✅ Good**: Separate tests
 
 ```typescript
-it('creates student successfully', async () => {
-  const result = await createStudent({ firstName: 'John' })
+it("creates student successfully", async () => {
+  const result = await createStudent({ firstName: "John" })
   expect(result.success).toBe(true)
 })
 
-it('sends welcome email after creation', async () => {
-  await createStudent({ firstName: 'John' })
+it("sends welcome email after creation", async () => {
+  await createStudent({ firstName: "John" })
   expect(emailService.send).toHaveBeenCalledWith(
-    expect.objectContaining({ subject: 'Welcome' })
+    expect.objectContaining({ subject: "Welcome" })
   )
 })
 
-it('logs creation event to audit log', async () => {
-  await createStudent({ firstName: 'John' })
+it("logs creation event to audit log", async () => {
+  await createStudent({ firstName: "John" })
   expect(auditLog.create).toHaveBeenCalledWith(
-    expect.objectContaining({ action: 'student.created' })
+    expect.objectContaining({ action: "student.created" })
   )
 })
 ```
 
 ### Coverage Targets
 
-| Code Type | Target | Priority |
-|-----------|--------|----------|
-| Server actions | 95%+ | Critical |
-| Business logic | 95%+ | Critical |
-| Multi-tenant queries | 100% | Security-Critical |
-| UI components | 80%+ | High |
-| Validation schemas | 90%+ | High |
-| Utility functions | 90%+ | Medium |
-| Types/interfaces | N/A | - |
+| Code Type            | Target | Priority          |
+| -------------------- | ------ | ----------------- |
+| Server actions       | 95%+   | Critical          |
+| Business logic       | 95%+   | Critical          |
+| Multi-tenant queries | 100%   | Security-Critical |
+| UI components        | 80%+   | High              |
+| Validation schemas   | 90%+   | High              |
+| Utility functions    | 90%+   | Medium            |
+| Types/interfaces     | N/A    | -                 |
 
 **Philosophy**: Focus on **behavior**, not implementation. Aim for 95%+ overall coverage.
 
@@ -1620,7 +1642,7 @@ export default defineConfig({
 ```typescript
 export default defineConfig({
   test: {
-    globals: true,  // ← Add this
+    globals: true, // ← Add this
   },
 })
 ```
@@ -1632,13 +1654,14 @@ export default defineConfig({
 **Solution**: Define mocks before imports:
 
 ```typescript
-// ✅ Correct order
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
-import { createStudent } from './actions'  // After mock
-
 // ❌ Wrong order
-import { createStudent } from './actions'  // Before mock
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
+import { createStudent, createStudent } from "./actions" // After mock
+
+// ✅ Correct order
+vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
+
+// Before mock
+vi.mock("@/lib/db", () => ({ db: mockPrisma() }))
 ```
 
 #### Error: "TypeError: Cannot read property 'mockResolvedValue' of undefined"
@@ -1650,10 +1673,10 @@ vi.mock('@/lib/db', () => ({ db: mockPrisma() }))
 ```typescript
 // ❌ Wrong
 const prisma = mockPrisma()
-vi.mock('@/lib/db', () => ({ db: prisma }))  // prisma not yet available
+vi.mock("@/lib/db", () => ({ db: prisma })) // prisma not yet available
 
 // ✅ Correct
-vi.mock('@/lib/db', () => ({ db: mockPrisma() }))  // Factory function
+vi.mock("@/lib/db", () => ({ db: mockPrisma() })) // Factory function
 ```
 
 #### Warning: "Warning: An update to Component inside a test was not wrapped in act(...)"
@@ -1682,13 +1705,13 @@ it('updates component', async () => {
 **Solution**: Mock `useRouter`:
 
 ```typescript
-vi.mock('next/navigation', () => ({
+vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
     replace: vi.fn(),
     refresh: vi.fn(),
   })),
-  usePathname: vi.fn(() => '/'),
+  usePathname: vi.fn(() => "/"),
   useSearchParams: vi.fn(() => new URLSearchParams()),
 }))
 ```
@@ -1704,7 +1727,8 @@ pnpm test --reporter=verbose
 #### Debug Single Test
 
 ```typescript
-it.only('debugs this test', () => {  // ← .only
+it.only("debugs this test", () => {
+  // ← .only
   // ...
 })
 ```
@@ -1729,12 +1753,12 @@ it('debugs render', () => {
 #### Check Mock Calls
 
 ```typescript
-it('debugs mock calls', () => {
+it("debugs mock calls", () => {
   const mockFn = vi.fn()
-  mockFn({ foo: 'bar' })
+  mockFn({ foo: "bar" })
 
-  console.log(mockFn.mock.calls)  // [[ { foo: 'bar' } ]]
-  console.log(mockFn.mock.calls[0][0])  // { foo: 'bar' }
+  console.log(mockFn.mock.calls) // [[ { foo: 'bar' } ]]
+  console.log(mockFn.mock.calls[0][0]) // { foo: 'bar' }
 })
 ```
 
@@ -1765,7 +1789,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -1831,14 +1855,14 @@ pnpm test --run
 
 ### Quick Reference Card
 
-| Task | Command |
-|------|---------|
-| Run all tests | `pnpm test` |
+| Task              | Command                     |
+| ----------------- | --------------------------- |
+| Run all tests     | `pnpm test`                 |
 | Run specific test | `pnpm test path/to/test.ts` |
-| Run with coverage | `pnpm test --coverage` |
-| Run in watch mode | `pnpm test --watch` |
-| Run E2E tests | `pnpm test:e2e` |
-| Debug test | Add `it.only()` |
+| Run with coverage | `pnpm test --coverage`      |
+| Run in watch mode | `pnpm test --watch`         |
+| Run E2E tests     | `pnpm test:e2e`             |
+| Debug test        | Add `it.only()`             |
 
 ### Next Steps
 

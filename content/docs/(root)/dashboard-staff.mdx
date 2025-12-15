@@ -73,9 +73,11 @@ The **Staff Dashboard** provides administrative staff with tools to manage daily
 Task completion summary:
 
 ```tsx
-const completedTasksToday = todayTasks.filter(t => t.status === "completed").length;
+const completedTasksToday = todayTasks.filter(
+  (t) => t.status === "completed"
+).length
 
-<WelcomeBanner
+;<WelcomeBanner
   userName={user.name || user.email?.split("@")[0]}
   role="Staff"
   subtitle={`${completedTasksToday} of ${todayTasks.length} tasks completed today`}
@@ -84,20 +86,23 @@ const completedTasksToday = todayTasks.filter(t => t.status === "completed").len
 
 ## Key Metrics
 
-| Metric | Icon | Color Logic |
-|--------|------|-------------|
-| Today's Tasks | ListTodo | Blue |
+| Metric           | Icon          | Color Logic                  |
+| ---------------- | ------------- | ---------------------------- |
+| Today's Tasks    | ListTodo      | Blue                         |
 | Pending Requests | ClipboardList | Red if >2 urgent, else amber |
-| Visitors Today | Users | Purple |
-| Alerts | TriangleAlert | Amber |
+| Visitors Today   | Users         | Purple                       |
+| Alerts           | TriangleAlert | Amber                        |
 
 ```tsx
 <MetricCard
   title="Pending Requests"
   value={pendingRequests.length}
   icon={ClipboardList}
-  iconColor={pendingRequests.filter(r => r.urgency === "high").length > 2
-    ? "text-destructive" : "text-amber-500"}
+  iconColor={
+    pendingRequests.filter((r) => r.urgency === "high").length > 2
+      ? "text-destructive"
+      : "text-amber-500"
+  }
 />
 ```
 
@@ -106,44 +111,63 @@ const completedTasksToday = todayTasks.filter(t => t.status === "completed").len
 Task list with status tracking:
 
 ```tsx
-{todayTasks.map((task) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div className="flex items-center gap-3">
-      <div className={`p-2 rounded-full ${
-        task.status === "completed" ? "bg-emerald-100" :
-        task.status === "in-progress" ? "bg-blue-100" : "bg-muted"
-      }`}>
-        {task.status === "completed" ? (
-          <CircleCheckBig className="h-4 w-4 text-emerald-600" />
-        ) : task.status === "in-progress" ? (
-          <Clock className="h-4 w-4 text-blue-600" />
-        ) : (
-          <ListTodo className="h-4 w-4 text-muted-foreground" />
-        )}
+{
+  todayTasks.map((task) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div className="flex items-center gap-3">
+        <div
+          className={`rounded-full p-2 ${
+            task.status === "completed"
+              ? "bg-emerald-100"
+              : task.status === "in-progress"
+                ? "bg-blue-100"
+                : "bg-muted"
+          }`}
+        >
+          {task.status === "completed" ? (
+            <CircleCheckBig className="h-4 w-4 text-emerald-600" />
+          ) : task.status === "in-progress" ? (
+            <Clock className="h-4 w-4 text-blue-600" />
+          ) : (
+            <ListTodo className="text-muted-foreground h-4 w-4" />
+          )}
+        </div>
+        <div>
+          <p
+            className={`font-medium ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+          >
+            {task.task}
+          </p>
+          <p className="text-muted-foreground text-sm">Due: {task.dueTime}</p>
+        </div>
       </div>
-      <div>
-        <p className={`font-medium ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}>
-          {task.task}
-        </p>
-        <p className="text-sm text-muted-foreground">Due: {task.dueTime}</p>
+      <div className="flex items-center gap-2">
+        <Badge
+          variant={
+            task.priority === "high"
+              ? "destructive"
+              : task.priority === "medium"
+                ? "secondary"
+                : "outline"
+          }
+        >
+          {task.priority}
+        </Badge>
+        <Badge
+          variant={
+            task.status === "completed"
+              ? "default"
+              : task.status === "in-progress"
+                ? "secondary"
+                : "outline"
+          }
+        >
+          {task.status.replace("-", " ")}
+        </Badge>
       </div>
     </div>
-    <div className="flex items-center gap-2">
-      <Badge variant={
-        task.priority === "high" ? "destructive" :
-        task.priority === "medium" ? "secondary" : "outline"
-      }>
-        {task.priority}
-      </Badge>
-      <Badge variant={
-        task.status === "completed" ? "default" :
-        task.status === "in-progress" ? "secondary" : "outline"
-      }>
-        {task.status.replace("-", " ")}
-      </Badge>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 Task statuses: pending, in-progress, completed
@@ -165,7 +189,7 @@ const productivityRings = [
   },
   {
     label: "Requests",
-    value: 100 - (pendingRequests.length * 10),
+    value: 100 - pendingRequests.length * 10,
     color: "#3b82f6",
     current: urgentRequests.length,
     target: pendingRequests.length,
@@ -179,7 +203,7 @@ const productivityRings = [
     target: 0,
     unit: "overdue",
   },
-];
+]
 ```
 
 ## Weekly Task Completion
@@ -212,27 +236,34 @@ Bar chart:
 Request tracking with urgency:
 
 ```tsx
-{pendingRequests.map((request) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{request.type}</p>
-      <p className="text-sm text-muted-foreground">
-        {request.requester} • {request.department}
-      </p>
+{
+  pendingRequests.map((request) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{request.type}</p>
+        <p className="text-muted-foreground text-sm">
+          {request.requester} • {request.department}
+        </p>
+      </div>
+      <div className="text-right">
+        <Badge
+          variant={
+            request.urgency === "high"
+              ? "destructive"
+              : request.urgency === "medium"
+                ? "secondary"
+                : "outline"
+          }
+        >
+          {request.urgency}
+        </Badge>
+        <p className="text-muted-foreground mt-1 text-xs">
+          {request.daysOpen} day{request.daysOpen !== 1 ? "s" : ""} open
+        </p>
+      </div>
     </div>
-    <div className="text-right">
-      <Badge variant={
-        request.urgency === "high" ? "destructive" :
-        request.urgency === "medium" ? "secondary" : "outline"
-      }>
-        {request.urgency}
-      </Badge>
-      <p className="text-xs text-muted-foreground mt-1">
-        {request.daysOpen} day{request.daysOpen !== 1 ? "s" : ""} open
-      </p>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 Request types: Student Transfer, Document Request, Schedule Change, Certificate Issue
@@ -242,20 +273,27 @@ Request types: Student Transfer, Document Request, Schedule Change, Certificate 
 Items awaiting approval:
 
 ```tsx
-{pendingApprovals.map((approval) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{approval.item}</p>
-      <p className="text-sm text-muted-foreground">{approval.requester}</p>
+{
+  pendingApprovals.map((approval) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{approval.item}</p>
+        <p className="text-muted-foreground text-sm">{approval.requester}</p>
+      </div>
+      <Badge
+        variant={
+          approval.daysLeft <= 2
+            ? "destructive"
+            : approval.daysLeft <= 5
+              ? "secondary"
+              : "outline"
+        }
+      >
+        {approval.daysLeft} day{approval.daysLeft !== 1 ? "s" : ""} left
+      </Badge>
     </div>
-    <Badge variant={
-      approval.daysLeft <= 2 ? "destructive" :
-      approval.daysLeft <= 5 ? "secondary" : "outline"
-    }>
-      {approval.daysLeft} day{approval.daysLeft !== 1 ? "s" : ""} left
-    </Badge>
-  </div>
-))}
+  ))
+}
 ```
 
 ## Maintenance Requests
@@ -263,20 +301,27 @@ Items awaiting approval:
 Issue tracking:
 
 ```tsx
-{maintenanceRequests.map((request) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div className="flex-1 min-w-0">
-      <p className="font-medium truncate">{request.issue}</p>
-      <p className="text-sm text-muted-foreground">{request.assignedTo}</p>
+{
+  maintenanceRequests.map((request) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">{request.issue}</p>
+        <p className="text-muted-foreground text-sm">{request.assignedTo}</p>
+      </div>
+      <Badge
+        variant={
+          request.priority === "high"
+            ? "destructive"
+            : request.status === "in-progress"
+              ? "default"
+              : "secondary"
+        }
+      >
+        {request.status.replace("-", " ")}
+      </Badge>
     </div>
-    <Badge variant={
-      request.priority === "high" ? "destructive" :
-      request.status === "in-progress" ? "default" : "secondary"
-    }>
-      {request.status.replace("-", " ")}
-    </Badge>
-  </div>
-))}
+  ))
+}
 ```
 
 Statuses: pending, in-progress, scheduled
@@ -286,19 +331,21 @@ Statuses: pending, in-progress, scheduled
 Stock level warnings:
 
 ```tsx
-{inventoryAlerts.map((alert) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{alert.item}</p>
-      <p className="text-sm text-muted-foreground">
-        {alert.quantity} in stock (min: {alert.threshold})
-      </p>
+{
+  inventoryAlerts.map((alert) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{alert.item}</p>
+        <p className="text-muted-foreground text-sm">
+          {alert.quantity} in stock (min: {alert.threshold})
+        </p>
+      </div>
+      <Badge variant={alert.quantity === 0 ? "destructive" : "secondary"}>
+        {alert.status}
+      </Badge>
     </div>
-    <Badge variant={alert.quantity === 0 ? "destructive" : "secondary"}>
-      {alert.status}
-    </Badge>
-  </div>
-))}
+  ))
+}
 ```
 
 Statuses: Low stock, Out of stock
@@ -308,82 +355,88 @@ Statuses: Low stock, Out of stock
 Check-in/out tracking:
 
 ```tsx
-{visitorLog.map((visitor) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div className="flex items-center gap-3">
-      <div className={`p-2 rounded-full ${
-        visitor.status === "checked-in" ? "bg-emerald-100" : "bg-muted"
-      }`}>
-        <UserCheck className="h-4 w-4" />
+{
+  visitorLog.map((visitor) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div className="flex items-center gap-3">
+        <div
+          className={`rounded-full p-2 ${
+            visitor.status === "checked-in" ? "bg-emerald-100" : "bg-muted"
+          }`}
+        >
+          <UserCheck className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="font-medium">{visitor.visitor}</p>
+          <p className="text-muted-foreground text-sm">{visitor.purpose}</p>
+        </div>
       </div>
-      <div>
-        <p className="font-medium">{visitor.visitor}</p>
-        <p className="text-sm text-muted-foreground">{visitor.purpose}</p>
+      <div className="text-right">
+        <Badge
+          variant={visitor.status === "checked-in" ? "default" : "secondary"}
+        >
+          {visitor.status.replace("-", " ")}
+        </Badge>
+        <p className="text-muted-foreground mt-1 text-xs">{visitor.time}</p>
       </div>
     </div>
-    <div className="text-right">
-      <Badge variant={visitor.status === "checked-in" ? "default" : "secondary"}>
-        {visitor.status.replace("-", " ")}
-      </Badge>
-      <p className="text-xs text-muted-foreground mt-1">{visitor.time}</p>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 ## Workflow Summary Stats
 
 4-column grid:
 
-| Stat | Color | Description |
-|------|-------|-------------|
-| In Queue | Blue | Tasks waiting |
-| Completed Today | Emerald | Tasks done |
-| Overdue | Destructive | Past due |
-| Completion Rate | Primary | Percentage |
+| Stat            | Color       | Description   |
+| --------------- | ----------- | ------------- |
+| In Queue        | Blue        | Tasks waiting |
+| Completed Today | Emerald     | Tasks done    |
+| Overdue         | Destructive | Past due      |
+| Completion Rate | Primary     | Percentage    |
 
 ## Data Fetching
 
 ```tsx
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 
 // Fetch announcements
 const announcements = await db.announcement.findMany({
   where: { schoolId, published: true },
   take: 5,
   orderBy: { createdAt: "desc" },
-});
+})
 ```
 
 ## Quick Actions
 
 6 actions for STAFF role:
 
-| Action | Icon | Destination |
-|--------|------|-------------|
-| Tasks | ClipboardList | /tasks |
-| Schedule | Calendar | /schedule |
-| Messages | MessageSquare | /messages |
-| Announce | Bell | /announcements |
-| Reports | FileText | /reports |
-| Directory | Users | /directory |
+| Action    | Icon          | Destination    |
+| --------- | ------------- | -------------- |
+| Tasks     | ClipboardList | /tasks         |
+| Schedule  | Calendar      | /schedule      |
+| Messages  | MessageSquare | /messages      |
+| Announce  | Bell          | /announcements |
+| Reports   | FileText      | /reports       |
+| Directory | Users         | /directory     |
 
 ## Progress Cards
 
-| Card | Current | Total | Unit |
-|------|---------|-------|------|
-| Daily Tasks | Completed | Total Tasks | "tasks" |
-| Request Processing | Non-urgent | Total | "handled" |
-| Week Progress | Current Day | 7 | "days" |
+| Card               | Current     | Total       | Unit      |
+| ------------------ | ----------- | ----------- | --------- |
+| Daily Tasks        | Completed   | Total Tasks | "tasks"   |
+| Request Processing | Non-urgent  | Total       | "handled" |
+| Week Progress      | Current Day | 7           | "days"    |
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
+| File                             | Purpose             |
+| -------------------------------- | ------------------- |
 | `dashboards/staff-dashboard.tsx` | Dashboard component |
-| `lib/db.ts` | Database queries |
-| `widgets/index.tsx` | Widget components |
-| `widgets/dashboard-charts.tsx` | Chart components |
+| `lib/db.ts`                      | Database queries    |
+| `widgets/index.tsx`              | Widget components   |
+| `widgets/dashboard-charts.tsx`   | Chart components    |
 
 ## Related
 

@@ -1,21 +1,23 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { requireOperator } from "@/components/operator/lib/operator-auth";
-import { revalidatePath } from "next/cache";
-import type { ReceiptRow } from "./types";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { requireOperator } from "@/components/operator/lib/operator-auth"
+
+import type { ReceiptRow } from "./types"
 
 const reviewReceiptSchema = z.object({
   receiptId: z.string().min(1),
   status: z.enum(["approved", "rejected"]),
   notes: z.string().optional(),
-});
+})
 
 export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
   try {
-    await requireOperator();
-    const validated = reviewReceiptSchema.parse(data);
+    await requireOperator()
+    const validated = reviewReceiptSchema.parse(data)
 
     // Update receipt status
     const receipt = await db.receipt.update({
@@ -33,7 +35,7 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
           },
         },
       },
-    });
+    })
 
     // If approved, mark the invoice as paid
     if (validated.status === "approved") {
@@ -44,7 +46,7 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
           amountPaid: receipt.amount,
           updatedAt: new Date(), // Track when payment was processed
         },
-      });
+      })
     }
 
     // Create audit log
@@ -53,22 +55,25 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
         action: `receipt_${validated.status}`,
         userId: "operator", // TODO: Get actual operator user ID
         schoolId: receipt.invoice.schoolId,
-        reason: validated.notes || `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
+        reason:
+          validated.notes ||
+          `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
       },
-    });
+    })
 
-    revalidatePath("/billing");
-    revalidatePath("/billing/receipts");
+    revalidatePath("/billing")
+    revalidatePath("/billing/receipts")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Failed to review receipt:", error);
+    console.error("Failed to review receipt:", error)
     return {
       success: false,
       error: {
-        message: error instanceof Error ? error.message : "Failed to review receipt",
+        message:
+          error instanceof Error ? error.message : "Failed to review receipt",
       },
-    };
+    }
   }
 }
 
@@ -77,21 +82,21 @@ const uploadReceiptSchema = z.object({
   amount: z.number().positive(),
   fileName: z.string().min(1),
   fileUrl: z.string().url(),
-});
+})
 
 export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
   try {
-    await requireOperator();
-    const validated = uploadReceiptSchema.parse(data);
+    await requireOperator()
+    const validated = uploadReceiptSchema.parse(data)
 
     // Get the invoice to retrieve schoolId
     const invoice = await db.invoice.findUnique({
       where: { id: validated.invoiceId },
       select: { schoolId: true },
-    });
+    })
 
     if (!invoice) {
-      throw new Error("Invoice not found");
+      throw new Error("Invoice not found")
     }
 
     const receipt = await db.receipt.create({
@@ -102,7 +107,7 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
         fileUrl: validated.fileUrl,
         status: "pending",
       },
-    });
+    })
 
     // Create audit log
     await db.auditLog.create({
@@ -112,45 +117,64 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
         schoolId: invoice.schoolId,
         reason: `Receipt uploaded: ${validated.fileName} for invoice ${validated.invoiceId} - Amount: $${(validated.amount / 100).toFixed(2)}`,
       },
-    });
+    })
 
-    revalidatePath("/billing");
-    revalidatePath("/billing/receipts");
+    revalidatePath("/billing")
+    revalidatePath("/billing/receipts")
 
-    return { success: true, receiptId: receipt.id };
+    return { success: true, receiptId: receipt.id }
   } catch (error) {
-    console.error("Failed to upload receipt:", error);
+    console.error("Failed to upload receipt:", error)
     return {
       success: false,
       error: {
-        message: error instanceof Error ? error.message : "Failed to upload receipt",
+        message:
+          error instanceof Error ? error.message : "Failed to upload receipt",
       },
-    };
+    }
   }
 }
 
 // Get receipts with filters for pagination
 export async function getReceipts(input: {
-  page: number;
-  perPage: number;
-  status?: string;
-  search?: string;
+  page: number
+  perPage: number
+  status?: string
+  search?: string
 }) {
   try {
-    await requireOperator();
+    await requireOperator()
 
-    const offset = (input.page - 1) * input.perPage;
+    const offset = (input.page - 1) * input.perPage
     const where = {
-      ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+      ...(input.status && input.status !== "all"
+        ? { status: input.status }
+        : {}),
       ...(input.search
         ? {
             OR: [
-              { invoice: { stripeInvoiceId: { contains: input.search, mode: "insensitive" as const } } },
-              { invoice: { school: { name: { contains: input.search, mode: "insensitive" as const } } } },
-            ]
+              {
+                invoice: {
+                  stripeInvoiceId: {
+                    contains: input.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+              {
+                invoice: {
+                  school: {
+                    name: {
+                      contains: input.search,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                },
+              },
+            ],
           }
-        : {})
-    };
+        : {}),
+    }
 
     const [receipts, total] = await Promise.all([
       db.receipt.findMany({
@@ -173,7 +197,7 @@ export async function getReceipts(input: {
         take: input.perPage,
       }),
       db.receipt.count({ where }),
-    ]);
+    ])
 
     const rows: ReceiptRow[] = receipts.map((receipt) => ({
       id: receipt.id,
@@ -186,18 +210,19 @@ export async function getReceipts(input: {
       uploadedAt: receipt.createdAt.toISOString(),
       reviewedAt: receipt.reviewedAt?.toISOString() || null,
       notes: receipt.notes,
-    }));
+    }))
 
-    return { success: true, data: rows, total };
+    return { success: true, data: rows, total }
   } catch (error) {
-    console.error("Failed to fetch receipts:", error);
+    console.error("Failed to fetch receipts:", error)
     return {
       success: false,
       error: {
-        message: error instanceof Error ? error.message : "Failed to fetch receipts",
+        message:
+          error instanceof Error ? error.message : "Failed to fetch receipts",
       },
       data: [],
       total: 0,
-    };
+    }
   }
 }

@@ -74,15 +74,15 @@
  * ```
  */
 
-import { translateFields } from "./translate";
+import { translateFields } from "./translate"
 
-type SupportedLanguage = "en" | "ar";
+type SupportedLanguage = "en" | "ar"
 
 interface TranslationResult<T> {
-  success: boolean;
-  data: T;
-  translatedFields?: Record<string, string>;
-  error?: string;
+  success: boolean
+  data: T
+  translatedFields?: Record<string, string>
+  error?: string
 }
 
 /**
@@ -109,30 +109,33 @@ export async function withAutoTranslation<T extends Record<string, unknown>>(
   translatableFields: (keyof T)[],
   sourceLanguage: SupportedLanguage
 ): Promise<TranslationResult<T & Record<string, string>>> {
-  const targetSuffix = sourceLanguage === "en" ? "Ar" : "En";
-  const sourceSuffix = sourceLanguage === "en" ? "En" : "Ar";
+  const targetSuffix = sourceLanguage === "en" ? "Ar" : "En"
+  const sourceSuffix = sourceLanguage === "en" ? "En" : "Ar"
 
   // Extract only the fields that need translation
-  const fieldsToTranslate: Record<string, string> = {};
+  const fieldsToTranslate: Record<string, string> = {}
   for (const field of translatableFields) {
-    const value = data[field];
+    const value = data[field]
     if (typeof value === "string" && value.trim() !== "") {
-      fieldsToTranslate[String(field)] = value;
+      fieldsToTranslate[String(field)] = value
     }
   }
 
   // If no fields to translate, return original data with source suffix
   if (Object.keys(fieldsToTranslate).length === 0) {
-    const additionalFields: Record<string, string> = {};
+    const additionalFields: Record<string, string> = {}
     // Add source language suffixes for empty fields
     for (const field of translatableFields) {
-      const value = data[field];
+      const value = data[field]
       if (typeof value === "string") {
-        additionalFields[`${String(field)}${sourceSuffix}`] = value;
-        additionalFields[`${String(field)}${targetSuffix}`] = "";
+        additionalFields[`${String(field)}${sourceSuffix}`] = value
+        additionalFields[`${String(field)}${targetSuffix}`] = ""
       }
     }
-    return { success: true, data: { ...data, ...additionalFields } as T & Record<string, string> };
+    return {
+      success: true,
+      data: { ...data, ...additionalFields } as T & Record<string, string>,
+    }
   }
 
   try {
@@ -140,51 +143,51 @@ export async function withAutoTranslation<T extends Record<string, unknown>>(
     const result = await translateFields({
       fields: fieldsToTranslate,
       sourceLanguage,
-    });
+    })
 
     // Build additional fields separately to avoid TypeScript indexing issues
-    const additionalFields: Record<string, string> = {};
+    const additionalFields: Record<string, string> = {}
 
     // Add source language suffixed fields
     for (const field of translatableFields) {
-      const value = data[field];
+      const value = data[field]
       if (typeof value === "string") {
-        additionalFields[`${String(field)}${sourceSuffix}`] = value;
+        additionalFields[`${String(field)}${sourceSuffix}`] = value
       }
     }
 
     // Add translated fields
     if (result.success && result.translated) {
       for (const [key, value] of Object.entries(result.translated)) {
-        additionalFields[`${key}${targetSuffix}`] = value;
+        additionalFields[`${key}${targetSuffix}`] = value
       }
       return {
         success: true,
         data: { ...data, ...additionalFields } as T & Record<string, string>,
         translatedFields: result.translated,
-      };
+      }
     }
 
     // Translation failed - fill target fields with empty strings
     for (const field of translatableFields) {
-      additionalFields[`${String(field)}${targetSuffix}`] = "";
+      additionalFields[`${String(field)}${targetSuffix}`] = ""
     }
 
     return {
       success: false,
       data: { ...data, ...additionalFields } as T & Record<string, string>,
       error: result.error || "Translation failed",
-    };
+    }
   } catch (error) {
-    console.error("[withAutoTranslation] Error:", error);
+    console.error("[withAutoTranslation] Error:", error)
 
     // Return original data with empty target fields on error
-    const additionalFields: Record<string, string> = {};
+    const additionalFields: Record<string, string> = {}
     for (const field of translatableFields) {
-      const value = data[field];
+      const value = data[field]
       if (typeof value === "string") {
-        additionalFields[`${String(field)}${sourceSuffix}`] = value;
-        additionalFields[`${String(field)}${targetSuffix}`] = "";
+        additionalFields[`${String(field)}${sourceSuffix}`] = value
+        additionalFields[`${String(field)}${targetSuffix}`] = ""
       }
     }
 
@@ -192,7 +195,7 @@ export async function withAutoTranslation<T extends Record<string, unknown>>(
       success: false,
       data: { ...data, ...additionalFields } as T & Record<string, string>,
       error: error instanceof Error ? error.message : "Translation failed",
-    };
+    }
   }
 }
 
@@ -213,23 +216,23 @@ export function getLocalizedField<T extends Record<string, unknown>>(
   fieldName: string,
   locale: SupportedLanguage
 ): string {
-  const suffix = locale === "ar" ? "Ar" : "En";
-  const fallbackSuffix = locale === "ar" ? "En" : "Ar";
+  const suffix = locale === "ar" ? "Ar" : "En"
+  const fallbackSuffix = locale === "ar" ? "En" : "Ar"
 
-  const primaryField = `${fieldName}${suffix}`;
-  const fallbackField = `${fieldName}${fallbackSuffix}`;
+  const primaryField = `${fieldName}${suffix}`
+  const fallbackField = `${fieldName}${fallbackSuffix}`
 
-  const value = entity[primaryField];
+  const value = entity[primaryField]
   if (typeof value === "string" && value.trim() !== "") {
-    return value;
+    return value
   }
 
-  const fallback = entity[fallbackField];
+  const fallback = entity[fallbackField]
   if (typeof fallback === "string") {
-    return fallback;
+    return fallback
   }
 
-  return "";
+  return ""
 }
 
 /**
@@ -256,21 +259,21 @@ export function prepareBilingualData<T extends Record<string, unknown>>(
   translatableFields: (keyof T)[],
   sourceLanguage: SupportedLanguage
 ): Record<string, unknown> {
-  const result: Record<string, unknown> = { sourceLanguage };
+  const result: Record<string, unknown> = { sourceLanguage }
 
   // Copy non-translatable fields as-is
   for (const [key, value] of Object.entries(sourceData)) {
     if (!translatableFields.includes(key as keyof T)) {
-      result[key] = value;
+      result[key] = value
     }
   }
 
   // Copy bilingual fields from translated data
   for (const field of translatableFields) {
-    const fieldStr = String(field);
-    result[`${fieldStr}En`] = translatedData[`${fieldStr}En`] ?? "";
-    result[`${fieldStr}Ar`] = translatedData[`${fieldStr}Ar`] ?? "";
+    const fieldStr = String(field)
+    result[`${fieldStr}En`] = translatedData[`${fieldStr}En`] ?? ""
+    result[`${fieldStr}Ar`] = translatedData[`${fieldStr}Ar`] ?? ""
   }
 
-  return result;
+  return result
 }

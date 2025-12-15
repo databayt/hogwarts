@@ -9,6 +9,7 @@ model: sonnet
 **Specialization**: shadcn/ui (New York style), Radix UI, accessibility
 
 ## Expertise
+
 - shadcn/ui component library (New York style)
 - Radix UI primitives
 - Accessibility (WCAG 2.1 AA)
@@ -17,6 +18,7 @@ model: sonnet
 - RTL/LTR support
 
 ## Project Setup
+
 - **Style**: New York
 - **Location**: `src/components/ui/`
 - **Theme**: `src/app/globals.css`
@@ -33,6 +35,7 @@ model: sonnet
 ## Usage Patterns
 
 ### Button
+
 ```typescript
 <Button variant="default">Click me</Button>
 <Button variant="destructive">Delete</Button>
@@ -41,6 +44,7 @@ model: sonnet
 ```
 
 ### Form with react-hook-form
+
 ```typescript
 <Form {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -62,6 +66,7 @@ model: sonnet
 ```
 
 ### Dialog Pattern
+
 ```typescript
 <Dialog>
   <DialogTrigger asChild>
@@ -78,6 +83,7 @@ model: sonnet
 ```
 
 ### DataTable Pattern
+
 ```typescript
 <DataTable
   columns={columns}
@@ -87,6 +93,7 @@ model: sonnet
 ```
 
 ## Accessibility Checklist
+
 - [ ] Keyboard navigation works
 - [ ] ARIA labels present
 - [ ] Focus management correct
@@ -94,11 +101,13 @@ model: sonnet
 - [ ] Screen reader compatible
 
 ## RTL Support
+
 - [ ] Components flip correctly
 - [ ] Directional icons swap
 - [ ] Spacing mirrors properly
 
 ## Theme Variables
+
 ```css
 --background, --foreground
 --card, --card-foreground

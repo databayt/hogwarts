@@ -28,68 +28,69 @@
  * - OpenStreetMap Nominatim (always available, free tier)
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
 // === TYPE DEFINITIONS ===
 
 export interface Coordinates {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 export interface AddressComponents {
-  street?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postalCode?: string;
+  street?: string
+  city?: string
+  state?: string
+  country?: string
+  postalCode?: string
 }
 
 export interface GeocodingResult {
-  success: boolean;
-  coordinates?: Coordinates;
-  formattedAddress?: string;
-  addressComponents?: AddressComponents;
-  placeId?: string;
-  error?: string;
+  success: boolean
+  coordinates?: Coordinates
+  formattedAddress?: string
+  addressComponents?: AddressComponents
+  placeId?: string
+  error?: string
 }
 
 export interface LocationValidation {
-  isValid: boolean;
-  suggestions?: string[];
-  confidence?: number;
+  isValid: boolean
+  suggestions?: string[]
+  confidence?: number
 }
 
-export type MapsProvider = 'google' | 'mapbox' | 'openstreetmap';
+export type MapsProvider = "google" | "mapbox" | "openstreetmap"
 
 // === CONFIGURATION ===
 
 interface MapsConfig {
-  provider: MapsProvider;
-  apiKey?: string;
-  region?: string;
-  language?: string;
+  provider: MapsProvider
+  apiKey?: string
+  region?: string
+  language?: string
 }
 
 const config: MapsConfig = {
-  provider: (process.env.NEXT_PUBLIC_MAPS_PROVIDER as MapsProvider) || 'openstreetmap',
+  provider:
+    (process.env.NEXT_PUBLIC_MAPS_PROVIDER as MapsProvider) || "openstreetmap",
   apiKey: process.env.NEXT_PUBLIC_MAPS_API_KEY,
-  region: process.env.NEXT_PUBLIC_MAPS_REGION || 'US',
-  language: process.env.NEXT_PUBLIC_MAPS_LANGUAGE || 'en',
-};
+  region: process.env.NEXT_PUBLIC_MAPS_REGION || "US",
+  language: process.env.NEXT_PUBLIC_MAPS_LANGUAGE || "en",
+}
 
 // === MAIN SERVICE CLASS ===
 
 class MapsService {
-  private provider: MapsProvider;
-  private apiKey?: string;
+  private provider: MapsProvider
+  private apiKey?: string
 
   constructor(config: MapsConfig) {
-    this.provider = config.provider;
-    this.apiKey = config.apiKey;
-    
-    if (this.provider !== 'openstreetmap' && !this.apiKey) {
-      logger.warn('Maps API key not configured', { provider: this.provider });
+    this.provider = config.provider
+    this.apiKey = config.apiKey
+
+    if (this.provider !== "openstreetmap" && !this.apiKey) {
+      logger.warn("Maps API key not configured", { provider: this.provider })
     }
   }
 
@@ -101,24 +102,27 @@ class MapsService {
     try {
       // Use provider-specific geocoding for address-to-coordinates conversion
       switch (this.provider) {
-        case 'google':
-          return await this.geocodeWithGoogle(address);
-        case 'mapbox':
-          return await this.geocodeWithMapbox(address);
-        case 'openstreetmap':
-          return await this.geocodeWithOSM(address);
+        case "google":
+          return await this.geocodeWithGoogle(address)
+        case "mapbox":
+          return await this.geocodeWithMapbox(address)
+        case "openstreetmap":
+          return await this.geocodeWithOSM(address)
         default:
           return {
             success: false,
-            error: `Unsupported maps provider: ${this.provider}`
-          };
+            error: `Unsupported maps provider: ${this.provider}`,
+          }
       }
     } catch (error) {
-      logger.error('Geocoding failed', error as Error, { address, provider: this.provider });
+      logger.error("Geocoding failed", error as Error, {
+        address,
+        provider: this.provider,
+      })
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Geocoding failed'
-      };
+        error: error instanceof Error ? error.message : "Geocoding failed",
+      }
     }
   }
 
@@ -128,24 +132,28 @@ class MapsService {
   async reverseGeocode(coordinates: Coordinates): Promise<GeocodingResult> {
     try {
       switch (this.provider) {
-        case 'google':
-          return await this.reverseGeocodeWithGoogle(coordinates);
-        case 'mapbox':
-          return await this.reverseGeocodeWithMapbox(coordinates);
-        case 'openstreetmap':
-          return await this.reverseGeocodeWithOSM(coordinates);
+        case "google":
+          return await this.reverseGeocodeWithGoogle(coordinates)
+        case "mapbox":
+          return await this.reverseGeocodeWithMapbox(coordinates)
+        case "openstreetmap":
+          return await this.reverseGeocodeWithOSM(coordinates)
         default:
           return {
             success: false,
-            error: `Unsupported maps provider: ${this.provider}`
-          };
+            error: `Unsupported maps provider: ${this.provider}`,
+          }
       }
     } catch (error) {
-      logger.error('Reverse geocoding failed', error as Error, { coordinates, provider: this.provider });
+      logger.error("Reverse geocoding failed", error as Error, {
+        coordinates,
+        provider: this.provider,
+      })
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Reverse geocoding failed'
-      };
+        error:
+          error instanceof Error ? error.message : "Reverse geocoding failed",
+      }
     }
   }
 
@@ -153,26 +161,26 @@ class MapsService {
    * Validate an address
    */
   async validateAddress(address: string): Promise<LocationValidation> {
-    const result = await this.geocodeAddress(address);
-    
+    const result = await this.geocodeAddress(address)
+
     if (!result.success || !result.coordinates) {
       return {
         isValid: false,
         suggestions: [],
-        confidence: 0
-      };
+        confidence: 0,
+      }
     }
 
     // Calculate confidence based on address match
-    const confidence = result.formattedAddress 
+    const confidence = result.formattedAddress
       ? this.calculateAddressConfidence(address, result.formattedAddress)
-      : 0.5;
+      : 0.5
 
     return {
       isValid: confidence > 0.7,
       suggestions: result.formattedAddress ? [result.formattedAddress] : [],
-      confidence
-    };
+      confidence,
+    }
   }
 
   // === GOOGLE MAPS IMPLEMENTATION ===
@@ -181,8 +189,9 @@ class MapsService {
     if (!this.apiKey) {
       return {
         success: false,
-        error: 'Google Maps API key not configured. Set NEXT_PUBLIC_MAPS_API_KEY in your environment.'
-      };
+        error:
+          "Google Maps API key not configured. Set NEXT_PUBLIC_MAPS_API_KEY in your environment.",
+      }
     }
 
     // NOTE: Uncomment and implement when Google Maps API is configured
@@ -239,23 +248,26 @@ class MapsService {
 
     return {
       success: false,
-      error: 'Google Maps integration not yet implemented. Please configure API key and uncomment implementation.'
-    };
+      error:
+        "Google Maps integration not yet implemented. Please configure API key and uncomment implementation.",
+    }
   }
 
-  private async reverseGeocodeWithGoogle(coordinates: Coordinates): Promise<GeocodingResult> {
+  private async reverseGeocodeWithGoogle(
+    coordinates: Coordinates
+  ): Promise<GeocodingResult> {
     if (!this.apiKey) {
       return {
         success: false,
-        error: 'Google Maps API key not configured'
-      };
+        error: "Google Maps API key not configured",
+      }
     }
 
     // NOTE: Implement when Google Maps API is configured
     return {
       success: false,
-      error: 'Google Maps reverse geocoding not yet implemented'
-    };
+      error: "Google Maps reverse geocoding not yet implemented",
+    }
   }
 
   // === MAPBOX IMPLEMENTATION ===
@@ -264,8 +276,9 @@ class MapsService {
     if (!this.apiKey) {
       return {
         success: false,
-        error: 'Mapbox API key not configured. Set NEXT_PUBLIC_MAPS_API_KEY in your environment.'
-      };
+        error:
+          "Mapbox API key not configured. Set NEXT_PUBLIC_MAPS_API_KEY in your environment.",
+      }
     }
 
     // NOTE: Uncomment and implement when Mapbox API is configured
@@ -319,159 +332,166 @@ class MapsService {
 
     return {
       success: false,
-      error: 'Mapbox integration not yet implemented. Please configure API key and uncomment implementation.'
-    };
+      error:
+        "Mapbox integration not yet implemented. Please configure API key and uncomment implementation.",
+    }
   }
 
-  private async reverseGeocodeWithMapbox(coordinates: Coordinates): Promise<GeocodingResult> {
+  private async reverseGeocodeWithMapbox(
+    coordinates: Coordinates
+  ): Promise<GeocodingResult> {
     if (!this.apiKey) {
       return {
         success: false,
-        error: 'Mapbox API key not configured'
-      };
+        error: "Mapbox API key not configured",
+      }
     }
 
     // NOTE: Implement when Mapbox API is configured
     return {
       success: false,
-      error: 'Mapbox reverse geocoding not yet implemented'
-    };
+      error: "Mapbox reverse geocoding not yet implemented",
+    }
   }
 
   // === OPENSTREETMAP IMPLEMENTATION (FREE, NO API KEY) ===
 
   private async geocodeWithOSM(address: string): Promise<GeocodingResult> {
     try {
-      const url = new URL('https://nominatim.openstreetmap.org/search');
-      url.searchParams.append('q', address);
-      url.searchParams.append('format', 'json');
-      url.searchParams.append('addressdetails', '1');
-      url.searchParams.append('limit', '1');
+      const url = new URL("https://nominatim.openstreetmap.org/search")
+      url.searchParams.append("q", address)
+      url.searchParams.append("format", "json")
+      url.searchParams.append("addressdetails", "1")
+      url.searchParams.append("limit", "1")
 
       const response = await fetch(url.toString(), {
         headers: {
-          'User-Agent': 'SchoolOnboardingSystem/1.0' // Required by OSM
-        }
-      });
-      
-      const data = await response.json();
+          "User-Agent": "SchoolOnboardingSystem/1.0", // Required by OSM
+        },
+      })
+
+      const data = await response.json()
 
       if (!Array.isArray(data) || data.length === 0) {
         return {
           success: false,
-          error: 'No results found for this address'
-        };
+          error: "No results found for this address",
+        }
       }
 
-      const result = data[0];
-      const components: AddressComponents = {};
-      
+      const result = data[0]
+      const components: AddressComponents = {}
+
       if (result.address) {
-        components.street = result.address.road || result.address.street;
-        components.city = result.address.city || result.address.town || result.address.village;
-        components.state = result.address.state;
-        components.country = result.address.country;
-        components.postalCode = result.address.postcode;
+        components.street = result.address.road || result.address.street
+        components.city =
+          result.address.city || result.address.town || result.address.village
+        components.state = result.address.state
+        components.country = result.address.country
+        components.postalCode = result.address.postcode
       }
 
       return {
         success: true,
         coordinates: {
           latitude: parseFloat(result.lat),
-          longitude: parseFloat(result.lon)
+          longitude: parseFloat(result.lon),
         },
         formattedAddress: result.display_name,
         addressComponents: components,
-        placeId: result.osm_id?.toString()
-      };
+        placeId: result.osm_id?.toString(),
+      }
     } catch (error) {
-      logger.error('OpenStreetMap geocoding failed', error as Error);
+      logger.error("OpenStreetMap geocoding failed", error as Error)
       return {
         success: false,
-        error: 'Failed to geocode address with OpenStreetMap'
-      };
+        error: "Failed to geocode address with OpenStreetMap",
+      }
     }
   }
 
-  private async reverseGeocodeWithOSM(coordinates: Coordinates): Promise<GeocodingResult> {
+  private async reverseGeocodeWithOSM(
+    coordinates: Coordinates
+  ): Promise<GeocodingResult> {
     try {
-      const url = new URL('https://nominatim.openstreetmap.org/reverse');
-      url.searchParams.append('lat', coordinates.latitude.toString());
-      url.searchParams.append('lon', coordinates.longitude.toString());
-      url.searchParams.append('format', 'json');
-      url.searchParams.append('addressdetails', '1');
+      const url = new URL("https://nominatim.openstreetmap.org/reverse")
+      url.searchParams.append("lat", coordinates.latitude.toString())
+      url.searchParams.append("lon", coordinates.longitude.toString())
+      url.searchParams.append("format", "json")
+      url.searchParams.append("addressdetails", "1")
 
       const response = await fetch(url.toString(), {
         headers: {
-          'User-Agent': 'SchoolOnboardingSystem/1.0'
-        }
-      });
-      
-      const result = await response.json();
+          "User-Agent": "SchoolOnboardingSystem/1.0",
+        },
+      })
+
+      const result = await response.json()
 
       if (!result || result.error) {
         return {
           success: false,
-          error: result.error || 'No address found for these coordinates'
-        };
+          error: result.error || "No address found for these coordinates",
+        }
       }
 
-      const components: AddressComponents = {};
+      const components: AddressComponents = {}
       if (result.address) {
-        components.street = result.address.road || result.address.street;
-        components.city = result.address.city || result.address.town || result.address.village;
-        components.state = result.address.state;
-        components.country = result.address.country;
-        components.postalCode = result.address.postcode;
+        components.street = result.address.road || result.address.street
+        components.city =
+          result.address.city || result.address.town || result.address.village
+        components.state = result.address.state
+        components.country = result.address.country
+        components.postalCode = result.address.postcode
       }
 
       return {
         success: true,
         coordinates: {
           latitude: parseFloat(result.lat),
-          longitude: parseFloat(result.lon)
+          longitude: parseFloat(result.lon),
         },
         formattedAddress: result.display_name,
         addressComponents: components,
-        placeId: result.osm_id?.toString()
-      };
+        placeId: result.osm_id?.toString(),
+      }
     } catch (error) {
-      logger.error('OpenStreetMap reverse geocoding failed', error as Error);
+      logger.error("OpenStreetMap reverse geocoding failed", error as Error)
       return {
         success: false,
-        error: 'Failed to reverse geocode with OpenStreetMap'
-      };
+        error: "Failed to reverse geocode with OpenStreetMap",
+      }
     }
   }
 
   // === HELPER METHODS ===
 
   private calculateAddressConfidence(input: string, matched: string): number {
-    const inputLower = input.toLowerCase();
-    const matchedLower = matched.toLowerCase();
+    const inputLower = input.toLowerCase()
+    const matchedLower = matched.toLowerCase()
 
     // WHY: Calculate confidence by comparing word fragments
     // Splits both input and geocoded result into words, then checks if each
     // input word appears in geocoded result. This prevents false positives
     // when provider returns completely different address.
     // Example: "123 Main St New York" should match "123 Main Street, New York, NY"
-    const inputParts = inputLower.split(/[\s,]+/);
-    const matchedParts = matchedLower.split(/[\s,]+/);
+    const inputParts = inputLower.split(/[\s,]+/)
+    const matchedParts = matchedLower.split(/[\s,]+/)
 
-    let matches = 0;
+    let matches = 0
     for (const part of inputParts) {
-      if (matchedParts.some(m => m.includes(part) || part.includes(m))) {
-        matches++;
+      if (matchedParts.some((m) => m.includes(part) || part.includes(m))) {
+        matches++
       }
     }
 
-    return matches / Math.max(inputParts.length, 1);
+    return matches / Math.max(inputParts.length, 1)
   }
 }
 
 // === SINGLETON INSTANCE ===
 
-export const mapsService = new MapsService(config);
+export const mapsService = new MapsService(config)
 
 // === UTILITY FUNCTIONS ===
 
@@ -479,39 +499,46 @@ export const mapsService = new MapsService(config);
  * Format coordinates for display
  */
 export function formatCoordinates(coords: Coordinates): string {
-  return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+  return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`
 }
 
 /**
  * Calculate distance between two points (in kilometers)
  */
-export function calculateDistance(point1: Coordinates, point2: Coordinates): number {
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = toRad(point2.latitude - point1.latitude);
-  const dLon = toRad(point2.longitude - point1.longitude);
-  const lat1 = toRad(point1.latitude);
-  const lat2 = toRad(point2.latitude);
+export function calculateDistance(
+  point1: Coordinates,
+  point2: Coordinates
+): number {
+  const R = 6371 // Earth's radius in kilometers
+  const dLat = toRad(point2.latitude - point1.latitude)
+  const dLon = toRad(point2.longitude - point1.longitude)
+  const lat1 = toRad(point1.latitude)
+  const lat2 = toRad(point2.latitude)
 
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const d = R * c;
-  
-  return d;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const d = R * c
+
+  return d
 }
 
 function toRad(value: number): number {
-  return value * Math.PI / 180;
+  return (value * Math.PI) / 180
 }
 
 // === REACT HOOKS (if using in client components) ===
 
-export function useMapsUrl(address?: string, coordinates?: Coordinates): string {
+export function useMapsUrl(
+  address?: string,
+  coordinates?: Coordinates
+): string {
   if (coordinates) {
-    return `https://www.google.com/maps/search/?api=1&query=${coordinates.latitude},${coordinates.longitude}`;
+    return `https://www.google.com/maps/search/?api=1&query=${coordinates.latitude},${coordinates.longitude}`
   }
   if (address) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
   }
-  return '';
+  return ""
 }

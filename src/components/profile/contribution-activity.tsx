@@ -1,22 +1,24 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useMemo, useState } from "react"
 import {
-  GitCommit,
-  FolderPlus,
-  GitPullRequest,
-  CircleDot,
   BookOpen,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  CircleDot,
+  FileText,
+  FolderPlus,
+  GitCommit,
+  GitPullRequest,
+  Star,
   Trophy,
   Users,
-  Calendar,
-  FileText,
-  Star,
-  ChevronDown,
-  ChevronUp
 } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+
 import type { ProfileRole } from "./types"
 
 interface ContributionActivityProps {
@@ -26,7 +28,15 @@ interface ContributionActivityProps {
 
 interface ActivityItem {
   id: string
-  type: "commits" | "created" | "pull_request" | "issue" | "achievement" | "assignment" | "attendance" | "grade"
+  type:
+    | "commits"
+    | "created"
+    | "pull_request"
+    | "issue"
+    | "achievement"
+    | "assignment"
+    | "attendance"
+    | "grade"
   title: string
   description?: string
   count?: number
@@ -41,7 +51,10 @@ interface ActivityItem {
 }
 
 // Generate activity items based on role
-function generateActivityForRole(role: ProfileRole, year: number): Map<string, ActivityItem[]> {
+function generateActivityForRole(
+  role: ProfileRole,
+  year: number
+): Map<string, ActivityItem[]> {
   const activities = new Map<string, ActivityItem[]>()
   const currentDate = new Date()
   const currentYear = currentDate.getFullYear()
@@ -51,7 +64,10 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
     const date = new Date(year, month, 1)
     if (date > currentDate) continue
 
-    const monthKey = date.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    const monthKey = date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })
     const monthActivities: ActivityItem[] = []
 
     // Generate role-specific activities
@@ -70,7 +86,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           ],
           count,
           date,
-          icon: <FileText className="size-4 text-muted-foreground" />,
+          icon: <FileText className="text-muted-foreground size-4" />,
         })
       }
 
@@ -81,11 +97,19 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           type: "created",
           title: "Enrolled in new courses",
           items: [
-            { name: "Advanced Mathematics", status: "Active", date: date.toLocaleDateString() },
-            { name: "Physics Lab", status: "Active", date: date.toLocaleDateString() },
+            {
+              name: "Advanced Mathematics",
+              status: "Active",
+              date: date.toLocaleDateString(),
+            },
+            {
+              name: "Physics Lab",
+              status: "Active",
+              date: date.toLocaleDateString(),
+            },
           ],
           date,
-          icon: <BookOpen className="size-4 text-muted-foreground" />,
+          icon: <BookOpen className="text-muted-foreground size-4" />,
         })
       }
 
@@ -96,9 +120,14 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           type: "achievement",
           title: "Earned an achievement",
           date,
-          icon: <Trophy className="size-4 text-muted-foreground" />,
+          icon: <Trophy className="text-muted-foreground size-4" />,
           achievement: {
-            title: ["Honor Roll", "Perfect Attendance", "Science Fair Winner", "Top Performer"][Math.floor(Math.random() * 4)],
+            title: [
+              "Honor Roll",
+              "Perfect Attendance",
+              "Science Fair Winner",
+              "Top Performer",
+            ][Math.floor(Math.random() * 4)],
             description: "Recognized for outstanding academic performance",
           },
         })
@@ -118,7 +147,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           ],
           count,
           date,
-          icon: <Users className="size-4 text-muted-foreground" />,
+          icon: <Users className="text-muted-foreground size-4" />,
         })
       }
 
@@ -133,7 +162,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
             { name: "Assignment Grades", status: "Published" },
           ],
           date,
-          icon: <Star className="size-4 text-muted-foreground" />,
+          icon: <Star className="text-muted-foreground size-4" />,
         })
       }
 
@@ -147,7 +176,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
             { name: "Calculus Study Guide", date: date.toLocaleDateString() },
           ],
           date,
-          icon: <FolderPlus className="size-4 text-muted-foreground" />,
+          icon: <FolderPlus className="text-muted-foreground size-4" />,
         })
       }
     } else if (role === "parent") {
@@ -164,7 +193,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           ],
           count,
           date,
-          icon: <BookOpen className="size-4 text-muted-foreground" />,
+          icon: <BookOpen className="text-muted-foreground size-4" />,
         })
       }
 
@@ -175,10 +204,13 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           type: "issue",
           title: "Attended school events",
           items: [
-            { name: "Parent-Teacher Conference", date: date.toLocaleDateString() },
+            {
+              name: "Parent-Teacher Conference",
+              date: date.toLocaleDateString(),
+            },
           ],
           date,
-          icon: <Calendar className="size-4 text-muted-foreground" />,
+          icon: <Calendar className="text-muted-foreground size-4" />,
         })
       }
     } else if (role === "staff") {
@@ -195,7 +227,7 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           ],
           count,
           date,
-          icon: <FileText className="size-4 text-muted-foreground" />,
+          icon: <FileText className="text-muted-foreground size-4" />,
         })
       }
 
@@ -206,11 +238,14 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
           type: "created",
           title: "Generated reports",
           items: [
-            { name: "Monthly Attendance Report", date: date.toLocaleDateString() },
+            {
+              name: "Monthly Attendance Report",
+              date: date.toLocaleDateString(),
+            },
             { name: "Fee Collection Summary", date: date.toLocaleDateString() },
           ],
           date,
-          icon: <FolderPlus className="size-4 text-muted-foreground" />,
+          icon: <FolderPlus className="text-muted-foreground size-4" />,
         })
       }
     }
@@ -223,7 +258,10 @@ function generateActivityForRole(role: ProfileRole, year: number): Map<string, A
   return activities
 }
 
-export default function ContributionActivity({ role, data }: ContributionActivityProps) {
+export default function ContributionActivity({
+  role,
+  data,
+}: ContributionActivityProps) {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
@@ -235,7 +273,7 @@ export default function ContributionActivity({ role, data }: ContributionActivit
   }, [role, selectedYear])
 
   const toggleExpand = (id: string) => {
-    setExpandedItems(prev => {
+    setExpandedItems((prev) => {
       const next = new Set(prev)
       if (next.has(id)) {
         next.delete(id)
@@ -254,10 +292,12 @@ export default function ContributionActivity({ role, data }: ContributionActivit
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-border p-6">
+    <div className="border-border space-y-4 rounded-lg border p-6">
       {/* Header with year selector */}
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-foreground">{roleLabels[role]}</h3>
+        <h3 className="text-foreground text-base font-semibold">
+          {roleLabels[role]}
+        </h3>
         <div className="flex gap-1">
           {years.map((year) => (
             <Button
@@ -278,57 +318,78 @@ export default function ContributionActivity({ role, data }: ContributionActivit
         {Array.from(activities.entries()).map(([month, items]) => (
           <div key={month} className="space-y-3">
             {/* Month header */}
-            <h4 className="text-sm font-medium text-muted-foreground">{month}</h4>
+            <h4 className="text-muted-foreground text-sm font-medium">
+              {month}
+            </h4>
 
             {/* Activity items */}
-            <div className="space-y-3 ms-4 border-s-2 border-border ps-4">
+            <div className="border-border ms-4 space-y-3 border-s-2 ps-4">
               {items.map((item) => (
                 <div key={item.id} className="relative">
                   {/* Timeline dot */}
-                  <div className="absolute -start-[1.4rem] top-1 size-2.5 rounded-full bg-border" />
+                  <div className="bg-border absolute -start-[1.4rem] top-1 size-2.5 rounded-full" />
 
                   <div className="space-y-2">
                     {/* Activity header */}
                     <div className="flex items-start gap-2">
                       {item.icon}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground">{item.title}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-foreground text-sm">{item.title}</p>
 
                         {/* Expandable items list */}
                         {item.items && item.items.length > 0 && (
                           <div className="mt-2 space-y-1">
-                            {item.items.slice(0, expandedItems.has(item.id) ? undefined : 2).map((subItem, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-xs">
-                                <span className="text-primary hover:underline cursor-pointer">
-                                  {subItem.name}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  {subItem.count && (
-                                    <div className="flex items-center gap-1">
-                                      <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
-                                        <div
-                                          className="h-full bg-chart-2 rounded-full"
-                                          style={{ width: `${Math.min((subItem.count / (item.count || 1)) * 100 * 3, 100)}%` }}
-                                        />
+                            {item.items
+                              .slice(
+                                0,
+                                expandedItems.has(item.id) ? undefined : 2
+                              )
+                              .map((subItem, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between text-xs"
+                                >
+                                  <span className="text-primary cursor-pointer hover:underline">
+                                    {subItem.name}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {subItem.count && (
+                                      <div className="flex items-center gap-1">
+                                        <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+                                          <div
+                                            className="bg-chart-2 h-full rounded-full"
+                                            style={{
+                                              width: `${Math.min((subItem.count / (item.count || 1)) * 100 * 3, 100)}%`,
+                                            }}
+                                          />
+                                        </div>
+                                        <span className="text-muted-foreground">
+                                          {subItem.count}
+                                        </span>
                                       </div>
-                                      <span className="text-muted-foreground">{subItem.count}</span>
-                                    </div>
-                                  )}
-                                  {subItem.status && (
-                                    <Badge variant="secondary" className="h-5 text-[10px]">
-                                      {subItem.status}
-                                    </Badge>
-                                  )}
-                                  {subItem.date && !subItem.count && !subItem.status && (
-                                    <span className="text-muted-foreground">{subItem.date}</span>
-                                  )}
+                                    )}
+                                    {subItem.status && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="h-5 text-[10px]"
+                                      >
+                                        {subItem.status}
+                                      </Badge>
+                                    )}
+                                    {subItem.date &&
+                                      !subItem.count &&
+                                      !subItem.status && (
+                                        <span className="text-muted-foreground">
+                                          {subItem.date}
+                                        </span>
+                                      )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
                             {item.items.length > 2 && (
                               <button
                                 onClick={() => toggleExpand(item.id)}
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
                               >
                                 {expandedItems.has(item.id) ? (
                                   <>
@@ -348,14 +409,18 @@ export default function ContributionActivity({ role, data }: ContributionActivit
 
                         {/* Achievement card */}
                         {item.achievement && (
-                          <div className="mt-3 p-4 rounded-lg border border-border bg-card">
+                          <div className="border-border bg-card mt-3 rounded-lg border p-4">
                             <div className="flex items-center gap-3">
-                              <div className="size-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                              <div className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-amber-600">
                                 <Trophy className="size-6 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-primary">{item.achievement.title}</p>
-                                <p className="text-xs text-muted-foreground">{item.achievement.description}</p>
+                                <p className="text-primary text-sm font-semibold">
+                                  {item.achievement.title}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {item.achievement.description}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -370,7 +435,7 @@ export default function ContributionActivity({ role, data }: ContributionActivit
         ))}
 
         {activities.size === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-muted-foreground py-8 text-center">
             <p className="text-sm">No activity recorded for {selectedYear}</p>
           </div>
         )}

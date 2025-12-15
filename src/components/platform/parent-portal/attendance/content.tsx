@@ -1,13 +1,15 @@
-import { auth } from '@/auth';
-import { db } from '@/lib/db';
-import { AttendanceView } from './view';
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { AttendanceView } from "./view"
 
 export async function ParentAttendanceContent() {
-  const session = await auth();
-  
+  const session = await auth()
+
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login")
   }
 
   // Check if user is a parent/guardian
@@ -43,7 +45,7 @@ export async function ParentAttendanceContent() {
               },
               attendances: {
                 orderBy: {
-                  date: 'desc',
+                  date: "desc",
                 },
                 take: 90, // Last 90 days
                 select: {
@@ -71,27 +73,31 @@ export async function ParentAttendanceContent() {
         },
       },
     },
-  });
+  })
 
   if (!guardian) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">You don't have access to parent portal.</p>
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground">
+          You don't have access to parent portal.
+        </p>
       </div>
-    );
+    )
   }
 
   // Prepare data for the view
-  const students = guardian.studentGuardians.map(sg => ({
+  const students = guardian.studentGuardians.map((sg) => ({
     id: sg.student.id,
-    name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ''} ${sg.student.surname}`,
+    name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ""} ${sg.student.surname}`,
     email: null as string | null,
-    classes: sg.student.studentClasses.map(sc => ({
+    classes: sg.student.studentClasses.map((sc) => ({
       id: sc.class.id,
       name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
-      teacher: sc.class.teacher ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}` : 'N/A',
+      teacher: sc.class.teacher
+        ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}`
+        : "N/A",
     })),
-    attendances: sg.student.attendances.map(a => ({
+    attendances: sg.student.attendances.map((a) => ({
       id: a.id,
       date: a.date,
       status: a.status,
@@ -99,7 +105,7 @@ export async function ParentAttendanceContent() {
       className: a.class.subject.subjectName,
       notes: a.notes,
     })),
-  }));
+  }))
 
-  return <AttendanceView students={students} />;
+  return <AttendanceView students={students} />
 }

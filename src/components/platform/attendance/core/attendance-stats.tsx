@@ -1,70 +1,107 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react"
+import { motion } from "framer-motion"
+import {
+  Activity,
+  BarChart3,
+  Calendar,
+  Clock,
+  PieChart,
+  TrendingDown,
+  TrendingUp,
+  UserCheck,
+  UserMinus,
+  Users,
+  UserX,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Users, UserCheck, UserX, Clock, UserMinus, Calendar, TrendingUp, TrendingDown, Activity } from "lucide-react"
-import { PieChart, BarChart3 } from "lucide-react";
-import { cn } from '@/lib/utils';
-import type { AttendanceStats, AttendanceRecord, AttendanceMethod } from '../shared/types';
-import { getMethodDisplayName, getStatusColor, calculateAttendancePercentage } from '../shared/utils';
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+
+import type {
+  AttendanceMethod,
+  AttendanceRecord,
+  AttendanceStats,
+} from "../shared/types"
+import {
+  calculateAttendancePercentage,
+  getMethodDisplayName,
+  getStatusColor,
+} from "../shared/utils"
 
 interface AttendanceStatsProps {
-  stats: AttendanceStats | null;
-  records?: AttendanceRecord[];
-  showDetails?: boolean;
-  className?: string;
-  dictionary?: any;
+  stats: AttendanceStats | null
+  records?: AttendanceRecord[]
+  showDetails?: boolean
+  className?: string
+  dictionary?: any
 }
 
 interface StatCardProps {
-  title: string;
-  value: number | string;
-  icon: React.ReactNode;
-  description?: string;
-  color?: string;
-  percentage?: number;
-  trend?: 'up' | 'down' | 'neutral';
+  title: string
+  value: number | string
+  icon: React.ReactNode
+  description?: string
+  color?: string
+  percentage?: number
+  trend?: "up" | "down" | "neutral"
 }
 
-function StatCard({ title, value, icon, description, color, percentage, trend }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  icon,
+  description,
+  color,
+  percentage,
+  trend,
+}: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="transition-shadow hover:shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <div className={cn("p-2 rounded-lg", color || "bg-secondary")}>
+          <div className={cn("rounded-lg p-2", color || "bg-secondary")}>
             {icon}
           </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{value}</div>
           {description && (
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+            <p className="text-muted-foreground mt-1 text-xs">{description}</p>
           )}
           {percentage !== undefined && (
-            <div className="flex items-center mt-2">
+            <div className="mt-2 flex items-center">
               <Progress value={percentage} className="flex-1" />
-              <span className="ml-2 text-sm font-medium">{percentage.toFixed(1)}%</span>
+              <span className="ml-2 text-sm font-medium">
+                {percentage.toFixed(1)}%
+              </span>
             </div>
           )}
           {trend && (
-            <div className="flex items-center mt-2">
-              {trend === 'up' && <TrendingUp className="h-4 w-4 text-chart-2 mr-1" />}
-              {trend === 'down' && <TrendingDown className="h-4 w-4 text-destructive mr-1" />}
-              {trend === 'neutral' && <Activity className="h-4 w-4 text-muted-foreground mr-1" />}
-              <span className="text-xs text-muted-foreground">
+            <div className="mt-2 flex items-center">
+              {trend === "up" && (
+                <TrendingUp className="text-chart-2 mr-1 h-4 w-4" />
+              )}
+              {trend === "down" && (
+                <TrendingDown className="text-destructive mr-1 h-4 w-4" />
+              )}
+              {trend === "neutral" && (
+                <Activity className="text-muted-foreground mr-1 h-4 w-4" />
+              )}
+              <span className="text-muted-foreground text-xs">
                 vs last period
               </span>
             </div>
@@ -72,7 +109,7 @@ function StatCard({ title, value, icon, description, color, percentage, trend }:
         </CardContent>
       </Card>
     </motion.div>
-  );
+  )
 }
 
 export function AttendanceStats({
@@ -80,7 +117,7 @@ export function AttendanceStats({
   records = [],
   showDetails = true,
   className,
-  dictionary
+  dictionary,
 }: AttendanceStatsProps) {
   if (!stats) {
     return (
@@ -90,39 +127,39 @@ export function AttendanceStats({
           <CardDescription>No data available</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <BarChart3 className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+          <div className="py-8 text-center">
+            <BarChart3 className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
             <p className="text-muted-foreground">
               Select a class and date to view attendance statistics
             </p>
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // Calculate method distribution
-  const methodDistribution: Record<AttendanceMethod, number> = {} as any;
-  records.forEach(record => {
+  const methodDistribution: Record<AttendanceMethod, number> = {} as any
+  records.forEach((record) => {
     if (!methodDistribution[record.method]) {
-      methodDistribution[record.method] = 0;
+      methodDistribution[record.method] = 0
     }
-    methodDistribution[record.method]++;
-  });
+    methodDistribution[record.method]++
+  })
 
   // Calculate time-based stats (if records have check-in times)
   const timeStats = records.reduce(
     (acc, record) => {
       if (record.checkInTime) {
-        const hour = new Date(record.checkInTime).getHours();
-        if (hour < 9) acc.early++;
-        else if (hour < 10) acc.onTime++;
-        else acc.late++;
+        const hour = new Date(record.checkInTime).getHours()
+        if (hour < 9) acc.early++
+        else if (hour < 10) acc.onTime++
+        else acc.late++
       }
-      return acc;
+      return acc
     },
     { early: 0, onTime: 0, late: 0 }
-  );
+  )
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -138,7 +175,7 @@ export function AttendanceStats({
         <StatCard
           title="Present"
           value={stats.present}
-          icon={<UserCheck className="h-4 w-4 text-chart-2" />}
+          icon={<UserCheck className="text-chart-2 h-4 w-4" />}
           description={`${calculateAttendancePercentage(stats.present, stats.total)}% attendance`}
           color="bg-chart-2/10"
           percentage={calculateAttendancePercentage(stats.present, stats.total)}
@@ -146,14 +183,14 @@ export function AttendanceStats({
         <StatCard
           title="Absent"
           value={stats.absent}
-          icon={<UserX className="h-4 w-4 text-destructive" />}
+          icon={<UserX className="text-destructive h-4 w-4" />}
           description={`${calculateAttendancePercentage(stats.absent, stats.total)}% absence`}
           color="bg-destructive/10"
         />
         <StatCard
           title="Late"
           value={stats.late}
-          icon={<Clock className="h-4 w-4 text-chart-4" />}
+          icon={<Clock className="text-chart-4 h-4 w-4" />}
           description="Arrived after start time"
           color="bg-chart-4/10"
         />
@@ -166,21 +203,21 @@ export function AttendanceStats({
             <StatCard
               title="Excused"
               value={stats.excused}
-              icon={<UserMinus className="h-4 w-4 text-primary" />}
+              icon={<UserMinus className="text-primary h-4 w-4" />}
               description="With valid excuse"
               color="bg-primary/10"
             />
             <StatCard
               title="Sick"
               value={stats.sick}
-              icon={<Activity className="h-4 w-4 text-chart-1" />}
+              icon={<Activity className="text-chart-1 h-4 w-4" />}
               description="Health-related absence"
               color="bg-chart-1/10"
             />
             <StatCard
               title="Holiday"
               value={stats.holiday}
-              icon={<Calendar className="h-4 w-4 text-chart-3" />}
+              icon={<Calendar className="text-chart-3 h-4 w-4" />}
               description="On approved leave"
               color="bg-chart-3/10"
             />
@@ -201,8 +238,8 @@ export function AttendanceStats({
                     {stats.attendanceRate.toFixed(1)}%
                   </span>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Target: 95%</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">Target: 95%</p>
+                    <p className="text-muted-foreground text-xs">
                       {stats.attendanceRate >= 95 ? (
                         <span className="text-chart-2">Above target</span>
                       ) : (
@@ -213,10 +250,7 @@ export function AttendanceStats({
                     </p>
                   </div>
                 </div>
-                <Progress
-                  value={stats.attendanceRate}
-                  className="h-3"
-                />
+                <Progress value={stats.attendanceRate} className="h-3" />
               </div>
             </CardContent>
           </Card>
@@ -233,16 +267,20 @@ export function AttendanceStats({
               <CardContent>
                 <div className="space-y-3">
                   {Object.entries(methodDistribution).map(([method, count]) => {
-                    const percentage = (count / stats.total) * 100;
+                    const percentage = (count / stats.total) * 100
                     return (
                       <div key={method} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span>{getMethodDisplayName(method as AttendanceMethod)}</span>
-                          <span className="font-medium">{count} ({percentage.toFixed(0)}%)</span>
+                          <span>
+                            {getMethodDisplayName(method as AttendanceMethod)}
+                          </span>
+                          <span className="font-medium">
+                            {count} ({percentage.toFixed(0)}%)
+                          </span>
                         </div>
                         <Progress value={percentage} className="h-2" />
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </CardContent>
@@ -250,27 +288,39 @@ export function AttendanceStats({
           )}
 
           {/* Time Distribution */}
-          {(timeStats.early > 0 || timeStats.onTime > 0 || timeStats.late > 0) && (
+          {(timeStats.early > 0 ||
+            timeStats.onTime > 0 ||
+            timeStats.late > 0) && (
             <Card>
               <CardHeader>
                 <CardTitle>Arrival Time Distribution</CardTitle>
-                <CardDescription>
-                  When students checked in
-                </CardDescription>
+                <CardDescription>When students checked in</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-chart-2">{timeStats.early}</div>
-                    <p className="text-sm text-muted-foreground">Early (&lt;9 AM)</p>
+                    <div className="text-chart-2 text-2xl font-bold">
+                      {timeStats.early}
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      Early (&lt;9 AM)
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-primary">{timeStats.onTime}</div>
-                    <p className="text-sm text-muted-foreground">On Time (9-10 AM)</p>
+                    <div className="text-primary text-2xl font-bold">
+                      {timeStats.onTime}
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      On Time (9-10 AM)
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-chart-4">{timeStats.late}</div>
-                    <p className="text-sm text-muted-foreground">Late (&gt;10 AM)</p>
+                    <div className="text-chart-4 text-2xl font-bold">
+                      {timeStats.late}
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      Late (&gt;10 AM)
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -291,7 +341,7 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-chart-2" />
+                      <div className="bg-chart-2 h-3 w-3 rounded-full" />
                       Present
                     </span>
                     <span className="font-medium">{stats.present}</span>
@@ -306,7 +356,7 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-destructive" />
+                      <div className="bg-destructive h-3 w-3 rounded-full" />
                       Absent
                     </span>
                     <span className="font-medium">{stats.absent}</span>
@@ -321,7 +371,7 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-chart-4" />
+                      <div className="bg-chart-4 h-3 w-3 rounded-full" />
                       Late
                     </span>
                     <span className="font-medium">{stats.late}</span>
@@ -337,7 +387,7 @@ export function AttendanceStats({
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-primary" />
+                        <div className="bg-primary h-3 w-3 rounded-full" />
                         Excused
                       </span>
                       <span className="font-medium">{stats.excused}</span>
@@ -356,10 +406,10 @@ export function AttendanceStats({
 
       {/* Last Updated */}
       {stats.lastUpdated && (
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-center text-sm">
           Last updated: {new Date(stats.lastUpdated).toLocaleString()}
         </div>
       )}
     </div>
-  );
+  )
 }

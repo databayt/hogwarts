@@ -1,23 +1,40 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { lessonCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { LessonFormStepProps } from "./types";
-import { TIME_SLOTS } from "./config";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { TIME_SLOTS } from "./config"
+import { LessonFormStepProps } from "./types"
+import { lessonCreateSchema } from "./validation"
 
 export function ScheduleDetailsStep({ form, isView }: LessonFormStepProps) {
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="lessonDate"
@@ -66,7 +83,11 @@ export function ScheduleDetailsStep({ form, isView }: LessonFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Start Time</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select start time" />
@@ -91,7 +112,11 @@ export function ScheduleDetailsStep({ form, isView }: LessonFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>End Time</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select end time" />
@@ -111,5 +136,5 @@ export function ScheduleDetailsStep({ form, isView }: LessonFormStepProps) {
         />
       </div>
     </div>
-  );
+  )
 }

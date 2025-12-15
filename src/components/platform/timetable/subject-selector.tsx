@@ -1,12 +1,26 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { getAllSubjects } from './fallback-data'
+import { useEffect, useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { getAllSubjects } from "./fallback-data"
 
 interface SubjectSelectorProps {
   open: boolean
@@ -17,16 +31,16 @@ interface SubjectSelectorProps {
   availableSubjects?: string[]
 }
 
-export function SubjectSelector({ 
-  open, 
-  onOpenChange, 
-  currentSubject, 
-  onSubjectChange, 
+export function SubjectSelector({
+  open,
+  onOpenChange,
+  currentSubject,
+  onSubjectChange,
   showAllSubjects = false,
-  availableSubjects = []
+  availableSubjects = [],
 }: SubjectSelectorProps) {
   const [selectedSubject, setSelectedSubject] = useState(currentSubject)
-  const [customSubject, setCustomSubject] = useState('')
+  const [customSubject, setCustomSubject] = useState("")
   const [useCustomSubject, setUseCustomSubject] = useState(false)
 
   useEffect(() => {
@@ -50,7 +64,9 @@ export function SubjectSelector({
 
   // Get all available subjects based on configuration
   const allSubjects = showAllSubjects ? getAllSubjects() : availableSubjects
-  const uniqueSubjects = [...new Set([...allSubjects, ...availableSubjects])].filter(Boolean).sort()
+  const uniqueSubjects = [...new Set([...allSubjects, ...availableSubjects])]
+    .filter(Boolean)
+    .sort()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,8 +77,8 @@ export function SubjectSelector({
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label>Select from available subjects</Label>
-            <Select 
-              value={selectedSubject} 
+            <Select
+              value={selectedSubject}
               onValueChange={(value) => {
                 setSelectedSubject(value)
                 setUseCustomSubject(false)
@@ -89,11 +105,11 @@ export function SubjectSelector({
                 id="useCustomSubject"
                 checked={useCustomSubject}
                 onChange={(e) => setUseCustomSubject(e.target.checked)}
-                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
+                className="border-border bg-background text-primary focus:ring-primary h-4 w-4 rounded"
               />
               <Label htmlFor="useCustomSubject">Use custom subject name</Label>
             </div>
-            
+
             {useCustomSubject && (
               <Input
                 placeholder="Enter custom subject name"
@@ -115,7 +131,10 @@ export function SubjectSelector({
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={useCustomSubject && !customSubject.trim()}>
+          <Button
+            onClick={handleSave}
+            disabled={useCustomSubject && !customSubject.trim()}
+          >
             Save
           </Button>
         </DialogFooter>

@@ -1,7 +1,8 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import { Loader2 } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 
 /**
  * ShadcnSpinnerBadge - Loading badges with spinners

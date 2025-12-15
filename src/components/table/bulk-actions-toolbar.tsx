@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import type { Table } from "@tanstack/react-table"
+import { Download, Mail, Trash2, UserPlus, X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { X, Trash2, Mail, UserPlus, Download } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 export interface BulkAction<TData> {
   id: string
@@ -48,12 +49,9 @@ export function BulkActionsToolbar<TData>({
 
   return (
     <div
-      className={cn(
-        "fixed inset-x-0 bottom-6 z-50 mx-auto w-fit",
-        className
-      )}
+      className={cn("fixed inset-x-0 bottom-6 z-50 mx-auto w-fit", className)}
     >
-      <div className="flex items-center gap-2 rounded-lg border bg-background px-4 py-2 shadow-lg">
+      <div className="bg-background flex items-center gap-2 rounded-lg border px-4 py-2 shadow-lg">
         {/* Selection count */}
         <div className="flex items-center gap-2 text-sm">
           <span className="font-medium tabular-nums">{selectedCount}</span>
@@ -89,7 +87,9 @@ export function BulkActionsToolbar<TData>({
           className="h-8"
         >
           <X className="h-4 w-4" />
-          <span className="ml-1.5 sr-only sm:not-sr-only">{t.clearSelection}</span>
+          <span className="sr-only ml-1.5 sm:not-sr-only">
+            {t.clearSelection}
+          </span>
         </Button>
       </div>
     </div>

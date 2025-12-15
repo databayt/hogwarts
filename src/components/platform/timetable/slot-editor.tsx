@@ -1,10 +1,23 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import { useEffect, useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type Props = {
   open: boolean
@@ -17,18 +30,37 @@ type Props = {
   initialClassroomId?: string
 }
 
-export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initialPeriodId, initialClassId, initialTeacherId, initialClassroomId }: Props) {
-  const [days, setDays] = useState<number[]>([0,1,2,3,4])
-  const [periods, setPeriods] = useState<Array<{ id: string; name: string }>>([])
-  const [classes, setClasses] = useState<Array<{ id: string; label: string }>>([])
-  const [teachers, setTeachers] = useState<Array<{ id: string; label: string }>>([])
-  const [classrooms, setClassrooms] = useState<Array<{ id: string; roomName: string }>>([])
-  const [dayOfWeek, setDayOfWeek] = useState('0')
-  const [periodId, setPeriodId] = useState('')
-  const [classId, setClassId] = useState('')
-  const [teacherId, setTeacherId] = useState('')
-  const [classroomId, setClassroomId] = useState('')
-  const [suggestions, setSuggestions] = useState<Array<{ dayOfWeek: number; periodId: string; periodName: string }>>([])
+export function SlotEditor({
+  open,
+  onOpenChange,
+  termId,
+  initialDayOfWeek,
+  initialPeriodId,
+  initialClassId,
+  initialTeacherId,
+  initialClassroomId,
+}: Props) {
+  const [days, setDays] = useState<number[]>([0, 1, 2, 3, 4])
+  const [periods, setPeriods] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
+  const [classes, setClasses] = useState<Array<{ id: string; label: string }>>(
+    []
+  )
+  const [teachers, setTeachers] = useState<
+    Array<{ id: string; label: string }>
+  >([])
+  const [classrooms, setClassrooms] = useState<
+    Array<{ id: string; roomName: string }>
+  >([])
+  const [dayOfWeek, setDayOfWeek] = useState("0")
+  const [periodId, setPeriodId] = useState("")
+  const [classId, setClassId] = useState("")
+  const [teacherId, setTeacherId] = useState("")
+  const [classroomId, setClassroomId] = useState("")
+  const [suggestions, setSuggestions] = useState<
+    Array<{ dayOfWeek: number; periodId: string; periodName: string }>
+  >([])
 
   useEffect(() => {
     ;(async () => {
@@ -45,7 +77,7 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
       const c = await cRes.json()
       const t = await tRes.json()
       const r = await rRes.json()
-      setDays(cfg.config?.workingDays ?? [0,1,2,3,4])
+      setDays(cfg.config?.workingDays ?? [0, 1, 2, 3, 4])
       setPeriods(pr.periods ?? [])
       setClasses(c.classes ?? [])
       setTeachers(t.teachers ?? [])
@@ -58,19 +90,34 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
   }, [termId])
 
   useEffect(() => {
-    if (typeof initialDayOfWeek === 'number') setDayOfWeek(String(initialDayOfWeek))
+    if (typeof initialDayOfWeek === "number")
+      setDayOfWeek(String(initialDayOfWeek))
     if (initialPeriodId) setPeriodId(initialPeriodId)
     if (initialClassId) setClassId(initialClassId)
     if (initialTeacherId) setTeacherId(initialTeacherId)
     if (initialClassroomId) setClassroomId(initialClassroomId)
-  }, [initialDayOfWeek, initialPeriodId, initialClassId, initialTeacherId, initialClassroomId, open])
+  }, [
+    initialDayOfWeek,
+    initialPeriodId,
+    initialClassId,
+    initialTeacherId,
+    initialClassroomId,
+    open,
+  ])
 
   const onSave = async () => {
     if (!termId || !periodId || !classId || !teacherId || !classroomId) return
-    await fetch('/api/timetable/slot', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ termId, dayOfWeek: Number(dayOfWeek), periodId, classId, teacherId, classroomId }),
+    await fetch("/api/timetable/slot", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        termId,
+        dayOfWeek: Number(dayOfWeek),
+        periodId,
+        classId,
+        teacherId,
+        classroomId,
+      }),
     })
     onOpenChange(false)
   }
@@ -78,8 +125,8 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
   const onSuggest = async () => {
     if (!termId) return
     const params = new URLSearchParams({ termId })
-    if (teacherId) params.set('teacherId', teacherId)
-    if (classroomId) params.set('classroomId', classroomId)
+    if (teacherId) params.set("teacherId", teacherId)
+    if (classroomId) params.set("classroomId", classroomId)
     const res = await fetch(`/api/timetable/suggest?${params.toString()}`)
     const data = await res.json()
     setSuggestions(data.suggestions || [])
@@ -95,10 +142,14 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
           <div className="grid gap-2">
             <Label>Day</Label>
             <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {days.map((d) => (
-                  <SelectItem key={d} value={String(d)}>{d}</SelectItem>
+                  <SelectItem key={d} value={String(d)}>
+                    {d}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -106,10 +157,14 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
           <div className="grid gap-2">
             <Label>Period</Label>
             <Select value={periodId} onValueChange={setPeriodId}>
-              <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {periods.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -117,10 +172,14 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
           <div className="grid gap-2">
             <Label>Class</Label>
             <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger className="w-[300px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -128,10 +187,14 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
           <div className="grid gap-2">
             <Label>Teacher</Label>
             <Select value={teacherId} onValueChange={setTeacherId}>
-              <SelectTrigger className="w-[300px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {teachers.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -139,10 +202,14 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
           <div className="grid gap-2">
             <Label>Classroom</Label>
             <Select value={classroomId} onValueChange={setClassroomId}>
-              <SelectTrigger className="w-[300px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[300px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {classrooms.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>{r.roomName}</SelectItem>
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.roomName}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -151,20 +218,24 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
         {suggestions.length > 0 && (
           <div className="mt-4">
             <p className="muted mb-2">Suggested free slots</p>
-            <ul className="list-disc ps-5 muted max-h-40 overflow-auto">
+            <ul className="muted max-h-40 list-disc overflow-auto ps-5">
               {suggestions.map((s, idx) => (
-                <li key={`${s.dayOfWeek}:${s.periodId}:${idx}`}>Day {s.dayOfWeek} — {s.periodName}</li>
+                <li key={`${s.dayOfWeek}:${s.periodId}:${idx}`}>
+                  Day {s.dayOfWeek} — {s.periodName}
+                </li>
               ))}
             </ul>
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline" onClick={onSuggest} disabled={!termId}>Suggest</Button>
-          <Button onClick={onSave} disabled={!termId}>Save slot</Button>
+          <Button variant="outline" onClick={onSuggest} disabled={!termId}>
+            Suggest
+          </Button>
+          <Button onClick={onSave} disabled={!termId}>
+            Save slot
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-
-

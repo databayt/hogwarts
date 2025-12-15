@@ -10,7 +10,9 @@ This is a comprehensive showcase of all 32 dashboard card components available i
 ## Card Categories
 
 ### Enhanced Cards (5 cards)
+
 Original cards with size, loading, and onClick features:
+
 - `StatCard` - Display metrics with icons and trends
 - `ProgressCard` - Show completion percentages
 - `ListCard` - Display lists of items
@@ -18,7 +20,9 @@ Original cards with size, loading, and onClick features:
 - `ChartCard` - Simple chart visualizations
 
 ### New Variants (7 cards)
+
 Specialized card types:
+
 - `HeroStatCard` - Large hero-style stat display
 - `ActionCard` - Call-to-action card with button
 - `ComparisonCard` - Compare multiple metrics
@@ -28,7 +32,9 @@ Specialized card types:
 - `SkeletonCard` - Loading skeleton states
 
 ### Modern 2025 Patterns (12 cards)
+
 Interactive and engaging designs:
+
 - `FlipCard` - 3D flip animation (front/back)
 - `MetricCard` - Metric with sparkline chart
 - `NotificationCard` - Alert/notification display
@@ -43,7 +49,9 @@ Interactive and engaging designs:
 - `IconStatCard` - Icon-focused stat card
 
 ### shadcn Dashboard Patterns (8 cards)
+
 Advanced dashboard patterns:
+
 - `RecentSalesCard` - Recent transactions list
 - `ActivityFeedCard` - Activity timeline feed
 - `TeamMembersCard` - Team member avatars
@@ -56,6 +64,7 @@ Advanced dashboard patterns:
 ## Layout Components
 
 The showcase also demonstrates the layout components:
+
 - `DashboardShell` - Main dashboard wrapper
 - `DashboardSection` - Section with title/description
 - `DashboardGrid` - Responsive grid layout
@@ -76,7 +85,7 @@ The showcase also demonstrates the layout components:
 ```tsx
 import { StatCard } from "@/components/atom/lab"
 
-<StatCard
+;<StatCard
   value="2,543"
   label="Total Students"
   icon={<Users className="size-4" />}

@@ -1,10 +1,28 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { NotificationChannel, NotificationType } from "@prisma/client"
+import {
+  Bell,
+  Clock,
+  LoaderCircle,
+  Mail,
+  MessageSquare,
+  Smartphone,
+} from "lucide-react"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -14,7 +32,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -22,16 +39,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
-import { LoaderCircle, Bell, Mail, Smartphone, MessageSquare, Clock } from "lucide-react"
-import { NOTIFICATION_TYPE_CONFIG } from "./config"
-import { updateNotificationPreferences } from "./actions"
-import type { NotificationChannel, NotificationType } from "@prisma/client"
-import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { updateNotificationPreferences } from "./actions"
+import { NOTIFICATION_TYPE_CONFIG } from "./config"
 
 const preferencesFormSchema = z.object({
   preferences: z.array(
@@ -74,7 +89,9 @@ export function NotificationPreferencesForm({
   const [isLoading, setIsLoading] = useState(false)
 
   // Transform initial preferences into form format
-  const notificationTypes = Object.keys(NOTIFICATION_TYPE_CONFIG) as NotificationType[]
+  const notificationTypes = Object.keys(
+    NOTIFICATION_TYPE_CONFIG
+  ) as NotificationType[]
 
   const initialFormData: PreferencesFormValues = {
     preferences: notificationTypes.map((type) => {
@@ -99,11 +116,19 @@ export function NotificationPreferencesForm({
         sms: smsPref?.enabled ?? false,
       }
     }),
-    quietHoursEnabled: initialPreferences.some((p) => p.quietHoursStart !== null),
-    quietHoursStart: initialPreferences.find((p) => p.quietHoursStart !== null)?.quietHoursStart ?? 22,
-    quietHoursEnd: initialPreferences.find((p) => p.quietHoursEnd !== null)?.quietHoursEnd ?? 8,
+    quietHoursEnabled: initialPreferences.some(
+      (p) => p.quietHoursStart !== null
+    ),
+    quietHoursStart:
+      initialPreferences.find((p) => p.quietHoursStart !== null)
+        ?.quietHoursStart ?? 22,
+    quietHoursEnd:
+      initialPreferences.find((p) => p.quietHoursEnd !== null)?.quietHoursEnd ??
+      8,
     digestEnabled: initialPreferences.some((p) => p.digestEnabled === true),
-    digestFrequency: initialPreferences.find((p) => p.digestFrequency)?.digestFrequency ?? "daily",
+    digestFrequency:
+      initialPreferences.find((p) => p.digestFrequency)?.digestFrequency ??
+      "daily",
   }
 
   const form = useForm<PreferencesFormValues>({
@@ -117,7 +142,10 @@ export function NotificationPreferencesForm({
     try {
       // Transform form data into preference updates
       const updates = data.preferences.flatMap((pref) => {
-        const channels: Array<{ channel: NotificationChannel; enabled: boolean }> = [
+        const channels: Array<{
+          channel: NotificationChannel
+          enabled: boolean
+        }> = [
           { channel: "in_app", enabled: pref.inApp },
           { channel: "email", enabled: pref.email },
           { channel: "push", enabled: pref.push },
@@ -128,10 +156,16 @@ export function NotificationPreferencesForm({
           type: pref.type as NotificationType,
           channel: ch.channel,
           enabled: ch.enabled,
-          quietHoursStart: data.quietHoursEnabled ? data.quietHoursStart : undefined,
-          quietHoursEnd: data.quietHoursEnabled ? data.quietHoursEnd : undefined,
+          quietHoursStart: data.quietHoursEnabled
+            ? data.quietHoursStart
+            : undefined,
+          quietHoursEnd: data.quietHoursEnabled
+            ? data.quietHoursEnd
+            : undefined,
           digestEnabled: data.digestEnabled,
-          digestFrequency: data.digestEnabled ? data.digestFrequency : undefined,
+          digestFrequency: data.digestEnabled
+            ? data.digestFrequency
+            : undefined,
         }))
       })
 
@@ -186,7 +220,9 @@ export function NotificationPreferencesForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>{dictionary.preferences.quietHours.enable}</FormLabel>
+                    <FormLabel>
+                      {dictionary.preferences.quietHours.enable}
+                    </FormLabel>
                     <FormDescription>
                       {dictionary.preferences.quietHours.enableDescription}
                     </FormDescription>
@@ -208,9 +244,13 @@ export function NotificationPreferencesForm({
                   name="quietHoursStart"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{dictionary.preferences.quietHours.startTime}</FormLabel>
+                      <FormLabel>
+                        {dictionary.preferences.quietHours.startTime}
+                      </FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value))
+                        }
                         defaultValue={String(field.value)}
                       >
                         <FormControl>
@@ -236,9 +276,13 @@ export function NotificationPreferencesForm({
                   name="quietHoursEnd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{dictionary.preferences.quietHours.endTime}</FormLabel>
+                      <FormLabel>
+                        {dictionary.preferences.quietHours.endTime}
+                      </FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        onValueChange={(value) =>
+                          field.onChange(parseInt(value))
+                        }
                         defaultValue={String(field.value)}
                       >
                         <FormControl>
@@ -281,7 +325,9 @@ export function NotificationPreferencesForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>{dictionary.preferences.digest.enable}</FormLabel>
+                    <FormLabel>
+                      {dictionary.preferences.digest.enable}
+                    </FormLabel>
                     <FormDescription>
                       {dictionary.preferences.digest.enableDescription}
                     </FormDescription>
@@ -302,7 +348,9 @@ export function NotificationPreferencesForm({
                 name="digestFrequency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dictionary.preferences.digest.frequency}</FormLabel>
+                    <FormLabel>
+                      {dictionary.preferences.digest.frequency}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -313,8 +361,12 @@ export function NotificationPreferencesForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="daily">{dictionary.preferences.digest.daily}</SelectItem>
-                        <SelectItem value="weekly">{dictionary.preferences.digest.weekly}</SelectItem>
+                        <SelectItem value="daily">
+                          {dictionary.preferences.digest.daily}
+                        </SelectItem>
+                        <SelectItem value="weekly">
+                          {dictionary.preferences.digest.weekly}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
@@ -331,7 +383,9 @@ export function NotificationPreferencesForm({
         {/* Notification Type Preferences */}
         <Card>
           <CardHeader>
-            <CardTitle>{dictionary.preferences.notificationTypes.title}</CardTitle>
+            <CardTitle>
+              {dictionary.preferences.notificationTypes.title}
+            </CardTitle>
             <CardDescription>
               {dictionary.preferences.notificationTypes.description}
             </CardDescription>
@@ -339,7 +393,8 @@ export function NotificationPreferencesForm({
           <CardContent>
             <div className="space-y-4">
               {form.watch("preferences").map((pref, index) => {
-                const config = NOTIFICATION_TYPE_CONFIG[pref.type as NotificationType]
+                const config =
+                  NOTIFICATION_TYPE_CONFIG[pref.type as NotificationType]
                 const Icon = config.icon
 
                 return (
@@ -347,12 +402,12 @@ export function NotificationPreferencesForm({
                     {index > 0 && <Separator />}
 
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        <Icon className="h-5 w-5 text-muted-foreground" />
+                      <div className="mt-1 flex-shrink-0">
+                        <Icon className="text-muted-foreground h-5 w-5" />
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex items-center gap-2">
                           <h4 className="text-sm font-medium">
                             {dictionary.types[pref.type as NotificationType]}
                           </h4>
@@ -363,31 +418,37 @@ export function NotificationPreferencesForm({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {(["inApp", "email", "push", "sms"] as const).map((channel) => {
-                            const ChannelIcon = channelIcons[channel]
-                            return (
-                              <FormField
-                                key={channel}
-                                control={form.control}
-                                name={`preferences.${index}.${channel}`}
-                                render={({ field }) => (
-                                  <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl>
-                                      <Switch
-                                        checked={field.value}
-                                        onCheckedChange={field.onChange}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="flex items-center gap-1 text-xs font-normal cursor-pointer">
-                                      <ChannelIcon className="h-3.5 w-3.5" />
-                                      {dictionary.preferences.channels[channel]}
-                                    </FormLabel>
-                                  </FormItem>
-                                )}
-                              />
-                            )
-                          })}
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          {(["inApp", "email", "push", "sms"] as const).map(
+                            (channel) => {
+                              const ChannelIcon = channelIcons[channel]
+                              return (
+                                <FormField
+                                  key={channel}
+                                  control={form.control}
+                                  name={`preferences.${index}.${channel}`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex items-center space-y-0 space-x-2">
+                                      <FormControl>
+                                        <Switch
+                                          checked={field.value}
+                                          onCheckedChange={field.onChange}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="flex cursor-pointer items-center gap-1 text-xs font-normal">
+                                        <ChannelIcon className="h-3.5 w-3.5" />
+                                        {
+                                          dictionary.preferences.channels[
+                                            channel
+                                          ]
+                                        }
+                                      </FormLabel>
+                                    </FormItem>
+                                  )}
+                                />
+                              )
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -409,7 +470,9 @@ export function NotificationPreferencesForm({
             {dictionary.common.reset}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {dictionary.common.save}
           </Button>
         </div>

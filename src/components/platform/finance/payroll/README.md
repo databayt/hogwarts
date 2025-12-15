@@ -9,30 +9,35 @@ The Payroll module automates salary calculations, tax withholding, benefits admi
 ## Key Features
 
 ### 1. Salary Structure Management
+
 - Define base salary, allowances, and benefits
 - Configure pre-tax and post-tax deductions
 - Track employer contributions
 - Support for multiple pay frequencies (monthly, bi-weekly)
 
 ### 2. Progressive Tax Calculation
+
 - **5 Tax Brackets** with cumulative calculations
 - **Social Security Tax** (6.2% up to $160,200 wage base)
 - **Medicare Tax** (1.45% + 0.9% additional for high earners)
 - **Employer Contributions** (7.65% for Social Security + Medicare)
 
 ### 3. Payroll Processing
+
 - Batch process payroll for multiple employees
 - Calculate gross/net salaries automatically
 - Generate payslips with detailed breakdown
 - Approval workflow before finalization
 
 ### 4. Payslip Generation
+
 - Professional PDF payslips
 - Detailed earnings and deductions breakdown
 - Year-to-date totals
 - Digital delivery via email
 
 ### 5. Benefits & Deductions
+
 - Health insurance
 - Retirement contributions (401k, pension)
 - Life insurance
@@ -44,15 +49,16 @@ The Payroll module automates salary calculations, tax withholding, benefits admi
 
 ### Progressive Tax Brackets (2024)
 
-| Income Range | Tax Rate | Fixed Amount |
-|--------------|----------|--------------|
-| $0 - $10,000 | 0% | $0 |
-| $10,001 - $30,000 | 10% | $0 |
-| $30,001 - $60,000 | 15% | $2,000 |
-| $60,001 - $100,000 | 20% | $6,500 |
-| $100,001+ | 25% | $14,500 |
+| Income Range       | Tax Rate | Fixed Amount |
+| ------------------ | -------- | ------------ |
+| $0 - $10,000       | 0%       | $0           |
+| $10,001 - $30,000  | 10%      | $0           |
+| $30,001 - $60,000  | 15%      | $2,000       |
+| $60,001 - $100,000 | 20%      | $6,500       |
+| $100,001+          | 25%      | $14,500      |
 
 **Example Calculation for $75,000 salary:**
+
 ```
 Bracket 1: $10,000 × 0% = $0
 Bracket 2: $20,000 × 10% = $2,000
@@ -62,25 +68,30 @@ Total Income Tax: $2,000 + $4,500 + $3,000 = $9,500
 ```
 
 ### Social Security Tax
+
 - **Rate:** 6.2% for both employee and employer
 - **Wage Base:** $160,200 (2024 limit)
 - **Maximum:** $9,932.40 per year
 
 **Example for $75,000 salary:**
+
 ```
 Social Security = $75,000 × 6.2% = $4,650
 ```
 
 ### Medicare Tax
+
 - **Standard Rate:** 1.45% (no wage limit)
 - **Additional Medicare Tax:** 0.9% for income >$200,000
 
 **Example for $75,000 salary:**
+
 ```
 Medicare = $75,000 × 1.45% = $1,087.50
 ```
 
 ### Employer Contributions
+
 - **Social Security:** 6.2%
 - **Medicare:** 1.45%
 - **Total:** 7.65%
@@ -88,6 +99,7 @@ Medicare = $75,000 × 1.45% = $1,087.50
 ## Data Models
 
 ### SalaryStructure
+
 ```typescript
 {
   id: string
@@ -103,6 +115,7 @@ Medicare = $75,000 × 1.45% = $1,087.50
 ```
 
 ### Benefit
+
 ```typescript
 {
   type: "ALLOWANCE" | "BONUS" | "COMMISSION" | "OTHER"
@@ -114,17 +127,19 @@ Medicare = $75,000 × 1.45% = $1,087.50
 ```
 
 ### Deduction
+
 ```typescript
 {
   type: "PERCENTAGE" | "FIXED"
   name: string
-  value: number           // Percentage (e.g., 5) or fixed amount
-  isPreTax: boolean      // Deduct before or after tax
+  value: number // Percentage (e.g., 5) or fixed amount
+  isPreTax: boolean // Deduct before or after tax
   isRecurring: boolean
 }
 ```
 
 ### PayrollRun
+
 ```typescript
 {
   id: string
@@ -143,6 +158,7 @@ Medicare = $75,000 × 1.45% = $1,087.50
 ```
 
 ### PayrollItem
+
 ```typescript
 {
   id: string
@@ -168,11 +184,13 @@ Medicare = $75,000 × 1.45% = $1,087.50
 ### Salary Structure Management
 
 #### `createSalaryStructureWithRBAC(data)`
+
 Creates a new salary structure for a staff member.
 
 **Permissions Required:** `payroll:create`
 
 **Example:**
+
 ```typescript
 const result = await createSalaryStructureWithRBAC({
   userId: "user_123",
@@ -185,41 +203,43 @@ const result = await createSalaryStructureWithRBAC({
       name: "Housing Allowance",
       amount: 10000,
       isRecurring: true,
-      isTaxable: true
+      isTaxable: true,
     },
     {
       type: "ALLOWANCE",
       name: "Transportation",
       amount: 5000,
       isRecurring: true,
-      isTaxable: true
-    }
+      isTaxable: true,
+    },
   ],
   deductions: [
     {
       type: "PERCENTAGE",
       name: "401k Contribution",
-      value: 5,          // 5% of gross
+      value: 5, // 5% of gross
       isPreTax: true,
-      isRecurring: true
+      isRecurring: true,
     },
     {
       type: "FIXED",
       name: "Health Insurance",
       value: 500,
       isPreTax: true,
-      isRecurring: true
-    }
-  ]
+      isRecurring: true,
+    },
+  ],
 })
 ```
 
 #### `updateSalaryStructureWithRBAC(id, data)`
+
 Updates an existing salary structure.
 
 **Permissions Required:** `payroll:edit`
 
 #### `deactivateSalaryStructureWithRBAC(id)`
+
 Deactivates a salary structure (sets effectiveTo to today).
 
 **Permissions Required:** `payroll:delete`
@@ -227,17 +247,19 @@ Deactivates a salary structure (sets effectiveTo to today).
 ### Payroll Processing
 
 #### `processPayrollRunWithRBAC(data)`
+
 Processes payroll for all active employees in a period.
 
 **Permissions Required:** `payroll:process`
 
 **Example:**
+
 ```typescript
 const result = await processPayrollRunWithRBAC({
   periodStart: new Date("2024-11-01"),
   periodEnd: new Date("2024-11-30"),
   paymentDate: new Date("2024-12-01"),
-  includeInactive: false
+  includeInactive: false,
 })
 
 if (result.success && result.data) {
@@ -247,6 +269,7 @@ if (result.success && result.data) {
 ```
 
 **Process:**
+
 1. Fetches all active salary structures
 2. Calculates taxes for each employee
 3. Applies benefits and deductions
@@ -255,11 +278,13 @@ if (result.success && result.data) {
 6. Sets status to DRAFT (requires approval)
 
 #### `approvePayrollRunWithRBAC(id)`
+
 Approves a payroll run, changing status to PROCESSED.
 
 **Permissions Required:** `payroll:approve`
 
 **Example:**
+
 ```typescript
 const result = await approvePayrollRunWithRBAC(payrollRunId)
 
@@ -270,6 +295,7 @@ if (result.success) {
 ```
 
 #### `markPayrollRunAsPaidWithRBAC(id)`
+
 Marks payroll run as PAID after actual payment.
 
 **Permissions Required:** `payroll:process`
@@ -277,9 +303,11 @@ Marks payroll run as PAID after actual payment.
 ### Payslip Generation
 
 #### `generatePayslipWithRBAC(payrollItemId)`
+
 Generates a detailed payslip for an employee.
 
 **Returns:**
+
 ```typescript
 {
   employee: {
@@ -321,6 +349,7 @@ Generates a detailed payslip for an employee.
 ```
 
 **Example:**
+
 ```typescript
 const result = await generatePayslipWithRBAC(payrollItemId)
 
@@ -340,18 +369,21 @@ if (result.success && result.data) {
 ### Step-by-Step Calculation
 
 For an employee with:
+
 - Base Salary: $60,000/year ($5,000/month)
 - Housing Allowance: $10,000/year ($833.33/month)
 - 401k: 5% pre-tax
 - Health Insurance: $500/month pre-tax
 
 **1. Calculate Gross Salary**
+
 ```
 Gross = Base + Benefits
 Gross = $5,000 + $833.33 = $5,833.33
 ```
 
 **2. Apply Pre-Tax Deductions**
+
 ```
 401k = $5,833.33 × 5% = $291.67
 Health Insurance = $500
@@ -361,6 +393,7 @@ Taxable Income = $5,833.33 - $791.67 = $5,041.66
 ```
 
 **3. Calculate Income Tax** (Annual: $60,500)
+
 ```
 Bracket 1: $10,000 × 0% = $0
 Bracket 2: $20,000 × 10% = $2,000
@@ -371,27 +404,32 @@ Monthly Tax = $6,600 / 12 = $550
 ```
 
 **4. Calculate Social Security**
+
 ```
 Social Security = $5,041.66 × 6.2% = $312.58
 ```
 
 **5. Calculate Medicare**
+
 ```
 Medicare = $5,041.66 × 1.45% = $73.10
 ```
 
 **6. Calculate Net Salary**
+
 ```
 Net = Taxable Income - Taxes
 Net = $5,041.66 - $550 - $312.58 - $73.10 = $4,105.98
 ```
 
 **7. Calculate Employer Contributions**
+
 ```
 Employer = $5,041.66 × 7.65% = $385.69
 ```
 
 **Summary:**
+
 - Gross: $5,833.33
 - Pre-Tax Deductions: $791.67
 - Taxes: $935.68
@@ -401,6 +439,7 @@ Employer = $5,041.66 × 7.65% = $385.69
 ## Workflow
 
 ### 1. Setup Phase
+
 ```
 1. Create salary structures for all staff
 2. Define benefits and deductions
@@ -409,6 +448,7 @@ Employer = $5,041.66 × 7.65% = $385.69
 ```
 
 ### 2. Monthly Processing
+
 ```
 1. Review active salary structures
 2. Process payroll run (Draft status)
@@ -421,6 +461,7 @@ Employer = $5,041.66 × 7.65% = $385.69
 ```
 
 ### 3. Year-End
+
 ```
 1. Generate W-2 forms
 2. Calculate year-to-date totals
@@ -432,17 +473,20 @@ Employer = $5,041.66 × 7.65% = $385.69
 ## Integration with Other Modules
 
 ### Budget Module
+
 - Payroll deducts from "Salaries & Benefits" allocation
 - Commits budget for recurring salaries
 - Alerts if payroll exceeds budget
 
 ### Accounts Module
+
 - Creates journal entries for each payroll run
 - Debits salary expense accounts
 - Credits cash/bank accounts
 - Tracks employer contributions
 
 ### Banking Module
+
 - Initiates bank transfers for salary payments
 - Tracks payment status
 - Reconciles payroll transactions
@@ -451,44 +495,49 @@ Employer = $5,041.66 × 7.65% = $385.69
 
 ### Permissions
 
-| Role | View | Create | Edit | Delete | Process | Approve |
-|------|------|--------|------|--------|---------|---------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (own) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STAFF** | ✅ (own) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STUDENT** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Role           | View     | Create | Edit | Delete | Process | Approve |
+| -------------- | -------- | ------ | ---- | ------ | ------- | ------- |
+| **ADMIN**      | ✅       | ✅     | ✅   | ✅     | ✅      | ✅      |
+| **ACCOUNTANT** | ✅       | ✅     | ✅   | ✅     | ✅      | ✅      |
+| **TEACHER**    | ✅ (own) | ❌     | ❌   | ❌     | ❌      | ❌      |
+| **STAFF**      | ✅ (own) | ❌     | ❌   | ❌     | ❌      | ❌      |
+| **STUDENT**    | ❌       | ❌     | ❌   | ❌     | ❌      | ❌      |
+| **GUARDIAN**   | ❌       | ❌     | ❌   | ❌     | ❌      | ❌      |
 
 **Note:** Teachers and staff can only view their own salary and payslips.
 
 ## Best Practices
 
 ### 1. Salary Structure Management
+
 - Review and update annually
 - Document all changes
 - Communicate changes to affected staff
 - Maintain salary confidentiality
 
 ### 2. Payroll Processing
+
 - Process payroll 3-5 days before payment date
 - Always review calculations before approval
 - Keep backup of all payroll data
 - Test calculations with sample data first
 
 ### 3. Tax Compliance
+
 - Update tax brackets annually
 - File tax reports on time
 - Keep W-2 records for 7 years
 - Consult tax professional for complex cases
 
 ### 4. Benefits & Deductions
+
 - Get written consent for all deductions
 - Review benefits annually
 - Cap deductions at 25% of gross (legal requirement)
 - Track unused benefits (vacation, sick leave)
 
 ### 5. Security
+
 - Limit access to payroll data (need-to-know basis)
 - Use audit logs for all changes
 - Encrypt sensitive payroll information
@@ -527,6 +576,7 @@ Employer = $5,041.66 × 7.65% = $385.69
    - Net pay received
 
 ### Compliance Reports
+
 - W-2 forms (annual)
 - 941 forms (quarterly)
 - FUTA/SUTA reports
@@ -535,27 +585,33 @@ Employer = $5,041.66 × 7.65% = $385.69
 ## Troubleshooting
 
 ### Tax Calculation Incorrect
+
 **Issue:** Tax amounts don't match expectations
 
 **Solution:**
+
 - Verify tax brackets are up-to-date
 - Check pre-tax deductions are applied first
 - Ensure Social Security wage base is correct
 - Review additional Medicare tax threshold
 
 ### Payslip Generation Fails
+
 **Issue:** Cannot generate payslip PDF
 
 **Solution:**
+
 - Verify payroll item exists and is approved
 - Check all required fields are populated
 - Ensure PDF generation library is installed
 - Review server logs for specific errors
 
 ### Negative Net Salary
+
 **Issue:** Net salary is negative or very low
 
 **Solution:**
+
 - Check total deductions don't exceed limits
 - Verify benefit amounts are correct
 - Review loan deductions

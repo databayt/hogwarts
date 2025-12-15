@@ -3,6 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
@@ -83,7 +84,9 @@ const ATOMS_LINKS = [
 export function AtomsSidebar({
   tree,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { tree: typeof atomsSource.pageTree }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  tree: typeof atomsSource.pageTree
+}) {
   const pathname = usePathname()
 
   return (
@@ -92,9 +95,9 @@ export function AtomsSidebar({
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="overflow-y-auto gap-0">
+      <SidebarContent className="gap-0 overflow-y-auto">
         <ScrollArea className="h-full w-full">
-          <div className="pb-4 pt-2 pl-0">
+          <div className="pt-2 pb-4 pl-0">
             <SidebarGroup className="p-0">
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -106,9 +109,11 @@ export function AtomsSidebar({
                         <SidebarMenuButton
                           asChild
                           isActive={isActive}
-                          className="relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
+                          className="relative h-[30px] w-full border border-transparent p-0 text-[0.8rem] font-medium"
                         >
-                          <Link href={href} className="block w-full">{name}</Link>
+                          <Link href={href} className="block w-full">
+                            {name}
+                          </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     )

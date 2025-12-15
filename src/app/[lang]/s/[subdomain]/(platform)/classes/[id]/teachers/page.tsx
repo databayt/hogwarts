@@ -1,11 +1,21 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users } from "lucide-react"
 import Link from "next/link"
-import { SubjectTeachers } from "@/components/platform/classes/subject-teachers"
-import { getClassById, getClassSubjectTeachers } from "@/components/platform/classes/actions"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ArrowLeft, Users } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  getClassById,
+  getClassSubjectTeachers,
+} from "@/components/platform/classes/actions"
+import { SubjectTeachers } from "@/components/platform/classes/subject-teachers"
 
 export const metadata = { title: "Dashboard: Class Teachers" }
 
@@ -43,7 +53,7 @@ export default async function Page({ params }: Props) {
           </Link>
         </Button>
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="text-muted-foreground py-8 text-center">
             {t.classNotFound}
           </CardContent>
         </Card>
@@ -64,7 +74,7 @@ export default async function Page({ params }: Props) {
         </Button>
         <div>
           <h1 className="text-2xl font-semibold">{classData.name}</h1>
-          <p className="text-sm text-muted-foreground">{t.description}</p>
+          <p className="text-muted-foreground text-sm">{t.description}</p>
         </div>
       </div>
 

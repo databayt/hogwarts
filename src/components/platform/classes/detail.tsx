@@ -3,28 +3,36 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
-  CircleAlert,
   ArrowLeft,
-  Users,
-  GraduationCap,
   BookOpen,
   Building,
   Calendar,
+  CircleAlert,
   Clock,
-  User,
+  GraduationCap,
   School,
+  User,
   UserCog,
+  Users,
 } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import type { ClassDetailResult, ClassTeacherRow } from "./actions"
 import { SubjectTeachers } from "./subject-teachers"
 
@@ -68,7 +76,9 @@ export function ClassDetailContent({
     viewAttendance: isRTL ? "عرض الحضور" : "View Attendance",
     unknown: isRTL ? "غير محدد" : "Unknown",
     errorTitle: isRTL ? "خطأ" : "Error",
-    errorLoading: isRTL ? "فشل تحميل بيانات الفصل" : "Failed to load class data",
+    errorLoading: isRTL
+      ? "فشل تحميل بيانات الفصل"
+      : "Failed to load class data",
     notFound: isRTL ? "الفصل غير موجود" : "Class not found",
     enrolledAt: isRTL ? "تاريخ التسجيل" : "Enrolled",
     subjectTeachers: isRTL ? "معلمو المادة" : "Subject Teachers",
@@ -85,9 +95,7 @@ export function ClassDetailContent({
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
           <AlertTitle>{t.errorTitle}</AlertTitle>
-          <AlertDescription>
-            {error || t.notFound}
-          </AlertDescription>
+          <AlertDescription>{error || t.notFound}</AlertDescription>
         </Alert>
       </div>
     )
@@ -98,7 +106,9 @@ export function ClassDetailContent({
     : t.unknown
 
   const subjectName = isRTL
-    ? classData.subject?.subjectNameAr || classData.subject?.subjectName || t.unknown
+    ? classData.subject?.subjectNameAr ||
+      classData.subject?.subjectName ||
+      t.unknown
     : classData.subject?.subjectName || t.unknown
 
   return (
@@ -114,7 +124,9 @@ export function ClassDetailContent({
               {isRTL && classData.nameAr ? classData.nameAr : classData.name}
             </h1>
             {classData.courseCode && (
-              <p className="text-sm text-muted-foreground">{classData.courseCode}</p>
+              <p className="text-muted-foreground text-sm">
+                {classData.courseCode}
+              </p>
             )}
           </div>
         </div>
@@ -146,8 +158,10 @@ export function ClassDetailContent({
             {/* Subject Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.subject}</CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">
+                  {t.subject}
+                </CardTitle>
+                <BookOpen className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-lg font-semibold">{subjectName}</div>
@@ -157,15 +171,17 @@ export function ClassDetailContent({
             {/* Teacher Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.teacher}</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">
+                  {t.teacher}
+                </CardTitle>
+                <User className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-lg font-semibold">{teacherName}</div>
                 {classData.teacher?.userId && (
                   <Link
                     href={`/${lang}/profile/${classData.teacher.userId}`}
-                    className="text-xs text-muted-foreground hover:underline"
+                    className="text-muted-foreground text-xs hover:underline"
                   >
                     {t.viewProfile}
                   </Link>
@@ -177,11 +193,13 @@ export function ClassDetailContent({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{t.term}</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <Calendar className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-lg font-semibold">
-                  {classData.term?.termName || `Term ${classData.term?.termNumber}` || t.unknown}
+                  {classData.term?.termName ||
+                    `Term ${classData.term?.termNumber}` ||
+                    t.unknown}
                 </div>
               </CardContent>
             </Card>
@@ -189,15 +207,17 @@ export function ClassDetailContent({
             {/* Classroom Card */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t.classroom}</CardTitle>
-                <Building className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">
+                  {t.classroom}
+                </CardTitle>
+                <Building className="text-muted-foreground h-4 w-4" />
               </CardHeader>
               <CardContent>
                 <div className="text-lg font-semibold">
                   {classData.classroom?.roomName || t.unknown}
                 </div>
                 {classData.classroom?.capacity && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t.capacity}: {classData.classroom.capacity}
                   </p>
                 )}
@@ -213,24 +233,34 @@ export function ClassDetailContent({
             <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {classData.credits && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t.credits}</p>
+                  <p className="text-muted-foreground text-sm font-medium">
+                    {t.credits}
+                  </p>
                   <p className="text-lg">{classData.credits}</p>
                 </div>
               )}
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t.capacity}</p>
+                <p className="text-muted-foreground text-sm font-medium">
+                  {t.capacity}
+                </p>
                 <p className="text-lg">
                   {classData.minCapacity || 0} - {classData.maxCapacity || 50}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t.evaluationType}</p>
+                <p className="text-muted-foreground text-sm font-medium">
+                  {t.evaluationType}
+                </p>
                 <p className="text-lg">{classData.evaluationType}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t.createdAt}</p>
+                <p className="text-muted-foreground text-sm font-medium">
+                  {t.createdAt}
+                </p>
                 <p className="text-lg">
-                  {new Date(classData.createdAt).toLocaleDateString(isRTL ? "ar-SA" : "en-US")}
+                  {new Date(classData.createdAt).toLocaleDateString(
+                    isRTL ? "ar-SA" : "en-US"
+                  )}
                 </p>
               </div>
             </CardContent>
@@ -239,25 +269,31 @@ export function ClassDetailContent({
           {/* Quick Stats */}
           <div className="grid gap-4 md:grid-cols-3">
             <Link href={`/${lang}/students?classId=${classData.id}`}>
-              <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
+              <Card className="hover:bg-accent/50 h-full cursor-pointer transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t.enrolledStudents}</CardTitle>
-                  <School className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">
+                    {t.enrolledStudents}
+                  </CardTitle>
+                  <School className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{classData._count.studentClasses}</div>
+                  <div className="text-2xl font-bold">
+                    {classData._count.studentClasses}
+                  </div>
                 </CardContent>
               </Card>
             </Link>
 
             <Link href={`/${lang}/grades?classId=${classData.id}`}>
-              <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
+              <Card className="hover:bg-accent/50 h-full cursor-pointer transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t.viewGrades}</CardTitle>
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">
+                    {t.viewGrades}
+                  </CardTitle>
+                  <GraduationCap className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground text-sm">
                     {isRTL ? "اضغط لعرض الدرجات" : "Click to view grades"}
                   </div>
                 </CardContent>
@@ -265,13 +301,15 @@ export function ClassDetailContent({
             </Link>
 
             <Link href={`/${lang}/attendance?classId=${classData.id}`}>
-              <Card className="cursor-pointer hover:bg-accent/50 transition-colors h-full">
+              <Card className="hover:bg-accent/50 h-full cursor-pointer transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t.viewAttendance}</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">
+                    {t.viewAttendance}
+                  </CardTitle>
+                  <Clock className="text-muted-foreground h-4 w-4" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-muted-foreground text-sm">
                     {isRTL ? "اضغط لعرض الحضور" : "Click to view attendance"}
                   </div>
                 </CardContent>
@@ -286,12 +324,13 @@ export function ClassDetailContent({
             <CardHeader>
               <CardTitle>{t.enrolledStudents}</CardTitle>
               <CardDescription>
-                {classData._count.studentClasses} / {classData.maxCapacity || 50} {t.students.toLowerCase()}
+                {classData._count.studentClasses} /{" "}
+                {classData.maxCapacity || 50} {t.students.toLowerCase()}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {classData.enrolledStudents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t.noStudents}</p>
+                <p className="text-muted-foreground text-sm">{t.noStudents}</p>
               ) : (
                 <div className="space-y-4">
                   {classData.enrolledStudents.map((enrollment) => (
@@ -308,9 +347,10 @@ export function ClassDetailContent({
                         </Avatar>
                         <div>
                           <p className="font-medium">
-                            {enrollment.student.givenName} {enrollment.student.surname}
+                            {enrollment.student.givenName}{" "}
+                            {enrollment.student.surname}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {t.enrolledAt}:{" "}
                             {new Date(enrollment.enrolledAt).toLocaleDateString(
                               isRTL ? "ar-SA" : "en-US"
@@ -321,14 +361,18 @@ export function ClassDetailContent({
                       <div className="flex gap-2">
                         {enrollment.student.userId && (
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/${lang}/profile/${enrollment.student.userId}`}>
+                            <Link
+                              href={`/${lang}/profile/${enrollment.student.userId}`}
+                            >
                               <User className="mr-1 h-3 w-3" />
                               {t.viewProfile}
                             </Link>
                           </Button>
                         )}
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/${lang}/grades?studentId=${enrollment.student.id}`}>
+                          <Link
+                            href={`/${lang}/grades?studentId=${enrollment.student.id}`}
+                          >
                             <GraduationCap className="mr-1 h-3 w-3" />
                             {t.viewGrades}
                           </Link>

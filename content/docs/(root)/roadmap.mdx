@@ -13,52 +13,42 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ## URL Inventory Overview
 
-<div className="overflow-x-auto my-6">
-| Feature Group | Routes | Status | Completion |
-|--------------|--------|--------|------------|
-| Authentication | 6 | Ready | 100% |
-| Onboarding | 19 | Ready | 95% |
-| Admission Portal | 12 | Ready | 90% |
-| Dashboard | 2 | Ready | 90% |
-| Students | 10 | Ready | 90% |
-| Teachers | 7 | Ready | 90% |
-| Classes | 7 | Ready | 90% |
-| Subjects | 1 | Ready | 95% |
-| Attendance | 14 | Ready | 90% |
-| Exams | 24 | Ready | 95% |
-| Grades | 2 | Ready | 85% |
-| Timetable | 9 | Ready | 95% |
-| Announcements | 3 | Ready | 90% |
-| Events | 7 | Ready | 80% |
-| Finance | 18 | Ready | 75% |
-| School Settings | 14 | Ready | 85% |
-| Parents | 2 | Ready | 90% |
-| Profile | 6 | Ready | 80% |
-| Admission Admin | 5 | Ready | 95% |
-| Library | 7 | Ready | 75% |
-| Notifications | 2 | Ready | 80% |
-| Marketing Site | 6 | Ready | 90% |
-| Operator Admin | 14 | Ready | 85% |
+<div className="my-6 overflow-x-auto">
+  | Feature Group | Routes | Status | Completion |
+  |--------------|--------|--------|------------| | Authentication | 6 | Ready |
+  100% | | Onboarding | 19 | Ready | 95% | | Admission Portal | 12 | Ready | 90%
+  | | Dashboard | 2 | Ready | 90% | | Students | 10 | Ready | 90% | | Teachers |
+  7 | Ready | 90% | | Classes | 7 | Ready | 90% | | Subjects | 1 | Ready | 95% |
+  | Attendance | 14 | Ready | 90% | | Exams | 24 | Ready | 95% | | Grades | 2 |
+  Ready | 85% | | Timetable | 9 | Ready | 95% | | Announcements | 3 | Ready |
+  90% | | Events | 7 | Ready | 80% | | Finance | 18 | Ready | 75% | | School
+  Settings | 14 | Ready | 85% | | Parents | 2 | Ready | 90% | | Profile | 6 |
+  Ready | 80% | | Admission Admin | 5 | Ready | 95% | | Library | 7 | Ready |
+  75% | | Notifications | 2 | Ready | 80% | | Marketing Site | 6 | Ready | 90% |
+  | Operator Admin | 14 | Ready | 85% |
 </div>
 
 ---
 
 ## Critical Blockers (4) - ALL RESOLVED ✅
 
-<div className="p-4 border-l-4 border-green-500 my-6">
-  <p className="font-semibold text-green-600">All 4 blockers have been resolved - MVP is ready to ship!</p>
+<div className="my-6 border-l-4 border-green-500 p-4">
+  <p className="font-semibold text-green-600">
+    All 4 blockers have been resolved - MVP is ready to ship!
+  </p>
 </div>
 
 ### Blocker 1: Password Reset ✅ FIXED
 
-| Property | Value |
-|----------|-------|
-| **URLs** | `/[lang]/(auth)/reset`, `/[lang]/(auth)/new-password` |
-| **Status** | ✅ FIXED - Locale handling corrected |
-| **Impact** | Resolved - Users can recover accounts |
-| **Files** | `src/components/auth/reset-password/`, `src/auth.ts` |
+| Property   | Value                                                 |
+| ---------- | ----------------------------------------------------- |
+| **URLs**   | `/[lang]/(auth)/reset`, `/[lang]/(auth)/new-password` |
+| **Status** | ✅ FIXED - Locale handling corrected                  |
+| **Impact** | Resolved - Users can recover accounts                 |
+| **Files**  | `src/components/auth/reset-password/`, `src/auth.ts`  |
 
 **Resolution:**
+
 - Fixed locale parameter handling in password reset flow
 - Token generation and validation working correctly
 - Email delivery via Resend operational
@@ -67,14 +57,15 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 2: Guardian Linking ✅ FIXED
 
-| Property | Value |
-|----------|-------|
-| **URLs** | `/[lang]/s/[subdomain]/(platform)/students/[id]` (Guardian tab) |
-| **Status** | ✅ FIXED - Schema updated, server actions implemented |
-| **Impact** | Resolved - Parents can be linked to students |
-| **Files** | `src/components/platform/students/guardian-tab/` |
+| Property   | Value                                                           |
+| ---------- | --------------------------------------------------------------- |
+| **URLs**   | `/[lang]/s/[subdomain]/(platform)/students/[id]` (Guardian tab) |
+| **Status** | ✅ FIXED - Schema updated, server actions implemented           |
+| **Impact** | Resolved - Parents can be linked to students                    |
+| **Files**  | `src/components/platform/students/guardian-tab/`                |
 
 **Resolution:**
+
 - Schema fix applied for guardian relationships
 - Server actions for link/unlink working
 - Guardian modal fully operational
@@ -84,14 +75,15 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 3: Academic Year Setup ✅ FIXED
 
-| Property | Value |
-|----------|-------|
-| **URLs** | `/[lang]/s/[subdomain]/(platform)/school/academic` |
-| **Status** | ✅ COMPLETE - 5 entities fully implemented |
-| **Impact** | Resolved - Full academic configuration available |
-| **Files** | `src/components/platform/settings/academic-year/` |
+| Property   | Value                                              |
+| ---------- | -------------------------------------------------- |
+| **URLs**   | `/[lang]/s/[subdomain]/(platform)/school/academic` |
+| **Status** | ✅ COMPLETE - 5 entities fully implemented         |
+| **Impact** | Resolved - Full academic configuration available   |
+| **Files**  | `src/components/platform/settings/academic-year/`  |
 
 **Resolution:**
+
 - SchoolYear CRUD fully implemented
 - Term configuration with start/end dates
 - Period management working
@@ -102,14 +94,15 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### Blocker 4: Teacher-Class Assignment ✅ FIXED
 
-| Property | Value |
-|----------|-------|
-| **URLs** | `/[lang]/s/[subdomain]/(platform)/classes` |
+| Property   | Value                                                     |
+| ---------- | --------------------------------------------------------- |
+| **URLs**   | `/[lang]/s/[subdomain]/(platform)/classes`                |
 | **Status** | ✅ FIXED - ClassTeacher UI and server actions implemented |
-| **Impact** | Resolved - Subject teachers can be assigned to classes |
-| **Files** | `src/components/platform/classes/` |
+| **Impact** | Resolved - Subject teachers can be assigned to classes    |
+| **Files**  | `src/components/platform/classes/`                        |
 
 **Resolution:**
+
 - ClassTeacher many-to-many relationship implemented
 - Teacher assignment UI in class form working
 - Subject teachers can be assigned per class
@@ -121,15 +114,13 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 1. Authentication (6 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status | Issues |
-|-----|------|--------|--------|
-| `/[lang]/(auth)/login` | Login | Ready | - |
-| `/[lang]/(auth)/join` | Registration | Ready | - |
-| `/[lang]/(auth)/reset` | Password Reset | Ready | ✅ Fixed |
-| `/[lang]/(auth)/new-password` | New Password | Ready | ✅ Fixed |
-| `/[lang]/(auth)/new-verification` | Email Verify | Ready | - |
-| `/[lang]/(auth)/error` | Auth Error | Ready | - |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | Issues | |-----|------|--------|--------| |
+  `/[lang]/(auth)/login` | Login | Ready | - | | `/[lang]/(auth)/join` |
+  Registration | Ready | - | | `/[lang]/(auth)/reset` | Password Reset | Ready |
+  ✅ Fixed | | `/[lang]/(auth)/new-password` | New Password | Ready | ✅ Fixed |
+  | `/[lang]/(auth)/new-verification` | Email Verify | Ready | - | |
+  `/[lang]/(auth)/error` | Auth Error | Ready | - |
 </div>
 
 **Completion:** 100% (6/6 routes working)
@@ -139,28 +130,26 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 2. Onboarding (19 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/onboarding` | Start | Ready |
-| `/[lang]/onboarding/overview` | Overview | Ready |
-| `/[lang]/onboarding/apply` | Apply | Ready |
-| `/[lang]/onboarding/[id]/about-school` | About School | Ready |
-| `/[lang]/onboarding/[id]/description` | Description | Ready |
-| `/[lang]/onboarding/[id]/title` | Title | Ready |
-| `/[lang]/onboarding/[id]/location` | Location | Ready |
-| `/[lang]/onboarding/[id]/branding` | Branding | Ready |
-| `/[lang]/onboarding/[id]/legal` | Legal | Ready |
-| `/[lang]/onboarding/[id]/subdomain` | Subdomain | Ready |
-| `/[lang]/onboarding/[id]/price` | Price | Ready |
-| `/[lang]/onboarding/[id]/discount` | Discount | Ready |
-| `/[lang]/onboarding/[id]/capacity` | Capacity | Ready |
-| `/[lang]/onboarding/[id]/stand-out` | Stand Out | Ready |
-| `/[lang]/onboarding/[id]/visibility` | Visibility | Ready |
-| `/[lang]/onboarding/[id]/import` | Import | Ready |
-| `/[lang]/onboarding/[id]/join` | Join | Ready |
-| `/[lang]/onboarding/[id]/finish-setup` | Finish Setup | Ready |
-| `/[lang]/onboarding/[id]/congratulations` | Congrats | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| | `/[lang]/onboarding` | Start
+  | Ready | | `/[lang]/onboarding/overview` | Overview | Ready | |
+  `/[lang]/onboarding/apply` | Apply | Ready | |
+  `/[lang]/onboarding/[id]/about-school` | About School | Ready | |
+  `/[lang]/onboarding/[id]/description` | Description | Ready | |
+  `/[lang]/onboarding/[id]/title` | Title | Ready | |
+  `/[lang]/onboarding/[id]/location` | Location | Ready | |
+  `/[lang]/onboarding/[id]/branding` | Branding | Ready | |
+  `/[lang]/onboarding/[id]/legal` | Legal | Ready | |
+  `/[lang]/onboarding/[id]/subdomain` | Subdomain | Ready | |
+  `/[lang]/onboarding/[id]/price` | Price | Ready | |
+  `/[lang]/onboarding/[id]/discount` | Discount | Ready | |
+  `/[lang]/onboarding/[id]/capacity` | Capacity | Ready | |
+  `/[lang]/onboarding/[id]/stand-out` | Stand Out | Ready | |
+  `/[lang]/onboarding/[id]/visibility` | Visibility | Ready | |
+  `/[lang]/onboarding/[id]/import` | Import | Ready | |
+  `/[lang]/onboarding/[id]/join` | Join | Ready | |
+  `/[lang]/onboarding/[id]/finish-setup` | Finish Setup | Ready | |
+  `/[lang]/onboarding/[id]/congratulations` | Congrats | Ready |
 </div>
 
 **Completion:** 95% (18/19 routes working)
@@ -170,21 +159,20 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 3. Admission Portal (12 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(site)/apply` | Apply Home | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]` | Application Start | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/overview` | Overview | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/continue` | Continue | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/status` | Status | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/personal` | Personal Info | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/academic` | Academic | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/guardian` | Guardian Info | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/contact` | Contact | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/documents` | Documents | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/review` | Review | Ready |
-| `/[lang]/s/[subdomain]/(site)/apply/[id]/success` | Success | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(site)/apply` | Apply Home | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]` | Application Start | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/overview` | Overview | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/continue` | Continue | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/status` | Status | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/personal` | Personal Info | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/academic` | Academic | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/guardian` | Guardian Info | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/contact` | Contact | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/documents` | Documents | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/review` | Review | Ready | |
+  `/[lang]/s/[subdomain]/(site)/apply/[id]/success` | Success | Ready |
 </div>
 
 **Completion:** 90%
@@ -194,11 +182,11 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 4. Dashboard (2 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/dashboard` | Dashboard Home | Ready |
-| `/[lang]/s/[subdomain]/(platform)/dashboard/settings` | Dashboard Settings | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/dashboard` | Dashboard Home | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/dashboard/settings` | Dashboard Settings |
+  Ready |
 </div>
 
 **Completion:** 85%
@@ -208,19 +196,20 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 5. Students (10 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status | Issues |
-|-----|------|--------|--------|
-| `/[lang]/s/[subdomain]/(platform)/students` | Students List | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/manage` | Manage | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/enroll` | Enroll | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/settings` | Settings | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/performance` | Performance | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/analysis` | Analysis | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/reports` | Reports | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/students/guardians` | Guardians | Ready | ✅ Fixed |
-| `/[lang]/s/[subdomain]/(platform)/students/[id]` | Student Detail | Ready | ✅ Fixed |
-| `/[lang]/s/[subdomain]/(platform)/students/year-levels` | Year Levels | Ready | - |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | Issues | |-----|------|--------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/students` | Students List | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/students/manage` | Manage | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/students/enroll` | Enroll | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/students/settings` | Settings | Ready | - |
+  | `/[lang]/s/[subdomain]/(platform)/students/performance` | Performance |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/analysis` | Analysis
+  | Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/reports` | Reports
+  | Ready | - | | `/[lang]/s/[subdomain]/(platform)/students/guardians` |
+  Guardians | Ready | ✅ Fixed | |
+  `/[lang]/s/[subdomain]/(platform)/students/[id]` | Student Detail | Ready | ✅
+  Fixed | | `/[lang]/s/[subdomain]/(platform)/students/year-levels` | Year
+  Levels | Ready | - |
 </div>
 
 **Completion:** 90%
@@ -230,16 +219,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 6. Teachers (7 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/teachers` | Teachers List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/add` | Add Teacher | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/settings` | Settings | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]` | Teacher Detail | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/departments` | Departments | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/schedule` | Schedule | Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/performance` | Performance | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/teachers` | Teachers List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/teachers/add` | Add Teacher | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/teachers/settings` | Settings | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/teachers/[id]` | Teacher Detail | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/teachers/departments` | Departments | Ready
+  | | `/[lang]/s/[subdomain]/(platform)/teachers/schedule` | Schedule | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/teachers/performance` | Performance |
+  Ready |
 </div>
 
 **Completion:** 90%
@@ -249,16 +238,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 7. Classes (7 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status | Issues |
-|-----|------|--------|--------|
-| `/[lang]/s/[subdomain]/(platform)/classes` | Classes List | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/classes/create` | Create Class | Ready | ✅ Fixed |
-| `/[lang]/s/[subdomain]/(platform)/classes/[id]` | Class Detail | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/classes/settings` | Settings | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/classes/schedule` | Schedule | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/classes/capacity` | Capacity | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/classes/subjects` | Subjects | Ready | ✅ Fixed |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | Issues | |-----|------|--------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/classes` | Classes List | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/classes/create` | Create Class | Ready | ✅
+  Fixed | | `/[lang]/s/[subdomain]/(platform)/classes/[id]` | Class Detail |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/settings` | Settings |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/schedule` | Schedule |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/capacity` | Capacity |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/classes/subjects` | Subjects |
+  Ready | ✅ Fixed |
 </div>
 
 **Completion:** 90%
@@ -268,10 +257,9 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 8. Subjects (1 URL)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/subjects` | Subjects List | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/subjects` | Subjects List | Ready |
 </div>
 
 **Completion:** 90%
@@ -281,23 +269,24 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 9. Attendance (14 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/attendance` | Attendance Home | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/manual` | Manual Entry | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/qr-code` | QR Code | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/barcode` | Barcode | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/geo` | Geolocation | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/bulk-upload` | Bulk Upload | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/analytics` | Analytics | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/attendance/analysis` | Analysis | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/attendance/reports` | Reports | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/attendance/recent` | Recent | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/bulk` | Bulk Management | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/settings` | Settings | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/config` | Config | Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/interventions` | Interventions | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/attendance` | Attendance Home | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/manual` | Manual Entry | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/attendance/qr-code` | QR Code | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/barcode` | Barcode | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/geo` | Geolocation | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/bulk-upload` | Bulk Upload |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/attendance/analytics` | Analytics
+  | In Progress | | `/[lang]/s/[subdomain]/(platform)/attendance/analysis` |
+  Analysis | In Progress | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/reports` | Reports | In Progress
+  | | `/[lang]/s/[subdomain]/(platform)/attendance/recent` | Recent | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/bulk` | Bulk Management | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/attendance/settings` | Settings | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/attendance/config` | Config | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/attendance/interventions` | Interventions |
+  Ready |
 </div>
 
 **Completion:** 85%
@@ -307,33 +296,37 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 10. Exams (24 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/exams` | Exams List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/new` | New Exam | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/[id]` | Exam Detail | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/[id]/edit` | Edit Exam | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/[id]/take` | Take Exam | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/upcoming` | Upcoming | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark` | Mark Page | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark/pending` | Mark Pending | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark/bulk/[id]` | Bulk Mark | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]` | Grade Exam | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark/questions` | Mark Questions | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result` | Results List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result/[id]` | Result Detail | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/analytics` | Result Analytics | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result/analytics` | Results Analytics | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result/recent` | Recent Results | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/pdf/batch` | PDF Batch | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/qbank` | Question Bank | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/qbank/new` | New Question | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/qbank/[id]` | Question Detail | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/qbank/ai-generate` | AI Generate | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/generate` | Generate Exams | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Templates | Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/generate/templates/[id]` | Template Detail | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/exams` | Exams List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/new` | New Exam | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/[id]` | Exam Detail | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/[id]/edit` | Edit Exam | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/[id]/take` | Take Exam | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/upcoming` | Upcoming | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/mark` | Mark Page | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/mark/pending` | Mark Pending | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/exams/mark/bulk/[id]` | Bulk Mark | Ready
+  | | `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]` | Grade Exam |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/mark/questions` | Mark
+  Questions | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result` |
+  Results List | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result/[id]`
+  | Result Detail | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/analytics` | Result
+  Analytics | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/result/analytics` | Results Analytics
+  | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/result/recent` | Recent
+  Results | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/result/[id]/pdf/batch` | PDF Batch |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank` | Question Bank |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/new` | New Question |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/[id]` | Question
+  Detail | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/qbank/ai-generate`
+  | AI Generate | Ready | | `/[lang]/s/[subdomain]/(platform)/exams/generate` |
+  Generate Exams | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Templates |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/exams/generate/templates/[id]` |
+  Template Detail | Ready |
 </div>
 
 **Completion:** 95%
@@ -343,11 +336,10 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 11. Grades (2 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/grades` | Grades List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/grades/[id]` | Grade Detail | In Progress |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/grades` | Grades List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/grades/[id]` | Grade Detail | In Progress |
 </div>
 
 **Completion:** 75%
@@ -357,18 +349,18 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 12. Timetable (9 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/timetable` | Timetable Home | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/by-class` | By Class | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/by-teacher` | By Teacher | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/by-room` | By Room | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/generate` | Generate | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/conflicts` | Conflicts | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/settings` | Settings | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/templates` | Templates | Ready |
-| `/[lang]/s/[subdomain]/(platform)/timetable/analytics` | Analytics | In Progress |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/timetable` | Timetable Home | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/by-class` | By Class | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/by-teacher` | By Teacher | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/timetable/by-room` | By Room | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/generate` | Generate | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/conflicts` | Conflicts | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/settings` | Settings | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/templates` | Templates | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/timetable/analytics` | Analytics | In
+  Progress |
 </div>
 
 **Completion:** 95%
@@ -378,12 +370,11 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 13. Announcements (3 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/announcements` | List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/announcements/archived` | Archived | Ready |
-| `/[lang]/s/[subdomain]/(platform)/announcements/config` | Config | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/announcements` | List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/announcements/archived` | Archived | Ready |
+  | `/[lang]/s/[subdomain]/(platform)/announcements/config` | Config | Ready |
 </div>
 
 **Completion:** 85%
@@ -393,16 +384,16 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 14. Events (7 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/events` | Events List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/events/create` | Create Event | Ready |
-| `/[lang]/s/[subdomain]/(platform)/events/calendar` | Calendar | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/events/categories` | Categories | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/events/attendance` | Attendance | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/events/recurring` | Recurring | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/events/settings` | Settings | In Progress |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/events` | Events List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/events/create` | Create Event | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/events/calendar` | Calendar | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/events/categories` | Categories | In
+  Progress | | `/[lang]/s/[subdomain]/(platform)/events/attendance` | Attendance
+  | In Progress | | `/[lang]/s/[subdomain]/(platform)/events/recurring` |
+  Recurring | In Progress | | `/[lang]/s/[subdomain]/(platform)/events/settings`
+  | Settings | In Progress |
 </div>
 
 **Completion:** 70%
@@ -412,23 +403,23 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 15. Finance (18 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/finance` | Finance Home | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/dashboard` | Dashboard | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/fees` | Fees | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/salary` | Salary | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/expenses` | Expenses | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/receipt` | Receipt | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/banking` | Banking | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/budget` | Budget | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/accounts` | Accounts | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/payroll` | Payroll | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/timesheet` | Timesheet | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/wallet` | Wallet | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/reports` | Reports | In Progress |
-| `/[lang]/s/[subdomain]/(platform)/finance/invoice/*` | Invoice (8 routes) | In Progress |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/finance` | Finance Home | In Progress | |
+  `/[lang]/s/[subdomain]/(platform)/finance/dashboard` | Dashboard | In Progress
+  | | `/[lang]/s/[subdomain]/(platform)/finance/fees` | Fees | In Progress | |
+  `/[lang]/s/[subdomain]/(platform)/finance/salary` | Salary | In Progress | |
+  `/[lang]/s/[subdomain]/(platform)/finance/expenses` | Expenses | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/finance/receipt` | Receipt | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/finance/banking` | Banking | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/finance/budget` | Budget | In Progress | |
+  `/[lang]/s/[subdomain]/(platform)/finance/accounts` | Accounts | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/finance/payroll` | Payroll | In Progress |
+  | `/[lang]/s/[subdomain]/(platform)/finance/timesheet` | Timesheet | In
+  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/wallet` | Wallet | In
+  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/reports` | Reports | In
+  Progress | | `/[lang]/s/[subdomain]/(platform)/finance/invoice/*` | Invoice (8
+  routes) | In Progress |
 </div>
 
 **Completion:** 50%
@@ -438,22 +429,24 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 16. School Settings (14 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status | Issues |
-|-----|------|--------|--------|
-| `/[lang]/s/[subdomain]/(platform)/school` | School Home | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/academic` | Academic Year | Ready | ✅ Fixed - 5 entities |
-| `/[lang]/s/[subdomain]/(platform)/school/billing` | Billing | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/configuration` | Configuration | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/security` | Security | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/communication` | Communication | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/membership` | Membership | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/subscription` | Subscription | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/integration` | Integration | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/bulk` | Bulk Operations | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/reports` | Reports | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/system` | System | Ready | - |
-| `/[lang]/s/[subdomain]/(platform)/school/analysis` | Analysis | Ready | - |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | Issues | |-----|------|--------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/school` | School Home | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/academic` | Academic Year | Ready |
+  ✅ Fixed - 5 entities | | `/[lang]/s/[subdomain]/(platform)/school/billing` |
+  Billing | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/configuration` | Configuration |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/security` | Security |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/communication` |
+  Communication | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/membership` | Membership | Ready | -
+  | | `/[lang]/s/[subdomain]/(platform)/school/subscription` | Subscription |
+  Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/integration` |
+  Integration | Ready | - | | `/[lang]/s/[subdomain]/(platform)/school/bulk` |
+  Bulk Operations | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/reports` | Reports | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/system` | System | Ready | - | |
+  `/[lang]/s/[subdomain]/(platform)/school/analysis` | Analysis | Ready | - |
 </div>
 
 **Completion:** 85%
@@ -463,11 +456,10 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 17. Parents (2 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/parents` | Parents List | Ready |
-| `/[lang]/s/[subdomain]/(platform)/parents/[id]` | Parent Detail | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/parents` | Parents List | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/parents/[id]` | Parent Detail | Ready |
 </div>
 
 **Completion:** 90%
@@ -477,14 +469,13 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 18. Admission Admin (5 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/admission` | Admission Home | Ready |
-| `/[lang]/s/[subdomain]/(platform)/admission/applications` | Applications | Ready |
-| `/[lang]/s/[subdomain]/(platform)/admission/enrollment` | Enrollment | Ready |
-| `/[lang]/s/[subdomain]/(platform)/admission/merit` | Merit | Ready |
-| `/[lang]/s/[subdomain]/(platform)/admission/settings` | Settings | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(platform)/admission` | Admission Home | Ready | |
+  `/[lang]/s/[subdomain]/(platform)/admission/applications` | Applications |
+  Ready | | `/[lang]/s/[subdomain]/(platform)/admission/enrollment` | Enrollment
+  | Ready | | `/[lang]/s/[subdomain]/(platform)/admission/merit` | Merit | Ready
+  | | `/[lang]/s/[subdomain]/(platform)/admission/settings` | Settings | Ready |
 </div>
 
 **Completion:** 90%
@@ -494,16 +485,15 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 19. Public School Site (7 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(site)/` | School Homepage | Ready |
-| `/[lang]/s/[subdomain]/(site)/about` | About | Ready |
-| `/[lang]/s/[subdomain]/(site)/academic` | Academic Info | Ready |
-| `/[lang]/s/[subdomain]/(site)/admissions` | Admissions Info | Ready |
-| `/[lang]/s/[subdomain]/(site)/inquiry` | Inquiry Form | Ready |
-| `/[lang]/s/[subdomain]/(site)/tour` | Tour Booking | Ready |
-| `/[lang]/s/[subdomain]/(site)/tour/[bookingId]` | Booking Detail | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| |
+  `/[lang]/s/[subdomain]/(site)/` | School Homepage | Ready | |
+  `/[lang]/s/[subdomain]/(site)/about` | About | Ready | |
+  `/[lang]/s/[subdomain]/(site)/academic` | Academic Info | Ready | |
+  `/[lang]/s/[subdomain]/(site)/admissions` | Admissions Info | Ready | |
+  `/[lang]/s/[subdomain]/(site)/inquiry` | Inquiry Form | Ready | |
+  `/[lang]/s/[subdomain]/(site)/tour` | Tour Booking | Ready | |
+  `/[lang]/s/[subdomain]/(site)/tour/[bookingId]` | Booking Detail | Ready |
 </div>
 
 **Completion:** 85%
@@ -513,15 +503,13 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### 20. Marketing Site (6 URLs)
 
-<div className="overflow-x-auto my-4">
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/(marketing)/` | Homepage | Ready |
-| `/[lang]/(marketing)/blog` | Blog | Ready |
-| `/[lang]/(marketing)/pricing` | Pricing | Ready |
-| `/[lang]/(marketing)/features` | Features | Ready |
-| `/[lang]/(marketing)/features/[id]` | Feature Detail | Ready |
-| `/[lang]/(marketing)/docs/[[...slug]]` | Documentation | Ready |
+<div className="my-4 overflow-x-auto">
+  | URL | Page | Status | |-----|------|--------| | `/[lang]/(marketing)/` |
+  Homepage | Ready | | `/[lang]/(marketing)/blog` | Blog | Ready | |
+  `/[lang]/(marketing)/pricing` | Pricing | Ready | |
+  `/[lang]/(marketing)/features` | Features | Ready | |
+  `/[lang]/(marketing)/features/[id]` | Feature Detail | Ready | |
+  `/[lang]/(marketing)/docs/[[...slug]]` | Documentation | Ready |
 </div>
 
 **Completion:** 85%
@@ -531,22 +519,22 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ## Quality Metrics
 
-<div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
-  <div className="p-4 border rounded-lg text-center">
+<div className="my-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+  <div className="rounded-lg border p-4 text-center">
     <p className="text-2xl font-bold text-green-600">38</p>
-    <p className="text-xs text-muted-foreground">Error Boundaries</p>
+    <p className="text-muted-foreground text-xs">Error Boundaries</p>
   </div>
-  <div className="p-4 border rounded-lg text-center">
+  <div className="rounded-lg border p-4 text-center">
     <p className="text-2xl font-bold text-blue-600">800+</p>
-    <p className="text-xs text-muted-foreground">i18n Keys</p>
+    <p className="text-muted-foreground text-xs">i18n Keys</p>
   </div>
-  <div className="p-4 border rounded-lg text-center">
+  <div className="rounded-lg border p-4 text-center">
     <p className="text-2xl font-bold text-purple-600">15</p>
-    <p className="text-xs text-muted-foreground">Test Files (target: 50)</p>
+    <p className="text-muted-foreground text-xs">Test Files (target: 50)</p>
   </div>
-  <div className="p-4 border rounded-lg text-center">
+  <div className="rounded-lg border p-4 text-center">
     <p className="text-2xl font-bold text-green-600">100%</p>
-    <p className="text-xs text-muted-foreground">Tenant Scoped</p>
+    <p className="text-muted-foreground text-xs">Tenant Scoped</p>
   </div>
 </div>
 
@@ -556,45 +544,65 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ### MVP Launch Ready When:
 
-<div className="space-y-2 my-6">
+<div className="my-6 space-y-2">
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Blocker 1: Password reset flow fixed</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Blocker 2: Guardian linking works</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Blocker 3: Academic year/term setup complete</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Blocker 4: Teacher-class assignment works</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded border flex items-center justify-center text-xs">☐</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded border text-xs">
+      ☐
+    </span>
     <span>50 test files on critical paths</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Zero critical security vulnerabilities</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Full mobile-responsive design (375px - 1440px)</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Error boundaries in place (97+ loading.tsx)</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>i18n complete (800+ keys)</span>
   </div>
   <div className="flex items-center gap-2">
-    <span className="w-5 h-5 rounded-md bg-green-100 flex items-center justify-center text-xs text-green-600">✓</span>
+    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-green-100 text-xs text-green-600">
+      ✓
+    </span>
     <span>Multi-tenant isolation (100% schoolId scoped)</span>
   </div>
 </div>
@@ -603,13 +611,13 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ## Deferred to Post-MVP
 
-| Feature | Reason | Priority |
-|---------|--------|----------|
-| Stripe Integration | Manual payments acceptable | HIGH |
-| School Setup Wizard | Developer-assisted onboarding | MEDIUM |
-| Finance Full Implementation | Manual tracking acceptable | MEDIUM |
-| UI Component Tests | Critical paths covered | LOW |
-| E2E Test Expansion | 15 existing tests sufficient | MEDIUM |
+| Feature                     | Reason                        | Priority |
+| --------------------------- | ----------------------------- | -------- |
+| Stripe Integration          | Manual payments acceptable    | HIGH     |
+| School Setup Wizard         | Developer-assisted onboarding | MEDIUM   |
+| Finance Full Implementation | Manual tracking acceptable    | MEDIUM   |
+| UI Component Tests          | Critical paths covered        | LOW      |
+| E2E Test Expansion          | 15 existing tests sufficient  | MEDIUM   |
 
 ---
 
@@ -622,4 +630,4 @@ This roadmap is organized around **actual URLs/routes** in the platform. Each fe
 
 ---
 
-*URL-centric roadmap - 255+ routes mapped, 4 critical blockers RESOLVED ✅, ~95% MVP ready to ship.*
+_URL-centric roadmap - 255+ routes mapped, 4 critical blockers RESOLVED ✅, ~95% MVP ready to ship._

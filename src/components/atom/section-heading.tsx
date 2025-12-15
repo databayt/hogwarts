@@ -1,6 +1,7 @@
-import { cn } from "@/lib/utils"
-import Link from "next/link"
 import React from "react"
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
 
 interface SectionHeadingProps {
   title: string
@@ -28,23 +29,28 @@ export default function SectionHeading({
   linkHref,
   linkTarget,
   linkIcon,
-  children
+  children,
 }: SectionHeadingProps) {
   return (
-    <div className={cn("flex flex-col items-center space-y-2 text-center pt-20", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center space-y-2 pt-20 text-center",
+        className
+      )}
+    >
       <h1
         className={cn(
-          "font-heading font-extrabold text-4xl md:text-5xl leading-[1.1]",
+          "font-heading text-4xl leading-[1.1] font-extrabold md:text-5xl",
           titleClassName
         )}
       >
         {title}
       </h1>
-      
+
       {(description || linkText) && (
-        <p 
+        <p
           className={cn(
-            "pb-8 leading-normal text-muted-foreground sm:leading-7 max-w-3xl",
+            "text-muted-foreground max-w-3xl pb-8 leading-normal sm:leading-7",
             descriptionClassName
           )}
         >
@@ -54,7 +60,7 @@ export default function SectionHeading({
               href={linkHref}
               target={linkTarget}
               rel={linkTarget === "_blank" ? "noreferrer" : undefined}
-              className="underline underline-offset-4 flex items-center justify-center text-foreground/70 hover:text-foreground"
+              className="text-foreground/70 hover:text-foreground flex items-center justify-center underline underline-offset-4"
             >
               {linkText}
               {linkIcon && <span className="ms-1">{linkIcon}</span>}
@@ -62,7 +68,7 @@ export default function SectionHeading({
           )}
         </p>
       )}
-      
+
       {children}
     </div>
   )

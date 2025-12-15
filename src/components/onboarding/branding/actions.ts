@@ -1,17 +1,19 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { 
-  requireSchoolOwnership,
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { z } from "zod"
+
+import {
   createActionResponse,
-  type ActionResponse 
-} from "@/lib/auth-security";
-import { brandingSchema } from "./validation";
+  requireSchoolOwnership,
+  type ActionResponse,
+} from "@/lib/auth-security"
+import { db } from "@/lib/db"
 
-export type BrandingFormData = z.infer<typeof brandingSchema>;
+import { brandingSchema } from "./validation"
+
+export type BrandingFormData = z.infer<typeof brandingSchema>
 
 export async function updateSchoolBranding(
   schoolId: string,
@@ -19,9 +21,9 @@ export async function updateSchoolBranding(
 ): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
-    const validatedData = brandingSchema.parse(data);
+    const validatedData = brandingSchema.parse(data)
 
     // Update school branding in database
     const updatedSchool = await db.school.update({
@@ -33,24 +35,26 @@ export async function updateSchoolBranding(
         // Store in available fields temporarily
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath(`/onboarding/${schoolId}/branding`);
-    
-    return createActionResponse(updatedSchool);
+    revalidatePath(`/onboarding/${schoolId}/branding`)
+
+    return createActionResponse(updatedSchool)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createActionResponse(undefined, error);
+      return createActionResponse(undefined, error)
     }
-    
-    return createActionResponse(undefined, error);
+
+    return createActionResponse(undefined, error)
   }
 }
 
-export async function getSchoolBranding(schoolId: string): Promise<ActionResponse> {
+export async function getSchoolBranding(
+  schoolId: string
+): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -59,10 +63,10 @@ export async function getSchoolBranding(schoolId: string): Promise<ActionRespons
         logoUrl: true,
         name: true,
       },
-    });
+    })
 
     if (!school) {
-      throw new Error("School not found");
+      throw new Error("School not found")
     }
 
     return createActionResponse({
@@ -71,22 +75,22 @@ export async function getSchoolBranding(schoolId: string): Promise<ActionRespons
       primaryColor: "#000000", // Default values since not in schema
       secondaryColor: "#ffffff",
       tagline: "",
-    });
+    })
   } catch (error) {
-    return createActionResponse(undefined, error);
+    return createActionResponse(undefined, error)
   }
 }
 
 export async function proceedToNext(schoolId: string) {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
-    revalidatePath(`/onboarding/${schoolId}`);
+    revalidatePath(`/onboarding/${schoolId}`)
   } catch (error) {
-    console.error("Error proceeding to next step:", error);
-    throw error;
+    console.error("Error proceeding to next step:", error)
+    throw error
   }
 
-  redirect(`/onboarding/${schoolId}/import`);
+  redirect(`/onboarding/${schoolId}/import`)
 }

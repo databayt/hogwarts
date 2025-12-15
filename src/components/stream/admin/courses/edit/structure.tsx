@@ -1,20 +1,18 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useTransition } from "react"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ChevronDown,
+  FileText,
+  GripVertical,
+  Loader2,
+  Pencil,
+  PlusIcon,
+  Trash2,
+  Video,
+} from "lucide-react"
+import { toast } from "sonner"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,119 +23,125 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
-import { SortableList } from "@/components/stream/shared/sortable-list";
+} from "@/components/ui/collapsible"
 import {
-  PlusIcon,
-  ChevronDown,
-  GripVertical,
-  Pencil,
-  Trash2,
-  Video,
-  FileText,
-  Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { SortableList } from "@/components/stream/shared/sortable-list"
+
 import {
   createChapter,
-  updateChapter,
-  deleteChapter,
-  reorderChapters,
   createLesson,
-  updateLesson,
+  deleteChapter,
   deleteLesson,
+  reorderChapters,
   reorderLessons,
-} from "./actions";
+  updateChapter,
+  updateLesson,
+} from "./actions"
 
 interface Lesson {
-  id: string;
-  title: string;
-  description: string | null;
-  videoUrl: string | null;
-  position: number;
-  isPublished: boolean;
-  isFree: boolean;
-  duration: number | null;
+  id: string
+  title: string
+  description: string | null
+  videoUrl: string | null
+  position: number
+  isPublished: boolean
+  isFree: boolean
+  duration: number | null
 }
 
 interface Chapter {
-  id: string;
-  title: string;
-  description: string | null;
-  position: number;
-  isPublished: boolean;
-  isFree: boolean;
-  lessons: Lesson[];
+  id: string
+  title: string
+  description: string | null
+  position: number
+  isPublished: boolean
+  isFree: boolean
+  lessons: Lesson[]
 }
 
 interface CourseStructureProps {
   data: {
-    id: string;
-    title: string;
-    chapters: Chapter[];
-  };
+    id: string
+    title: string
+    chapters: Chapter[]
+  }
 }
 
 export function CourseStructure({ data }: CourseStructureProps) {
-  const [chapters, setChapters] = useState<Chapter[]>(data.chapters || []);
-  const [isPending, startTransition] = useTransition();
+  const [chapters, setChapters] = useState<Chapter[]>(data.chapters || [])
+  const [isPending, startTransition] = useTransition()
 
   // Chapter state
-  const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false);
-  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
-  const [chapterTitle, setChapterTitle] = useState("");
+  const [isChapterDialogOpen, setIsChapterDialogOpen] = useState(false)
+  const [editingChapter, setEditingChapter] = useState<Chapter | null>(null)
+  const [chapterTitle, setChapterTitle] = useState("")
 
   // Lesson state
-  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
-  const [lessonTitle, setLessonTitle] = useState("");
-  const [lessonDescription, setLessonDescription] = useState("");
-  const [lessonVideoUrl, setLessonVideoUrl] = useState("");
+  const [isLessonDialogOpen, setIsLessonDialogOpen] = useState(false)
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(
+    null
+  )
+  const [lessonTitle, setLessonTitle] = useState("")
+  const [lessonDescription, setLessonDescription] = useState("")
+  const [lessonVideoUrl, setLessonVideoUrl] = useState("")
 
   // Expanded chapters
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(
     new Set(chapters.map((c) => c.id))
-  );
+  )
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters((prev) => {
-      const next = new Set(prev);
+      const next = new Set(prev)
       if (next.has(chapterId)) {
-        next.delete(chapterId);
+        next.delete(chapterId)
       } else {
-        next.add(chapterId);
+        next.add(chapterId)
       }
-      return next;
-    });
-  };
+      return next
+    })
+  }
 
   // ==========================================
   // CHAPTER HANDLERS
   // ==========================================
 
   const handleCreateChapter = () => {
-    setEditingChapter(null);
-    setChapterTitle("");
-    setIsChapterDialogOpen(true);
-  };
+    setEditingChapter(null)
+    setChapterTitle("")
+    setIsChapterDialogOpen(true)
+  }
 
   const handleEditChapter = (chapter: Chapter) => {
-    setEditingChapter(chapter);
-    setChapterTitle(chapter.title);
-    setIsChapterDialogOpen(true);
-  };
+    setEditingChapter(chapter)
+    setChapterTitle(chapter.title)
+    setIsChapterDialogOpen(true)
+  }
 
   const handleSaveChapter = () => {
     if (!chapterTitle.trim()) {
-      toast.error("Chapter title is required");
-      return;
+      toast.error("Chapter title is required")
+      return
     }
 
     startTransition(async () => {
@@ -146,43 +150,43 @@ export function CourseStructure({ data }: CourseStructureProps) {
           // Update existing chapter
           const result = await updateChapter(editingChapter.id, {
             title: chapterTitle,
-          });
+          })
 
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
 
           setChapters((prev) =>
             prev.map((c) =>
               c.id === editingChapter.id ? { ...c, title: chapterTitle } : c
             )
-          );
-          toast.success("Chapter updated");
+          )
+          toast.success("Chapter updated")
         } else {
           // Create new chapter
           const result = await createChapter({
             title: chapterTitle,
             courseId: data.id,
-          });
+          })
 
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
 
-          toast.success("Chapter created");
+          toast.success("Chapter created")
           // Refresh will happen via revalidation
         }
 
-        setIsChapterDialogOpen(false);
-        setChapterTitle("");
-        setEditingChapter(null);
+        setIsChapterDialogOpen(false)
+        setChapterTitle("")
+        setEditingChapter(null)
       } catch {
-        toast.error("Failed to save chapter");
+        toast.error("Failed to save chapter")
       }
-    });
-  };
+    })
+  }
 
   const handleDeleteChapter = (chapterId: string) => {
     startTransition(async () => {
@@ -190,74 +194,74 @@ export function CourseStructure({ data }: CourseStructureProps) {
         const result = await deleteChapter({
           chapterId,
           courseId: data.id,
-        });
+        })
 
         if (result.status === "error") {
-          toast.error(result.message);
-          return;
+          toast.error(result.message)
+          return
         }
 
-        setChapters((prev) => prev.filter((c) => c.id !== chapterId));
-        toast.success("Chapter deleted");
+        setChapters((prev) => prev.filter((c) => c.id !== chapterId))
+        toast.success("Chapter deleted")
       } catch {
-        toast.error("Failed to delete chapter");
+        toast.error("Failed to delete chapter")
       }
-    });
-  };
+    })
+  }
 
   const handleReorderChapters = (reorderedChapters: Chapter[]) => {
-    setChapters(reorderedChapters);
+    setChapters(reorderedChapters)
 
     startTransition(async () => {
       try {
         const result = await reorderChapters(
           data.id,
           reorderedChapters.map((c) => ({ id: c.id, position: c.position }))
-        );
+        )
 
         if (result.status === "error") {
-          toast.error(result.message);
+          toast.error(result.message)
           // Revert on error
-          setChapters(data.chapters);
+          setChapters(data.chapters)
         }
       } catch {
-        toast.error("Failed to reorder chapters");
-        setChapters(data.chapters);
+        toast.error("Failed to reorder chapters")
+        setChapters(data.chapters)
       }
-    });
-  };
+    })
+  }
 
   // ==========================================
   // LESSON HANDLERS
   // ==========================================
 
   const handleCreateLesson = (chapterId: string) => {
-    setSelectedChapterId(chapterId);
-    setEditingLesson(null);
-    setLessonTitle("");
-    setLessonDescription("");
-    setLessonVideoUrl("");
-    setIsLessonDialogOpen(true);
-  };
+    setSelectedChapterId(chapterId)
+    setEditingLesson(null)
+    setLessonTitle("")
+    setLessonDescription("")
+    setLessonVideoUrl("")
+    setIsLessonDialogOpen(true)
+  }
 
   const handleEditLesson = (lesson: Lesson, chapterId: string) => {
-    setSelectedChapterId(chapterId);
-    setEditingLesson(lesson);
-    setLessonTitle(lesson.title);
-    setLessonDescription(lesson.description || "");
-    setLessonVideoUrl(lesson.videoUrl || "");
-    setIsLessonDialogOpen(true);
-  };
+    setSelectedChapterId(chapterId)
+    setEditingLesson(lesson)
+    setLessonTitle(lesson.title)
+    setLessonDescription(lesson.description || "")
+    setLessonVideoUrl(lesson.videoUrl || "")
+    setIsLessonDialogOpen(true)
+  }
 
   const handleSaveLesson = () => {
     if (!lessonTitle.trim()) {
-      toast.error("Lesson title is required");
-      return;
+      toast.error("Lesson title is required")
+      return
     }
 
     if (!selectedChapterId) {
-      toast.error("Chapter not selected");
-      return;
+      toast.error("Chapter not selected")
+      return
     }
 
     startTransition(async () => {
@@ -268,11 +272,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
             title: lessonTitle,
             description: lessonDescription || null,
             videoUrl: lessonVideoUrl || null,
-          });
+          })
 
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
 
           setChapters((prev) =>
@@ -293,8 +297,8 @@ export function CourseStructure({ data }: CourseStructureProps) {
                   }
                 : c
             )
-          );
-          toast.success("Lesson updated");
+          )
+          toast.success("Lesson updated")
         } else {
           // Create new lesson
           const result = await createLesson({
@@ -303,28 +307,28 @@ export function CourseStructure({ data }: CourseStructureProps) {
             videoUrl: lessonVideoUrl || null,
             chapterId: selectedChapterId,
             courseId: data.id,
-          });
+          })
 
           if (result.status === "error") {
-            toast.error(result.message);
-            return;
+            toast.error(result.message)
+            return
           }
 
-          toast.success("Lesson created");
+          toast.success("Lesson created")
           // Refresh will happen via revalidation
         }
 
-        setIsLessonDialogOpen(false);
-        setLessonTitle("");
-        setLessonDescription("");
-        setLessonVideoUrl("");
-        setEditingLesson(null);
-        setSelectedChapterId(null);
+        setIsLessonDialogOpen(false)
+        setLessonTitle("")
+        setLessonDescription("")
+        setLessonVideoUrl("")
+        setEditingLesson(null)
+        setSelectedChapterId(null)
       } catch {
-        toast.error("Failed to save lesson");
+        toast.error("Failed to save lesson")
       }
-    });
-  };
+    })
+  }
 
   const handleDeleteLesson = (lessonId: string, chapterId: string) => {
     startTransition(async () => {
@@ -333,11 +337,11 @@ export function CourseStructure({ data }: CourseStructureProps) {
           lessonId,
           chapterId,
           courseId: data.id,
-        });
+        })
 
         if (result.status === "error") {
-          toast.error(result.message);
-          return;
+          toast.error(result.message)
+          return
         }
 
         setChapters((prev) =>
@@ -346,20 +350,23 @@ export function CourseStructure({ data }: CourseStructureProps) {
               ? { ...c, lessons: c.lessons.filter((l) => l.id !== lessonId) }
               : c
           )
-        );
-        toast.success("Lesson deleted");
+        )
+        toast.success("Lesson deleted")
       } catch {
-        toast.error("Failed to delete lesson");
+        toast.error("Failed to delete lesson")
       }
-    });
-  };
+    })
+  }
 
-  const handleReorderLessons = (chapterId: string, reorderedLessons: Lesson[]) => {
+  const handleReorderLessons = (
+    chapterId: string,
+    reorderedLessons: Lesson[]
+  ) => {
     setChapters((prev) =>
       prev.map((c) =>
         c.id === chapterId ? { ...c, lessons: reorderedLessons } : c
       )
-    );
+    )
 
     startTransition(async () => {
       try {
@@ -367,16 +374,16 @@ export function CourseStructure({ data }: CourseStructureProps) {
           chapterId,
           reorderedLessons.map((l) => ({ id: l.id, position: l.position })),
           data.id
-        );
+        )
 
         if (result.status === "error") {
-          toast.error(result.message);
+          toast.error(result.message)
         }
       } catch {
-        toast.error("Failed to reorder lessons");
+        toast.error("Failed to reorder lessons")
       }
-    });
-  };
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -388,7 +395,10 @@ export function CourseStructure({ data }: CourseStructureProps) {
             Organize your course content into chapters and lessons
           </p>
         </div>
-        <Dialog open={isChapterDialogOpen} onOpenChange={setIsChapterDialogOpen}>
+        <Dialog
+          open={isChapterDialogOpen}
+          onOpenChange={setIsChapterDialogOpen}
+        >
           <DialogTrigger asChild>
             <Button onClick={handleCreateChapter} disabled={isPending}>
               {isPending ? (
@@ -457,7 +467,9 @@ export function CourseStructure({ data }: CourseStructureProps) {
                           expandedChapters.has(chapter.id) ? "" : "-rotate-90"
                         }`}
                       />
-                      <CardTitle className="text-base">{chapter.title}</CardTitle>
+                      <CardTitle className="text-base">
+                        {chapter.title}
+                      </CardTitle>
                       <Badge variant="secondary">
                         {chapter.lessons?.length || 0} lessons
                       </Badge>
@@ -467,8 +479,8 @@ export function CourseStructure({ data }: CourseStructureProps) {
                         variant="ghost"
                         size="icon"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditChapter(chapter);
+                          e.stopPropagation()
+                          handleEditChapter(chapter)
                         }}
                         disabled={isPending}
                       >
@@ -482,7 +494,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                             onClick={(e) => e.stopPropagation()}
                             disabled={isPending}
                           >
-                            <Trash2 className="size-4 text-destructive" />
+                            <Trash2 className="text-destructive size-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -522,7 +534,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                               {lesson.videoUrl ? (
                                 <Video className="size-4 text-blue-500" />
                               ) : (
-                                <FileText className="size-4 text-muted-foreground" />
+                                <FileText className="text-muted-foreground size-4" />
                               )}
                               <span>{lesson.title}</span>
                               {lesson.isFree && (
@@ -535,7 +547,9 @@ export function CourseStructure({ data }: CourseStructureProps) {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleEditLesson(lesson, chapter.id)}
+                                onClick={() =>
+                                  handleEditLesson(lesson, chapter.id)
+                                }
                                 disabled={isPending}
                               >
                                 <Pencil className="size-3" />
@@ -547,7 +561,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                                     size="icon"
                                     disabled={isPending}
                                   >
-                                    <Trash2 className="size-3 text-destructive" />
+                                    <Trash2 className="text-destructive size-3" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -560,10 +574,15 @@ export function CourseStructure({ data }: CourseStructureProps) {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() =>
-                                        handleDeleteLesson(lesson.id, chapter.id)
+                                        handleDeleteLesson(
+                                          lesson.id,
+                                          chapter.id
+                                        )
                                       }
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     >
@@ -577,7 +596,7 @@ export function CourseStructure({ data }: CourseStructureProps) {
                         )}
                       />
                     ) : (
-                      <p className="muted text-center py-2">No lessons yet</p>
+                      <p className="muted py-2 text-center">No lessons yet</p>
                     )}
                     <Button
                       variant="outline"
@@ -665,5 +684,5 @@ export function CourseStructure({ data }: CourseStructureProps) {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

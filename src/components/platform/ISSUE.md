@@ -9,29 +9,30 @@ Track the implementation status and production readiness of all platform feature
 
 ## Overall Platform Status
 
-| Feature | Status | Admin Features | UI Complete | Data Integrity | Integration |
-|---------|--------|----------------|-------------|----------------|-------------|
-| Students | ✅ MVP | ✅ CRUD + Import | ✅ Complete | ✅ Validated | ✅ Classes, Parents |
-| Teachers | ✅ MVP | ✅ CRUD + Import | ✅ Complete | ✅ Validated | ✅ Classes, Subjects |
-| Classes | ✅ MVP | ✅ CRUD + Assign | ✅ Complete | ✅ Validated | ✅ Timetable, Students |
-| Timetable | ✅ MVP | ✅ Slots + Conflicts | ✅ Complete | ✅ Validated | ✅ Classes, Teachers |
-| Attendance | ✅ MVP | ✅ Mark + Export | ✅ Complete | ✅ Validated | ✅ Students, Classes |
-| Assignments | ✅ MVP | ✅ CRUD + Grade | ✅ Complete | ✅ Validated | ✅ Classes, Results |
-| Exams | ✅ MVP | ✅ CRUD + Marks | ✅ Complete | ✅ Validated | ✅ Classes, Results |
-| Results | ✅ MVP | ✅ Gradebook + Reports | ✅ Complete | ✅ Validated | ✅ Exams, Assignments |
-| Announcements | ✅ MVP | ✅ CRUD + Scope | ✅ Complete | ✅ Validated | ✅ All |
-| Events | ✅ MVP | ✅ CRUD + RSVP | ✅ Complete | ✅ Validated | ✅ Calendar |
-| Lessons | ✅ MVP | ✅ CRUD + Content | ✅ Complete | ✅ Validated | ✅ Classes, Timetable |
-| Parents | ✅ MVP | ✅ CRUD + Link | ✅ Complete | ✅ Validated | ✅ Students |
-| Parent Portal | ✅ MVP | ✅ Read-only | ✅ Complete | ✅ Validated | ✅ Core Features |
-| Dashboard | ✅ MVP | ✅ Role-based | ✅ Real Data | ✅ Complete | ✅ All Roles |
-| Settings | ✅ MVP | ✅ Config | ✅ Complete | ✅ Validated | ✅ Admin |
-| Admin | ✅ MVP | ✅ Users + Roles | ✅ Complete | ✅ Validated | ✅ Settings |
-| Import/Export | ✅ MVP | ✅ CSV Import/Export | ✅ Enhanced | ✅ Detailed | ✅ Complete |
-| Subjects | ✅ MVP | ✅ CRUD | ✅ Complete | ✅ Validated | ✅ Classes, Teachers |
-| Profile | ✅ MVP | ✅ Edit | ✅ Complete | ✅ Validated | ✅ Auth |
+| Feature       | Status | Admin Features         | UI Complete  | Data Integrity | Integration            |
+| ------------- | ------ | ---------------------- | ------------ | -------------- | ---------------------- |
+| Students      | ✅ MVP | ✅ CRUD + Import       | ✅ Complete  | ✅ Validated   | ✅ Classes, Parents    |
+| Teachers      | ✅ MVP | ✅ CRUD + Import       | ✅ Complete  | ✅ Validated   | ✅ Classes, Subjects   |
+| Classes       | ✅ MVP | ✅ CRUD + Assign       | ✅ Complete  | ✅ Validated   | ✅ Timetable, Students |
+| Timetable     | ✅ MVP | ✅ Slots + Conflicts   | ✅ Complete  | ✅ Validated   | ✅ Classes, Teachers   |
+| Attendance    | ✅ MVP | ✅ Mark + Export       | ✅ Complete  | ✅ Validated   | ✅ Students, Classes   |
+| Assignments   | ✅ MVP | ✅ CRUD + Grade        | ✅ Complete  | ✅ Validated   | ✅ Classes, Results    |
+| Exams         | ✅ MVP | ✅ CRUD + Marks        | ✅ Complete  | ✅ Validated   | ✅ Classes, Results    |
+| Results       | ✅ MVP | ✅ Gradebook + Reports | ✅ Complete  | ✅ Validated   | ✅ Exams, Assignments  |
+| Announcements | ✅ MVP | ✅ CRUD + Scope        | ✅ Complete  | ✅ Validated   | ✅ All                 |
+| Events        | ✅ MVP | ✅ CRUD + RSVP         | ✅ Complete  | ✅ Validated   | ✅ Calendar            |
+| Lessons       | ✅ MVP | ✅ CRUD + Content      | ✅ Complete  | ✅ Validated   | ✅ Classes, Timetable  |
+| Parents       | ✅ MVP | ✅ CRUD + Link         | ✅ Complete  | ✅ Validated   | ✅ Students            |
+| Parent Portal | ✅ MVP | ✅ Read-only           | ✅ Complete  | ✅ Validated   | ✅ Core Features       |
+| Dashboard     | ✅ MVP | ✅ Role-based          | ✅ Real Data | ✅ Complete    | ✅ All Roles           |
+| Settings      | ✅ MVP | ✅ Config              | ✅ Complete  | ✅ Validated   | ✅ Admin               |
+| Admin         | ✅ MVP | ✅ Users + Roles       | ✅ Complete  | ✅ Validated   | ✅ Settings            |
+| Import/Export | ✅ MVP | ✅ CSV Import/Export   | ✅ Enhanced  | ✅ Detailed    | ✅ Complete            |
+| Subjects      | ✅ MVP | ✅ CRUD                | ✅ Complete  | ✅ Validated   | ✅ Classes, Teachers   |
+| Profile       | ✅ MVP | ✅ Edit                | ✅ Complete  | ✅ Validated   | ✅ Auth                |
 
 **Legend:**
+
 - ✅ Production-ready
 - 🚧 In progress / needs polish
 - ⏸️ Planned / not started
@@ -42,6 +43,7 @@ Track the implementation status and production readiness of all platform feature
 ## Critical Path to Production
 
 ### Phase 1: Core Management (COMPLETE ✅)
+
 - [x] Students CRUD with CSV import
 - [x] Teachers CRUD with CSV import
 - [x] Classes CRUD with teacher/student assignment
@@ -50,6 +52,7 @@ Track the implementation status and production readiness of all platform feature
 - [x] Role-based access control basics
 
 ### Phase 2: Academic Operations (COMPLETE ✅)
+
 - [x] Timetable with flexible schedules
 - [x] Attendance marking and export
 - [x] Assignments creation and grading
@@ -58,6 +61,7 @@ Track the implementation status and production readiness of all platform feature
 - [x] Announcements with scope targeting
 
 ### Phase 3: Admin Tools (COMPLETE ✅)
+
 - [x] Dashboard with role-based views
 - [x] School settings configuration
 - [x] User and role management
@@ -65,6 +69,7 @@ Track the implementation status and production readiness of all platform feature
 - [x] Events and calendar
 
 ### Phase 4: Polish & Integration (IN PROGRESS 🚧)
+
 - [x] Lessons content management
 - [x] Complete parent portal core features
 - [x] Replace dashboard mock data with real queries
@@ -74,6 +79,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Accessibility improvements (ARIA)
 
 ### Phase 5: Future Enhancements (PLANNED ⏸️)
+
 - [ ] Messaging system (teacher-parent communication)
 - [ ] Push notifications
 - [ ] Library management
@@ -89,7 +95,9 @@ Track the implementation status and production readiness of all platform feature
 ## Feature-Specific Issues
 
 ### Students (`students/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] CSV bulk import with error reporting
 - [x] Class enrollment management
@@ -102,7 +110,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Transfer between schools
 
 ### Teachers (`teachers/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] CSV bulk import
 - [x] Department assignments
@@ -115,7 +125,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Teaching load analytics
 
 ### Classes (`classes/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Teacher assignment
 - [x] Student enrollment (many-to-many)
@@ -129,7 +141,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Grade distribution charts
 
 ### Timetable (`timetable/`)
+
 **Status:** ✅ Production-ready MVP (See `timetable/ISSUE.md` for details)
+
 - [x] Weekly schedule builder
 - [x] Flexible working days configuration
 - [x] Lunch break positioning
@@ -143,7 +157,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Accessibility (ARIA grid pattern)
 
 ### Attendance (`attendance/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] Daily attendance marking
 - [x] Period-by-period tracking
 - [x] Present/Absent/Late status codes
@@ -158,7 +174,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Tardy tracking
 
 ### Assignments (`assignments/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Due date management
 - [x] Class targeting
@@ -174,7 +192,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Rubrics and marking guides
 
 ### Exams (`exams/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Scheduling with date/time/duration
 - [x] Class and subject assignment
@@ -190,7 +210,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Analytics (average, median, distribution)
 
 ### Results (`results/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] Gradebook view
 - [x] Assignment scores
 - [x] Exam marks
@@ -206,7 +228,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Progress reports
 
 ### Announcements (`announcements/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Scope targeting (School/Class/Role)
 - [x] Priority levels
@@ -221,7 +245,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Scheduled publishing
 
 ### Events (`events/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Date and time scheduling
 - [x] Location assignment
@@ -236,7 +262,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Event photos/gallery
 
 ### Lessons (`lessons/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Class and subject assignment
 - [x] Lesson plan content
@@ -250,7 +278,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Student progress tracking
 
 ### Parents (`parents/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Student relationships (guardian linking)
 - [x] Contact information
@@ -263,7 +293,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Emergency contacts
 
 ### Parent Portal (`parent-portal/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] Authentication and access
 - [x] View announcements
 - [x] View child's attendance
@@ -278,7 +310,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Update profile
 
 ### Dashboard (`dashboard/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] Role-based views (admin, teacher, student, parent)
 - [x] Quick stats cards
 - [x] Pending tasks widget
@@ -291,7 +325,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Quick actions with navigation
 
 ### Settings (`settings/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] School profile (name, logo)
 - [x] Academic year configuration
 - [x] Locale selection (Arabic/English)
@@ -305,7 +341,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] API access management
 
 ### Admin (`admin/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] User management (list, roles)
 - [x] Role assignment (ADMIN, TEACHER, etc.)
 - [x] Invitation system
@@ -318,7 +356,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] System health dashboard
 
 ### Import/Export (`import/`)
+
 **Status:** ✅ Production-ready MVP (Enhanced validation + Complete export)
+
 - [x] CSV import for students
 - [x] CSV import for teachers
 - [x] Template downloads
@@ -344,7 +384,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] SIS integration
 
 ### Subjects (`subjects/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] CRUD operations with validation
 - [x] Subject catalog
 - [x] Search and filtering
@@ -356,7 +398,9 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Grade-level configuration
 
 ### Profile (`profile/`)
+
 **Status:** ✅ Production-ready MVP
+
 - [x] View and edit user information
 - [x] Password change
 - [x] Avatar upload
@@ -372,6 +416,7 @@ Track the implementation status and production readiness of all platform feature
 ## Cross-Cutting Concerns
 
 ### UI/UX Polish
+
 - [x] shadcn/ui components used throughout
 - [x] Responsive layouts for desktop
 - [x] Loading states for async operations
@@ -385,6 +430,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Print styles optimization
 
 ### Data Integrity
+
 - [x] Zod validation on client and server
 - [x] Multi-tenant isolation (schoolId scoping)
 - [x] Unique constraints scoped by tenant
@@ -396,6 +442,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Migration testing
 
 ### Performance
+
 - [x] Server-side rendering (Next.js App Router)
 - [x] Database indexes on foreign keys
 - [x] Prisma connection pooling
@@ -408,6 +455,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Lazy loading for routes
 
 ### Integration
+
 - [x] Students ↔ Classes ↔ Teachers
 - [x] Classes → Timetable
 - [x] Timetable → Attendance
@@ -423,6 +471,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Events → Calendar sync
 
 ### Internationalization (i18n)
+
 - [x] Arabic (RTL) and English (LTR) support
 - [x] 800+ translation keys
 - [x] Font loading (Tajawal, Inter)
@@ -439,18 +488,21 @@ Track the implementation status and production readiness of all platform feature
 ## Known Issues & Limitations
 
 ### Dashboard
+
 - **Issue:** ✅ RESOLVED - Real data now implemented
 - **Completed:** Teacher, Student, and Parent dashboards use live database queries
 - **Remaining:** Admin, Staff, Accountant dashboard implementations (lower priority)
 - **Priority:** Low (MVP complete)
 
 ### Parent Portal
+
 - **Issue:** ✅ RESOLVED - Core features now complete
 - **Completed:** Grades, assignments, timetable views with guardian authorization
 - **Remaining:** Report cards, notifications, messaging (future enhancements)
 - **Priority:** Low (MVP complete)
 
 ### Import/Export
+
 - **Issue:** ✅ RESOLVED - Enhanced validation and complete export implemented
 - **Completed:**
   - Field-level validation with detailed error messages and suggestions
@@ -471,18 +523,21 @@ Track the implementation status and production readiness of all platform feature
 - **Priority:** Low (MVP complete)
 
 ### Timetable
-- **Issue:** Typography violations (hardcoded text-* classes)
+
+- **Issue:** Typography violations (hardcoded text-\* classes)
 - **Impact:** Inconsistent typography
 - **Fix:** Use semantic HTML and typography system
 - **Priority:** Low (See `timetable/ISSUE.md`)
 
 ### Results
+
 - **Issue:** Report card PDF generation not implemented
 - **Impact:** Cannot generate printable report cards
 - **Fix:** Implement PDF generation with template
 - **Priority:** High
 
 ### Assignments
+
 - **Issue:** File attachments not implemented
 - **Impact:** Cannot attach files to assignments
 - **Fix:** Implement file upload/download system
@@ -493,6 +548,7 @@ Track the implementation status and production readiness of all platform feature
 ## Deployment Checklist
 
 ### Pre-Production
+
 - [ ] All MVP features tested end-to-end
 - [ ] Database migrations tested and documented
 - [ ] Environment variables configured
@@ -502,6 +558,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Backup procedures documented
 
 ### Production Readiness
+
 - [ ] SSL certificates configured
 - [ ] Custom domain setup
 - [ ] CDN configured (Vercel Edge)
@@ -512,6 +569,7 @@ Track the implementation status and production readiness of all platform feature
 - [ ] Incident response plan documented
 
 ### Post-Launch
+
 - [ ] User feedback collection system
 - [ ] Analytics tracking configured
 - [ ] A/B testing framework
@@ -548,6 +606,7 @@ git push origin main        # Auto-deploy to Vercel
 ### Framework & Runtime (Production Versions)
 
 **Core Stack:**
+
 - **Next.js 15.4+** - App Router with Turbopack, Server Components ([Docs](https://nextjs.org/docs))
 - **React 19.1+** - Actions, Server Components, new hooks ([Docs](https://react.dev))
 - **TypeScript 5.x** - Strict mode, full type safety ([Docs](https://www.typescriptlang.org/docs))
@@ -556,6 +615,7 @@ git push origin main        # Auto-deploy to Vercel
 ### Database & ORM
 
 **Database:**
+
 - **Neon PostgreSQL** - Serverless Postgres with autoscaling ([Docs](https://neon.tech/docs/introduction))
   - Autoscaling compute
   - Database branching for development
@@ -563,6 +623,7 @@ git push origin main        # Auto-deploy to Vercel
   - Connection pooling via Pgbouncer
 
 **ORM:**
+
 - **Prisma 6.14+** - Type-safe database client ([Docs](https://www.prisma.io/docs))
   - 19 schema files for multi-tenant models
   - Automatic TypeScript type generation
@@ -572,12 +633,14 @@ git push origin main        # Auto-deploy to Vercel
 ### UI & Styling
 
 **Component Library:**
+
 - **shadcn/ui** - Radix UI primitives with Tailwind ([Docs](https://ui.shadcn.com/docs))
   - 50+ accessible components
   - New York design variant
   - Full customization control
 
 **Styling:**
+
 - **Tailwind CSS 4** - Utility-first CSS framework ([Docs](https://tailwindcss.com/docs))
   - OKLCH color space
   - CSS-first configuration
@@ -587,23 +650,27 @@ git push origin main        # Auto-deploy to Vercel
 ### Authentication & Forms
 
 **Auth:**
+
 - **NextAuth.js v5** - Multi-provider authentication ([Docs](https://authjs.dev))
   - JWT sessions with schoolId
   - Google, Facebook, Credentials providers
   - CSRF protection
 
 **Forms & Validation:**
+
 - **React Hook Form 7.61+** - Performant form management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - TypeScript-first schema validation ([Docs](https://zod.dev))
 
 ### Data Management
 
 **Tables:**
+
 - **TanStack Table 8.21+** - Headless table library ([Docs](https://tanstack.com/table))
   - Sorting, filtering, pagination
   - Full TypeScript support
 
 **Additional Libraries:**
+
 - **date-fns 4.1+** - Modern date utilities
 - **Recharts 2.15+** - Charting library
 - **@dnd-kit 6.3+** - Drag-and-drop
@@ -612,12 +679,14 @@ git push origin main        # Auto-deploy to Vercel
 ### Testing & Quality
 
 **Testing:**
+
 - **Vitest 2.0+** - Fast unit testing with Vite
 - **React Testing Library** - Component testing
 - **Playwright 1.55+** - E2E testing across browsers
 - **MSW** - API mocking
 
 **Code Quality:**
+
 - **ESLint** - Next.js recommended config
 - **Prettier** - Code formatting
 - **TypeScript Strict Mode** - Maximum type safety
@@ -625,11 +694,13 @@ git push origin main        # Auto-deploy to Vercel
 ### Monitoring & Infrastructure
 
 **Monitoring:**
+
 - **Sentry 10.12+** - Error tracking and performance monitoring
 - **Vercel Analytics** - Web vitals and user analytics
 - **Vercel Speed Insights** - Real user monitoring
 
 **Deployment:**
+
 - **Vercel** - Edge network with automatic HTTPS
 - **pnpm 9.x** - Required package manager for Vercel
 - **@t3-oss/env-nextjs** - Type-safe environment variables
@@ -637,6 +708,7 @@ git push origin main        # Auto-deploy to Vercel
 ### Communication
 
 **Email:**
+
 - **Resend 4.7+** - Transactional email API
 - **@react-email/components** - React email templates
 
@@ -661,36 +733,41 @@ git push origin main        # Auto-deploy to Vercel
 ### Architecture Patterns
 
 **Multi-Tenant SaaS:**
+
 - Every query scoped by `schoolId` from session
 - Subdomain routing: `school.databayt.org`
 - JWT sessions with tenant context
 - Row-level data isolation
 
 **Server Actions Pattern:**
+
 ```typescript
 "use server"
 export async function createEntity(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.entity.create({ data: { ...validated, schoolId } })
-  revalidatePath('/entities')
+  revalidatePath("/entities")
   return { success: true }
 }
 ```
 
 **Mirror Pattern:**
+
 - Routes in `app/[lang]/s/[subdomain]/(platform)/` mirror components in `components/platform/`
 - Each feature has: content.tsx, actions.ts, validation.ts, types.ts, form.tsx, columns.tsx
 
 ### Performance Requirements
 
 **Benchmarks:**
+
 - Page load: < 2 seconds (target)
 - Time to Interactive: < 3 seconds
 - Lighthouse Score: > 90
 - Database query time: < 100ms (avg)
 
 **Optimizations:**
+
 - Database indexes on `schoolId` and foreign keys
 - Connection pooling via Prisma
 - SWR for client-side caching
@@ -700,18 +777,21 @@ export async function createEntity(input: FormData) {
 ### Security Standards
 
 **Authentication:**
+
 - JWT tokens (24-hour expiry)
 - HttpOnly cookies
 - CSRF protection
 - Session refresh (5-minute update age in production)
 
 **Data Protection:**
+
 - SQL injection prevention (Prisma ORM)
 - XSS prevention (React auto-escaping)
 - HTTPS enforced
 - Secure headers (CSP, HSTS, X-Frame-Options)
 
 **Multi-Tenant Isolation:**
+
 - All queries filtered by `schoolId`
 - Unique constraints scoped by tenant
 - No cross-tenant data leakage
@@ -720,6 +800,7 @@ export async function createEntity(input: FormData) {
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started
@@ -727,4 +808,3 @@ export async function createEntity(input: FormData) {
 
 **Last Review:** 2025-10-11
 **Next Review:** After completing remaining Phase 4 items (Export, Mobile, Accessibility)
-

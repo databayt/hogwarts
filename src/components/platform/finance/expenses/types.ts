@@ -2,9 +2,10 @@
  * Expenses Module - Type Definitions
  */
 
-import type { ExpenseStatus } from '@prisma/client'
-import type { expenseSchema, expenseCategorySchema } from './validation'
-import type { z } from 'zod'
+import type { ExpenseStatus } from "@prisma/client"
+import type { z } from "zod"
+
+import type { expenseCategorySchema, expenseSchema } from "./validation"
 
 export type ExpenseInput = z.infer<typeof expenseSchema>
 export type ExpenseCategoryInput = z.infer<typeof expenseCategorySchema>

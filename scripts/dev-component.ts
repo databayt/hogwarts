@@ -3,20 +3,20 @@
  * Run: npx tsx scripts/dev-component.ts --name StudentCard --type page [--i18n] [--tests]
  */
 
-import { Command } from 'commander'
-import chalk from 'chalk'
-import ora from 'ora'
-import { mkdirSync, writeFileSync, existsSync } from 'fs'
-import { join } from 'path'
+import { existsSync, mkdirSync, writeFileSync } from "fs"
+import { join } from "path"
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 const program = new Command()
 program
-  .requiredOption('-n, --name <name>', 'Component name (PascalCase)')
-  .requiredOption('-t, --type <type>', 'Type: page|feature|atom|ui')
-  .option('--i18n', 'Include internationalization')
-  .option('--tests', 'Include test files')
-  .option('--stories', 'Include Storybook stories')
-  .option('--path <path>', 'Custom path (default: auto-detect from type)')
+  .requiredOption("-n, --name <name>", "Component name (PascalCase)")
+  .requiredOption("-t, --type <type>", "Type: page|feature|atom|ui")
+  .option("--i18n", "Include internationalization")
+  .option("--tests", "Include test files")
+  .option("--stories", "Include Storybook stories")
+  .option("--path <path>", "Custom path (default: auto-detect from type)")
   .parse()
 
 const options = program.opts()
@@ -26,24 +26,24 @@ function toCamelCase(str: string): string {
 }
 
 function toKebabCase(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+  return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()
 }
 
 function getComponentPath(): string {
   if (options.path) return options.path
 
-  const basePath = 'src'
+  const basePath = "src"
   switch (options.type) {
-    case 'page':
-      return join(basePath, 'components', 'platform', toKebabCase(options.name))
-    case 'feature':
-      return join(basePath, 'components', toKebabCase(options.name))
-    case 'atom':
-      return join(basePath, 'components', 'atom')
-    case 'ui':
-      return join(basePath, 'components', 'ui')
+    case "page":
+      return join(basePath, "components", "platform", toKebabCase(options.name))
+    case "feature":
+      return join(basePath, "components", toKebabCase(options.name))
+    case "atom":
+      return join(basePath, "components", "atom")
+    case "ui":
+      return join(basePath, "components", "ui")
     default:
-      return join(basePath, 'components', toKebabCase(options.name))
+      return join(basePath, "components", toKebabCase(options.name))
   }
 }
 
@@ -177,28 +177,36 @@ describe('${options.name}', () => {
 function generateI18n(): { ar: string; en: string } {
   const key = toCamelCase(options.name)
   return {
-    ar: JSON.stringify({
-      [key]: {
-        title: options.name,
-        description: 'وصف المكون',
-        actions: {
-          create: 'إنشاء',
-          edit: 'تعديل',
-          delete: 'حذف',
-        }
-      }
-    }, null, 2),
-    en: JSON.stringify({
-      [key]: {
-        title: options.name,
-        description: 'Component description',
-        actions: {
-          create: 'Create',
-          edit: 'Edit',
-          delete: 'Delete',
-        }
-      }
-    }, null, 2)
+    ar: JSON.stringify(
+      {
+        [key]: {
+          title: options.name,
+          description: "وصف المكون",
+          actions: {
+            create: "إنشاء",
+            edit: "تعديل",
+            delete: "حذف",
+          },
+        },
+      },
+      null,
+      2
+    ),
+    en: JSON.stringify(
+      {
+        [key]: {
+          title: options.name,
+          description: "Component description",
+          actions: {
+            create: "Create",
+            edit: "Edit",
+            delete: "Delete",
+          },
+        },
+      },
+      null,
+      2
+    ),
   }
 }
 
@@ -229,7 +237,7 @@ import { ${options.name}Content } from '@/components/${toKebabCase(options.name)
 - \`actions.ts\` - Server actions
 - \`validation.ts\` - Zod schemas
 - \`types.ts\` - TypeScript types
-${options.tests ? '- `content.test.tsx` - Tests' : ''}
+${options.tests ? "- `content.test.tsx` - Tests" : ""}
 
 ## Generated
 ${new Date().toISOString()}
@@ -237,7 +245,7 @@ ${new Date().toISOString()}
 }
 
 async function generateComponent() {
-  const spinner = ora('Generating component...').start()
+  const spinner = ora("Generating component...").start()
 
   try {
     const componentPath = getComponentPath()
@@ -251,42 +259,42 @@ async function generateComponent() {
 
     // Main content file
     files.push({
-      path: join(componentPath, 'content.tsx'),
-      content: generateContent()
+      path: join(componentPath, "content.tsx"),
+      content: generateContent(),
     })
 
     // Types
     files.push({
-      path: join(componentPath, 'types.ts'),
-      content: generateTypes()
+      path: join(componentPath, "types.ts"),
+      content: generateTypes(),
     })
 
     // Validation
     files.push({
-      path: join(componentPath, 'validation.ts'),
-      content: generateValidation()
+      path: join(componentPath, "validation.ts"),
+      content: generateValidation(),
     })
 
     // Actions (for features/pages)
-    if (options.type === 'page' || options.type === 'feature') {
+    if (options.type === "page" || options.type === "feature") {
       files.push({
-        path: join(componentPath, 'actions.ts'),
-        content: generateActions()
+        path: join(componentPath, "actions.ts"),
+        content: generateActions(),
       })
     }
 
     // Tests
     if (options.tests) {
       files.push({
-        path: join(componentPath, 'content.test.tsx'),
-        content: generateTest()
+        path: join(componentPath, "content.test.tsx"),
+        content: generateTest(),
       })
     }
 
     // README
     files.push({
-      path: join(componentPath, 'README.md'),
-      content: generateREADME()
+      path: join(componentPath, "README.md"),
+      content: generateREADME(),
     })
 
     // Write all files
@@ -298,33 +306,32 @@ async function generateComponent() {
     // I18n (if requested)
     if (options.i18n) {
       const i18n = generateI18n()
-      spinner.text = 'Adding i18n keys...'
-      console.log(chalk.yellow('\n⚠️  Add these keys to your dictionaries:\n'))
-      console.log(chalk.cyan('Arabic (ar):'))
+      spinner.text = "Adding i18n keys..."
+      console.log(chalk.yellow("\n⚠️  Add these keys to your dictionaries:\n"))
+      console.log(chalk.cyan("Arabic (ar):"))
       console.log(chalk.gray(i18n.ar))
-      console.log(chalk.cyan('\nEnglish (en):'))
+      console.log(chalk.cyan("\nEnglish (en):"))
       console.log(chalk.gray(i18n.en))
     }
 
-    spinner.succeed(chalk.green('Component generated successfully!'))
+    spinner.succeed(chalk.green("Component generated successfully!"))
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-    console.log(chalk.bold('✅ Component Generation Complete'))
-    console.log(chalk.cyan('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+    console.log(chalk.bold("✅ Component Generation Complete"))
+    console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
 
-    console.log(chalk.white('Component:'), chalk.green(options.name))
-    console.log(chalk.white('Path:'), chalk.green(componentPath))
-    console.log(chalk.white('Type:'), chalk.green(options.type))
+    console.log(chalk.white("Component:"), chalk.green(options.name))
+    console.log(chalk.white("Path:"), chalk.green(componentPath))
+    console.log(chalk.white("Type:"), chalk.green(options.type))
 
-    console.log(chalk.white('\nGenerated Files:'))
-    files.forEach(f => {
+    console.log(chalk.white("\nGenerated Files:"))
+    files.forEach((f) => {
       console.log(`  ✓ ${f.path}`)
     })
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
-
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
   } catch (error) {
-    spinner.fail(chalk.red('Generation failed'))
+    spinner.fail(chalk.red("Generation failed"))
     console.error(error)
     process.exit(1)
   }

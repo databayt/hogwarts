@@ -18,7 +18,7 @@ export function ShadcnFieldCheckbox() {
       <Checkbox id="checkbox-demo" defaultChecked />
       <label
         htmlFor="checkbox-demo"
-        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         I agree to the terms and conditions
       </label>

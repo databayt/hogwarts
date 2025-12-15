@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### MCP Server Development
+
 - **Custom MCP Servers**: Build Hogwarts-specific MCP servers
 - **Protocol Compliance**: Implement JSON-RPC 2.0 spec correctly
 - **Resource Endpoints**: Expose school data, reports, analytics
@@ -22,12 +23,14 @@ model: sonnet
 - **Transport Optimization**: Stdio, HTTP, or WebSocket transports
 
 ### Integration
+
 - **PostgreSQL MCP**: Direct database access for query optimization
 - **GitHub MCP**: Repository operations, PR/issue management
 - **Custom Tools**: School-specific utilities and reports
 - **Security**: Authentication, authorization, rate limiting
 
 ### Performance & Reliability
+
 - **Response Time**: <100ms for resource fetches
 - **Throughput**: Handle 100+ requests/second
 - **Error Handling**: Graceful failures with clear messages
@@ -42,14 +45,14 @@ model: sonnet
 ```typescript
 // MCP uses JSON-RPC 2.0
 interface JsonRpcRequest {
-  jsonrpc: '2.0'
+  jsonrpc: "2.0"
   id: string | number
   method: string
   params?: Record<string, unknown>
 }
 
 interface JsonRpcResponse {
-  jsonrpc: '2.0'
+  jsonrpc: "2.0"
   id: string | number
   result?: unknown
   error?: {
@@ -64,13 +67,13 @@ interface JsonRpcResponse {
 
 ```typescript
 // src/mcp/server.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 const server = new Server(
   {
-    name: 'hogwarts-mcp',
-    version: '1.0.0',
+    name: "hogwarts-mcp",
+    version: "1.0.0",
   },
   {
     capabilities: {
@@ -85,16 +88,16 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
   return {
     resources: [
       {
-        uri: 'hogwarts://schools',
-        name: 'Schools',
-        description: 'List all schools in the platform',
-        mimeType: 'application/json',
+        uri: "hogwarts://schools",
+        name: "Schools",
+        description: "List all schools in the platform",
+        mimeType: "application/json",
       },
       {
-        uri: 'hogwarts://students/{schoolId}',
-        name: 'Students',
-        description: 'List students for a school',
-        mimeType: 'application/json',
+        uri: "hogwarts://students/{schoolId}",
+        name: "Students",
+        description: "List students for a school",
+        mimeType: "application/json",
       },
     ],
   }
@@ -104,15 +107,18 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params
 
-  if (name === 'get_student_analytics') {
-    const { schoolId, yearLevel } = args as { schoolId: string; yearLevel: string }
+  if (name === "get_student_analytics") {
+    const { schoolId, yearLevel } = args as {
+      schoolId: string
+      yearLevel: string
+    }
 
     const analytics = await getStudentAnalytics(schoolId, yearLevel)
 
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(analytics, null, 2),
         },
       ],
@@ -136,6 +142,7 @@ await server.connect(transport)
 **Purpose**: Expose school data to Claude Code for analysis, reporting, and queries
 
 **Resources**:
+
 ```typescript
 // List schools
 hogwarts://schools → [{ id, name, subdomain, status }]
@@ -154,6 +161,7 @@ hogwarts://analytics/{schoolId}/{type} → { revenue, attendance, ... }
 ```
 
 **Tools**:
+
 ```typescript
 // Get student analytics
 get_student_analytics(schoolId, yearLevel)
@@ -166,20 +174,22 @@ query_school_data(schoolId, query)
 ```
 
 **Implementation**:
+
 ```typescript
 // src/mcp/hogwarts-server.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { db } from '@/lib/db'
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"
+
+import { db } from "@/lib/db"
 
 const server = new Server({
-  name: 'hogwarts-mcp',
-  version: '1.0.0',
+  name: "hogwarts-mcp",
+  version: "1.0.0",
 })
 
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const { uri } = request.params
 
-  if (uri === 'hogwarts://schools') {
+  if (uri === "hogwarts://schools") {
     const schools = await db.school.findMany({
       select: { id: true, name: true, subdomain: true },
     })
@@ -188,15 +198,15 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       contents: [
         {
           uri,
-          mimeType: 'application/json',
+          mimeType: "application/json",
           text: JSON.stringify(schools, null, 2),
         },
       ],
     }
   }
 
-  if (uri.startsWith('hogwarts://students/')) {
-    const schoolId = uri.split('/').pop()
+  if (uri.startsWith("hogwarts://students/")) {
+    const schoolId = uri.split("/").pop()
 
     const students = await db.student.findMany({
       where: { schoolId },
@@ -212,7 +222,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       contents: [
         {
           uri,
-          mimeType: 'application/json',
+          mimeType: "application/json",
           text: JSON.stringify(students, null, 2),
         },
       ],
@@ -232,6 +242,7 @@ await server.connect(transport)
 **Purpose**: Direct database access for complex queries and analytics
 
 **Tools**:
+
 ```typescript
 // Execute raw SQL (with safety checks)
 execute_query(schoolId, query, params)
@@ -244,11 +255,12 @@ get_schema(tableName)
 ```
 
 **Implementation**:
+
 ```typescript
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params
 
-  if (name === 'execute_query') {
+  if (name === "execute_query") {
     const { schoolId, query, params } = args as {
       schoolId: string
       query: string
@@ -257,7 +269,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
     // Security: Validate query (no DROP, DELETE without WHERE, etc.)
     if (!isQuerySafe(query)) {
-      throw new Error('Unsafe query detected')
+      throw new Error("Unsafe query detected")
     }
 
     // Execute with schoolId scoping
@@ -266,7 +278,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(result, null, 2),
         },
       ],
@@ -280,6 +292,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 **Purpose**: Generate PDF reports, export data, create visualizations
 
 **Tools**:
+
 ```typescript
 // Generate student report card
 generate_report_card(studentId, term)
@@ -310,7 +323,11 @@ generate_dashboard(schoolId, metrics)
     },
     "postgres": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://..."],
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://..."
+      ],
       "disabled": false
     },
     "github": {
@@ -352,7 +369,7 @@ server.setRequestHandler(RequestSchema, async (request) => {
   const apiKey = request.params._meta?.apiKey
 
   if (apiKey !== API_KEY) {
-    throw new Error('Unauthorized')
+    throw new Error("Unauthorized")
   }
 
   // Process request
@@ -370,7 +387,7 @@ async function checkAccess(userId: string, schoolId: string) {
   })
 
   if (user.schoolId !== schoolId && !user.isPlatformAdmin) {
-    throw new Error('Access denied')
+    throw new Error("Access denied")
   }
 }
 ```
@@ -378,11 +395,11 @@ async function checkAccess(userId: string, schoolId: string) {
 ### Input Validation
 
 ```typescript
-import { z } from 'zod'
+import { z } from "zod"
 
 const GetStudentAnalyticsSchema = z.object({
   schoolId: z.string().min(1),
-  yearLevel: z.enum(['GRADE_9', 'GRADE_10', 'GRADE_11', 'GRADE_12']),
+  yearLevel: z.enum(["GRADE_9", "GRADE_10", "GRADE_11", "GRADE_12"]),
 })
 
 // In handler
@@ -397,34 +414,34 @@ const validated = GetStudentAnalyticsSchema.parse(args)
 
 ```typescript
 // src/mcp/__tests__/hogwarts-server.test.ts
-import { describe, it, expect } from 'vitest'
-import { testMCPServer } from '@modelcontextprotocol/sdk/server/test.js'
+import { testMCPServer } from "@modelcontextprotocol/sdk/server/test.js"
+import { describe, expect, it } from "vitest"
 
-describe('Hogwarts MCP Server', () => {
-  it('should list schools', async () => {
+describe("Hogwarts MCP Server", () => {
+  it("should list schools", async () => {
     const response = await testMCPServer(server, {
-      method: 'resources/list',
+      method: "resources/list",
     })
 
     expect(response.resources).toBeInstanceOf(Array)
     expect(response.resources.length).toBeGreaterThan(0)
   })
 
-  it('should get student analytics', async () => {
+  it("should get student analytics", async () => {
     const response = await testMCPServer(server, {
-      method: 'tools/call',
+      method: "tools/call",
       params: {
-        name: 'get_student_analytics',
+        name: "get_student_analytics",
         arguments: {
-          schoolId: 'test-school',
-          yearLevel: 'GRADE_10',
+          schoolId: "test-school",
+          yearLevel: "GRADE_10",
         },
       },
     })
 
-    expect(response.content[0].type).toBe('text')
+    expect(response.content[0].type).toBe("text")
     const data = JSON.parse(response.content[0].text)
-    expect(data).toHaveProperty('totalStudents')
+    expect(data).toHaveProperty("totalStudents")
   })
 })
 ```
@@ -444,27 +461,27 @@ echo '{"jsonrpc":"2.0","id":1,"method":"resources/list","params":{}}' | node dis
 ## Monitoring & Logging
 
 ```typescript
-import { logger } from '@/lib/logger'
+import { logger } from "@/lib/logger"
 
 server.setRequestHandler(RequestSchema, async (request) => {
   const startTime = Date.now()
 
   try {
-    logger.info('MCP request received', {
+    logger.info("MCP request received", {
       method: request.method,
       params: request.params,
     })
 
     const result = await handleRequest(request)
 
-    logger.info('MCP request completed', {
+    logger.info("MCP request completed", {
       method: request.method,
       duration: Date.now() - startTime,
     })
 
     return result
   } catch (error) {
-    logger.error('MCP request failed', {
+    logger.error("MCP request failed", {
       method: request.method,
       error: error.message,
       duration: Date.now() - startTime,
@@ -480,6 +497,7 @@ server.setRequestHandler(RequestSchema, async (request) => {
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/api` - Server action patterns
 - `/agents/prisma` - Database access
 - `/agents/security` - Authentication/authorization
@@ -516,6 +534,7 @@ server.setRequestHandler(RequestSchema, async (request) => {
 ## Success Metrics
 
 **Target Achievements**:
+
 - Response time <100ms for resource fetches
 - Throughput >100 requests/second
 - 99.9% uptime for MCP servers

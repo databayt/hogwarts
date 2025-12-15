@@ -81,19 +81,25 @@ Dynamic subtitle based on assignment count:
 
 ## Key Metrics
 
-| Metric | Icon | Color Logic |
-|--------|------|-------------|
-| Attendance | Calendar | Green if >=85%, else amber |
-| Average Grade | GraduationCap | Green >=80%, blue >=60%, else amber |
-| Assignments Due | FileText | Red if >3, else purple |
-| Classes Today | BookOpen | Blue |
+| Metric          | Icon          | Color Logic                         |
+| --------------- | ------------- | ----------------------------------- |
+| Attendance      | Calendar      | Green if >=85%, else amber          |
+| Average Grade   | GraduationCap | Green >=80%, blue >=60%, else amber |
+| Assignments Due | FileText      | Red if >3, else purple              |
+| Classes Today   | BookOpen      | Blue                                |
 
 ```tsx
 <MetricCard
   title="Average Grade"
   value={averageGrade > 0 ? `${averageGrade.toFixed(0)}%` : "N/A"}
   iconName="GraduationCap"
-  iconColor={averageGrade >= 80 ? "text-green-500" : averageGrade >= 60 ? "text-blue-500" : "text-amber-500"}
+  iconColor={
+    averageGrade >= 80
+      ? "text-green-500"
+      : averageGrade >= 60
+        ? "text-blue-500"
+        : "text-amber-500"
+  }
 />
 ```
 
@@ -102,11 +108,11 @@ Dynamic subtitle based on assignment count:
 Highlighted progress card:
 
 ```tsx
-<Card className="bg-gradient-to-r from-primary/5 via-transparent to-transparent">
+<Card className="from-primary/5 bg-gradient-to-r via-transparent to-transparent">
   <CardContent className="p-4">
-    <div className="flex items-center justify-between mb-3">
+    <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Target className="h-4 w-4 text-primary" />
+        <Target className="text-primary h-4 w-4" />
         <span className="font-medium">Attendance Goal</span>
       </div>
       <Badge variant={percentage >= 90 ? "default" : "secondary"}>
@@ -114,7 +120,7 @@ Highlighted progress card:
       </Badge>
     </div>
     <Progress value={percentage} className="h-3" />
-    <div className="flex justify-between mt-2">
+    <div className="mt-2 flex justify-between">
       <span>{presentDays} days present</span>
       <span>Target: 90%</span>
     </div>
@@ -139,20 +145,25 @@ const activityData = [
   {
     label: "Grades",
     value: averageGrade,
-    color: averageGrade >= 80 ? "#22c55e" : averageGrade >= 60 ? "#3b82f6" : "#ef4444",
+    color:
+      averageGrade >= 80
+        ? "#22c55e"
+        : averageGrade >= 60
+          ? "#3b82f6"
+          : "#ef4444",
     current: Math.round(averageGrade),
     target: 100,
     unit: "%",
   },
   {
     label: "Tasks",
-    value: 100 - (assignments.length * 20),
+    value: 100 - assignments.length * 20,
     color: "#8b5cf6",
     current: assignments.length,
     target: 5,
     unit: "due",
   },
-];
+]
 ```
 
 ## Today's Schedule
@@ -160,16 +171,18 @@ const activityData = [
 Timetable with `ScheduleItem`:
 
 ```tsx
-{todaysTimetable.map((entry, index) => (
-  <ScheduleItem
-    key={entry.id}
-    time={format(new Date(entry.startTime), "HH:mm")}
-    title={entry.subject}
-    subtitle={`Room ${entry.room} • ${entry.teacher}`}
-    badge={index === 0 ? "Now" : undefined}
-    isActive={index === 0}
-  />
-))}
+{
+  todaysTimetable.map((entry, index) => (
+    <ScheduleItem
+      key={entry.id}
+      time={format(new Date(entry.startTime), "HH:mm")}
+      title={entry.subject}
+      subtitle={`Room ${entry.room} • ${entry.teacher}`}
+      badge={index === 0 ? "Now" : undefined}
+      isActive={index === 0}
+    />
+  ))
+}
 ```
 
 ## Performance Gauge
@@ -190,29 +203,41 @@ Radial chart for average grade:
 List with status badges:
 
 ```tsx
-{upcomingAssignments.map((assignment) => {
-  const dueDate = new Date(assignment.dueDate);
-  const daysUntil = differenceInDays(dueDate, new Date());
-  const isOverdue = daysUntil < 0;
+{
+  upcomingAssignments.map((assignment) => {
+    const dueDate = new Date(assignment.dueDate)
+    const daysUntil = differenceInDays(dueDate, new Date())
+    const isOverdue = daysUntil < 0
 
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg border">
-      <div>
-        <p className="font-medium">{assignment.title}</p>
-        <p className="text-sm text-muted-foreground">
-          {assignment.subject} • {assignment.className}
-        </p>
+    return (
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div>
+          <p className="font-medium">{assignment.title}</p>
+          <p className="text-muted-foreground text-sm">
+            {assignment.subject} • {assignment.className}
+          </p>
+        </div>
+        <Badge
+          variant={
+            isOverdue || assignment.status === "NOT_SUBMITTED"
+              ? "destructive"
+              : isToday(dueDate)
+                ? "default"
+                : isTomorrow(dueDate)
+                  ? "secondary"
+                  : "outline"
+          }
+        >
+          {isOverdue
+            ? "Overdue"
+            : daysUntil === 0
+              ? "Due Today"
+              : `${daysUntil} days`}
+        </Badge>
       </div>
-      <Badge variant={
-        isOverdue || assignment.status === "NOT_SUBMITTED" ? "destructive" :
-        isToday(dueDate) ? "default" :
-        isTomorrow(dueDate) ? "secondary" : "outline"
-      }>
-        {isOverdue ? "Overdue" : daysUntil === 0 ? "Due Today" : `${daysUntil} days`}
-      </Badge>
-    </div>
-  );
-})}
+    )
+  })
+}
 ```
 
 ## Recent Grades
@@ -220,20 +245,28 @@ List with status badges:
 Grade cards with score and percentage:
 
 ```tsx
-{recentGrades.map((grade) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{grade.examTitle}</p>
-      <p className="text-sm text-muted-foreground">{grade.subject}</p>
+{
+  recentGrades.map((grade) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{grade.examTitle}</p>
+        <p className="text-muted-foreground text-sm">{grade.subject}</p>
+      </div>
+      <div className="text-right">
+        <p className="font-bold">
+          {grade.marksObtained}/{grade.totalMarks}
+        </p>
+        <Badge
+          className={
+            grade.percentage >= 80 ? "bg-emerald-100 text-emerald-700" : ""
+          }
+        >
+          {grade.percentage.toFixed(0)}%{grade.grade ? ` • ${grade.grade}` : ""}
+        </Badge>
+      </div>
     </div>
-    <div className="text-right">
-      <p className="font-bold">{grade.marksObtained}/{grade.totalMarks}</p>
-      <Badge className={grade.percentage >= 80 ? "bg-emerald-100 text-emerald-700" : ""}>
-        {grade.percentage.toFixed(0)}%{grade.grade ? ` • ${grade.grade}` : ""}
-      </Badge>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 ## School Announcements
@@ -241,15 +274,19 @@ Grade cards with score and percentage:
 Using `AnnouncementCard`:
 
 ```tsx
-{announcements.slice(0, 3).map((announcement, index) => (
-  <AnnouncementCard
-    key={announcement.id}
-    title={announcement.title}
-    content={announcement.body || "Click to view full announcement"}
-    date={announcement.createdAt}
-    priority={index === 0 ? "high" : "normal"}
-  />
-))}
+{
+  announcements
+    .slice(0, 3)
+    .map((announcement, index) => (
+      <AnnouncementCard
+        key={announcement.id}
+        title={announcement.title}
+        content={announcement.body || "Click to view full announcement"}
+        date={announcement.createdAt}
+        priority={index === 0 ? "high" : "normal"}
+      />
+    ))
+}
 ```
 
 ## Grade Trend Chart
@@ -267,25 +304,26 @@ Comparison with previous term:
 ```
 
 Data format:
+
 ```tsx
 const gradeTrendData = [
   { period: "Sep", current: 75, previous: 70 },
   { period: "Oct", current: 78, previous: 72 },
   { period: "Nov", current: 82, previous: 75 },
   { period: "Dec", current: averageGrade, previous: 78 },
-];
+]
 ```
 
 ## Academic Summary Stats
 
 4-column grid:
 
-| Stat | Color |
-|------|-------|
-| Attendance % | Primary |
-| Average Grade % | Blue |
-| Assessments Count | Purple |
-| Submitted Count | Emerald |
+| Stat              | Color   |
+| ----------------- | ------- |
+| Attendance %      | Primary |
+| Average Grade %   | Blue    |
+| Assessments Count | Purple  |
+| Submitted Count   | Emerald |
 
 ## Data Fetching
 
@@ -308,23 +346,23 @@ const data = await getStudentDashboardData();
 
 6 actions for STUDENT role:
 
-| Action | Icon | Destination |
-|--------|------|-------------|
-| Assignments | FileText | /assignments |
-| Grades | Award | /grades |
-| Timetable | CalendarDays | /timetable |
-| Messages | MessageSquare | /messages |
-| Library | BookOpen | /library |
-| Attendance | Clock | /attendance |
+| Action      | Icon          | Destination  |
+| ----------- | ------------- | ------------ |
+| Assignments | FileText      | /assignments |
+| Grades      | Award         | /grades      |
+| Timetable   | CalendarDays  | /timetable   |
+| Messages    | MessageSquare | /messages    |
+| Library     | BookOpen      | /library     |
+| Attendance  | Clock         | /attendance  |
 
 ## Error Handling
 
 ```tsx
 try {
-  data = await getStudentDashboardData();
+  data = await getStudentDashboardData()
 } catch (error) {
-  console.error("[StudentDashboard] Error:", error);
-  return <ErrorCard message="Unable to load dashboard" />;
+  console.error("[StudentDashboard] Error:", error)
+  return <ErrorCard message="Unable to load dashboard" />
 }
 ```
 
@@ -342,12 +380,12 @@ const dashDict = dictionary?.studentDashboard || {
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `dashboards/student-dashboard.tsx` | Dashboard component |
-| `dashboards/actions.ts` | `getStudentDashboardData()` |
-| `widgets/index.tsx` | Widget components |
-| `widgets/dashboard-charts.tsx` | Chart components |
+| File                               | Purpose                     |
+| ---------------------------------- | --------------------------- |
+| `dashboards/student-dashboard.tsx` | Dashboard component         |
+| `dashboards/actions.ts`            | `getStudentDashboardData()` |
+| `widgets/index.tsx`                | Widget components           |
+| `widgets/dashboard-charts.tsx`     | Chart components            |
 
 ## Related
 

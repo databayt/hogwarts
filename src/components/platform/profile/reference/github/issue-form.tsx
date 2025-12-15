@@ -32,7 +32,7 @@
 //   const handleSubmit = (e) => {
 //     e.preventDefault();
 //     if (!title.trim()) return;
-    
+
 //     onSubmit({
 //       title,
 //       description,

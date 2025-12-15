@@ -1,12 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo } from "react"
 
 export interface Transaction {
   id: string
   name: string
-  amount: number       // Positive for credits, negative for debits
+  amount: number // Positive for credits, negative for debits
   category: string
   date: string
-  type: 'credit' | 'debit'
+  type: "credit" | "debit"
   pending?: boolean
   merchantName?: string
   [key: string]: any
@@ -19,12 +19,12 @@ export interface FilterOptions {
   dateTo?: string | null
   minAmount?: number | null
   maxAmount?: number | null
-  status?: 'pending' | 'completed' | null
+  status?: "pending" | "completed" | null
 }
 
 export interface SortOptions {
-  field: 'date' | 'amount' | 'name'
-  direction: 'asc' | 'desc'
+  field: "date" | "amount" | "name"
+  direction: "asc" | "desc"
 }
 
 /**
@@ -66,7 +66,7 @@ export function useTransactionFilter(
   // Extract unique categories from transactions
   const categories = useMemo(() => {
     if (!transactions?.length) return []
-    return [...new Set(transactions.map(t => t.category))].sort()
+    return [...new Set(transactions.map((t) => t.category))].sort()
   }, [transactions])
 
   // Apply filters
@@ -77,44 +77,49 @@ export function useTransactionFilter(
 
     // Category filter
     if (options.category) {
-      filtered = filtered.filter(t => t.category === options.category)
+      filtered = filtered.filter((t) => t.category === options.category)
     }
 
     // Search filter (searches name and merchant name)
     if (options.searchTerm) {
       const searchLower = options.searchTerm.toLowerCase()
-      filtered = filtered.filter(t =>
-        t.name.toLowerCase().includes(searchLower) ||
-        t.category.toLowerCase().includes(searchLower) ||
-        (t.merchantName && t.merchantName.toLowerCase().includes(searchLower))
+      filtered = filtered.filter(
+        (t) =>
+          t.name.toLowerCase().includes(searchLower) ||
+          t.category.toLowerCase().includes(searchLower) ||
+          (t.merchantName && t.merchantName.toLowerCase().includes(searchLower))
       )
     }
 
     // Date range filter
     if (options.dateFrom) {
       const fromDate = new Date(options.dateFrom)
-      filtered = filtered.filter(t => new Date(t.date) >= fromDate)
+      filtered = filtered.filter((t) => new Date(t.date) >= fromDate)
     }
 
     if (options.dateTo) {
       const toDate = new Date(options.dateTo)
-      filtered = filtered.filter(t => new Date(t.date) <= toDate)
+      filtered = filtered.filter((t) => new Date(t.date) <= toDate)
     }
 
     // Amount range filter
     if (options.minAmount !== null && options.minAmount !== undefined) {
-      filtered = filtered.filter(t => Math.abs(t.amount) >= options.minAmount!)
+      filtered = filtered.filter(
+        (t) => Math.abs(t.amount) >= options.minAmount!
+      )
     }
 
     if (options.maxAmount !== null && options.maxAmount !== undefined) {
-      filtered = filtered.filter(t => Math.abs(t.amount) <= options.maxAmount!)
+      filtered = filtered.filter(
+        (t) => Math.abs(t.amount) <= options.maxAmount!
+      )
     }
 
     // Status filter
-    if (options.status === 'pending') {
-      filtered = filtered.filter(t => t.pending === true)
-    } else if (options.status === 'completed') {
-      filtered = filtered.filter(t => t.pending !== true)
+    if (options.status === "pending") {
+      filtered = filtered.filter((t) => t.pending === true)
+    } else if (options.status === "completed") {
+      filtered = filtered.filter((t) => t.pending !== true)
     }
 
     return filtered
@@ -130,18 +135,18 @@ export function useTransactionFilter(
       let comparison = 0
 
       switch (sortOptions.field) {
-        case 'date':
+        case "date":
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime()
           break
-        case 'amount':
+        case "amount":
           comparison = Math.abs(a.amount) - Math.abs(b.amount)
           break
-        case 'name':
+        case "name":
           comparison = a.name.localeCompare(b.name)
           break
       }
 
-      return sortOptions.direction === 'asc' ? comparison : -comparison
+      return sortOptions.direction === "asc" ? comparison : -comparison
     })
 
     return sorted
@@ -161,10 +166,10 @@ export function useTransactionFilter(
 
     const total = sortedTransactions.reduce((sum, t) => sum + t.amount, 0)
     const totalCredit = sortedTransactions
-      .filter(t => t.type === 'credit')
+      .filter((t) => t.type === "credit")
       .reduce((sum, t) => sum + t.amount, 0)
     const totalDebit = sortedTransactions
-      .filter(t => t.type === 'debit')
+      .filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
     return {
@@ -180,20 +185,23 @@ export function useTransactionFilter(
   const categoryDistribution = useMemo(() => {
     if (!sortedTransactions.length) return []
 
-    const distribution = sortedTransactions.reduce((acc, t) => {
-      const existing = acc.find(item => item.category === t.category)
-      if (existing) {
-        existing.count++
-        existing.total += Math.abs(t.amount)
-      } else {
-        acc.push({
-          category: t.category,
-          count: 1,
-          total: Math.abs(t.amount),
-        })
-      }
-      return acc
-    }, [] as Array<{ category: string; count: number; total: number }>)
+    const distribution = sortedTransactions.reduce(
+      (acc, t) => {
+        const existing = acc.find((item) => item.category === t.category)
+        if (existing) {
+          existing.count++
+          existing.total += Math.abs(t.amount)
+        } else {
+          acc.push({
+            category: t.category,
+            count: 1,
+            total: Math.abs(t.amount),
+          })
+        }
+        return acc
+      },
+      [] as Array<{ category: string; count: number; total: number }>
+    )
 
     return distribution.sort((a, b) => b.total - a.total)
   }, [sortedTransactions])
@@ -203,7 +211,9 @@ export function useTransactionFilter(
     categories,
     stats,
     categoryDistribution,
-    hasFilters: Object.values(options).some(v => v !== null && v !== undefined),
+    hasFilters: Object.values(options).some(
+      (v) => v !== null && v !== undefined
+    ),
   }
 }
 

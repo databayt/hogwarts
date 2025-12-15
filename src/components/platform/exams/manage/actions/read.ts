@@ -1,24 +1,26 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { getExamsSchema } from "../validation";
-import type { ActionResponse, ExamListRow } from "./types";
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import { getExamsSchema } from "../validation"
+import type { ActionResponse, ExamListRow } from "./types"
 
 /**
  * Get single exam details
  */
 export async function getExam(input: { id: string }): Promise<{
-  exam: Record<string, unknown> | null;
+  exam: Record<string, unknown> | null
 }> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      throw new Error("Missing school context");
+      throw new Error("Missing school context")
     }
 
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     const exam = await db.exam.findFirst({
       where: { id, schoolId },
@@ -41,12 +43,12 @@ export async function getExam(input: { id: string }): Promise<{
         createdAt: true,
         updatedAt: true,
       },
-    });
+    })
 
-    return { exam: exam as Record<string, unknown> | null };
+    return { exam: exam as Record<string, unknown> | null }
   } catch (error) {
-    console.error("Error getting exam:", error);
-    return { exam: null };
+    console.error("Error getting exam:", error)
+    return { exam: null }
   }
 }
 
@@ -56,16 +58,16 @@ export async function getExam(input: { id: string }): Promise<{
 export async function getExams(
   input?: Partial<z.infer<typeof getExamsSchema>>
 ): Promise<{
-  rows: ExamListRow[];
-  total: number;
+  rows: ExamListRow[]
+  total: number
 }> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      throw new Error("Missing school context");
+      throw new Error("Missing school context")
     }
 
-    const searchParams = getExamsSchema.parse(input ?? {});
+    const searchParams = getExamsSchema.parse(input ?? {})
 
     // Build where clause
     const where: Record<string, unknown> = {
@@ -80,17 +82,19 @@ export async function getExams(
       ...(searchParams.examDate
         ? { examDate: new Date(searchParams.examDate) }
         : {}),
-    };
+    }
 
     // Calculate pagination
-    const skip = (searchParams.page - 1) * searchParams.perPage;
-    const take = searchParams.perPage;
+    const skip = (searchParams.page - 1) * searchParams.perPage
+    const take = searchParams.perPage
 
     // Build orderBy
     const orderBy =
-      searchParams.sort && Array.isArray(searchParams.sort) && searchParams.sort.length
+      searchParams.sort &&
+      Array.isArray(searchParams.sort) &&
+      searchParams.sort.length
         ? searchParams.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ examDate: "desc" }, { startTime: "asc" }];
+        : [{ examDate: "desc" }, { startTime: "asc" }]
 
     // Fetch data and count in parallel
     const [rows, count] = await Promise.all([
@@ -113,7 +117,7 @@ export async function getExams(
         },
       }),
       db.exam.count({ where }),
-    ]);
+    ])
 
     // Map to response format
     const mapped: ExamListRow[] = rows.map((exam) => ({
@@ -129,18 +133,18 @@ export async function getExams(
       examType: exam.examType,
       status: exam.status,
       createdAt: exam.createdAt.toISOString(),
-    }));
+    }))
 
     return {
       rows: mapped,
       total: count,
-    };
+    }
   } catch (error) {
-    console.error("Error getting exams:", error);
+    console.error("Error getting exams:", error)
     return {
       rows: [],
       total: 0,
-    };
+    }
   }
 }
 
@@ -148,22 +152,22 @@ export async function getExams(
  * Get upcoming exams for a class or student
  */
 export async function getUpcomingExams(input?: {
-  classId?: string;
-  studentId?: string;
-  limit?: number;
+  classId?: string
+  studentId?: string
+  limit?: number
 }): Promise<ActionResponse<ExamListRow[]>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     const where: Record<string, unknown> = {
       schoolId,
@@ -173,10 +177,10 @@ export async function getUpcomingExams(input?: {
       status: {
         in: ["PLANNED", "IN_PROGRESS"],
       },
-    };
+    }
 
     if (input?.classId) {
-      where.classId = input.classId;
+      where.classId = input.classId
     }
 
     if (input?.studentId) {
@@ -188,12 +192,12 @@ export async function getUpcomingExams(input?: {
             select: { classId: true },
           },
         },
-      });
+      })
 
       if (student) {
         where.classId = {
           in: student.studentClasses.map((sc) => sc.classId),
-        };
+        }
       }
     }
 
@@ -209,7 +213,7 @@ export async function getUpcomingExams(input?: {
           select: { subjectName: true },
         },
       },
-    });
+    })
 
     const mapped: ExamListRow[] = exams.map((exam) => ({
       id: exam.id,
@@ -224,18 +228,18 @@ export async function getUpcomingExams(input?: {
       examType: exam.examType,
       status: exam.status,
       createdAt: exam.createdAt.toISOString(),
-    }));
+    }))
 
     return {
       success: true,
       data: mapped,
-    };
+    }
   } catch (error) {
-    console.error("Error getting upcoming exams:", error);
+    console.error("Error getting upcoming exams:", error)
     return {
       success: false,
       error: "Failed to get upcoming exams",
       code: "FETCH_FAILED",
-    };
+    }
   }
 }

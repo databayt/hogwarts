@@ -1,15 +1,15 @@
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
 
 interface Props {
-  params: Promise<{ subdomain: string }>;
+  params: Promise<{ subdomain: string }>
 }
 
 export default async function Test({ params }: Props) {
-  const { subdomain } = await params;
-  
+  const { subdomain } = await params
+
   try {
-    const result = await getSchoolBySubdomain(subdomain);
-    
+    const result = await getSchoolBySubdomain(subdomain)
+
     return (
       <div className="space-y-4">
         <h3>Subdomain Test Page</h3>
@@ -27,13 +27,13 @@ export default async function Test({ params }: Props) {
           )}
         </div>
       </div>
-    );
+    )
   } catch (error) {
     return (
       <div className="space-y-4">
         <h3>Error</h3>
         <pre className="text-red-600">{JSON.stringify(error, null, 2)}</pre>
       </div>
-    );
+    )
   }
 }

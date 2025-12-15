@@ -1,50 +1,50 @@
-'use client';
+"use client"
 
-import { Check, ChevronsUpDown, GalleryVerticalEnd } from 'lucide-react';
-import * as React from 'react';
+import * as React from "react"
+import { Check, ChevronsUpDown, GalleryVerticalEnd } from "lucide-react"
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
-} from '@/components/ui/sidebar';
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
 
 interface Tenant {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 export function OrgSwitcher({
   tenants,
   defaultTenant,
-  onTenantSwitch
+  onTenantSwitch,
 }: {
-  tenants: Tenant[];
-  defaultTenant: Tenant;
-  onTenantSwitch?: (tenantId: string) => void;
+  tenants: Tenant[]
+  defaultTenant: Tenant
+  onTenantSwitch?: (tenantId: string) => void
 }) {
   const [selectedTenant, setSelectedTenant] = React.useState<
     Tenant | undefined
-  >(defaultTenant || (tenants.length > 0 ? tenants[0] : undefined));
+  >(defaultTenant || (tenants.length > 0 ? tenants[0] : undefined))
 
   const handleTenantSwitch = (tenant: Tenant) => {
-    setSelectedTenant(tenant);
+    setSelectedTenant(tenant)
     if (onTenantSwitch) {
-      onTenantSwitch(tenant.id);
+      onTenantSwitch(tenant.id)
     }
     // Default behavior: navigate to tenant-aware lab (subdomain or path-based)
     // Replace with subdomain routing if configured; placeholder path-based switch:
     // TODO: connect to subdomain router when available
-  };
+  }
 
   if (!selectedTenant) {
-    return null;
+    return null
   }
   return (
     <SidebarMenu>
@@ -52,31 +52,31 @@ export function OrgSwitcher({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size='lg'
-              className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className='bg-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <GalleryVerticalEnd className='size-4' />
+              <div className="bg-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <GalleryVerticalEnd className="size-4" />
               </div>
-              <div className='flex flex-col gap-0.5 leading-none'>
-                <span className='font-semibold'>Next Starter</span>
-                <span className=''>{selectedTenant.name}</span>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold">Next Starter</span>
+                <span className="">{selectedTenant.name}</span>
               </div>
-              <ChevronsUpDown className='ms-auto' />
+              <ChevronsUpDown className="ms-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-[--radix-dropdown-menu-trigger-width]'
-            align='start'
+            className="w-[--radix-dropdown-menu-trigger-width]"
+            align="start"
           >
             {tenants.map((tenant) => (
               <DropdownMenuItem
                 key={tenant.id}
                 onSelect={() => handleTenantSwitch(tenant)}
               >
-                {tenant.name}{' '}
+                {tenant.name}{" "}
                 {tenant.id === selectedTenant.id && (
-                  <Check className='ms-auto' />
+                  <Check className="ms-auto" />
                 )}
               </DropdownMenuItem>
             ))}
@@ -84,5 +84,5 @@ export function OrgSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
+  )
 }

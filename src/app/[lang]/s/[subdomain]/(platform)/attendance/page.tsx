@@ -1,15 +1,21 @@
-import { AttendanceOverviewContent } from '@/components/platform/attendance/overview/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceOverviewContent } from "@/components/platform/attendance/overview/content"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary?.school?.attendance?.title || 'Attendance',
-    description: dictionary?.school?.attendance?.overview || 'Manage student attendance',
+    title: dictionary?.school?.attendance?.title || "Attendance",
+    description:
+      dictionary?.school?.attendance?.overview || "Manage student attendance",
   }
 }
 
@@ -20,10 +26,5 @@ interface Props {
 export default async function Page({ params }: Props) {
   const { lang, subdomain } = await params
 
-  return (
-    <AttendanceOverviewContent
-      locale={lang}
-      subdomain={subdomain}
-    />
-  )
+  return <AttendanceOverviewContent locale={lang} subdomain={subdomain} />
 }

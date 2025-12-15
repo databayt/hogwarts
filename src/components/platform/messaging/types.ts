@@ -1,17 +1,17 @@
 import type {
-  ConversationType,
-  ParticipantRole,
-  MessageStatus,
   Conversation,
+  ConversationInvite,
   ConversationParticipant,
+  ConversationType,
   Message,
   MessageAttachment,
+  MessageDraft,
   MessageReaction,
   MessageReadReceipt,
-  TypingIndicator,
-  MessageDraft,
+  MessageStatus,
+  ParticipantRole,
   PinnedMessage,
-  ConversationInvite,
+  TypingIndicator,
 } from "@prisma/client"
 
 // DTO types for API responses
@@ -346,7 +346,10 @@ export type MessageSocketEvents = {
   "message:read": { messageId: string; userId: string; readAt: Date }
   "message:reaction": MessageReactionDTO
   "conversation:new": ConversationDTO
-  "conversation:updated": { conversationId: string; updates: Partial<ConversationDTO> }
+  "conversation:updated": {
+    conversationId: string
+    updates: Partial<ConversationDTO>
+  }
   "conversation:archived": { conversationId: string }
   "conversation:participant_added": ConversationParticipantDTO
   "conversation:participant_removed": { conversationId: string; userId: string }
@@ -395,4 +398,8 @@ export type MessagingAction =
   | "send_broadcast"
 
 // Re-export Prisma enums for convenience
-export { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
+export {
+  ConversationType,
+  ParticipantRole,
+  MessageStatus,
+} from "@prisma/client"

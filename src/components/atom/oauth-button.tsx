@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/atom/icons"
@@ -15,8 +16,10 @@ const providerIcons = {
 
 export type OAuthProvider = keyof typeof providerIcons
 
-export interface OAuthButtonProps
-  extends Omit<React.ComponentProps<typeof Button>, "children"> {
+export interface OAuthButtonProps extends Omit<
+  React.ComponentProps<typeof Button>,
+  "children"
+> {
   provider: OAuthProvider
   label?: string
 }

@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { IconStat } from "./icon-stat"
 import { StatGroup } from "./stat-group"
 import type { BaseVariant, CardSize, TrendData } from "./types"
@@ -96,7 +98,7 @@ export function StatCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -113,7 +115,9 @@ export function StatCard({
             icon={icon}
             value={value}
             label={label}
-            variant={variant === "primary" || variant === "muted" ? variant : "default"}
+            variant={
+              variant === "primary" || variant === "muted" ? variant : "default"
+            }
           />
         ) : (
           <StatGroup

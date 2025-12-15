@@ -1,20 +1,21 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
 import type { ElementType } from "react"
 import {
-  Users,
-  CircleCheck,
+  Activity,
+  Calendar,
   CircleAlert,
+  CircleCheck,
   Clock,
   TrendingUp,
-  Calendar,
   UserCheck,
-  UserX,
   UserMinus,
-  Activity,
+  Users,
+  UserX,
 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Icon map for string-based icon names (prevents Server Component serialization issues)
 const iconMap: Record<string, ElementType> = {
@@ -84,20 +85,24 @@ export function StatCard({
     <Card className={cn("", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {Icon && (
-          iconBgColor ? (
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", iconBgColor)}>
-              <Icon className="h-5 w-5 text-white dark:text-foreground" />
+        {Icon &&
+          (iconBgColor ? (
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-xl",
+                iconBgColor
+              )}
+            >
+              <Icon className="dark:text-foreground h-5 w-5 text-white" />
             </div>
           ) : (
             <Icon className={cn("h-4 w-4", styles.icon)} />
-          )
-        )}
+          ))}
       </CardHeader>
       <CardContent>
         <div className={cn("text-2xl font-bold", styles.value)}>{value}</div>
         {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-xs">{description}</p>
         )}
       </CardContent>
     </Card>

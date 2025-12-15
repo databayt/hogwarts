@@ -1,15 +1,20 @@
-"use client";
+"use client"
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useState } from "react"
+import Link from "next/link"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ArrowLeft, Loader2, SaveIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -18,33 +23,33 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createLessonSchema, type CreateLessonInput } from "../create/validation";
-import { ArrowLeft, Loader2, SaveIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import Link from "next/link";
-import { FileUpload } from "@/components/stream/shared/file-upload";
-import { updateLesson } from "../edit/actions";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { FileUpload } from "@/components/stream/shared/file-upload"
+
+import {
+  createLessonSchema,
+  type CreateLessonInput,
+} from "../create/validation"
+import { updateLesson } from "../edit/actions"
 
 interface LessonFormProps {
   data: {
-    id: string;
-    title: string;
-    description: string | null;
-    videoUrl: string | null;
-    duration: number | null;
-    position: number;
-    isFree: boolean;
-  };
-  courseId: string;
-  chapterId: string;
+    id: string
+    title: string
+    description: string | null
+    videoUrl: string | null
+    duration: number | null
+    position: number
+    isFree: boolean
+  }
+  courseId: string
+  chapterId: string
 }
 
 export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, setIsPending] = useState(false)
 
   const form = useForm<CreateLessonInput>({
     resolver: zodResolver(createLessonSchema),
@@ -56,10 +61,10 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
       position: data.position,
       isFree: data.isFree,
     },
-  });
+  })
 
   async function onSubmit(values: CreateLessonInput) {
-    setIsPending(true);
+    setIsPending(true)
     try {
       const result = await updateLesson(data.id, {
         title: values.title,
@@ -67,23 +72,23 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
         videoUrl: values.videoUrl,
         duration: values.duration,
         isFree: values.isFree,
-      });
+      })
 
       if (result.status === "success") {
-        toast.success("Lesson updated successfully!");
+        toast.success("Lesson updated successfully!")
       } else {
-        toast.error(result.message || "Failed to update lesson");
+        toast.error(result.message || "Failed to update lesson")
       }
     } catch (error) {
-      toast.error("Failed to update lesson");
+      toast.error("Failed to update lesson")
     } finally {
-      setIsPending(false);
+      setIsPending(false)
     }
   }
 
   return (
     <>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="mb-6 flex items-center gap-4">
         <Link
           href={`/stream/admin/courses/${courseId}/edit`}
           className={buttonVariants({
@@ -155,7 +160,8 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                       />
                     </FormControl>
                     <FormDescription>
-                      Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to 5GB with S3.
+                      Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to
+                      5GB with S3.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -175,8 +181,8 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseInt(val));
+                          const val = e.target.value
+                          field.onChange(val === "" ? undefined : parseInt(val))
                         }}
                       />
                     </FormControl>
@@ -203,5 +209,5 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
         </CardContent>
       </Card>
     </>
-  );
+  )
 }

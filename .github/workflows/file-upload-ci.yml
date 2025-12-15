@@ -7,23 +7,23 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'src/components/file-upload/**'
-      - 'src/app/**/upload/**'
-      - 'src/lib/storage/**'
-      - 'src/lib/upload/**'
-      - 'infrastructure/terraform/**'
-      - '.github/workflows/file-upload-ci.yml'
+      - "src/components/file-upload/**"
+      - "src/app/**/upload/**"
+      - "src/lib/storage/**"
+      - "src/lib/upload/**"
+      - "infrastructure/terraform/**"
+      - ".github/workflows/file-upload-ci.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'src/components/file-upload/**'
-      - 'src/app/**/upload/**'
-      - 'src/lib/storage/**'
-      - 'src/lib/upload/**'
+      - "src/components/file-upload/**"
+      - "src/app/**/upload/**"
+      - "src/lib/storage/**"
+      - "src/lib/upload/**"
 
 env:
-  NODE_VERSION: '20.x'
-  PNPM_VERSION: '9.x'
+  NODE_VERSION: "20.x"
+  PNPM_VERSION: "9.x"
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -67,8 +67,8 @@ jobs:
       - name: OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          path: '.'
-          format: 'HTML'
+          path: "."
+          format: "HTML"
           args: >
             --enableRetired
             --enableExperimental
@@ -131,7 +131,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -272,7 +272,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

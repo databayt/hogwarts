@@ -1,7 +1,17 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns"
+import { Pencil, Plus, Users } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -9,49 +19,46 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Users } from "lucide-react";
-import { format } from "date-fns";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Scholarship {
-  id: string;
-  name: string;
-  academicYear: string;
-  coverageType: string;
-  coverageAmount: any;
-  currentBeneficiaries: number;
-  maxBeneficiaries?: number | null;
-  startDate: Date | string;
-  endDate: Date | string;
-  isActive: boolean;
+  id: string
+  name: string
+  academicYear: string
+  coverageType: string
+  coverageAmount: any
+  currentBeneficiaries: number
+  maxBeneficiaries?: number | null
+  startDate: Date | string
+  endDate: Date | string
+  isActive: boolean
 }
 
 interface Props {
-  scholarships: Scholarship[];
-  dictionary?: Dictionary;
+  scholarships: Scholarship[]
+  dictionary?: Dictionary
 }
 
 export function ScholarshipsList({ scholarships, dictionary }: Props) {
   const formatCoverage = (type: string, amount: any) => {
-    const value = typeof amount === 'object' ? amount.toNumber() : amount;
+    const value = typeof amount === "object" ? amount.toNumber() : amount
 
     switch (type) {
       case "PERCENTAGE":
-        return `${value}%`;
+        return `${value}%`
       case "FIXED_AMOUNT":
         return new Intl.NumberFormat("en-IN", {
           style: "currency",
           currency: "INR",
           minimumFractionDigits: 0,
-        }).format(value);
+        }).format(value)
       case "FULL":
-        return "100%";
+        return "100%"
       default:
-        return value;
+        return value
     }
-  };
+  }
 
   return (
     <Card>
@@ -77,36 +84,45 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
               <TableHead>Beneficiaries</TableHead>
               <TableHead>Validity</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">
-                Actions
-              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {scholarships.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="text-muted-foreground py-8 text-center"
+                >
                   No scholarships found
                 </TableCell>
               </TableRow>
             ) : (
               scholarships.map((scholarship) => (
                 <TableRow key={scholarship.id}>
-                  <TableCell className="font-medium">{scholarship.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {scholarship.name}
+                  </TableCell>
                   <TableCell>{scholarship.academicYear}</TableCell>
                   <TableCell>
-                    {formatCoverage(scholarship.coverageType, scholarship.coverageAmount)}
+                    {formatCoverage(
+                      scholarship.coverageType,
+                      scholarship.coverageAmount
+                    )}
                   </TableCell>
                   <TableCell>
                     {scholarship.currentBeneficiaries}
-                    {scholarship.maxBeneficiaries && ` / ${scholarship.maxBeneficiaries}`}
+                    {scholarship.maxBeneficiaries &&
+                      ` / ${scholarship.maxBeneficiaries}`}
                   </TableCell>
                   <TableCell>
                     {format(new Date(scholarship.startDate), "MMM dd")} -
                     {format(new Date(scholarship.endDate), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={scholarship.isActive ? "default" : "secondary"}>
+                    <Badge
+                      variant={scholarship.isActive ? "default" : "secondary"}
+                    >
                       {scholarship.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
@@ -127,5 +143,5 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }

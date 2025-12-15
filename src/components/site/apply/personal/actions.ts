@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { personalSchema, type PersonalSchemaType } from './validation';
+import { personalSchema, type PersonalSchemaType } from "./validation"
 
 export interface SavePersonalResult {
-  success: boolean;
-  data?: PersonalSchemaType;
-  error?: string;
+  success: boolean
+  data?: PersonalSchemaType
+  error?: string
 }
 
 export async function savePersonalStep(
@@ -13,22 +13,22 @@ export async function savePersonalStep(
 ): Promise<SavePersonalResult> {
   try {
     // Validate data
-    const validatedData = personalSchema.parse(data);
+    const validatedData = personalSchema.parse(data)
 
     return {
       success: true,
-      data: validatedData
-    };
+      data: validatedData,
+    }
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        error: error.message
-      };
+        error: error.message,
+      }
     }
     return {
       success: false,
-      error: 'Validation failed'
-    };
+      error: "Validation failed",
+    }
   }
 }

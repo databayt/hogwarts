@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonPageNav } from '@/components/ui/skeleton-page-nav'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function TeacherDetailLoading() {
   return (

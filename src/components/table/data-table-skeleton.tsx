@@ -1,4 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -6,17 +7,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/table"
 
 interface DataTableSkeletonProps extends React.ComponentProps<"div"> {
-  columnCount: number;
-  rowCount?: number;
-  filterCount?: number;
-  cellWidths?: string[];
-  withViewOptions?: boolean;
-  withPagination?: boolean;
-  shrinkZero?: boolean;
+  columnCount: number
+  rowCount?: number
+  filterCount?: number
+  cellWidths?: string[]
+  withViewOptions?: boolean
+  withPagination?: boolean
+  shrinkZero?: boolean
 }
 
 export function DataTableSkeleton({
@@ -32,8 +32,8 @@ export function DataTableSkeleton({
 }: DataTableSkeletonProps) {
   const cozyCellWidths = Array.from(
     { length: columnCount },
-    (_, index) => cellWidths[index % cellWidths.length] ?? "auto",
-  );
+    (_, index) => cellWidths[index % cellWidths.length] ?? "auto"
+  )
 
   return (
     <div
@@ -98,7 +98,7 @@ export function DataTableSkeleton({
               <Skeleton className="h-7 w-24" />
               <Skeleton className="h-7 w-[4.5rem]" />
             </div>
-            <div className="flex items-center justify-center font-medium muted">
+            <div className="muted flex items-center justify-center font-medium">
               <Skeleton className="h-7 w-20" />
             </div>
             <div className="flex items-center gap-2">
@@ -111,5 +111,5 @@ export function DataTableSkeleton({
         </div>
       ) : null}
     </div>
-  );
+  )
 }

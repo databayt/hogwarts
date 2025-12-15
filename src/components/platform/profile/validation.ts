@@ -22,13 +22,14 @@
  * - Custom fields: Record<string, any> for extensibility without schema changes
  */
 
-import { z } from 'zod'
+import { z } from "zod"
+
 import {
-  UserProfileType,
-  ProfileVisibility,
   ActivityType,
-  AvailabilityStatus
-} from './types'
+  AvailabilityStatus,
+  ProfileVisibility,
+  UserProfileType,
+} from "./types"
 
 // ============================================================================
 // Common Validation Schemas
@@ -40,7 +41,7 @@ import {
  */
 export const emailSchema = z
   .string()
-  .email('Invalid email address')
+  .email("Invalid email address")
   .toLowerCase()
   .trim()
 
@@ -51,7 +52,7 @@ export const emailSchema = z
  */
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
+  .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format")
   .optional()
   .nullable()
 
@@ -60,7 +61,7 @@ export const phoneSchema = z
  */
 export const urlSchema = z
   .string()
-  .url('Invalid URL format')
+  .url("Invalid URL format")
   .optional()
   .nullable()
 
@@ -69,46 +70,50 @@ export const urlSchema = z
  */
 export const dateSchema = z
   .union([z.string(), z.date()])
-  .transform((val) => (typeof val === 'string' ? new Date(val) : val))
+  .transform((val) => (typeof val === "string" ? new Date(val) : val))
 
 /**
  * Social links validation
  */
-export const socialLinksSchema = z.object({
-  website: urlSchema,
-  linkedin: urlSchema,
-  twitter: urlSchema,
-  facebook: urlSchema,
-  instagram: urlSchema,
-  github: urlSchema,
-  youtube: urlSchema
-}).partial()
+export const socialLinksSchema = z
+  .object({
+    website: urlSchema,
+    linkedin: urlSchema,
+    twitter: urlSchema,
+    facebook: urlSchema,
+    instagram: urlSchema,
+    github: urlSchema,
+    youtube: urlSchema,
+  })
+  .partial()
 
 /**
  * Profile settings validation
  */
 export const profileSettingsSchema = z.object({
-  theme: z.enum(['light', 'dark', 'system']).optional(),
-  language: z.enum(['ar', 'en']),
+  theme: z.enum(["light", "dark", "system"]).optional(),
+  language: z.enum(["ar", "en"]),
   emailNotifications: z.boolean().default(true),
   pushNotifications: z.boolean().default(true),
   showEmail: z.boolean().default(false),
   showPhone: z.boolean().default(false),
   showLocation: z.boolean().default(true),
   allowMessages: z.boolean().default(true),
-  allowConnectionRequests: z.boolean().default(true)
+  allowConnectionRequests: z.boolean().default(true),
 })
 
 /**
  * Address validation
  */
-export const addressSchema = z.object({
-  address: z.string().min(1).max(500).optional(),
-  city: z.string().min(1).max(100).optional(),
-  state: z.string().min(1).max(100).optional(),
-  country: z.string().min(1).max(100).optional(),
-  postalCode: z.string().min(1).max(20).optional()
-}).partial()
+export const addressSchema = z
+  .object({
+    address: z.string().min(1).max(500).optional(),
+    city: z.string().min(1).max(100).optional(),
+    state: z.string().min(1).max(100).optional(),
+    country: z.string().min(1).max(100).optional(),
+    postalCode: z.string().min(1).max(20).optional(),
+  })
+  .partial()
 
 // ============================================================================
 // Base Profile Validation
@@ -118,11 +123,15 @@ export const addressSchema = z.object({
  * Base profile schema shared across all user types
  */
 export const baseProfileSchema = z.object({
-  displayName: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  displayName: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: emailSchema,
   avatar: urlSchema,
   coverImage: urlSchema,
-  bio: z.string().max(500, 'Bio must be 500 characters or less').optional().nullable(),
+  bio: z
+    .string()
+    .max(500, "Bio must be 500 characters or less")
+    .optional()
+    .nullable(),
 
   // Contact
   phone: phoneSchema,
@@ -134,7 +143,7 @@ export const baseProfileSchema = z.object({
 
   // Settings
   visibility: z.nativeEnum(ProfileVisibility).default(ProfileVisibility.SCHOOL),
-  settings: profileSettingsSchema
+  settings: profileSettingsSchema,
 })
 
 // ============================================================================
@@ -151,12 +160,12 @@ export const studentAcademicInfoSchema = z.object({
   currentYearLevel: z.string().optional(),
   currentSection: z.string().optional(),
   house: z.string().optional().nullable(),
-  studentType: z.enum(['REGULAR', 'TRANSFER', 'INTERNATIONAL', 'EXCHANGE']),
+  studentType: z.enum(["REGULAR", "TRANSFER", "INTERNATIONAL", "EXCHANGE"]),
   enrollmentDate: dateSchema,
   expectedGraduation: dateSchema.optional().nullable(),
   gpa: z.number().min(0).max(5).optional().nullable(),
   rank: z.number().positive().optional().nullable(),
-  totalCredits: z.number().nonnegative().optional().nullable()
+  totalCredits: z.number().nonnegative().optional().nullable(),
 })
 
 /**
@@ -164,9 +173,9 @@ export const studentAcademicInfoSchema = z.object({
  */
 export const skillSchema = z.object({
   name: z.string().min(1).max(50),
-  level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
+  level: z.enum(["beginner", "intermediate", "advanced", "expert"]),
   verified: z.boolean().default(false),
-  endorsements: z.number().nonnegative().default(0)
+  endorsements: z.number().nonnegative().default(0),
 })
 
 /**
@@ -174,7 +183,13 @@ export const skillSchema = z.object({
  */
 export const languageSchema = z.object({
   name: z.string().min(1).max(50),
-  proficiency: z.enum(['native', 'fluent', 'professional', 'conversational', 'basic'])
+  proficiency: z.enum([
+    "native",
+    "fluent",
+    "professional",
+    "conversational",
+    "basic",
+  ]),
 })
 
 /**
@@ -186,7 +201,7 @@ export const certificationSchema = z.object({
   issueDate: dateSchema,
   expiryDate: dateSchema.optional().nullable(),
   credentialId: z.string().optional().nullable(),
-  url: urlSchema
+  url: urlSchema,
 })
 
 /**
@@ -198,7 +213,7 @@ export const studentSkillsInterestsSchema = z.object({
   hobbies: z.array(z.string().max(50)).max(10),
   extracurriculars: z.array(z.string().max(100)).max(10),
   languages: z.array(languageSchema).max(10),
-  certifications: z.array(certificationSchema).max(20)
+  certifications: z.array(certificationSchema).max(20),
 })
 
 /**
@@ -206,7 +221,7 @@ export const studentSkillsInterestsSchema = z.object({
  */
 export const studentProfileUpdateSchema = baseProfileSchema.extend({
   academicInfo: studentAcademicInfoSchema.partial(),
-  skillsAndInterests: studentSkillsInterestsSchema.partial()
+  skillsAndInterests: studentSkillsInterestsSchema.partial(),
 })
 
 // ============================================================================
@@ -219,12 +234,12 @@ export const studentProfileUpdateSchema = baseProfileSchema.extend({
 export const teacherProfessionalInfoSchema = z.object({
   employeeId: z.string().min(1).max(50),
   designation: z.string().max(100).optional().nullable(),
-  employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'VISITING']),
-  employmentStatus: z.enum(['ACTIVE', 'ON_LEAVE', 'RESIGNED', 'RETIRED']),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT", "VISITING"]),
+  employmentStatus: z.enum(["ACTIVE", "ON_LEAVE", "RESIGNED", "RETIRED"]),
   joiningDate: dateSchema,
   totalExperience: z.number().nonnegative(),
   specializations: z.array(z.string().max(100)).max(10),
-  researchInterests: z.array(z.string().max(100)).max(10).optional()
+  researchInterests: z.array(z.string().max(100)).max(10).optional(),
 })
 
 /**
@@ -232,11 +247,11 @@ export const teacherProfessionalInfoSchema = z.object({
  */
 export const publicationSchema = z.object({
   title: z.string().min(1).max(500),
-  type: z.enum(['journal', 'conference', 'book', 'chapter', 'other']),
+  type: z.enum(["journal", "conference", "book", "chapter", "other"]),
   publisher: z.string().max(200).optional(),
   year: z.number().min(1900).max(new Date().getFullYear()),
   doi: z.string().optional(),
-  url: urlSchema
+  url: urlSchema,
 })
 
 /**
@@ -247,7 +262,7 @@ export const officeHourSchema = z.object({
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
   location: z.string().max(100).optional(),
-  isOnline: z.boolean().optional()
+  isOnline: z.boolean().optional(),
 })
 
 /**
@@ -256,7 +271,13 @@ export const officeHourSchema = z.object({
 export const teacherScheduleSchema = z.object({
   weeklyHours: z.number().nonnegative().max(60),
   officeHours: z.array(officeHourSchema).max(10).optional(),
-  availability: z.enum(['available', 'busy', 'in_class', 'on_leave', 'offline'] as const)
+  availability: z.enum([
+    "available",
+    "busy",
+    "in_class",
+    "on_leave",
+    "offline",
+  ] as const),
 })
 
 /**
@@ -265,7 +286,7 @@ export const teacherScheduleSchema = z.object({
 export const teacherProfileUpdateSchema = baseProfileSchema.extend({
   professionalInfo: teacherProfessionalInfoSchema.partial(),
   publications: z.array(publicationSchema).max(100).optional(),
-  schedule: teacherScheduleSchema.partial()
+  schedule: teacherScheduleSchema.partial(),
 })
 
 // ============================================================================
@@ -276,19 +297,19 @@ export const teacherProfileUpdateSchema = baseProfileSchema.extend({
  * Parent family information validation
  */
 export const parentFamilyInfoSchema = z.object({
-  relationship: z.enum(['father', 'mother', 'guardian', 'other']),
+  relationship: z.enum(["father", "mother", "guardian", "other"]),
   occupation: z.string().max(100).optional().nullable(),
   employer: z.string().max(200).optional().nullable(),
   workPhone: phoneSchema,
   emergencyContact: z.boolean().default(false),
-  primaryContact: z.boolean().default(false)
+  primaryContact: z.boolean().default(false),
 })
 
 /**
  * Complete parent profile update schema
  */
 export const parentProfileUpdateSchema = baseProfileSchema.extend({
-  familyInfo: parentFamilyInfoSchema.partial()
+  familyInfo: parentFamilyInfoSchema.partial(),
 })
 
 // ============================================================================
@@ -304,10 +325,10 @@ export const staffInfoSchema = z.object({
   designation: z.string().min(1).max(100),
   role: z.string().min(1).max(100),
   joiningDate: dateSchema,
-  employmentType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT']),
-  employmentStatus: z.enum(['ACTIVE', 'ON_LEAVE', 'RESIGNED']),
+  employmentType: z.enum(["FULL_TIME", "PART_TIME", "CONTRACT"]),
+  employmentStatus: z.enum(["ACTIVE", "ON_LEAVE", "RESIGNED"]),
   reportingTo: z.string().optional().nullable(),
-  responsibilities: z.array(z.string().max(200)).max(20)
+  responsibilities: z.array(z.string().max(200)).max(20),
 })
 
 /**
@@ -316,7 +337,13 @@ export const staffInfoSchema = z.object({
 export const staffScheduleSchema = z.object({
   workingHours: z.string().max(100),
   currentShift: z.string().max(50).optional(),
-  availability: z.enum(['available', 'busy', 'in_class', 'on_leave', 'offline'] as const)
+  availability: z.enum([
+    "available",
+    "busy",
+    "in_class",
+    "on_leave",
+    "offline",
+  ] as const),
 })
 
 /**
@@ -324,7 +351,7 @@ export const staffScheduleSchema = z.object({
  */
 export const staffProfileUpdateSchema = baseProfileSchema.extend({
   staffInfo: staffInfoSchema.partial(),
-  schedule: staffScheduleSchema.partial()
+  schedule: staffScheduleSchema.partial(),
 })
 
 // ============================================================================
@@ -341,7 +368,7 @@ export const activityItemSchema = z.object({
   timestamp: dateSchema,
   icon: z.string().optional(),
   link: z.string().optional(),
-  metadata: z.record(z.string(), z.any()).optional()
+  metadata: z.record(z.string(), z.any()).optional(),
 })
 
 /**
@@ -350,13 +377,21 @@ export const activityItemSchema = z.object({
 export const dailyContributionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   count: z.number().nonnegative(),
-  level: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-  details: z.object({
-    assignments: z.number().optional(),
-    attendance: z.number().optional(),
-    activities: z.number().optional(),
-    achievements: z.number().optional()
-  }).optional()
+  level: z.union([
+    z.literal(0),
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+  ]),
+  details: z
+    .object({
+      assignments: z.number().optional(),
+      attendance: z.number().optional(),
+      activities: z.number().optional(),
+      achievements: z.number().optional(),
+    })
+    .optional(),
 })
 
 // ============================================================================
@@ -372,42 +407,50 @@ export const profileSearchParamsSchema = z.object({
   department: z.string().optional(),
   grade: z.string().optional(),
   skills: z.array(z.string()).optional(),
-  sortBy: z.enum(['name', 'joinedAt', 'lastActive', 'popularity']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
+  sortBy: z.enum(["name", "joinedAt", "lastActive", "popularity"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
   limit: z.number().positive().max(100).default(20),
-  offset: z.number().nonnegative().default(0)
+  offset: z.number().nonnegative().default(0),
 })
 
 /**
  * Profile update request validation
  */
-export const profileUpdateRequestSchema = z.object({
-  displayName: z.string().min(2).max(100).optional(),
-  bio: z.string().max(500).optional(),
-  avatar: urlSchema,
-  coverImage: urlSchema,
-  socialLinks: socialLinksSchema,
-  settings: profileSettingsSchema.partial(),
-  customFields: z.record(z.string(), z.any()).optional()
-}).partial()
+export const profileUpdateRequestSchema = z
+  .object({
+    displayName: z.string().min(2).max(100).optional(),
+    bio: z.string().max(500).optional(),
+    avatar: urlSchema,
+    coverImage: urlSchema,
+    socialLinks: socialLinksSchema,
+    settings: profileSettingsSchema.partial(),
+    customFields: z.record(z.string(), z.any()).optional(),
+  })
+  .partial()
 
 /**
  * Profile visibility update validation
  */
 export const profileVisibilityUpdateSchema = z.object({
-  visibility: z.nativeEnum(ProfileVisibility)
+  visibility: z.nativeEnum(ProfileVisibility),
 })
 
 /**
  * Profile theme update validation
  */
 export const profileThemeUpdateSchema = z.object({
-  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
-  accentColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+  primaryColor: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i)
+    .optional(),
+  accentColor: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i)
+    .optional(),
   backgroundImage: urlSchema,
   backgroundPattern: z.string().optional(),
-  cardStyle: z.enum(['flat', 'elevated', 'bordered']).optional(),
-  layout: z.enum(['classic', 'modern', 'compact']).optional()
+  cardStyle: z.enum(["flat", "elevated", "bordered"]).optional(),
+  layout: z.enum(["classic", "modern", "compact"]).optional(),
 })
 
 // ============================================================================
@@ -419,7 +462,7 @@ export const profileThemeUpdateSchema = z.object({
  */
 export const connectionRequestSchema = z.object({
   targetUserId: z.string().uuid(),
-  message: z.string().max(500).optional()
+  message: z.string().max(500).optional(),
 })
 
 /**
@@ -429,7 +472,7 @@ export const messageSchema = z.object({
   recipientId: z.string().uuid(),
   subject: z.string().max(200).optional(),
   content: z.string().min(1).max(5000),
-  isPrivate: z.boolean().default(true)
+  isPrivate: z.boolean().default(true),
 })
 
 /**
@@ -438,7 +481,7 @@ export const messageSchema = z.object({
 export const endorsementSchema = z.object({
   userId: z.string().uuid(),
   skillName: z.string().min(1).max(50),
-  comment: z.string().max(500).optional()
+  comment: z.string().max(500).optional(),
 })
 
 // ============================================================================
@@ -449,14 +492,19 @@ export const endorsementSchema = z.object({
  * Bulk profile import validation
  */
 export const bulkProfileImportSchema = z.object({
-  profiles: z.array(z.object({
-    email: emailSchema,
-    displayName: z.string().min(2).max(100),
-    type: z.nativeEnum(UserProfileType),
-    additionalData: z.record(z.string(), z.any()).optional()
-  })).min(1).max(1000),
+  profiles: z
+    .array(
+      z.object({
+        email: emailSchema,
+        displayName: z.string().min(2).max(100),
+        type: z.nativeEnum(UserProfileType),
+        additionalData: z.record(z.string(), z.any()).optional(),
+      })
+    )
+    .min(1)
+    .max(1000),
   skipExisting: z.boolean().default(false),
-  sendWelcomeEmail: z.boolean().default(true)
+  sendWelcomeEmail: z.boolean().default(true),
 })
 
 /**
@@ -465,8 +513,8 @@ export const bulkProfileImportSchema = z.object({
 export const bulkProfileExportSchema = z.object({
   userIds: z.array(z.string().uuid()).optional(),
   types: z.array(z.nativeEnum(UserProfileType)).optional(),
-  format: z.enum(['json', 'csv', 'excel']).default('json'),
-  includePrivateData: z.boolean().default(false)
+  format: z.enum(["json", "csv", "excel"]).default("json"),
+  includePrivateData: z.boolean().default(false),
 })
 
 // ============================================================================

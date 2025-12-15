@@ -26,8 +26,9 @@
  * @see /api/plaid/exchange-public-token for production version
  */
 
-import { NextResponse } from 'next/server'
-import { plaidClient } from '@/components/platform/finance/banking/lib/plaid'
+import { NextResponse } from "next/server"
+
+import { plaidClient } from "@/components/platform/finance/banking/lib/plaid"
 
 export async function POST(request: Request) {
   try {
@@ -47,9 +48,9 @@ export async function POST(request: Request) {
       item_id,
     })
   } catch (error) {
-    console.error('Error exchanging public token:', error)
+    console.error("Error exchanging public token:", error)
     return NextResponse.json(
-      { error: 'Failed to exchange public token' },
+      { error: "Failed to exchange public token" },
       { status: 500 }
     )
   }

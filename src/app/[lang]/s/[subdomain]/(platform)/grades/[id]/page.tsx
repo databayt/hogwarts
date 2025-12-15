@@ -1,34 +1,35 @@
-import { notFound } from "next/navigation";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { getTenantContext } from "@/lib/tenant-context";
-import { ModalProvider } from "@/components/atom/modal/context";
-import { GradeDetailContent } from "@/components/platform/grades/detail-content";
+import { notFound } from "next/navigation"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { ModalProvider } from "@/components/atom/modal/context"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { GradeDetailContent } from "@/components/platform/grades/detail-content"
 import {
+  getClassGradeStats,
   getResultDetail,
   getStudentGradeHistory,
-  getClassGradeStats,
   getStudentRank,
-} from "@/components/platform/grades/queries";
-import type { Locale } from "@/components/internationalization/config";
+} from "@/components/platform/grades/queries"
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string; id: string }>;
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function GradeDetailPage({ params }: Props) {
-  const { lang, id } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return notFound();
+    return notFound()
   }
 
   // Fetch grade detail
-  const grade = await getResultDetail(schoolId, id);
+  const grade = await getResultDetail(schoolId, id)
 
   if (!grade) {
-    return notFound();
+    return notFound()
   }
 
   // Fetch analytics data in parallel
@@ -40,10 +41,10 @@ export default async function GradeDetailPage({ params }: Props) {
       grade.assignmentId,
       grade.examId
     ),
-  ]);
+  ])
 
   // Calculate student rank
-  const studentRank = getStudentRank(grade.studentId, classStats);
+  const studentRank = getStudentRank(grade.studentId, classStats)
 
   return (
     <ModalProvider>
@@ -56,5 +57,5 @@ export default async function GradeDetailPage({ params }: Props) {
         lang={lang}
       />
     </ModalProvider>
-  );
+  )
 }

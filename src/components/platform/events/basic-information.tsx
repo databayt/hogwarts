@@ -1,18 +1,31 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { eventCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { EventFormStepProps } from "./types";
-import { EVENT_TYPES } from "./config";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
+
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { EVENT_TYPES } from "./config"
+import { EventFormStepProps } from "./types"
+import { eventCreateSchema } from "./validation"
 
 export function BasicInformationStep({ form, isView }: EventFormStepProps) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       {/* Title */}
       <FormField
         control={form.control}
@@ -34,10 +47,10 @@ export function BasicInformationStep({ form, isView }: EventFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea 
-                placeholder="Event description (optional)" 
-                disabled={isView} 
-                {...field} 
+              <Textarea
+                placeholder="Event description (optional)"
+                disabled={isView}
+                {...field}
                 rows={4}
               />
             </FormControl>
@@ -52,7 +65,11 @@ export function BasicInformationStep({ form, isView }: EventFormStepProps) {
         name="eventType"
         render={({ field }) => (
           <FormItem>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select event type" />
@@ -71,5 +88,5 @@ export function BasicInformationStep({ form, isView }: EventFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

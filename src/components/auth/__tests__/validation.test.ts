@@ -10,20 +10,22 @@
  * - i18n-enabled schema factories
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import {
-  LoginSchema,
-  RegisterSchema,
-  ResetSchema,
-  NewPasswordSchema,
-  SettingsSchema,
   createLoginSchema,
+  createNewPasswordSchema,
   createRegisterSchema,
   createResetSchema,
-  createNewPasswordSchema,
   createSettingsSchema,
-} from '../validation'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+  LoginSchema,
+  NewPasswordSchema,
+  RegisterSchema,
+  ResetSchema,
+  SettingsSchema,
+} from "../validation"
 
 // ============================================================================
 // Mock Dictionary for i18n Tests
@@ -32,14 +34,14 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 const mockDictionary: Dictionary = {
   messages: {
     validation: {
-      required: 'Required',
-      email: 'Valid email required',
-      emailRequired: 'Email is required',
-      passwordRequired: 'Password is required',
-      passwordMinLength: 'Minimum 6 characters required',
-      newPasswordRequired: 'New password is required',
-      nameRequired: 'Name is required',
-      invalidCredentials: 'Invalid email or password',
+      required: "Required",
+      email: "Valid email required",
+      emailRequired: "Email is required",
+      passwordRequired: "Password is required",
+      passwordMinLength: "Minimum 6 characters required",
+      newPasswordRequired: "New password is required",
+      nameRequired: "Name is required",
+      invalidCredentials: "Invalid email or password",
     },
     toast: {
       success: {},
@@ -63,82 +65,82 @@ const mockDictionary: Dictionary = {
 // LoginSchema Tests
 // ============================================================================
 
-describe('LoginSchema', () => {
-  describe('email validation', () => {
-    it('should accept valid email', () => {
+describe("LoginSchema", () => {
+  describe("email validation", () => {
+    it("should accept valid email", () => {
       const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid email format', () => {
+    it("should reject invalid email format", () => {
       const result = LoginSchema.safeParse({
-        email: 'invalid-email',
-        password: 'password123',
+        email: "invalid-email",
+        password: "password123",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].path).toContain('email')
+        expect(result.error.issues[0].path).toContain("email")
       }
     })
 
-    it('should reject empty email', () => {
+    it("should reject empty email", () => {
       const result = LoginSchema.safeParse({
-        email: '',
-        password: 'password123',
+        email: "",
+        password: "password123",
       })
       expect(result.success).toBe(false)
     })
 
-    it('should reject missing email', () => {
+    it("should reject missing email", () => {
       const result = LoginSchema.safeParse({
-        password: 'password123',
-      })
-      expect(result.success).toBe(false)
-    })
-  })
-
-  describe('password validation', () => {
-    it('should accept valid password', () => {
-      const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-      })
-      expect(result.success).toBe(true)
-    })
-
-    it('should reject empty password', () => {
-      const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: '',
-      })
-      expect(result.success).toBe(false)
-    })
-
-    it('should reject missing password', () => {
-      const result = LoginSchema.safeParse({
-        email: 'test@example.com',
+        password: "password123",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('2FA code', () => {
-    it('should accept login with optional 2FA code', () => {
+  describe("password validation", () => {
+    it("should accept valid password", () => {
       const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        code: '123456',
+        email: "test@example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept login without 2FA code', () => {
+    it("should reject empty password", () => {
       const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "",
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it("should reject missing password", () => {
+      const result = LoginSchema.safeParse({
+        email: "test@example.com",
+      })
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe("2FA code", () => {
+    it("should accept login with optional 2FA code", () => {
+      const result = LoginSchema.safeParse({
+        email: "test@example.com",
+        password: "password123",
+        code: "123456",
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it("should accept login without 2FA code", () => {
+      const result = LoginSchema.safeParse({
+        email: "test@example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
@@ -149,65 +151,65 @@ describe('LoginSchema', () => {
 // RegisterSchema Tests
 // ============================================================================
 
-describe('RegisterSchema', () => {
-  describe('email validation', () => {
-    it('should accept valid registration data', () => {
+describe("RegisterSchema", () => {
+  describe("email validation", () => {
+    it("should accept valid registration data", () => {
       const result = RegisterSchema.safeParse({
-        email: 'newuser@example.com',
-        password: 'password123',
-        username: 'newuser',
+        email: "newuser@example.com",
+        password: "password123",
+        username: "newuser",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid email', () => {
+    it("should reject invalid email", () => {
       const result = RegisterSchema.safeParse({
-        email: 'not-an-email',
-        password: 'password123',
-        username: 'newuser',
+        email: "not-an-email",
+        password: "password123",
+        username: "newuser",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('password validation', () => {
-    it('should reject password shorter than 6 characters', () => {
+  describe("password validation", () => {
+    it("should reject password shorter than 6 characters", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: '12345', // 5 characters
-        username: 'newuser',
+        email: "test@example.com",
+        password: "12345", // 5 characters
+        username: "newuser",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].path).toContain('password')
+        expect(result.error.issues[0].path).toContain("password")
       }
     })
 
-    it('should accept password with exactly 6 characters', () => {
+    it("should accept password with exactly 6 characters", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: '123456',
-        username: 'newuser',
+        email: "test@example.com",
+        password: "123456",
+        username: "newuser",
       })
       expect(result.success).toBe(true)
     })
   })
 
-  describe('username validation', () => {
-    it('should reject empty username', () => {
+  describe("username validation", () => {
+    it("should reject empty username", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        username: '',
+        email: "test@example.com",
+        password: "password123",
+        username: "",
       })
       expect(result.success).toBe(false)
     })
 
-    it('should accept valid username', () => {
+    it("should accept valid username", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        username: 'JohnDoe',
+        email: "test@example.com",
+        password: "password123",
+        username: "JohnDoe",
       })
       expect(result.success).toBe(true)
     })
@@ -218,24 +220,24 @@ describe('RegisterSchema', () => {
 // ResetSchema Tests
 // ============================================================================
 
-describe('ResetSchema', () => {
-  it('should accept valid email for password reset', () => {
+describe("ResetSchema", () => {
+  it("should accept valid email for password reset", () => {
     const result = ResetSchema.safeParse({
-      email: 'user@example.com',
+      email: "user@example.com",
     })
     expect(result.success).toBe(true)
   })
 
-  it('should reject invalid email for password reset', () => {
+  it("should reject invalid email for password reset", () => {
     const result = ResetSchema.safeParse({
-      email: 'invalid',
+      email: "invalid",
     })
     expect(result.success).toBe(false)
   })
 
-  it('should reject empty email for password reset', () => {
+  it("should reject empty email for password reset", () => {
     const result = ResetSchema.safeParse({
-      email: '',
+      email: "",
     })
     expect(result.success).toBe(false)
   })
@@ -245,24 +247,24 @@ describe('ResetSchema', () => {
 // NewPasswordSchema Tests
 // ============================================================================
 
-describe('NewPasswordSchema', () => {
-  it('should accept password with 6+ characters', () => {
+describe("NewPasswordSchema", () => {
+  it("should accept password with 6+ characters", () => {
     const result = NewPasswordSchema.safeParse({
-      password: 'newpassword123',
+      password: "newpassword123",
     })
     expect(result.success).toBe(true)
   })
 
-  it('should reject password shorter than 6 characters', () => {
+  it("should reject password shorter than 6 characters", () => {
     const result = NewPasswordSchema.safeParse({
-      password: '12345',
+      password: "12345",
     })
     expect(result.success).toBe(false)
   })
 
-  it('should reject empty password', () => {
+  it("should reject empty password", () => {
     const result = NewPasswordSchema.safeParse({
-      password: '',
+      password: "",
     })
     expect(result.success).toBe(false)
   })
@@ -272,100 +274,100 @@ describe('NewPasswordSchema', () => {
 // SettingsSchema Tests
 // ============================================================================
 
-describe('SettingsSchema', () => {
-  describe('basic fields', () => {
-    it('should accept valid settings with role', () => {
+describe("SettingsSchema", () => {
+  describe("basic fields", () => {
+    it("should accept valid settings with role", () => {
       const result = SettingsSchema.safeParse({
-        role: 'ADMIN',
+        role: "ADMIN",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept settings with name', () => {
+    it("should accept settings with name", () => {
       const result = SettingsSchema.safeParse({
-        name: 'John Doe',
-        role: 'USER',
+        name: "John Doe",
+        role: "USER",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept settings with email', () => {
+    it("should accept settings with email", () => {
       const result = SettingsSchema.safeParse({
-        email: 'john@example.com',
-        role: 'USER',
+        email: "john@example.com",
+        role: "USER",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid role', () => {
+    it("should reject invalid role", () => {
       const result = SettingsSchema.safeParse({
-        role: 'INVALID_ROLE',
+        role: "INVALID_ROLE",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('two-factor authentication', () => {
-    it('should accept enabling 2FA', () => {
+  describe("two-factor authentication", () => {
+    it("should accept enabling 2FA", () => {
       const result = SettingsSchema.safeParse({
         isTwoFactorEnabled: true,
-        role: 'USER',
+        role: "USER",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept disabling 2FA', () => {
+    it("should accept disabling 2FA", () => {
       const result = SettingsSchema.safeParse({
         isTwoFactorEnabled: false,
-        role: 'USER',
+        role: "USER",
       })
       expect(result.success).toBe(true)
     })
   })
 
-  describe('password change validation', () => {
-    it('should accept password change with both fields', () => {
+  describe("password change validation", () => {
+    it("should accept password change with both fields", () => {
       const result = SettingsSchema.safeParse({
-        password: 'oldpassword',
-        newPassword: 'newpassword',
-        role: 'USER',
+        password: "oldpassword",
+        newPassword: "newpassword",
+        role: "USER",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject password without newPassword', () => {
+    it("should reject password without newPassword", () => {
       const result = SettingsSchema.safeParse({
-        password: 'oldpassword',
-        role: 'USER',
+        password: "oldpassword",
+        role: "USER",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        const newPasswordError = result.error.issues.find(
-          (e) => e.path.includes('newPassword')
+        const newPasswordError = result.error.issues.find((e) =>
+          e.path.includes("newPassword")
         )
         expect(newPasswordError).toBeDefined()
       }
     })
 
-    it('should reject newPassword without password', () => {
+    it("should reject newPassword without password", () => {
       const result = SettingsSchema.safeParse({
-        newPassword: 'newpassword',
-        role: 'USER',
+        newPassword: "newpassword",
+        role: "USER",
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        const passwordError = result.error.issues.find(
-          (e) => e.path.includes('password')
+        const passwordError = result.error.issues.find((e) =>
+          e.path.includes("password")
         )
         expect(passwordError).toBeDefined()
       }
     })
 
-    it('should reject short newPassword', () => {
+    it("should reject short newPassword", () => {
       const result = SettingsSchema.safeParse({
-        password: 'oldpassword',
-        newPassword: '12345', // Less than 6 characters
-        role: 'USER',
+        password: "oldpassword",
+        newPassword: "12345", // Less than 6 characters
+        role: "USER",
       })
       expect(result.success).toBe(false)
     })
@@ -376,99 +378,99 @@ describe('SettingsSchema', () => {
 // i18n Schema Factory Tests
 // ============================================================================
 
-describe('i18n Schema Factories', () => {
-  describe('createLoginSchema', () => {
-    it('should create schema with dictionary messages', () => {
+describe("i18n Schema Factories", () => {
+  describe("createLoginSchema", () => {
+    it("should create schema with dictionary messages", () => {
       const schema = createLoginSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'invalid',
-        password: 'password123',
+        email: "invalid",
+        password: "password123",
       })
       expect(result.success).toBe(false)
     })
 
-    it('should validate email correctly', () => {
+    it("should validate email correctly", () => {
       const schema = createLoginSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
   })
 
-  describe('createRegisterSchema', () => {
-    it('should create schema with dictionary messages', () => {
+  describe("createRegisterSchema", () => {
+    it("should create schema with dictionary messages", () => {
       const schema = createRegisterSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        username: 'testuser',
+        email: "test@example.com",
+        password: "password123",
+        username: "testuser",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject short password with localized message', () => {
+    it("should reject short password with localized message", () => {
       const schema = createRegisterSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'test@example.com',
-        password: '123',
-        username: 'testuser',
+        email: "test@example.com",
+        password: "123",
+        username: "testuser",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('createResetSchema', () => {
-    it('should create schema with dictionary messages', () => {
+  describe("createResetSchema", () => {
+    it("should create schema with dictionary messages", () => {
       const schema = createResetSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'test@example.com',
+        email: "test@example.com",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid email with localized message', () => {
+    it("should reject invalid email with localized message", () => {
       const schema = createResetSchema(mockDictionary)
       const result = schema.safeParse({
-        email: 'not-an-email',
+        email: "not-an-email",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('createNewPasswordSchema', () => {
-    it('should create schema with dictionary messages', () => {
+  describe("createNewPasswordSchema", () => {
+    it("should create schema with dictionary messages", () => {
       const schema = createNewPasswordSchema(mockDictionary)
       const result = schema.safeParse({
-        password: 'newpassword123',
+        password: "newpassword123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject short password with localized message', () => {
+    it("should reject short password with localized message", () => {
       const schema = createNewPasswordSchema(mockDictionary)
       const result = schema.safeParse({
-        password: '123',
+        password: "123",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('createSettingsSchema', () => {
-    it('should create schema with dictionary messages', () => {
+  describe("createSettingsSchema", () => {
+    it("should create schema with dictionary messages", () => {
       const schema = createSettingsSchema(mockDictionary)
       const result = schema.safeParse({
-        role: 'ADMIN',
+        role: "ADMIN",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should validate password change with localized messages', () => {
+    it("should validate password change with localized messages", () => {
       const schema = createSettingsSchema(mockDictionary)
       const result = schema.safeParse({
-        password: 'oldpassword',
-        role: 'USER',
+        password: "oldpassword",
+        role: "USER",
         // Missing newPassword should fail
       })
       expect(result.success).toBe(false)
@@ -480,75 +482,75 @@ describe('i18n Schema Factories', () => {
 // Edge Cases and Security Tests
 // ============================================================================
 
-describe('Edge Cases', () => {
-  describe('email edge cases', () => {
-    it('should accept email with subdomain', () => {
+describe("Edge Cases", () => {
+  describe("email edge cases", () => {
+    it("should accept email with subdomain", () => {
       const result = LoginSchema.safeParse({
-        email: 'user@mail.example.com',
-        password: 'password123',
+        email: "user@mail.example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept email with plus sign', () => {
+    it("should accept email with plus sign", () => {
       const result = LoginSchema.safeParse({
-        email: 'user+tag@example.com',
-        password: 'password123',
+        email: "user+tag@example.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept email with numbers', () => {
+    it("should accept email with numbers", () => {
       const result = LoginSchema.safeParse({
-        email: 'user123@example123.com',
-        password: 'password123',
+        email: "user123@example123.com",
+        password: "password123",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should reject email with spaces', () => {
+    it("should reject email with spaces", () => {
       const result = LoginSchema.safeParse({
-        email: 'user @example.com',
-        password: 'password123',
+        email: "user @example.com",
+        password: "password123",
       })
       expect(result.success).toBe(false)
     })
   })
 
-  describe('password edge cases', () => {
-    it('should accept password with special characters', () => {
+  describe("password edge cases", () => {
+    it("should accept password with special characters", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: 'P@ssw0rd!#$',
-        username: 'testuser',
+        email: "test@example.com",
+        password: "P@ssw0rd!#$",
+        username: "testuser",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept password with unicode characters', () => {
+    it("should accept password with unicode characters", () => {
       const result = RegisterSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        username: 'testuser',
+        email: "test@example.com",
+        password: "password123",
+        username: "testuser",
       })
       expect(result.success).toBe(true)
     })
   })
 
-  describe('2FA code edge cases', () => {
-    it('should accept 6-digit 2FA code', () => {
+  describe("2FA code edge cases", () => {
+    it("should accept 6-digit 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
-        code: '123456',
+        email: "test@example.com",
+        password: "password123",
+        code: "123456",
       })
       expect(result.success).toBe(true)
     })
 
-    it('should accept undefined 2FA code', () => {
+    it("should accept undefined 2FA code", () => {
       const result = LoginSchema.safeParse({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
         code: undefined,
       })
       expect(result.success).toBe(true)

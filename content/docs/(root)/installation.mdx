@@ -50,7 +50,7 @@ I use the `@` alias to make it easier to import files. Add the following to your
 I use a `cn` helper to make it easier to conditionally add Tailwind CSS classes. Here's how I define it:
 
 ```ts
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -67,10 +67,10 @@ Here's what my `tailwind.config.js` file looks like:
 module.exports = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
   ],
   theme: {
     container: {
@@ -246,4 +246,4 @@ Configure the import alias for utils? › @/lib/utils
 Are you using React Server Components? › no / yes (yes)
 ```
 
-That's it! You can now start adding components to your project. 
+That's it! You can now start adding components to your project.

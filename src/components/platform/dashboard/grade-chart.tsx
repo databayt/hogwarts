@@ -1,6 +1,8 @@
 "use client"
 
 import { RadialBar, RadialBarChart } from "recharts"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -14,7 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+
 import type { GradeDistributionChartProps } from "./types"
 
 const gradeChartConfig = {
@@ -38,16 +40,24 @@ export function GradeDistributionChart({
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <ChartContainer config={gradeChartConfig} className="mx-auto aspect-square max-h-[200px]">
+        <ChartContainer
+          config={gradeChartConfig}
+          className="mx-auto aspect-square max-h-[200px]"
+        >
           <RadialBarChart data={data} innerRadius={30} outerRadius={100}>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent hideLabel />}
+            />
             <RadialBar dataKey="count" background />
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
       {totalStudents && (
         <CardFooter className="flex-col gap-2 text-sm">
-          <div className="text-muted-foreground">Total: {totalStudents} students</div>
+          <div className="text-muted-foreground">
+            Total: {totalStudents} students
+          </div>
         </CardFooter>
       )}
     </Card>

@@ -11,7 +11,10 @@ export const subjectUpdateSchema = subjectBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
 })
 
-export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })
+export const sortItemSchema = z.object({
+  id: z.string(),
+  desc: z.boolean().optional(),
+})
 
 export const getSubjectsSchema = z.object({
   page: z.number().int().positive().default(1),

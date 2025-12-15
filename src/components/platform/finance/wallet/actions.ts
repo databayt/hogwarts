@@ -2,25 +2,33 @@
  * Wallet Module - Server Actions
  */
 
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
-import { walletSchema, walletTopupSchema, walletRefundSchema } from './validation'
-import type { WalletActionResult } from './types'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
-export async function createWallet(formData: FormData): Promise<WalletActionResult> {
+import { db } from "@/lib/db"
+
+import type { WalletActionResult } from "./types"
+import {
+  walletRefundSchema,
+  walletSchema,
+  walletTopupSchema,
+} from "./validation"
+
+export async function createWallet(
+  formData: FormData
+): Promise<WalletActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      type: formData.get('type'),
-      userId: formData.get('userId') || null,
-      isActive: formData.get('isActive') === 'true',
+      type: formData.get("type"),
+      userId: formData.get("userId") || null,
+      isActive: formData.get("isActive") === "true",
     }
 
     const validated = walletSchema.parse(data)
@@ -38,11 +46,14 @@ export async function createWallet(formData: FormData): Promise<WalletActionResu
       },
     })
 
-    revalidatePath('/finance/wallet')
+    revalidatePath("/finance/wallet")
     return { success: true, data: wallet as any }
   } catch (error) {
-    console.error('Error creating wallet:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to create wallet' }
+    console.error("Error creating wallet:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create wallet",
+    }
   }
 }
 
@@ -50,14 +61,14 @@ export async function topupWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      walletId: formData.get('walletId'),
-      amount: Number(formData.get('amount')),
-      paymentMethod: formData.get('paymentMethod'),
-      description: formData.get('description') || undefined,
+      walletId: formData.get("walletId"),
+      amount: Number(formData.get("amount")),
+      paymentMethod: formData.get("paymentMethod"),
+      description: formData.get("description") || undefined,
     }
 
     const validated = walletTopupSchema.parse(data)
@@ -81,8 +92,9 @@ export async function topupWallet(formData: FormData) {
         data: {
           walletId: validated.walletId,
           amount: validated.amount,
-          type: 'CREDIT',
-          description: validated.description || `Top-up via ${validated.paymentMethod}`,
+          type: "CREDIT",
+          description:
+            validated.description || `Top-up via ${validated.paymentMethod}`,
           schoolId: session.user.schoolId!,
           balanceAfter: wallet.balance,
           createdBy: session.user.id,
@@ -92,11 +104,14 @@ export async function topupWallet(formData: FormData) {
       return { wallet, transaction }
     })
 
-    revalidatePath('/finance/wallet')
+    revalidatePath("/finance/wallet")
     return { success: true, data: result }
   } catch (error) {
-    console.error('Error topping up wallet:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to top-up wallet' }
+    console.error("Error topping up wallet:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to top-up wallet",
+    }
   }
 }
 
@@ -104,13 +119,13 @@ export async function refundWallet(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      walletId: formData.get('walletId'),
-      amount: Number(formData.get('amount')),
-      reason: formData.get('reason'),
+      walletId: formData.get("walletId"),
+      amount: Number(formData.get("amount")),
+      reason: formData.get("reason"),
     }
 
     const validated = walletRefundSchema.parse(data)
@@ -124,11 +139,11 @@ export async function refundWallet(formData: FormData) {
     })
 
     if (!wallet) {
-      return { success: false, error: 'Wallet not found' }
+      return { success: false, error: "Wallet not found" }
     }
 
     if (Number(wallet.balance) < validated.amount) {
-      return { success: false, error: 'Insufficient balance' }
+      return { success: false, error: "Insufficient balance" }
     }
 
     const result = await db.$transaction(async (tx) => {
@@ -147,7 +162,7 @@ export async function refundWallet(formData: FormData) {
         data: {
           walletId: validated.walletId,
           amount: validated.amount,
-          type: 'DEBIT',
+          type: "DEBIT",
           description: `Refund: ${validated.reason}`,
           schoolId: session.user.schoolId!,
           balanceAfter: updatedWallet.balance,
@@ -158,19 +173,25 @@ export async function refundWallet(formData: FormData) {
       return { wallet: updatedWallet, transaction }
     })
 
-    revalidatePath('/finance/wallet')
+    revalidatePath("/finance/wallet")
     return { success: true, data: result }
   } catch (error) {
-    console.error('Error refunding wallet:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to refund wallet' }
+    console.error("Error refunding wallet:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to refund wallet",
+    }
   }
 }
 
-export async function getWallets(filters?: { type?: string; isActive?: boolean }) {
+export async function getWallets(filters?: {
+  type?: string
+  isActive?: boolean
+}) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const wallets = await db.wallet.findMany({
@@ -182,16 +203,16 @@ export async function getWallets(filters?: { type?: string; isActive?: boolean }
       include: {
         transactions: {
           take: 10,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 100,
     })
 
     return { success: true, data: wallets }
   } catch (error) {
-    console.error('Error fetching wallets:', error)
-    return { success: false, error: 'Failed to fetch wallets' }
+    console.error("Error fetching wallets:", error)
+    return { success: false, error: "Failed to fetch wallets" }
   }
 }

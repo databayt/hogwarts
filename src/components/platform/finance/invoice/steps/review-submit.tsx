@@ -1,35 +1,42 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { z } from "zod";
-import { InvoiceSchemaZod } from "../validation";
-import { useEffect } from "react";
+import { useEffect } from "react"
+import { useFormContext } from "react-hook-form"
+import { z } from "zod"
+
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
+import { InvoiceSchemaZod } from "../validation"
 
 interface ReviewSubmitStepProps {
-  isView: boolean;
+  isView: boolean
 }
 
 export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
-  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>();
-  const { register, watch, setValue, formState: { errors } } = form;
+  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
+  const {
+    register,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form
 
-  const sub_total = watch("sub_total") || 0;
-  const discount = watch("discount") || 0;
-  const tax_percentage = watch("tax_percentage") || 0;
-  const sub_totalRemoveDiscount = sub_total - discount;
-  const taxAmount = (sub_totalRemoveDiscount * tax_percentage) / 100 || 0;
-  const totalAmount = sub_totalRemoveDiscount + taxAmount;
+  const sub_total = watch("sub_total") || 0
+  const discount = watch("discount") || 0
+  const tax_percentage = watch("tax_percentage") || 0
+  const sub_totalRemoveDiscount = sub_total - discount
+  const taxAmount = (sub_totalRemoveDiscount * tax_percentage) / 100 || 0
+  const totalAmount = sub_totalRemoveDiscount + taxAmount
 
   useEffect(() => {
-    setValue("total", totalAmount);
-  }, [totalAmount, setValue]);
+    setValue("total", totalAmount)
+  }, [totalAmount, setValue])
 
-  const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", { 
-    style: "currency", 
-    currency: watch("currency") || "USD" 
-  }).format(totalAmount);
+  const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
+    style: "currency",
+    currency: watch("currency") || "USD",
+  }).format(totalAmount)
 
   return (
     <div className="space-y-6">
@@ -47,7 +54,6 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
               className={`h-10 w-full ${errors.sub_total ? "border-red-500" : ""}`}
               readOnly
             />
-
           </div>
           <div className="flex-1">
             <Input
@@ -58,11 +64,10 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
               step="0.01"
               className={`h-10 w-full ${errors.discount ? "border-red-500" : ""}`}
               onChange={(e) => {
-                const discountValue = parseFloat(e.target.value) || 0;
-                setValue("discount", discountValue);
+                const discountValue = parseFloat(e.target.value) || 0
+                setValue("discount", discountValue)
               }}
             />
-
           </div>
           <div className="flex-1">
             <Input
@@ -73,11 +78,10 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
               step="0.01"
               className={`h-10 w-full ${errors.tax_percentage ? "border-red-500" : ""}`}
               onChange={(e) => {
-                const taxValue = parseFloat(e.target.value) || 0;
-                setValue("tax_percentage", taxValue);
+                const taxValue = parseFloat(e.target.value) || 0
+                setValue("tax_percentage", taxValue)
               }}
             />
-
           </div>
           <div className="flex-1">
             <Input
@@ -89,34 +93,39 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
               className={`h-10 w-full ${errors.total ? "border-red-500" : ""}`}
               readOnly
             />
-
           </div>
         </div>
-        
+
         {/* Calculated Values Display */}
-        <div className="bg-muted p-4 rounded-lg space-y-2">
+        <div className="bg-muted space-y-2 rounded-lg p-4">
           <div className="flex justify-between text-sm">
             <span>Sub Total:</span>
-            <span>{new Intl.NumberFormat("en-us", { 
-              style: "currency", 
-              currency: watch("currency") || "USD" 
-            }).format(sub_total)}</span>
+            <span>
+              {new Intl.NumberFormat("en-us", {
+                style: "currency",
+                currency: watch("currency") || "USD",
+              }).format(sub_total)}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Discount:</span>
-            <span>{new Intl.NumberFormat("en-us", { 
-              style: "currency", 
-              currency: watch("currency") || "USD" 
-            }).format(discount)}</span>
+            <span>
+              {new Intl.NumberFormat("en-us", {
+                style: "currency",
+                currency: watch("currency") || "USD",
+              }).format(discount)}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Tax ({tax_percentage}%):</span>
-            <span>{new Intl.NumberFormat("en-us", { 
-              style: "currency", 
-              currency: watch("currency") || "USD" 
-            }).format(taxAmount)}</span>
+            <span>
+              {new Intl.NumberFormat("en-us", {
+                style: "currency",
+                currency: watch("currency") || "USD",
+              }).format(taxAmount)}
+            </span>
           </div>
-          <div className="flex justify-between font-medium border-t pt-2">
+          <div className="flex justify-between border-t pt-2 font-medium">
             <span>Total:</span>
             <span>{totalAmountInCurrencyFormat}</span>
           </div>
@@ -132,5 +141,5 @@ export function ReviewSubmitStep({ isView }: ReviewSubmitStepProps) {
         />
       </div>
     </div>
-  );
+  )
 }

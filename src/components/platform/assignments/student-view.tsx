@@ -1,11 +1,28 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback } from 'react';
-import { format, formatDistanceToNow, isPast, isWithinInterval, addDays } from 'date-fns';
-import { Clock, Calendar, FileText, Upload, Check, X, CircleAlert, ChevronRight } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useCallback, useMemo, useState } from "react"
+import {
+  addDays,
+  format,
+  formatDistanceToNow,
+  isPast,
+  isWithinInterval,
+} from "date-fns"
+import {
+  Calendar,
+  Check,
+  ChevronRight,
+  CircleAlert,
+  Clock,
+  FileText,
+  Upload,
+  X,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,72 +30,77 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Assignment {
-  id: string;
-  title: string;
-  description?: string;
-  type: string;
-  status: string;
-  totalPoints: number;
-  weight: number;
-  dueDate: Date | string;
-  publishDate?: Date | string;
-  instructions?: string;
+  id: string
+  title: string
+  description?: string
+  type: string
+  status: string
+  totalPoints: number
+  weight: number
+  dueDate: Date | string
+  publishDate?: Date | string
+  instructions?: string
   class: {
-    name: string;
+    name: string
     subject: {
-      subjectName: string;
-    };
-  };
+      subjectName: string
+    }
+  }
 }
 
 interface Submission {
-  id: string;
-  assignmentId: string;
-  status: 'NOT_SUBMITTED' | 'DRAFT' | 'SUBMITTED' | 'LATE_SUBMITTED' | 'GRADED' | 'RETURNED';
-  submittedAt?: Date | string;
-  content?: string;
-  attachments?: string[];
-  score?: number;
-  feedback?: string;
-  gradedAt?: Date | string;
+  id: string
+  assignmentId: string
+  status:
+    | "NOT_SUBMITTED"
+    | "DRAFT"
+    | "SUBMITTED"
+    | "LATE_SUBMITTED"
+    | "GRADED"
+    | "RETURNED"
+  submittedAt?: Date | string
+  content?: string
+  attachments?: string[]
+  score?: number
+  feedback?: string
+  gradedAt?: Date | string
 }
 
 interface StudentAssignmentViewProps {
-  studentId: string;
-  assignments: Assignment[];
-  submissions: Submission[];
-  onSubmitClick: (assignmentId: string) => void;
-  onViewClick: (assignmentId: string) => void;
+  studentId: string
+  assignments: Assignment[]
+  submissions: Submission[]
+  onSubmitClick: (assignmentId: string) => void
+  onViewClick: (assignmentId: string) => void
 }
 
 const statusColors = {
-  NOT_SUBMITTED: 'bg-muted text-muted-foreground',
-  DRAFT: 'bg-chart-4/10 text-chart-4',
-  SUBMITTED: 'bg-chart-2/10 text-chart-2',
-  LATE_SUBMITTED: 'bg-chart-1/10 text-chart-1',
-  GRADED: 'bg-primary/10 text-primary',
-  RETURNED: 'bg-chart-3/10 text-chart-3',
-};
+  NOT_SUBMITTED: "bg-muted text-muted-foreground",
+  DRAFT: "bg-chart-4/10 text-chart-4",
+  SUBMITTED: "bg-chart-2/10 text-chart-2",
+  LATE_SUBMITTED: "bg-chart-1/10 text-chart-1",
+  GRADED: "bg-primary/10 text-primary",
+  RETURNED: "bg-chart-3/10 text-chart-3",
+}
 
 const typeColors = {
-  HOMEWORK: 'bg-primary/10 text-primary',
-  QUIZ: 'bg-chart-5/10 text-chart-5',
-  TEST: 'bg-destructive/10 text-destructive',
-  MIDTERM: 'bg-chart-1/10 text-chart-1',
-  FINAL_EXAM: 'bg-destructive/10 text-destructive',
-  PROJECT: 'bg-chart-3/10 text-chart-3',
-  LAB_REPORT: 'bg-chart-1/10 text-chart-1',
-  ESSAY: 'bg-chart-2/10 text-chart-2',
-  PRESENTATION: 'bg-chart-4/10 text-chart-4',
-};
+  HOMEWORK: "bg-primary/10 text-primary",
+  QUIZ: "bg-chart-5/10 text-chart-5",
+  TEST: "bg-destructive/10 text-destructive",
+  MIDTERM: "bg-chart-1/10 text-chart-1",
+  FINAL_EXAM: "bg-destructive/10 text-destructive",
+  PROJECT: "bg-chart-3/10 text-chart-3",
+  LAB_REPORT: "bg-chart-1/10 text-chart-1",
+  ESSAY: "bg-chart-2/10 text-chart-2",
+  PRESENTATION: "bg-chart-4/10 text-chart-4",
+}
 
 export function StudentAssignmentView({
   studentId,
@@ -87,93 +109,129 @@ export function StudentAssignmentView({
   onSubmitClick,
   onViewClick,
 }: StudentAssignmentViewProps) {
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'overdue' | 'completed'>('upcoming');
-  const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [selectedTab, setSelectedTab] = useState<
+    "upcoming" | "overdue" | "completed"
+  >("upcoming")
+  const [selectedSubject, setSelectedSubject] = useState<string>("all")
 
   // Create submission map
   const submissionMap = useMemo(() => {
-    return submissions.reduce((acc, sub) => {
-      acc[sub.assignmentId] = sub;
-      return acc;
-    }, {} as Record<string, Submission>);
-  }, [submissions]);
+    return submissions.reduce(
+      (acc, sub) => {
+        acc[sub.assignmentId] = sub
+        return acc
+      },
+      {} as Record<string, Submission>
+    )
+  }, [submissions])
 
   // Get unique subjects
   const subjects = useMemo(() => {
-    const subjectSet = new Set(assignments.map(a => a.class.subject.subjectName));
-    return Array.from(subjectSet).sort();
-  }, [assignments]);
+    const subjectSet = new Set(
+      assignments.map((a) => a.class.subject.subjectName)
+    )
+    return Array.from(subjectSet).sort()
+  }, [assignments])
 
   // Filter and categorize assignments
   const categorizedAssignments = useMemo(() => {
-    const now = new Date();
+    const now = new Date()
     const filtered = assignments.filter(
-      a => selectedSubject === 'all' || a.class.subject.subjectName === selectedSubject
-    );
+      (a) =>
+        selectedSubject === "all" ||
+        a.class.subject.subjectName === selectedSubject
+    )
 
-    const upcoming: Assignment[] = [];
-    const overdue: Assignment[] = [];
-    const completed: Assignment[] = [];
+    const upcoming: Assignment[] = []
+    const overdue: Assignment[] = []
+    const completed: Assignment[] = []
 
-    filtered.forEach(assignment => {
-      const submission = submissionMap[assignment.id];
-      const dueDate = new Date(assignment.dueDate);
+    filtered.forEach((assignment) => {
+      const submission = submissionMap[assignment.id]
+      const dueDate = new Date(assignment.dueDate)
 
-      if (submission?.status === 'GRADED' || submission?.status === 'RETURNED') {
-        completed.push(assignment);
-      } else if (isPast(dueDate) && submission?.status !== 'SUBMITTED' && submission?.status !== 'LATE_SUBMITTED') {
-        overdue.push(assignment);
+      if (
+        submission?.status === "GRADED" ||
+        submission?.status === "RETURNED"
+      ) {
+        completed.push(assignment)
+      } else if (
+        isPast(dueDate) &&
+        submission?.status !== "SUBMITTED" &&
+        submission?.status !== "LATE_SUBMITTED"
+      ) {
+        overdue.push(assignment)
       } else {
-        upcoming.push(assignment);
+        upcoming.push(assignment)
       }
-    });
+    })
 
     return {
-      upcoming: upcoming.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()),
-      overdue: overdue.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()),
-      completed: completed.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()),
-    };
-  }, [assignments, submissionMap, selectedSubject]);
+      upcoming: upcoming.sort(
+        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+      ),
+      overdue: overdue.sort(
+        (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+      ),
+      completed: completed.sort(
+        (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
+      ),
+    }
+  }, [assignments, submissionMap, selectedSubject])
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const totalAssignments = assignments.length;
-    const submitted = submissions.filter(s =>
-      ['SUBMITTED', 'LATE_SUBMITTED', 'GRADED', 'RETURNED'].includes(s.status)
-    ).length;
-    const graded = submissions.filter(s => ['GRADED', 'RETURNED'].includes(s.status));
+    const totalAssignments = assignments.length
+    const submitted = submissions.filter((s) =>
+      ["SUBMITTED", "LATE_SUBMITTED", "GRADED", "RETURNED"].includes(s.status)
+    ).length
+    const graded = submissions.filter((s) =>
+      ["GRADED", "RETURNED"].includes(s.status)
+    )
 
-    const totalScore = graded.reduce((sum, s) => sum + (s.score || 0), 0);
-    const averageScore = graded.length > 0 ? totalScore / graded.length : 0;
+    const totalScore = graded.reduce((sum, s) => sum + (s.score || 0), 0)
+    const averageScore = graded.length > 0 ? totalScore / graded.length : 0
 
     return {
       total: totalAssignments,
       submitted,
       pending: totalAssignments - submitted,
       overdue: categorizedAssignments.overdue.length,
-      submissionRate: totalAssignments > 0 ? (submitted / totalAssignments) * 100 : 0,
+      submissionRate:
+        totalAssignments > 0 ? (submitted / totalAssignments) * 100 : 0,
       averageScore: averageScore.toFixed(1),
-    };
-  }, [assignments, submissions, categorizedAssignments]);
+    }
+  }, [assignments, submissions, categorizedAssignments])
 
   const getDueDateColor = (dueDate: Date | string) => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const daysUntilDue = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const due = new Date(dueDate)
+    const now = new Date()
+    const daysUntilDue = Math.ceil(
+      (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    )
 
-    if (daysUntilDue < 0) return 'text-destructive';
-    if (daysUntilDue <= 1) return 'text-chart-1';
-    if (daysUntilDue <= 3) return 'text-chart-4';
-    return 'text-muted-foreground';
-  };
+    if (daysUntilDue < 0) return "text-destructive"
+    if (daysUntilDue <= 1) return "text-chart-1"
+    if (daysUntilDue <= 3) return "text-chart-4"
+    return "text-muted-foreground"
+  }
 
   const AssignmentCard = ({ assignment }: { assignment: Assignment }) => {
-    const submission = submissionMap[assignment.id];
-    const dueDate = new Date(assignment.dueDate);
-    const isOverdue = isPast(dueDate) && !['SUBMITTED', 'LATE_SUBMITTED', 'GRADED', 'RETURNED'].includes(submission?.status || '');
+    const submission = submissionMap[assignment.id]
+    const dueDate = new Date(assignment.dueDate)
+    const isOverdue =
+      isPast(dueDate) &&
+      !["SUBMITTED", "LATE_SUBMITTED", "GRADED", "RETURNED"].includes(
+        submission?.status || ""
+      )
 
     return (
-      <Card className={cn("hover:shadow-md transition-shadow", isOverdue && "border-red-200")}>
+      <Card
+        className={cn(
+          "transition-shadow hover:shadow-md",
+          isOverdue && "border-red-200"
+        )}
+      >
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
@@ -183,12 +241,20 @@ export function StudentAssignmentView({
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge variant="outline" className={typeColors[assignment.type as keyof typeof typeColors]}>
-                {assignment.type.replace('_', ' ')}
+              <Badge
+                variant="outline"
+                className={
+                  typeColors[assignment.type as keyof typeof typeColors]
+                }
+              >
+                {assignment.type.replace("_", " ")}
               </Badge>
               {submission && (
-                <Badge variant="outline" className={statusColors[submission.status]}>
-                  {submission.status.replace('_', ' ')}
+                <Badge
+                  variant="outline"
+                  className={statusColors[submission.status]}
+                >
+                  {submission.status.replace("_", " ")}
                 </Badge>
               )}
             </div>
@@ -196,38 +262,52 @@ export function StudentAssignmentView({
         </CardHeader>
         <CardContent className="space-y-4">
           {assignment.description && (
-            <p className="text-sm text-muted-foreground">{assignment.description}</p>
+            <p className="text-muted-foreground text-sm">
+              {assignment.description}
+            </p>
           )}
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Calendar className="text-muted-foreground h-4 w-4" />
               <span className={getDueDateColor(dueDate)}>
-                Due {format(dueDate, 'MMM dd, yyyy')}
+                Due {format(dueDate, "MMM dd, yyyy")}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="text-muted-foreground h-4 w-4" />
               <span className={getDueDateColor(dueDate)}>
-                {isPast(dueDate) ? 'Overdue' : formatDistanceToNow(dueDate, { addSuffix: true })}
+                {isPast(dueDate)
+                  ? "Overdue"
+                  : formatDistanceToNow(dueDate, { addSuffix: true })}
               </span>
             </div>
           </div>
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
-              <span className="font-medium">{assignment.totalPoints} points</span>
-              <span className="text-muted-foreground">Weight: {assignment.weight}%</span>
+              <span className="font-medium">
+                {assignment.totalPoints} points
+              </span>
+              <span className="text-muted-foreground">
+                Weight: {assignment.weight}%
+              </span>
             </div>
             {submission?.score !== undefined && (
               <div className="flex items-center gap-2">
                 <span className="font-medium">Score:</span>
-                <span className={cn(
-                  "font-bold",
-                  submission.score >= assignment.totalPoints * 0.9 && "text-chart-2",
-                  submission.score >= assignment.totalPoints * 0.7 && submission.score < assignment.totalPoints * 0.9 && "text-primary",
-                  submission.score < assignment.totalPoints * 0.7 && "text-destructive"
-                )}>
+                <span
+                  className={cn(
+                    "font-bold",
+                    submission.score >= assignment.totalPoints * 0.9 &&
+                      "text-chart-2",
+                    submission.score >= assignment.totalPoints * 0.7 &&
+                      submission.score < assignment.totalPoints * 0.9 &&
+                      "text-primary",
+                    submission.score < assignment.totalPoints * 0.7 &&
+                      "text-destructive"
+                  )}
+                >
                   {submission.score}/{assignment.totalPoints}
                 </span>
               </div>
@@ -235,20 +315,28 @@ export function StudentAssignmentView({
           </div>
 
           {submission?.submittedAt && (
-            <div className="text-sm text-muted-foreground">
-              Submitted on {format(new Date(submission.submittedAt), 'MMM dd, yyyy at h:mm a')}
+            <div className="text-muted-foreground text-sm">
+              Submitted on{" "}
+              {format(
+                new Date(submission.submittedAt),
+                "MMM dd, yyyy at h:mm a"
+              )}
             </div>
           )}
         </CardContent>
         <CardFooter className="gap-2">
-          {!submission || submission.status === 'NOT_SUBMITTED' || submission.status === 'DRAFT' ? (
+          {!submission ||
+          submission.status === "NOT_SUBMITTED" ||
+          submission.status === "DRAFT" ? (
             <Button
               className="w-full"
               onClick={() => onSubmitClick(assignment.id)}
               variant={isOverdue ? "destructive" : "default"}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              {submission?.status === 'DRAFT' ? 'Continue Submission' : 'Submit Assignment'}
+              <Upload className="mr-2 h-4 w-4" />
+              {submission?.status === "DRAFT"
+                ? "Continue Submission"
+                : "Submit Assignment"}
             </Button>
           ) : (
             <Button
@@ -256,19 +344,19 @@ export function StudentAssignmentView({
               variant="outline"
               onClick={() => onViewClick(assignment.id)}
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="mr-2 h-4 w-4" />
               View Submission
             </Button>
           )}
         </CardFooter>
       </Card>
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Statistics Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Assignments</CardDescription>
@@ -283,7 +371,9 @@ export function StudentAssignmentView({
             <CardDescription>Submitted</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-chart-2">{stats.submitted}</div>
+            <div className="text-chart-2 text-2xl font-bold">
+              {stats.submitted}
+            </div>
             <Progress value={stats.submissionRate} className="mt-2 h-2" />
           </CardContent>
         </Card>
@@ -293,7 +383,9 @@ export function StudentAssignmentView({
             <CardDescription>Pending</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-chart-4">{stats.pending}</div>
+            <div className="text-chart-4 text-2xl font-bold">
+              {stats.pending}
+            </div>
           </CardContent>
         </Card>
 
@@ -302,7 +394,9 @@ export function StudentAssignmentView({
             <CardDescription>Average Score</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{stats.averageScore}%</div>
+            <div className="text-primary text-2xl font-bold">
+              {stats.averageScore}%
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -310,16 +404,16 @@ export function StudentAssignmentView({
       {/* Subject Filter */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         <Button
-          variant={selectedSubject === 'all' ? 'default' : 'outline'}
+          variant={selectedSubject === "all" ? "default" : "outline"}
           size="sm"
-          onClick={() => setSelectedSubject('all')}
+          onClick={() => setSelectedSubject("all")}
         >
           All Subjects
         </Button>
-        {subjects.map(subject => (
+        {subjects.map((subject) => (
           <Button
             key={subject}
-            variant={selectedSubject === subject ? 'default' : 'outline'}
+            variant={selectedSubject === subject ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedSubject(subject)}
           >
@@ -330,11 +424,11 @@ export function StudentAssignmentView({
 
       {/* Assignment Tabs */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming" className="relative">
             Upcoming
             {categorizedAssignments.upcoming.length > 0 && (
-              <span className="ml-2 text-xs bg-primary/20 px-1.5 py-0.5 rounded-full">
+              <span className="bg-primary/20 ml-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.upcoming.length}
               </span>
             )}
@@ -342,7 +436,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="overdue" className="relative">
             Overdue
             {categorizedAssignments.overdue.length > 0 && (
-              <span className="ml-2 text-xs bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">
+              <span className="bg-destructive/20 text-destructive ml-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.overdue.length}
               </span>
             )}
@@ -350,7 +444,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="completed">
             Completed
             {categorizedAssignments.completed.length > 0 && (
-              <span className="ml-2 text-xs bg-chart-2/20 text-chart-2 px-1.5 py-0.5 rounded-full">
+              <span className="bg-chart-2/20 text-chart-2 ml-2 rounded-full px-1.5 py-0.5 text-xs">
                 {categorizedAssignments.completed.length}
               </span>
             )}
@@ -359,13 +453,13 @@ export function StudentAssignmentView({
 
         <TabsContent value="upcoming" className="space-y-4">
           {categorizedAssignments.upcoming.length > 0 ? (
-            categorizedAssignments.upcoming.map(assignment => (
+            categorizedAssignments.upcoming.map((assignment) => (
               <AssignmentCard key={assignment.id} assignment={assignment} />
             ))
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <Check className="h-12 w-12 text-chart-2 mb-4" />
+                <Check className="text-chart-2 mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">No upcoming assignments</p>
               </CardContent>
             </Card>
@@ -374,13 +468,13 @@ export function StudentAssignmentView({
 
         <TabsContent value="overdue" className="space-y-4">
           {categorizedAssignments.overdue.length > 0 ? (
-            categorizedAssignments.overdue.map(assignment => (
+            categorizedAssignments.overdue.map((assignment) => (
               <AssignmentCard key={assignment.id} assignment={assignment} />
             ))
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <Check className="h-12 w-12 text-chart-2 mb-4" />
+                <Check className="text-chart-2 mb-4 h-12 w-12" />
                 <p className="text-muted-foreground">No overdue assignments</p>
               </CardContent>
             </Card>
@@ -389,19 +483,21 @@ export function StudentAssignmentView({
 
         <TabsContent value="completed" className="space-y-4">
           {categorizedAssignments.completed.length > 0 ? (
-            categorizedAssignments.completed.map(assignment => (
+            categorizedAssignments.completed.map((assignment) => (
               <AssignmentCard key={assignment.id} assignment={assignment} />
             ))
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No completed assignments yet</p>
+                <FileText className="text-muted-foreground mb-4 h-12 w-12" />
+                <p className="text-muted-foreground">
+                  No completed assignments yet
+                </p>
               </CardContent>
             </Card>
           )}
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

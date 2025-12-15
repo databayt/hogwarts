@@ -8,19 +8,21 @@
  * - Bulk operations with validation
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { revalidatePath } from "next/cache";
-import type { ActionResponse } from "./types";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
+  generateQuestionCSVTemplate,
   generateQuestionsCSV,
   parseQuestionsCSV,
-  generateQuestionCSVTemplate,
-} from "./csv-utils";
+} from "./csv-utils"
+import type { ActionResponse } from "./types"
 
 // Validation schemas
 const exportQuestionsSchema = z.object({
@@ -30,30 +32,30 @@ const exportQuestionsSchema = z.object({
   bloomLevel: z.string().optional(),
   tags: z.array(z.string()).optional(),
   includeAnalytics: z.boolean().optional().default(false),
-});
+})
 
 const importQuestionsSchema = z.object({
   csvContent: z.string().min(1, "CSV content is required"),
   subjectId: z.string().min(1, "Subject is required"),
   validateOnly: z.boolean().optional().default(false),
-});
+})
 
 // Types
 export interface ImportResult {
-  totalRows: number;
-  successCount: number;
-  errorCount: number;
+  totalRows: number
+  successCount: number
+  errorCount: number
   errors: Array<{
-    row: number;
-    errors: string[];
-  }>;
-  importedIds?: string[];
+    row: number
+    errors: string[]
+  }>
+  importedIds?: string[]
 }
 
 export interface ExportResult {
-  csv: string;
-  filename: string;
-  count: number;
+  csv: string
+  filename: string
+  count: number
 }
 
 /**
@@ -63,36 +65,36 @@ export async function exportQuestionsToCSV(
   input: z.infer<typeof exportQuestionsSchema>
 ): Promise<ActionResponse<ExportResult>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = exportQuestionsSchema.parse(input);
+    const parsed = exportQuestionsSchema.parse(input)
 
     // Build query filters
-    const where: any = { schoolId };
+    const where: any = { schoolId }
 
     if (parsed.subjectId) {
-      where.subjectId = parsed.subjectId;
+      where.subjectId = parsed.subjectId
     }
 
     if (parsed.questionType) {
-      where.questionType = parsed.questionType;
+      where.questionType = parsed.questionType
     }
 
     if (parsed.difficulty) {
-      where.difficulty = parsed.difficulty;
+      where.difficulty = parsed.difficulty
     }
 
     if (parsed.bloomLevel) {
-      where.bloomLevel = parsed.bloomLevel;
+      where.bloomLevel = parsed.bloomLevel
     }
 
     if (parsed.tags && parsed.tags.length > 0) {
       where.tags = {
         hasSome: parsed.tags,
-      };
+      }
     }
 
     // Fetch questions
@@ -114,21 +116,21 @@ export async function exportQuestionsToCSV(
         { difficulty: "asc" },
         { createdAt: "desc" },
       ],
-    });
+    })
 
     if (questions.length === 0) {
       return {
         success: false,
         error: "No questions found matching the criteria",
-      };
+      }
     }
 
     // Generate CSV
-    const csv = generateQuestionsCSV(questions);
+    const csv = generateQuestionsCSV(questions)
 
     // Generate filename with timestamp
-    const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `questions_export_${timestamp}.csv`;
+    const timestamp = new Date().toISOString().split("T")[0]
+    const filename = `questions_export_${timestamp}.csv`
 
     return {
       success: true,
@@ -137,23 +139,23 @@ export async function exportQuestionsToCSV(
         filename,
         count: questions.length,
       },
-    };
+    }
   } catch (error) {
-    console.error("Error exporting questions:", error);
+    console.error("Error exporting questions:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: "Invalid export parameters",
         details: error.issues,
-      };
+      }
     }
 
     return {
       success: false,
       error: "Failed to export questions",
       details: error,
-    };
+    }
   }
 }
 
@@ -164,17 +166,17 @@ export async function importQuestionsFromCSV(
   input: z.infer<typeof importQuestionsSchema>
 ): Promise<ActionResponse<ImportResult>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Unauthorized" }
     }
 
-    const parsed = importQuestionsSchema.parse(input);
+    const parsed = importQuestionsSchema.parse(input)
 
     // Verify subject exists and belongs to school
     const subject = await db.subject.findFirst({
@@ -182,13 +184,13 @@ export async function importQuestionsFromCSV(
         id: parsed.subjectId,
         schoolId,
       },
-    });
+    })
 
     if (!subject) {
       return {
         success: false,
         error: "Subject not found or does not belong to your school",
-      };
+      }
     }
 
     // Parse CSV content
@@ -197,7 +199,7 @@ export async function importQuestionsFromCSV(
       schoolId,
       parsed.subjectId,
       session.user.id
-    );
+    )
 
     // If validation only, return results without importing
     if (parsed.validateOnly) {
@@ -209,11 +211,11 @@ export async function importQuestionsFromCSV(
           errorCount: invalid.length,
           errors: invalid,
         },
-      };
+      }
     }
 
     // Import valid questions
-    const importedIds: string[] = [];
+    const importedIds: string[] = []
 
     if (valid.length > 0) {
       // Use transaction for bulk import
@@ -222,21 +224,21 @@ export async function importQuestionsFromCSV(
           try {
             const question = await tx.questionBank.create({
               data: questionData,
-            });
-            importedIds.push(question.id);
+            })
+            importedIds.push(question.id)
           } catch (error) {
             // Add to invalid list if database insert fails
             invalid.push({
               row: valid.indexOf(questionData) + 2, // +2 for header and 0-index
               errors: [`Database error: ${error}`],
-            });
+            })
           }
         }
-      });
+      })
     }
 
     // Revalidate the questions page
-    revalidatePath("/exams/questions");
+    revalidatePath("/exams/questions")
 
     return {
       success: true,
@@ -247,30 +249,33 @@ export async function importQuestionsFromCSV(
         errors: invalid,
         importedIds,
       },
-    };
+    }
   } catch (error) {
-    console.error("Error importing questions:", error);
+    console.error("Error importing questions:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: "Invalid import data",
         details: error.issues,
-      };
+      }
     }
 
-    if (error instanceof Error && error.message.includes("Missing required headers")) {
+    if (
+      error instanceof Error &&
+      error.message.includes("Missing required headers")
+    ) {
       return {
         success: false,
         error: error.message,
-      };
+      }
     }
 
     return {
       success: false,
       error: "Failed to import questions",
       details: error,
-    };
+    }
   }
 }
 
@@ -281,13 +286,13 @@ export async function downloadQuestionTemplate(): Promise<
   ActionResponse<{ csv: string; filename: string }>
 > {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const csv = generateQuestionCSVTemplate();
-    const filename = "question_import_template.csv";
+    const csv = generateQuestionCSVTemplate()
+    const filename = "question_import_template.csv"
 
     return {
       success: true,
@@ -295,14 +300,14 @@ export async function downloadQuestionTemplate(): Promise<
         csv,
         filename,
       },
-    };
+    }
   } catch (error) {
-    console.error("Error generating template:", error);
+    console.error("Error generating template:", error)
     return {
       success: false,
       error: "Failed to generate template",
       details: error,
-    };
+    }
   }
 }
 
@@ -313,28 +318,30 @@ export async function exportQuestionsWithMetadata(
   filters?: z.infer<typeof exportQuestionsSchema>
 ): Promise<ActionResponse<ExportResult>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = filters ? exportQuestionsSchema.parse(filters) : {
-      subjectId: undefined,
-      questionType: undefined,
-      difficulty: undefined,
-      bloomLevel: undefined,
-      tags: undefined,
-      includeAnalytics: false,
-    };
+    const parsed = filters
+      ? exportQuestionsSchema.parse(filters)
+      : {
+          subjectId: undefined,
+          questionType: undefined,
+          difficulty: undefined,
+          bloomLevel: undefined,
+          tags: undefined,
+          includeAnalytics: false,
+        }
 
     // Build query
-    const where: any = { schoolId };
+    const where: any = { schoolId }
 
-    if (parsed.subjectId) where.subjectId = parsed.subjectId;
-    if (parsed.questionType) where.questionType = parsed.questionType;
-    if (parsed.difficulty) where.difficulty = parsed.difficulty;
-    if (parsed.bloomLevel) where.bloomLevel = parsed.bloomLevel;
-    if (parsed.tags?.length) where.tags = { hasSome: parsed.tags };
+    if (parsed.subjectId) where.subjectId = parsed.subjectId
+    if (parsed.questionType) where.questionType = parsed.questionType
+    if (parsed.difficulty) where.difficulty = parsed.difficulty
+    if (parsed.bloomLevel) where.bloomLevel = parsed.bloomLevel
+    if (parsed.tags?.length) where.tags = { hasSome: parsed.tags }
 
     // Fetch questions with all relationships
     const questions = await db.questionBank.findMany({
@@ -367,17 +374,14 @@ export async function exportQuestionsWithMetadata(
           },
         },
       },
-      orderBy: [
-        { subjectId: "asc" },
-        { createdAt: "desc" },
-      ],
-    });
+      orderBy: [{ subjectId: "asc" }, { createdAt: "desc" }],
+    })
 
     if (questions.length === 0) {
       return {
         success: false,
         error: "No questions found",
-      };
+      }
     }
 
     // Generate enhanced CSV with metadata
@@ -391,11 +395,11 @@ export async function exportQuestionsWithMetadata(
       sourceTitle: q.sourceMaterial?.title || "",
       reviewStatus: q.review?.status || "",
       qualityRating: q.review?.qualityRating || "",
-    }));
+    }))
 
-    const csv = generateQuestionsCSV(enhancedQuestions);
-    const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `questions_full_export_${timestamp}.csv`;
+    const csv = generateQuestionsCSV(enhancedQuestions)
+    const timestamp = new Date().toISOString().split("T")[0]
+    const filename = `questions_full_export_${timestamp}.csv`
 
     return {
       success: true,
@@ -404,13 +408,13 @@ export async function exportQuestionsWithMetadata(
         filename,
         count: questions.length,
       },
-    };
+    }
   } catch (error) {
-    console.error("Error exporting questions with metadata:", error);
+    console.error("Error exporting questions with metadata:", error)
     return {
       success: false,
       error: "Failed to export questions",
       details: error,
-    };
+    }
   }
 }

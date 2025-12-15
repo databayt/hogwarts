@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { getSchoolBranding } from './actions'
-import { type BrandingFormData } from './validation'
+import { useEffect, useState } from "react"
+
+import { getSchoolBranding } from "./actions"
+import { type BrandingFormData } from "./validation"
 
 interface UseBrandingReturn {
   data: BrandingFormData | null
@@ -18,20 +19,20 @@ export function useBranding(schoolId: string): UseBrandingReturn {
 
   const fetchBranding = async () => {
     if (!schoolId) return
-    
+
     try {
       setLoading(true)
       setError(null)
       const result = await getSchoolBranding(schoolId)
-      
+
       if (result.success) {
         setData(result.data)
       } else {
-        setError(result.error || 'Failed to fetch branding')
+        setError(result.error || "Failed to fetch branding")
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-      console.error('Error fetching branding:', err)
+      setError("An unexpected error occurred")
+      console.error("Error fetching branding:", err)
     } finally {
       setLoading(false)
     }
@@ -49,6 +50,6 @@ export function useBranding(schoolId: string): UseBrandingReturn {
     data,
     loading,
     error,
-    refresh
+    refresh,
   }
 }

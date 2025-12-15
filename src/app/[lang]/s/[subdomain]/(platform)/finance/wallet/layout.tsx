@@ -1,7 +1,7 @@
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,19 +15,17 @@ export default async function WalletLayout({ children, params }: Props) {
 
   // Define wallet page navigation
   const walletPages: PageNavItem[] = [
-    { name: 'Overview', href: `/${lang}/finance/wallet` },
-    { name: 'Balance', href: `/${lang}/finance/wallet/balance` },
-    { name: 'Transactions', href: `/${lang}/finance/wallet/transactions` },
-    { name: 'Top Up', href: `/${lang}/finance/wallet/top-up` },
-    { name: 'Withdraw', href: `/${lang}/finance/wallet/withdraw` },
-    { name: 'Reports', href: `/${lang}/finance/wallet/reports` },
+    { name: "Overview", href: `/${lang}/finance/wallet` },
+    { name: "Balance", href: `/${lang}/finance/wallet/balance` },
+    { name: "Transactions", href: `/${lang}/finance/wallet/transactions` },
+    { name: "Top Up", href: `/${lang}/finance/wallet/top-up` },
+    { name: "Withdraw", href: `/${lang}/finance/wallet/withdraw` },
+    { name: "Reports", href: `/${lang}/finance/wallet/reports` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Wallet'}
-      />
+      <PageHeadingSetter title={d?.title || "Wallet"} />
       <PageNav pages={walletPages} />
       {children}
     </div>

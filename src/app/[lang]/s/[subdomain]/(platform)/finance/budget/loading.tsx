@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function BudgetLoading() {
   return (

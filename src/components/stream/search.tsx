@@ -3,9 +3,10 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Search as SearchIcon, X } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 interface SearchProps {
   lang: string
@@ -14,7 +15,12 @@ interface SearchProps {
   variant?: "default" | "expanded"
 }
 
-export function Search({ lang, dictionary, className, variant = "default" }: SearchProps) {
+export function Search({
+  lang,
+  dictionary,
+  className,
+  variant = "default",
+}: SearchProps) {
   const router = useRouter()
   const [query, setQuery] = React.useState("")
   const [isFocused, setIsFocused] = React.useState(false)
@@ -24,7 +30,9 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`)
+      router.push(
+        `/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`
+      )
     }
   }
 
@@ -51,9 +59,9 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
     >
       <div
         className={cn(
-          "relative flex items-center w-full rounded-full border transition-all duration-200",
+          "relative flex w-full items-center rounded-full border transition-all duration-200",
           isFocused
-            ? "border-primary ring-2 ring-primary/20"
+            ? "border-primary ring-primary/20 ring-2"
             : "border-input hover:border-muted-foreground/50",
           "bg-background"
         )}
@@ -66,10 +74,12 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onKeyDown={handleKeyDown}
-          placeholder={dictionary?.search?.placeholder || "What do you want to learn?"}
+          placeholder={
+            dictionary?.search?.placeholder || "What do you want to learn?"
+          }
           className={cn(
-            "border-0 bg-transparent shadow-none focus-visible:ring-0 h-11",
-            isRTL ? "pr-4 pl-14" : "pl-4 pr-14",
+            "h-11 border-0 bg-transparent shadow-none focus-visible:ring-0",
+            isRTL ? "pr-4 pl-14" : "pr-14 pl-4",
             "rounded-full"
           )}
           aria-label={dictionary?.search?.ariaLabel || "Search courses"}
@@ -81,12 +91,12 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
             type="button"
             onClick={handleClear}
             className={cn(
-              "absolute flex items-center justify-center size-6 rounded-full hover:bg-muted transition-colors",
+              "hover:bg-muted absolute flex size-6 items-center justify-center rounded-full transition-colors",
               isRTL ? "left-14" : "right-14"
             )}
             aria-label={dictionary?.search?.clear || "Clear search"}
           >
-            <X className="size-4 text-muted-foreground" />
+            <X className="text-muted-foreground size-4" />
           </button>
         )}
 
@@ -95,7 +105,7 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
           type="submit"
           size="icon"
           className={cn(
-            "absolute size-9 rounded-full bg-primary hover:bg-primary/90",
+            "bg-primary hover:bg-primary/90 absolute size-9 rounded-full",
             isRTL ? "left-1" : "right-1"
           )}
           aria-label={dictionary?.search?.submit || "Search"}
@@ -108,7 +118,11 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
 }
 
 // Compact search for mobile/smaller screens
-export function SearchCompact({ lang, dictionary, className }: Omit<SearchProps, "variant">) {
+export function SearchCompact({
+  lang,
+  dictionary,
+  className,
+}: Omit<SearchProps, "variant">) {
   const router = useRouter()
   const [isOpen, setIsOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
@@ -123,7 +137,9 @@ export function SearchCompact({ lang, dictionary, className }: Omit<SearchProps,
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`)
+      router.push(
+        `/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`
+      )
       setIsOpen(false)
       setQuery("")
     }
@@ -147,7 +163,7 @@ export function SearchCompact({ lang, dictionary, className }: Omit<SearchProps,
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "absolute inset-x-0 top-0 z-50 flex items-center gap-2 bg-background p-2 shadow-lg",
+        "bg-background absolute inset-x-0 top-0 z-50 flex items-center gap-2 p-2 shadow-lg",
         className
       )}
     >
@@ -156,8 +172,10 @@ export function SearchCompact({ lang, dictionary, className }: Omit<SearchProps,
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder={dictionary?.search?.placeholder || "What do you want to learn?"}
-        className="flex-1 h-10 rounded-full"
+        placeholder={
+          dictionary?.search?.placeholder || "What do you want to learn?"
+        }
+        className="h-10 flex-1 rounded-full"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setIsOpen(false)
@@ -165,11 +183,7 @@ export function SearchCompact({ lang, dictionary, className }: Omit<SearchProps,
           }
         }}
       />
-      <Button
-        type="submit"
-        size="icon"
-        className="rounded-full bg-primary"
-      >
+      <Button type="submit" size="icon" className="bg-primary rounded-full">
         <SearchIcon className="size-4" />
       </Button>
       <Button

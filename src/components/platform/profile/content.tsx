@@ -3,20 +3,28 @@
  * Dynamically loads the appropriate profile component based on user role
  */
 
-"use client";
+"use client"
 
-import * as React from 'react'
-import { useSession } from 'next-auth/react'
-import { StudentProfileContent } from './student/content'
-import { TeacherProfileContent } from './teacher/content'
-import { ParentProfileContent } from './parent/content'
-import { StaffProfileContent } from './staff/content'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
+import * as React from "react"
 import { CircleAlert } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { useDictionary } from '@/components/internationalization/use-dictionary'
-import { useLocale } from '@/components/internationalization/use-locale'
+import { useSession } from "next-auth/react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { useLocale } from "@/components/internationalization/use-locale"
+
+import { ParentProfileContent } from "./parent/content"
+import { StaffProfileContent } from "./staff/content"
+import { StudentProfileContent } from "./student/content"
+import { TeacherProfileContent } from "./teacher/content"
 
 export function ProfileContent() {
   const { dictionary, isLoading: isDictionaryLoading } = useDictionary()
@@ -32,11 +40,11 @@ export function ProfileContent() {
   }, [session])
 
   // Loading state (dictionary or session)
-  if (status === 'loading' || isDictionaryLoading || !dictionary) {
+  if (status === "loading" || isDictionaryLoading || !dictionary) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-48 w-full" />
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="lg:col-span-3">
             <Skeleton className="h-96 w-full" />
           </div>
@@ -49,7 +57,7 @@ export function ProfileContent() {
   }
 
   // Unauthenticated state
-  if (status === 'unauthenticated' || !session) {
+  if (status === "unauthenticated" || !session) {
     return (
       <div className="space-y-4">
         <Alert>
@@ -68,7 +76,7 @@ export function ProfileContent() {
 
   // Render appropriate profile based on role
   switch (userRole) {
-    case 'STUDENT':
+    case "STUDENT":
       return (
         <StudentProfileContent
           studentId={profileId}
@@ -78,7 +86,7 @@ export function ProfileContent() {
         />
       )
 
-    case 'TEACHER':
+    case "TEACHER":
       return (
         <TeacherProfileContent
           teacherId={profileId}
@@ -88,7 +96,7 @@ export function ProfileContent() {
         />
       )
 
-    case 'GUARDIAN':
+    case "GUARDIAN":
       return (
         <ParentProfileContent
           parentId={profileId}
@@ -98,8 +106,8 @@ export function ProfileContent() {
         />
       )
 
-    case 'STAFF':
-    case 'ACCOUNTANT':
+    case "STAFF":
+    case "ACCOUNTANT":
       return (
         <StaffProfileContent
           staffId={profileId}
@@ -109,8 +117,8 @@ export function ProfileContent() {
         />
       )
 
-    case 'ADMIN':
-    case 'DEVELOPER':
+    case "ADMIN":
+    case "DEVELOPER":
       // Admins and developers get staff profile with additional privileges
       return (
         <StaffProfileContent
@@ -129,14 +137,15 @@ export function ProfileContent() {
             <CardHeader>
               <CardTitle>Profile Setup Required</CardTitle>
               <CardDescription>
-                Your profile type has not been configured yet. Please contact your administrator.
+                Your profile type has not been configured yet. Please contact
+                your administrator.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground space-y-2 text-sm">
                 <p>User ID: {session.user?.id}</p>
                 <p>Email: {session.user?.email}</p>
-                <p>Role: {userRole || 'Not assigned'}</p>
+                <p>Role: {userRole || "Not assigned"}</p>
               </div>
             </CardContent>
           </Card>
@@ -144,5 +153,3 @@ export function ProfileContent() {
       )
   }
 }
-
-

@@ -1,44 +1,50 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { deleteBook } from "../../actions";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+
+import { deleteBook } from "../../actions"
 
 interface Props {
-  bookId: string;
-  schoolId: string;
-  dictionary: any;
+  bookId: string
+  schoolId: string
+  dictionary: any
 }
 
-export default function BookTableActions({ bookId, schoolId, dictionary }: Props) {
-  const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
-  const t = dictionary.school;
+export default function BookTableActions({
+  bookId,
+  schoolId,
+  dictionary,
+}: Props) {
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
+  const t = dictionary.school
 
   const handleDelete = async () => {
     if (!confirm(`${t.common.messages.confirmDelete}?`)) {
-      return;
+      return
     }
 
-    setIsDeleting(true);
+    setIsDeleting(true)
 
     try {
-      const result = await deleteBook({ id: bookId, schoolId });
+      const result = await deleteBook({ id: bookId, schoolId })
 
       if (result.success) {
-        toast.success(result.message);
-        router.refresh();
+        toast.success(result.message)
+        router.refresh()
       } else {
-        toast.error(result.error || t.library.messages.bookNotFound);
+        toast.error(result.error || t.library.messages.bookNotFound)
       }
     } catch (error) {
-      toast.error(t.common.messages.errorOccurred);
+      toast.error(t.common.messages.errorOccurred)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   return (
     <div className="flex gap-2">
@@ -58,5 +64,5 @@ export default function BookTableActions({ bookId, schoolId, dictionary }: Props
         {isDeleting ? t.common.status.deleting : t.common.actions.delete}
       </Button>
     </div>
-  );
+  )
 }

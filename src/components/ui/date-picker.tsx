@@ -3,11 +3,11 @@
 import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
+import type { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import type { DateRange } from "react-day-picker"
 import {
   Popover,
   PopoverContent,
@@ -27,7 +27,7 @@ export function DatePicker({
   onSelect,
   placeholder = "Pick a date",
   className,
-  disabled = false
+  disabled = false,
 }: DatePickerProps) {
   return (
     <Popover>
@@ -72,11 +72,11 @@ export function DateRangePicker({
   onSelect,
   placeholder = "Pick a date range",
   className,
-  disabled = false
+  disabled = false,
 }: DateRangePickerProps) {
   const [range, setRange] = React.useState<DateRange>({
     from,
-    to
+    to,
   })
 
   React.useEffect(() => {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Lessons validation schema tests
@@ -14,7 +14,9 @@ describe("Lesson Validation Schemas", () => {
     content: z.string().optional(),
     objectives: z.array(z.string()).optional(),
     materials: z.array(z.string()).optional(),
-    status: z.enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).default("DRAFT"),
+    status: z
+      .enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+      .default("DRAFT"),
   })
 
   const lessonCreateSchema = lessonBaseSchema
@@ -29,7 +31,9 @@ describe("Lesson Validation Schemas", () => {
     classId: z.string().optional(),
     subjectId: z.string().optional(),
     teacherId: z.string().optional(),
-    status: z.enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
+    status: z
+      .enum(["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
+      .optional(),
     dateFrom: z.string().optional(),
     dateTo: z.string().optional(),
   })
@@ -103,7 +107,13 @@ describe("Lesson Validation Schemas", () => {
     })
 
     it("validates status enum", () => {
-      const validStatuses = ["DRAFT", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"]
+      const validStatuses = [
+        "DRAFT",
+        "SCHEDULED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELLED",
+      ]
 
       validStatuses.forEach((status) => {
         const data = {
@@ -169,7 +179,9 @@ describe("Lesson Validation Schemas", () => {
       }
 
       expect(lessonUpdateSchema.safeParse(validObjectives).success).toBe(true)
-      expect(lessonUpdateSchema.safeParse(invalidObjectives).success).toBe(false)
+      expect(lessonUpdateSchema.safeParse(invalidObjectives).success).toBe(
+        false
+      )
     })
   })
 

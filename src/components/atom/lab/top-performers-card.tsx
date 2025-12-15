@@ -1,10 +1,18 @@
 import * as React from "react"
+import { Award, Medal, Trophy } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Trophy, Medal, Award } from "lucide-react"
+
 import type { CardSize } from "./types"
 
 interface Performer {
@@ -167,11 +175,11 @@ export function TopPerformersCard({
     if (!showMedals) return null
     switch (rank) {
       case 1:
-        return <Trophy className="h-5 w-5 text-chart-3" />
+        return <Trophy className="text-chart-3 h-5 w-5" />
       case 2:
-        return <Medal className="h-5 w-5 text-muted-foreground" />
+        return <Medal className="text-muted-foreground h-5 w-5" />
       case 3:
-        return <Award className="h-5 w-5 text-chart-5" />
+        return <Award className="text-chart-5 h-5 w-5" />
       default:
         return null
     }
@@ -190,7 +198,9 @@ export function TopPerformersCard({
             ) : (
               <>
                 <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
+                {description && (
+                  <CardDescription>{description}</CardDescription>
+                )}
               </>
             )}
           </div>
@@ -225,9 +235,9 @@ export function TopPerformersCard({
               <div key={index} className="space-y-2">
                 <div className="flex items-center gap-3">
                   {/* Rank or Medal */}
-                  <div className="flex items-center justify-center w-6 h-6 shrink-0">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center">
                     {getRankIcon(performer.rank) || (
-                      <span className="font-semibold text-muted-foreground">
+                      <span className="text-muted-foreground font-semibold">
                         #{performer.rank}
                       </span>
                     )}
@@ -236,14 +246,19 @@ export function TopPerformersCard({
                   {/* Avatar */}
                   <Avatar className="h-10 w-10 shrink-0">
                     {performer.avatar && (
-                      <AvatarImage src={performer.avatar} alt={performer.name} />
+                      <AvatarImage
+                        src={performer.avatar}
+                        alt={performer.name}
+                      />
                     )}
-                    <AvatarFallback>{getInitials(performer.name)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getInitials(performer.name)}
+                    </AvatarFallback>
                   </Avatar>
 
                   {/* Name & Subtitle */}
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="font-medium text-foreground leading-none truncate">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-foreground truncate leading-none font-medium">
                       {performer.name}
                     </p>
                     {performer.subtitle && (
@@ -253,7 +268,7 @@ export function TopPerformersCard({
 
                   {/* Value */}
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-foreground whitespace-nowrap">
+                    <p className="text-foreground font-semibold whitespace-nowrap">
                       {typeof performer.value === "number"
                         ? performer.value.toLocaleString()
                         : performer.value}

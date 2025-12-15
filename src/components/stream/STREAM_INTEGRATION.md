@@ -3,6 +3,7 @@
 This guide will help you integrate the Marshal LMS system as a "Stream" module into your multi-tenant school management system.
 
 ## Table of Contents
+
 1. [Prerequisites](#prerequisites)
 2. [Installation Steps](#installation-steps)
 3. [Prisma Integration](#prisma-integration)
@@ -29,6 +30,7 @@ Before integrating the Stream module, ensure you have:
 ### Required User Model Fields
 
 Your existing `User` model MUST have these fields:
+
 ```prisma
 model User {
   id    String  @id @default(cuid())
@@ -115,11 +117,13 @@ You have two options:
 If you're using Prisma's multi-file approach:
 
 1. Copy the stream models file:
+
 ```bash
 cp prisma/models/stream.prisma <YOUR_PROJECT>/prisma/models/
 ```
 
 2. In your main `prisma/schema.prisma`, ensure you have:
+
 ```prisma
 generator client {
   provider = "prisma-client-js"
@@ -176,6 +180,7 @@ pnpm prisma migrate deploy
 ### Step 4: Verify Table Creation
 
 Check that these tables were created with the `stream_` prefix:
+
 - `stream_course`
 - `stream_chapter`
 - `stream_lesson`
@@ -231,24 +236,18 @@ If you have a `routes.ts` or similar file, add stream routes:
 // lib/stream/routes.ts or add to existing routes.ts
 export const streamRoutes = {
   // Public routes
-  public: [
-    '/stream',
-    '/stream/courses',
-  ],
+  public: ["/stream", "/stream/courses"],
 
   // Protected routes (require authentication)
   protected: [
-    '/stream/lab',
-    '/stream/payment/success',
-    '/stream/payment/cancel',
+    "/stream/lab",
+    "/stream/payment/success",
+    "/stream/payment/cancel",
   ],
 
   // Admin routes (require ADMIN or TEACHER role)
-  admin: [
-    '/stream/admin',
-    '/stream/admin/courses',
-  ],
-};
+  admin: ["/stream/admin", "/stream/admin/courses"],
+}
 ```
 
 ### Update Middleware (if needed)
@@ -258,20 +257,20 @@ If your middleware restricts routes, ensure stream routes are handled:
 ```typescript
 // middleware.ts
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl
 
   // Allow public stream routes
-  if (pathname.startsWith('/stream/courses') || pathname === '/stream') {
-    return NextResponse.next();
+  if (pathname.startsWith("/stream/courses") || pathname === "/stream") {
+    return NextResponse.next()
   }
 
   // Protect stream lab
-  if (pathname.startsWith('/stream/lab')) {
+  if (pathname.startsWith("/stream/lab")) {
     // Check authentication
   }
 
   // Protect stream admin
-  if (pathname.startsWith('/stream/admin')) {
+  if (pathname.startsWith("/stream/admin")) {
     // Check admin role
   }
 
@@ -290,18 +289,18 @@ Update your main navigation to include stream links:
 ```typescript
 // components/navigation.tsx or similar
 const navigation = [
-  { name: 'Dashboard', href: '/lab' },
-  { name: 'Courses', href: '/stream/courses' }, // Add this
-  { name: 'My Learning', href: '/stream/lab' }, // Add this
+  { name: "Dashboard", href: "/lab" },
+  { name: "Courses", href: "/stream/courses" }, // Add this
+  { name: "My Learning", href: "/stream/lab" }, // Add this
   // ... other links
-];
+]
 
 // For admin users
 const adminNavigation = [
-  { name: 'Admin Dashboard', href: '/admin' },
-  { name: 'Manage Courses', href: '/stream/admin/courses' }, // Add this
+  { name: "Admin Dashboard", href: "/admin" },
+  { name: "Manage Courses", href: "/stream/admin/courses" }, // Add this
   // ... other admin links
-];
+]
 ```
 
 ### Update Dashboard Layout
@@ -338,7 +337,7 @@ The stream module uses Arcjet for rate limiting. Update your middleware:
 
 ```typescript
 // middleware.ts
-import arcjet, { fixedWindow } from "@/lib/arcjet";
+import arcjet, { fixedWindow } from "@/lib/arcjet"
 
 const aj = arcjet.withRule(
   fixedWindow({
@@ -346,18 +345,15 @@ const aj = arcjet.withRule(
     window: "1m",
     max: 60, // 60 requests per minute
   })
-);
+)
 
 export async function middleware(request: NextRequest) {
   // Apply rate limiting to stream API routes
   if (request.nextUrl.pathname.startsWith("/stream/admin")) {
-    const decision = await aj.protect(request);
+    const decision = await aj.protect(request)
 
     if (decision.isDenied()) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 })
     }
   }
 
@@ -372,30 +368,35 @@ export async function middleware(request: NextRequest) {
 After integration, test these scenarios:
 
 ### Public Routes
+
 - [ ] Browse courses at `/stream/courses`
 - [ ] View course details at `/stream/courses/[slug]`
 - [ ] Enrollment button triggers Stripe checkout
 - [ ] Unauthenticated users redirected to login
 
 ### Student Dashboard
+
 - [ ] View enrolled courses at `/stream/dashboard`
 - [ ] Access course lessons
 - [ ] Mark lessons as complete
 - [ ] Track course progress
 
 ### Admin Panel
+
 - [ ] Create new course at `/stream/admin/courses/create`
 - [ ] Edit course structure (chapters/lessons)
 - [ ] Upload course thumbnails and videos
 - [ ] Delete courses
 
 ### Payments
+
 - [ ] Stripe checkout flow completes
 - [ ] Webhook handles `checkout.session.completed`
 - [ ] Enrollment status updates to "Active"
 - [ ] User can access course after payment
 
 ### API Routes
+
 - [ ] S3 upload works for images
 - [ ] S3 upload works for videos
 - [ ] Stripe webhook receives events
@@ -408,6 +409,7 @@ After integration, test these scenarios:
 ### Issue: Prisma Client Not Regenerated
 
 **Solution**:
+
 ```bash
 pnpm prisma generate
 # Restart your dev server
@@ -418,9 +420,11 @@ pnpm prisma generate
 **Symptoms**: File upload returns 500 error
 
 **Solutions**:
+
 1. Check AWS credentials in `.env`
 2. Verify bucket permissions (should allow PutObject, GetObject, DeleteObject)
 3. Check CORS settings on bucket:
+
 ```json
 [
   {
@@ -434,9 +438,11 @@ pnpm prisma generate
 ### Issue: Stripe Webhook Not Receiving Events
 
 **Solutions**:
+
 1. Verify webhook secret in `.env`
 2. Check Stripe dashboard webhook logs
 3. Use Stripe CLI for local testing:
+
 ```bash
 stripe listen --forward-to localhost:3000/api/webhook/stripe
 ```
@@ -444,6 +450,7 @@ stripe listen --forward-to localhost:3000/api/webhook/stripe
 ### Issue: Routes Return 404
 
 **Solutions**:
+
 1. Clear Next.js cache: `rm -rf .next`
 2. Restart dev server
 3. Check middleware isn't blocking stream routes
@@ -454,6 +461,7 @@ stripe listen --forward-to localhost:3000/api/webhook/stripe
 **Symptoms**: TypeScript errors about missing types
 
 **Solutions**:
+
 1. Regenerate Prisma client: `pnpm prisma generate`
 2. Restart TypeScript server in VS Code
 3. Check `tsconfig.json` includes Prisma output path
@@ -463,6 +471,7 @@ stripe listen --forward-to localhost:3000/api/webhook/stripe
 **Symptoms**: User can't enroll even after payment
 
 **Solutions**:
+
 1. Check Stripe webhook is configured correctly
 2. Verify `STRIPE_WEBHOOK_SECRET` matches Stripe dashboard
 3. Check database for enrollment record with "Pending" status
@@ -477,6 +486,7 @@ If your system uses subdomains for tenants:
 ### Option 1: Shared Courses Across Tenants
 
 Courses are available to all tenants:
+
 - No changes needed
 - All tenants access `/stream` routes
 
@@ -485,6 +495,7 @@ Courses are available to all tenants:
 Courses are isolated per tenant:
 
 1. Add `tenantId` or `schoolId` to Course model:
+
 ```prisma
 model Course {
   // ... existing fields
@@ -494,18 +505,19 @@ model Course {
 ```
 
 2. Update course queries to filter by tenant:
+
 ```typescript
 // components/stream/data/course/get-all-courses.ts
 export async function getAllCourses() {
-  const session = await auth();
-  const tenantId = session?.user?.schoolId;
+  const session = await auth()
+  const tenantId = session?.user?.schoolId
 
   return prisma.course.findMany({
     where: {
       schoolId: tenantId, // Filter by tenant
       status: "Published",
     },
-  });
+  })
 }
 ```
 
@@ -528,11 +540,13 @@ export async function getAllCourses() {
 ## Support
 
 For issues specific to the Stream module:
+
 1. Check this integration guide
 2. Review `STREAM_PACKAGES.md` for dependency issues
 3. Check the troubleshooting section above
 
 For general Next.js/Prisma issues:
+
 - Next.js docs: https://nextjs.org/docs
 - Prisma docs: https://www.prisma.io/docs
 - Stripe docs: https://stripe.com/docs
@@ -542,12 +556,12 @@ For general Next.js/Prisma issues:
 ## Version Compatibility
 
 | Package | Minimum Version | Tested Version |
-|---------|----------------|----------------|
-| Next.js | 15.0.0 | 15.3.3 |
-| React | 19.0.0 | 19.0.0 |
-| Prisma | 6.0.0 | 6.8.2 |
-| AuthJS | 5.0.0 | 5.x |
-| Stripe | 18.0.0 | 18.2.1 |
+| ------- | --------------- | -------------- |
+| Next.js | 15.0.0          | 15.3.3         |
+| React   | 19.0.0          | 19.0.0         |
+| Prisma  | 6.0.0           | 6.8.2          |
+| AuthJS  | 5.0.0           | 5.x            |
+| Stripe  | 18.0.0          | 18.2.1         |
 
 ---
 

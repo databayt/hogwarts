@@ -11,6 +11,7 @@
 ### 1. Middleware Backups
 
 #### `src/middleware.backup.ts` (310 lines)
+
 - **Status**: Duplicate of current `src/middleware.ts`
 - **Last Modified**: Commit `8b47bac` - "perf(middleware): optimize Edge Function..."
 - **Imports**: None found
@@ -18,6 +19,7 @@
 - **Action**: DELETE
 
 #### `src/middleware.minimal.ts` (116 lines)
+
 - **Status**: Untracked file (never committed to git)
 - **Description**: Experimental minimal middleware without auth/logging
 - **Imports**: None found
@@ -27,30 +29,36 @@
 ### 2. Empty Placeholder Files (Invoice Module)
 
 #### `src/components/platform/finance/invoice/zod-schema.ts` (2 lines)
+
 ```typescript
 // Deprecated after moving schemas into validation.ts
 export {}
 ```
+
 - **Status**: Empty placeholder
 - **Imports**: None found
 - **Risk**: LOW
 - **Action**: DELETE
 
 #### `src/components/platform/finance/invoice/email.ts` (3 lines)
+
 ```typescript
 // Deprecated after consolidation into actions.ts
 export {}
 ```
+
 - **Status**: Empty placeholder
 - **Imports**: Found in 2 files but NOT actively used
 - **Risk**: LOW
 - **Action**: DELETE
 
 #### `src/components/platform/finance/invoice/dashboard/actions.ts` (3 lines)
+
 ```typescript
 // Deprecated after consolidation into actions.ts
 export {}
 ```
+
 - **Status**: Empty placeholder
 - **Imports**: None found
 - **Risk**: LOW
@@ -59,6 +67,7 @@ export {}
 ### 3. Empty Debug File
 
 #### `src/components/auth/debug-auth.tsx` (1 line)
+
 - **Status**: Empty file
 - **Imports**: None found
 - **Risk**: LOW
@@ -67,6 +76,7 @@ export {}
 ### 4. Example/Reference Files
 
 #### `src/lib/websocket/server.example.txt` (288 lines)
+
 - **Description**: Complete Socket.io server example for real-time attendance
 - **Format**: .txt file with TypeScript code
 - **Purpose**: Documentation/reference
@@ -82,6 +92,7 @@ export {}
 ### 1. Theme Component
 
 #### `src/components/theme/content.tsx` (~500+ lines estimated)
+
 - **Status**: Marked as "DEPRECATED - use settings integration" in README.md
 - **Description**: Standalone theme customization UI with preset gallery
 - **Static Imports**: None found
@@ -95,6 +106,7 @@ export {}
 ### 2. Dashboard Showcase
 
 #### `src/components/platform/dashboard/dashboard-showcase.tsx` (856 lines)
+
 - **Status**: Has `@ts-nocheck` directive
 - **Issues**: 36+ TypeScript errors documented in TODO comments
 - **Description**: Comprehensive showcase of 46+ dashboard card components
@@ -111,6 +123,7 @@ export {}
 ### 3. Commented API Route
 
 #### `src/app/api/email/[invoiceId]/route.ts` (64 lines commented out)
+
 - **Active Code**: Only 2 lines - returns `{ ok: true }`
 - **Commented Code**: 64 lines of MongoDB-based invoice email implementation
 - **Risk**: MEDIUM - Email functionality may be needed
@@ -127,6 +140,7 @@ export {}
 ### 1. Deprecated File Upload Component
 
 #### `src/components/file-upload/Uploader.tsx`
+
 - **Status**: Marked `@deprecated` in JSDoc
 - **Replacement**: `FileUploadButton` component
 - **Current Usage**: Still imported in **19 files**:
@@ -146,6 +160,7 @@ export {}
 ### 2. Cookie Debug Component
 
 #### `src/components/auth/cookie-debug.tsx` (148 lines)
+
 - **Status**: Active in production
 - **Usage**: Used in `src/components/platform/dashboard/content.tsx`
 - **Purpose**: Fallback UI for users without role-specific dashboards
@@ -157,6 +172,7 @@ export {}
 ### 3. Table Component Backward Compatibility
 
 #### `src/components/table/` (old structure)
+
 - **Status**: Kept intentionally for backward compatibility
 - **Documentation**: See `src/components/table/MIGRATION_GUIDE.md`
 - **Deprecated Folders**:
@@ -179,6 +195,7 @@ export {}
 ### Atom Lab Components
 
 #### `src/components/atom/lab/` (67 components)
+
 - **Examples**: stat-card.tsx, progress-card.tsx, hero-stat-card.tsx
 - **Status**: Active reusable UI components (atoms)
 - **Usage**: Referenced extensively in dashboard components
@@ -189,18 +206,19 @@ export {}
 
 ## 📊 Summary
 
-| Risk Level | Files | Lines of Code | Action Required |
-|------------|-------|---------------|-----------------|
-| 🟢 LOW | 7 | ~723 | Delete immediately |
-| 🟡 MEDIUM | 3 | ~1,420 | Verify then delete |
-| 🔴 HIGH | 3 | ~200+ | Migration required |
-| **Total** | **13** | **~2,343** | **Mixed** |
+| Risk Level | Files  | Lines of Code | Action Required    |
+| ---------- | ------ | ------------- | ------------------ |
+| 🟢 LOW     | 7      | ~723          | Delete immediately |
+| 🟡 MEDIUM  | 3      | ~1,420        | Verify then delete |
+| 🔴 HIGH    | 3      | ~200+         | Migration required |
+| **Total**  | **13** | **~2,343**    | **Mixed**          |
 
 ---
 
 ## 🔄 Recommended Action Plan
 
 ### Phase 1: Immediate Cleanup (Safe - 15 minutes)
+
 ```bash
 # Delete LOW RISK files
 rm src/middleware.backup.ts
@@ -221,6 +239,7 @@ git commit -m "chore: remove legacy files and empty placeholders"
 ### Phase 2: Verification Tasks (1-2 hours)
 
 #### 2.1 Verify Theme Component
+
 ```bash
 # Check for dynamic imports
 grep -r "theme/content" src/app/
@@ -237,6 +256,7 @@ pnpm dev
 **Decision**: If no usage found → DELETE `src/components/theme/content.tsx`
 
 #### 2.2 Verify Dashboard Showcase
+
 ```bash
 # Check Storybook usage
 grep -r "dashboard-showcase" .storybook/ 2>/dev/null
@@ -249,10 +269,12 @@ grep -r "dashboard-showcase" src/app/**/docs/
 ```
 
 **Decision**:
+
 - If used in docs/testing → FIX 36+ TypeScript errors
 - If not used → DELETE `src/components/platform/dashboard/dashboard-showcase.tsx`
 
 #### 2.3 Verify Email Functionality
+
 ```bash
 # Test invoice email sending
 pnpm dev
@@ -266,6 +288,7 @@ pnpm dev
 ### Phase 3: Create Migration Issues (Future Work)
 
 #### Issue 1: File Upload Component Migration
+
 ```markdown
 Title: Migrate from Uploader to FileUploadButton (19 files)
 
@@ -273,6 +296,7 @@ Description:
 The `Uploader` component is deprecated. Migrate all 19 references to use `FileUploadButton`.
 
 Files to Update:
+
 - [ ] src/components/onboarding/branding/content.tsx
 - [ ] src/components/platform/communication/hub.tsx
 - [ ] src/components/platform/messaging/message-input.tsx
@@ -287,6 +311,7 @@ Priority: Medium
 ```
 
 #### Issue 2: Dashboard Showcase TypeScript Errors
+
 ```markdown
 Title: Fix or Remove dashboard-showcase.tsx (36+ TypeScript errors)
 
@@ -294,6 +319,7 @@ Description:
 The `dashboard-showcase.tsx` file has @ts-nocheck with 36+ TypeScript errors.
 
 Options:
+
 1. Fix all TypeScript errors if component is valuable
 2. Delete if not used in docs/testing/development
 
@@ -304,6 +330,7 @@ Priority: Low
 ```
 
 #### Issue 3: Table Backward Compatibility Removal
+
 ```markdown
 Title: Remove table component backward compatibility
 
@@ -312,14 +339,16 @@ Old table structure is kept for backward compatibility per MIGRATION_GUIDE.md.
 After deprecation period, remove old folders and consolidate.
 
 Folders to Remove:
+
 - src/components/table/types/
 - src/components/table/config/
 - src/components/table/lib/
 - src/components/table/hooks/
-- src/components/table/_components/
-- src/components/table/_lib/
+- src/components/table/\_components/
+- src/components/table/\_lib/
 
 Prerequisites:
+
 - [ ] Deprecation period ended (check MIGRATION_GUIDE.md)
 - [ ] No external integrations using old paths
 - [ ] All internal imports updated

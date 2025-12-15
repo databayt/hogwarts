@@ -7,6 +7,7 @@ The Lessons feature empowers teachers to create lesson plans, organize curriculu
 ### Course Management Integration
 
 Lessons are now fully integrated with the enhanced Course Management system:
+
 - **Lessons are linked to Class (Course Sections)** - Each lesson belongs to a specific class/section
 - **Teacher & Subject auto-assigned** - Inherited from the class configuration
 - **Evaluation Types supported** - Normal, GPA, CWA, and CCE grading systems
@@ -16,6 +17,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📚 View all lesson plans across school
 - 📊 Monitor curriculum coverage
 - 🔍 Search and filter lessons
@@ -23,6 +25,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 - 📈 Track lesson delivery progress
 
 ### What Teachers Can Do
+
 - ✅ Create lesson plans for their classes
 - ✅ Link lessons to timetable slots
 - ✅ Attach resources and materials
@@ -33,6 +36,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 - ❌ Cannot modify other teachers' lessons
 
 ### What Students Can View
+
 - ✅ View upcoming lesson topics
 - ✅ Access lesson materials
 - ✅ See learning objectives
@@ -40,20 +44,24 @@ Lessons are now fully integrated with the enhanced Course Management system:
 - ❌ Cannot view lesson plans
 
 ### What Parents Can View
+
 - ✅ View what their child is learning
 - ✅ See upcoming topics
 - ❌ Cannot access detailed lesson plans
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Class and subject assignment
 - ✅ Lesson content management
 - ✅ Multi-tenant isolation (schoolId scoping)
 
 **Planned:**
+
 - ⏸️ Resource attachments (PDFs, videos)
 - ⏸️ Lesson templates
 - ⏸️ Curriculum mapping
@@ -64,6 +72,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 ## Admin Workflows
 
 ### 1. Create a Lesson Plan
+
 1. Navigate to `/lessons`
 2. Click "Create Lesson"
 3. Fill in lesson details:
@@ -77,6 +86,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 5. Save as draft or publish
 
 ### 2. Link Lessons to Timetable
+
 1. Open timetable view
 2. Click on a period slot
 3. Select "Attach Lesson Plan"
@@ -84,6 +94,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 5. Lesson appears in teacher and student schedules
 
 ### 3. Attach Resources
+
 1. Open lesson detail page
 2. Click "Add Resources"
 3. Upload files (PDFs, presentations, videos)
@@ -91,6 +102,7 @@ Lessons are now fully integrated with the enhanced Course Management system:
 5. Students can access materials
 
 ### 4. Track Curriculum Coverage
+
 1. Navigate to `/lessons/curriculum`
 2. View curriculum map
 3. See which topics covered
@@ -102,21 +114,25 @@ Lessons are now fully integrated with the enhanced Course Management system:
 ## Integration with Other Features
 
 ### Links to Timetable
+
 - Lessons attached to specific timetable slots
 - Teachers see lesson plans in schedule
 - Students view lesson topics ahead
 
 ### Links to Assignments
+
 - Link assignments to lessons
 - Students see related homework
 - Curriculum alignment tracking
 
 ### Links to Classes
+
 - Lessons created per class
 - Different lessons for different sections
 - Class-specific adaptations
 
 ### Links to Subjects
+
 - Lessons organized by subject
 - Subject-wise curriculum planning
 - Cross-curricular connections
@@ -126,12 +142,14 @@ Lessons are now fully integrated with the enhanced Course Management system:
 ## Technical Implementation
 
 **Files:**
+
 - `content.tsx` - Lesson list view
 - `actions.ts` - CRUD operations
 - `validation.ts` - Zod schemas
 - `form.tsx` - Lesson creation form
 
 **Database Schema:**
+
 ```prisma
 enum LessonStatus {
   PLANNED
@@ -200,37 +218,44 @@ model Class {
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

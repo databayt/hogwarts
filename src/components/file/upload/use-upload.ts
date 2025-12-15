@@ -20,67 +20,82 @@
  * - No chunking - only handles single-request uploads (use useChunkedUpload for large files)
  */
 
-"use client";
+"use client"
 
-import { useState, useCallback, useRef } from "react";
-import type { FileCategory, FileType, StorageProvider, StorageTier, UploadProgress, FileMetadata } from "../types";
-import { validateFile, validateFiles } from "./validation";
-import { uploadFile, uploadFiles as uploadFilesAction, deleteFile } from "./actions";
+import { useCallback, useRef, useState } from "react"
+
+import type {
+  FileCategory,
+  FileMetadata,
+  FileType,
+  StorageProvider,
+  StorageTier,
+  UploadProgress,
+} from "../types"
+import {
+  deleteFile,
+  uploadFile,
+  uploadFiles as uploadFilesAction,
+} from "./actions"
+import { validateFile, validateFiles } from "./validation"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface UseUploadOptions {
-  category: FileCategory;
-  type?: FileType;
-  folder?: string;
-  provider?: StorageProvider;
-  tier?: StorageTier;
-  access?: "public" | "private";
-  maxSize?: number;
-  maxFiles?: number;
-  maxTotalSize?: number;
-  allowedTypes?: string[];
-  metadata?: Record<string, string>;
-  onSuccess?: (result: UploadResult) => void;
-  onError?: (error: string, filename?: string) => void;
-  onProgress?: (progress: UploadProgress) => void;
+  category: FileCategory
+  type?: FileType
+  folder?: string
+  provider?: StorageProvider
+  tier?: StorageTier
+  access?: "public" | "private"
+  maxSize?: number
+  maxFiles?: number
+  maxTotalSize?: number
+  allowedTypes?: string[]
+  metadata?: Record<string, string>
+  onSuccess?: (result: UploadResult) => void
+  onError?: (error: string, filename?: string) => void
+  onProgress?: (progress: UploadProgress) => void
 }
 
 interface UploadResult {
-  id: string;
-  url: string;
-  filename: string;
-  originalName: string;
-  size: number;
-  mimeType: string;
-  category: FileCategory;
-  type?: string;
-  provider: StorageProvider;
-  tier: StorageTier;
+  id: string
+  url: string
+  filename: string
+  originalName: string
+  size: number
+  mimeType: string
+  category: FileCategory
+  type?: string
+  provider: StorageProvider
+  tier: StorageTier
 }
 
 interface UseUploadReturn {
   // State
-  isUploading: boolean;
-  progress: UploadProgress | null;
-  error: string | null;
-  uploadedFiles: UploadResult[];
+  isUploading: boolean
+  progress: UploadProgress | null
+  error: string | null
+  uploadedFiles: UploadResult[]
 
   // Actions
-  upload: (file: File) => Promise<UploadResult | null>;
-  uploadMultiple: (files: File[]) => Promise<UploadResult[]>;
-  remove: (fileId: string) => Promise<boolean>;
-  reset: () => void;
-  clearError: () => void;
+  upload: (file: File) => Promise<UploadResult | null>
+  uploadMultiple: (files: File[]) => Promise<UploadResult[]>
+  remove: (fileId: string) => Promise<boolean>
+  reset: () => void
+  clearError: () => void
 
   // Validation
-  validate: (file: File) => { valid: boolean; error?: string };
-  validateMultiple: (files: File[]) => { valid: boolean; errors: Array<{ file: string; error: string }> };
+  validate: (file: File) => { valid: boolean; error?: string }
+  validateMultiple: (files: File[]) => {
+    valid: boolean
+    errors: Array<{ file: string; error: string }>
+  }
 
   // Utilities
-  getAcceptedTypes: () => Record<string, string[]>;
+  getAcceptedTypes: () => Record<string, string[]>
 }
 
 // ============================================================================
@@ -88,12 +103,12 @@ interface UseUploadReturn {
 // ============================================================================
 
 export function useUpload(options: UseUploadOptions): UseUploadReturn {
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState<UploadProgress | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([]);
+  const [isUploading, setIsUploading] = useState(false)
+  const [progress, setProgress] = useState<UploadProgress | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([])
 
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // ============================================================================
   // Validation
@@ -106,10 +121,10 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         type: options.type,
         maxSize: options.maxSize,
         allowedTypes: options.allowedTypes,
-      });
+      })
     },
     [options.category, options.type, options.maxSize, options.allowedTypes]
-  );
+  )
 
   const validateMultiple = useCallback(
     (files: File[]) => {
@@ -120,10 +135,17 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         maxFiles: options.maxFiles,
         maxTotalSize: options.maxTotalSize,
         allowedTypes: options.allowedTypes,
-      });
+      })
     },
-    [options.category, options.type, options.maxSize, options.maxFiles, options.maxTotalSize, options.allowedTypes]
-  );
+    [
+      options.category,
+      options.type,
+      options.maxSize,
+      options.maxFiles,
+      options.maxTotalSize,
+      options.allowedTypes,
+    ]
+  )
 
   // ============================================================================
   // Upload Single File
@@ -132,15 +154,15 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
   const upload = useCallback(
     async (file: File): Promise<UploadResult | null> => {
       // Validate first
-      const validation = validate(file);
+      const validation = validate(file)
       if (!validation.valid) {
-        setError(validation.error || "Validation failed");
-        options.onError?.(validation.error || "Validation failed", file.name);
-        return null;
+        setError(validation.error || "Validation failed")
+        options.onError?.(validation.error || "Validation failed", file.name)
+        return null
       }
 
-      setIsUploading(true);
-      setError(null);
+      setIsUploading(true)
+      setError(null)
       setProgress({
         fileId: `upload-${Date.now()}`,
         fileName: file.name,
@@ -150,28 +172,31 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         loaded: 0,
         total: file.size,
         status: "uploading",
-      });
+      })
 
       try {
         // Create FormData
-        const formData = new FormData();
-        formData.set("file", file);
+        const formData = new FormData()
+        formData.set("file", file)
 
         // Simulate progress by incrementing 10% every 200ms until server responds
         // Real progress would require XMLHttpRequest upload events (not available with FormData)
         // Stops at 90% to leave room for server processing
         const progressInterval = setInterval(() => {
           setProgress((prev) => {
-            if (!prev || (prev.percentage ?? prev.progress) >= 90) return prev;
-            const newPercentage = Math.min((prev.percentage ?? prev.progress) + 10, 90);
+            if (!prev || (prev.percentage ?? prev.progress) >= 90) return prev
+            const newPercentage = Math.min(
+              (prev.percentage ?? prev.progress) + 10,
+              90
+            )
             return {
               ...prev,
               loaded: Math.floor((newPercentage / 100) * (prev.total ?? 0)),
               percentage: newPercentage,
               progress: newPercentage,
-            };
-          });
-        }, 200);
+            }
+          })
+        }, 200)
 
         // Upload via server action
         const result = await uploadFile(formData, {
@@ -182,15 +207,17 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           tier: options.tier,
           access: options.access,
           metadata: options.metadata,
-        });
+        })
 
-        clearInterval(progressInterval);
+        clearInterval(progressInterval)
 
         if (!result.success) {
-          setProgress((prev) => prev ? { ...prev, status: "error", error: result.error } : null);
-          setError(result.error);
-          options.onError?.(result.error, file.name);
-          return null;
+          setProgress((prev) =>
+            prev ? { ...prev, status: "error", error: result.error } : null
+          )
+          setError(result.error)
+          options.onError?.(result.error, file.name)
+          return null
         }
 
         // Success
@@ -205,7 +232,7 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           type: result.type,
           provider: result.provider as StorageProvider,
           tier: result.tier as StorageTier,
-        };
+        }
 
         setProgress({
           fileId: `upload-${Date.now()}`,
@@ -216,10 +243,10 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           progress: 100,
           percentage: 100,
           status: "success",
-        });
+        })
 
-        setUploadedFiles((prev) => [...prev, uploadResult]);
-        options.onSuccess?.(uploadResult);
+        setUploadedFiles((prev) => [...prev, uploadResult])
+        options.onSuccess?.(uploadResult)
         options.onProgress?.({
           fileId: `upload-${Date.now()}`,
           fileName: file.name,
@@ -229,21 +256,24 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           progress: 100,
           percentage: 100,
           status: "success",
-        });
+        })
 
-        return uploadResult;
+        return uploadResult
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Upload failed";
-        setProgress((prev) => prev ? { ...prev, status: "error", error: errorMessage } : null);
-        setError(errorMessage);
-        options.onError?.(errorMessage, file.name);
-        return null;
+        const errorMessage =
+          err instanceof Error ? err.message : "Upload failed"
+        setProgress((prev) =>
+          prev ? { ...prev, status: "error", error: errorMessage } : null
+        )
+        setError(errorMessage)
+        options.onError?.(errorMessage, file.name)
+        return null
       } finally {
-        setIsUploading(false);
+        setIsUploading(false)
       }
     },
     [options, validate]
-  );
+  )
 
   // ============================================================================
   // Upload Multiple Files
@@ -252,21 +282,23 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
   const uploadMultiple = useCallback(
     async (files: File[]): Promise<UploadResult[]> => {
       // Validate all files first
-      const validation = validateMultiple(files);
+      const validation = validateMultiple(files)
       if (!validation.valid) {
-        const errorMessage = validation.errors.map((e) => `${e.file}: ${e.error}`).join("; ");
-        setError(errorMessage);
-        options.onError?.(errorMessage);
-        return [];
+        const errorMessage = validation.errors
+          .map((e) => `${e.file}: ${e.error}`)
+          .join("; ")
+        setError(errorMessage)
+        options.onError?.(errorMessage)
+        return []
       }
 
-      setIsUploading(true);
-      setError(null);
+      setIsUploading(true)
+      setError(null)
 
-      const results: UploadResult[] = [];
+      const results: UploadResult[] = []
 
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const file = files[i]
 
         setProgress({
           fileId: `upload-${Date.now()}-${i}`,
@@ -279,61 +311,58 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
           status: "uploading",
           currentFile: i + 1,
           totalFiles: files.length,
-        });
+        })
 
-        const result = await upload(file);
+        const result = await upload(file)
         if (result) {
-          results.push(result);
+          results.push(result)
         }
       }
 
-      setIsUploading(false);
-      return results;
+      setIsUploading(false)
+      return results
     },
     [options, upload, validateMultiple]
-  );
+  )
 
   // ============================================================================
   // Remove File
   // ============================================================================
 
-  const remove = useCallback(
-    async (fileId: string): Promise<boolean> => {
-      try {
-        const result = await deleteFile(fileId);
-        if (result.success) {
-          setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId));
-          return true;
-        }
-        setError(result.error || "Delete failed");
-        return false;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Delete failed";
-        setError(errorMessage);
-        return false;
+  const remove = useCallback(async (fileId: string): Promise<boolean> => {
+    try {
+      const result = await deleteFile(fileId)
+      if (result.success) {
+        setUploadedFiles((prev) => prev.filter((f) => f.id !== fileId))
+        return true
       }
-    },
-    []
-  );
+      setError(result.error || "Delete failed")
+      return false
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Delete failed"
+      setError(errorMessage)
+      return false
+    }
+  }, [])
 
   // ============================================================================
   // Utility Functions
   // ============================================================================
 
   const reset = useCallback(() => {
-    setIsUploading(false);
-    setProgress(null);
-    setError(null);
-    setUploadedFiles([]);
+    setIsUploading(false)
+    setProgress(null)
+    setError(null)
+    setUploadedFiles([])
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
     }
-  }, []);
+  }, [])
 
   const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+    setError(null)
+  }, [])
 
   const getAcceptedTypes = useCallback((): Record<string, string[]> => {
     // Return accept object for react-dropzone based on category
@@ -354,9 +383,12 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
       document: {
         "application/pdf": [".pdf"],
         "application/msword": [".doc"],
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+          [".docx"],
         "application/vnd.ms-excel": [".xls"],
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+          ".xlsx",
+        ],
         "text/plain": [".txt"],
         "text/csv": [".csv"],
       },
@@ -371,10 +403,10 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         "application/gzip": [".gz"],
       },
       other: {},
-    };
+    }
 
-    return categoryMimes[options.category] || {};
-  }, [options.category]);
+    return categoryMimes[options.category] || {}
+  }, [options.category])
 
   return {
     // State
@@ -396,7 +428,7 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
 
     // Utilities
     getAcceptedTypes,
-  };
+  }
 }
 
-export type { UseUploadOptions, UseUploadReturn, UploadResult };
+export type { UseUploadOptions, UseUploadReturn, UploadResult }

@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from "@t3-oss/env-nextjs"
+import { z } from "zod"
 
 export const env = createEnv({
   server: {
@@ -24,10 +24,22 @@ export const env = createEnv({
 
     // File Upload & Storage
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(), // Vercel Blob
-    AWS_ACCESS_KEY_ID: z.string().optional().transform(val => val === '' ? undefined : val), // AWS S3
-    AWS_SECRET_ACCESS_KEY: z.string().optional().transform(val => val === '' ? undefined : val),
-    AWS_REGION: z.string().optional().transform(val => val === '' ? undefined : val),
-    AWS_S3_BUCKET: z.string().optional().transform(val => val === '' ? undefined : val),
+    AWS_ACCESS_KEY_ID: z
+      .string()
+      .optional()
+      .transform((val) => (val === "" ? undefined : val)), // AWS S3
+    AWS_SECRET_ACCESS_KEY: z
+      .string()
+      .optional()
+      .transform((val) => (val === "" ? undefined : val)),
+    AWS_REGION: z
+      .string()
+      .optional()
+      .transform((val) => (val === "" ? undefined : val)),
+    AWS_S3_BUCKET: z
+      .string()
+      .optional()
+      .transform((val) => (val === "" ? undefined : val)),
     CLOUDFLARE_R2_ACCESS_KEY_ID: z.string().min(1).optional(), // Cloudflare R2
     CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     CLOUDFLARE_R2_BUCKET: z.string().optional(),
@@ -93,7 +105,8 @@ export const env = createEnv({
     AWS_REGION: process.env.AWS_REGION,
     AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
     CLOUDFLARE_R2_ACCESS_KEY_ID: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY:
+      process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
     CLOUDFLARE_R2_BUCKET: process.env.CLOUDFLARE_R2_BUCKET,
     CLOUDFLARE_R2_ENDPOINT: process.env.CLOUDFLARE_R2_ENDPOINT,
     CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
@@ -138,6 +151,4 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
-});
-
-
+})

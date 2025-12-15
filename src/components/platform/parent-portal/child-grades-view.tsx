@@ -1,11 +1,11 @@
-import { getChildGrades } from "./actions";
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -13,18 +13,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { getChildGrades } from "./actions"
 
 interface Props {
-  studentId: string;
+  studentId: string
 }
 
 export async function ChildGradesView({ studentId }: Props) {
-  const { grades } = await getChildGrades({ studentId });
+  const { grades } = await getChildGrades({ studentId })
 
-  const { examResults, classScores } = grades;
+  const { examResults, classScores } = grades
 
   return (
     <div className="space-y-6">
@@ -46,7 +47,7 @@ export async function ChildGradesView({ studentId }: Props) {
             </CardHeader>
             <CardContent>
               {examResults.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">
+                <p className="text-muted-foreground py-8 text-center">
                   No exam results recorded yet
                 </p>
               ) : (
@@ -135,7 +136,7 @@ export async function ChildGradesView({ studentId }: Props) {
             </CardHeader>
             <CardContent>
               {classScores.length === 0 ? (
-                <p className="text-center py-8 text-muted-foreground">
+                <p className="text-muted-foreground py-8 text-center">
                   No class scores recorded yet
                 </p>
               ) : (
@@ -175,5 +176,5 @@ export async function ChildGradesView({ studentId }: Props) {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

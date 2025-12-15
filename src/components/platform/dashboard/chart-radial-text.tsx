@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react"
 import {
   Label,
   PolarGrid,
   PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
-} from "recharts";
+} from "recharts"
 
 import {
   Card,
@@ -16,15 +16,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+} from "@/components/ui/card"
+import { ChartConfig, ChartContainer } from "@/components/ui/chart"
 
 export interface RadialTextChartProps {
-  value?: number;
-  label?: string;
-  trend?: number;
-  trendLabel?: string;
-  maxValue?: number;
+  value?: number
+  label?: string
+  trend?: number
+  trendLabel?: string
+  maxValue?: number
 }
 
 export function RadialTextChart({
@@ -36,20 +36,20 @@ export function RadialTextChart({
 }: RadialTextChartProps) {
   const chartData = [
     { name: "value", value: value, fill: "var(--color-value)" },
-  ];
+  ]
 
   const chartConfig = {
     value: {
       label: label,
       color: "hsl(var(--chart-2))",
     },
-  } satisfies ChartConfig;
+  } satisfies ChartConfig
 
   // Calculate end angle based on value percentage (0 = 0 degrees, maxValue = 250 degrees)
-  const endAngle = Math.min((value / maxValue) * 250, 250);
+  const endAngle = Math.min((value / maxValue) * 250, 250)
 
   return (
-    <Card className="flex flex-col border-none shadow-none bg-muted">
+    <Card className="bg-muted flex flex-col border-none shadow-none">
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
@@ -96,7 +96,7 @@ export function RadialTextChart({
                           {label}
                         </tspan>
                       </text>
-                    );
+                    )
                   }
                 }}
               />
@@ -104,22 +104,22 @@ export function RadialTextChart({
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
+        <div className="flex items-center gap-2 leading-none font-medium">
           {trend >= 0 ? (
             <>
-              Trending up by {trend}% this month <TrendingUp className="size-4" />
+              Trending up by {trend}% this month{" "}
+              <TrendingUp className="size-4" />
             </>
           ) : (
             <>
-              Trending down by {Math.abs(trend)}% this month <TrendingDown className="size-4" />
+              Trending down by {Math.abs(trend)}% this month{" "}
+              <TrendingDown className="size-4" />
             </>
           )}
         </div>
-        <div className="leading-none text-muted-foreground">
-          {trendLabel}
-        </div>
+        <div className="text-muted-foreground leading-none">{trendLabel}</div>
       </CardFooter>
     </Card>
-  );
+  )
 }

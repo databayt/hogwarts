@@ -1,53 +1,46 @@
 "use client"
 
 import * as React from "react"
-import { useState, useMemo, useCallback, useTransition } from "react"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import type { NotificationPriority, NotificationType } from "@prisma/client"
 import {
+  differenceInDays,
   format,
   formatDistanceToNow,
+  isPast,
   isToday,
   isYesterday,
   startOfDay,
-  differenceInDays,
-  isPast,
 } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
+import { AnimatePresence, motion } from "framer-motion"
 import {
+  Archive,
+  Award,
   Bell,
+  BookOpen,
+  Calendar,
   Check,
   CheckCheck,
-  Archive,
+  DollarSign,
+  Filter,
+  Loader2,
+  MessageSquare,
+  MoreHorizontal,
+  Settings,
   Star,
   Trash2,
-  MessageSquare,
-  Calendar,
-  DollarSign,
-  Award,
   TriangleAlert,
   Users,
-  BookOpen,
-  Settings,
-  Loader2,
-  MoreHorizontal,
-  Filter,
   X,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -56,14 +49,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "@/components/ui/use-toast"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { motion, AnimatePresence } from "framer-motion"
-import type { NotificationDTO } from "./types"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
-import type { NotificationType, NotificationPriority } from "@prisma/client"
+import type { NotificationDTO } from "./types"
 
 // Notification type icons using existing config
 const typeIcons: Record<string, React.ElementType> = {
@@ -142,9 +144,7 @@ export function NotificationCenter({
     return filtered.sort((a, b) => {
       if (a.priority === "urgent" && b.priority !== "urgent") return -1
       if (b.priority === "urgent" && a.priority !== "urgent") return 1
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
   }, [notifications, selectedTab, selectedTypes])
 
@@ -254,11 +254,11 @@ export function NotificationCenter({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, x: -20 }}
         className={cn(
-          "group flex items-start gap-3 p-4 rounded-lg transition-colors",
+          "group flex items-start gap-3 rounded-lg p-4 transition-colors",
           !notification.read && "bg-accent/50",
           notification.priority === "urgent" &&
             !notification.read &&
-            "border-l-4 border-l-destructive"
+            "border-l-destructive border-l-4"
         )}
       >
         {bulkActionMode && (
@@ -294,33 +294,33 @@ export function NotificationCenter({
             )}
           />
           {notification.priority === "urgent" && !notification.read && (
-            <span className="absolute inline-flex h-3 w-3 -top-1 ltr:-right-1 rtl:-left-1">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-destructive" />
+            <span className="absolute -top-1 inline-flex h-3 w-3 ltr:-right-1 rtl:-left-1">
+              <span className="bg-destructive absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+              <span className="bg-destructive relative inline-flex h-3 w-3 rounded-full" />
             </span>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
               <p
                 className={cn(
-                  "text-sm truncate",
+                  "truncate text-sm",
                   !notification.read
-                    ? "font-semibold text-foreground"
-                    : "font-medium text-muted-foreground"
+                    ? "text-foreground font-semibold"
+                    : "text-muted-foreground font-medium"
                 )}
               >
                 {notification.title}
               </p>
               {notification.actor && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {notification.actor.username || notification.actor.email}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex shrink-0 items-center gap-2">
               {notification.priority !== "normal" && (
                 <Badge
                   variant={priorityConfig.badgeVariant}
@@ -329,13 +329,13 @@ export function NotificationCenter({
                   {dictionary.priorities.badge[notification.priority]}
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-muted-foreground text-xs whitespace-nowrap">
                 {timeAgo}
               </span>
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+          <p className="text-muted-foreground mb-2 line-clamp-2 text-sm">
             {notification.body}
           </p>
 
@@ -359,12 +359,10 @@ export function NotificationCenter({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
               >
                 <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">
-                  {dictionary.actions.settings}
-                </span>
+                <span className="sr-only">{dictionary.actions.settings}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -372,19 +370,19 @@ export function NotificationCenter({
                 <DropdownMenuItem
                   onClick={() => onMarkAsRead([notification.id])}
                 >
-                  <Check className="h-4 w-4 me-2" />
+                  <Check className="me-2 h-4 w-4" />
                   {dictionary.actions.markAsRead}
                 </DropdownMenuItem>
               )}
               {onStar && (
                 <DropdownMenuItem onClick={() => onStar(notification.id)}>
-                  <Star className="h-4 w-4 me-2" />
+                  <Star className="me-2 h-4 w-4" />
                   Star
                 </DropdownMenuItem>
               )}
               {onArchive && (
                 <DropdownMenuItem onClick={() => onArchive([notification.id])}>
-                  <Archive className="h-4 w-4 me-2" />
+                  <Archive className="me-2 h-4 w-4" />
                   {dictionary.actions.archive}
                 </DropdownMenuItem>
               )}
@@ -393,7 +391,7 @@ export function NotificationCenter({
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete([notification.id])}
               >
-                <Trash2 className="h-4 w-4 me-2" />
+                <Trash2 className="me-2 h-4 w-4" />
                 {dictionary.actions.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -406,7 +404,7 @@ export function NotificationCenter({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
             {dictionary.title}
@@ -431,7 +429,9 @@ export function NotificationCenter({
                 setSelectedNotifications([])
               }}
             >
-              {bulkActionMode ? dictionary.confirmations.cancel : dictionary.bulk.selectAll.split(" ")[0]}
+              {bulkActionMode
+                ? dictionary.confirmations.cancel
+                : dictionary.bulk.selectAll.split(" ")[0]}
             </Button>
           )}
 
@@ -443,7 +443,7 @@ export function NotificationCenter({
                 onClick={() => handleBulkAction("read")}
                 disabled={isPending}
               >
-                {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
+                {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 {dictionary.actions.markAsRead}
               </Button>
               <Button
@@ -501,8 +501,8 @@ export function NotificationCenter({
           >
             <Card>
               <CardContent className="pt-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-sm">
                     {dictionary.filters.filterBy}:
                   </span>
                   {Object.entries(typeIcons)
@@ -537,7 +537,7 @@ export function NotificationCenter({
                       size="sm"
                       onClick={() => setSelectedTypes([])}
                     >
-                      <X className="h-4 w-4 me-1" />
+                      <X className="me-1 h-4 w-4" />
                       {dictionary.filters.clearFilters}
                     </Button>
                   )}
@@ -590,11 +590,11 @@ export function NotificationCenter({
           <ScrollArea className="h-[500px]">
             <AnimatePresence mode="popLayout">
               {Object.keys(groupedNotifications).length > 0 ? (
-                <div className="p-4 space-y-4">
+                <div className="space-y-4 p-4">
                   {Object.entries(groupedNotifications).map(
                     ([date, notifications]) => (
                       <div key={date}>
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2 sticky top-0 bg-card py-1">
+                        <h3 className="text-muted-foreground bg-card sticky top-0 mb-2 py-1 text-sm font-medium">
                           {date}
                         </h3>
                         <div className="space-y-1">
@@ -615,13 +615,13 @@ export function NotificationCenter({
                   animate={{ opacity: 1 }}
                   className="flex flex-col items-center justify-center py-16"
                 >
-                  <div className="rounded-full bg-muted p-4 mb-4">
-                    <Bell className="h-8 w-8 text-muted-foreground" />
+                  <div className="bg-muted mb-4 rounded-full p-4">
+                    <Bell className="text-muted-foreground h-8 w-8" />
                   </div>
-                  <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+                  <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
                     {dictionary.empty.noNotifications}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {dictionary.empty.noNotificationsDescription}
                   </p>
                 </motion.div>

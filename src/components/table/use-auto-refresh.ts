@@ -1,31 +1,31 @@
-'use client';
+"use client"
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from "react"
 
 export interface UseAutoRefreshOptions {
   /** Whether auto-refresh is enabled */
-  enabled?: boolean;
+  enabled?: boolean
   /** Refresh interval in milliseconds */
-  interval?: number;
+  interval?: number
   /** Callback to execute on refresh */
-  onRefresh: () => void | Promise<void>;
+  onRefresh: () => void | Promise<void>
   /** Callback when refresh fails */
-  onError?: (error: Error) => void;
+  onError?: (error: Error) => void
   /** Whether to refresh immediately on mount */
-  refreshOnMount?: boolean;
+  refreshOnMount?: boolean
   /** Whether to pause on window blur */
-  pauseOnBlur?: boolean;
+  pauseOnBlur?: boolean
 }
 
 export interface UseAutoRefreshReturn {
   /** Manually trigger refresh */
-  refresh: () => Promise<void>;
+  refresh: () => Promise<void>
   /** Start auto-refresh */
-  start: () => void;
+  start: () => void
   /** Stop auto-refresh */
-  stop: () => void;
+  stop: () => void
   /** Check if auto-refresh is running */
-  isRunning: boolean;
+  isRunning: boolean
 }
 
 /**
@@ -39,77 +39,77 @@ export function useAutoRefresh({
   refreshOnMount = false,
   pauseOnBlur = true,
 }: UseAutoRefreshOptions): UseAutoRefreshReturn {
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isRunningRef = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isRunningRef = useRef(false)
 
   const refresh = useCallback(async () => {
     try {
-      await onRefresh();
+      await onRefresh()
     } catch (error) {
-      onError?.(error as Error);
+      onError?.(error as Error)
     }
-  }, [onRefresh, onError]);
+  }, [onRefresh, onError])
 
   const start = useCallback(() => {
-    if (intervalRef.current || !enabled) return;
+    if (intervalRef.current || !enabled) return
 
-    isRunningRef.current = true;
+    isRunningRef.current = true
     intervalRef.current = setInterval(() => {
-      refresh();
-    }, interval);
-  }, [enabled, interval, refresh]);
+      refresh()
+    }, interval)
+  }, [enabled, interval, refresh])
 
   const stop = useCallback(() => {
     if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-      isRunningRef.current = false;
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+      isRunningRef.current = false
     }
-  }, []);
+  }, [])
 
   // Handle window focus/blur
   useEffect(() => {
-    if (!pauseOnBlur || !enabled) return;
+    if (!pauseOnBlur || !enabled) return
 
     const handleFocus = () => {
       if (isRunningRef.current) {
-        start();
+        start()
       }
-    };
+    }
 
     const handleBlur = () => {
-      stop();
-    };
+      stop()
+    }
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
+    window.addEventListener("focus", handleFocus)
+    window.addEventListener("blur", handleBlur)
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, [enabled, pauseOnBlur, start, stop]);
+      window.removeEventListener("focus", handleFocus)
+      window.removeEventListener("blur", handleBlur)
+    }
+  }, [enabled, pauseOnBlur, start, stop])
 
   // Start/stop based on enabled state
   useEffect(() => {
     if (enabled) {
-      start();
+      start()
       if (refreshOnMount) {
-        refresh();
+        refresh()
       }
     } else {
-      stop();
+      stop()
     }
 
     return () => {
-      stop();
-    };
-  }, [enabled, start, stop, refresh, refreshOnMount]);
+      stop()
+    }
+  }, [enabled, start, stop, refresh, refreshOnMount])
 
   return {
     refresh,
     start,
     stop,
     isRunning: isRunningRef.current,
-  };
+  }
 }

@@ -48,22 +48,26 @@ Execute complete deployment pipeline with comprehensive validation, testing, and
 ## Pre-Flight Checks
 
 ### 1. Code Quality
+
 - ✅ No uncommitted changes
 - ✅ Branch up to date
 - ✅ No merge conflicts
 
 ### 2. Tests
+
 - ✅ Unit tests passing
 - ✅ Integration tests passing
 - ✅ E2E tests passing
 - ✅ Coverage ≥ 95%
 
 ### 3. Build
+
 - ✅ TypeScript compilation
 - ✅ No build errors
 - ✅ Bundle size acceptable
 
 ### 4. Security
+
 - ✅ No vulnerable dependencies
 - ✅ No security violations
 - ✅ Secrets not exposed
@@ -71,6 +75,7 @@ Execute complete deployment pipeline with comprehensive validation, testing, and
 ## Deployment Pipeline
 
 ### Stage 1: Validation
+
 ```bash
 # Check git status
 git status
@@ -84,6 +89,7 @@ git status -uno
 ```
 
 ### Stage 2: Test Execution
+
 ```bash
 # Run test suite
 pnpm test
@@ -96,6 +102,7 @@ pnpm test --coverage
 ```
 
 ### Stage 3: Security Scan
+
 ```bash
 # Dependency audit
 pnpm audit
@@ -108,6 +115,7 @@ git secrets --scan
 ```
 
 ### Stage 4: Build
+
 ```bash
 # Production build
 pnpm build
@@ -120,6 +128,7 @@ ls -la .next
 ```
 
 ### Stage 5: Deploy
+
 ```bash
 # Staging deployment
 vercel --env=staging
@@ -132,6 +141,7 @@ vercel --prod --build-env KEY=value
 ```
 
 ### Stage 6: Verification
+
 ```bash
 # Health check
 curl https://app.domain.com/api/health
@@ -144,6 +154,7 @@ lighthouse https://app.domain.com
 ```
 
 ### Stage 7: Notification
+
 ```bash
 # Update GitHub deployment
 gh deployment create production
@@ -160,6 +171,7 @@ gh issue comment 123 --body "Deployed to production"
 ## Environment-Specific Config
 
 ### Staging
+
 ```json
 {
   "staging": {
@@ -172,6 +184,7 @@ gh issue comment 123 --body "Deployed to production"
 ```
 
 ### Production
+
 ```json
 {
   "production": {
@@ -227,6 +240,7 @@ Time: 3m 45s
 ## Deployment Checklist
 
 ### Before Deployment
+
 - [ ] All stories in epic completed
 - [ ] Code reviewed and approved
 - [ ] Tests passing with good coverage
@@ -237,6 +251,7 @@ Time: 3m 45s
 - [ ] Database migrations ready
 
 ### During Deployment
+
 - [ ] Monitor deployment logs
 - [ ] Watch error rates
 - [ ] Check performance metrics
@@ -244,6 +259,7 @@ Time: 3m 45s
 - [ ] Run smoke tests
 
 ### After Deployment
+
 - [ ] Verify application health
 - [ ] Check user-facing features
 - [ ] Monitor error tracking
@@ -254,18 +270,21 @@ Time: 3m 45s
 ## Error Handling
 
 ### Build Failures
+
 1. Check TypeScript errors
 2. Verify dependencies
 3. Clear cache and rebuild
 4. Check environment variables
 
 ### Deployment Failures
+
 1. Check deployment logs
 2. Verify credentials
 3. Check network connectivity
 4. Review platform status
 
 ### Post-Deploy Issues
+
 1. Check error monitoring
 2. Review application logs
 3. Verify database connectivity
@@ -275,20 +294,20 @@ Time: 3m 45s
 
 ```typescript
 // Complete deployment pipeline
-await invokeAgent('/agents/workflow/git', {
-  task: 'ensure-clean-state'
+await invokeAgent("/agents/workflow/git", {
+  task: "ensure-clean-state",
 })
 
-await invokeAgent('/agents/quality/test', {
-  task: 'run-all-tests'
+await invokeAgent("/agents/quality/test", {
+  task: "run-all-tests",
 })
 
-await invokeAgent('/agents/quality/secure', {
-  task: 'security-audit'
+await invokeAgent("/agents/quality/secure", {
+  task: "security-audit",
 })
 
-await invokeAgent('/agents/devtools/build', {
-  task: 'production-build'
+await invokeAgent("/agents/devtools/build", {
+  task: "production-build",
 })
 
 await deployToEnvironment(environment)
@@ -301,6 +320,7 @@ await notifyStakeholders(environment)
 ## Metrics Tracked
 
 ### Deployment Metrics
+
 - Deployment frequency
 - Lead time for changes
 - Mean time to recovery
@@ -308,6 +328,7 @@ await notifyStakeholders(environment)
 - Deployment duration
 
 ### Quality Metrics
+
 - Test pass rate
 - Coverage percentage
 - Build success rate

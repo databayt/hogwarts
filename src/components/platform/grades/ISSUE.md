@@ -10,6 +10,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] CRUD operations with Zod validation
 - [x] Multi-step form (student/assignment → grading)
 - [x] Grade entry (score, max score, letter grade)
@@ -25,6 +26,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Enter grades for students
 - [x] View gradebook
 - [x] Calculate percentages automatically
@@ -38,6 +40,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Identify at-risk students
 
 ### Role-Based Access
+
 - [x] Admin can view all grades
 - [ ] Teacher can enter grades for their classes
 - [ ] Teacher can view their class gradebook
@@ -46,6 +49,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Counselor can view all students (intervention)
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Validation on all inputs
 - [x] Referential integrity (foreign keys)
@@ -60,6 +64,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 ### Critical Issues (Priority 1) 🔴
 
 **GPA Calculation Engine**
+
 - [ ] Calculate term GPA (average of current term grades)
 - [ ] Calculate cumulative GPA (all terms)
 - [ ] Support weighted GPA (honors/AP courses)
@@ -70,6 +75,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] GPA trends over time (chart)
 
 **Report Card Generation**
+
 - [ ] Create report card PDF template
 - [ ] Include student information (name, photo, ID)
 - [ ] Include all subject grades
@@ -82,6 +88,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Download ZIP of all report cards
 
 **Grade Boundaries Configuration**
+
 - [ ] Add GradeBoundary model
 - [ ] Configure percentage → letter grade mapping
 - [ ] Configure GPA values per letter grade
@@ -91,6 +98,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Settings UI for grade configuration
 
 **Gradebook View**
+
 - [ ] Matrix view (students × assignments)
 - [ ] Class average row
 - [ ] Student average column
@@ -101,6 +109,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Keyboard navigation
 
 ### Academic Analytics
+
 - [ ] Grade distribution charts (A/B/C/D/F counts)
 - [ ] Performance trends over time
 - [ ] Subject-wise comparisons
@@ -110,6 +119,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Compare classes within grade level
 
 ### Honor Roll & Recognition
+
 - [ ] Configure honor roll criteria (GPA thresholds)
 - [ ] High honor roll (e.g., GPA ≥ 3.75)
 - [ ] Honor roll (e.g., GPA ≥ 3.25)
@@ -119,6 +129,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Honor roll announcements
 
 ### At-Risk Student Tracking
+
 - [ ] Identify students with GPA < 2.0
 - [ ] Flag multiple failing grades
 - [ ] Detect significant grade drops
@@ -128,6 +139,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Progress monitoring
 
 ### Transcript Generation
+
 - [ ] Full academic transcript (all terms)
 - [ ] Official transcript with school seal
 - [ ] Include course names and grades
@@ -137,6 +149,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Digital signature support
 
 ### Progress Reports (Mid-Term)
+
 - [ ] Mid-term progress snapshots
 - [ ] Current grade estimates
 - [ ] Missing assignment alerts
@@ -145,6 +158,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Track parent acknowledgment
 
 ### Class Rank Calculation
+
 - [ ] Calculate percentile rank
 - [ ] Weighted vs. unweighted rank
 - [ ] Tie-breaking rules
@@ -153,6 +167,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Top 10% identification
 
 ### Performance Issues
+
 - [ ] Add indexes for student/class/assignment queries
 - [ ] Optimize gradebook matrix queries
 - [ ] Cache GPA calculations
@@ -160,6 +175,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Lazy loading for gradebook columns
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for gradebook
 - [ ] Keyboard navigation for grade entry
 - [ ] ARIA labels for form fields
@@ -167,6 +183,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] High contrast mode
 
 ### UX Polish
+
 - [ ] Loading skeletons
 - [ ] Empty state guidance
 - [ ] Error handling with user messages
@@ -175,6 +192,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Mobile-responsive gradebook
 
 ### Export/Import Enhancement
+
 - [ ] Export gradebook to CSV
 - [ ] Export report cards to PDF
 - [ ] Import grades from CSV (bulk entry)
@@ -183,6 +201,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 - [ ] Scheduled exports (end of term)
 
 ### Integration Enhancements
+
 - [ ] Link to assignment submissions
 - [ ] Link to exam results
 - [ ] Link to attendance (for report cards)
@@ -195,6 +214,7 @@ Track production readiness and enhancements for the Results/Gradebook feature.
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Result {
   id           String   @id @default(cuid())
@@ -224,6 +244,7 @@ model Result {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `termId` field (String? with relation to Term)
 - [ ] Add `subjectId` field (String? with relation to Subject)
 - [ ] Add `gradedBy` field (String? userId of teacher)
@@ -236,6 +257,7 @@ model Result {
 - [ ] Add ReportCard model (generated report cards)
 
 **GPA Model:**
+
 ```prisma
 model StudentGPA {
   id        String   @id @default(cuid())
@@ -263,6 +285,7 @@ model StudentGPA {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createResult(input)` - Create grade entry
 - [x] `updateResult(input)` - Update grade
 - [x] `deleteResult(input)` - Delete grade
@@ -270,6 +293,7 @@ model StudentGPA {
 - [x] `getResults(input)` - Fetch results list with filters
 
 ### Actions to Implement
+
 - [ ] `calculateGPA(studentId, termId?)` - Calculate GPA
 - [ ] `getGradebook(classId, termId)` - Fetch gradebook matrix
 - [ ] `bulkEnterGrades(assignmentId, grades: [{studentId, score, feedback}])` - Bulk grading
@@ -284,6 +308,7 @@ model StudentGPA {
 - [ ] `applyGradeBoundaries(percentage)` - Convert % to letter grade
 
 ### Action Enhancements
+
 - [ ] Add typed return values
 - [ ] Add request ID logging
 - [ ] Add proper error handling
@@ -295,6 +320,7 @@ model StudentGPA {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with results list
 - [x] `table.tsx` - Client data table
 - [x] `columns.tsx` - Column definitions
@@ -306,6 +332,7 @@ model StudentGPA {
 - [x] `validation.ts` - Zod schemas
 
 ### Components to Create
+
 - [ ] `gradebook-matrix.tsx` - Spreadsheet-like gradebook
 - [ ] `gpa-calculator.tsx` - GPA calculation display
 - [ ] `report-card-generator.tsx` - Report card creation UI
@@ -321,6 +348,7 @@ model StudentGPA {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test GPA calculation logic
 - [ ] Test grade boundary mapping
 - [ ] Test percentage calculations
@@ -328,12 +356,14 @@ model StudentGPA {
 - [ ] Test weighted GPA
 
 ### Integration Tests
+
 - [ ] Test gradebook matrix generation
 - [ ] Test report card PDF creation
 - [ ] Test bulk grade entry
 - [ ] Test honor roll identification
 
 ### E2E Tests
+
 - [ ] Test grade entry workflow
 - [ ] Test gradebook viewing
 - [ ] Test GPA display
@@ -360,6 +390,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -367,6 +398,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -374,18 +406,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -393,9 +428,10 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 
 For detailed version requirements and architecture patterns, see [Platform Technology Stack](../ISSUE.md#technology-stack--version-requirements).
 
-------
+---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

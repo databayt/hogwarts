@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges";
+import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges"
 
 const demoCharges = [
   {
@@ -24,7 +24,7 @@ const demoCharges = [
     date: "Jan 15, 2025",
     type: "prorated" as const,
   },
-];
+]
 
 export function UpcomingChargesDemo() {
   return (
@@ -35,5 +35,5 @@ export function UpcomingChargesDemo() {
       totalAmount="$21.50"
       charges={demoCharges}
     />
-  );
+  )
 }

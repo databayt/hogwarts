@@ -1,31 +1,33 @@
-import { auth } from "@/auth"
-import { InvoiceTable } from "@/components/platform/finance/invoice/table"
-import type { InvoiceRow } from "@/components/platform/finance/invoice/columns"
-import { SearchParams } from 'nuqs/server'
-import { invoiceSearchParams } from '@/components/platform/finance/invoice/list-params'
-import { getInvoicesWithFilters } from '@/components/platform/finance/invoice/actions'
 import { redirect } from "next/navigation"
-import { checkCurrentUserPermission } from '../lib/permissions'
+import { auth } from "@/auth"
+import { SearchParams } from "nuqs/server"
+
+import { getInvoicesWithFilters } from "@/components/platform/finance/invoice/actions"
+import type { InvoiceRow } from "@/components/platform/finance/invoice/columns"
+import { invoiceSearchParams } from "@/components/platform/finance/invoice/list-params"
+import { InvoiceTable } from "@/components/platform/finance/invoice/table"
+
+import { checkCurrentUserPermission } from "../lib/permissions"
 
 // Extended user type that includes the properties added by our auth callbacks
 type ExtendedUser = {
-  id: string;
-  email?: string | null;
-  role?: string;
-  schoolId?: string | null;
-};
+  id: string
+  email?: string | null
+  role?: string
+  schoolId?: string | null
+}
 
 // Extended session type
 type ExtendedSession = {
-  user: ExtendedUser;
-};
+  user: ExtendedUser
+}
 
 interface Props {
   searchParams: Promise<SearchParams>
 }
 
 export async function InvoiceContent({ searchParams }: Props) {
-  const session = await auth() as ExtendedSession | null
+  const session = (await auth()) as ExtendedSession | null
 
   if (!session?.user?.id) {
     redirect("/login")
@@ -36,7 +38,11 @@ export async function InvoiceContent({ searchParams }: Props) {
   }
 
   // Check permissions for current user
-  const canView = await checkCurrentUserPermission(session.user.schoolId, 'invoice', 'view')
+  const canView = await checkCurrentUserPermission(
+    session.user.schoolId,
+    "invoice",
+    "view"
+  )
 
   // If user can't view invoices, show permission denied
   if (!canView) {
@@ -44,16 +50,18 @@ export async function InvoiceContent({ searchParams }: Props) {
       <div className="flex flex-1 flex-col gap-4">
         <div>
           <h1 className="text-xl font-semibold">Invoices</h1>
-          <p className="text-sm text-muted-foreground">You don't have permission to view invoices</p>
+          <p className="text-muted-foreground text-sm">
+            You don't have permission to view invoices
+          </p>
         </div>
       </div>
     )
   }
-  
+
   const sp = await invoiceSearchParams.parse(await searchParams)
   let data: InvoiceRow[] = []
   let total = 0
-  
+
   try {
     const result = await getInvoicesWithFilters(sp)
     if (result.success) {
@@ -61,9 +69,9 @@ export async function InvoiceContent({ searchParams }: Props) {
       total = result.total
     }
   } catch (error) {
-    console.error('Failed to fetch invoices:', error)
+    console.error("Failed to fetch invoices:", error)
   }
-  
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <InvoiceTable initialData={data} total={total} perPage={sp.perPage} />
@@ -72,5 +80,3 @@ export async function InvoiceContent({ searchParams }: Props) {
 }
 
 export default InvoiceContent
-
-

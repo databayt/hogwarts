@@ -1,7 +1,8 @@
-'use client';
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+"use client"
 
-import { CardWrapper } from "@/components/auth/card-wrapper";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
+
+import { CardWrapper } from "@/components/auth/card-wrapper"
 
 export const ErrorCard = () => {
   return (
@@ -10,9 +11,9 @@ export const ErrorCard = () => {
       backButtonHref="/login"
       backButtonLabel="Back to login"
     >
-      <div className="w-full flex justify-center items-center">
-      <ExclamationTriangleIcon className="text-destructive" />
+      <div className="flex w-full items-center justify-center">
+        <ExclamationTriangleIcon className="text-destructive" />
       </div>
     </CardWrapper>
-  );
-};
+  )
+}

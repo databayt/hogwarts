@@ -1,15 +1,25 @@
 "use client"
 
 // Marking Dashboard Table Columns
-
+import type {
+  MarkingResult,
+  QuestionBank,
+  Student,
+  StudentAnswer,
+} from "@prisma/client"
 import type { ColumnDef } from "@tanstack/react-table"
-import type { MarkingResult, StudentAnswer, Student, QuestionBank } from "@prisma/client"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { CircleCheck, Eye, Pencil } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { MARKING_STATUS, GRADING_METHODS, QUESTION_TYPES } from "./config"
-import { formatPoints, formatConfidence, getAIConfidenceIndicator } from "./utils"
-import { Eye, Pencil, CircleCheck } from "lucide-react";
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { GRADING_METHODS, MARKING_STATUS, QUESTION_TYPES } from "./config"
+import {
+  formatConfidence,
+  formatPoints,
+  getAIConfidenceIndicator,
+} from "./utils"
 
 type MarkingQueueItem = StudentAnswer & {
   student: Student
@@ -17,7 +27,9 @@ type MarkingQueueItem = StudentAnswer & {
   markingResult?: MarkingResult | null
 }
 
-export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[] {
+export function getColumns(
+  dictionary: Dictionary
+): ColumnDef<MarkingQueueItem>[] {
   const dict = dictionary.marking
   return [
     {
@@ -25,12 +37,11 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
       header: dict.table.student,
       cell: ({ row }) => {
         const student = row.original.student
-        const fullName = `${student.givenName} ${student.middleName || ''} ${student.surname}`.trim().replace(/\s+/g, ' ')
-        return (
-          <div className="font-medium">
-            {fullName}
-          </div>
-        )
+        const fullName =
+          `${student.givenName} ${student.middleName || ""} ${student.surname}`
+            .trim()
+            .replace(/\s+/g, " ")
+        return <div className="font-medium">{fullName}</div>
       },
     },
     {
@@ -38,13 +49,15 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
       header: dict.table.question,
       cell: ({ row }) => {
         const question = row.original.question
-        const questionType = question.questionType as keyof typeof dict.questionTypes
-        const difficulty = question.difficulty.toLowerCase() as keyof typeof dict.difficulty
+        const questionType =
+          question.questionType as keyof typeof dict.questionTypes
+        const difficulty =
+          question.difficulty.toLowerCase() as keyof typeof dict.difficulty
 
         return (
           <div className="max-w-md">
             <p className="truncate text-sm">{question.questionText}</p>
-            <div className="flex gap-2 mt-1">
+            <div className="mt-1 flex gap-2">
               <Badge variant="outline" className="text-xs">
                 {dict.questionTypes[questionType]}
               </Badge>
@@ -60,7 +73,8 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
       accessorKey: "submissionType",
       header: dict.table.type,
       cell: ({ row }) => {
-        const type = row.original.submissionType.toLowerCase() as keyof typeof dict.submissionTypes
+        const type =
+          row.original.submissionType.toLowerCase() as keyof typeof dict.submissionTypes
         return (
           <Badge variant="secondary" className="capitalize">
             {dict.submissionTypes[type]}
@@ -77,7 +91,9 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
           return <Badge variant="outline">{dict.status.notStarted}</Badge>
         }
 
-        const statusKey = result.status.toLowerCase().replace("_", "") as keyof typeof dict.status
+        const statusKey = result.status
+          .toLowerCase()
+          .replace("_", "") as keyof typeof dict.status
         const config = MARKING_STATUS[result.status]
         return (
           <Badge variant="outline" className={config.color}>
@@ -96,10 +112,13 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
         return (
           <div>
             <p className="font-medium">
-              {formatPoints(Number(result.pointsAwarded), Number(result.maxPoints))}
+              {formatPoints(
+                Number(result.pointsAwarded),
+                Number(result.maxPoints)
+              )}
             </p>
             {result.aiConfidence && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 AI: {formatConfidence(result.aiConfidence)}
               </p>
             )}
@@ -114,10 +133,13 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
         const result = row.original.markingResult
         if (!result) return <span className="text-muted-foreground">-</span>
 
-        const methodKey = result.gradingMethod.toLowerCase().replace("_", "") as keyof typeof dict.gradingMethods
+        const methodKey = result.gradingMethod
+          .toLowerCase()
+          .replace("_", "") as keyof typeof dict.gradingMethods
         return (
           <Badge variant="secondary" className="text-xs">
-            {dict.gradingMethods[methodKey] || GRADING_METHODS[result.gradingMethod].label}
+            {dict.gradingMethods[methodKey] ||
+              GRADING_METHODS[result.gradingMethod].label}
           </Badge>
         )
       },

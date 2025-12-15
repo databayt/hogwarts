@@ -57,10 +57,11 @@
  * - Requires middleware for subdomain routing to work
  * - Not validated against existing TLDs or reserved domains
  */
+import { revalidatePath } from "next/cache"
 
 import { db } from "@/lib/db"
-import { revalidatePath } from "next/cache"
-import { normalizeSubdomain, isValidSubdomain } from "./subdomain"
+
+import { isValidSubdomain, normalizeSubdomain } from "./subdomain"
 
 /**
  * Check if a subdomain is available for use
@@ -72,34 +73,34 @@ export async function checkSubdomainAvailability(subdomain: string): Promise<{
   try {
     // Normalize the subdomain
     const normalized = normalizeSubdomain(subdomain)
-    
+
     // Validate format
     if (!isValidSubdomain(normalized)) {
       return {
         available: false,
-        error: "Invalid subdomain format"
+        error: "Invalid subdomain format",
       }
     }
-    
+
     // Check if already exists
     const existingSchool = await db.school.findUnique({
       where: { domain: normalized },
-      select: { id: true, name: true }
+      select: { id: true, name: true },
     })
-    
+
     if (existingSchool) {
       return {
         available: false,
-        error: `Subdomain already taken by "${existingSchool.name}"`
+        error: `Subdomain already taken by "${existingSchool.name}"`,
       }
     }
-    
+
     return { available: true }
   } catch (error) {
-    console.error('Error checking subdomain availability:', error)
+    console.error("Error checking subdomain availability:", error)
     return {
       available: false,
-      error: "Database error occurred"
+      error: "Database error occurred",
     }
   }
 }
@@ -108,7 +109,7 @@ export async function checkSubdomainAvailability(subdomain: string): Promise<{
  * Reserve a subdomain for a school (during onboarding)
  */
 export async function reserveSubdomain(
-  subdomain: string, 
+  subdomain: string,
   schoolId: string
 ): Promise<{
   success: boolean
@@ -120,23 +121,23 @@ export async function reserveSubdomain(
     if (!availability.available) {
       return {
         success: false,
-        error: availability.error
+        error: availability.error,
       }
     }
-    
+
     // Update the school with the reserved subdomain
     await db.school.update({
       where: { id: schoolId },
-      data: { domain: normalizeSubdomain(subdomain) }
+      data: { domain: normalizeSubdomain(subdomain) },
     })
-    
+
     revalidatePath("/onboarding")
     return { success: true }
   } catch (error) {
-    console.error('Error reserving subdomain:', error)
+    console.error("Error reserving subdomain:", error)
     return {
       success: false,
-      error: "Failed to reserve subdomain"
+      error: "Failed to reserve subdomain",
     }
   }
 }
@@ -155,17 +156,17 @@ export async function getAllSubdomains(): Promise<{
         id: true,
         name: true,
         domain: true,
-        isActive: true
+        isActive: true,
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     })
-    
+
     return { success: true, data: schools }
   } catch (error) {
-    console.error('Error fetching subdomains:', error)
+    console.error("Error fetching subdomains:", error)
     return {
       success: false,
-      error: "Failed to fetch subdomains"
+      error: "Failed to fetch subdomains",
     }
   }
 }
@@ -186,23 +187,23 @@ export async function updateSubdomain(
     if (!availability.available) {
       return {
         success: false,
-        error: availability.error
+        error: availability.error,
       }
     }
-    
+
     // Update the school
     await db.school.update({
       where: { id: schoolId },
-      data: { domain: normalizeSubdomain(newSubdomain) }
+      data: { domain: normalizeSubdomain(newSubdomain) },
     })
-    
+
     revalidatePath("/operator/tenants")
     return { success: true }
   } catch (error) {
-    console.error('Error updating subdomain:', error)
+    console.error("Error updating subdomain:", error)
     return {
       success: false,
-      error: "Failed to update subdomain"
+      error: "Failed to update subdomain",
     }
   }
 }
@@ -217,7 +218,7 @@ export async function getSchoolBySubdomain(subdomain: string): Promise<{
 }> {
   try {
     const normalized = normalizeSubdomain(subdomain)
-    
+
     const school = await db.school.findUnique({
       where: { domain: normalized },
       select: {
@@ -235,23 +236,23 @@ export async function getSchoolBySubdomain(subdomain: string): Promise<{
         maxTeachers: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     })
-    
+
     if (!school) {
       return {
         success: false,
-        error: "School not found"
+        error: "School not found",
       }
     }
-    
+
     return { success: true, data: school }
   } catch (error) {
-    console.error('Error fetching school by subdomain:', error)
+    console.error("Error fetching school by subdomain:", error)
     return {
       success: false,
-      error: "Database error occurred"
+      error: "Database error occurred",
     }
   }
 }

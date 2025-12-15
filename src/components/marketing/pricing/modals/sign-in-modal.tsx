@@ -1,30 +1,24 @@
-import { signIn } from "next-auth/react";
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useCallback, useMemo, useState } from "react"
+import { signIn } from "next-auth/react"
 
-import { Icons } from "@/components/marketing/pricing/shared/icons";
-import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/atom/modal";
-import { siteConfig } from "@/components/marketing/pricing/config/site";
+import { Button } from "@/components/ui/button"
+import { Modal } from "@/components/atom/modal"
+import { siteConfig } from "@/components/marketing/pricing/config/site"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
 
 function SignInModal({
   showSignInModal,
   setShowSignInModal,
 }: {
-  showSignInModal: boolean;
-  setShowSignInModal: Dispatch<SetStateAction<boolean>>;
+  showSignInModal: boolean
+  setShowSignInModal: Dispatch<SetStateAction<boolean>>
 }) {
-  const [signInClicked, setSignInClicked] = useState(false);
+  const [signInClicked, setSignInClicked] = useState(false)
 
   return (
     <Modal showModal={showSignInModal} setShowModal={setShowSignInModal}>
       <div className="w-full">
-        <div className="flex flex-col items-center justify-center space-y-3 border-b bg-background px-4 py-6 pt-8 text-center md:px-16">
+        <div className="bg-background flex flex-col items-center justify-center space-y-3 border-b px-4 py-6 pt-8 text-center md:px-16">
           <a href={siteConfig.url}>
             <Icons.logo className="size-10" />
           </a>
@@ -35,17 +29,17 @@ function SignInModal({
           </p>
         </div>
 
-        <div className="flex flex-col space-y-4 bg-secondary/50 px-4 py-8 md:px-16">
+        <div className="bg-secondary/50 flex flex-col space-y-4 px-4 py-8 md:px-16">
           <Button
             variant="default"
             disabled={signInClicked}
             onClick={() => {
-              setSignInClicked(true);
+              setSignInClicked(true)
               signIn("google", { redirect: false }).then(() =>
                 setTimeout(() => {
-                  setShowSignInModal(false);
-                }, 400),
-              );
+                  setShowSignInModal(false)
+                }, 400)
+              )
             }}
           >
             {signInClicked ? (
@@ -58,11 +52,11 @@ function SignInModal({
         </div>
       </div>
     </Modal>
-  );
+  )
 }
 
 export function useSignInModal() {
-  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false)
 
   const SignInModalCallback = useCallback(() => {
     return (
@@ -70,14 +64,14 @@ export function useSignInModal() {
         showSignInModal={showSignInModal}
         setShowSignInModal={setShowSignInModal}
       />
-    );
-  }, [showSignInModal, setShowSignInModal]);
+    )
+  }, [showSignInModal, setShowSignInModal])
 
   return useMemo(
     () => ({
       setShowSignInModal,
       SignInModal: SignInModalCallback,
     }),
-    [setShowSignInModal, SignInModalCallback],
-  );
+    [setShowSignInModal, SignInModalCallback]
+  )
 }

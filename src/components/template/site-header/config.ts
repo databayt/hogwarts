@@ -1,4 +1,4 @@
-import { SiteConfig } from "./types"
+import { DocsConfig, MarketingConfig, SiteConfig } from "./types"
 
 export const siteConfig: SiteConfig = {
   name: "Hogwarts",
@@ -11,8 +11,6 @@ export const siteConfig: SiteConfig = {
     github: "https://github.com/shadcn/taxonomy",
   },
 }
-
-import { DocsConfig } from "./types"
 
 export const docsConfig: DocsConfig = {
   mainNav: [
@@ -149,8 +147,6 @@ export const docsConfig: DocsConfig = {
   ],
 }
 
-import { MarketingConfig } from "./types"
-
 export const marketingConfig: MarketingConfig = {
   mainNav: [
     {
@@ -172,6 +168,5 @@ export const marketingConfig: MarketingConfig = {
       title: "Platform",
       href: "/dashboard",
     },
-
   ],
 }

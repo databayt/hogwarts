@@ -1,78 +1,81 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useState } from "react";
-import { BeatLoader } from "react-spinners";
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
-import { FormSuccess } from "../form-success";
-import { FormError } from "../error/form-error";
-import { newVerification } from "./action";
-import type { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { BeatLoader } from "react-spinners"
+
+import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import { FormError } from "../error/form-error"
+import { FormSuccess } from "../form-success"
+import { newVerification } from "./action"
 
 interface Props extends React.ComponentPropsWithoutRef<"div"> {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  lang: Locale;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  lang: Locale
 }
 
 export const NewVerificationForm = (props: Props) => {
-  const { dictionary, lang, className, ...rest } = props;
-  const [error, setError] = useState<string | undefined>();
-  const [success, setSuccess] = useState<string | undefined>();
+  const { dictionary, lang, className, ...rest } = props
+  const [error, setError] = useState<string | undefined>()
+  const [success, setSuccess] = useState<string | undefined>()
 
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const searchParams = useSearchParams()
+  const token = searchParams.get("token")
 
   const onSubmit = useCallback(() => {
-    if (success || error) return;
+    if (success || error) return
 
     if (!token) {
-      setError("Missing token!");
-      return;
+      setError("Missing token!")
+      return
     }
 
     newVerification(token)
       .then((data) => {
-        setSuccess(data.success);
-        setError(data.error);
+        setSuccess(data.success)
+        setError(data.error)
       })
       .catch(() => {
-        setError("Something went wrong!");
-      });
-  }, [token, success, error]);
+        setError("Something went wrong!")
+      })
+  }, [token, success, error])
 
   useEffect(() => {
     if (token) {
-      onSubmit();
+      onSubmit()
     }
-  }, [token, onSubmit]);
+  }, [token, onSubmit])
 
   return (
-    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...rest}>
-      <Card className="border-none shadow-none bg-background">
+    <div
+      className={cn(
+        "flex min-w-[200px] flex-col gap-6 md:min-w-[350px]",
+        className
+      )}
+      {...rest}
+    >
+      <Card className="bg-background border-none shadow-none">
         <CardHeader className="text-center">
           <h4>Confirming your verification</h4>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
-            <div className="flex items-center w-full justify-center">
-              {!success && !error && (
-                <BeatLoader />
-              )}
+            <div className="flex w-full items-center justify-center">
+              {!success && !error && <BeatLoader />}
               <FormSuccess message={success} />
-              {!success && (
-                <FormError message={error} />
-              )}
+              {!success && <FormError message={error} />}
             </div>
 
-            <div className="text-center muted">
-              <Link href="/login" className="hover:underline underline-offset-4">
+            <div className="muted text-center">
+              <Link
+                href="/login"
+                className="underline-offset-4 hover:underline"
+              >
                 Back to login
               </Link>
             </div>
@@ -80,5 +83,5 @@ export const NewVerificationForm = (props: Props) => {
         </CardContent>
       </Card>
     </div>
-  );
-};
+  )
+}

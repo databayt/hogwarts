@@ -1,15 +1,15 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import Link from "next/link"
+import { ArrowUpRight } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 
 export default function TransactionsList() {
   return (
@@ -51,9 +51,7 @@ export default function TransactionsList() {
             <TableRow>
               <TableCell>
                 <div>Liam Johnson</div>
-                <div className="hidden muted md:inline">
-                  liam@example.com
-                </div>
+                <div className="muted hidden md:inline">liam@example.com</div>
               </TableCell>
               <TableCell className="hidden xl:table-column">Sale</TableCell>
               <TableCell className="hidden xl:table-column">
@@ -69,9 +67,7 @@ export default function TransactionsList() {
             <TableRow>
               <TableCell>
                 <div>Olivia Smith</div>
-                <div className="hidden muted md:inline">
-                  olivia@example.com
-                </div>
+                <div className="muted hidden md:inline">olivia@example.com</div>
               </TableCell>
               <TableCell className="hidden xl:table-column">Refund</TableCell>
               <TableCell className="hidden xl:table-column">
@@ -87,9 +83,7 @@ export default function TransactionsList() {
             <TableRow>
               <TableCell>
                 <div>Noah Williams</div>
-                <div className="hidden muted md:inline">
-                  noah@example.com
-                </div>
+                <div className="muted hidden md:inline">noah@example.com</div>
               </TableCell>
               <TableCell className="hidden xl:table-column">
                 Subscription
@@ -107,9 +101,7 @@ export default function TransactionsList() {
             <TableRow>
               <TableCell>
                 <div>Emma Brown</div>
-                <div className="hidden muted md:inline">
-                  emma@example.com
-                </div>
+                <div className="muted hidden md:inline">emma@example.com</div>
               </TableCell>
               <TableCell className="hidden xl:table-column">Sale</TableCell>
               <TableCell className="hidden xl:table-column">
@@ -125,9 +117,7 @@ export default function TransactionsList() {
             <TableRow>
               <TableCell>
                 <div>Liam Johnson</div>
-                <div className="hidden muted md:inline">
-                  liam@example.com
-                </div>
+                <div className="muted hidden md:inline">liam@example.com</div>
               </TableCell>
               <TableCell className="hidden xl:table-column">Sale</TableCell>
               <TableCell className="hidden xl:table-column">
@@ -144,5 +134,5 @@ export default function TransactionsList() {
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }

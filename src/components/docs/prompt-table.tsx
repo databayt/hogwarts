@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import React from "react";
-import { Copy, Check } from "lucide-react";
+import React from "react"
+import { Check, Copy } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -12,31 +12,31 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 
-import type { Prompt } from "./prompt-types";
+import type { Prompt } from "./prompt-types"
 
 interface PromptTableProps {
-  prompts: Prompt[];
+  prompts: Prompt[]
 }
 
 export function PromptTable({ prompts }: PromptTableProps) {
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [copiedId, setCopiedId] = React.useState<string | null>(null)
 
   const handleCopy = (prompt: Prompt) => {
-    navigator.clipboard.writeText(prompt.content);
-    setCopiedId(prompt.id);
+    navigator.clipboard.writeText(prompt.content)
+    setCopiedId(prompt.id)
     setTimeout(() => {
-      setCopiedId(null);
-    }, 2000);
-  };
+      setCopiedId(null)
+    }, 2000)
+  }
 
   const scrollToPrompt = (id: string) => {
-    const element = document.getElementById(id);
+    const element = document.getElementById(id)
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      element.scrollIntoView({ behavior: "smooth", block: "start" })
     }
-  };
+  }
 
   return (
     <div className="overflow-x-auto rounded-lg border">
@@ -56,7 +56,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
               <TableCell className="font-medium">
                 <button
                   onClick={() => scrollToPrompt(prompt.id)}
-                  className="text-start text-primary hover:underline"
+                  className="text-primary text-start hover:underline"
                 >
                   {prompt.name}
                 </button>
@@ -99,5 +99,5 @@ export function PromptTable({ prompts }: PromptTableProps) {
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

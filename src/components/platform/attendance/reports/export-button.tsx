@@ -1,37 +1,49 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import {
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
-import { getAttendanceReportCsv, getAttendanceReport, getAttendanceStats } from "@/components/platform/attendance/actions";
-import { generateCSVFilename } from "@/components/file";
-import { generateAttendancePDF, downloadPDF } from "./pdf-generator";
-import { generateAttendanceExcel, downloadExcel } from "./excel-generator";
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { generateCSVFilename } from "@/components/file"
+import {
+  getAttendanceReport,
+  getAttendanceReportCsv,
+  getAttendanceStats,
+} from "@/components/platform/attendance/actions"
+
+import { downloadExcel, generateAttendanceExcel } from "./excel-generator"
+import { downloadPDF, generateAttendancePDF } from "./pdf-generator"
 
 type Filters = {
-  classId?: string;
-  studentId?: string;
-  status?: string;
-  from?: string;
-  to?: string;
-};
-
-interface AttendanceReportExportButtonProps {
-  filters: Filters;
-  schoolName?: string;
-  className?: string;
-  locale?: string;
+  classId?: string
+  studentId?: string
+  status?: string
+  from?: string
+  to?: string
 }
 
-type ExportFormat = "csv" | "pdf" | "excel";
+interface AttendanceReportExportButtonProps {
+  filters: Filters
+  schoolName?: string
+  className?: string
+  locale?: string
+}
+
+type ExportFormat = "csv" | "pdf" | "excel"
 
 export function AttendanceReportExportButton({
   filters,
@@ -39,46 +51,50 @@ export function AttendanceReportExportButton({
   className,
   locale = "en",
 }: AttendanceReportExportButtonProps) {
-  const [downloading, setDownloading] = React.useState<ExportFormat | null>(null);
-  const isArabic = locale === "ar";
+  const [downloading, setDownloading] = React.useState<ExportFormat | null>(
+    null
+  )
+  const isArabic = locale === "ar"
 
   const getDateRange = () => {
-    const from = filters.from ? new Date(filters.from) : new Date(new Date().setDate(new Date().getDate() - 30));
-    const to = filters.to ? new Date(filters.to) : new Date();
-    return { from, to };
-  };
+    const from = filters.from
+      ? new Date(filters.from)
+      : new Date(new Date().setDate(new Date().getDate() - 30))
+    const to = filters.to ? new Date(filters.to) : new Date()
+    return { from, to }
+  }
 
   const formatFilename = (extension: string) => {
-    const dateRange = getDateRange();
-    const fromStr = dateRange.from.toISOString().split("T")[0];
-    const toStr = dateRange.to.toISOString().split("T")[0];
-    return `attendance_report_${fromStr}_${toStr}.${extension}`;
-  };
+    const dateRange = getDateRange()
+    const fromStr = dateRange.from.toISOString().split("T")[0]
+    const toStr = dateRange.to.toISOString().split("T")[0]
+    return `attendance_report_${fromStr}_${toStr}.${extension}`
+  }
 
   const downloadCSV = async () => {
-    setDownloading("csv");
+    setDownloading("csv")
     try {
-      const csv = await getAttendanceReportCsv(filters);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = formatFilename("csv");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      const csv = await getAttendanceReportCsv(filters)
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = formatFilename("csv")
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
     } catch (error) {
-      console.error("Error exporting CSV:", error);
+      console.error("Error exporting CSV:", error)
     } finally {
-      setDownloading(null);
+      setDownloading(null)
     }
-  };
+  }
 
   const downloadPDFReport = async () => {
-    setDownloading("pdf");
+    setDownloading("pdf")
     try {
-      const dateRange = getDateRange();
+      const dateRange = getDateRange()
 
       // Fetch data for PDF
       const [reportResult, statsResult] = await Promise.all([
@@ -95,16 +111,17 @@ export function AttendanceReportExportButton({
           dateTo: dateRange.to.toISOString(),
           classId: filters.classId,
         }),
-      ]);
+      ])
 
       const records =
         reportResult && "records" in reportResult && reportResult.records
           ? reportResult.records
-          : [];
+          : []
 
-      const stats = statsResult && !("success" in statsResult && !statsResult.success)
-        ? (statsResult as any)
-        : null;
+      const stats =
+        statsResult && !("success" in statsResult && !statsResult.success)
+          ? (statsResult as any)
+          : null
 
       const blob = await generateAttendancePDF({
         records: records as any,
@@ -113,20 +130,20 @@ export function AttendanceReportExportButton({
         schoolName,
         className,
         locale,
-      });
+      })
 
-      downloadPDF(blob, formatFilename("pdf"));
+      downloadPDF(blob, formatFilename("pdf"))
     } catch (error) {
-      console.error("Error exporting PDF:", error);
+      console.error("Error exporting PDF:", error)
     } finally {
-      setDownloading(null);
+      setDownloading(null)
     }
-  };
+  }
 
   const downloadExcelReport = async () => {
-    setDownloading("excel");
+    setDownloading("excel")
     try {
-      const dateRange = getDateRange();
+      const dateRange = getDateRange()
 
       // Fetch data for Excel
       const [reportResult, statsResult] = await Promise.all([
@@ -143,16 +160,17 @@ export function AttendanceReportExportButton({
           dateTo: dateRange.to.toISOString(),
           classId: filters.classId,
         }),
-      ]);
+      ])
 
       const records =
         reportResult && "records" in reportResult && reportResult.records
           ? reportResult.records
-          : [];
+          : []
 
-      const stats = statsResult && !("success" in statsResult && !statsResult.success)
-        ? (statsResult as any)
-        : null;
+      const stats =
+        statsResult && !("success" in statsResult && !statsResult.success)
+          ? (statsResult as any)
+          : null
 
       const blob = generateAttendanceExcel({
         records: records as any,
@@ -161,17 +179,17 @@ export function AttendanceReportExportButton({
         schoolName,
         className,
         locale,
-      });
+      })
 
-      downloadExcel(blob, formatFilename("xlsx"));
+      downloadExcel(blob, formatFilename("xlsx"))
     } catch (error) {
-      console.error("Error exporting Excel:", error);
+      console.error("Error exporting Excel:", error)
     } finally {
-      setDownloading(null);
+      setDownloading(null)
     }
-  };
+  }
 
-  const isLoading = downloading !== null;
+  const isLoading = downloading !== null
 
   return (
     <DropdownMenu>
@@ -187,8 +205,8 @@ export function AttendanceReportExportButton({
               ? "جاري التصدير..."
               : "Exporting..."
             : isArabic
-            ? "تصدير"
-            : "Export"}
+              ? "تصدير"
+              : "Export"}
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -197,7 +215,10 @@ export function AttendanceReportExportButton({
           {isArabic ? "تنسيق التصدير" : "Export Format"}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={downloadCSV} disabled={downloading === "csv"}>
+        <DropdownMenuItem
+          onClick={downloadCSV}
+          disabled={downloading === "csv"}
+        >
           <FileText className="mr-2 h-4 w-4" />
           {downloading === "csv" ? (
             <span className="flex items-center">
@@ -208,7 +229,10 @@ export function AttendanceReportExportButton({
             <span>{isArabic ? "تصدير CSV" : "Export CSV"}</span>
           )}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={downloadExcelReport} disabled={downloading === "excel"}>
+        <DropdownMenuItem
+          onClick={downloadExcelReport}
+          disabled={downloading === "excel"}
+        >
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           {downloading === "excel" ? (
             <span className="flex items-center">
@@ -219,7 +243,10 @@ export function AttendanceReportExportButton({
             <span>{isArabic ? "تصدير Excel" : "Export Excel"}</span>
           )}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={downloadPDFReport} disabled={downloading === "pdf"}>
+        <DropdownMenuItem
+          onClick={downloadPDFReport}
+          disabled={downloading === "pdf"}
+        >
           <FileText className="mr-2 h-4 w-4 text-red-500" />
           {downloading === "pdf" ? (
             <span className="flex items-center">
@@ -232,8 +259,8 @@ export function AttendanceReportExportButton({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
 
 // Legacy export for backwards compatibility
-export { AttendanceReportExportButton as default };
+export { AttendanceReportExportButton as default }

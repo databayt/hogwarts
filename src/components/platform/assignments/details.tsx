@@ -1,32 +1,53 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { assignmentCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { AssignmentFormStepProps } from "./types";
-import { ASSIGNMENT_TYPES } from "./config";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { ASSIGNMENT_TYPES } from "./config"
+import { AssignmentFormStepProps } from "./types"
+import { assignmentCreateSchema } from "./validation"
 
 export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="type"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Assignment Type</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select assignment type" />
@@ -53,14 +74,16 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
             <FormItem>
               <FormLabel>Total Points</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  min="0.01" 
-                  placeholder="0.00" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  disabled={isView}
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || 0)
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -75,15 +98,17 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
             <FormItem>
               <FormLabel>Weight (%)</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  min="0.01" 
-                  max="100" 
-                  placeholder="0.00" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="100"
+                  placeholder="0.00"
+                  disabled={isView}
                   {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || 0)
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -140,11 +165,11 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
           <FormItem>
             <FormLabel>Instructions</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Enter assignment instructions..." 
+              <Textarea
+                placeholder="Enter assignment instructions..."
                 className="min-h-[120px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -152,5 +177,5 @@ export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

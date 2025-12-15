@@ -9,6 +9,7 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 ## Key Features
 
 ### 1. Budget Creation & Allocation
+
 - Create annual/quarterly/monthly budgets
 - Allocate funds to multiple categories
 - Set spending limits per allocation
@@ -16,6 +17,7 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 - Multi-currency support
 
 ### 2. Variance Analysis
+
 - Real-time variance tracking (allocated vs spent vs committed)
 - Percentage variance calculations
 - Status indicators (UNDER, ON_TRACK, NEAR_LIMIT, OVER)
@@ -23,6 +25,7 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 - Monthly trend analysis
 
 ### 3. Budget Forecasting
+
 - AI-powered spending projections
 - Historical data analysis
 - Projected overrun calculations
@@ -30,12 +33,14 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 - Confidence scores
 
 ### 4. Budget Transfers
+
 - Transfer funds between allocations
 - Approval workflow for transfers
 - Reason tracking and audit trail
 - Prevents negative balances
 
 ### 5. Budget Revisions
+
 - Version control for budget changes
 - Track all modifications
 - Compare revisions side-by-side
@@ -44,6 +49,7 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 ## Data Models
 
 ### Budget
+
 ```typescript
 {
   id: string
@@ -64,6 +70,7 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 ```
 
 ### BudgetAllocation
+
 ```typescript
 {
   id: string
@@ -78,12 +85,13 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 ```
 
 ### BudgetRevision
+
 ```typescript
 {
   id: string
   budgetId: string
   revisionNumber: number
-  changes: Json           // { category, oldAmount, newAmount, reason }
+  changes: Json // { category, oldAmount, newAmount, reason }
   reason: string
   revisedBy: string
   revisedAt: Date
@@ -95,11 +103,13 @@ The Budget module provides schools with powerful tools to plan, allocate, monito
 ### Budget CRUD
 
 #### `createBudgetWithRBAC(data)`
+
 Creates a new budget with allocations.
 
 **Permissions Required:** `budget:create`
 
 **Example:**
+
 ```typescript
 const result = await createBudgetWithRBAC({
   name: "FY 2024-25 Budget",
@@ -110,21 +120,24 @@ const result = await createBudgetWithRBAC({
     { category: "Salaries", allocated: 500000 },
     { category: "Operating Expenses", allocated: 150000 },
     { category: "Capital Expenditure", allocated: 100000 },
-  ]
+  ],
 })
 ```
 
 #### `updateBudgetWithRBAC(id, data)`
+
 Updates budget details and allocations.
 
 **Permissions Required:** `budget:edit`
 
 #### `deleteBudgetWithRBAC(id)`
+
 Deletes a budget (only if in DRAFT status).
 
 **Permissions Required:** `budget:delete`
 
 #### `approveBudgetWithRBAC(id)`
+
 Approves a budget, changing status from DRAFT to ACTIVE.
 
 **Permissions Required:** `budget:approve`
@@ -132,9 +145,11 @@ Approves a budget, changing status from DRAFT to ACTIVE.
 ### Variance Analysis
 
 #### `getBudgetWithVarianceAnalysis(budgetId)`
+
 Retrieves comprehensive variance analysis for a budget.
 
 **Returns:**
+
 ```typescript
 {
   budgetId: string
@@ -154,17 +169,20 @@ Retrieves comprehensive variance analysis for a budget.
 ```
 
 **Status Values:**
+
 - `UNDER` - Spent < 70% of allocated
 - `ON_TRACK` - Spent 70-90% of allocated
 - `NEAR_LIMIT` - Spent 90-100% of allocated
 - `OVER` - Spent > 100% of allocated
 
 **Alert Severity:**
+
 - `INFO` - Informational message
 - `WARNING` - Approaching limit (>85% spent)
 - `CRITICAL` - Over budget or very close (>95% spent)
 
 **Example:**
+
 ```typescript
 const result = await getBudgetWithVarianceAnalysis(budgetId)
 
@@ -173,7 +191,9 @@ if (result.success && result.data) {
   console.log(`Utilization: ${result.data.utilizationRate}%`)
 
   // Check for overspending alerts
-  const criticalAlerts = result.data.alerts.filter(a => a.severity === "CRITICAL")
+  const criticalAlerts = result.data.alerts.filter(
+    (a) => a.severity === "CRITICAL"
+  )
   if (criticalAlerts.length > 0) {
     console.warn("CRITICAL ALERTS:", criticalAlerts)
   }
@@ -183,9 +203,11 @@ if (result.success && result.data) {
 ### Forecasting
 
 #### `generateBudgetForecast(budgetId)`
+
 Generates spending forecast based on historical data.
 
 **Returns:**
+
 ```typescript
 {
   budgetId: string
@@ -202,6 +224,7 @@ Generates spending forecast based on historical data.
 ```
 
 **Example:**
+
 ```typescript
 const result = await generateBudgetForecast(budgetId)
 
@@ -211,7 +234,7 @@ if (result.success && result.data) {
   }
 
   // Show recommendations
-  result.data.recommendations.forEach(rec => {
+  result.data.recommendations.forEach((rec) => {
     console.log("💡", rec)
   })
 }
@@ -220,21 +243,24 @@ if (result.success && result.data) {
 ### Budget Transfers
 
 #### `transferBudgetAllocationWithRBAC(data)`
+
 Transfers funds between budget allocations.
 
 **Permissions Required:** `budget:edit` or `budget:approve`
 
 **Example:**
+
 ```typescript
 const result = await transferBudgetAllocationWithRBAC({
   fromAllocationId: "alloc_123",
   toAllocationId: "alloc_456",
   amount: 10000,
-  reason: "Need additional funds for technology purchases"
+  reason: "Need additional funds for technology purchases",
 })
 ```
 
 **Validation:**
+
 - Source allocation must have sufficient available funds
 - Cannot transfer to same allocation
 - Requires approval if amount > threshold (configurable)
@@ -242,11 +268,13 @@ const result = await transferBudgetAllocationWithRBAC({
 ### Budget Revisions
 
 #### `createBudgetRevisionWithRBAC(budgetId, changes, reason)`
+
 Creates a new budget revision with tracked changes.
 
 **Permissions Required:** `budget:approve`
 
 **Example:**
+
 ```typescript
 const result = await createBudgetRevisionWithRBAC(
   budgetId,
@@ -255,8 +283,8 @@ const result = await createBudgetRevisionWithRBAC(
       category: "Salaries",
       oldAmount: 500000,
       newAmount: 550000,
-      reason: "Additional teaching staff hired"
-    }
+      reason: "Additional teaching staff hired",
+    },
   ],
   "Mid-year budget adjustment"
 )
@@ -266,19 +294,20 @@ const result = await createBudgetRevisionWithRBAC(
 
 Common budget categories:
 
-| Category | Description | Typical % of Total |
-|----------|-------------|-------------------|
-| **Salaries & Benefits** | Staff compensation | 60-70% |
-| **Operating Expenses** | Day-to-day operations | 15-20% |
-| **Capital Expenditure** | Buildings, equipment | 5-10% |
-| **Technology** | IT infrastructure | 3-5% |
-| **Marketing** | Student recruitment | 2-3% |
-| **Professional Development** | Staff training | 1-2% |
-| **Contingency** | Emergency fund | 5% |
+| Category                     | Description           | Typical % of Total |
+| ---------------------------- | --------------------- | ------------------ |
+| **Salaries & Benefits**      | Staff compensation    | 60-70%             |
+| **Operating Expenses**       | Day-to-day operations | 15-20%             |
+| **Capital Expenditure**      | Buildings, equipment  | 5-10%              |
+| **Technology**               | IT infrastructure     | 3-5%               |
+| **Marketing**                | Student recruitment   | 2-3%               |
+| **Professional Development** | Staff training        | 1-2%               |
+| **Contingency**              | Emergency fund        | 5%                 |
 
 ## Workflow
 
 ### 1. Budget Planning Phase
+
 ```
 1. Finance team creates draft budget
 2. Allocate funds to categories
@@ -289,6 +318,7 @@ Common budget categories:
 ```
 
 ### 2. Budget Monitoring Phase
+
 ```
 1. Monthly variance analysis
 2. Review spending vs allocated
@@ -299,6 +329,7 @@ Common budget categories:
 ```
 
 ### 3. Budget Closing Phase
+
 ```
 1. Final variance analysis
 2. Generate year-end reports
@@ -310,21 +341,25 @@ Common budget categories:
 ## Integration with Other Modules
 
 ### Expenses Module
+
 - All approved expenses deduct from budget allocations
 - Real-time budget availability checks
 - Prevents expenses exceeding allocated amounts
 
 ### Payroll Module
+
 - Salary payments deduct from "Salaries" allocation
 - Automatic budget commitment for recurring salaries
 - Year-to-date tracking
 
 ### Accounts Module
+
 - Journal entries link to budget allocations
 - Double-entry bookkeeping for all budget transactions
 - Financial statement integration
 
 ### Reports Module
+
 - Budget vs actual reports
 - Variance analysis reports
 - Department-wise spending reports
@@ -334,44 +369,49 @@ Common budget categories:
 
 ### Permissions
 
-| Role | View | Create | Edit | Delete | Approve | Forecast |
-|------|------|--------|------|--------|---------|----------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (dept) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STAFF** | ✅ (dept) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STUDENT** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Role           | View      | Create | Edit | Delete | Approve | Forecast |
+| -------------- | --------- | ------ | ---- | ------ | ------- | -------- |
+| **ADMIN**      | ✅        | ✅     | ✅   | ✅     | ✅      | ✅       |
+| **ACCOUNTANT** | ✅        | ✅     | ✅   | ✅     | ✅      | ✅       |
+| **TEACHER**    | ✅ (dept) | ❌     | ❌   | ❌     | ❌      | ❌       |
+| **STAFF**      | ✅ (dept) | ❌     | ❌   | ❌     | ❌      | ❌       |
+| **STUDENT**    | ❌        | ❌     | ❌   | ❌     | ❌      | ❌       |
+| **GUARDIAN**   | ❌        | ❌     | ❌   | ❌     | ❌      | ❌       |
 
 **Note:** Teachers and staff can view budgets for their departments only (requires custom permission).
 
 ## Best Practices
 
 ### 1. Budget Planning
+
 - Plan 12-18 months in advance
 - Include 5-10% contingency fund
 - Review historical spending patterns
 - Involve department heads in planning
 
 ### 2. Allocation Strategy
+
 - Align allocations with strategic goals
 - Use zero-based budgeting approach
 - Prioritize essential spending first
 - Leave room for unexpected costs
 
 ### 3. Monitoring
+
 - Review variance monthly
 - Set up automated alerts
 - Investigate significant variances (>10%)
 - Adjust forecasts quarterly
 
 ### 4. Transfer Management
+
 - Document all transfer reasons
 - Require approval for transfers >$5,000
 - Limit transfers to 10% of allocation
 - Track transfer patterns for next year's planning
 
 ### 5. Year-End Procedures
+
 - Freeze budget 2 weeks before fiscal year end
 - Reconcile all transactions
 - Generate final reports
@@ -411,6 +451,7 @@ Common budget categories:
    - Approval workflow
 
 ### Custom Reports
+
 - Department-wise spending
 - Year-over-year comparison
 - Budget efficiency metrics
@@ -419,27 +460,33 @@ Common budget categories:
 ## Troubleshooting
 
 ### Budget Over/Under Allocated
+
 **Issue:** Total allocations don't match budget total
 
 **Solution:**
+
 - Review all allocations
 - Check for missing categories
 - Verify calculation accuracy
 - Adjust allocations to match total
 
 ### Variance Calculation Incorrect
+
 **Issue:** Variance numbers don't match manual calculations
 
 **Solution:**
+
 - Verify all transactions are approved
 - Check for pending/committed amounts
 - Ensure expense categorization is correct
 - Run data integrity check
 
 ### Forecast Not Accurate
+
 **Issue:** Forecast projections are significantly off
 
 **Solution:**
+
 - Ensure sufficient historical data (3+ months)
 - Check for one-time expenses skewing averages
 - Adjust forecast algorithm parameters

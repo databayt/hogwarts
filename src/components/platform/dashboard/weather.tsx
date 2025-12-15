@@ -1,24 +1,21 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { cn } from "@/lib/utils"
+import { useCallback, useState } from "react"
 import {
-  Droplets,
-  Wind,
-  Thermometer,
-} from "lucide-react"
-import Icon from "@mdi/react"
-import {
-  mdiWeatherSunny,
-  mdiWeatherPartlyCloudy,
   mdiWeatherCloudy,
-  mdiWeatherRainy,
-  mdiWeatherPouring,
-  mdiWeatherSnowy,
-  mdiWeatherWindy,
   mdiWeatherFog,
   mdiWeatherLightning,
+  mdiWeatherPartlyCloudy,
+  mdiWeatherPouring,
+  mdiWeatherRainy,
+  mdiWeatherSnowy,
+  mdiWeatherSunny,
+  mdiWeatherWindy,
 } from "@mdi/js"
+import Icon from "@mdi/react"
+import { Droplets, Thermometer, Wind } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 // ============================================================================
 // TYPES
@@ -180,11 +177,11 @@ export function Weather({
     return (
       <div
         className={cn(
-          "w-full max-w-[280px] h-[320px] flex flex-col items-center justify-center text-center p-4",
+          "flex h-[320px] w-full max-w-[280px] flex-col items-center justify-center p-4 text-center",
           className
         )}
       >
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Unable to load weather data
         </p>
       </div>
@@ -207,7 +204,7 @@ export function Weather({
   return (
     <div
       className={cn(
-        "w-full max-w-[280px] h-[320px] flex flex-col justify-between",
+        "flex h-[320px] w-full max-w-[280px] flex-col justify-between",
         className
       )}
     >
@@ -215,40 +212,38 @@ export function Weather({
         {/* Header with condition */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-1">
               <WeatherIcon
                 condition={currentWeather.condition}
                 className="size-5"
               />
-              <span className="text-sm">
-                {currentWeather.conditionLabel}
-              </span>
+              <span className="text-sm">{currentWeather.conditionLabel}</span>
             </div>
           </div>
 
           {location && (
-            <p className="text-sm text-muted-foreground">{location}</p>
+            <p className="text-muted-foreground text-sm">{location}</p>
           )}
 
           {/* Weather details */}
           <div className="mt-2 space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Droplets className="size-4" />
               <span>Humidity: {currentWeather.humidity}%</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <span className="text-primary">
                 Rain: {currentWeather.rainChance}%
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Thermometer className="size-4" />
               <span>
                 {currentWeather.temperature}°{tempUnit} (
                 {currentWeather.tempLow}°{tempUnit})
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <Wind className="size-4" />
               <span>
                 {currentWeather.windSpeed} {speedUnit}
@@ -260,14 +255,16 @@ export function Weather({
         {/* Time and Date - matching sizes */}
         <div className="mt-3 space-y-0">
           <p className="text-xl font-bold tracking-tight">{currentTime}</p>
-          <p className="text-xl font-bold tracking-tight text-muted-foreground">{currentDate}</p>
+          <p className="text-muted-foreground text-xl font-bold tracking-tight">
+            {currentDate}
+          </p>
         </div>
 
         {/* 6-day forecast strip */}
-        <div className="mt-3 flex justify-between rounded-lg bg-muted/50 p-2">
+        <div className="bg-muted/50 mt-3 flex justify-between rounded-lg p-2">
           {forecastData.slice(0, 6).map((item) => (
             <div key={item.day} className="flex flex-col items-center gap-0.5">
-              <span className="text-xs text-muted-foreground">{item.day}</span>
+              <span className="text-muted-foreground text-xs">{item.day}</span>
               <WeatherIcon condition={item.condition} className="size-4" />
               <span className="text-xs font-medium">
                 {item.temp}°{tempUnit.charAt(0)}

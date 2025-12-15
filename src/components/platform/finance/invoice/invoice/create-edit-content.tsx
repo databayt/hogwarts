@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { InvoiceCreateForm } from "@/components/platform/finance/invoice/form";
-import { type Locale } from '@/components/internationalization/config'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { InvoiceCreateForm } from "@/components/platform/finance/invoice/form"
 
 interface Props {
-  invoiceId?: string;
+  invoiceId?: string
   defaults?: {
-    firstName?: string | null;
-    lastName?: string | null;
-    email?: string | null;
-    currency?: string | null;
-  };
+    firstName?: string | null
+    lastName?: string | null
+    email?: string | null
+    currency?: string | null
+  }
   dictionary: Dictionary
   lang: Locale
 }
@@ -32,7 +32,5 @@ export default function CreateEditInvoiceModalContent({
         currency={defaults?.currency || undefined}
       />
     </div>
-  );
+  )
 }
-
-

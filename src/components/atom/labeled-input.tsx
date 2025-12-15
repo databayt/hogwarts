@@ -2,9 +2,10 @@
 "use client"
 
 import * as React from "react"
-import { Label } from "@/components/ui/label"
-import { Input, type InputProps } from "@/components/ui/input"
+
 import { cn } from "@/lib/utils"
+import { Input, type InputProps } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export interface LabeledInputProps extends Omit<InputProps, "id"> {
   label: string
@@ -20,7 +21,10 @@ export function LabeledInput({
   const id = React.useId()
 
   return (
-    <div className={cn("grid gap-2", containerClassName)} data-slot="labeled-input">
+    <div
+      className={cn("grid gap-2", containerClassName)}
+      data-slot="labeled-input"
+    >
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} className={className} {...props} />
     </div>

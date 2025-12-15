@@ -15,40 +15,60 @@
  * Multi-tenant: Data is pre-filtered on server by schoolId before reaching component
  * i18n: Fully bilingual with dynamic string interpolation for Arabic/English
  */
-'use client'
+"use client"
 
-import { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useMemo, useState } from "react"
+import Link from "next/link"
 import {
-  Search,
-  TrendingUp,
-  TrendingDown,
+  ArrowDownRight,
+  ArrowUpRight,
   Award,
-  Users,
-  Clock,
+  BarChart3,
   BookOpen,
   ClipboardCheck,
-  BarChart3,
-  Trophy,
-  Medal,
-  Star,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
+  Clock,
+  Download,
   Filter,
-  Download
-} from 'lucide-react'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import Link from 'next/link'
+  Medal,
+  Minus,
+  Search,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+  Users,
+} from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface TeacherPerformance {
   id: string
@@ -63,7 +83,7 @@ interface TeacherPerformance {
   classCount: number
   subjectCount: number
   attendanceMarked: number
-  workloadStatus: 'UNDERUTILIZED' | 'NORMAL' | 'OVERLOAD'
+  workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
   workloadPercentage: number
   performanceScore: number
   departments: { id: string; name: string; isPrimary: boolean }[]
@@ -80,7 +100,7 @@ interface WorkloadConfig {
 interface Props {
   teachers: TeacherPerformance[]
   workloadConfig?: WorkloadConfig
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
@@ -88,48 +108,53 @@ export default function TeacherPerformanceContent({
   teachers,
   workloadConfig,
   dictionary,
-  lang
+  lang,
 }: Props) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [performanceFilter, setPerformanceFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [performanceFilter, setPerformanceFilter] = useState<string>("all")
 
   const t = {
-    title: lang === 'ar' ? 'تحليلات الأداء' : 'Performance Analytics',
-    subtitle: lang === 'ar' ? 'تتبع وتحليل أداء المعلمين' : 'Track and analyze teacher performance',
-    search: lang === 'ar' ? 'بحث عن معلم...' : 'Search for a teacher...',
-    allStatuses: lang === 'ar' ? 'جميع الحالات' : 'All Statuses',
-    active: lang === 'ar' ? 'نشط' : 'Active',
-    inactive: lang === 'ar' ? 'غير نشط' : 'Inactive',
-    allPerformance: lang === 'ar' ? 'جميع المستويات' : 'All Levels',
-    excellent: lang === 'ar' ? 'ممتاز' : 'Excellent',
-    good: lang === 'ar' ? 'جيد' : 'Good',
-    needsImprovement: lang === 'ar' ? 'يحتاج تحسين' : 'Needs Improvement',
-    overview: lang === 'ar' ? 'نظرة عامة' : 'Overview',
-    ranking: lang === 'ar' ? 'الترتيب' : 'Ranking',
-    metrics: lang === 'ar' ? 'المقاييس' : 'Metrics',
-    totalTeachers: lang === 'ar' ? 'إجمالي المعلمين' : 'Total Teachers',
-    avgPerformance: lang === 'ar' ? 'متوسط الأداء' : 'Avg. Performance',
-    avgWorkload: lang === 'ar' ? 'متوسط العبء' : 'Avg. Workload',
-    topPerformers: lang === 'ar' ? 'أفضل المعلمين' : 'Top Performers',
-    attendanceMarked: lang === 'ar' ? 'الحضور المسجل' : 'Attendance Marked',
-    periods: lang === 'ar' ? 'الحصص' : 'Periods',
-    classes: lang === 'ar' ? 'الفصول' : 'Classes',
-    subjects: lang === 'ar' ? 'المواد' : 'Subjects',
-    score: lang === 'ar' ? 'الدرجة' : 'Score',
-    rank: lang === 'ar' ? 'الترتيب' : 'Rank',
-    teacher: lang === 'ar' ? 'المعلم' : 'Teacher',
-    department: lang === 'ar' ? 'القسم' : 'Department',
-    workload: lang === 'ar' ? 'العبء' : 'Workload',
-    performance: lang === 'ar' ? 'الأداء' : 'Performance',
-    details: lang === 'ar' ? 'التفاصيل' : 'Details',
-    noTeachers: lang === 'ar' ? 'لا يوجد معلمون' : 'No teachers found',
-    exportReport: lang === 'ar' ? 'تصدير التقرير' : 'Export Report',
-    underutilized: lang === 'ar' ? 'أقل من المطلوب' : 'Underutilized',
-    normal: lang === 'ar' ? 'طبيعي' : 'Normal',
-    overload: lang === 'ar' ? 'زائد' : 'Overload',
-    performanceBreakdown: lang === 'ar' ? 'تحليل الأداء' : 'Performance Breakdown',
-    workloadDistribution: lang === 'ar' ? 'توزيع العبء' : 'Workload Distribution',
+    title: lang === "ar" ? "تحليلات الأداء" : "Performance Analytics",
+    subtitle:
+      lang === "ar"
+        ? "تتبع وتحليل أداء المعلمين"
+        : "Track and analyze teacher performance",
+    search: lang === "ar" ? "بحث عن معلم..." : "Search for a teacher...",
+    allStatuses: lang === "ar" ? "جميع الحالات" : "All Statuses",
+    active: lang === "ar" ? "نشط" : "Active",
+    inactive: lang === "ar" ? "غير نشط" : "Inactive",
+    allPerformance: lang === "ar" ? "جميع المستويات" : "All Levels",
+    excellent: lang === "ar" ? "ممتاز" : "Excellent",
+    good: lang === "ar" ? "جيد" : "Good",
+    needsImprovement: lang === "ar" ? "يحتاج تحسين" : "Needs Improvement",
+    overview: lang === "ar" ? "نظرة عامة" : "Overview",
+    ranking: lang === "ar" ? "الترتيب" : "Ranking",
+    metrics: lang === "ar" ? "المقاييس" : "Metrics",
+    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
+    avgPerformance: lang === "ar" ? "متوسط الأداء" : "Avg. Performance",
+    avgWorkload: lang === "ar" ? "متوسط العبء" : "Avg. Workload",
+    topPerformers: lang === "ar" ? "أفضل المعلمين" : "Top Performers",
+    attendanceMarked: lang === "ar" ? "الحضور المسجل" : "Attendance Marked",
+    periods: lang === "ar" ? "الحصص" : "Periods",
+    classes: lang === "ar" ? "الفصول" : "Classes",
+    subjects: lang === "ar" ? "المواد" : "Subjects",
+    score: lang === "ar" ? "الدرجة" : "Score",
+    rank: lang === "ar" ? "الترتيب" : "Rank",
+    teacher: lang === "ar" ? "المعلم" : "Teacher",
+    department: lang === "ar" ? "القسم" : "Department",
+    workload: lang === "ar" ? "العبء" : "Workload",
+    performance: lang === "ar" ? "الأداء" : "Performance",
+    details: lang === "ar" ? "التفاصيل" : "Details",
+    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers found",
+    exportReport: lang === "ar" ? "تصدير التقرير" : "Export Report",
+    underutilized: lang === "ar" ? "أقل من المطلوب" : "Underutilized",
+    normal: lang === "ar" ? "طبيعي" : "Normal",
+    overload: lang === "ar" ? "زائد" : "Overload",
+    performanceBreakdown:
+      lang === "ar" ? "تحليل الأداء" : "Performance Breakdown",
+    workloadDistribution:
+      lang === "ar" ? "توزيع العبء" : "Workload Distribution",
   }
 
   // Filter teachers based on search and filters
@@ -137,20 +162,23 @@ export default function TeacherPerformanceContent({
     return teachers.filter((teacher) => {
       // Search filter
       const fullName = `${teacher.givenName} ${teacher.surname}`.toLowerCase()
-      const matchesSearch = searchQuery === '' || fullName.includes(searchQuery.toLowerCase())
+      const matchesSearch =
+        searchQuery === "" || fullName.includes(searchQuery.toLowerCase())
 
       // Status filter
-      const matchesStatus = statusFilter === 'all' ||
-        (statusFilter === 'active' && teacher.employmentStatus === 'ACTIVE') ||
-        (statusFilter === 'inactive' && teacher.employmentStatus !== 'ACTIVE')
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && teacher.employmentStatus === "ACTIVE") ||
+        (statusFilter === "inactive" && teacher.employmentStatus !== "ACTIVE")
 
       // Performance filter
       let matchesPerformance = true
-      if (performanceFilter === 'excellent') {
+      if (performanceFilter === "excellent") {
         matchesPerformance = teacher.performanceScore >= 80
-      } else if (performanceFilter === 'good') {
-        matchesPerformance = teacher.performanceScore >= 50 && teacher.performanceScore < 80
-      } else if (performanceFilter === 'needs-improvement') {
+      } else if (performanceFilter === "good") {
+        matchesPerformance =
+          teacher.performanceScore >= 50 && teacher.performanceScore < 80
+      } else if (performanceFilter === "needs-improvement") {
         matchesPerformance = teacher.performanceScore < 50
       }
 
@@ -172,7 +200,7 @@ export default function TeacherPerformanceContent({
         needsImprovementCount: 0,
         underutilizedCount: 0,
         normalCount: 0,
-        overloadCount: 0
+        overloadCount: 0,
       }
     }
 
@@ -186,7 +214,10 @@ export default function TeacherPerformanceContent({
       teachers.reduce((sum, t) => sum + t.workloadPercentage, 0) / total
     )
     // Total attendance marking events across all teachers (for volume metrics)
-    const totalAttendance = teachers.reduce((sum, t) => sum + t.attendanceMarked, 0)
+    const totalAttendance = teachers.reduce(
+      (sum, t) => sum + t.attendanceMarked,
+      0
+    )
 
     return {
       total,
@@ -194,11 +225,17 @@ export default function TeacherPerformanceContent({
       avgWorkload,
       totalAttendance,
       excellentCount: teachers.filter((t) => t.performanceScore >= 80).length,
-      goodCount: teachers.filter((t) => t.performanceScore >= 50 && t.performanceScore < 80).length,
-      needsImprovementCount: teachers.filter((t) => t.performanceScore < 50).length,
-      underutilizedCount: teachers.filter((t) => t.workloadStatus === 'UNDERUTILIZED').length,
-      normalCount: teachers.filter((t) => t.workloadStatus === 'NORMAL').length,
-      overloadCount: teachers.filter((t) => t.workloadStatus === 'OVERLOAD').length
+      goodCount: teachers.filter(
+        (t) => t.performanceScore >= 50 && t.performanceScore < 80
+      ).length,
+      needsImprovementCount: teachers.filter((t) => t.performanceScore < 50)
+        .length,
+      underutilizedCount: teachers.filter(
+        (t) => t.workloadStatus === "UNDERUTILIZED"
+      ).length,
+      normalCount: teachers.filter((t) => t.workloadStatus === "NORMAL").length,
+      overloadCount: teachers.filter((t) => t.workloadStatus === "OVERLOAD")
+        .length,
     }
   }, [teachers])
 
@@ -208,27 +245,44 @@ export default function TeacherPerformanceContent({
   }, [teachers])
 
   const getPerformanceColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 50) return 'text-yellow-600'
-    return 'text-red-600'
+    if (score >= 80) return "text-green-600"
+    if (score >= 50) return "text-yellow-600"
+    return "text-red-600"
   }
 
   const getPerformanceBadge = (score: number) => {
-    if (score >= 80) return { label: t.excellent, variant: 'default' as const, className: 'bg-green-100 text-green-800' }
-    if (score >= 50) return { label: t.good, variant: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800' }
-    return { label: t.needsImprovement, variant: 'destructive' as const, className: 'bg-red-100 text-red-800' }
+    if (score >= 80)
+      return {
+        label: t.excellent,
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800",
+      }
+    if (score >= 50)
+      return {
+        label: t.good,
+        variant: "secondary" as const,
+        className: "bg-yellow-100 text-yellow-800",
+      }
+    return {
+      label: t.needsImprovement,
+      variant: "destructive" as const,
+      className: "bg-red-100 text-red-800",
+    }
   }
 
   const getWorkloadBadge = (status: string) => {
     switch (status) {
-      case 'UNDERUTILIZED':
-        return { label: t.underutilized, className: 'bg-blue-100 text-blue-800' }
-      case 'NORMAL':
-        return { label: t.normal, className: 'bg-green-100 text-green-800' }
-      case 'OVERLOAD':
-        return { label: t.overload, className: 'bg-red-100 text-red-800' }
+      case "UNDERUTILIZED":
+        return {
+          label: t.underutilized,
+          className: "bg-blue-100 text-blue-800",
+        }
+      case "NORMAL":
+        return { label: t.normal, className: "bg-green-100 text-green-800" }
+      case "OVERLOAD":
+        return { label: t.overload, className: "bg-red-100 text-red-800" }
       default:
-        return { label: status, className: 'bg-gray-100 text-gray-800' }
+        return { label: status, className: "bg-gray-100 text-gray-800" }
     }
   }
 
@@ -241,12 +295,16 @@ export default function TeacherPerformanceContent({
       case 3:
         return <Medal className="h-5 w-5 text-amber-600" />
       default:
-        return <span className="text-sm font-medium text-muted-foreground">#{rank}</span>
+        return (
+          <span className="text-muted-foreground text-sm font-medium">
+            #{rank}
+          </span>
+        )
     }
   }
 
   const getInitials = (givenName: string, surname: string) => {
-    return `${givenName?.charAt(0) || ''}${surname?.charAt(0) || ''}`.toUpperCase()
+    return `${givenName?.charAt(0) || ""}${surname?.charAt(0) || ""}`.toUpperCase()
   }
 
   return (
@@ -269,10 +327,12 @@ export default function TeacherPerformanceContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.totalTeachers}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.totalTeachers}
+                </p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
+              <Users className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -281,8 +341,12 @@ export default function TeacherPerformanceContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.avgPerformance}</p>
-                <p className={`text-2xl font-bold ${getPerformanceColor(stats.avgPerformance)}`}>
+                <p className="text-muted-foreground text-sm">
+                  {t.avgPerformance}
+                </p>
+                <p
+                  className={`text-2xl font-bold ${getPerformanceColor(stats.avgPerformance)}`}
+                >
                   {stats.avgPerformance}%
                 </p>
               </div>
@@ -295,10 +359,10 @@ export default function TeacherPerformanceContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.avgWorkload}</p>
+                <p className="text-muted-foreground text-sm">{t.avgWorkload}</p>
                 <p className="text-2xl font-bold">{stats.avgWorkload}%</p>
               </div>
-              <Clock className="h-8 w-8 text-muted-foreground" />
+              <Clock className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -307,10 +371,14 @@ export default function TeacherPerformanceContent({
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.attendanceMarked}</p>
-                <p className="text-2xl font-bold">{stats.totalAttendance.toLocaleString()}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.attendanceMarked}
+                </p>
+                <p className="text-2xl font-bold">
+                  {stats.totalAttendance.toLocaleString()}
+                </p>
               </div>
-              <ClipboardCheck className="h-8 w-8 text-muted-foreground" />
+              <ClipboardCheck className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -353,7 +421,7 @@ export default function TeacherPerformanceContent({
                           {getRankIcon(index + 1)}
                         </div>
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={teacher.profilePhotoUrl || ''} />
+                          <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
                             {getInitials(teacher.givenName, teacher.surname)}
                           </AvatarFallback>
@@ -362,12 +430,14 @@ export default function TeacherPerformanceContent({
                           <p className="font-medium">
                             {teacher.givenName} {teacher.surname}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {teacher.departments[0]?.name || '-'}
+                          <p className="text-muted-foreground text-sm">
+                            {teacher.departments[0]?.name || "-"}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${getPerformanceColor(teacher.performanceScore)}`}>
+                          <p
+                            className={`text-lg font-bold ${getPerformanceColor(teacher.performanceScore)}`}
+                          >
                             {teacher.performanceScore}%
                           </p>
                         </div>
@@ -375,7 +445,9 @@ export default function TeacherPerformanceContent({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-4">{t.noTeachers}</p>
+                  <p className="text-muted-foreground py-4 text-center">
+                    {t.noTeachers}
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -395,7 +467,11 @@ export default function TeacherPerformanceContent({
                     <span className="font-medium">{stats.excellentCount}</span>
                   </div>
                   <Progress
-                    value={stats.total > 0 ? (stats.excellentCount / stats.total) * 100 : 0}
+                    value={
+                      stats.total > 0
+                        ? (stats.excellentCount / stats.total) * 100
+                        : 0
+                    }
                     className="h-2 bg-green-100"
                   />
                 </div>
@@ -409,7 +485,11 @@ export default function TeacherPerformanceContent({
                     <span className="font-medium">{stats.goodCount}</span>
                   </div>
                   <Progress
-                    value={stats.total > 0 ? (stats.goodCount / stats.total) * 100 : 0}
+                    value={
+                      stats.total > 0
+                        ? (stats.goodCount / stats.total) * 100
+                        : 0
+                    }
                     className="h-2 bg-yellow-100"
                   />
                 </div>
@@ -418,12 +498,20 @@ export default function TeacherPerformanceContent({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-3 w-3 rounded-full bg-red-500" />
-                      <span className="text-sm">{t.needsImprovement} (&lt;50%)</span>
+                      <span className="text-sm">
+                        {t.needsImprovement} (&lt;50%)
+                      </span>
                     </div>
-                    <span className="font-medium">{stats.needsImprovementCount}</span>
+                    <span className="font-medium">
+                      {stats.needsImprovementCount}
+                    </span>
                   </div>
                   <Progress
-                    value={stats.total > 0 ? (stats.needsImprovementCount / stats.total) * 100 : 0}
+                    value={
+                      stats.total > 0
+                        ? (stats.needsImprovementCount / stats.total) * 100
+                        : 0
+                    }
                     className="h-2 bg-red-100"
                   />
                 </div>
@@ -441,9 +529,13 @@ export default function TeacherPerformanceContent({
                     <div className="mb-2 flex items-center justify-center">
                       <TrendingDown className="h-6 w-6 text-blue-500" />
                     </div>
-                    <p className="text-2xl font-bold text-blue-600">{stats.underutilizedCount}</p>
-                    <p className="text-sm text-muted-foreground">{t.underutilized}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {stats.underutilizedCount}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {t.underutilized}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
                       &lt;{workloadConfig?.minPeriodsPerWeek || 15} {t.periods}
                     </p>
                   </div>
@@ -452,10 +544,13 @@ export default function TeacherPerformanceContent({
                     <div className="mb-2 flex items-center justify-center">
                       <Minus className="h-6 w-6 text-green-500" />
                     </div>
-                    <p className="text-2xl font-bold text-green-600">{stats.normalCount}</p>
-                    <p className="text-sm text-muted-foreground">{t.normal}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {workloadConfig?.minPeriodsPerWeek || 15}-{workloadConfig?.overloadThreshold || 25} {t.periods}
+                    <p className="text-2xl font-bold text-green-600">
+                      {stats.normalCount}
+                    </p>
+                    <p className="text-muted-foreground text-sm">{t.normal}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {workloadConfig?.minPeriodsPerWeek || 15}-
+                      {workloadConfig?.overloadThreshold || 25} {t.periods}
                     </p>
                   </div>
 
@@ -463,9 +558,13 @@ export default function TeacherPerformanceContent({
                     <div className="mb-2 flex items-center justify-center">
                       <TrendingUp className="h-6 w-6 text-red-500" />
                     </div>
-                    <p className="text-2xl font-bold text-red-600">{stats.overloadCount}</p>
-                    <p className="text-sm text-muted-foreground">{t.overload}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-2xl font-bold text-red-600">
+                      {stats.overloadCount}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {t.overload}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
                       &gt;{workloadConfig?.overloadThreshold || 25} {t.periods}
                     </p>
                   </div>
@@ -482,7 +581,7 @@ export default function TeacherPerformanceContent({
             <CardContent className="p-4">
               <div className="flex flex-col gap-4 md:flex-row md:items-center">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     placeholder={t.search}
                     value={searchQuery}
@@ -500,7 +599,10 @@ export default function TeacherPerformanceContent({
                     <SelectItem value="inactive">{t.inactive}</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={performanceFilter} onValueChange={setPerformanceFilter}>
+                <Select
+                  value={performanceFilter}
+                  onValueChange={setPerformanceFilter}
+                >
                   <SelectTrigger className="w-full md:w-[180px]">
                     <SelectValue placeholder={t.allPerformance} />
                   </SelectTrigger>
@@ -508,7 +610,9 @@ export default function TeacherPerformanceContent({
                     <SelectItem value="all">{t.allPerformance}</SelectItem>
                     <SelectItem value="excellent">{t.excellent}</SelectItem>
                     <SelectItem value="good">{t.good}</SelectItem>
-                    <SelectItem value="needs-improvement">{t.needsImprovement}</SelectItem>
+                    <SelectItem value="needs-improvement">
+                      {t.needsImprovement}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -527,17 +631,24 @@ export default function TeacherPerformanceContent({
                       <TableHead>{t.department}</TableHead>
                       <TableHead className="text-center">{t.periods}</TableHead>
                       <TableHead className="text-center">{t.classes}</TableHead>
-                      <TableHead className="text-center">{t.workload}</TableHead>
+                      <TableHead className="text-center">
+                        {t.workload}
+                      </TableHead>
                       <TableHead className="text-center">{t.score}</TableHead>
                       <TableHead>{t.details}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredTeachers.map((teacher, index) => {
-                      const performanceBadge = getPerformanceBadge(teacher.performanceScore)
-                      const workloadBadge = getWorkloadBadge(teacher.workloadStatus)
+                      const performanceBadge = getPerformanceBadge(
+                        teacher.performanceScore
+                      )
+                      const workloadBadge = getWorkloadBadge(
+                        teacher.workloadStatus
+                      )
                       // Find original rank in full list
-                      const originalRank = teachers.findIndex((t) => t.id === teacher.id) + 1
+                      const originalRank =
+                        teachers.findIndex((t) => t.id === teacher.id) + 1
 
                       return (
                         <TableRow key={teacher.id}>
@@ -549,23 +660,28 @@ export default function TeacherPerformanceContent({
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={teacher.profilePhotoUrl || ''} />
+                                <AvatarImage
+                                  src={teacher.profilePhotoUrl || ""}
+                                />
                                 <AvatarFallback className="text-xs">
-                                  {getInitials(teacher.givenName, teacher.surname)}
+                                  {getInitials(
+                                    teacher.givenName,
+                                    teacher.surname
+                                  )}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">
                                   {teacher.givenName} {teacher.surname}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-muted-foreground text-xs">
                                   {teacher.emailAddress}
                                 </p>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            {teacher.departments[0]?.name || '-'}
+                            {teacher.departments[0]?.name || "-"}
                           </TableCell>
                           <TableCell className="text-center">
                             {teacher.totalPeriods}
@@ -574,13 +690,18 @@ export default function TeacherPerformanceContent({
                             {teacher.classCount}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="secondary" className={workloadBadge.className}>
+                            <Badge
+                              variant="secondary"
+                              className={workloadBadge.className}
+                            >
                               {workloadBadge.label}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex flex-col items-center gap-1">
-                              <span className={`text-lg font-bold ${getPerformanceColor(teacher.performanceScore)}`}>
+                              <span
+                                className={`text-lg font-bold ${getPerformanceColor(teacher.performanceScore)}`}
+                              >
                                 {teacher.performanceScore}%
                               </span>
                               <Progress
@@ -602,7 +723,7 @@ export default function TeacherPerformanceContent({
                   </TableBody>
                 </Table>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <div className="text-muted-foreground flex flex-col items-center justify-center py-12">
                   <Users className="mb-4 h-12 w-12" />
                   <p>{t.noTeachers}</p>
                 </div>
@@ -615,7 +736,9 @@ export default function TeacherPerformanceContent({
         <TabsContent value="metrics" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredTeachers.slice(0, 9).map((teacher) => {
-              const performanceBadge = getPerformanceBadge(teacher.performanceScore)
+              const performanceBadge = getPerformanceBadge(
+                teacher.performanceScore
+              )
               const workloadBadge = getWorkloadBadge(teacher.workloadStatus)
 
               return (
@@ -624,7 +747,7 @@ export default function TeacherPerformanceContent({
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={teacher.profilePhotoUrl || ''} />
+                          <AvatarImage src={teacher.profilePhotoUrl || ""} />
                           <AvatarFallback>
                             {getInitials(teacher.givenName, teacher.surname)}
                           </AvatarFallback>
@@ -634,11 +757,14 @@ export default function TeacherPerformanceContent({
                             {teacher.givenName} {teacher.surname}
                           </CardTitle>
                           <CardDescription>
-                            {teacher.departments[0]?.name || '-'}
+                            {teacher.departments[0]?.name || "-"}
                           </CardDescription>
                         </div>
                       </div>
-                      <Badge variant="secondary" className={performanceBadge.className}>
+                      <Badge
+                        variant="secondary"
+                        className={performanceBadge.className}
+                      >
                         {teacher.performanceScore}%
                       </Badge>
                     </div>
@@ -647,34 +773,58 @@ export default function TeacherPerformanceContent({
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">{t.performance}</span>
-                          <span className={getPerformanceColor(teacher.performanceScore)}>
+                          <span className="text-muted-foreground">
+                            {t.performance}
+                          </span>
+                          <span
+                            className={getPerformanceColor(
+                              teacher.performanceScore
+                            )}
+                          >
                             {performanceBadge.label}
                           </span>
                         </div>
-                        <Progress value={teacher.performanceScore} className="h-2" />
+                        <Progress
+                          value={teacher.performanceScore}
+                          className="h-2"
+                        />
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="rounded-lg bg-muted/50 p-2">
-                          <Clock className="mx-auto mb-1 h-4 w-4 text-muted-foreground" />
-                          <p className="text-lg font-semibold">{teacher.totalPeriods}</p>
-                          <p className="text-xs text-muted-foreground">{t.periods}</p>
+                        <div className="bg-muted/50 rounded-lg p-2">
+                          <Clock className="text-muted-foreground mx-auto mb-1 h-4 w-4" />
+                          <p className="text-lg font-semibold">
+                            {teacher.totalPeriods}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {t.periods}
+                          </p>
                         </div>
-                        <div className="rounded-lg bg-muted/50 p-2">
-                          <Users className="mx-auto mb-1 h-4 w-4 text-muted-foreground" />
-                          <p className="text-lg font-semibold">{teacher.classCount}</p>
-                          <p className="text-xs text-muted-foreground">{t.classes}</p>
+                        <div className="bg-muted/50 rounded-lg p-2">
+                          <Users className="text-muted-foreground mx-auto mb-1 h-4 w-4" />
+                          <p className="text-lg font-semibold">
+                            {teacher.classCount}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {t.classes}
+                          </p>
                         </div>
-                        <div className="rounded-lg bg-muted/50 p-2">
-                          <BookOpen className="mx-auto mb-1 h-4 w-4 text-muted-foreground" />
-                          <p className="text-lg font-semibold">{teacher.subjectCount}</p>
-                          <p className="text-xs text-muted-foreground">{t.subjects}</p>
+                        <div className="bg-muted/50 rounded-lg p-2">
+                          <BookOpen className="text-muted-foreground mx-auto mb-1 h-4 w-4" />
+                          <p className="text-lg font-semibold">
+                            {teacher.subjectCount}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {t.subjects}
+                          </p>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className={workloadBadge.className}>
+                        <Badge
+                          variant="secondary"
+                          className={workloadBadge.className}
+                        >
                           {workloadBadge.label}
                         </Badge>
                         <Button variant="ghost" size="sm" asChild>
@@ -693,7 +843,7 @@ export default function TeacherPerformanceContent({
 
           {filteredTeachers.length === 0 && (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <CardContent className="text-muted-foreground flex flex-col items-center justify-center py-12">
                 <BarChart3 className="mb-4 h-12 w-12" />
                 <p>{t.noTeachers}</p>
               </CardContent>

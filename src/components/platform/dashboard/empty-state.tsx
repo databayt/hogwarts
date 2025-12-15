@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
+
 import { getIcon } from "./config"
 import type { EmptyStateProps } from "./types"
 
@@ -19,18 +21,20 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center py-8 px-4 text-center",
+        "flex flex-col items-center justify-center px-4 py-8 text-center",
         className
       )}
     >
       {Icon && (
-        <div className="rounded-full bg-muted p-4 mb-4">
-          <Icon className="h-8 w-8 text-muted-foreground" />
+        <div className="bg-muted mb-4 rounded-full p-4">
+          <Icon className="text-muted-foreground h-8 w-8" />
         </div>
       )}
-      <h3 className="font-medium text-foreground mb-1">{title}</h3>
+      <h3 className="text-foreground mb-1 font-medium">{title}</h3>
       {description && (
-        <p className="text-sm text-muted-foreground mb-4 max-w-sm">{description}</p>
+        <p className="text-muted-foreground mb-4 max-w-sm text-sm">
+          {description}
+        </p>
       )}
       {action &&
         (action.href ? (

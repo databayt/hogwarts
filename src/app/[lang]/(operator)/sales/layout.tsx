@@ -1,24 +1,24 @@
-import { type Locale } from "@/components/internationalization/config";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
-  children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+  children: React.ReactNode
+  params: Promise<{ lang: string }>
 }
 
 export default async function SalesLayout({ children, params }: Props) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang as Locale);
-  const d = dictionary?.sales;
+  const { lang } = await params
+  const dictionary = await getDictionary(lang as Locale)
+  const d = dictionary?.sales
 
   // Define sales page navigation with i18n
   const salesPages: PageNavItem[] = [
     { name: d?.navAll || "All Leads", href: `/${lang}/sales` },
     { name: d?.navImport || "Import", href: `/${lang}/sales/import` },
     { name: d?.navAnalytics || "Analytics", href: `/${lang}/sales/analytics` },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
@@ -26,5 +26,5 @@ export default async function SalesLayout({ children, params }: Props) {
       <PageNav pages={salesPages} />
       {children}
     </div>
-  );
+  )
 }

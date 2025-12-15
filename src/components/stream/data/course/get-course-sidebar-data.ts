@@ -1,22 +1,26 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
+
+import { db } from "@/lib/db"
 
 /**
  * Fetches course data for sidebar navigation
  * Multi-tenant: Scoped by schoolId
  */
-export async function getCourseSidebarData(slug: string, schoolId: string | null) {
+export async function getCourseSidebarData(
+  slug: string,
+  schoolId: string | null
+) {
   if (!schoolId) {
-    notFound();
+    notFound()
   }
 
   const course = await db.streamCourse.findFirst({
     where: {
       slug,
       schoolId,
-      isPublished: true
+      isPublished: true,
     },
     include: {
       chapters: {
@@ -30,10 +34,10 @@ export async function getCourseSidebarData(slug: string, schoolId: string | null
         orderBy: { position: "asc" },
       },
     },
-  });
+  })
 
   if (!course) {
-    notFound();
+    notFound()
   }
 
   return {
@@ -41,5 +45,5 @@ export async function getCourseSidebarData(slug: string, schoolId: string | null
       ...course,
       chapter: course.chapters, // Map chapters to chapter for backward compatibility
     },
-  };
+  }
 }

@@ -1,15 +1,20 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { examGeneratorSchema } from "../validation";
-import { generateExamQuestions, generateExamPreview } from "../../generate/utils";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import {
+  generateExamPreview,
+  generateExamQuestions,
+} from "../../generate/utils"
+import { examGeneratorSchema } from "../validation"
 import type {
   ActionResponse,
   GenerateExamData,
   GenerationResult,
-} from "./types";
+} from "./types"
 
 /**
  * Generate an exam using a template or custom distribution
@@ -18,32 +23,32 @@ export async function generateExam(
   formData: FormData
 ): Promise<ActionResponse<GenerationResult>> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const userId = session.user.id;
+    const schoolId = session.user.schoolId
+    const userId = session.user.id
 
-    const data = Object.fromEntries(formData);
+    const data = Object.fromEntries(formData)
 
     // Parse JSON fields
     if (
       typeof data.customDistribution === "string" &&
       data.customDistribution
     ) {
-      data.customDistribution = JSON.parse(data.customDistribution);
+      data.customDistribution = JSON.parse(data.customDistribution)
     }
     if (typeof data.questionIds === "string" && data.questionIds) {
-      data.questionIds = JSON.parse(data.questionIds);
+      data.questionIds = JSON.parse(data.questionIds)
     }
 
-    const validated = examGeneratorSchema.parse(data);
+    const validated = examGeneratorSchema.parse(data)
 
     // Verify exam exists and belongs to school
     const exam = await db.exam.findFirst({
@@ -56,19 +61,19 @@ export async function generateExam(
         subjectId: true,
         title: true,
       },
-    });
+    })
 
     if (!exam) {
       return {
         success: false,
         error: "Exam not found",
         code: "EXAM_NOT_FOUND",
-      };
+      }
     }
 
     // Get distribution from template or use custom
-    let distribution = validated.customDistribution;
-    const templateId = validated.templateId;
+    let distribution = validated.customDistribution
+    const templateId = validated.templateId
 
     if (templateId && !distribution) {
       const template = await db.examTemplate.findFirst({
@@ -76,20 +81,20 @@ export async function generateExam(
           id: templateId,
           schoolId,
         },
-      });
+      })
 
       if (!template) {
         return {
           success: false,
           error: "Template not found",
           code: "TEMPLATE_NOT_FOUND",
-        };
+        }
       }
 
       distribution = template.distribution as Record<
         string,
         Record<string, number>
-      >;
+      >
     }
 
     if (!distribution) {
@@ -97,7 +102,7 @@ export async function generateExam(
         success: false,
         error: "No distribution provided",
         code: "MISSING_DISTRIBUTION",
-      };
+      }
     }
 
     // Get available questions for the subject
@@ -114,14 +119,14 @@ export async function generateExam(
       include: {
         analytics: true,
       },
-    });
+    })
 
     if (availableQuestions.length === 0) {
       return {
         success: false,
         error: "No questions available for this subject",
         code: "NO_QUESTIONS",
-      };
+      }
     }
 
     // Generate exam using algorithm
@@ -131,7 +136,7 @@ export async function generateExam(
       undefined,
       validated.isRandomized,
       validated.seed
-    );
+    )
 
     if (!result.metadata.distributionMet) {
       return {
@@ -143,7 +148,7 @@ export async function generateExam(
         details: {
           missingCategories: result.metadata.missingCategories,
         },
-      };
+      }
     }
 
     // Create generated exam with questions in transaction
@@ -160,7 +165,7 @@ export async function generateExam(
           generationNotes: validated.generationNotes,
           generatedBy: userId,
         },
-      });
+      })
 
       // Create question associations
       await tx.generatedExamQuestion.createMany({
@@ -171,14 +176,14 @@ export async function generateExam(
           order: index + 1,
           points: q.points,
         })),
-      });
+      })
 
-      return exam;
-    });
+      return exam
+    })
 
-    revalidatePath("/exams");
-    revalidatePath("/exams/generate");
-    revalidatePath(`/exams/${validated.examId}`);
+    revalidatePath("/exams")
+    revalidatePath("/exams/generate")
+    revalidatePath(`/exams/${validated.examId}`)
 
     return {
       success: true,
@@ -187,9 +192,9 @@ export async function generateExam(
         totalQuestions: generatedExam.totalQuestions,
         metadata: result.metadata,
       },
-    };
+    }
   } catch (error) {
-    console.error("Generate exam error:", error);
+    console.error("Generate exam error:", error)
 
     if (error instanceof Error && error.message.includes("validation")) {
       return {
@@ -197,7 +202,7 @@ export async function generateExam(
         error: "Invalid generation data",
         code: "VALIDATION_ERROR",
         details: error.message,
-      };
+      }
     }
 
     return {
@@ -205,7 +210,7 @@ export async function generateExam(
       error: "Failed to generate exam",
       code: "GENERATION_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -216,46 +221,46 @@ export async function previewExamGeneration(
   formData: FormData
 ): Promise<ActionResponse<any>> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const data = Object.fromEntries(formData);
+    const schoolId = session.user.schoolId
+    const data = Object.fromEntries(formData)
 
     // Parse JSON fields
     if (
       typeof data.customDistribution === "string" &&
       data.customDistribution
     ) {
-      data.customDistribution = JSON.parse(data.customDistribution);
+      data.customDistribution = JSON.parse(data.customDistribution)
     }
 
     const distribution = data.customDistribution as unknown as Record<
       string,
       Record<string, number>
-    >;
+    >
 
     if (!distribution) {
       return {
         success: false,
         error: "No distribution provided",
         code: "MISSING_DISTRIBUTION",
-      };
+      }
     }
 
-    const subjectId = data.subjectId as string;
+    const subjectId = data.subjectId as string
     if (!subjectId) {
       return {
         success: false,
         error: "Subject ID is required",
         code: "MISSING_SUBJECT",
-      };
+      }
     }
 
     // Get available questions
@@ -267,23 +272,23 @@ export async function previewExamGeneration(
       include: {
         analytics: true,
       },
-    });
+    })
 
     // Generate preview
-    const preview = generateExamPreview(availableQuestions);
+    const preview = generateExamPreview(availableQuestions)
 
     return {
       success: true,
       data: preview,
-    };
+    }
   } catch (error) {
-    console.error("Preview generation error:", error);
+    console.error("Preview generation error:", error)
     return {
       success: false,
       error: "Failed to generate preview",
       code: "PREVIEW_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -295,17 +300,17 @@ export async function regenerateExam(
   newSeed?: string
 ): Promise<ActionResponse<GenerationResult>> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.id || !session.user.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
-    const userId = session.user.id;
+    const schoolId = session.user.schoolId
+    const userId = session.user.id
 
     // Get existing generated exam
     const existingExam = await db.generatedExam.findFirst({
@@ -317,21 +322,21 @@ export async function regenerateExam(
         template: true,
         exam: true,
       },
-    });
+    })
 
     if (!existingExam) {
       return {
         success: false,
         error: "Generated exam not found",
         code: "EXAM_NOT_FOUND",
-      };
+      }
     }
 
     // Use template distribution or fetch from existing questions
-    let distribution: Record<string, Record<string, number>>;
+    let distribution: Record<string, Record<string, number>>
 
     if (existingExam.template) {
-      distribution = existingExam.template.distribution as any;
+      distribution = existingExam.template.distribution as any
     } else {
       // Reconstruct distribution from existing questions
       const existingQuestions = await db.generatedExamQuestion.findMany({
@@ -342,16 +347,16 @@ export async function regenerateExam(
         include: {
           question: true,
         },
-      });
+      })
 
-      distribution = {};
+      distribution = {}
       for (const eq of existingQuestions) {
-        const type = eq.question.questionType;
-        const difficulty = eq.question.difficulty;
+        const type = eq.question.questionType
+        const difficulty = eq.question.difficulty
 
-        if (!distribution[type]) distribution[type] = {};
-        if (!distribution[type][difficulty]) distribution[type][difficulty] = 0;
-        distribution[type][difficulty]++;
+        if (!distribution[type]) distribution[type] = {}
+        if (!distribution[type][difficulty]) distribution[type][difficulty] = 0
+        distribution[type][difficulty]++
       }
     }
 
@@ -364,7 +369,7 @@ export async function regenerateExam(
       include: {
         analytics: true,
       },
-    });
+    })
 
     // Generate new exam
     const result = generateExamQuestions(
@@ -373,7 +378,7 @@ export async function regenerateExam(
       undefined,
       true, // Always randomize for regeneration
       newSeed || undefined
-    );
+    )
 
     if (!result.metadata.distributionMet) {
       return {
@@ -382,7 +387,7 @@ export async function regenerateExam(
           ", "
         )}`,
         code: "DISTRIBUTION_NOT_MET",
-      };
+      }
     }
 
     // Create new generated exam in transaction
@@ -398,7 +403,7 @@ export async function regenerateExam(
           generationNotes: `Regenerated from exam ${generatedExamId}`,
           generatedBy: userId,
         },
-      });
+      })
 
       await tx.generatedExamQuestion.createMany({
         data: result.selectedQuestions.map((q, index) => ({
@@ -408,13 +413,13 @@ export async function regenerateExam(
           order: index + 1,
           points: q.points,
         })),
-      });
+      })
 
-      return exam;
-    });
+      return exam
+    })
 
-    revalidatePath("/exams");
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams")
+    revalidatePath("/exams/generate")
 
     return {
       success: true,
@@ -423,15 +428,15 @@ export async function regenerateExam(
         totalQuestions: newGeneratedExam.totalQuestions,
         metadata: result.metadata,
       },
-    };
+    }
   } catch (error) {
-    console.error("Regenerate exam error:", error);
+    console.error("Regenerate exam error:", error)
     return {
       success: false,
       error: "Failed to regenerate exam",
       code: "REGENERATION_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }
 
@@ -442,16 +447,16 @@ export async function deleteGeneratedExam(
   generatedExamId: string
 ): Promise<ActionResponse> {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user?.schoolId) {
       return {
         success: false,
         error: "Unauthorized - No school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     // Delete in transaction
     await db.$transaction(async (tx) => {
@@ -461,7 +466,7 @@ export async function deleteGeneratedExam(
           generatedExamId,
           schoolId,
         },
-      });
+      })
 
       // Delete generated exam
       await tx.generatedExam.delete({
@@ -469,20 +474,20 @@ export async function deleteGeneratedExam(
           id: generatedExamId,
           schoolId,
         },
-      });
-    });
+      })
+    })
 
-    revalidatePath("/exams");
-    revalidatePath("/exams/generate");
+    revalidatePath("/exams")
+    revalidatePath("/exams/generate")
 
-    return { success: true };
+    return { success: true }
   } catch (error) {
-    console.error("Delete generated exam error:", error);
+    console.error("Delete generated exam error:", error)
     return {
       success: false,
       error: "Failed to delete generated exam",
       code: "DELETE_FAILED",
       details: error instanceof Error ? error.message : undefined,
-    };
+    }
   }
 }

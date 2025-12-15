@@ -1,13 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { CreditCard } from "lucide-react"
+import { toast, Toaster } from "sonner"
+
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Toaster, toast } from "sonner"
 import { BillingSettings } from "@/components/billingsdk/billing-settings"
-import { CreditCard } from "lucide-react"
 
 type InvoiceFormat = "PDF" | "HTML"
 
@@ -26,7 +34,9 @@ interface NewCardForm {
 }
 
 export default function BillingSettingsDemo() {
-  const [activeTab, setActiveTab] = useState<"general" | "payment" | "invoices" | "limits">("general")
+  const [activeTab, setActiveTab] = useState<
+    "general" | "payment" | "invoices" | "limits"
+  >("general")
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true)
   const [usageAlerts, setUsageAlerts] = useState<boolean>(true)
   const [invoiceReminders, setInvoiceReminders] = useState<boolean>(false)
@@ -42,7 +52,6 @@ export default function BillingSettingsDemo() {
     cvc: "",
   })
   const [open, setOpen] = useState<boolean>(false)
-
 
   const handleToggleEmailNotifications = (checked: boolean) => {
     console.log(`Email notifications toggled to: ${checked}`)
@@ -81,14 +90,18 @@ export default function BillingSettingsDemo() {
 
   const isValidCardNumber = (number: string): boolean => {
     const normalized = number.replace(/\s/g, "")
-    return normalized.length >= 13 && normalized.length <= 19 && /^\d+$/.test(normalized)
+    return (
+      normalized.length >= 13 &&
+      normalized.length <= 19 &&
+      /^\d+$/.test(normalized)
+    )
   }
 
   const isValidExpiry = (expiry: string): boolean => {
     if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(expiry)) {
       return false
     }
-    const [month, year] = expiry.split('/').map(Number)
+    const [month, year] = expiry.split("/").map(Number)
     const currentYear = Number(String(new Date().getFullYear()).slice(-2))
     const currentMonth = new Date().getMonth() + 1
     if (year < currentYear || (year === currentYear && month < currentMonth)) {
@@ -100,7 +113,7 @@ export default function BillingSettingsDemo() {
   const isValidCvc = (cvc: string): boolean => {
     return /^\d{3,4}$/.test(cvc)
   }
- 
+
   const detectCardBrand = (number: string): Card["brand"] => {
     if (number.startsWith("4")) return "Visa"
     if (/^5[1-5]/.test(number)) return "MasterCard"
@@ -114,7 +127,9 @@ export default function BillingSettingsDemo() {
       return
     }
     if (!isValidExpiry(newCard.expiry)) {
-      toast.error("Please enter a valid expiry date (MM/YY) that's not in the past.")
+      toast.error(
+        "Please enter a valid expiry date (MM/YY) that's not in the past."
+      )
       return
     }
     if (!isValidCvc(newCard.cvc)) {
@@ -137,16 +152,18 @@ export default function BillingSettingsDemo() {
   }
 
   const formatCardNumber = (value: string): string => {
-    const rawValue = value.replace(/\D/g, '');
-    const formattedValue = rawValue.match(/.{1,4}/g)?.join(' ') || '';
-    return formattedValue;
-  };
+    const rawValue = value.replace(/\D/g, "")
+    const formattedValue = rawValue.match(/.{1,4}/g)?.join(" ") || ""
+    return formattedValue
+  }
 
   return (
     <div className="p-6">
       <BillingSettings
         activeTab={activeTab}
-        onTabChange={(tab: string) => setActiveTab(tab as "general" | "payment" | "invoices" | "limits")}
+        onTabChange={(tab: string) =>
+          setActiveTab(tab as "general" | "payment" | "invoices" | "limits")
+        }
         emailNotifications={emailNotifications}
         onEmailNotificationsChange={handleToggleEmailNotifications}
         usageAlerts={usageAlerts}
@@ -179,16 +196,16 @@ export default function BillingSettingsDemo() {
                   id="number"
                   value={formatCardNumber(newCard.number)}
                   onChange={(e) => {
-                    const rawValue = e.target.value.replace(/\s/g, '');
+                    const rawValue = e.target.value.replace(/\s/g, "")
                     if (rawValue.length <= 19) {
-                      setNewCard({ ...newCard, number: rawValue });
+                      setNewCard({ ...newCard, number: rawValue })
                     }
                   }}
                   placeholder="1234 5678 9012 3456"
                   className="pr-10"
                   maxLength={19}
                 />
-                <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <CreditCard className="text-muted-foreground absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -198,12 +215,12 @@ export default function BillingSettingsDemo() {
                   id="expiry"
                   value={newCard.expiry}
                   onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, '');
+                    let value = e.target.value.replace(/\D/g, "")
                     if (value.length >= 2) {
-                      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                      value = value.slice(0, 2) + "/" + value.slice(2, 4)
                     }
                     if (value.length <= 5) {
-                      setNewCard({ ...newCard, expiry: value });
+                      setNewCard({ ...newCard, expiry: value })
                     }
                   }}
                   placeholder="MM/YY"
@@ -217,9 +234,9 @@ export default function BillingSettingsDemo() {
                   type="password"
                   value={newCard.cvc}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
+                    const value = e.target.value.replace(/\D/g, "")
                     if (value.length <= 4) {
-                      setNewCard({ ...newCard, cvc: value });
+                      setNewCard({ ...newCard, cvc: value })
                     }
                   }}
                   placeholder="123"
@@ -232,9 +249,7 @@ export default function BillingSettingsDemo() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddCard}>
-              Add Card
-            </Button>
+            <Button onClick={handleAddCard}>Add Card</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

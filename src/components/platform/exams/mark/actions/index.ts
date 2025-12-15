@@ -4,38 +4,23 @@
  */
 
 // Question Bank Operations
-export {
-  createQuestion,
-  updateQuestion,
-  deleteQuestion,
-} from "./question-bank";
+export { createQuestion, updateQuestion, deleteQuestion } from "./question-bank"
 
 // Rubric Management
-export {
-  createRubric,
-  updateRubric,
-  deleteRubric,
-} from "./rubric";
+export { createRubric, updateRubric, deleteRubric } from "./rubric"
 
 // Student Answer Submission
 export {
   submitAnswer,
   getStudentAnswers,
   clearStudentAnswer,
-} from "./submission";
+} from "./submission"
 
 // Automated Marking
-export {
-  autoGradeAnswer,
-  autoGradeExam,
-} from "./auto-mark";
+export { autoGradeAnswer, autoGradeExam } from "./auto-mark"
 
 // AI-Assisted Grading
-export {
-  aiGradeAnswer,
-  batchAIGrade,
-  getAIFeedback,
-} from "./ai-grade";
+export { aiGradeAnswer, batchAIGrade, getAIFeedback } from "./ai-grade"
 
 // Manual Marking & Overrides
 export {
@@ -43,7 +28,7 @@ export {
   overrideGrade,
   reviewAIGrade,
   getGradeOverrides,
-} from "./manual-mark";
+} from "./manual-mark"
 
 // Bulk Operations
 export {
@@ -51,7 +36,7 @@ export {
   bulkAIGrade,
   importMarksFromCSV,
   resetExamGrades,
-} from "./bulk-operations";
+} from "./bulk-operations"
 
 // OCR Processing
 export {
@@ -59,7 +44,7 @@ export {
   batchProcessOCR,
   correctOCRText,
   getOCRStatus,
-} from "./ocr";
+} from "./ocr"
 
 // Type Exports
 export type {
@@ -77,4 +62,4 @@ export type {
   GradeOverrideInput,
   BulkGradeInput,
   TenantContext,
-} from "./types";
+} from "./types"

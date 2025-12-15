@@ -13,11 +13,17 @@ interface ReconciliationPanelProps {
   reconciliationHistory?: any
 }
 
-export function ReconciliationPanel({ accounts, selectedAccountId, reconciliationHistory }: ReconciliationPanelProps) {
+export function ReconciliationPanel({
+  accounts,
+  selectedAccountId,
+  reconciliationHistory,
+}: ReconciliationPanelProps) {
   return (
-    <div className="text-center text-muted-foreground p-8">
+    <div className="text-muted-foreground p-8 text-center">
       <p>Enhanced reconciliation panel is currently unavailable.</p>
-      <p className="text-sm mt-2">Please use the standard reconciliation interface.</p>
+      <p className="mt-2 text-sm">
+        Please use the standard reconciliation interface.
+      </p>
     </div>
   )
 }

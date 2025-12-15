@@ -1,11 +1,12 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -13,37 +14,42 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { type Locale } from "@/components/internationalization/config"
 
-import { bookSchema, type BookSchema } from "../../validation";
-import { BOOK_GENRES } from "../../config";
-import { createBook } from "../../actions";
-import ColorPicker from "./color-picker";
-import FileUpload from "./file-upload";
-import { type Locale } from "@/components/internationalization/config";
+import { createBook } from "../../actions"
+import { BOOK_GENRES } from "../../config"
+import { bookSchema, type BookSchema } from "../../validation"
+import ColorPicker from "./color-picker"
+import FileUpload from "./file-upload"
 
 interface Props {
-  type?: "create" | "update";
-  bookData?: Partial<BookSchema>;
-  schoolId: string;
-  dictionary: any;
-  lang: Locale;
+  type?: "create" | "update"
+  bookData?: Partial<BookSchema>
+  schoolId: string
+  dictionary: any
+  lang: Locale
 }
 
-export default function BookForm({ type = "create", bookData, schoolId, dictionary, lang }: Props) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const t = dictionary.school;
+export default function BookForm({
+  type = "create",
+  bookData,
+  schoolId,
+  dictionary,
+  lang,
+}: Props) {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = dictionary.school
 
   const form = useForm<BookSchema>({
     resolver: zodResolver(bookSchema),
@@ -59,30 +65,30 @@ export default function BookForm({ type = "create", bookData, schoolId, dictiona
       videoUrl: bookData?.videoUrl || "",
       summary: bookData?.summary || "",
     },
-  });
+  })
 
   const onSubmit = async (values: BookSchema) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       const result = await createBook({
         ...values,
         schoolId,
-      });
+      })
 
       if (result.success) {
-        toast.success(result.message);
-        router.push("/library/admin/books");
-        router.refresh();
+        toast.success(result.message)
+        router.push("/library/admin/books")
+        router.refresh()
       } else {
-        toast.error(result.error || t.library.messages.bookNotFound);
+        toast.error(result.error || t.library.messages.bookNotFound)
       }
     } catch (error) {
-      toast.error(t.common.messages.errorOccurred);
+      toast.error(t.common.messages.errorOccurred)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Form {...form}>
@@ -94,10 +100,7 @@ export default function BookForm({ type = "create", bookData, schoolId, dictiona
             <FormItem>
               <FormLabel>{t.library.admin.bookTitle}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder={t.library.admin.bookTitle}
-                  {...field}
-                />
+                <Input placeholder={t.library.admin.bookTitle} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -111,10 +114,7 @@ export default function BookForm({ type = "create", bookData, schoolId, dictiona
             <FormItem>
               <FormLabel>{t.library.admin.bookAuthor}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder={t.library.admin.bookAuthor}
-                  {...field}
-                />
+                <Input placeholder={t.library.admin.bookAuthor} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -214,10 +214,7 @@ export default function BookForm({ type = "create", bookData, schoolId, dictiona
             <FormItem>
               <FormLabel>{t.library.admin.coverColor}</FormLabel>
               <FormControl>
-                <ColorPicker
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+                <ColorPicker value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -280,18 +277,16 @@ export default function BookForm({ type = "create", bookData, schoolId, dictiona
         />
 
         <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-          >
+          <Button type="button" variant="outline" onClick={() => router.back()}>
             {t.library.admin.cancel}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? t.library.admin.creating : t.library.admin.addBookToLibrary}
+            {isSubmitting
+              ? t.library.admin.creating
+              : t.library.admin.addBookToLibrary}
           </Button>
         </div>
       </form>
     </Form>
-  );
+  )
 }

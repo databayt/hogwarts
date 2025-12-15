@@ -1,42 +1,45 @@
-"use server";
+"use server"
 
-import { generateText } from "ai";
-import { providers } from "@/lib/ai/providers";
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
+import { auth } from "@/auth"
+import { generateText } from "ai"
+
+import { providers } from "@/lib/ai/providers"
+import { getTenantContext } from "@/lib/tenant-context"
 
 interface TranslateInput {
-  title: string;
-  body: string;
-  sourceLanguage: "en" | "ar";
+  title: string
+  body: string
+  sourceLanguage: "en" | "ar"
 }
 
 interface TranslateResult {
-  success: boolean;
+  success: boolean
   data?: {
-    translatedTitle: string;
-    translatedBody: string;
-  };
-  error?: string;
+    translatedTitle: string
+    translatedBody: string
+  }
+  error?: string
 }
 
 /**
  * Translate announcement content using Groq AI (free, fast)
  * Uses llama-3.1-8b-instant for cost-effective translation
  */
-export async function translateAnnouncement(input: TranslateInput): Promise<TranslateResult> {
-  const session = await auth();
+export async function translateAnnouncement(
+  input: TranslateInput
+): Promise<TranslateResult> {
+  const session = await auth()
   if (!session?.user) {
-    return { success: false, error: "Not authenticated" };
+    return { success: false, error: "Not authenticated" }
   }
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
   if (!schoolId) {
-    return { success: false, error: "Missing school context" };
+    return { success: false, error: "Missing school context" }
   }
 
-  const targetLanguage = input.sourceLanguage === "en" ? "ar" : "en";
-  const targetLangName = targetLanguage === "en" ? "English" : "Arabic";
+  const targetLanguage = input.sourceLanguage === "en" ? "ar" : "en"
+  const targetLangName = targetLanguage === "en" ? "English" : "Arabic"
 
   try {
     // Translate title and body in parallel for speed
@@ -49,7 +52,7 @@ export async function translateAnnouncement(input: TranslateInput): Promise<Tran
         model: providers.groq.fast,
         prompt: `Translate the following text to ${targetLangName}. Return ONLY the translation, no explanations or additional text:\n\n${input.body}`,
       }),
-    ]);
+    ])
 
     return {
       success: true,
@@ -57,12 +60,12 @@ export async function translateAnnouncement(input: TranslateInput): Promise<Tran
         translatedTitle: titleResult.text.trim(),
         translatedBody: bodyResult.text.trim(),
       },
-    };
+    }
   } catch (error) {
-    console.error("[translateAnnouncement] Error:", error);
+    console.error("[translateAnnouncement] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Translation failed"
-    };
+      error: error instanceof Error ? error.message : "Translation failed",
+    }
   }
 }

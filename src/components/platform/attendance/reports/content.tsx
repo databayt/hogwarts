@@ -1,13 +1,39 @@
 "use client"
 
-import * as React from 'react'
-import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DateRangePicker } from '@/components/ui/date-picker'
+import * as React from "react"
+import { useCallback, useEffect, useState } from "react"
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  FileSpreadsheet,
+  ListFilter,
+  LoaderCircle,
+  RefreshCw,
+  Search,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { DateRangePicker } from "@/components/ui/date-picker"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -15,17 +41,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileSpreadsheet, Search, ListFilter, RefreshCw, LoaderCircle, CircleCheck, CircleX, Clock, CircleAlert } from "lucide-react";
-import { AttendanceReportExportButton } from "./export-button";
-import { cn } from '@/lib/utils'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+} from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import {
   getAttendanceReport,
+  getAttendanceStats,
   getClassesForSelection,
-  getAttendanceStats
-} from '../actions'
+} from "../actions"
+import { AttendanceReportExportButton } from "./export-button"
 
 interface ReportRecord {
   id: string
@@ -54,11 +78,12 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PRESENT: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  ABSENT: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  LATE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  EXCUSED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  SICK: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  PRESENT:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  ABSENT: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  LATE: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  EXCUSED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  SICK: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
 }
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -69,7 +94,11 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
   SICK: <CircleAlert className="h-4 w-4" />,
 }
 
-export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Props) {
+export function ReportsContent({
+  dictionary,
+  locale = "en",
+  initialFilters,
+}: Props) {
   const [records, setRecords] = useState<ReportRecord[]>([])
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,12 +106,18 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
 
   // ListFilter state
   const [dateRange, setDateRange] = useState({
-    from: initialFilters?.from ? new Date(initialFilters.from) : new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: initialFilters?.to ? new Date(initialFilters.to) : new Date()
+    from: initialFilters?.from
+      ? new Date(initialFilters.from)
+      : new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: initialFilters?.to ? new Date(initialFilters.to) : new Date(),
   })
-  const [selectedClass, setSelectedClass] = useState<string>(initialFilters?.classId || 'all')
-  const [selectedStatus, setSelectedStatus] = useState<string>(initialFilters?.status || 'all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedClass, setSelectedClass] = useState<string>(
+    initialFilters?.classId || "all"
+  )
+  const [selectedStatus, setSelectedStatus] = useState<string>(
+    initialFilters?.status || "all"
+  )
+  const [searchQuery, setSearchQuery] = useState("")
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -91,7 +126,13 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
   const pageSize = 50
 
   // Stats
-  const [stats, setStats] = useState<{ total: number; present: number; absent: number; late: number; attendanceRate: number } | null>(null)
+  const [stats, setStats] = useState<{
+    total: number
+    present: number
+    absent: number
+    late: number
+    attendanceRate: number
+  } | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -101,8 +142,9 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
         getAttendanceReport({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: selectedClass !== 'all' ? selectedClass : undefined,
-          status: selectedStatus !== 'all' ? [selectedStatus as any] : undefined,
+          classId: selectedClass !== "all" ? selectedClass : undefined,
+          status:
+            selectedStatus !== "all" ? [selectedStatus as any] : undefined,
           limit: pageSize,
           offset: (page - 1) * pageSize,
         }),
@@ -110,21 +152,27 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
         getAttendanceStats({
           dateFrom: dateRange.from.toISOString(),
           dateTo: dateRange.to.toISOString(),
-          classId: selectedClass !== 'all' ? selectedClass : undefined,
-        })
+          classId: selectedClass !== "all" ? selectedClass : undefined,
+        }),
       ])
 
       // Handle mixed return types
-      if (!('success' in reportResult && !reportResult.success) && 'records' in reportResult) {
+      if (
+        !("success" in reportResult && !reportResult.success) &&
+        "records" in reportResult
+      ) {
         if (reportResult.records) setRecords(reportResult.records as any)
         if (reportResult.total != null) setTotal(reportResult.total)
-        if (reportResult.totalPages != null) setTotalPages(reportResult.totalPages)
+        if (reportResult.totalPages != null)
+          setTotalPages(reportResult.totalPages)
       }
-      if (classesResult.success && classesResult.data) setClasses(classesResult.data.classes)
+      if (classesResult.success && classesResult.data)
+        setClasses(classesResult.data.classes)
       // statsResult returns raw data on success
-      if (!('success' in statsResult && !statsResult.success)) setStats(statsResult as any)
+      if (!("success" in statsResult && !statsResult.success))
+        setStats(statsResult as any)
     } catch (error) {
-      console.error('Error fetching report data:', error)
+      console.error("Error fetching report data:", error)
     } finally {
       setLoading(false)
     }
@@ -141,18 +189,20 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
   }, [fetchData])
 
   // Get selected class name for export
-  const selectedClassName = selectedClass !== 'all'
-    ? classes.find(c => c.id === selectedClass)?.name
-    : undefined
+  const selectedClassName =
+    selectedClass !== "all"
+      ? classes.find((c) => c.id === selectedClass)?.name
+      : undefined
 
   // Memoize filtered records to prevent recalculation on every render
   const filteredRecords = React.useMemo(() => {
     if (!searchQuery) return records
 
     const query = searchQuery.toLowerCase()
-    return records.filter(r =>
-      r.studentName.toLowerCase().includes(query) ||
-      r.className.toLowerCase().includes(query)
+    return records.filter(
+      (r) =>
+        r.studentName.toLowerCase().includes(query) ||
+        r.className.toLowerCase().includes(query)
     )
   }, [records, searchQuery])
 
@@ -163,12 +213,14 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+          <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
             <FileSpreadsheet className="h-6 w-6 text-purple-600 dark:text-purple-400" />
           </div>
           <div>
-            <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">Attendance Reports</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+              Attendance Reports
+            </h1>
+            <p className="text-muted-foreground text-sm">
               Generate and export detailed attendance reports
             </p>
           </div>
@@ -179,13 +231,15 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
             onClick={handleRefresh}
             disabled={refreshing}
           >
-            <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
+            <RefreshCw
+              className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")}
+            />
             Refresh
           </Button>
           <AttendanceReportExportButton
             filters={{
-              classId: selectedClass !== 'all' ? selectedClass : undefined,
-              status: selectedStatus !== 'all' ? selectedStatus : undefined,
+              classId: selectedClass !== "all" ? selectedClass : undefined,
+              status: selectedStatus !== "all" ? selectedStatus : undefined,
               from: dateRange.from.toISOString(),
               to: dateRange.to.toISOString(),
             }}
@@ -200,11 +254,15 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Records</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Records
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">{stats.attendanceRate}% attendance rate</p>
+              <p className="text-muted-foreground text-xs">
+                {stats.attendanceRate}% attendance rate
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -213,7 +271,9 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
               <CircleCheck className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.present}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.present}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -222,7 +282,9 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.late}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.late}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -231,7 +293,9 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
               <CircleX className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.absent}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -240,7 +304,7 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
       {/* Filters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <ListFilter className="h-4 w-4" />
             Filters
           </CardTitle>
@@ -253,24 +317,41 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
                 from={dateRange.from}
                 to={dateRange.to}
                 onSelect={(range) => {
-                  setDateRange({ from: range.from || new Date(), to: range.to || new Date() })
+                  setDateRange({
+                    from: range.from || new Date(),
+                    to: range.to || new Date(),
+                  })
                   setPage(1)
                 }}
                 placeholder="Select date range"
               />
             </div>
-            <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setPage(1) }}>
+            <Select
+              value={selectedClass}
+              onValueChange={(v) => {
+                setSelectedClass(v)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
-                {classes.map(cls => (
-                  <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedStatus} onValueChange={(v) => { setSelectedStatus(v); setPage(1) }}>
+            <Select
+              value={selectedStatus}
+              onValueChange={(v) => {
+                setSelectedStatus(v)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -283,8 +364,8 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
                 <SelectItem value="SICK">Sick</SelectItem>
               </SelectContent>
             </Select>
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative min-w-[200px] flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
               <Input
                 placeholder="Search student or class..."
                 value={searchQuery}
@@ -311,18 +392,18 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
+                onClick={() => setPage((p) => p - 1)}
               >
                 Previous
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 Page {page} of {totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
               >
                 Next
               </Button>
@@ -332,13 +413,15 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" />
+              <LoaderCircle className="text-muted-foreground h-8 w-8 animate-spin" />
             </div>
           ) : filteredRecords.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <FileSpreadsheet className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <div className="text-muted-foreground py-12 text-center">
+              <FileSpreadsheet className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p>No records found</p>
-              <p className="text-sm">Adjust filters or date range to see data</p>
+              <p className="text-sm">
+                Adjust filters or date range to see data
+              </p>
             </div>
           ) : (
             <ScrollArea className="h-[500px]">
@@ -364,28 +447,36 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
                       <TableCell>{record.studentName}</TableCell>
                       <TableCell>{record.className}</TableCell>
                       <TableCell>
-                        <Badge className={cn("gap-1", STATUS_COLORS[record.status])}>
+                        <Badge
+                          className={cn("gap-1", STATUS_COLORS[record.status])}
+                        >
                           {STATUS_ICONS[record.status]}
                           {record.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {record.method.replace('_', ' ')}
+                          {record.method.replace("_", " ")}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         {record.checkInTime
-                          ? new Date(record.checkInTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-                          : '-'}
+                          ? new Date(record.checkInTime).toLocaleTimeString(
+                              locale,
+                              { hour: "2-digit", minute: "2-digit" }
+                            )
+                          : "-"}
                       </TableCell>
                       <TableCell>
                         {record.checkOutTime
-                          ? new Date(record.checkOutTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-                          : '-'}
+                          ? new Date(record.checkOutTime).toLocaleTimeString(
+                              locale,
+                              { hour: "2-digit", minute: "2-digit" }
+                            )
+                          : "-"}
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">
-                        {record.notes || '-'}
+                        {record.notes || "-"}
                       </TableCell>
                     </TableRow>
                   ))}

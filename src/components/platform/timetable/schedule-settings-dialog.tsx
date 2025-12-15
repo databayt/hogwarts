@@ -1,13 +1,27 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useEffect, useState } from "react"
 
-const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 type Props = {
   open: boolean
@@ -16,10 +30,17 @@ type Props = {
   onSaved?: () => void
 }
 
-export function ScheduleSettingsDialog({ open, onOpenChange, termId, onSaved }: Props) {
-  const [workingDays, setWorkingDays] = useState<number[]>([0,1,2,3,4])
-  const [periods, setPeriods] = useState<Array<{ id: string; name: string }>>([])
-  const [lunchAfter, setLunchAfter] = useState<string>('')
+export function ScheduleSettingsDialog({
+  open,
+  onOpenChange,
+  termId,
+  onSaved,
+}: Props) {
+  const [workingDays, setWorkingDays] = useState<number[]>([0, 1, 2, 3, 4])
+  const [periods, setPeriods] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
+  const [lunchAfter, setLunchAfter] = useState<string>("")
   const disabled = !termId
 
   useEffect(() => {
@@ -31,22 +52,34 @@ export function ScheduleSettingsDialog({ open, onOpenChange, termId, onSaved }: 
       ])
       const cfg = await cfgRes.json()
       const pr = await perRes.json()
-      setWorkingDays(cfg.config?.workingDays ?? [0,1,2,3,4])
-      setLunchAfter(cfg.config?.defaultLunchAfterPeriod != null ? String(cfg.config.defaultLunchAfterPeriod) : '')
+      setWorkingDays(cfg.config?.workingDays ?? [0, 1, 2, 3, 4])
+      setLunchAfter(
+        cfg.config?.defaultLunchAfterPeriod != null
+          ? String(cfg.config.defaultLunchAfterPeriod)
+          : ""
+      )
       setPeriods(pr.periods ?? [])
     })()
   }, [termId])
 
   const toggleDay = (d: number) => {
-    setWorkingDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a,b)=>a-b)))
+    setWorkingDays((prev) =>
+      prev.includes(d)
+        ? prev.filter((x) => x !== d)
+        : [...prev, d].sort((a, b) => a - b)
+    )
   }
 
   const onSave = async () => {
     if (!termId) return
-    await fetch('/api/schedule/config', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ termId, workingDays, defaultLunchAfterPeriod: lunchAfter ? Number(lunchAfter) : null }),
+    await fetch("/api/schedule/config", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        termId,
+        workingDays,
+        defaultLunchAfterPeriod: lunchAfter ? Number(lunchAfter) : null,
+      }),
     })
     onSaved?.()
     onOpenChange(false)
@@ -64,7 +97,11 @@ export function ScheduleSettingsDialog({ open, onOpenChange, termId, onSaved }: 
             <div className="flex flex-wrap gap-3">
               {DAY_LABELS.map((label, idx) => (
                 <label key={label} className="flex items-center gap-2">
-                  <Checkbox checked={workingDays.includes(idx)} onCheckedChange={() => toggleDay(idx)} disabled={disabled} />
+                  <Checkbox
+                    checked={workingDays.includes(idx)}
+                    onCheckedChange={() => toggleDay(idx)}
+                    disabled={disabled}
+                  />
                   <span>{label}</span>
                 </label>
               ))}
@@ -73,22 +110,26 @@ export function ScheduleSettingsDialog({ open, onOpenChange, termId, onSaved }: 
           <div>
             <Label className="mb-2 block">Lunch after period</Label>
             <Select value={lunchAfter} onValueChange={setLunchAfter}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Not set" /></SelectTrigger>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Not set" />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Not set</SelectItem>
                 {periods.map((p, idx) => (
-                  <SelectItem key={p.id} value={String(idx)}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={String(idx)}>
+                    {p.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onSave} disabled={disabled}>Save</Button>
+          <Button onClick={onSave} disabled={disabled}>
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-
-

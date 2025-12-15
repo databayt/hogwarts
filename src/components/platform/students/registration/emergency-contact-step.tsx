@@ -1,15 +1,28 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CircleAlert } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CircleAlert } from "lucide-react"
+import { UseFormReturn } from "react-hook-form"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface EmergencyContactStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
 const relationshipOptions = [
@@ -23,16 +36,21 @@ const relationshipOptions = [
   "Brother",
   "Sister",
   "Other",
-];
+]
 
-export function EmergencyContactStep({ form, dictionary }: EmergencyContactStepProps) {
+export function EmergencyContactStep({
+  form,
+  dictionary,
+}: EmergencyContactStepProps) {
   return (
     <div className="grid gap-6">
       <Alert>
         <CircleAlert className="h-4 w-4" />
         <AlertTitle>Important</AlertTitle>
         <AlertDescription>
-          Emergency contact information will be used only in case of emergencies. Please ensure the contact person is available and reachable.
+          Emergency contact information will be used only in case of
+          emergencies. Please ensure the contact person is available and
+          reachable.
         </AlertDescription>
       </Alert>
 
@@ -72,7 +90,10 @@ export function EmergencyContactStep({ form, dictionary }: EmergencyContactStepP
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Relationship *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select relationship" />
@@ -93,15 +114,20 @@ export function EmergencyContactStep({ form, dictionary }: EmergencyContactStepP
         </div>
       </div>
 
-      <div className="rounded-lg bg-muted p-4">
+      <div className="bg-muted rounded-lg p-4">
         <h5 className="mb-2">Tips for Emergency Contacts</h5>
-        <ul className="text-sm text-muted-foreground space-y-1">
+        <ul className="text-muted-foreground space-y-1 text-sm">
           <li>• Choose someone who is usually available during school hours</li>
-          <li>• Ensure they are authorized to make medical decisions if needed</li>
+          <li>
+            • Ensure they are authorized to make medical decisions if needed
+          </li>
           <li>• Verify the phone number is correct and active</li>
-          <li>• Consider adding an alternate emergency contact in guardian information</li>
+          <li>
+            • Consider adding an alternate emergency contact in guardian
+            information
+          </li>
         </ul>
       </div>
     </div>
-  );
+  )
 }

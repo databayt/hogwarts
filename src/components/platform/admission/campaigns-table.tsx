@@ -1,33 +1,35 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useDeferredValue } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import type { CampaignRow } from "./campaigns-columns";
-import { getCampaignColumns } from "./campaigns-columns";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
+import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Briefcase, Calendar, Users } from "lucide-react"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
-  PlatformToolbar,
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getCampaigns } from "./actions";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { getCampaigns } from "./actions"
+import type { CampaignRow } from "./campaigns-columns"
+import { getCampaignColumns } from "./campaigns-columns"
 
 interface CampaignsTableProps {
-  initialData: CampaignRow[];
-  total: number;
-  dictionary: Dictionary["school"]["admission"];
-  lang: Locale;
-  perPage?: number;
+  initialData: CampaignRow[]
+  total: number
+  dictionary: Dictionary["school"]["admission"]
+  lang: Locale
+  perPage?: number
 }
 
 export function CampaignsTable({
@@ -37,19 +39,19 @@ export function CampaignsTable({
   lang,
   perPage = 20,
 }: CampaignsTableProps) {
-  const t = dictionary;
-  const router = useRouter();
-  const { openModal } = useModal();
+  const t = dictionary
+  const router = useRouter()
+  const { openModal } = useModal()
 
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
-  const [searchInput, setSearchInput] = useState("");
-  const deferredSearch = useDeferredValue(searchInput);
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  const [searchInput, setSearchInput] = useState("")
+  const deferredSearch = useDeferredValue(searchInput)
 
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
-    if (deferredSearch) f.name = deferredSearch;
-    return f;
-  }, [deferredSearch]);
+    const f: Record<string, unknown> = {}
+    if (deferredSearch) f.name = deferredSearch
+    return f
+  }, [deferredSearch])
 
   const {
     data,
@@ -66,16 +68,19 @@ export function CampaignsTable({
       const result = await getCampaigns({
         ...params,
         name: deferredSearch || undefined,
-      });
+      })
       if (result.success) {
-        return { rows: result.data.rows as CampaignRow[], total: result.data.total };
+        return {
+          rows: result.data.rows as CampaignRow[],
+          total: result.data.total,
+        }
       }
-      return { rows: [], total: 0 };
+      return { rows: [], total: 0 }
     },
     filters,
-  });
+  })
 
-  const columns = useMemo(() => getCampaignColumns(t, lang), [t, lang]);
+  const columns = useMemo(() => getCampaignColumns(t, lang), [t, lang])
 
   const { table } = useDataTable<CampaignRow>({
     data,
@@ -88,29 +93,29 @@ export function CampaignsTable({
         pageSize: data.length || perPage,
       },
     },
-  });
+  })
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-  }, []);
+    setSearchInput(value)
+  }, [])
 
   const handleView = useCallback(
     (id: string) => {
-      router.push(`/admission/campaigns/${id}`);
+      router.push(`/admission/campaigns/${id}`)
     },
     [router]
-  );
+  )
 
   const getStatusBadge = (status: string) => {
-    const label = t?.status?.[status as keyof typeof t.status] || status;
+    const label = t?.status?.[status as keyof typeof t.status] || status
     const variant =
       status === "OPEN"
         ? "default"
         : status === "DRAFT"
-        ? "outline"
-        : "secondary";
-    return { label, variant: variant as "default" | "outline" | "secondary" };
-  };
+          ? "outline"
+          : "secondary"
+    return { label, variant: variant as "default" | "outline" | "secondary" }
+  }
 
   const toolbarTranslations = {
     search: t?.campaigns?.campaignName || "Campaign name",
@@ -121,7 +126,7 @@ export function CampaignsTable({
     export: "Export",
     exportCSV: "Export CSV",
     exporting: "Exporting...",
-  };
+  }
 
   return (
     <>
@@ -150,13 +155,16 @@ export function CampaignsTable({
           {data.length === 0 ? (
             <GridEmptyState
               title={t?.campaigns?.title || "Campaigns"}
-              description={t?.campaigns?.createCampaign || "Create a campaign to get started"}
+              description={
+                t?.campaigns?.createCampaign ||
+                "Create a campaign to get started"
+              }
               icon={<Briefcase className="h-12 w-12" />}
             />
           ) : (
             <GridContainer columns={3}>
               {data.map((campaign) => {
-                const statusBadge = getStatusBadge(campaign.status);
+                const statusBadge = getStatusBadge(campaign.status)
                 return (
                   <GridCard
                     key={campaign.id}
@@ -183,23 +191,23 @@ export function CampaignsTable({
                     actionsLabel={t?.columns?.actions || "Actions"}
                     onClick={() => handleView(campaign.id)}
                   >
-                    <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground mt-2 flex gap-2 text-xs">
                       <Calendar className="h-3 w-3" />
                       {new Date(campaign.startDate).toLocaleDateString()} -{" "}
                       {new Date(campaign.endDate).toLocaleDateString()}
                     </div>
                   </GridCard>
-                );
+                )
               })}
             </GridContainer>
           )}
 
           {hasMore && (
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={loadMore}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading ? "Loading..." : "Load More"}
               </button>
@@ -211,7 +219,7 @@ export function CampaignsTable({
       <Modal
         content={
           <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">
+            <h2 className="mb-4 text-lg font-semibold">
               {t?.campaigns?.createCampaign || "Create Campaign"}
             </h2>
             <p className="text-muted-foreground">
@@ -221,5 +229,5 @@ export function CampaignsTable({
         }
       />
     </>
-  );
+  )
 }

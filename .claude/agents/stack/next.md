@@ -30,6 +30,7 @@ model: sonnet
 ## Checklist
 
 **Server Components** (default):
+
 - [ ] Async data fetching
 - [ ] Include schoolId in queries
 - [ ] error.tsx and loading.tsx
@@ -37,12 +38,14 @@ model: sonnet
 - [ ] Streaming with Suspense
 
 **Client Components** (when needed):
+
 - [ ] "use client" directive
 - [ ] Uses hooks/interactivity
 - [ ] Minimized bundle
 - [ ] Dynamic imports for heavy components
 
 **Server Actions**:
+
 - [ ] "use server" directive
 - [ ] Zod validation
 - [ ] Include schoolId
@@ -50,6 +53,7 @@ model: sonnet
 - [ ] Error handling with try/catch
 
 **Performance**:
+
 - [ ] Streaming with Suspense
 - [ ] Parallel data fetching
 - [ ] Image optimization
@@ -59,19 +63,22 @@ model: sonnet
 ## Common Patterns
 
 ### Mirror Pattern
+
 ```
 app/[lang]/feature/page.tsx → import FeatureContent from '@/components/feature/content'
 ```
 
 ### Multi-tenant Query
+
 ```typescript
 const schoolId = session?.user?.schoolId
 const data = await db.model.findMany({
-  where: { schoolId }
+  where: { schoolId },
 })
 ```
 
 ### Server Action Pattern
+
 ```typescript
 "use server"
 export async function createItem(data: FormData) {

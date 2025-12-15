@@ -1,40 +1,48 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { KpiCard } from "@/components/operator/dashboard/card";
-import { KPI_SUPPORTING } from "@/components/operator/dashboard/config";
-import { useSearchParams } from "next/navigation";
+import * as React from "react"
+import { useSearchParams } from "next/navigation"
+
+import { KpiCard } from "@/components/operator/dashboard/card"
+import { KPI_SUPPORTING } from "@/components/operator/dashboard/config"
 
 type Totals = {
-  totalSchools: number;
-  activeSchools: number;
-  totalUsers: number;
-  totalStudents: number;
-};
+  totalSchools: number
+  activeSchools: number
+  totalUsers: number
+  totalStudents: number
+}
 
 export function MetricsCards({ totals }: { totals: Totals }) {
-  const sp = useSearchParams();
-  const period = sp.get("period") ?? "7d";
-  const [deltas, setDeltas] = React.useState<{ schools: number; users: number; students: number } | null>(null);
+  const sp = useSearchParams()
+  const period = sp.get("period") ?? "7d"
+  const [deltas, setDeltas] = React.useState<{
+    schools: number
+    users: number
+    students: number
+  } | null>(null)
 
   React.useEffect(() => {
-    const controller = new AbortController();
+    const controller = new AbortController()
     const run = async () => {
       try {
-        const res = await fetch(`/operator/overview/metrics?period=${period}`, { cache: "no-store", signal: controller.signal });
-        if (!res.ok) return;
-        const json = await res.json();
-        setDeltas(json.deltas ?? null);
+        const res = await fetch(`/operator/overview/metrics?period=${period}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        })
+        if (!res.ok) return
+        const json = await res.json()
+        setDeltas(json.deltas ?? null)
       } catch {
         // ignore
       }
-    };
-    void run();
-    return () => controller.abort();
-  }, [period]);
+    }
+    void run()
+    return () => controller.abort()
+  }, [period])
 
   return (
-    <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4'>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         title={KPI_SUPPORTING.totalSchools.label}
         value={totals.totalSchools}
@@ -74,13 +82,5 @@ export function MetricsCards({ totals }: { totals: Totals }) {
         container
       />
     </div>
-  );
+  )
 }
-
-
-
-
-
-
-
-

@@ -25,11 +25,11 @@
   }
 
   tr {
-    @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+    @apply hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors;
   }
 
   th {
-    @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+    @apply text-muted-foreground h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0;
   }
 
   td {
@@ -40,12 +40,12 @@
 @layer utilities {
   /* Lead text - Large intro paragraphs */
   .lead {
-    @apply text-xl text-muted-foreground;
+    @apply text-muted-foreground text-xl;
   }
 
   /* Muted text - Secondary/hint text */
   .muted {
-    @apply text-sm text-muted-foreground;
+    @apply text-muted-foreground text-sm;
   }
 
   /* Text balance for headings */

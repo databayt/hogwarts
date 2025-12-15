@@ -9,6 +9,7 @@ The Banking module manages school bank accounts, processes transactions, handles
 ## Key Features
 
 ### 1. Bank Account Management
+
 - Multiple bank account support
 - Account types (checking, savings, payroll, etc.)
 - Real-time balance tracking
@@ -16,6 +17,7 @@ The Banking module manages school bank accounts, processes transactions, handles
 - Multi-currency support
 
 ### 2. Transaction Management
+
 - Manual transaction entry
 - Bulk import from bank statements
 - Transaction categorization
@@ -23,6 +25,7 @@ The Banking module manages school bank accounts, processes transactions, handles
 - Duplicate detection
 
 ### 3. Bank Reconciliation
+
 - Monthly reconciliation workflow
 - Automatic matching algorithm
 - Manual matching interface
@@ -30,12 +33,14 @@ The Banking module manages school bank accounts, processes transactions, handles
 - Reconciliation reports
 
 ### 4. Cash Flow Management
+
 - Cash position tracking
 - Forecast cash flow
 - Alert on low balances
 - Multi-account cash pooling
 
 ### 5. Integration
+
 - Import bank statements (CSV, OFX, QFX)
 - Export transactions
 - Connect with accounting module
@@ -44,6 +49,7 @@ The Banking module manages school bank accounts, processes transactions, handles
 ## Data Models
 
 ### BankAccount
+
 ```typescript
 {
   id: string
@@ -62,6 +68,7 @@ The Banking module manages school bank accounts, processes transactions, handles
 ```
 
 ### Account Types
+
 ```typescript
 enum AccountType {
   CHECKING          // Main operating account
@@ -74,6 +81,7 @@ enum AccountType {
 ```
 
 ### BankTransaction
+
 ```typescript
 {
   id: string
@@ -94,6 +102,7 @@ enum AccountType {
 ```
 
 ### BankReconciliation
+
 ```typescript
 {
   id: string
@@ -116,11 +125,13 @@ enum AccountType {
 ### Bank Account Management
 
 #### `createBankAccountWithRBAC(data)`
+
 Creates a new bank account.
 
 **Permissions Required:** `banking:create`
 
 **Example:**
+
 ```typescript
 const result = await createBankAccountWithRBAC({
   accountName: "Main Operating Account",
@@ -129,16 +140,18 @@ const result = await createBankAccountWithRBAC({
   accountType: "CHECKING",
   currency: "USD",
   currentBalance: 50000,
-  isPrimary: true
+  isPrimary: true,
 })
 ```
 
 #### `updateBankAccountWithRBAC(id, data)`
+
 Updates bank account details.
 
 **Permissions Required:** `banking:edit`
 
 #### `deactivateBankAccountWithRBAC(id)`
+
 Deactivates a bank account (sets isActive = false).
 
 **Permissions Required:** `banking:delete`
@@ -146,25 +159,28 @@ Deactivates a bank account (sets isActive = false).
 ### Transaction Management
 
 #### `createBankTransactionWithRBAC(data)`
+
 Records a manual bank transaction.
 
 **Permissions Required:** `banking:create`
 
 **Example:**
+
 ```typescript
 const result = await createBankTransactionWithRBAC({
   bankAccountId: "bank_123",
   date: new Date("2024-11-15"),
   description: "Payment to ABC Supplies",
-  amount: 1250.00,
+  amount: 1250.0,
   type: "DEBIT",
   category: "OPERATING_EXPENSE",
   payee: "ABC Supplies",
-  checkNumber: "1001"
+  checkNumber: "1001",
 })
 ```
 
 **Process:**
+
 1. Validates transaction data
 2. Updates bank account balance
 3. Creates journal entry (double-entry)
@@ -172,27 +188,28 @@ const result = await createBankTransactionWithRBAC({
 5. Marks as unreconciled
 
 #### `importBankStatementWithRBAC(bankAccountId, file)`
+
 Imports transactions from bank statement file.
 
 **Permissions Required:** `banking:create`
 
 **Supported Formats:**
+
 - CSV
 - OFX (Open Financial Exchange)
 - QFX (Quicken Financial Exchange)
 
 **Example:**
+
 ```typescript
-const result = await importBankStatementWithRBAC(
-  bankAccountId,
-  statementFile
-)
+const result = await importBankStatementWithRBAC(bankAccountId, statementFile)
 
 console.log(`Imported ${result.imported} transactions`)
 console.log(`Skipped ${result.skipped} duplicates`)
 ```
 
 **Import Process:**
+
 1. Parses file format
 2. Validates transaction data
 3. Detects duplicates
@@ -203,17 +220,19 @@ console.log(`Skipped ${result.skipped} duplicates`)
 ### Bank Reconciliation
 
 #### `startBankReconciliationWithRBAC(data)`
+
 Initiates a new bank reconciliation.
 
 **Permissions Required:** `banking:edit`
 
 **Example:**
+
 ```typescript
 const result = await startBankReconciliationWithRBAC({
   bankAccountId: "bank_123",
   periodStart: new Date("2024-11-01"),
   periodEnd: new Date("2024-11-30"),
-  statementBalance: 48750.50
+  statementBalance: 48750.5,
 })
 
 if (result.success && result.data) {
@@ -224,6 +243,7 @@ if (result.success && result.data) {
 ```
 
 **Reconciliation Steps:**
+
 1. Fetches all transactions in period
 2. Identifies unreconciled transactions
 3. Calculates book balance
@@ -231,11 +251,13 @@ if (result.success && result.data) {
 5. Highlights discrepancies
 
 #### `matchTransactionWithRBAC(reconciliationId, transactionId, statementLineId)`
+
 Matches a book transaction with a statement line.
 
 **Permissions Required:** `banking:edit`
 
 **Example:**
+
 ```typescript
 const result = await matchTransactionWithRBAC(
   reconciliationId,
@@ -245,17 +267,20 @@ const result = await matchTransactionWithRBAC(
 ```
 
 **Matching Rules:**
+
 - Same date (±3 days)
 - Same amount
 - Similar description (fuzzy match)
 - Same type (debit/credit)
 
 #### `completeBankReconciliationWithRBAC(reconciliationId)`
+
 Finalizes the reconciliation process.
 
 **Permissions Required:** `banking:approve`
 
 **Example:**
+
 ```typescript
 const result = await completeBankReconciliationWithRBAC(reconciliationId)
 
@@ -267,6 +292,7 @@ if (result.success) {
 ```
 
 **Completion Process:**
+
 1. Verifies all transactions matched
 2. Posts adjustments (bank fees, interest, etc.)
 3. Updates last reconciled date and balance
@@ -276,9 +302,11 @@ if (result.success) {
 ### Cash Management
 
 #### `getCashPositionWithRBAC()`
+
 Gets current cash position across all accounts.
 
 **Returns:**
+
 ```typescript
 {
   totalCash: number
@@ -295,9 +323,11 @@ Gets current cash position across all accounts.
 ```
 
 #### `forecastCashFlowWithRBAC(days)`
+
 Forecasts cash flow for next N days.
 
 **Returns:**
+
 ```typescript
 {
   currentCash: number
@@ -348,21 +378,25 @@ Forecasts cash flow for next N days.
 The system uses a 3-tier matching algorithm:
 
 **Tier 1: Exact Match (95% confidence)**
+
 - Same date
 - Same amount
 - Similar description
 
 **Tier 2: Probable Match (80% confidence)**
+
 - Date within ±2 days
 - Amount within ±$0.01
 - Description similarity >70%
 
 **Tier 3: Possible Match (60% confidence)**
+
 - Date within ±5 days
 - Amount within ±$1.00
 - Description similarity >50%
 
 **Manual Review Required:**
+
 - Confidence <60%
 - Multiple possible matches
 - Unusual transactions
@@ -371,41 +405,46 @@ The system uses a 3-tier matching algorithm:
 
 ### Common Categories
 
-| Category | Type | Examples |
-|----------|------|----------|
-| **Tuition Revenue** | Credit | Student fee payments |
-| **Vendor Payments** | Debit | Supplier invoices |
-| **Payroll** | Debit | Salary disbursements |
-| **Utilities** | Debit | Electric, water, internet |
-| **Bank Fees** | Debit | Service charges, wire fees |
-| **Interest Income** | Credit | Savings interest |
-| **Loan Payment** | Debit | Principal + interest |
-| **Refunds** | Debit | Student refunds |
-| **Donations** | Credit | Philanthropic contributions |
+| Category            | Type   | Examples                    |
+| ------------------- | ------ | --------------------------- |
+| **Tuition Revenue** | Credit | Student fee payments        |
+| **Vendor Payments** | Debit  | Supplier invoices           |
+| **Payroll**         | Debit  | Salary disbursements        |
+| **Utilities**       | Debit  | Electric, water, internet   |
+| **Bank Fees**       | Debit  | Service charges, wire fees  |
+| **Interest Income** | Credit | Savings interest            |
+| **Loan Payment**    | Debit  | Principal + interest        |
+| **Refunds**         | Debit  | Student refunds             |
+| **Donations**       | Credit | Philanthropic contributions |
 
 ## Integration with Other Modules
 
 ### Accounts Module
+
 - Creates journal entries for all transactions
 - Maintains double-entry bookkeeping
 - Links to chart of accounts
 
 ### Payroll Module
+
 - Tracks payroll disbursements
 - Reconciles payroll account
 - Monitors payroll tax payments
 
 ### Expenses Module
+
 - Links expense payments to bank transactions
 - Tracks vendor payments
 - Manages reimbursements
 
 ### Fees Module
+
 - Tracks fee payments received
 - Identifies student payments
 - Manages refunds
 
 ### Budget Module
+
 - Monitors cash vs budget
 - Alerts on cash shortfalls
 - Tracks cash flow against forecast
@@ -414,44 +453,49 @@ The system uses a 3-tier matching algorithm:
 
 ### Permissions
 
-| Role | View | Create | Edit | Delete | Reconcile | View All |
-|------|------|--------|------|--------|-----------|----------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STAFF** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STUDENT** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Role           | View | Create | Edit | Delete | Reconcile | View All |
+| -------------- | ---- | ------ | ---- | ------ | --------- | -------- |
+| **ADMIN**      | ✅   | ✅     | ✅   | ✅     | ✅        | ✅       |
+| **ACCOUNTANT** | ✅   | ✅     | ✅   | ✅     | ✅        | ✅       |
+| **TEACHER**    | ❌   | ❌     | ❌   | ❌     | ❌        | ❌       |
+| **STAFF**      | ❌   | ❌     | ❌   | ❌     | ❌        | ❌       |
+| **STUDENT**    | ❌   | ❌     | ❌   | ❌     | ❌        | ❌       |
+| **GUARDIAN**   | ❌   | ❌     | ❌   | ❌     | ❌        | ❌       |
 
 **Note:** Banking access is restricted to finance personnel only.
 
 ## Best Practices
 
 ### 1. Account Security
+
 - Limit access to banking module
 - Use two-factor authentication
 - Log all banking activities
 - Regular security audits
 
 ### 2. Reconciliation Discipline
+
 - Reconcile monthly (no exceptions)
 - Complete within 15 days
 - Investigate all discrepancies
 - Document unusual items
 
 ### 3. Cash Management
+
 - Maintain minimum cash balance ($10K-$50K)
 - Monitor daily cash position
 - Forecast cash needs weekly
 - Set up low balance alerts
 
 ### 4. Transaction Entry
+
 - Enter transactions daily
 - Attach receipts/invoices
 - Use consistent descriptions
 - Categorize accurately
 
 ### 5. Statement Management
+
 - Keep statements for 7 years
 - Store electronically (encrypted)
 - Back up regularly
@@ -493,9 +537,11 @@ The system uses a 3-tier matching algorithm:
 ## Troubleshooting
 
 ### Reconciliation Won't Balance
+
 **Issue:** Difference between book and statement balance
 
 **Solution:**
+
 1. Verify statement balance entered correctly
 2. Check for missing transactions
 3. Look for duplicate entries
@@ -504,9 +550,11 @@ The system uses a 3-tier matching algorithm:
 6. Contact bank if truly unresolvable
 
 ### Transaction Import Failed
+
 **Issue:** Cannot import bank statement
 
 **Solution:**
+
 - Verify file format (CSV, OFX, QFX)
 - Check file isn't corrupted
 - Ensure proper column mapping
@@ -514,9 +562,11 @@ The system uses a 3-tier matching algorithm:
 - Manual entry as last resort
 
 ### Duplicate Transactions
+
 **Issue:** Same transaction appears twice
 
 **Solution:**
+
 - Use duplicate detection feature
 - Check import history
 - Delete duplicate (keep original)

@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function SkeletonSection({ card = false }: { card?: boolean }) {
   return (
@@ -21,5 +21,5 @@ export function SkeletonSection({ card = false }: { card?: boolean }) {
         )}
       </div>
     </div>
-  );
+  )
 }

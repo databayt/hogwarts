@@ -30,16 +30,16 @@ src/lib/document-extraction/
 
 ## Supported Onboarding Steps
 
-| Step | Extracted Data |
-|------|----------------|
-| `title` | School name, subdomain, tagline |
-| `description` | Mission, vision, values, description |
-| `location` | Country, state, city, address, contact info |
-| `capacity` | Student/teacher/class counts, facilities |
-| `price` | Currency, tuition, registration, other fees |
-| `branding` | Colors, design guidelines |
-| `import` | Bulk data (students, teachers, classes) |
-| `legal` | Terms, privacy policy, licenses |
+| Step          | Extracted Data                              |
+| ------------- | ------------------------------------------- |
+| `title`       | School name, subdomain, tagline             |
+| `description` | Mission, vision, values, description        |
+| `location`    | Country, state, city, address, contact info |
+| `capacity`    | Student/teacher/class counts, facilities    |
+| `price`       | Currency, tuition, registration, other fees |
+| `branding`    | Colors, design guidelines                   |
+| `import`      | Bulk data (students, teachers, classes)     |
+| `legal`       | Terms, privacy policy, licenses             |
 
 ## Usage
 
@@ -86,16 +86,16 @@ export function DocumentUpload() {
 ### Server-Side (Direct Usage)
 
 ```typescript
-import { extractFromDocument } from '@/lib/document-extraction'
+import { extractFromDocument } from "@/lib/document-extraction"
 
-const result = await extractFromDocument(file, 'location', {
+const result = await extractFromDocument(file, "location", {
   maxFileSize: 10 * 1024 * 1024, // 10MB
-  allowedTypes: ['image/jpeg', 'application/pdf'],
+  allowedTypes: ["image/jpeg", "application/pdf"],
 })
 
 if (result.success) {
-  console.log('Extracted fields:', result.data.fields)
-  console.log('Confidence:', result.data.confidence)
+  console.log("Extracted fields:", result.data.fields)
+  console.log("Confidence:", result.data.confidence)
 }
 ```
 
@@ -131,36 +131,41 @@ Response:
 ## File Type Handling
 
 ### Images (JPG, PNG, WebP)
+
 - Direct upload to Claude Vision API
 - Best for scanned documents, brochures, flyers
 
 ### PDF
+
 - Text extraction using `pdf-parse`
 - First page converted to image for Vision API
 - Best for forms, official documents
 
 ### Word (DOC/DOCX)
+
 - Text extraction using `mammoth`
 - Structured data extraction from formatted text
 - Best for mission statements, descriptions
 
 ### Excel (XLS/XLSX)
+
 - Sheet parsing using `xlsx`
 - Converts to readable text format
 - Best for capacity data, fee schedules
 
 ### CSV
+
 - Parsing using `papaparse`
 - Converts to structured text
 - Best for bulk import data
 
 ## Confidence Levels
 
-| Level | Score | Criteria |
-|-------|-------|----------|
-| `high` | 1.0 | Value found in raw text, structured data |
-| `medium` | 0.6 | Derived from context, long text |
-| `low` | 0.3 | Low certainty, missing context |
+| Level    | Score | Criteria                                 |
+| -------- | ----- | ---------------------------------------- |
+| `high`   | 1.0   | Value found in raw text, structured data |
+| `medium` | 0.6   | Derived from context, long text          |
+| `low`    | 0.3   | Low certainty, missing context           |
 
 ## Validation
 
@@ -184,7 +189,7 @@ export const locationExtractionSchema = z.object({
 const result = await extractFromDocument(file, stepId)
 
 if (!result.success) {
-  console.error('Extraction failed:', result.error)
+  console.error("Extraction failed:", result.error)
   // Handle error (show user message, retry, etc.)
 }
 ```
@@ -194,11 +199,11 @@ if (!result.success) {
 The API route is protected by authentication. Consider implementing rate limiting for production:
 
 ```typescript
-import { Ratelimit } from '@upstash/ratelimit'
+import { Ratelimit } from "@upstash/ratelimit"
 
 const ratelimit = new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(10, '1 h'), // 10 requests per hour
+  limiter: Ratelimit.slidingWindow(10, "1 h"), // 10 requests per hour
 })
 ```
 
@@ -211,10 +216,12 @@ const ratelimit = new Ratelimit({
 ## Cost Estimation
 
 Using Claude 3.5 Sonnet:
+
 - Input: $3 per 1M tokens
 - Output: $15 per 1M tokens
 
 Typical extraction:
+
 - Input tokens: ~500-1000 (image + prompt)
 - Output tokens: ~100-200 (structured data)
 - Cost per extraction: ~$0.005-0.01
@@ -222,11 +229,13 @@ Typical extraction:
 ## Environment Variables
 
 Required:
+
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 Optional:
+
 ```bash
 NEXT_PUBLIC_MAX_UPLOAD_SIZE=10485760  # 10MB
 ```
@@ -254,19 +263,19 @@ NEXT_PUBLIC_MAX_UPLOAD_SIZE=10485760  # 10MB
 
 ```typescript
 // Example test
-describe('Document Extraction', () => {
-  it('should extract school name from PDF', async () => {
-    const file = new File([pdfBuffer], 'school.pdf', {
-      type: 'application/pdf',
+describe("Document Extraction", () => {
+  it("should extract school name from PDF", async () => {
+    const file = new File([pdfBuffer], "school.pdf", {
+      type: "application/pdf",
     })
 
-    const result = await extractFromDocument(file, 'title')
+    const result = await extractFromDocument(file, "title")
 
     expect(result.success).toBe(true)
     expect(result.data?.fields).toContainEqual({
-      key: 'schoolName',
+      key: "schoolName",
       value: expect.any(String),
-      confidence: 'high',
+      confidence: "high",
     })
   })
 })
@@ -299,5 +308,6 @@ describe('Document Extraction', () => {
 ## Support
 
 For issues or questions, refer to:
+
 - [CLAUDE.md](/CLAUDE.md) - Project documentation
-- [Onboarding Implementation](/src/app/[lang]/s/[subdomain]/(onboarding))
+- [Onboarding Implementation](</src/app/[lang]/s/[subdomain]/(onboarding)>)

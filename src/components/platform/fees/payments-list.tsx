@@ -1,7 +1,17 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns"
+import { Download, Eye, Plus } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -9,47 +19,44 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Download, Eye } from "lucide-react";
-import { format } from "date-fns";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/table"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Payment {
-  id: string;
-  paymentNumber: string;
-  amount: any;
-  paymentDate: Date | string;
-  paymentMethod: string;
-  receiptNumber: string;
-  status: string;
+  id: string
+  paymentNumber: string
+  amount: any
+  paymentDate: Date | string
+  paymentMethod: string
+  receiptNumber: string
+  status: string
   student?: {
-    studentId: string | null;
-    givenName: string;
-    surname: string;
-  };
+    studentId: string | null
+    givenName: string
+    surname: string
+  }
   feeAssignment?: {
     feeStructure?: {
-      name: string;
-      academicYear: string;
-    };
-  };
+      name: string
+      academicYear: string
+    }
+  }
 }
 
 interface Props {
-  payments: Payment[];
-  dictionary?: Dictionary;
+  payments: Payment[]
+  dictionary?: Dictionary
 }
 
 export function PaymentsList({ payments, dictionary }: Props) {
   const formatCurrency = (amount: any) => {
-    const value = typeof amount === 'object' ? amount.toNumber() : amount;
+    const value = typeof amount === "object" ? amount.toNumber() : amount
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
-    }).format(value);
-  };
+    }).format(value)
+  }
 
   const getPaymentMethodLabel = (method: string) => {
     const methods: Record<string, string> = {
@@ -62,18 +69,16 @@ export function PaymentsList({ payments, dictionary }: Props) {
       NET_BANKING: "Net Banking",
       WALLET: "Wallet",
       OTHER: "Other",
-    };
-    return methods[method] || method;
-  };
+    }
+    return methods[method] || method
+  }
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Payments</CardTitle>
-          <CardDescription>
-            Track and manage fee payments
-          </CardDescription>
+          <CardDescription>Track and manage fee payments</CardDescription>
         </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -91,22 +96,25 @@ export function PaymentsList({ payments, dictionary }: Props) {
               <TableHead>Method</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">
-                Actions
-              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {payments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={8}
+                  className="text-muted-foreground py-8 text-center"
+                >
                   No payments found
                 </TableCell>
               </TableRow>
             ) : (
               payments.map((payment) => (
                 <TableRow key={payment.id}>
-                  <TableCell className="font-medium">{payment.paymentNumber}</TableCell>
+                  <TableCell className="font-medium">
+                    {payment.paymentNumber}
+                  </TableCell>
                   <TableCell>
                     {payment.student
                       ? `${payment.student.givenName} ${payment.student.surname}`
@@ -116,12 +124,18 @@ export function PaymentsList({ payments, dictionary }: Props) {
                     {payment.feeAssignment?.feeStructure?.name || "N/A"}
                   </TableCell>
                   <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                  <TableCell>{getPaymentMethodLabel(payment.paymentMethod)}</TableCell>
+                  <TableCell>
+                    {getPaymentMethodLabel(payment.paymentMethod)}
+                  </TableCell>
                   <TableCell>
                     {format(new Date(payment.paymentDate), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={payment.status === "SUCCESS" ? "default" : "destructive"}>
+                    <Badge
+                      variant={
+                        payment.status === "SUCCESS" ? "default" : "destructive"
+                      }
+                    >
                       {payment.status}
                     </Badge>
                   </TableCell>
@@ -142,5 +156,5 @@ export function PaymentsList({ payments, dictionary }: Props) {
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }

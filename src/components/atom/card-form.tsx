@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -9,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
 
 export interface CardFormProps {
   title: string
@@ -32,7 +33,7 @@ export function CardForm({
 }: CardFormProps) {
   return (
     <Card
-      className={cn("shadow-none border", className)}
+      className={cn("border shadow-none", className)}
       dir={dir}
       data-slot="card-form"
     >
@@ -43,7 +44,9 @@ export function CardForm({
       <CardContent className={cn("grid gap-6", contentClassName)}>
         {children}
       </CardContent>
-      {footer && <CardFooter className="justify-between space-x-2">{footer}</CardFooter>}
+      {footer && (
+        <CardFooter className="justify-between space-x-2">{footer}</CardFooter>
+      )}
     </Card>
   )
 }

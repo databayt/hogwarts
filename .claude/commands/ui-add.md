@@ -12,6 +12,7 @@ Add shadcn/ui component(s): $@
    - Verify shadcn MCP server is active
 
 2. **Add component(s)** from registry
+
    ```bash
    npx shadcn@latest add $@
    ```
@@ -50,6 +51,7 @@ Add shadcn/ui component(s): $@
 ## Success Criteria
 
 Component successfully added when:
+
 - ✅ Files created in `src/components/ui/`
 - ✅ Dependencies installed
 - ✅ Imports work correctly

@@ -1,17 +1,29 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react"
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  CreditCard,
+  Download,
+  Pencil,
+  Plus,
+  Printer,
+  Search,
+  Trash2,
+  Upload,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -19,149 +31,166 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
-import { CreditCard, Plus, Pencil, Trash2, Download, Upload, Search, CircleCheck, CircleX, CircleAlert, Printer } from "lucide-react";
-import { useAttendanceContext } from '../core/attendance-context';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
-import type { StudentIdentifier } from '../shared/types';
+  TableRow,
+} from "@/components/ui/table"
+import { toast } from "@/components/ui/use-toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { useAttendanceContext } from "../core/attendance-context"
+import type { StudentIdentifier } from "../shared/types"
 
 interface StudentCardsProps {
-  dictionary?: Dictionary;
-  locale?: string;
-  schoolId: string;
+  dictionary?: Dictionary
+  locale?: string
+  schoolId: string
 }
 
-export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCardsProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<StudentIdentifier | null>(null);
+export function StudentCards({
+  dictionary,
+  locale = "en",
+  schoolId,
+}: StudentCardsProps) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [editingCard, setEditingCard] = useState<StudentIdentifier | null>(null)
   const [newCard, setNewCard] = useState({
-    studentId: '',
-    barcode: '',
-    expiryDate: ''
-  });
-  const [cards, setCards] = useState<StudentIdentifier[]>([]);
+    studentId: "",
+    barcode: "",
+    expiryDate: "",
+  })
+  const [cards, setCards] = useState<StudentIdentifier[]>([])
 
   const {
     studentIdentifiers,
     fetchStudentIdentifiers,
     addStudentIdentifier,
-    removeStudentIdentifier
-  } = useAttendanceContext();
+    removeStudentIdentifier,
+  } = useAttendanceContext()
 
   useEffect(() => {
-    fetchStudentIdentifiers();
-  }, [fetchStudentIdentifiers]);
+    fetchStudentIdentifiers()
+  }, [fetchStudentIdentifiers])
 
   useEffect(() => {
     // ListFilter for barcode type identifiers
-    setCards(studentIdentifiers.filter(id => id.type === 'BARCODE'));
-  }, [studentIdentifiers]);
+    setCards(studentIdentifiers.filter((id) => id.type === "BARCODE"))
+  }, [studentIdentifiers])
 
   const handleAddCard = async () => {
     if (!newCard.studentId || !newCard.barcode) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields"
-      });
-      return;
+        description: "Please fill in all required fields",
+      })
+      return
     }
 
     try {
       await addStudentIdentifier({
         schoolId,
         studentId: newCard.studentId,
-        type: 'BARCODE',
+        type: "BARCODE",
         value: newCard.barcode,
         isActive: true,
         issuedAt: new Date().toISOString(),
-        expiresAt: newCard.expiryDate || undefined
-      });
+        expiresAt: newCard.expiryDate || undefined,
+      })
 
       toast({
         title: "Success",
         description: "Card added successfully",
-      });
+      })
 
-      setIsAddDialogOpen(false);
-      setNewCard({ studentId: '', barcode: '', expiryDate: '' });
+      setIsAddDialogOpen(false)
+      setNewCard({ studentId: "", barcode: "", expiryDate: "" })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add card"
-      });
+        description: "Failed to add card",
+      })
     }
-  };
+  }
 
   const handleDeleteCard = async (cardId: string) => {
     try {
-      await removeStudentIdentifier(cardId);
+      await removeStudentIdentifier(cardId)
       toast({
         title: "Success",
         description: "Card removed successfully",
-      });
+      })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to remove card"
-      });
+        description: "Failed to remove card",
+      })
     }
-  };
+  }
 
   const generateBarcode = () => {
     // Generate a random barcode
-    const prefix = 'STU';
-    const random = Math.floor(Math.random() * 1000000000);
-    const barcode = `${prefix}${random.toString().padStart(9, '0')}`;
-    setNewCard(prev => ({ ...prev, barcode }));
-  };
+    const prefix = "STU"
+    const random = Math.floor(Math.random() * 1000000000)
+    const barcode = `${prefix}${random.toString().padStart(9, "0")}`
+    setNewCard((prev) => ({ ...prev, barcode }))
+  }
 
   const printCard = (card: StudentIdentifier) => {
     // In production, this would generate a printable card
     toast({
       title: "Print Card",
       description: `Printing card for ${card.studentName || card.studentId}`,
-    });
-  };
+    })
+  }
 
   const exportCards = () => {
     // Export cards to CSV
     const csv = [
-      ['Student ID', 'Student Name', 'Barcode', 'Status', 'Issued Date', 'Expiry Date'],
-      ...cards.map(card => [
+      [
+        "Student ID",
+        "Student Name",
+        "Barcode",
+        "Status",
+        "Issued Date",
+        "Expiry Date",
+      ],
+      ...cards.map((card) => [
         card.studentId,
-        card.studentName || '',
+        card.studentName || "",
         card.value,
-        card.isActive ? 'Active' : 'Inactive',
+        card.isActive ? "Active" : "Inactive",
         card.issuedAt,
-        card.expiresAt || 'Never'
-      ])
-    ].map(row => row.join(',')).join('\n');
+        card.expiresAt || "Never",
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'student-cards.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "student-cards.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
-  const filteredCards = cards.filter(card =>
-    card.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    card.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (card.studentName && card.studentName.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredCards = cards.filter(
+    (card) =>
+      card.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (card.studentName &&
+        card.studentName.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
 
   return (
     <div className="space-y-4">
@@ -177,13 +206,13 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportCards}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Card
                   </Button>
                 </DialogTrigger>
@@ -200,7 +229,12 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                       <Input
                         placeholder="Enter student ID..."
                         value={newCard.studentId}
-                        onChange={(e) => setNewCard(prev => ({ ...prev, studentId: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCard((prev) => ({
+                            ...prev,
+                            studentId: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -209,7 +243,12 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                         <Input
                           placeholder="Enter or generate barcode..."
                           value={newCard.barcode}
-                          onChange={(e) => setNewCard(prev => ({ ...prev, barcode: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCard((prev) => ({
+                              ...prev,
+                              barcode: e.target.value,
+                            }))
+                          }
                         />
                         <Button
                           type="button"
@@ -225,7 +264,12 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                       <Input
                         type="date"
                         value={newCard.expiryDate}
-                        onChange={(e) => setNewCard(prev => ({ ...prev, expiryDate: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCard((prev) => ({
+                            ...prev,
+                            expiryDate: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -236,9 +280,7 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleAddCard}>
-                      Add Card
-                    </Button>
+                    <Button onClick={handleAddCard}>Add Card</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -247,8 +289,8 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
         </CardHeader>
         <CardContent>
           {/* Search Bar */}
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-4 w-4 text-muted-foreground" />
+          <div className="mb-4 flex items-center gap-2">
+            <Search className="text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search by student ID, name, or barcode..."
               value={searchQuery}
@@ -258,40 +300,46 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
           </div>
 
           {/* Statistics */}
-          <div className="grid grid-cols-4 gap-4 mb-4">
-            <div className="text-center p-3 bg-secondary rounded-lg">
+          <div className="mb-4 grid grid-cols-4 gap-4">
+            <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold">{cards.length}</p>
-              <p className="text-xs text-muted-foreground">Total Cards</p>
+              <p className="text-muted-foreground text-xs">Total Cards</p>
             </div>
-            <div className="text-center p-3 bg-secondary rounded-lg">
+            <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-green-600">
-                {cards.filter(c => c.isActive).length}
+                {cards.filter((c) => c.isActive).length}
               </p>
-              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-muted-foreground text-xs">Active</p>
             </div>
-            <div className="text-center p-3 bg-secondary rounded-lg">
+            <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-red-600">
-                {cards.filter(c => !c.isActive).length}
+                {cards.filter((c) => !c.isActive).length}
               </p>
-              <p className="text-xs text-muted-foreground">Inactive</p>
+              <p className="text-muted-foreground text-xs">Inactive</p>
             </div>
-            <div className="text-center p-3 bg-secondary rounded-lg">
+            <div className="bg-secondary rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-orange-600">
-                {cards.filter(c => c.expiresAt && new Date(c.expiresAt) < new Date()).length}
+                {
+                  cards.filter(
+                    (c) => c.expiresAt && new Date(c.expiresAt) < new Date()
+                  ).length
+                }
               </p>
-              <p className="text-xs text-muted-foreground">Expired</p>
+              <p className="text-muted-foreground text-xs">Expired</p>
             </div>
           </div>
 
           {/* Cards Table */}
           {filteredCards.length === 0 ? (
-            <div className="text-center py-8">
-              <CreditCard className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+            <div className="py-8 text-center">
+              <CreditCard className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
               <p className="text-muted-foreground">
-                {searchQuery ? 'No cards found matching your search' : 'No cards assigned yet'}
+                {searchQuery
+                  ? "No cards found matching your search"
+                  : "No cards assigned yet"}
               </p>
               {!searchQuery && (
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-muted-foreground mt-2 text-sm">
                   Click "Add Card" to assign barcodes to students
                 </p>
               )}
@@ -311,34 +359,39 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                 </TableHeader>
                 <TableBody>
                   {filteredCards.map((card) => {
-                    const isExpired = card.expiresAt && new Date(card.expiresAt) < new Date();
+                    const isExpired =
+                      card.expiresAt && new Date(card.expiresAt) < new Date()
                     return (
                       <TableRow key={card.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{card.studentName || 'Unknown'}</p>
-                            <p className="text-xs text-muted-foreground">{card.studentId}</p>
+                            <p className="font-medium">
+                              {card.studentName || "Unknown"}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {card.studentId}
+                            </p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <code className="px-2 py-1 bg-secondary rounded text-xs">
+                          <code className="bg-secondary rounded px-2 py-1 text-xs">
                             {card.value}
                           </code>
                         </TableCell>
                         <TableCell>
                           {isExpired ? (
                             <Badge variant="destructive">
-                              <CircleX className="h-3 w-3 mr-1" />
+                              <CircleX className="mr-1 h-3 w-3" />
                               Expired
                             </Badge>
                           ) : card.isActive ? (
                             <Badge variant="default">
-                              <CircleCheck className="h-3 w-3 mr-1" />
+                              <CircleCheck className="mr-1 h-3 w-3" />
                               Active
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
-                              <CircleAlert className="h-3 w-3 mr-1" />
+                              <CircleAlert className="mr-1 h-3 w-3" />
                               Inactive
                             </Badge>
                           )}
@@ -349,7 +402,7 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                         <TableCell>
                           {card.expiresAt
                             ? new Date(card.expiresAt).toLocaleDateString()
-                            : 'Never'}
+                            : "Never"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
@@ -377,7 +430,7 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
                           </div>
                         </TableCell>
                       </TableRow>
-                    );
+                    )
                   })}
                 </TableBody>
               </Table>
@@ -395,17 +448,17 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8 px-4 border-2 border-dashed rounded-lg">
+          <div className="flex items-center justify-center rounded-lg border-2 border-dashed px-4 py-8">
             <div className="text-center">
-              <Upload className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-3">
+              <Upload className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+              <p className="text-muted-foreground mb-3 text-sm">
                 Drop your CSV file here or click to browse
               </p>
               <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="mr-2 h-4 w-4" />
                 Select File
               </Button>
-              <p className="text-xs text-muted-foreground mt-3">
+              <p className="text-muted-foreground mt-3 text-xs">
                 CSV format: student_id, barcode, expiry_date
               </p>
             </div>
@@ -413,5 +466,5 @@ export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCar
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

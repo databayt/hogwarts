@@ -49,18 +49,19 @@
  * @see /sync-transactions for incremental updates
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { parseStringify } from '@/components/platform/finance/banking/lib/utils'
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { Configuration, PlaidApi, PlaidEnvironments } from "plaid"
+
+import { db } from "@/lib/db"
+import { parseStringify } from "@/components/platform/finance/banking/lib/utils"
 
 const configuration = new Configuration({
-  basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+  basePath: PlaidEnvironments[process.env.PLAID_ENV || "sandbox"],
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
-      'PLAID-SECRET': process.env.PLAID_SECRET,
+      "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
+      "PLAID-SECRET": process.env.PLAID_SECRET,
     },
   },
 })
@@ -72,10 +73,7 @@ export async function POST(request: NextRequest) {
     const session = await auth()
 
     if (!session?.user || !session.user.schoolId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const schoolId = session.user.schoolId
@@ -101,10 +99,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (!accountData) {
-      return NextResponse.json(
-        { error: 'Account not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: "Account not found" }, { status: 404 })
     }
 
     // Store Plaid item
@@ -115,7 +110,7 @@ export async function POST(request: NextRequest) {
         accessToken,
         itemId,
         institutionId,
-        institutionName: accountsResponse.data.item.institution_id || '',
+        institutionName: accountsResponse.data.item.institution_id || "",
       },
     })
 
@@ -134,35 +129,41 @@ export async function POST(request: NextRequest) {
         currentBalance: accountData.balances.current || 0,
         availableBalance: accountData.balances.available || 0,
         type: accountData.type,
-        subtype: accountData.subtype || '',
+        subtype: accountData.subtype || "",
       },
     })
 
     // Get initial transactions
     const now = new Date()
-    const startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate())
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - 6,
+      now.getDate()
+    )
 
     const transactionsResponse = await plaidClient.transactionsGet({
       access_token: accessToken,
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: now.toISOString().split('T')[0],
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: now.toISOString().split("T")[0],
     })
 
     // Store transactions
-    const transactions = transactionsResponse.data.transactions.map((transaction) => ({
-      accountId: transaction.account_id,
-      bankAccountId: bankAccount.id,
-      schoolId,
-      name: transaction.name,
-      amount: transaction.amount,
-      date: new Date(transaction.date),
-      paymentChannel: transaction.payment_channel,
-      category: transaction.category?.[0] || 'Other',
-      subcategory: transaction.category?.[1],
-      type: transaction.amount > 0 ? 'debit' : 'credit',
-      pending: transaction.pending,
-      merchantName: transaction.merchant_name,
-    }))
+    const transactions = transactionsResponse.data.transactions.map(
+      (transaction) => ({
+        accountId: transaction.account_id,
+        bankAccountId: bankAccount.id,
+        schoolId,
+        name: transaction.name,
+        amount: transaction.amount,
+        date: new Date(transaction.date),
+        paymentChannel: transaction.payment_channel,
+        category: transaction.category?.[0] || "Other",
+        subcategory: transaction.category?.[1],
+        type: transaction.amount > 0 ? "debit" : "credit",
+        pending: transaction.pending,
+        merchantName: transaction.merchant_name,
+      })
+    )
 
     if (transactions.length > 0) {
       await db.transaction.createMany({
@@ -172,9 +173,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(parseStringify(bankAccount))
   } catch (error) {
-    console.error('Error exchanging public token:', error)
+    console.error("Error exchanging public token:", error)
     return NextResponse.json(
-      { error: 'Failed to exchange token' },
+      { error: "Failed to exchange token" },
       { status: 500 }
     )
   }

@@ -1,8 +1,9 @@
 import { Suspense } from "react"
-import { MarkingContent } from "@/components/platform/exams/mark/content"
+
 import { Skeleton } from "@/components/ui/skeleton"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { MarkingContent } from "@/components/platform/exams/mark/content"
 
 export const metadata = {
   title: "Auto-Marking Dashboard",
@@ -15,7 +16,7 @@ function LoadingSkeleton() {
       <div className="flex items-center justify-between">
         <div>
           <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96 mt-2" />
+          <Skeleton className="mt-2 h-4 w-96" />
         </div>
         <Skeleton className="h-10 w-32" />
       </div>

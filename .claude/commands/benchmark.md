@@ -3,11 +3,13 @@
 Run performance benchmarks on components, functions, and API endpoints
 
 ## Usage
+
 ```bash
 /benchmark [target] [options]
 ```
 
 ## Examples
+
 ```bash
 /benchmark StudentTable             # Benchmark component render
 /benchmark api/students             # Benchmark API endpoint
@@ -18,6 +20,7 @@ Run performance benchmarks on components, functions, and API endpoints
 ## Process
 
 ### 1. Identify Benchmark Target
+
 - Component render performance
 - Function execution time
 - API response time
@@ -25,6 +28,7 @@ Run performance benchmarks on components, functions, and API endpoints
 - Bundle size impact
 
 ### 2. Generate Benchmark Suite
+
 ```typescript
 // benchmark/StudentTable.bench.ts
 import { bench, describe } from 'vitest';
@@ -50,75 +54,84 @@ describe('StudentTable Performance', () => {
 ### 3. Performance Metrics
 
 #### Component Metrics
+
 ```typescript
 const metrics = {
-  renderTime: 'Time to first render',
-  rerenderTime: 'Time for updates',
-  memoryUsage: 'Heap size delta',
-  componentCount: 'React component instances',
-  domNodes: 'DOM node count'
-};
+  renderTime: "Time to first render",
+  rerenderTime: "Time for updates",
+  memoryUsage: "Heap size delta",
+  componentCount: "React component instances",
+  domNodes: "DOM node count",
+}
 ```
 
 #### Function Metrics
+
 ```typescript
-bench('function performance', () => {
-  // Measure:
-  // - Execution time (ms)
-  // - CPU cycles
-  // - Memory allocation
-  // - Garbage collection impact
-}, {
-  iterations: 1000,
-  warmup: 100
-});
+bench(
+  "function performance",
+  () => {
+    // Measure:
+    // - Execution time (ms)
+    // - CPU cycles
+    // - Memory allocation
+    // - Garbage collection impact
+  },
+  {
+    iterations: 1000,
+    warmup: 100,
+  }
+)
 ```
 
 #### API Metrics
+
 ```typescript
 const apiMetrics = {
-  responseTime: 'Total response time',
-  ttfb: 'Time to first byte',
-  throughput: 'Requests per second',
-  p50: '50th percentile latency',
-  p95: '95th percentile latency',
-  p99: '99th percentile latency'
-};
+  responseTime: "Total response time",
+  ttfb: "Time to first byte",
+  throughput: "Requests per second",
+  p50: "50th percentile latency",
+  p95: "95th percentile latency",
+  p99: "99th percentile latency",
+}
 ```
 
 ### 4. Database Query Benchmarks
+
 ```typescript
-bench('fetch students with relations', async () => {
+bench("fetch students with relations", async () => {
   await db.student.findMany({
     where: { schoolId },
     include: {
       guardian: true,
       classes: true,
       attendance: {
-        take: 10
-      }
-    }
-  });
-});
+        take: 10,
+      },
+    },
+  })
+})
 
 // Analyze query plan
 const explain = await db.$queryRaw`
   EXPLAIN ANALYZE
   SELECT * FROM "Student"
   WHERE "schoolId" = ${schoolId}
-`;
+`
 ```
 
 ### 5. Bundle Size Analysis
+
 ```typescript
 // Measure bundle impact
-import { analyzeBundle } from '@next/bundle-analyzer';
+import { analyzeBundle } from "@next/bundle-analyzer"
 
 const analysis = await analyzeBundle({
-  before: 'main',
-  after: 'feature-branch',
-  modules: ['StudentTable', 'dependencies']
-});
+  before: "main",
+  after: "feature-branch",
+  modules: ["StudentTable", "dependencies"],
+})
 
 // Report size changes
 console.log(`
@@ -126,47 +139,50 @@ console.log(`
   - Main bundle: +${analysis.mainBundle}KB
   - Chunk size: +${analysis.chunkSize}KB
   - First load: +${analysis.firstLoad}KB
-`);
+`)
 ```
 
 ## Benchmark Configuration
 
 ### Options
+
 ```typescript
 interface BenchmarkOptions {
-  iterations?: number;      // Number of runs (default: 100)
-  warmup?: number;         // Warmup runs (default: 10)
-  timeout?: number;        // Max time per test (default: 60s)
-  compare?: string;        // Branch to compare against
-  threshold?: number;      // Performance regression threshold (%)
-  output?: 'json'|'html';  // Report format
+  iterations?: number // Number of runs (default: 100)
+  warmup?: number // Warmup runs (default: 10)
+  timeout?: number // Max time per test (default: 60s)
+  compare?: string // Branch to compare against
+  threshold?: number // Performance regression threshold (%)
+  output?: "json" | "html" // Report format
 }
 ```
 
 ### Performance Budget
+
 ```typescript
 const performanceBudget = {
   components: {
-    firstRender: 100,     // ms
-    rerender: 50,        // ms
-    memoryDelta: 5       // MB
+    firstRender: 100, // ms
+    rerender: 50, // ms
+    memoryDelta: 5, // MB
   },
   api: {
-    p50: 200,           // ms
-    p95: 500,           // ms
-    p99: 1000           // ms
+    p50: 200, // ms
+    p95: 500, // ms
+    p99: 1000, // ms
   },
   bundle: {
-    main: 200,          // KB gzipped
-    firstLoad: 100,     // KB
-    chunkSize: 50       // KB
-  }
-};
+    main: 200, // KB gzipped
+    firstLoad: 100, // KB
+    chunkSize: 50, // KB
+  },
+}
 ```
 
 ## Hogwarts Platform Benchmarks
 
 ### Critical Components
+
 ```bash
 # Student list performance
 /benchmark StudentTable --iterations=100
@@ -179,6 +195,7 @@ const performanceBudget = {
 ```
 
 ### API Endpoints
+
 ```bash
 # Bulk operations
 /benchmark api/students/bulk-create --payload=100
@@ -191,6 +208,7 @@ const performanceBudget = {
 ```
 
 ### Database Operations
+
 ```bash
 # N+1 query detection
 /benchmark queries/student-with-classes --detect-n+1
@@ -205,18 +223,20 @@ const performanceBudget = {
 ## Comparison & Regression Detection
 
 ### Branch Comparison
+
 ```typescript
 // Compare with main branch
 const comparison = {
-  baseline: await runBenchmark('main'),
-  current: await runBenchmark('HEAD'),
+  baseline: await runBenchmark("main"),
+  current: await runBenchmark("HEAD"),
 
   regression: current.time > baseline.time * 1.1, // 10% threshold
-  improvement: current.time < baseline.time * 0.9
-};
+  improvement: current.time < baseline.time * 0.9,
+}
 ```
 
 ### Historical Tracking
+
 ```typescript
 // Store benchmark results
 const history = {
@@ -225,13 +245,14 @@ const history = {
   results: benchmarkResults,
 
   // Track trends
-  trend: calculateTrend(last30Days)
-};
+  trend: calculateTrend(last30Days),
+}
 ```
 
 ## Report Generation
 
 ### HTML Report
+
 ```html
 <!-- benchmark-report.html -->
 <h1>Performance Benchmark Report</h1>
@@ -254,6 +275,7 @@ const history = {
 ```
 
 ### JSON Output
+
 ```json
 {
   "timestamp": "2024-10-31T10:00:00Z",
@@ -278,6 +300,7 @@ const history = {
 ## CI/CD Integration
 
 ### GitHub Actions
+
 ```yaml
 - name: Run Benchmarks
   run: |
@@ -296,6 +319,7 @@ const history = {
 ```
 
 ### Performance Gates
+
 ```typescript
 // Fail CI if performance regresses
 if (regression.detected) {
@@ -305,39 +329,42 @@ if (regression.detected) {
     Metric: ${regression.metric}
     Change: +${regression.percentage}%
     Threshold: ${regression.threshold}%
-  `);
-  process.exit(1);
+  `)
+  process.exit(1)
 }
 ```
 
 ## Optimization Suggestions
 
 ### Automated Recommendations
+
 ```typescript
 function analyzeResults(benchmark) {
-  const suggestions = [];
+  const suggestions = []
 
   if (benchmark.renderTime > 100) {
-    suggestions.push('Consider implementing React.memo()');
-    suggestions.push('Check for unnecessary re-renders');
+    suggestions.push("Consider implementing React.memo()")
+    suggestions.push("Check for unnecessary re-renders")
   }
 
   if (benchmark.bundleSize > 50) {
-    suggestions.push('Consider code splitting');
-    suggestions.push('Check for duplicate dependencies');
+    suggestions.push("Consider code splitting")
+    suggestions.push("Check for duplicate dependencies")
   }
 
-  return suggestions;
+  return suggestions
 }
 ```
 
 ## Success Metrics
+
 - <100ms component render time
 - <200ms API p50 latency
 - <5% performance regression threshold
 - 100% critical path coverage
 
 ## Related Commands
+
 - `/optimize`: Apply performance optimizations
 - `/snapshot`: Visual regression testing
 - `/lighthouse`: Core Web Vitals testing

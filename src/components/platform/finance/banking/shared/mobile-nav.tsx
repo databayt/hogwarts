@@ -1,18 +1,27 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
-import { House, CreditCard, SendHorizontal, History, Settings, Menu, X } from "lucide-react"
-import { Button } from '@/components/ui/button'
+import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import {
+  CreditCard,
+  History,
+  House,
+  Menu,
+  SendHorizontal,
+  Settings,
+  X,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
+} from "@/components/ui/sheet"
 
 interface BankingMobileNavProps {
   user: any
@@ -20,33 +29,37 @@ interface BankingMobileNavProps {
   lang: string
 }
 
-export function BankingMobileNav({ user, dictionary, lang }: BankingMobileNavProps) {
+export function BankingMobileNav({
+  user,
+  dictionary,
+  lang,
+}: BankingMobileNavProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
   const navItems = [
     {
-      title: dictionary?.dashboard || 'Dashboard',
+      title: dictionary?.dashboard || "Dashboard",
       href: `/${lang}/banking`,
       icon: House,
     },
     {
-      title: dictionary?.myBanks || 'My Banks',
+      title: dictionary?.myBanks || "My Banks",
       href: `/${lang}/banking/my-banks`,
       icon: CreditCard,
     },
     {
-      title: dictionary?.paymentTransfer || 'Payment Transfer',
+      title: dictionary?.paymentTransfer || "Payment Transfer",
       href: `/${lang}/banking/payment-transfer`,
       icon: SendHorizontal,
     },
     {
-      title: dictionary?.transactionHistory || 'Transaction History',
+      title: dictionary?.transactionHistory || "Transaction History",
       href: `/${lang}/banking/transaction-history`,
       icon: History,
     },
     {
-      title: dictionary?.settings || 'Settings',
+      title: dictionary?.settings || "Settings",
       href: `/${lang}/banking/settings`,
       icon: Settings,
     },
@@ -77,10 +90,10 @@ export function BankingMobileNav({ user, dictionary, lang }: BankingMobileNavPro
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-accent hover:text-accent-foreground'
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -92,14 +105,14 @@ export function BankingMobileNav({ user, dictionary, lang }: BankingMobileNavPro
 
         <div className="border-t p-4">
           <div className="flex items-center gap-3 px-3 py-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary">
-                {user?.name?.[0]?.toUpperCase() || 'U'}
+            <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+              <span className="text-primary text-sm font-semibold">
+                {user?.name?.[0]?.toUpperCase() || "U"}
               </span>
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">{user?.name}</p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <p className="text-muted-foreground text-xs">{user?.email}</p>
             </div>
           </div>
         </div>

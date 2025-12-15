@@ -10,6 +10,7 @@
 Runs a full suite of validation checks before allowing commits, preventing 204+ types of errors from reaching CI/CD. Combines dictionary validation, Prisma field type checking, enum completeness, TypeScript compilation, and build verification.
 
 **Prevents**:
+
 - Dictionary property errors (173+ patterns)
 - Prisma field type errors (13+ patterns)
 - Enum completeness issues (2+ patterns)
@@ -42,6 +43,7 @@ exit $?
 ## Validation Pipeline
 
 ### Phase 1: Quick Checks (0-2s)
+
 ```bash
 1. Dictionary Validation
    - Scan staged files for d?.stats, d?.blocks patterns
@@ -56,6 +58,7 @@ exit $?
 ```
 
 ### Phase 2: Type Safety (2-5s)
+
 ```bash
 3. Enum Completeness Check
    - Scan staged files for Record<Enum, T>
@@ -70,6 +73,7 @@ exit $?
 ```
 
 ### Phase 3: Build Verification (5-10s, main branch only)
+
 ```bash
 5. Build Check (conditional)
    - Only runs on main/master branch commits
@@ -183,7 +187,9 @@ Total time: 2.4s
 ## Validation Rules
 
 ### Dictionary Validation
+
 Uses **dictionary-validator** skill:
+
 ```typescript
 // Scans for invalid patterns
 const invalidPatterns = [
@@ -205,7 +211,9 @@ type Dictionary = {
 ```
 
 ### Prisma Field Type Validation
+
 Uses **prisma-optimizer** skill:
+
 ```typescript
 // Detects relation vs ID field usage
 ❌ submittedBy: { connect: { id: userId } }  // submittedBy doesn't exist
@@ -217,23 +225,30 @@ Uses **prisma-optimizer** skill:
 ```
 
 ### Enum Completeness
+
 Uses **type-safety** agent:
+
 ```typescript
 // Validates Record<Enum, T> completeness
 export enum ExpenseStatus {
-  PENDING, APPROVED, REJECTED, PAID, CANCELLED
+  PENDING,
+  APPROVED,
+  REJECTED,
+  PAID,
+  CANCELLED,
 }
 
 // ❌ Missing CANCELLED
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid'
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
 }
 ```
 
 ### TypeScript Compilation
+
 ```bash
 # Incremental type checking (only staged files)
 pnpm tsc --noEmit --incremental
@@ -245,6 +260,7 @@ pnpm tsc --noEmit --incremental
 ```
 
 ### Build Verification (Main Branch Only)
+
 ```bash
 # Only runs on main/master commits
 if [[ $(git branch --show-current) == "main" ]]; then
@@ -264,6 +280,7 @@ fi
 ### Git Hook Setup
 
 #### Option 1: Husky (Recommended)
+
 ```bash
 # Install husky
 pnpm add -D husky
@@ -292,6 +309,7 @@ exit 0
 ```
 
 #### Option 2: Manual Git Hook
+
 ```bash
 # .git/hooks/pre-commit
 #!/bin/bash
@@ -330,7 +348,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -346,6 +364,7 @@ jobs:
 ## Performance Optimization
 
 ### Staged Files Only (Git Hook Context)
+
 ```bash
 # Only check files in staging area
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$')
@@ -360,21 +379,23 @@ claude-code run /pre-commit-full --files="$STAGED_FILES"
 ```
 
 ### Parallel Execution
+
 ```typescript
 // Run Phase 1 checks in parallel
 await Promise.all([
   validateDictionary(stagedFiles),
-  validatePrismaFields(stagedFiles)
+  validatePrismaFields(stagedFiles),
 ])
 
 // Run Phase 2 checks in parallel
 await Promise.all([
   checkEnumCompleteness(stagedFiles),
-  runTypeScriptCheck(stagedFiles)
+  runTypeScriptCheck(stagedFiles),
 ])
 ```
 
 ### Caching
+
 ```bash
 # TypeScript incremental compilation
 pnpm tsc --noEmit --incremental  # Uses .tsbuildinfo cache
@@ -465,6 +486,7 @@ SKIP_PRE_COMMIT=1 git commit -m "Emergency fix"
 ### Issue: Validation Too Slow
 
 **Solution 1**: Enable staged files only
+
 ```json
 {
   "performance": {
@@ -474,6 +496,7 @@ SKIP_PRE_COMMIT=1 git commit -m "Emergency fix"
 ```
 
 **Solution 2**: Disable build check on feature branches
+
 ```json
 {
   "checks": {
@@ -487,6 +510,7 @@ SKIP_PRE_COMMIT=1 git commit -m "Emergency fix"
 ### Issue: False Positives
 
 **Solution**: Configure exclusions
+
 ```json
 {
   "exclude": [
@@ -501,6 +525,7 @@ SKIP_PRE_COMMIT=1 git commit -m "Emergency fix"
 ### Issue: Hook Not Running
 
 **Diagnosis**:
+
 ```bash
 # Check if hook is executable
 ls -la .git/hooks/pre-commit
@@ -516,12 +541,14 @@ chmod +x .git/hooks/pre-commit
 ## Success Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **204+ errors** would be caught before commit
 - **0 build failures** in CI/CD
 - **3+ hours saved** per incident (debugging time)
 - **30+ commits saved** (iterative fix commits)
 
 **Expected Performance**:
+
 - Feature branch commits: 2-5s
 - Main branch commits: 5-10s
 - 100% error prevention rate
@@ -531,6 +558,7 @@ chmod +x .git/hooks/pre-commit
 ## Best Practices
 
 1. **Run Locally Before Push**
+
    ```bash
    # Test your changes
    /pre-commit-full
@@ -545,6 +573,7 @@ chmod +x .git/hooks/pre-commit
    - Keep commits small and focused
 
 3. **Monitor Performance**
+
    ```bash
    # Add timing to hook
    START=$(date +%s)
@@ -559,6 +588,7 @@ chmod +x .git/hooks/pre-commit
    - Share knowledge with team
 
 5. **Keep Tools Updated**
+
    ```bash
    # Update Claude Code
    pnpm add -D @anthropic/claude-code@latest

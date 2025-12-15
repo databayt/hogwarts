@@ -3,4 +3,4 @@
  * All functions are now organized in the actions/ directory
  */
 
-export * from "./actions/index";
+export * from "./actions/index"

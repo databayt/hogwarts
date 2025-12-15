@@ -1,4 +1,4 @@
-type IconKey = keyof typeof import("./icons").Icons;
+type IconKey = keyof typeof import("./icons").Icons
 
 export const dashboardNav: { title: string; href: string; icon: IconKey }[] = [
   { title: "Overview", href: "/operator/overview", icon: "box" },
@@ -9,6 +9,4 @@ export const dashboardNav: { title: string; href: string; icon: IconKey }[] = [
   { title: "Observability", href: "/operator/observability", icon: "barChart" },
   { title: "Tenants", href: "/operator/tenants", icon: "envelope" },
   { title: "Profile", href: "/operator/profile", icon: "cog" },
-];
-
-
+]

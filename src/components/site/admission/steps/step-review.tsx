@@ -1,28 +1,43 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, AlertCircle, User, Phone, Users, GraduationCap, FileText } from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { ApplicationFormData, PublicCampaign } from "../types";
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  Phone,
+  User,
+  Users,
+} from "lucide-react"
+import { useFormContext } from "react-hook-form"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ApplicationFormData, PublicCampaign } from "../types"
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
-  campaign: PublicCampaign;
+  dictionary: Dictionary
+  lang: Locale
+  campaign: PublicCampaign
 }
 
 interface ReviewSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  isComplete?: boolean;
+  title: string
+  icon: React.ReactNode
+  children: React.ReactNode
+  isComplete?: boolean
 }
 
-function ReviewSection({ title, icon, children, isComplete = true }: ReviewSectionProps) {
+function ReviewSection({
+  title,
+  icon,
+  children,
+  isComplete = true,
+}: ReviewSectionProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -40,68 +55,87 @@ function ReviewSection({ title, icon, children, isComplete = true }: ReviewSecti
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
-  );
+  )
 }
 
 interface ReviewFieldProps {
-  label: string;
-  value?: string | null;
-  required?: boolean;
+  label: string
+  value?: string | null
+  required?: boolean
 }
 
 function ReviewField({ label, value, required }: ReviewFieldProps) {
-  const isEmpty = !value || value.trim() === "";
+  const isEmpty = !value || value.trim() === ""
 
   return (
     <div className="flex flex-col">
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-sm">{label}</span>
       <span className={isEmpty && required ? "text-amber-500" : ""}>
         {isEmpty ? (required ? "Required" : "-") : value}
       </span>
     </div>
-  );
+  )
 }
 
 export default function StepReview({ dictionary, lang, campaign }: Props) {
-  const { watch, formState } = useFormContext<ApplicationFormData>();
-  const formData = watch();
-  const isRTL = lang === "ar";
-  const { errors } = formState;
+  const { watch, formState } = useFormContext<ApplicationFormData>()
+  const formData = watch()
+  const isRTL = lang === "ar"
+  const { errors } = formState
 
   // Check section completeness
-  const isPersonalComplete = !!(formData.firstName && formData.lastName && formData.dateOfBirth && formData.gender && formData.nationality);
-  const isContactComplete = !!(formData.email && formData.phone && formData.address && formData.city && formData.state && formData.postalCode);
-  const isGuardianComplete = !!(formData.fatherName && formData.motherName);
-  const isAcademicComplete = !!formData.applyingForClass;
-  const isDocumentsComplete = !!formData.photoUrl;
+  const isPersonalComplete = !!(
+    formData.firstName &&
+    formData.lastName &&
+    formData.dateOfBirth &&
+    formData.gender &&
+    formData.nationality
+  )
+  const isContactComplete = !!(
+    formData.email &&
+    formData.phone &&
+    formData.address &&
+    formData.city &&
+    formData.state &&
+    formData.postalCode
+  )
+  const isGuardianComplete = !!(formData.fatherName && formData.motherName)
+  const isAcademicComplete = !!formData.applyingForClass
+  const isDocumentsComplete = !!formData.photoUrl
 
-  const hasErrors = Object.keys(errors).length > 0;
+  const hasErrors = Object.keys(errors).length > 0
 
   const formatGender = (gender?: string) => {
-    if (!gender) return "-";
+    if (!gender) return "-"
     if (isRTL) {
-      return gender === "MALE" ? "ذكر" : "أنثى";
+      return gender === "MALE" ? "ذكر" : "أنثى"
     }
-    return gender === "MALE" ? "Male" : "Female";
-  };
+    return gender === "MALE" ? "Male" : "Female"
+  }
 
   return (
     <div className="space-y-6">
       {/* Summary Banner */}
-      <div className={`p-4 rounded-lg border ${hasErrors ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800" : "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"}`}>
+      <div
+        className={`rounded-lg border p-4 ${hasErrors ? "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20" : "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"}`}
+      >
         <div className="flex items-center gap-2">
           {hasErrors ? (
             <>
               <AlertCircle className="h-5 w-5 text-amber-500" />
               <span className="font-medium text-amber-700 dark:text-amber-300">
-                {isRTL ? "يرجى مراجعة المعلومات قبل التقديم" : "Please review your information before submitting"}
+                {isRTL
+                  ? "يرجى مراجعة المعلومات قبل التقديم"
+                  : "Please review your information before submitting"}
               </span>
             </>
           ) : (
             <>
               <CheckCircle2 className="h-5 w-5 text-green-500" />
               <span className="font-medium text-green-700 dark:text-green-300">
-                {isRTL ? "طلبك جاهز للتقديم" : "Your application is ready to submit"}
+                {isRTL
+                  ? "طلبك جاهز للتقديم"
+                  : "Your application is ready to submit"}
               </span>
             </>
           )}
@@ -114,13 +148,15 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">{campaign.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {isRTL ? "العام الدراسي:" : "Academic Year:"} {campaign.academicYear}
+              <p className="text-muted-foreground text-sm">
+                {isRTL ? "العام الدراسي:" : "Academic Year:"}{" "}
+                {campaign.academicYear}
               </p>
             </div>
             {campaign.applicationFee && campaign.applicationFee > 0 && (
               <Badge variant="secondary">
-                {isRTL ? "رسوم التقديم:" : "Application Fee:"} ${campaign.applicationFee}
+                {isRTL ? "رسوم التقديم:" : "Application Fee:"} $
+                {campaign.applicationFee}
               </Badge>
             )}
           </div>
@@ -133,7 +169,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
         icon={<User className="h-5 w-5" />}
         isComplete={isPersonalComplete}
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <ReviewField
             label={isRTL ? "الاسم الأول" : "First Name"}
             value={formData.firstName}
@@ -180,7 +216,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
         icon={<Phone className="h-5 w-5" />}
         isComplete={isContactComplete}
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <ReviewField
             label={isRTL ? "البريد الإلكتروني" : "Email"}
             value={formData.email}
@@ -197,7 +233,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           />
         </div>
         <Separator className="my-4" />
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <div className="col-span-2 md:col-span-3">
             <ReviewField
               label={isRTL ? "العنوان" : "Address"}
@@ -236,8 +272,8 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
       >
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium mb-2">{isRTL ? "الأب" : "Father"}</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h4 className="mb-2 font-medium">{isRTL ? "الأب" : "Father"}</h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
                 label={isRTL ? "الاسم" : "Name"}
                 value={formData.fatherName}
@@ -259,8 +295,8 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           </div>
           <Separator />
           <div>
-            <h4 className="font-medium mb-2">{isRTL ? "الأم" : "Mother"}</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h4 className="mb-2 font-medium">{isRTL ? "الأم" : "Mother"}</h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
                 label={isRTL ? "الاسم" : "Name"}
                 value={formData.motherName}
@@ -284,8 +320,10 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
             <>
               <Separator />
               <div>
-                <h4 className="font-medium mb-2">{isRTL ? "ولي الأمر الإضافي" : "Additional Guardian"}</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <h4 className="mb-2 font-medium">
+                  {isRTL ? "ولي الأمر الإضافي" : "Additional Guardian"}
+                </h4>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <ReviewField
                     label={isRTL ? "الاسم" : "Name"}
                     value={formData.guardianName}
@@ -317,8 +355,10 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
       >
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium mb-2">{isRTL ? "التعليم السابق" : "Previous Education"}</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h4 className="mb-2 font-medium">
+              {isRTL ? "التعليم السابق" : "Previous Education"}
+            </h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
                 label={isRTL ? "المدرسة" : "School"}
                 value={formData.previousSchool}
@@ -339,8 +379,10 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
           </div>
           <Separator />
           <div>
-            <h4 className="font-medium mb-2">{isRTL ? "التقديم لـ" : "Applying For"}</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h4 className="mb-2 font-medium">
+              {isRTL ? "التقديم لـ" : "Applying For"}
+            </h4>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               <ReviewField
                 label={isRTL ? "الصف" : "Grade"}
                 value={formData.applyingForClass}
@@ -370,9 +412,9 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
         isComplete={isDocumentsComplete}
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {isRTL ? "صورة شخصية" : "Passport Photo"}
               </span>
               {formData.photoUrl ? (
@@ -380,7 +422,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
                   <img
                     src={formData.photoUrl}
                     alt="Photo"
-                    className="w-20 h-20 object-cover rounded"
+                    className="h-20 w-20 rounded object-cover"
                   />
                 </div>
               ) : (
@@ -390,7 +432,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {isRTL ? "التوقيع" : "Signature"}
               </span>
               {formData.signatureUrl ? (
@@ -398,7 +440,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
                   <img
                     src={formData.signatureUrl}
                     alt="Signature"
-                    className="w-20 h-10 object-contain"
+                    className="h-10 w-20 object-contain"
                   />
                 </div>
               ) : (
@@ -406,7 +448,7 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {isRTL ? "المستندات المرفقة" : "Attached Documents"}
               </span>
               <span>
@@ -417,12 +459,12 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
 
           {formData.documents && formData.documents.length > 0 && (
             <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">
+              <h4 className="mb-2 text-sm font-medium">
                 {isRTL ? "قائمة المستندات:" : "Document List:"}
               </h4>
               <ul className="space-y-1">
                 {formData.documents.map((doc, index) => (
-                  <li key={index} className="text-sm flex items-center gap-2">
+                  <li key={index} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                     {doc.name}
                   </li>
@@ -436,13 +478,13 @@ export default function StepReview({ dictionary, lang, campaign }: Props) {
       {/* Declaration */}
       <Card className="border-primary">
         <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {isRTL
-              ? "بالنقر على \"تقديم الطلب\"، أؤكد أن جميع المعلومات المقدمة صحيحة ودقيقة. أفهم أن تقديم معلومات كاذبة قد يؤدي إلى رفض الطلب أو إلغاء القبول."
-              : "By clicking \"Submit Application\", I confirm that all information provided is true and accurate. I understand that submitting false information may result in rejection of the application or cancellation of admission."}
+              ? 'بالنقر على "تقديم الطلب"، أؤكد أن جميع المعلومات المقدمة صحيحة ودقيقة. أفهم أن تقديم معلومات كاذبة قد يؤدي إلى رفض الطلب أو إلغاء القبول.'
+              : 'By clicking "Submit Application", I confirm that all information provided is true and accurate. I understand that submitting false information may result in rejection of the application or cancellation of admission.'}
           </p>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

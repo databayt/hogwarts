@@ -23,8 +23,6 @@ export const KPI_SUPPORTING = {
     trend: "up" as const,
     hint: "More KPIs coming soon",
   },
-};
+}
 
-export type KpiKey = keyof typeof KPI_SUPPORTING;
-
-
+export type KpiKey = keyof typeof KPI_SUPPORTING

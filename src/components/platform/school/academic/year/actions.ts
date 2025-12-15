@@ -1,17 +1,19 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { SchoolYearDetail, SchoolYearRow } from "./types"
 import {
+  getSchoolYearsSchema,
   schoolYearCreateSchema,
   schoolYearUpdateSchema,
-  getSchoolYearsSchema,
   type SchoolYearCreateInput,
   type SchoolYearUpdateInput,
 } from "./validation"
-import type { SchoolYearRow, SchoolYearDetail } from "./types"
 
 // ============================================================================
 // Types
@@ -45,7 +47,10 @@ export async function createSchoolYear(
     })
 
     if (existing) {
-      return { success: false, error: "A school year with this name already exists" }
+      return {
+        success: false,
+        error: "A school year with this name already exists",
+      }
     }
 
     const row = await db.schoolYear.create({
@@ -71,7 +76,8 @@ export async function createSchoolYear(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create school year",
+      error:
+        error instanceof Error ? error.message : "Failed to create school year",
     }
   }
 }
@@ -106,7 +112,10 @@ export async function updateSchoolYear(
       })
 
       if (duplicate) {
-        return { success: false, error: "A school year with this name already exists" }
+        return {
+          success: false,
+          error: "A school year with this name already exists",
+        }
       }
     }
 
@@ -131,14 +140,15 @@ export async function updateSchoolYear(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update school year",
+      error:
+        error instanceof Error ? error.message : "Failed to update school year",
     }
   }
 }
 
-export async function deleteSchoolYear(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteSchoolYear(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -166,7 +176,8 @@ export async function deleteSchoolYear(
     if (existing._count.terms > 0 || existing._count.periods > 0) {
       return {
         success: false,
-        error: "Cannot delete school year with associated terms or periods. Delete them first.",
+        error:
+          "Cannot delete school year with associated terms or periods. Delete them first.",
       }
     }
 
@@ -186,7 +197,8 @@ export async function deleteSchoolYear(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete school year",
+      error:
+        error instanceof Error ? error.message : "Failed to delete school year",
     }
   }
 }
@@ -195,9 +207,9 @@ export async function deleteSchoolYear(
 // Queries
 // ============================================================================
 
-export async function getSchoolYear(
-  input: { id: string }
-): Promise<ActionResponse<SchoolYearDetail | null>> {
+export async function getSchoolYear(input: {
+  id: string
+}): Promise<ActionResponse<SchoolYearDetail | null>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -244,7 +256,8 @@ export async function getSchoolYear(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch school year",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch school year",
     }
   }
 }
@@ -314,7 +327,8 @@ export async function getSchoolYears(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch school years",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch school years",
     }
   }
 }
@@ -344,7 +358,10 @@ export async function getSchoolYearOptions(): Promise<
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch school year options",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch school year options",
     }
   }
 }

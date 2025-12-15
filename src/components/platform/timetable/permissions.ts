@@ -3,25 +3,26 @@
  * Server-only permission guards and context functions
  */
 
-import { auth } from '@/auth'
-import { getTenantContext } from '@/lib/tenant-context'
+import { auth } from "@/auth"
 
-// Re-export all client-safe utilities
-export * from './permissions-config'
+import { getTenantContext } from "@/lib/tenant-context"
 
 // Import what we need from config
 import {
-  type TimetableRole,
-  type TimetableAction,
-  PERMISSION_MATRIX,
-  hasPermission,
-  canModifyTimetable,
-  canViewTimetable,
+  canConfigureSettings,
   canExportTimetable,
   canManageConflicts,
-  canConfigureSettings,
+  canModifyTimetable,
+  canViewTimetable,
   getAccessLevel,
-} from './permissions-config'
+  hasPermission,
+  PERMISSION_MATRIX,
+  type TimetableAction,
+  type TimetableRole,
+} from "./permissions-config"
+
+// Re-export all client-safe utilities
+export * from "./permissions-config"
 
 // ============================================================================
 // Server-Side Permission Guards
@@ -31,7 +32,9 @@ import {
  * Require a specific permission or throw an error
  * Use this in server actions
  */
-export async function requirePermission(action: TimetableAction): Promise<void> {
+export async function requirePermission(
+  action: TimetableAction
+): Promise<void> {
   const session = await auth()
   const role = session?.user?.role as TimetableRole | undefined
 
@@ -48,7 +51,7 @@ export async function requireAdminAccess(): Promise<void> {
   const role = session?.user?.role as TimetableRole | undefined
 
   if (!canModifyTimetable(role)) {
-    throw new Error('Permission denied: Admin access required')
+    throw new Error("Permission denied: Admin access required")
   }
 }
 
@@ -60,7 +63,9 @@ export async function requireReadAccess(): Promise<void> {
   const role = session?.user?.role as TimetableRole | undefined
 
   if (!canViewTimetable(role)) {
-    throw new Error('Permission denied: You do not have access to view timetable')
+    throw new Error(
+      "Permission denied: You do not have access to view timetable"
+    )
   }
 }
 
@@ -110,39 +115,39 @@ export async function filterTimetableByRole(
   const { role, userId } = await getPermissionContext()
 
   switch (role) {
-    case 'DEVELOPER':
-    case 'ADMIN':
-    case 'ACCOUNTANT':
-    case 'STAFF':
+    case "DEVELOPER":
+    case "ADMIN":
+    case "ACCOUNTANT":
+    case "STAFF":
       // Can see all timetable data
       return timetableData
 
-    case 'TEACHER':
+    case "TEACHER":
       // Can see all, but UI might highlight their own
       if (options?.teacherId) {
         // Filter to show only teacher's classes
-        return timetableData.filter((item: any) =>
-          item.teacherId === options.teacherId
+        return timetableData.filter(
+          (item: any) => item.teacherId === options.teacherId
         )
       }
       return timetableData
 
-    case 'STUDENT':
+    case "STUDENT":
       // Can only see their class timetable
       if (options?.classId) {
-        return timetableData.filter((item: any) =>
-          item.classId === options.classId
+        return timetableData.filter(
+          (item: any) => item.classId === options.classId
         )
       }
       return []
 
-    case 'GUARDIAN':
+    case "GUARDIAN":
       // Can only see their children's timetables
       if (options?.childIds && options.childIds.length > 0) {
         return timetableData.filter((item: any) =>
-          options.childIds?.some(childId =>
-            item.studentIds?.includes(childId) ||
-            item.classId === childId // Assuming childId might be classId
+          options.childIds?.some(
+            (childId) =>
+              item.studentIds?.includes(childId) || item.classId === childId // Assuming childId might be classId
           )
         )
       }
@@ -165,7 +170,16 @@ export async function logTimetableAction(
   action: TimetableAction,
   details: {
     entityId?: string
-    entityType?: 'slot' | 'config' | 'conflict' | 'bulk' | 'term' | 'teacher_constraint' | 'room_constraint' | 'template' | 'template_application'
+    entityType?:
+      | "slot"
+      | "config"
+      | "conflict"
+      | "bulk"
+      | "term"
+      | "teacher_constraint"
+      | "room_constraint"
+      | "template"
+      | "template_application"
     changes?: Record<string, unknown>
     metadata?: Record<string, unknown>
   }
@@ -183,7 +197,7 @@ export async function logTimetableAction(
   }
 
   // In production, this would write to an audit log table or service
-  console.log('[TIMETABLE_AUDIT]', JSON.stringify(auditLog))
+  console.log("[TIMETABLE_AUDIT]", JSON.stringify(auditLog))
 
   // You could also send to monitoring service like Sentry
   // Sentry.captureMessage('Timetable Action', { extra: auditLog })

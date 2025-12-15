@@ -1,7 +1,8 @@
 "use client"
 
-import { usePageHeading } from "./page-heading-context"
 import PageHeading from "@/components/atom/page-heading"
+
+import { usePageHeading } from "./page-heading-context"
 
 export function PageHeadingDisplay() {
   const { heading } = usePageHeading()

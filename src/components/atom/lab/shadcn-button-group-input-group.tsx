@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { AudioLines, Plus } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,8 +27,13 @@ export function ShadcnButtonGroupInputGroup() {
 
   return (
     <TooltipProvider>
-      <div className="flex w-full max-w-lg items-center gap-2 rounded-full border border-border p-1">
-        <Button size="icon" variant="outline" className="rounded-full" aria-label="Add">
+      <div className="border-border flex w-full max-w-lg items-center gap-2 rounded-full border p-1">
+        <Button
+          size="icon"
+          variant="outline"
+          className="rounded-full"
+          aria-label="Add"
+        >
           <Plus className="size-4" />
         </Button>
 

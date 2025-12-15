@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -95,10 +91,7 @@ export function CardsShare() {
                 </ItemContent>
                 <ItemActions>
                   <Select defaultValue="edit">
-                    <SelectTrigger
-                      className="ml-auto pr-2"
-                      aria-label="Edit"
-                    >
+                    <SelectTrigger className="ml-auto pr-2" aria-label="Edit">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent align="end">

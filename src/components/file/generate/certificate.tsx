@@ -3,17 +3,18 @@
  * PDF template for certificates
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { CertificateData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { CertificateData, TemplateStyle } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,18 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
-const createStyles = (locale: string = "en", style: TemplateStyle = "elegant") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+const createStyles = (
+  locale: string = "en",
+  style: TemplateStyle = "elegant"
+) => {
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   const baseStyles = StyleSheet.create({
     page: {
@@ -210,10 +214,10 @@ const createStyles = (locale: string = "en", style: TemplateStyle = "elegant") =
       width: 60,
       height: 60,
     },
-  });
+  })
 
-  return baseStyles;
-};
+  return baseStyles
+}
 
 // ============================================================================
 // Helper Functions
@@ -224,22 +228,25 @@ const formatDate = (date: Date, locale: string): string => {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
 // ============================================================================
 // Certificate Template Component
 // ============================================================================
 
 interface CertificateTemplateProps {
-  data: CertificateData;
-  style?: TemplateStyle;
+  data: CertificateData
+  style?: TemplateStyle
 }
 
-export function CertificateTemplate({ data, style = "elegant" }: CertificateTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale, style);
-  const isRTL = locale === "ar";
+export function CertificateTemplate({
+  data,
+  style = "elegant",
+}: CertificateTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale, style)
+  const isRTL = locale === "ar"
 
   const labels = {
     thisIsTo: isRTL ? "شهادة تقدير" : "This is to certify that",
@@ -247,7 +254,7 @@ export function CertificateTemplate({ data, style = "elegant" }: CertificateTemp
     issuedOn: isRTL ? "تاريخ الإصدار" : "Issued On",
     validUntil: isRTL ? "صالحة حتى" : "Valid Until",
     certificateNo: isRTL ? "رقم الشهادة" : "Certificate No",
-  };
+  }
 
   return (
     <Document>
@@ -269,7 +276,9 @@ export function CertificateTemplate({ data, style = "elegant" }: CertificateTemp
 
           {/* Certificate Title */}
           <Text style={styles.title}>
-            {isRTL ? data.certificateTitleAr || data.certificateTitle : data.certificateTitle}
+            {isRTL
+              ? data.certificateTitleAr || data.certificateTitle
+              : data.certificateTitle}
           </Text>
 
           {/* Subtitle */}
@@ -277,7 +286,9 @@ export function CertificateTemplate({ data, style = "elegant" }: CertificateTemp
 
           {/* Recipient Name */}
           <Text style={styles.recipientName}>
-            {isRTL ? data.recipientNameAr || data.recipientName : data.recipientName}
+            {isRTL
+              ? data.recipientNameAr || data.recipientName
+              : data.recipientName}
           </Text>
 
           {/* Achievement */}
@@ -349,7 +360,7 @@ export function CertificateTemplate({ data, style = "elegant" }: CertificateTemp
         )}
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles as createCertificateStyles };
+export { createStyles as createCertificateStyles }

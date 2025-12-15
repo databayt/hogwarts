@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
 /**
  * Featured tenants component
  *
  * Displays highlighted or featured tenants for the operator lab.
  */
+import { AlertCircle, Building2, TrendingUp, Users } from "lucide-react"
 
-import { TenantCard, TenantStatsCard, TenantBillingCard } from "./card";
-import { Building2, Users, TrendingUp, AlertCircle } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantBilling } from "./types";
-import { getTenantHealth, isTenantOnTrial, getTrialDaysRemaining } from "./util";
+import { TenantBillingCard, TenantCard, TenantStatsCard } from "./card"
+import type { Tenant, TenantBilling, TenantMetrics } from "./types"
+import { getTenantHealth, getTrialDaysRemaining, isTenantOnTrial } from "./util"
 
 interface FeaturedTenantsProps {
-  tenants: Tenant[];
-  metrics?: Record<string, TenantMetrics>;
-  billing?: Record<string, TenantBilling>;
-  maxItems?: number;
-  onTenantClick?: (tenantId: string) => void;
+  tenants: Tenant[]
+  metrics?: Record<string, TenantMetrics>
+  billing?: Record<string, TenantBilling>
+  maxItems?: number
+  onTenantClick?: (tenantId: string) => void
 }
 
 /**
@@ -29,7 +29,7 @@ export function FeaturedTenants({
   maxItems = 6,
   onTenantClick,
 }: FeaturedTenantsProps) {
-  const featuredTenants = tenants.slice(0, maxItems);
+  const featuredTenants = tenants.slice(0, maxItems)
 
   return (
     <div className="space-y-6">
@@ -53,16 +53,25 @@ export function FeaturedTenants({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Recently created tenants
  */
-export function RecentTenants({ tenants, maxItems = 5 }: { tenants: Tenant[]; maxItems?: number }) {
+export function RecentTenants({
+  tenants,
+  maxItems = 5,
+}: {
+  tenants: Tenant[]
+  maxItems?: number
+}) {
   const recentTenants = [...tenants]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, maxItems);
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, maxItems)
 
   return (
     <div className="space-y-4">
@@ -74,8 +83,8 @@ export function RecentTenants({ tenants, maxItems = 5 }: { tenants: Tenant[]; ma
             className="flex items-center justify-between rounded-lg border p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                <Building2 className="size-5 text-primary" />
+              <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+                <Building2 className="text-primary size-5" />
               </div>
               <div>
                 <h6>{tenant.name}</h6>
@@ -85,7 +94,8 @@ export function RecentTenants({ tenants, maxItems = 5 }: { tenants: Tenant[]; ma
             <small className="muted">
               {new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
                 Math.ceil(
-                  (new Date(tenant.createdAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                  (new Date(tenant.createdAt).getTime() - Date.now()) /
+                    (1000 * 60 * 60 * 24)
                 ),
                 "day"
               )}
@@ -94,7 +104,7 @@ export function RecentTenants({ tenants, maxItems = 5 }: { tenants: Tenant[]; ma
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -104,30 +114,31 @@ export function TenantsRequiringAttention({
   tenants,
   billing,
 }: {
-  tenants: Tenant[];
-  billing?: Record<string, TenantBilling>;
+  tenants: Tenant[]
+  billing?: Record<string, TenantBilling>
 }) {
   // Filter tenants that need attention
   const attentionTenants = tenants.filter((tenant) => {
-    const tenantBilling = billing?.[tenant.id];
-    const health = getTenantHealth(tenant.isActive, tenantBilling ?? null);
+    const tenantBilling = billing?.[tenant.id]
+    const health = getTenantHealth(tenant.isActive, tenantBilling ?? null)
     const trialEndingSoon = tenantBilling?.trialEndsAt
-      ? isTenantOnTrial(tenantBilling.trialEndsAt) && getTrialDaysRemaining(tenantBilling.trialEndsAt) <= 3
-      : false;
+      ? isTenantOnTrial(tenantBilling.trialEndsAt) &&
+        getTrialDaysRemaining(tenantBilling.trialEndsAt) <= 3
+      : false
 
-    return health !== "healthy" || trialEndingSoon;
-  });
+    return health !== "healthy" || trialEndingSoon
+  })
 
   if (attentionTenants.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-green-500/10 mx-auto">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-500/10">
           <TrendingUp className="size-6 text-green-600" />
         </div>
         <h5 className="mt-4">All systems operational</h5>
         <p className="muted mt-2">No tenants require immediate attention</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -142,14 +153,16 @@ export function TenantsRequiringAttention({
 
       <div className="space-y-3">
         {attentionTenants.map((tenant) => {
-          const tenantBilling = billing?.[tenant.id];
-          const health = getTenantHealth(tenant.isActive, tenantBilling ?? null);
-          const trialDays = tenantBilling?.trialEndsAt ? getTrialDaysRemaining(tenantBilling.trialEndsAt) : 0;
+          const tenantBilling = billing?.[tenant.id]
+          const health = getTenantHealth(tenant.isActive, tenantBilling ?? null)
+          const trialDays = tenantBilling?.trialEndsAt
+            ? getTrialDaysRemaining(tenantBilling.trialEndsAt)
+            : 0
 
           return (
             <div
               key={tenant.id}
-              className="flex items-start justify-between rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 p-4"
+              className="flex items-start justify-between rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:bg-amber-950/10"
             >
               <div className="flex items-start gap-3">
                 <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
@@ -163,22 +176,25 @@ export function TenantsRequiringAttention({
                       <small className="text-red-600">⚠ Tenant suspended</small>
                     )}
                     {health === "warning" && (
-                      <small className="text-amber-600">⚠ Billing overdue</small>
+                      <small className="text-amber-600">
+                        ⚠ Billing overdue
+                      </small>
                     )}
                     {trialDays > 0 && trialDays <= 3 && (
                       <small className="text-amber-600">
-                        ⏰ Trial ends in {trialDays} {trialDays === 1 ? "day" : "days"}
+                        ⏰ Trial ends in {trialDays}{" "}
+                        {trialDays === 1 ? "day" : "days"}
                       </small>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -189,59 +205,73 @@ export function TopTenantsByUsage({
   metrics,
   maxItems = 5,
 }: {
-  tenants: Tenant[];
-  metrics: Record<string, TenantMetrics>;
-  maxItems?: number;
+  tenants: Tenant[]
+  metrics: Record<string, TenantMetrics>
+  maxItems?: number
 }) {
   const tenantsWithMetrics = tenants
     .map((tenant) => ({
       tenant,
       metrics: metrics[tenant.id],
-      totalUsers: (metrics[tenant.id]?.students || 0) + (metrics[tenant.id]?.teachers || 0),
+      totalUsers:
+        (metrics[tenant.id]?.students || 0) +
+        (metrics[tenant.id]?.teachers || 0),
     }))
     .filter((item) => item.metrics)
     .sort((a, b) => b.totalUsers - a.totalUsers)
-    .slice(0, maxItems);
+    .slice(0, maxItems)
 
   return (
     <div className="space-y-4">
       <h4>Top Tenants by Usage</h4>
       <div className="space-y-3">
-        {tenantsWithMetrics.map(({ tenant, metrics: tenantMetrics, totalUsers }) => (
-          <div
-            key={tenant.id}
-            className="flex items-center justify-between rounded-lg border p-4"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                <Users className="size-5 text-primary" />
+        {tenantsWithMetrics.map(
+          ({ tenant, metrics: tenantMetrics, totalUsers }) => (
+            <div
+              key={tenant.id}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+                  <Users className="text-primary size-5" />
+                </div>
+                <div>
+                  <h6>{tenant.name}</h6>
+                  <small className="muted">
+                    {tenantMetrics.students} students • {tenantMetrics.teachers}{" "}
+                    teachers
+                  </small>
+                </div>
               </div>
-              <div>
-                <h6>{tenant.name}</h6>
-                <small className="muted">
-                  {tenantMetrics.students} students • {tenantMetrics.teachers} teachers
-                </small>
-              </div>
+              <div className="font-semibold tabular-nums">{totalUsers}</div>
             </div>
-            <div className="font-semibold tabular-nums">{totalUsers}</div>
-          </div>
-        ))}
+          )
+        )}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Tenant overview stats
  */
-export function TenantOverviewStats({ tenants, metrics }: {
-  tenants: Tenant[];
-  metrics: Record<string, TenantMetrics>;
+export function TenantOverviewStats({
+  tenants,
+  metrics,
+}: {
+  tenants: Tenant[]
+  metrics: Record<string, TenantMetrics>
 }) {
-  const totalTenants = tenants.length;
-  const activeTenants = tenants.filter((t) => t.isActive).length;
-  const totalStudents = Object.values(metrics).reduce((sum, m) => sum + (m?.students || 0), 0);
-  const totalTeachers = Object.values(metrics).reduce((sum, m) => sum + (m?.teachers || 0), 0);
+  const totalTenants = tenants.length
+  const activeTenants = tenants.filter((t) => t.isActive).length
+  const totalStudents = Object.values(metrics).reduce(
+    (sum, m) => sum + (m?.students || 0),
+    0
+  )
+  const totalTeachers = Object.values(metrics).reduce(
+    (sum, m) => sum + (m?.teachers || 0),
+    0
+  )
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -270,5 +300,5 @@ export function TenantOverviewStats({ tenants, metrics }: {
         description="Across all tenants"
       />
     </div>
-  );
+  )
 }

@@ -3,20 +3,26 @@
  * Generate and download PDF files using @react-pdf/renderer
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  pdf,
   Font,
-} from "@react-pdf/renderer";
-import type { ExportColumn, ExportConfig, ExportResult } from "./types";
-import { getValue, formatValue, getHeader, generateExportFilename } from "./formatters";
-import { downloadBlob } from "./csv-generator";
+  Image,
+  Page,
+  pdf,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import { downloadBlob } from "./csv-generator"
+import {
+  formatValue,
+  generateExportFilename,
+  getHeader,
+  getValue,
+} from "./formatters"
+import type { ExportColumn, ExportConfig, ExportResult } from "./types"
 
 // ============================================================================
 // Font Registration (Arabic support)
@@ -35,7 +41,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // Register Inter font for English text
 Font.register({
@@ -50,7 +56,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
@@ -60,8 +66,8 @@ const createStyles = (
   locale: string,
   customStyles?: ExportConfig["styles"]
 ) => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -152,25 +158,25 @@ const createStyles = (
       fontSize: 8,
       color: "#999",
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // PDF Document Component
 // ============================================================================
 
 interface PDFDocumentProps<T> {
-  config: ExportConfig<T>;
-  styles: ReturnType<typeof createStyles>;
+  config: ExportConfig<T>
+  styles: ReturnType<typeof createStyles>
 }
 
 // Map page size to react-pdf format
 const pageSizeMap: Record<string, "A4" | "LETTER" | "LEGAL" | "A3"> = {
-  "A4": "A4",
-  "Letter": "LETTER",
-  "Legal": "LEGAL",
-  "A3": "A3",
-};
+  A4: "A4",
+  Letter: "LETTER",
+  Legal: "LEGAL",
+  A3: "A3",
+}
 
 function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
   const {
@@ -184,20 +190,23 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
     orientation = "portrait",
     pageSize = "A4",
     includeHeader = true,
-  } = config;
+  } = config
 
-  const pdfPageSize = pageSizeMap[pageSize] || "A4";
+  const pdfPageSize = pageSizeMap[pageSize] || "A4"
 
   // Filter columns for PDF
   const pdfColumns = columns.filter(
     (col) => !col.hidden && col.includeInPdf !== false
-  );
+  )
 
   // Calculate column widths
-  const totalWidth = pdfColumns.reduce((sum, col) => sum + (col.width || 100), 0);
+  const totalWidth = pdfColumns.reduce(
+    (sum, col) => sum + (col.width || 100),
+    0
+  )
   const columnWidths = pdfColumns.map(
     (col) => `${((col.width || 100) / totalWidth) * 100}%`
-  );
+  )
 
   return (
     <Document>
@@ -240,8 +249,8 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
               ]}
             >
               {pdfColumns.map((col, colIdx) => {
-                const value = getValue(row, col);
-                const formatted = formatValue(value, col, row, locale);
+                const value = getValue(row, col)
+                const formatted = formatValue(value, col, row, locale)
 
                 return (
                   <View
@@ -255,7 +264,7 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
                   >
                     <Text>{formatted}</Text>
                   </View>
-                );
+                )
               })}
             </View>
           ))}
@@ -271,7 +280,7 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
         />
       </Page>
     </Document>
-  );
+  )
 }
 
 // ============================================================================
@@ -281,24 +290,26 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
 /**
  * Generate and download PDF file
  */
-export async function exportToPdf<T>(config: ExportConfig<T>): Promise<ExportResult> {
+export async function exportToPdf<T>(
+  config: ExportConfig<T>
+): Promise<ExportResult> {
   try {
-    const { filename, locale = "en", data, styles: customStyles } = config;
+    const { filename, locale = "en", data, styles: customStyles } = config
 
     // Create styles
-    const styles = createStyles(locale, customStyles);
+    const styles = createStyles(locale, customStyles)
 
     // Generate PDF document
-    const pdfDoc = <PDFDocument config={config} styles={styles} />;
+    const pdfDoc = <PDFDocument config={config} styles={styles} />
 
     // Generate blob
-    const blob = await pdf(pdfDoc).toBlob();
+    const blob = await pdf(pdfDoc).toBlob()
 
     // Generate filename
-    const exportFilename = generateExportFilename(filename, "pdf", locale);
+    const exportFilename = generateExportFilename(filename, "pdf", locale)
 
     // Trigger download
-    downloadBlob(blob, exportFilename);
+    downloadBlob(blob, exportFilename)
 
     return {
       success: true,
@@ -306,13 +317,13 @@ export async function exportToPdf<T>(config: ExportConfig<T>): Promise<ExportRes
       format: "pdf",
       rowCount: data.length,
       fileSize: blob.size,
-    };
+    }
   } catch (error) {
-    console.error("[exportToPdf] Error:", error);
+    console.error("[exportToPdf] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "PDF export failed",
-    };
+    }
   }
 }
 
@@ -321,9 +332,9 @@ export async function exportToPdf<T>(config: ExportConfig<T>): Promise<ExportRes
 // ============================================================================
 
 interface PDFPreviewProps<T> {
-  config: ExportConfig<T>;
-  width?: number;
-  height?: number;
+  config: ExportConfig<T>
+  width?: number
+  height?: number
 }
 
 export function PDFPreview<T>({
@@ -331,13 +342,15 @@ export function PDFPreview<T>({
   width = 600,
   height = 800,
 }: PDFPreviewProps<T>) {
-  const styles = createStyles(config.locale || "en", config.styles);
+  const styles = createStyles(config.locale || "en", config.styles)
 
   return (
-    <div style={{ width, height, overflow: "auto", border: "1px solid #e5e5e5" }}>
+    <div
+      style={{ width, height, overflow: "auto", border: "1px solid #e5e5e5" }}
+    >
       <PDFDocument config={config} styles={styles} />
     </div>
-  );
+  )
 }
 
-export { createStyles };
+export { createStyles }

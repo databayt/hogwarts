@@ -9,6 +9,7 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 ## Key Features
 
 ### 1. Time Entry
+
 - Clock in/out functionality
 - Manual time entry
 - Break time tracking
@@ -16,6 +17,7 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 - QR code scanning
 
 ### 2. Timesheet Management
+
 - Weekly/bi-weekly timesheets
 - Approval workflow
 - Overtime calculation
@@ -23,12 +25,14 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 - Time-off tracking
 
 ### 3. Overtime Rules
+
 - Configurable overtime thresholds
 - Premium pay rates (1.5x, 2x)
 - Automatic overtime detection
 - Overtime approval required
 
 ### 4. Reporting & Analytics
+
 - Hours worked by employee
 - Overtime reports
 - Department-wise hours
@@ -38,6 +42,7 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 ## Data Models
 
 ### Timesheet
+
 ```typescript
 {
   id: string
@@ -56,6 +61,7 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 ```
 
 ### TimeEntry
+
 ```typescript
 {
   id: string
@@ -75,13 +81,14 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 ```
 
 ### OvertimeRule
+
 ```typescript
 {
   regularHoursPerWeek: 40
-  overtimeMultiplier: 1.5      // 1.5x regular rate
-  doubleTimeMultiplier: 2.0    // After 12 hours/day or 60 hours/week
-  weekendMultiplier: 1.5       // Weekend work
-  holidayMultiplier: 2.0       // Holiday work
+  overtimeMultiplier: 1.5 // 1.5x regular rate
+  doubleTimeMultiplier: 2.0 // After 12 hours/day or 60 hours/week
+  weekendMultiplier: 1.5 // Weekend work
+  holidayMultiplier: 2.0 // Holiday work
 }
 ```
 
@@ -90,20 +97,24 @@ The Timesheet module tracks working hours for hourly-paid staff, substitute teac
 ### Time Entry
 
 #### `clockInWithRBAC(userId, location?)`
+
 Records clock-in time.
 
 **Example:**
+
 ```typescript
 const result = await clockInWithRBAC(userId, {
   latitude: 40.7128,
-  longitude: -74.0060
+  longitude: -74.006,
 })
 ```
 
 #### `clockOutWithRBAC(userId)`
+
 Records clock-out time and calculates hours worked.
 
 **Example:**
+
 ```typescript
 const result = await clockOutWithRBAC(userId)
 
@@ -116,11 +127,13 @@ if (result.success && result.data) {
 ```
 
 #### `createManualTimeEntryWithRBAC(data)`
+
 Creates a manual time entry (for corrections).
 
 **Permissions Required:** `timesheet:create`
 
 **Example:**
+
 ```typescript
 await createManualTimeEntryWithRBAC({
   userId: "staff_123",
@@ -128,16 +141,18 @@ await createManualTimeEntryWithRBAC({
   clockIn: new Date("2024-11-15T08:00:00"),
   clockOut: new Date("2024-11-15T17:00:00"),
   breakMinutes: 60,
-  notes: "Forgot to clock in - verified by manager"
+  notes: "Forgot to clock in - verified by manager",
 })
 ```
 
 ### Timesheet Management
 
 #### `submitTimesheetWithRBAC(timesheetId)`
+
 Submits timesheet for approval.
 
 **Example:**
+
 ```typescript
 const result = await submitTimesheetWithRBAC(timesheetId)
 
@@ -148,11 +163,13 @@ if (result.success) {
 ```
 
 #### `approveTimesheetWithRBAC(timesheetId)`
+
 Approves a submitted timesheet.
 
 **Permissions Required:** `timesheet:approve`
 
 **Example:**
+
 ```typescript
 const result = await approveTimesheetWithRBAC(timesheetId)
 
@@ -165,9 +182,11 @@ if (result.success) {
 ### Reporting
 
 #### `getTimesheetSummaryWithRBAC(userId, startDate, endDate)`
+
 Gets timesheet summary for a period.
 
 **Returns:**
+
 ```typescript
 {
   totalDays: number
@@ -183,6 +202,7 @@ Gets timesheet summary for a period.
 ## Overtime Calculation
 
 ### Daily Overtime
+
 ```
 Regular Hours: 0-8 hours/day at regular rate
 Overtime: 8-12 hours/day at 1.5x rate
@@ -196,6 +216,7 @@ Total: $220
 ```
 
 ### Weekly Overtime
+
 ```
 Regular Hours: 0-40 hours/week
 Overtime: 40+ hours/week at 1.5x rate
@@ -208,6 +229,7 @@ Total: $950
 ```
 
 ### Weekend/Holiday Rates
+
 ```
 Weekend: All hours at 1.5x rate
 Holiday: All hours at 2.0x rate
@@ -219,6 +241,7 @@ Example (working Sunday, 8 hours):
 ## Workflow
 
 ### Weekly Timesheet Cycle
+
 ```
 1. Monday: New timesheet period starts
 2. Daily: Staff clock in/out
@@ -230,6 +253,7 @@ Example (working Sunday, 8 hours):
 ```
 
 ### Time Entry Process
+
 ```
 1. Staff arrives at work
 2. Clock in via app/web/QR code
@@ -250,41 +274,46 @@ Example (working Sunday, 8 hours):
 
 ## RBAC
 
-| Role | View | Create | Edit | Approve | View All |
-|------|------|--------|------|---------|----------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **MANAGER** | ✅ (team) | ❌ | ❌ | ✅ (team) | ❌ |
-| **TEACHER** | ✅ (own) | ✅ (own) | ✅ (own) | ❌ | ❌ |
-| **STAFF** | ✅ (own) | ✅ (own) | ✅ (own) | ❌ | ❌ |
+| Role           | View      | Create   | Edit     | Approve   | View All |
+| -------------- | --------- | -------- | -------- | --------- | -------- |
+| **ADMIN**      | ✅        | ✅       | ✅       | ✅        | ✅       |
+| **ACCOUNTANT** | ✅        | ✅       | ✅       | ✅        | ✅       |
+| **MANAGER**    | ✅ (team) | ❌       | ❌       | ✅ (team) | ❌       |
+| **TEACHER**    | ✅ (own)  | ✅ (own) | ✅ (own) | ❌        | ❌       |
+| **STAFF**      | ✅ (own)  | ✅ (own) | ✅ (own) | ❌        | ❌       |
 
 ## Best Practices
 
 ### 1. Accurate Time Entry
+
 - Clock in/out at exact times
 - Record breaks honestly
 - Submit timesheets on time
 - Notify manager of errors immediately
 
 ### 2. Overtime Management
+
 - Get pre-approval for overtime
 - Monitor hours throughout week
 - Alert staff approaching overtime
 - Review overtime regularly
 
 ### 3. Approval Process
+
 - Review timesheets within 24 hours
 - Verify hours match schedules
 - Question unusual entries
 - Approve by Tuesday for Friday payroll
 
 ### 4. Compliance
+
 - Follow labor laws (FLSA)
 - Track all worked hours
 - Maintain 7-year records
 - Regular policy reviews
 
 ### 5. Technology Use
+
 - Use mobile app for clock in/out
 - Enable GPS for field staff
 - Set up geofencing for automatic clock-in
@@ -301,12 +330,15 @@ Example (working Sunday, 8 hours):
 ## Troubleshooting
 
 ### Forgot to Clock Out
+
 **Solution:** Manager can add clock-out time manually with note
 
 ### Incorrect Hours
+
 **Solution:** Edit time entry before submission; after submission requires manager approval
 
 ### Overtime Not Calculated
+
 **Solution:** Verify overtime rules configured; check if employee eligible for overtime
 
 ## Future Enhancements

@@ -1,4 +1,5 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import {
   Card,
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { StatGroup } from "./stat-group"
 import type { CardSize, StatData } from "./types"
 
@@ -103,11 +105,7 @@ export function ChartCard({
         )}
       </CardHeader>
       <CardContent className={cn(sizeClasses[size], "pt-0")}>
-        {loading ? (
-          <Skeleton className="h-64 w-full rounded-lg" />
-        ) : (
-          chart
-        )}
+        {loading ? <Skeleton className="h-64 w-full rounded-lg" /> : chart}
       </CardContent>
       {stats && stats.length > 0 && (
         <CardFooter className={cn(sizeClasses[size], "pt-0")}>

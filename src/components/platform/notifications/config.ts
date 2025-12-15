@@ -1,10 +1,21 @@
-import type {
-  NotificationType,
-  NotificationPriority,
-  NotificationChannel,
-} from "@prisma/client"
 import type { ElementType } from "react"
-import { Bell, MessageSquare, BookOpen, Calendar, DollarSign, Megaphone, UserCheck, TriangleAlert, FileText, Shield } from "lucide-react"
+import type {
+  NotificationChannel,
+  NotificationPriority,
+  NotificationType,
+} from "@prisma/client"
+import {
+  Bell,
+  BookOpen,
+  Calendar,
+  DollarSign,
+  FileText,
+  Megaphone,
+  MessageSquare,
+  Shield,
+  TriangleAlert,
+  UserCheck,
+} from "lucide-react"
 
 // Notification type configurations
 // Note: Icons use semantic color tokens for consistency and theme compatibility
@@ -189,29 +200,30 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: Record<
 }
 
 // Notification expiration times (in days)
-export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> = {
-  message: 30,
-  message_mention: 30,
-  assignment_created: 60,
-  assignment_due: 7,
-  assignment_graded: 60,
-  grade_posted: 90,
-  attendance_marked: 30,
-  attendance_alert: 7,
-  fee_due: 30,
-  fee_overdue: 30,
-  fee_paid: 90,
-  announcement: 90,
-  event_reminder: 7,
-  class_cancelled: 7,
-  class_rescheduled: 7,
-  system_alert: 30,
-  account_created: 90,
-  password_reset: 1,
-  login_alert: 7,
-  document_shared: 60,
-  report_ready: 30,
-}
+export const NOTIFICATION_EXPIRATION: Record<NotificationType, number | null> =
+  {
+    message: 30,
+    message_mention: 30,
+    assignment_created: 60,
+    assignment_due: 7,
+    assignment_graded: 60,
+    grade_posted: 90,
+    attendance_marked: 30,
+    attendance_alert: 7,
+    fee_due: 30,
+    fee_overdue: 30,
+    fee_paid: 90,
+    announcement: 90,
+    event_reminder: 7,
+    class_cancelled: 7,
+    class_rescheduled: 7,
+    system_alert: 30,
+    account_created: 90,
+    password_reset: 1,
+    login_alert: 7,
+    document_shared: 60,
+    report_ready: 30,
+  }
 
 // Pagination and limits
 export const NOTIFICATIONS_PER_PAGE = 20

@@ -3,19 +3,19 @@
  * Follows Hogwarts content pattern - client component that composes the feature
  */
 
-'use client'
+"use client"
 
-import * as React from 'react'
-import { ExpenseReceipt } from './types'
-import { getReceipts } from './actions'
-import { UploadForm } from './upload-form'
-import { ReceiptCard } from './receipt-card'
-import { DataTable } from './table'
-import { getColumns } from './columns'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LoaderCircle, Grid3X3, List, Plus } from "lucide-react"
+import * as React from "react"
+import { Grid3X3, List, LoaderCircle, Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -23,17 +23,29 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { getReceipts } from "./actions"
+import { getColumns } from "./columns"
+import { ReceiptCard } from "./receipt-card"
+import { DataTable } from "./table"
+import { ExpenseReceipt } from "./types"
+import { UploadForm } from "./upload-form"
 
 interface ReceiptsContentProps {
   initialReceipts?: ExpenseReceipt[]
   locale?: string
 }
 
-export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: ReceiptsContentProps) {
-  const [receipts, setReceipts] = React.useState<ExpenseReceipt[]>(initialReceipts)
+export function ReceiptsContent({
+  initialReceipts = [],
+  locale = "en",
+}: ReceiptsContentProps) {
+  const [receipts, setReceipts] =
+    React.useState<ExpenseReceipt[]>(initialReceipts)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [viewMode, setViewMode] = React.useState<'grid' | 'table'>('grid')
+  const [viewMode, setViewMode] = React.useState<"grid" | "table">("grid")
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState(false)
 
   const columns = React.useMemo(() => getColumns(), [])
@@ -46,7 +58,7 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
         setReceipts(result.data.receipts)
       }
     } catch (error) {
-      console.error('Failed to load receipts:', error)
+      console.error("Failed to load receipts:", error)
     } finally {
       setIsLoading(false)
     }
@@ -61,7 +73,9 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
   // Auto-refresh every 10 seconds to check for processing updates
   React.useEffect(() => {
     const interval = setInterval(() => {
-      const hasProcessing = receipts.some(r => r.status === 'processing' || r.status === 'pending')
+      const hasProcessing = receipts.some(
+        (r) => r.status === "processing" || r.status === "pending"
+      )
       if (hasProcessing) {
         void loadReceipts()
       }
@@ -73,9 +87,11 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
   const stats = React.useMemo(() => {
     return {
       total: receipts.length,
-      processed: receipts.filter(r => r.status === 'processed').length,
-      pending: receipts.filter(r => r.status === 'pending' || r.status === 'processing').length,
-      error: receipts.filter(r => r.status === 'error').length,
+      processed: receipts.filter((r) => r.status === "processed").length,
+      pending: receipts.filter(
+        (r) => r.status === "pending" || r.status === "processing"
+      ).length,
+      error: receipts.filter((r) => r.status === "error").length,
     }
   }, [receipts])
 
@@ -92,7 +108,7 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
         <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Upload Receipt
             </Button>
           </DialogTrigger>
@@ -100,7 +116,8 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
             <DialogHeader>
               <DialogTitle>Upload New Receipt</DialogTitle>
               <DialogDescription>
-                Upload a receipt image or PDF. AI will automatically extract the data.
+                Upload a receipt image or PDF. AI will automatically extract the
+                data.
               </DialogDescription>
             </DialogHeader>
             <UploadForm locale={locale} />
@@ -112,7 +129,9 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Receipts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Receipts
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
@@ -123,7 +142,9 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
             <CardTitle className="text-sm font-medium">Processed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-chart-2">{stats.processed}</div>
+            <div className="text-chart-2 text-2xl font-bold">
+              {stats.processed}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -131,7 +152,9 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
             <CardTitle className="text-sm font-medium">Processing</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{stats.pending}</div>
+            <div className="text-primary text-2xl font-bold">
+              {stats.pending}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -139,14 +162,19 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
             <CardTitle className="text-sm font-medium">Errors</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.error}</div>
+            <div className="text-destructive text-2xl font-bold">
+              {stats.error}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* View Toggle */}
       <div className="flex items-center justify-between">
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'table')}>
+        <Tabs
+          value={viewMode}
+          onValueChange={(value) => setViewMode(value as "grid" | "table")}
+        >
           <TabsList>
             <TabsTrigger value="grid" className="gap-2">
               <Grid3X3 className="h-4 w-4" />
@@ -163,24 +191,30 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
       {/* Content */}
       {isLoading && receipts.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
+          <LoaderCircle className="text-primary h-8 w-8 animate-spin" />
         </div>
       ) : receipts.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">No receipts uploaded yet</p>
+            <p className="text-muted-foreground mb-4">
+              No receipts uploaded yet
+            </p>
             <Button onClick={() => setIsUploadDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Upload Your First Receipt
             </Button>
           </CardContent>
         </Card>
       ) : (
         <>
-          {viewMode === 'grid' ? (
+          {viewMode === "grid" ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {receipts.map((receipt) => (
-                <ReceiptCard key={receipt.id} receipt={receipt} locale={locale} />
+                <ReceiptCard
+                  key={receipt.id}
+                  receipt={receipt}
+                  locale={locale}
+                />
               ))}
             </div>
           ) : (

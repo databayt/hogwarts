@@ -1,8 +1,8 @@
-import ExamsContent from '@/components/platform/exams/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ExamsContent from "@/components/platform/exams/content"
 
-export const metadata = { title: 'Dashboard: Exams' }
+export const metadata = { title: "Dashboard: Exams" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

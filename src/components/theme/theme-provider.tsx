@@ -6,24 +6,29 @@
  * Uses Zustand store for state management following tweakcn pattern.
  */
 
-'use client'
+"use client"
 
-import { type ReactNode, useEffect, useCallback, useRef } from 'react'
-import { useTheme as useNextTheme } from 'next-themes'
-import { useEditorStore } from '@/store/theme-editor-store'
-import { useThemePresetStore } from '@/store/theme-preset-store'
-import { applyThemeToDocument, getCurrentThemeMode } from './inject-theme'
-import { getUserTheme } from './actions'
-import type { ThemeEditorState } from '@/types/theme-editor'
-import { defaultThemeState } from './config'
-import { DynamicFontLoader } from './dynamic-font-loader'
+import { useCallback, useEffect, useRef, type ReactNode } from "react"
+import { useEditorStore } from "@/store/theme-editor-store"
+import { useThemePresetStore } from "@/store/theme-preset-store"
+import { useTheme as useNextTheme } from "next-themes"
+
+import type { ThemeEditorState } from "@/types/theme-editor"
+
+import { getUserTheme } from "./actions"
+import { defaultThemeState } from "./config"
+import { DynamicFontLoader } from "./dynamic-font-loader"
+import { applyThemeToDocument, getCurrentThemeMode } from "./inject-theme"
 
 interface ThemeProviderProps {
   children: ReactNode
   initialTheme?: any
 }
 
-export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps) {
+export function UserThemeProvider({
+  children,
+  initialTheme,
+}: ThemeProviderProps) {
   const { themeState, setThemeState } = useEditorStore()
   const { resolvedTheme } = useNextTheme()
   const presetStore = useThemePresetStore()
@@ -35,11 +40,12 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
 
     const initializePresets = async () => {
       try {
-        const { builtInPresets } = await import('./presets')
+        const { builtInPresets } = await import("./presets")
 
         // Register all built-in presets
         builtInPresets.forEach((preset) => {
-          const presetName = preset.label?.toLowerCase().replace(/\s+/g, '-') || 'untitled'
+          const presetName =
+            preset.label?.toLowerCase().replace(/\s+/g, "-") || "untitled"
           presetStore.registerPreset(presetName, preset)
         })
 
@@ -50,7 +56,7 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
 
         hasInitialized.current = true
       } catch (error) {
-        console.error('Failed to initialize presets:', error)
+        console.error("Failed to initialize presets:", error)
       }
     }
 
@@ -76,7 +82,7 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
   useEffect(() => {
     if (!resolvedTheme) return
 
-    const mode = resolvedTheme === 'dark' ? 'dark' : 'light'
+    const mode = resolvedTheme === "dark" ? "dark" : "light"
     const currentStyles = themeState.styles[mode]
     applyThemeToDocument(currentStyles, mode)
   }, [resolvedTheme, themeState])

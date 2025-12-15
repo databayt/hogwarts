@@ -1,62 +1,64 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useEffect } from "react";
-import type { z } from "zod";
-import { toast } from "sonner";
-import { createLead, updateLead } from "@/components/sales/actions";
-import { createLeadSchema } from "@/components/sales/validation";
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, type SubmitHandler } from "react-hook-form"
+import { toast } from "sonner"
+import type { z } from "zod"
+
+import { Button } from "@/components/ui/button"
 import {
-  Form as FormUI,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+  Form as FormUI,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useModal } from "@/components/atom/modal/context"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { createLead, updateLead } from "@/components/sales/actions"
+import { createLeadSchema } from "@/components/sales/validation"
+
+import { getLeadById } from "./actions"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-import {
-  LEAD_STATUS,
-  LEAD_SOURCE,
   LEAD_PRIORITY,
+  LEAD_SOURCE,
+  LEAD_STATUS,
   LEAD_TYPE,
-  type LeadStatusKey,
-  type LeadSourceKey,
   type LeadPriorityKey,
+  type LeadSourceKey,
+  type LeadStatusKey,
   type LeadTypeKey,
-} from "./constants";
-import type { Lead } from "./types";
-import { useModal } from "@/components/atom/modal/context";
-import { getLeadById } from "./actions";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "./constants"
+import type { Lead } from "./types"
 
 interface FormProps {
-  open: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
-  lead?: Lead | null;
-  mode?: "create" | "edit";
-  dictionary?: Record<string, string>;
+  open: boolean
+  onClose: () => void
+  onSuccess?: () => void
+  lead?: Lead | null
+  mode?: "create" | "edit"
+  dictionary?: Record<string, string>
 }
 
-type LeadFormValues = z.input<typeof createLeadSchema>;
+type LeadFormValues = z.input<typeof createLeadSchema>
 
 export function Form({
   open,
@@ -66,9 +68,9 @@ export function Form({
   mode = "create",
   dictionary,
 }: FormProps) {
-  const router = useRouter();
-  const isEditing = mode === "edit" && !!lead;
-  const d = dictionary;
+  const router = useRouter()
+  const isEditing = mode === "edit" && !!lead
+  const d = dictionary
 
   // Translations
   const t = {
@@ -122,7 +124,7 @@ export function Form({
     SCHOOL: d?.SCHOOL || "School",
     PARTNERSHIP: d?.PARTNERSHIP || "Partnership",
     OTHER: d?.OTHER || "Other",
-  };
+  }
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(createLeadSchema),
@@ -145,7 +147,7 @@ export function Form({
       tags: [],
       verified: false,
     },
-  });
+  })
 
   // Load existing lead for editing
   useEffect(() => {
@@ -168,8 +170,8 @@ export function Form({
         notes: "",
         tags: [],
         verified: false,
-      });
-      return;
+      })
+      return
     }
     form.reset({
       name: lead.name || "",
@@ -188,45 +190,49 @@ export function Form({
       score: lead.score ?? 50,
       notes: lead.notes || "",
       tags: lead.tags || [],
-    });
-  }, [lead, form]);
+    })
+  }, [lead, form])
 
   const onSubmit: SubmitHandler<LeadFormValues> = async (values) => {
     try {
-      const res = isEditing && lead
-        ? await updateLead(lead.id, values as Parameters<typeof updateLead>[1])
-        : await createLead(values as Parameters<typeof createLead>[0]);
+      const res =
+        isEditing && lead
+          ? await updateLead(
+              lead.id,
+              values as Parameters<typeof updateLead>[1]
+            )
+          : await createLead(values as Parameters<typeof createLead>[0])
 
       if (res?.success) {
         const successMsg = isEditing
           ? d?.leadUpdated || "Lead updated successfully"
-          : d?.leadCreated || "Lead created successfully";
-        toast.success(successMsg);
-        onClose();
+          : d?.leadCreated || "Lead created successfully"
+        toast.success(successMsg)
+        onClose()
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         } else {
-          router.refresh();
+          router.refresh()
         }
       } else {
         const errorMsg =
           res?.error ||
           (isEditing
             ? d?.failedUpdate || "Failed to update lead"
-            : d?.failedCreate || "Failed to create lead");
-        toast.error(errorMsg);
+            : d?.failedCreate || "Failed to create lead")
+        toast.error(errorMsg)
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error(d?.unexpectedError || "An unexpected error occurred");
+      console.error("Form submission error:", error)
+      toast.error(d?.unexpectedError || "An unexpected error occurred")
     }
-  };
+  }
 
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting = form.formState.isSubmitting
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t.title}</DialogTitle>
         </DialogHeader>
@@ -334,11 +340,13 @@ export function Form({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.keys(LEAD_TYPE) as LeadTypeKey[]).map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {t[type] || type}
-                          </SelectItem>
-                        ))}
+                        {(Object.keys(LEAD_TYPE) as LeadTypeKey[]).map(
+                          (type) => (
+                            <SelectItem key={type} value={type}>
+                              {t[type] || type}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -500,35 +508,31 @@ export function Form({
                 {t.cancel}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? isEditing
-                    ? t.updating
-                    : t.creating
-                  : t.save}
+                {isSubmitting ? (isEditing ? t.updating : t.creating) : t.save}
               </Button>
             </div>
           </form>
         </FormUI>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 // LeadForm - backward compatible version for use with Modal atom (table.tsx)
 // Uses useModal context instead of direct props
 
 interface LeadFormProps {
-  dictionary?: Dictionary["sales"];
-  onSuccess?: () => void;
+  dictionary?: Dictionary["sales"]
+  onSuccess?: () => void
 }
 
 export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
-  const { modal, closeModal } = useModal();
-  const router = useRouter();
+  const { modal, closeModal } = useModal()
+  const router = useRouter()
 
-  const currentId = modal.id || undefined;
-  const isEditing = !!currentId;
-  const d = dictionary as unknown as Record<string, string> | undefined;
+  const currentId = modal.id || undefined
+  const isEditing = !!currentId
+  const d = dictionary as unknown as Record<string, string> | undefined
 
   const t = {
     title: isEditing
@@ -576,7 +580,7 @@ export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
     SCHOOL: d?.SCHOOL || "School",
     PARTNERSHIP: d?.PARTNERSHIP || "Partnership",
     OTHER: d?.OTHER || "Other",
-  };
+  }
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(createLeadSchema),
@@ -599,14 +603,14 @@ export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
       tags: [],
       verified: false,
     },
-  });
+  })
 
   useEffect(() => {
     const load = async () => {
-      if (!currentId) return;
-      const res = await getLeadById(currentId);
-      if (!res.success || !res.data) return;
-      const lead = res.data;
+      if (!currentId) return
+      const res = await getLeadById(currentId)
+      if (!res.success || !res.data) return
+      const lead = res.data
       form.reset({
         name: lead.name || "",
         email: lead.email || "",
@@ -624,35 +628,39 @@ export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
         score: lead.score ?? 50,
         notes: lead.notes || "",
         tags: lead.tags || [],
-      });
-    };
-    void load();
-  }, [currentId, form]);
+      })
+    }
+    void load()
+  }, [currentId, form])
 
   const onSubmit: SubmitHandler<LeadFormValues> = async (values) => {
     try {
-      const res = isEditing && currentId
-        ? await updateLead(currentId, values as Parameters<typeof updateLead>[1])
-        : await createLead(values as Parameters<typeof createLead>[0]);
+      const res =
+        isEditing && currentId
+          ? await updateLead(
+              currentId,
+              values as Parameters<typeof updateLead>[1]
+            )
+          : await createLead(values as Parameters<typeof createLead>[0])
 
       if (res?.success) {
-        toast.success(isEditing ? "Lead updated" : "Lead created");
-        closeModal();
+        toast.success(isEditing ? "Lead updated" : "Lead created")
+        closeModal()
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         } else {
-          router.refresh();
+          router.refresh()
         }
       } else {
-        toast.error(res?.error || "Operation failed");
+        toast.error(res?.error || "Operation failed")
       }
     } catch (error) {
-      console.error("Form error:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Form error:", error)
+      toast.error("An unexpected error occurred")
     }
-  };
+  }
 
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting = form.formState.isSubmitting
 
   return (
     <FormUI {...form}>
@@ -812,14 +820,10 @@ export function LeadForm({ dictionary, onSuccess }: LeadFormProps) {
             {t.cancel}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? isEditing
-                ? t.updating
-                : t.creating
-              : t.save}
+            {isSubmitting ? (isEditing ? t.updating : t.creating) : t.save}
           </Button>
         </div>
       </form>
     </FormUI>
-  );
+  )
 }

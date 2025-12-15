@@ -1,7 +1,7 @@
 export interface TitleData {
-  title: string;
+  title: string
 }
 
 export interface TitleFormData {
-  title: string;
+  title: string
 }

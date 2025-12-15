@@ -1,10 +1,18 @@
 "use server"
 
 import { auth } from "@/auth"
-import { db } from "@/lib/db"
-import type { DashboardStats, FinancialAlert, RecentTransaction } from "./types"
-import { startOfMonth, endOfMonth, subMonths, startOfYear, endOfYear } from "date-fns"
 import { Decimal } from "@prisma/client/runtime/library"
+import {
+  endOfMonth,
+  endOfYear,
+  startOfMonth,
+  startOfYear,
+  subMonths,
+} from "date-fns"
+
+import { db } from "@/lib/db"
+
+import type { DashboardStats, FinancialAlert, RecentTransaction } from "./types"
 
 // Helper to convert Decimal to number
 function decimalToNumber(value: Decimal | null | undefined): number {
@@ -13,7 +21,7 @@ function decimalToNumber(value: Decimal | null | undefined): number {
 }
 
 export async function getDashboardStats(
-  dateRange: 'month' | 'quarter' | 'year' = 'month'
+  dateRange: "month" | "quarter" | "year" = "month"
 ): Promise<DashboardStats> {
   const session = await auth()
   if (!session?.user?.schoolId) {
@@ -28,14 +36,14 @@ export async function getDashboardStats(
   let endDate = endOfMonth(now)
 
   switch (dateRange) {
-    case 'year':
+    case "year":
       startDate = startOfYear(now)
       endDate = endOfYear(now)
       break
-    case 'quarter':
+    case "quarter":
       startDate = startOfMonth(subMonths(now, 2))
       break
-    case 'month':
+    case "month":
     default:
       startDate = startOfMonth(now)
       break
@@ -52,14 +60,14 @@ export async function getDashboardStats(
     students,
     payrollRuns,
     wallets,
-    transactions
+    transactions,
   ] = await Promise.all([
     // Invoices
     db.userInvoice.findMany({
       where: {
         schoolId,
-        invoice_date: { gte: startDate, lte: endDate }
-      }
+        invoice_date: { gte: startDate, lte: endDate },
+      },
     }),
 
     // Payments
@@ -67,47 +75,47 @@ export async function getDashboardStats(
       where: {
         schoolId,
         paymentDate: { gte: startDate, lte: endDate },
-        status: 'SUCCESS'
-      }
+        status: "SUCCESS",
+      },
     }),
 
     // Expenses
     db.expense.findMany({
       where: {
         schoolId,
-        expenseDate: { gte: startDate, lte: endDate }
+        expenseDate: { gte: startDate, lte: endDate },
       },
       include: {
-        category: true
-      }
+        category: true,
+      },
     }),
 
     // Bank Accounts
     db.bankAccount.findMany({
-      where: { schoolId }
+      where: { schoolId },
     }),
 
     // Budgets
     db.budget.findMany({
       where: {
         schoolId,
-        status: 'ACTIVE'
+        status: "ACTIVE",
       },
       include: {
         allocations: {
           include: {
-            category: true
-          }
-        }
-      }
+            category: true,
+          },
+        },
+      },
     }),
 
     // Fee Structures
     db.feeStructure.findMany({
       where: {
         schoolId,
-        isActive: true
-      }
+        isActive: true,
+      },
     }),
 
     // Students with fee assignments
@@ -116,154 +124,179 @@ export async function getDashboardStats(
       include: {
         feeAssignments: {
           where: {
-            academicYear: new Date().getFullYear().toString()
+            academicYear: new Date().getFullYear().toString(),
           },
           include: {
             payments: {
               where: {
-                status: 'SUCCESS'
-              }
-            }
-          }
-        }
-      }
+                status: "SUCCESS",
+              },
+            },
+          },
+        },
+      },
     }),
 
     // Payroll
     db.payrollRun.findMany({
       where: {
         schoolId,
-        payDate: { gte: startDate, lte: endDate }
-      }
+        payDate: { gte: startDate, lte: endDate },
+      },
     }),
 
     // Wallets
     db.wallet.findMany({
-      where: { schoolId }
+      where: { schoolId },
     }),
 
     // Bank Transactions
     db.transaction.findMany({
       where: {
         schoolId,
-        date: { gte: startDate, lte: endDate }
+        date: { gte: startDate, lte: endDate },
       },
-      orderBy: { date: 'desc' },
-      take: 10
-    })
+      orderBy: { date: "desc" },
+      take: 10,
+    }),
   ])
 
   // Calculate Revenue Metrics
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0)
-  const collectedRevenue = payments.reduce((sum, pay) =>
-    sum + decimalToNumber(pay.amount), 0
+  const collectedRevenue = payments.reduce(
+    (sum, pay) => sum + decimalToNumber(pay.amount),
+    0
   )
   const outstandingRevenue = totalRevenue - collectedRevenue
-  const collectionRate = totalRevenue > 0
-    ? (collectedRevenue / totalRevenue) * 100
-    : 0
+  const collectionRate =
+    totalRevenue > 0 ? (collectedRevenue / totalRevenue) * 100 : 0
 
   // Calculate Expense Metrics
-  const totalExpenses = expenses.reduce((sum, exp) =>
-    sum + decimalToNumber(exp.amount), 0
+  const totalExpenses = expenses.reduce(
+    (sum, exp) => sum + decimalToNumber(exp.amount),
+    0
   )
 
   // Group expenses by category
-  const expenseByCategory = expenses.reduce((acc, exp) => {
-    const category = exp.category?.name || 'Other'
-    if (!acc[category]) acc[category] = 0
-    acc[category] += decimalToNumber(exp.amount)
-    return acc
-  }, {} as Record<string, number>)
+  const expenseByCategory = expenses.reduce(
+    (acc, exp) => {
+      const category = exp.category?.name || "Other"
+      if (!acc[category]) acc[category] = 0
+      acc[category] += decimalToNumber(exp.amount)
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
-  const expenseCategories = Object.entries(expenseByCategory).map(([category, amount]) => ({
-    category,
-    amount,
-    percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0
-  }))
+  const expenseCategories = Object.entries(expenseByCategory).map(
+    ([category, amount]) => ({
+      category,
+      amount,
+      percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
+    })
+  )
 
   // Calculate Profit Metrics
   const grossProfit = collectedRevenue - totalExpenses
   const netProfit = grossProfit // Simplified - should include other deductions
-  const profitMargin = collectedRevenue > 0
-    ? (netProfit / collectedRevenue) * 100
-    : 0
+  const profitMargin =
+    collectedRevenue > 0 ? (netProfit / collectedRevenue) * 100 : 0
 
   // Calculate Cash Metrics
-  const cashBalance = bankAccounts.reduce((sum, acc) =>
-    sum + decimalToNumber(acc.currentBalance), 0
+  const cashBalance = bankAccounts.reduce(
+    (sum, acc) => sum + decimalToNumber(acc.currentBalance),
+    0
   )
   const cashInflow = collectedRevenue
   const cashOutflow = totalExpenses
   const monthlyExpenses = totalExpenses // Assuming monthly data
-  const cashRunway = monthlyExpenses > 0
-    ? Math.floor(cashBalance / monthlyExpenses)
-    : 999
+  const cashRunway =
+    monthlyExpenses > 0 ? Math.floor(cashBalance / monthlyExpenses) : 999
 
   // Calculate Invoice Metrics
   const totalInvoices = invoices.length
-  const paidInvoices = invoices.filter(inv => inv.status === 'PAID').length
-  const pendingInvoices = invoices.filter(inv => inv.status === 'UNPAID').length
-  const overdueInvoices = invoices.filter(inv =>
-    inv.status === 'OVERDUE' || (inv.status === 'UNPAID' && inv.due_date < now)
+  const paidInvoices = invoices.filter((inv) => inv.status === "PAID").length
+  const pendingInvoices = invoices.filter(
+    (inv) => inv.status === "UNPAID"
+  ).length
+  const overdueInvoices = invoices.filter(
+    (inv) =>
+      inv.status === "OVERDUE" ||
+      (inv.status === "UNPAID" && inv.due_date < now)
   ).length
   const overdueAmount = invoices
-    .filter(inv => inv.status === 'OVERDUE' || (inv.status === 'UNPAID' && inv.due_date < now))
+    .filter(
+      (inv) =>
+        inv.status === "OVERDUE" ||
+        (inv.status === "UNPAID" && inv.due_date < now)
+    )
     .reduce((sum, inv) => sum + inv.total, 0)
 
   // Calculate Payroll Metrics
-  const totalPayroll = payrollRuns.reduce((sum, run) =>
-    sum + decimalToNumber(run.totalNet), 0
+  const totalPayroll = payrollRuns.reduce(
+    (sum, run) => sum + decimalToNumber(run.totalNet),
+    0
   )
-  const payrollProcessed = payrollRuns.filter(run => run.status === 'PAID').length
-  const pendingPayroll = payrollRuns.filter(run =>
-    run.status !== 'PAID' && run.status !== 'CANCELLED'
+  const payrollProcessed = payrollRuns.filter(
+    (run) => run.status === "PAID"
+  ).length
+  const pendingPayroll = payrollRuns.filter(
+    (run) => run.status !== "PAID" && run.status !== "CANCELLED"
   ).length
 
   // Calculate Fee Metrics
   const totalStudents = students.length
-  const studentsWithPayments = students.filter(s =>
-    s.feeAssignments.some(fa => fa.payments.length > 0)
+  const studentsWithPayments = students.filter((s) =>
+    s.feeAssignments.some((fa) => fa.payments.length > 0)
   ).length
   const studentsWithoutPayments = totalStudents - studentsWithPayments
-  const totalFeeAmount = students.reduce((sum, s) =>
-    sum + s.feeAssignments.reduce((fSum, fa) =>
-      fSum + decimalToNumber(fa.finalAmount), 0
-    ), 0
+  const totalFeeAmount = students.reduce(
+    (sum, s) =>
+      sum +
+      s.feeAssignments.reduce(
+        (fSum, fa) => fSum + decimalToNumber(fa.finalAmount),
+        0
+      ),
+    0
   )
-  const averageFeePerStudent = totalStudents > 0
-    ? totalFeeAmount / totalStudents
-    : 0
+  const averageFeePerStudent =
+    totalStudents > 0 ? totalFeeAmount / totalStudents : 0
 
   // Bank Accounts
-  const bankAccountsData = bankAccounts.map(acc => ({
+  const bankAccountsData = bankAccounts.map((acc) => ({
     name: acc.name,
     balance: decimalToNumber(acc.currentBalance),
-    type: acc.type
+    type: acc.type,
   }))
 
   // Budget Categories
-  const budgetCategories = budgets.flatMap(budget =>
-    budget.allocations.map(alloc => ({
+  const budgetCategories = budgets.flatMap((budget) =>
+    budget.allocations.map((alloc) => ({
       category: alloc.category.name,
       allocated: decimalToNumber(alloc.allocated),
       spent: decimalToNumber(alloc.spent),
       remaining: decimalToNumber(alloc.remaining),
-      percentage: decimalToNumber(alloc.allocated) > 0
-        ? (decimalToNumber(alloc.spent) / decimalToNumber(alloc.allocated)) * 100
-        : 0
+      percentage:
+        decimalToNumber(alloc.allocated) > 0
+          ? (decimalToNumber(alloc.spent) / decimalToNumber(alloc.allocated)) *
+            100
+          : 0,
     }))
   )
 
   // Calculate budget totals
-  const budgetTotal = budgetCategories.reduce((sum, cat) => sum + cat.allocated, 0)
+  const budgetTotal = budgetCategories.reduce(
+    (sum, cat) => sum + cat.allocated,
+    0
+  )
   const budgetUsed = budgetCategories.reduce((sum, cat) => sum + cat.spent, 0)
   const budgetRemaining = budgetTotal - budgetUsed
 
   // Generate trends (mock data for now - should calculate from historical data)
   const generateTrend = (base: number, variance = 0.1) =>
-    Array.from({ length: 12 }, () =>
-      base * (1 + (Math.random() - 0.5) * variance)
+    Array.from(
+      { length: 12 },
+      () => base * (1 + (Math.random() - 0.5) * variance)
     )
 
   const revenuesTrend = generateTrend(collectedRevenue / 12)
@@ -323,7 +356,7 @@ export async function getDashboardStats(
     revenuesTrend,
     expensesTrend,
     profitTrend,
-    collectionTrend
+    collectionTrend,
   }
 }
 
@@ -341,65 +374,70 @@ export async function getRecentTransactions(
   const [bankTransactions, expenses, payments] = await Promise.all([
     db.transaction.findMany({
       where: { schoolId },
-      orderBy: { date: 'desc' },
-      take: limit
+      orderBy: { date: "desc" },
+      take: limit,
     }),
     db.expense.findMany({
       where: { schoolId },
-      orderBy: { expenseDate: 'desc' },
+      orderBy: { expenseDate: "desc" },
       include: { category: true },
-      take: limit
+      take: limit,
     }),
     db.payment.findMany({
       where: { schoolId },
-      orderBy: { paymentDate: 'desc' },
+      orderBy: { paymentDate: "desc" },
       include: { student: true },
-      take: limit
-    })
+      take: limit,
+    }),
   ])
 
   // Convert to unified format
   const recentTransactions: RecentTransaction[] = []
 
   // Add bank transactions
-  bankTransactions.forEach(tx => {
+  bankTransactions.forEach((tx) => {
     recentTransactions.push({
       id: tx.id,
-      type: tx.type === 'credit' ? 'income' : 'expense',
+      type: tx.type === "credit" ? "income" : "expense",
       description: tx.name,
       amount: decimalToNumber(tx.amount),
       date: tx.date,
-      status: tx.pending ? 'pending' : 'completed',
+      status: tx.pending ? "pending" : "completed",
       category: tx.category,
-      reference: tx.merchantName || undefined
+      reference: tx.merchantName || undefined,
     })
   })
 
   // Add expenses
-  expenses.forEach(exp => {
+  expenses.forEach((exp) => {
     recentTransactions.push({
       id: exp.id,
-      type: 'expense',
+      type: "expense",
       description: exp.description,
       amount: decimalToNumber(exp.amount),
       date: exp.expenseDate,
-      status: exp.status === 'PAID' ? 'completed' : 'pending',
+      status: exp.status === "PAID" ? "completed" : "pending",
       category: exp.category?.name,
-      reference: exp.expenseNumber
+      reference: exp.expenseNumber,
     })
   })
 
   // Add payments
-  payments.forEach(pay => {
+  payments.forEach((pay) => {
     recentTransactions.push({
       id: pay.id,
-      type: 'income',
+      type: "income",
       description: `Fee payment from ${pay.student.givenName} ${pay.student.surname}`,
       amount: decimalToNumber(pay.amount),
       date: pay.paymentDate,
-      status: pay.status === 'SUCCESS' ? 'completed' : pay.status === 'FAILED' ? 'failed' : 'pending',
-      category: 'Student Fees',
-      reference: pay.receiptNumber
+      status:
+        pay.status === "SUCCESS"
+          ? "completed"
+          : pay.status === "FAILED"
+            ? "failed"
+            : "pending",
+      category: "Student Fees",
+      reference: pay.receiptNumber,
     })
   })
 
@@ -423,32 +461,33 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
   const overdueInvoices = await db.userInvoice.count({
     where: {
       schoolId,
-      status: { in: ['UNPAID', 'OVERDUE'] },
-      due_date: { lt: now }
-    }
+      status: { in: ["UNPAID", "OVERDUE"] },
+      due_date: { lt: now },
+    },
   })
 
   if (overdueInvoices > 0) {
     alerts.push({
-      id: 'overdue-invoices',
-      type: 'warning',
-      title: 'Overdue Invoices',
+      id: "overdue-invoices",
+      type: "warning",
+      title: "Overdue Invoices",
       description: `${overdueInvoices} invoice(s) are overdue and require attention`,
       action: {
-        label: 'View Invoices',
-        href: '/finance/invoice/overdue'
+        label: "View Invoices",
+        href: "/finance/invoice/overdue",
       },
-      timestamp: now
+      timestamp: now,
     })
   }
 
   // Check for low cash balance
   const bankAccounts = await db.bankAccount.findMany({
-    where: { schoolId }
+    where: { schoolId },
   })
 
-  const totalBalance = bankAccounts.reduce((sum, acc) =>
-    sum + decimalToNumber(acc.currentBalance), 0
+  const totalBalance = bankAccounts.reduce(
+    (sum, acc) => sum + decimalToNumber(acc.currentBalance),
+    0
   )
 
   // Alert if cash is below 2 months of expenses
@@ -457,12 +496,12 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
       schoolId,
       expenseDate: {
         gte: startOfMonth(now),
-        lte: endOfMonth(now)
-      }
+        lte: endOfMonth(now),
+      },
     },
     _avg: {
-      amount: true
-    }
+      amount: true,
+    },
   })
 
   const avgMonthlyExpense = decimalToNumber(monthlyExpenses._avg.amount) || 0
@@ -470,15 +509,15 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
 
   if (totalBalance < minCashRequired && avgMonthlyExpense > 0) {
     alerts.push({
-      id: 'low-cash',
-      type: 'error',
-      title: 'Low Cash Balance',
+      id: "low-cash",
+      type: "error",
+      title: "Low Cash Balance",
       description: `Cash balance is below 2 months of operating expenses`,
       action: {
-        label: 'View Banking',
-        href: '/finance/banking'
+        label: "View Banking",
+        href: "/finance/banking",
       },
-      timestamp: now
+      timestamp: now,
     })
   }
 
@@ -486,22 +525,22 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
   const pendingPayroll = await db.payrollRun.count({
     where: {
       schoolId,
-      status: 'APPROVED',
-      payDate: { lte: now }
-    }
+      status: "APPROVED",
+      payDate: { lte: now },
+    },
   })
 
   if (pendingPayroll > 0) {
     alerts.push({
-      id: 'pending-payroll',
-      type: 'info',
-      title: 'Pending Payroll',
+      id: "pending-payroll",
+      type: "info",
+      title: "Pending Payroll",
       description: `${pendingPayroll} payroll run(s) ready for processing`,
       action: {
-        label: 'Process Payroll',
-        href: '/finance/payroll'
+        label: "Process Payroll",
+        href: "/finance/payroll",
       },
-      timestamp: now
+      timestamp: now,
     })
   }
 
@@ -512,26 +551,26 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     },
     include: {
       category: true,
-      budget: true
-    }
+      budget: true,
+    },
   })
 
   // Filter for budget overruns (spent > allocated)
   const overrunAllocations = budgetAllocations.filter(
-    alloc => decimalToNumber(alloc.spent) > decimalToNumber(alloc.allocated)
+    (alloc) => decimalToNumber(alloc.spent) > decimalToNumber(alloc.allocated)
   )
 
   if (overrunAllocations.length > 0) {
     alerts.push({
-      id: 'budget-overrun',
-      type: 'warning',
-      title: 'Budget Overrun',
+      id: "budget-overrun",
+      type: "warning",
+      title: "Budget Overrun",
       description: `${overrunAllocations.length} budget categories have exceeded allocation`,
       action: {
-        label: 'Review Budget',
-        href: '/finance/budget'
+        label: "Review Budget",
+        href: "/finance/budget",
       },
-      timestamp: now
+      timestamp: now,
     })
   }
 
@@ -540,19 +579,19 @@ export async function getFinancialAlerts(): Promise<FinancialAlert[]> {
     where: {
       schoolId,
       paymentDate: {
-        gte: subMonths(now, 1)
+        gte: subMonths(now, 1),
       },
-      status: 'SUCCESS'
-    }
+      status: "SUCCESS",
+    },
   })
 
   if (recentPayments > 10) {
     alerts.push({
-      id: 'good-collection',
-      type: 'success',
-      title: 'Strong Collection Rate',
+      id: "good-collection",
+      type: "success",
+      title: "Strong Collection Rate",
       description: `${recentPayments} successful payments received this month`,
-      timestamp: now
+      timestamp: now,
     })
   }
 
@@ -563,73 +602,87 @@ export async function getQuickActionsForRole(role: string) {
   // Define quick actions based on user role
   const allActions = [
     {
-      id: 'create-invoice',
-      label: 'Create Invoice',
-      icon: 'FileText',
-      href: '/finance/invoice/create',
-      color: 'blue',
-      description: 'Generate a new invoice',
-      permission: 'invoice.create'
+      id: "create-invoice",
+      label: "Create Invoice",
+      icon: "FileText",
+      href: "/finance/invoice/create",
+      color: "blue",
+      description: "Generate a new invoice",
+      permission: "invoice.create",
     },
     {
-      id: 'record-payment',
-      label: 'Record Payment',
-      icon: 'DollarSign',
-      href: '/finance/fees/payment',
-      color: 'green',
-      description: 'Record a fee payment',
-      permission: 'payment.create'
+      id: "record-payment",
+      label: "Record Payment",
+      icon: "DollarSign",
+      href: "/finance/fees/payment",
+      color: "green",
+      description: "Record a fee payment",
+      permission: "payment.create",
     },
     {
-      id: 'submit-expense',
-      label: 'Submit Expense',
-      icon: 'Receipt',
-      href: '/finance/expenses/create',
-      color: 'orange',
-      description: 'Submit an expense claim',
-      permission: 'expense.create'
+      id: "submit-expense",
+      label: "Submit Expense",
+      icon: "Receipt",
+      href: "/finance/expenses/create",
+      color: "orange",
+      description: "Submit an expense claim",
+      permission: "expense.create",
     },
     {
-      id: 'run-payroll',
-      label: 'Run Payroll',
-      icon: 'Users',
-      href: '/finance/payroll/run',
-      color: 'purple',
-      description: 'Process monthly payroll',
-      permission: 'payroll.process'
+      id: "run-payroll",
+      label: "Run Payroll",
+      icon: "Users",
+      href: "/finance/payroll/run",
+      color: "purple",
+      description: "Process monthly payroll",
+      permission: "payroll.process",
     },
     {
-      id: 'view-reports',
-      label: 'Financial Reports',
-      icon: 'BarChart',
-      href: '/finance/reports',
-      color: 'indigo',
-      description: 'View financial statements',
-      permission: 'reports.view'
+      id: "view-reports",
+      label: "Financial Reports",
+      icon: "BarChart",
+      href: "/finance/reports",
+      color: "indigo",
+      description: "View financial statements",
+      permission: "reports.view",
     },
     {
-      id: 'bank-reconciliation',
-      label: 'Bank Reconciliation',
-      icon: 'Building',
-      href: '/finance/banking/reconciliation',
-      color: 'teal',
-      description: 'Reconcile bank accounts',
-      permission: 'banking.reconcile'
-    }
+      id: "bank-reconciliation",
+      label: "Bank Reconciliation",
+      icon: "Building",
+      href: "/finance/banking/reconciliation",
+      color: "teal",
+      description: "Reconcile bank accounts",
+      permission: "banking.reconcile",
+    },
   ]
 
   // Filter actions based on role
   const rolePermissions: Record<string, string[]> = {
-    ADMIN: ['invoice.create', 'payment.create', 'expense.create', 'payroll.process', 'reports.view', 'banking.reconcile'],
-    ACCOUNTANT: ['invoice.create', 'payment.create', 'expense.create', 'payroll.process', 'reports.view', 'banking.reconcile'],
-    TEACHER: ['expense.create', 'reports.view'],
-    STAFF: ['expense.create'],
+    ADMIN: [
+      "invoice.create",
+      "payment.create",
+      "expense.create",
+      "payroll.process",
+      "reports.view",
+      "banking.reconcile",
+    ],
+    ACCOUNTANT: [
+      "invoice.create",
+      "payment.create",
+      "expense.create",
+      "payroll.process",
+      "reports.view",
+      "banking.reconcile",
+    ],
+    TEACHER: ["expense.create", "reports.view"],
+    STAFF: ["expense.create"],
     STUDENT: [],
-    GUARDIAN: ['payment.create'],
+    GUARDIAN: ["payment.create"],
   }
 
   const permissions = rolePermissions[role] || []
-  return allActions.filter(action =>
-    !action.permission || permissions.includes(action.permission)
+  return allActions.filter(
+    (action) => !action.permission || permissions.includes(action.permission)
   )
 }

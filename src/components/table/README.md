@@ -7,33 +7,31 @@ The central, reusable table system for the Hogwarts platform.
 ### Page-Based Pagination (Default)
 
 ```tsx
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
-import { useDataTable } from "@/components/table/use-data-table";
+import { DataTable } from "@/components/table/data-table/data-table"
+import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar"
+import { useDataTable } from "@/components/table/use-data-table"
 
 export function MyTable({ data, pageCount }) {
-  const columns = useMemo(() => getColumns(), []);
-  const { table } = useDataTable({ data, columns, pageCount });
+  const columns = useMemo(() => getColumns(), [])
+  const { table } = useDataTable({ data, columns, pageCount })
 
   return (
     <DataTable table={table}>
-      <DataTableToolbar table={table}>
-        {/* Custom actions */}
-      </DataTableToolbar>
+      <DataTableToolbar table={table}>{/* Custom actions */}</DataTableToolbar>
     </DataTable>
-  );
+  )
 }
 ```
 
 ### "See More" Pagination (New)
 
 ```tsx
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableSeeMore } from "@/components/table/data-table-see-more";
-import { useSeeMore } from "@/components/table/use-see-more";
+import { DataTableSeeMore } from "@/components/table/data-table-see-more"
+import { DataTable } from "@/components/table/data-table/data-table"
+import { useSeeMore } from "@/components/table/use-see-more"
 
 export function MyTable({ initialData, totalCount }) {
-  const columns = useMemo(() => getColumns(), []);
+  const columns = useMemo(() => getColumns(), [])
   const { table, seeMoreState, handleSeeMore, isLoadingMore } = useSeeMore({
     data: initialData,
     columns,
@@ -41,7 +39,7 @@ export function MyTable({ initialData, totalCount }) {
     onSeeMore: async (loadedCount, batchSize) => {
       // Fetch more data
     },
-  });
+  })
 
   return (
     <DataTable table={table}>
@@ -51,7 +49,7 @@ export function MyTable({ initialData, totalCount }) {
         isLoading={isLoadingMore}
       />
     </DataTable>
-  );
+  )
 }
 ```
 
@@ -127,11 +125,11 @@ Feature Tables (students, teachers, etc.)
 
 ```typescript
 // ✅ Correct
-const where = { schoolId };
-await db.student.findMany({ where });
+const where = { schoolId }
+await db.student.findMany({ where })
 
 // ❌ WRONG - Security risk!
-await db.student.findMany();
+await db.student.findMany()
 ```
 
 ## API Reference
@@ -141,6 +139,7 @@ await db.student.findMany();
 Page-based pagination hook.
 
 **Props:**
+
 - `data: TData[]` - Table data
 - `columns: ColumnDef<TData>[]` - Column definitions
 - `pageCount: number` - Total pages
@@ -148,6 +147,7 @@ Page-based pagination hook.
 - `enableAdvancedFilter?: boolean` - Enable advanced filtering
 
 **Returns:**
+
 - `table` - TanStack Table instance
 
 ### `useSeeMore<TData>`
@@ -155,12 +155,14 @@ Page-based pagination hook.
 "See more" pagination hook.
 
 **Props:**
+
 - `data: TData[]` - Initial data
 - `columns: ColumnDef<TData>[]` - Column definitions
 - `totalCount: number` - Total records
 - `onSeeMore: (loadedCount, batchSize) => Promise<void>` - Load more callback
 
 **Returns:**
+
 - `table` - TanStack Table instance
 - `seeMoreState` - Pagination state
 - `handleSeeMore` - Load more handler
@@ -170,12 +172,12 @@ Page-based pagination hook.
 
 ```typescript
 import {
-  getPagePaginationParams,
-  getSeeMorePaginationParams,
+  buildPaginationResult,
   buildPrismaOrderBy,
   buildPrismaWhere,
-  buildPaginationResult,
-} from "@/components/table/actions";
+  getPagePaginationParams,
+  getSeeMorePaginationParams,
+} from "@/components/table/actions"
 ```
 
 See `actions.ts` for full documentation.
@@ -193,12 +195,12 @@ export const columns: ColumnDef<Student>[] = [
     enableColumnFilter: true,
     meta: { variant: "text" },
   },
-];
+]
 
 // 2. Create table component
 export function StudentsTable({ data, pageCount }) {
-  const { table } = useDataTable({ data, columns, pageCount });
-  return <DataTable table={table} />;
+  const { table } = useDataTable({ data, columns, pageCount })
+  return <DataTable table={table} />
 }
 ```
 
@@ -218,19 +220,16 @@ export const columns: ColumnDef<Student>[] = [
       ],
     },
   },
-];
+]
 ```
 
 ### With Server Action
 
 ```tsx
 // actions.ts
-export async function fetchStudents(params: {
-  page: number;
-  perPage: number;
-}) {
-  const session = await auth();
-  const { skip, take } = getPagePaginationParams(params.page, params.perPage);
+export async function fetchStudents(params: { page: number; perPage: number }) {
+  const session = await auth()
+  const { skip, take } = getPagePaginationParams(params.page, params.perPage)
 
   const [data, total] = await Promise.all([
     db.student.findMany({
@@ -239,9 +238,9 @@ export async function fetchStudents(params: {
       take,
     }),
     db.student.count({ where: { schoolId: session.user.schoolId } }),
-  ]);
+  ])
 
-  return { data, pageCount: Math.ceil(total / params.perPage) };
+  return { data, pageCount: Math.ceil(total / params.perPage) }
 }
 ```
 
@@ -302,9 +301,9 @@ test("renders table with data", () => {
 ### Bulk Actions
 
 ```tsx
-const selectedRows = table.getFilteredSelectedRowModel().rows;
+const selectedRows = table.getFilteredSelectedRowModel().rows
 
-<Button
+;<Button
   disabled={selectedRows.length === 0}
   onClick={() => handleBulkDelete(selectedRows)}
 >
@@ -318,10 +317,10 @@ const selectedRows = table.getFilteredSelectedRowModel().rows;
 
 ```tsx
 // ❌ Bad
-const columns = getColumns();
+const columns = getColumns()
 
 // ✅ Good
-const columns = useMemo(() => getColumns(), []);
+const columns = useMemo(() => getColumns(), [])
 ```
 
 ### "Filters not working"
@@ -339,6 +338,7 @@ Always get `schoolId` from session and include in queries.
 ## Migration
 
 See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for:
+
 - Import path changes
 - Upgrading to "see more" pagination
 - Backward compatibility notes

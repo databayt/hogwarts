@@ -41,7 +41,7 @@ model School {
 
 ### Request flow (overview)
 
-1) A user visits a host. In middleware, we extract the subdomain and propagate it in a header.
+1. A user visits a host. In middleware, we extract the subdomain and propagate it in a header.
 
 ```ts
 // src/middleware.ts (excerpt)
@@ -63,7 +63,7 @@ if (subdomain) {
 }
 ```
 
-2) On the server, we resolve `schoolId` using the injected header (or impersonation cookie, or session fallback).
+2. On the server, we resolve `schoolId` using the injected header (or impersonation cookie, or session fallback).
 
 ```ts
 // src/components/platform/operator/lib/tenant.ts (excerpt)
@@ -72,7 +72,8 @@ export async function getTenantContext() {
   const cookieStore = await cookies()
   const hdrs = await headers()
 
-  const impersonatedSchoolId = cookieStore.get("impersonate_schoolId")?.value ?? null
+  const impersonatedSchoolId =
+    cookieStore.get("impersonate_schoolId")?.value ?? null
 
   let headerSchoolId: string | null = null
   const subdomain = hdrs.get("x-subdomain")
@@ -81,7 +82,8 @@ export async function getTenantContext() {
     headerSchoolId = school?.id ?? null
   }
 
-  const schoolId = impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
+  const schoolId =
+    impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null
   const role = (session?.user?.role as UserRole | undefined) ?? null
   const isPlatformAdmin = role === "DEVELOPER"
   const requestId = null
@@ -89,12 +91,12 @@ export async function getTenantContext() {
 }
 ```
 
-3) All server actions and DB access must include `{ schoolId }`.
+3. All server actions and DB access must include `{ schoolId }`.
 
 ```ts
 // Example usage in a server action
-import { getTenantContext } from "@/components/platform/operator/lib/tenant"
 import { db } from "@/lib/db"
+import { getTenantContext } from "@/components/platform/operator/lib/tenant"
 
 export async function listStudents() {
   const { schoolId } = await getTenantContext()
@@ -130,16 +132,16 @@ Seeded demo domains: `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
 
 Pick one of these:
 
-1) Easiest (URL param): add `?x-school=<domain>` to the page you’re testing.
+1. Easiest (URL param): add `?x-school=<domain>` to the page you’re testing.
    - Example: `/dashboard?x-school=khartoum`.
 
-2) Correct (user is tied to a school): set your user’s `schoolId` to match a school.
+2. Correct (user is tied to a school): set your user’s `schoolId` to match a school.
    - Using Prisma Studio:
      1. Run: `pnpm dlx prisma studio`
      2. Open `School` table, copy the `id` of the row where `domain = "khartoum"`.
      3. Open `User` table, set your `schoolId` to that `id` and save.
 
-3) Operator (DEVELOPER only): start impersonation which sets a cookie overriding the tenant.
+3. Operator (DEVELOPER only): start impersonation which sets a cookie overriding the tenant.
    - The action `startImpersonation(schoolId)` sets an `impersonate_schoolId` cookie for ~30 minutes.
    - A banner appears with “Stop impersonation” to clear it.
 
@@ -187,7 +189,8 @@ Auth attaches `schoolId` to the JWT/session. If a request lacks `x-subdomain` an
 
 ```ts
 // src/auth.ts (excerpt – JWT callback)
-;(token as unknown as { schoolId?: string | null }).schoolId = existingUser.schoolId ?? null
+;(token as unknown as { schoolId?: string | null }).schoolId =
+  existingUser.schoolId ?? null
 ```
 
 ### Impersonation (operator/dev only)
@@ -208,16 +211,14 @@ await prisma.student.findMany({ where: { schoolId } })
 
 ### Verifying your setup
 
-1) Visit `/docs` (public) to ensure middleware doesn’t block docs.
-2) Open the debug page: `/(platform)/operator/tenant-debug`.
-3) In dev, click a school card (adds `?x-school=<domain>`); in prod, move between subdomains.
-4) Confirm the counts change as you switch tenants.
-5) Navigate to `/students` and `/teachers` with the same `?x-school=<domain>` in dev or under the subdomain in prod.
+1. Visit `/docs` (public) to ensure middleware doesn’t block docs.
+2. Open the debug page: `/(platform)/operator/tenant-debug`.
+3. In dev, click a school card (adds `?x-school=<domain>`); in prod, move between subdomains.
+4. Confirm the counts change as you switch tenants.
+5. Navigate to `/students` and `/teachers` with the same `?x-school=<domain>` in dev or under the subdomain in prod.
 
 ### Troubleshooting
 
 - Missing tenant: ensure `NEXT_PUBLIC_ROOT_DOMAIN` is set correctly and a `School` row exists with `domain` matching the subdomain.
 - Local dev without subdomain: use `?x-school=<domain>` or the public API `?domain=<domain>` fallbacks.
 - Session fallback is null: sign in a user that has `schoolId` or specify `x-school`.
-
-

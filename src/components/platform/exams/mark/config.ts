@@ -1,12 +1,12 @@
 // Auto-Marking System Configuration
 
 import type {
-  QuestionType,
-  DifficultyLevel,
   BloomLevel,
+  DifficultyLevel,
   GradingMethod,
-  SubmissionType,
   MarkingStatus,
+  QuestionType,
+  SubmissionType,
 } from "@prisma/client"
 
 // Question Type Configurations

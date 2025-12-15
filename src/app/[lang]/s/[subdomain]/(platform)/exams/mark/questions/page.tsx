@@ -1,14 +1,15 @@
+import Link from "next/link"
 import { auth } from "@/auth"
+import { Edit, Plus, Trash } from "lucide-react"
+
 import { db } from "@/lib/db"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Edit, Trash } from "lucide-react"
-import Link from "next/link"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
-import { Shell as PageContainer } from "@/components/table/shell"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
 
 export const metadata = {
   title: "Question Bank",
@@ -70,9 +71,7 @@ export default async function QuestionBankPage({
     <PageContainer>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <PageHeadingSetter
-            title="Questions"
-          />
+          <PageHeadingSetter title="Questions" />
           <Button asChild>
             <Link href={`/${lang}/exams/mark/questions/create`}>
               <Plus className="mr-2 h-4 w-4" />
@@ -83,11 +82,15 @@ export default async function QuestionBankPage({
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{dict.statistics.totalQuestions}</p>
+            <p className="text-muted-foreground text-sm">
+              {dict.statistics.totalQuestions}
+            </p>
             <h3 className="text-2xl font-bold">{questions.length}</h3>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{dict.statistics.autoGradable}</p>
+            <p className="text-muted-foreground text-sm">
+              {dict.statistics.autoGradable}
+            </p>
             <h3 className="text-2xl font-bold">
               {
                 questions.filter((q) =>
@@ -99,7 +102,9 @@ export default async function QuestionBankPage({
             </h3>
           </Card>
           <Card className="p-4">
-            <p className="text-sm text-muted-foreground">{dict.statistics.withRubrics}</p>
+            <p className="text-muted-foreground text-sm">
+              {dict.statistics.withRubrics}
+            </p>
             <h3 className="text-2xl font-bold">
               {questions.filter((q) => q.rubrics.length > 0).length}
             </h3>
@@ -121,25 +126,42 @@ export default async function QuestionBankPage({
             </Card>
           ) : (
             questions.map((question) => {
-              const questionType = question.questionType as keyof typeof dict.questionTypes
-              const difficulty = question.difficulty.toLowerCase() as keyof typeof dict.difficulty
-              const bloomLevel = question.bloomLevel.toLowerCase() as keyof typeof dict.bloomLevels
+              const questionType =
+                question.questionType as keyof typeof dict.questionTypes
+              const difficulty =
+                question.difficulty.toLowerCase() as keyof typeof dict.difficulty
+              const bloomLevel =
+                question.bloomLevel.toLowerCase() as keyof typeof dict.bloomLevels
 
               return (
                 <Card key={question.id} className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{dict.questionTypes[questionType]}</Badge>
-                        <Badge variant="secondary">{dict.difficulty[difficulty]}</Badge>
-                        <Badge variant="outline">{dict.bloomLevels[bloomLevel]}</Badge>
+                      <div className="mb-2 flex items-center gap-2">
+                        <Badge variant="outline">
+                          {dict.questionTypes[questionType]}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {dict.difficulty[difficulty]}
+                        </Badge>
+                        <Badge variant="outline">
+                          {dict.bloomLevels[bloomLevel]}
+                        </Badge>
                       </div>
-                      <p className="text-sm font-medium mb-2">{question.questionText}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <p className="mb-2 text-sm font-medium">
+                        {question.questionText}
+                      </p>
+                      <div className="text-muted-foreground flex items-center gap-4 text-xs">
                         <span>{question.subject.subjectName}</span>
-                        <span>{question.points.toString()} {dict.questionBank.points}</span>
+                        <span>
+                          {question.points.toString()}{" "}
+                          {dict.questionBank.points}
+                        </span>
                         {question.rubrics.length > 0 && (
-                          <span>{question.rubrics[0].criteria.length} {dict.questionBank.criteria}</span>
+                          <span>
+                            {question.rubrics[0].criteria.length}{" "}
+                            {dict.questionBank.criteria}
+                          </span>
                         )}
                       </div>
                     </div>

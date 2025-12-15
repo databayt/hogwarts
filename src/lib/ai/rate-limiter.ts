@@ -94,10 +94,7 @@ class AIRateLimiter {
       this.requestCount++
     } catch (error: any) {
       // Handle rate limiting with exponential backoff
-      if (
-        error?.status === 429 &&
-        item.retryCount < this.config.maxRetries
-      ) {
+      if (error?.status === 429 && item.retryCount < this.config.maxRetries) {
         const backoffDelay =
           this.config.minDelay *
           Math.pow(this.config.backoffMultiplier, item.retryCount)
@@ -142,7 +139,8 @@ class AIRateLimiter {
       activeRequests: this.activeRequests,
       totalRequests: this.requestCount,
       totalCost: this.totalCost,
-      averageCostPerRequest: this.requestCount > 0 ? this.totalCost / this.requestCount : 0,
+      averageCostPerRequest:
+        this.requestCount > 0 ? this.totalCost / this.requestCount : 0,
     }
   }
 

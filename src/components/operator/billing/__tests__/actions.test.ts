@@ -1,75 +1,78 @@
-import { describe, it, expect, vi } from 'vitest'
-import * as billing from '../actions'
+import { describe, expect, it, vi } from "vitest"
 
-vi.mock('@/lib/db', () => {
+import * as billing from "../actions"
+
+vi.mock("@/lib/db", () => {
   return {
     db: {
       receipt: {
         create: vi.fn().mockResolvedValue({
-          id: 'r1',
-          schoolId: 's1',
-          invoiceId: 'i1',
-          filename: 'f.pdf',
+          id: "r1",
+          schoolId: "s1",
+          invoiceId: "i1",
+          filename: "f.pdf",
           amount: 1000,
-          status: 'pending'
+          status: "pending",
         }),
         update: vi.fn().mockResolvedValue({
-          id: 'r1',
-          schoolId: 's1',
-          invoiceId: 'i1',
-          status: 'approved'
-        })
+          id: "r1",
+          schoolId: "s1",
+          invoiceId: "i1",
+          status: "approved",
+        }),
       },
       invoice: {
         findUnique: vi.fn().mockResolvedValue({
-          id: 'i1',
-          schoolId: 's1'
+          id: "i1",
+          schoolId: "s1",
         }),
         update: vi.fn().mockResolvedValue({
-          id: 'i1',
-          schoolId: 's1',
-          status: 'paid'
-        })
+          id: "i1",
+          schoolId: "s1",
+          status: "paid",
+        }),
       },
-      $transaction: vi.fn().mockImplementation((fn) => fn({
-        receipt: {
-          update: vi.fn().mockResolvedValue({
-            id: 'r1',
-            schoolId: 's1',
-            invoiceId: 'i1',
-            status: 'approved'
-          })
-        },
-        invoice: {
-          update: vi.fn().mockResolvedValue({
-            id: 'i1',
-            schoolId: 's1',
-            status: 'paid'
-          })
-        }
-      }))
+      $transaction: vi.fn().mockImplementation((fn) =>
+        fn({
+          receipt: {
+            update: vi.fn().mockResolvedValue({
+              id: "r1",
+              schoolId: "s1",
+              invoiceId: "i1",
+              status: "approved",
+            }),
+          },
+          invoice: {
+            update: vi.fn().mockResolvedValue({
+              id: "i1",
+              schoolId: "s1",
+              status: "paid",
+            }),
+          },
+        })
+      ),
     },
   }
 })
 
-vi.mock('@/components/operator/lib/operator-auth', () => ({
-  requireOperator: vi.fn().mockResolvedValue({ userId: 'u1' }),
+vi.mock("@/components/operator/lib/operator-auth", () => ({
+  requireOperator: vi.fn().mockResolvedValue({ userId: "u1" }),
   requireNotImpersonating: vi.fn().mockResolvedValue(undefined),
   logOperatorAudit: vi.fn().mockResolvedValue(undefined),
 }))
 
-describe('billing/actions.ts', () => {
-  it('invoiceUpdateStatus updates invoice status', async () => {
+describe("billing/actions.ts", () => {
+  it("invoiceUpdateStatus updates invoice status", async () => {
     const result = await billing.invoiceUpdateStatus({
-      id: 'i1',
-      status: 'paid'
+      id: "i1",
+      status: "paid",
     })
     expect(result).toEqual({
       success: true,
       data: expect.objectContaining({
-        id: 'i1',
-        status: 'paid'
-      })
+        id: "i1",
+        status: "paid",
+      }),
     })
   })
 })

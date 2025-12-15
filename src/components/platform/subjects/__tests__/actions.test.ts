@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
   createSubject,
-  updateSubject,
   deleteSubject,
   getSubjects,
+  updateSubject,
 } from "../actions"
 
 // Mock dependencies
@@ -19,16 +23,18 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      subject: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-        findFirst: vi.fn(),
-        findMany: vi.fn(),
-        count: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        subject: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+          count: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -39,9 +45,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Subject Actions", () => {
   const mockSchoolId = "school-123"
@@ -103,8 +106,12 @@ describe("Subject Actions", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           subject: {
-            create: vi.fn().mockRejectedValue(new Error("Unique constraint failed")),
-            findFirst: vi.fn().mockResolvedValue({ id: "existing", code: "MATH101" }),
+            create: vi
+              .fn()
+              .mockRejectedValue(new Error("Unique constraint failed")),
+            findFirst: vi
+              .fn()
+              .mockResolvedValue({ id: "existing", code: "MATH101" }),
           },
         }
         return callback(tx)
@@ -200,7 +207,12 @@ describe("Subject Actions", () => {
   describe("getSubjects", () => {
     it("fetches subjects scoped to schoolId", async () => {
       const mockSubjects = [
-        { id: "1", name: "Mathematics", code: "MATH101", schoolId: mockSchoolId },
+        {
+          id: "1",
+          name: "Mathematics",
+          code: "MATH101",
+          schoolId: mockSchoolId,
+        },
         { id: "2", name: "English", code: "ENG101", schoolId: mockSchoolId },
       ]
 

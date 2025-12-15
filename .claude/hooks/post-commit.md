@@ -9,6 +9,7 @@ Automatically updates documentation, README files, and metrics after successful 
 ## Execution Flow
 
 ### 1. Update Feature Documentation
+
 ```bash
 # Detect changed features
 git diff HEAD~1 --name-only | grep -E "src/components/platform/.*/(content|actions|form)\.tsx?" | while read file; do
@@ -18,6 +19,7 @@ done
 ```
 
 ### 2. Update API Documentation
+
 ```bash
 # Detect changed server actions
 git diff HEAD~1 --name-only | grep -E "actions\.ts$" | while read file; do
@@ -26,6 +28,7 @@ done
 ```
 
 ### 3. Update Changelog
+
 ```bash
 # Parse commit message
 COMMIT_MSG=$(git log -1 --pretty=%B)
@@ -39,6 +42,7 @@ echo "" >> CHANGELOG.md
 ```
 
 ### 4. Update Metrics
+
 ```bash
 # Track velocity
 /metrics update velocity --commit $COMMIT_HASH
@@ -48,6 +52,7 @@ echo "" >> CHANGELOG.md
 ```
 
 ### 5. Generate Test Coverage Report
+
 ```bash
 # If tests were modified
 if git diff HEAD~1 --name-only | grep -q "\.test\.tsx?$"; then
@@ -57,6 +62,7 @@ fi
 ```
 
 ### 6. Update README Badges
+
 ```bash
 # Update dynamic badges
 COVERAGE=$(cat .bmad/metrics/coverage-latest.json | jq .total.lines.pct)
@@ -69,6 +75,7 @@ sed -i "s/tests-[0-9]*/tests-${TESTS_COUNT}/g" README.md
 ```
 
 ### 7. Create GitHub Issue for TODOs
+
 ```bash
 # Extract TODOs from commit
 git diff HEAD~1 | grep -E "^\+.*TODO:" | while read todo; do
@@ -78,6 +85,7 @@ done
 ```
 
 ### 8. Update Project Board
+
 ```bash
 # If story was completed
 if echo "$COMMIT_MSG" | grep -q "STORY-[0-9]*"; then
@@ -113,11 +121,13 @@ fi
 ## Features
 
 ### Smart Documentation Updates
+
 - Only updates docs for changed components
 - Preserves custom content
 - Adds new sections automatically
 
 ### Metrics Tracking
+
 ```json
 {
   "commit": "abc123",
@@ -134,14 +144,18 @@ fi
 ```
 
 ### Automatic Issue Creation
+
 TODOs in code automatically become GitHub issues:
+
 ```typescript
 // TODO: Add pagination to student list
 // Becomes: Issue #123 - "TODO: Add pagination to student list"
 ```
 
 ### Story Tracking
+
 Commits referencing stories update status:
+
 ```bash
 git commit -m "feat: implement student search STORY-005"
 # Automatically marks STORY-005 as COMPLETED
@@ -167,6 +181,7 @@ Time: 8.3s (async)
 ## Async Execution
 
 Hook runs asynchronously to not block Git operations:
+
 - Documentation updates: background
 - Metrics tracking: queued
 - Issue creation: webhook triggered
@@ -175,6 +190,7 @@ Hook runs asynchronously to not block Git operations:
 ## Error Handling
 
 Non-critical - failures don't block workflow:
+
 ```bash
 # Errors logged but don't stop execution
 if ! /docs-manager update $FEATURE 2>/dev/null; then

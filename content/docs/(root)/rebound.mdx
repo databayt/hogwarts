@@ -52,6 +52,7 @@ Competitive intelligence gathering:
 - **Innovation opportunities** discovery
 
 Example searches for finance block:
+
 - "best school fee management software 2025"
 - "school billing system features"
 - "education payment gateway integration"
@@ -60,26 +61,26 @@ Example searches for finance block:
 
 Technical evaluation of current implementation:
 
-| Check | Description |
-|-------|-------------|
+| Check        | Description                              |
+| ------------ | ---------------------------------------- |
 | Architecture | Mirror pattern, server/client boundaries |
-| Multi-tenant | schoolId in all queries |
-| Security | Validation, auth checks, OWASP |
-| Performance | N+1 queries, bundle size |
-| UX | Loading states, error handling |
-| i18n | Arabic/English coverage |
-| Tests | Coverage target: 95% |
+| Multi-tenant | schoolId in all queries                  |
+| Security     | Validation, auth checks, OWASP           |
+| Performance  | N+1 queries, bundle size                 |
+| UX           | Loading states, error handling           |
+| i18n         | Arabic/English coverage                  |
+| Tests        | Coverage target: 95%                     |
 
 ### Phase 3: Checklist (5 min)
 
 Prioritized production checklist with effort estimates:
 
-| Priority | Description | Examples |
-|----------|-------------|----------|
+| Priority     | Description                | Examples                                      |
+| ------------ | -------------------------- | --------------------------------------------- |
 | **Critical** | Must fix before production | Security vulnerabilities, multi-tenant issues |
-| **High** | Should fix soon | Missing core features, performance issues |
-| **Medium** | Plan for near-term | Enhancements, i18n gaps |
-| **Low** | Backlog | Nice-to-have features |
+| **High**     | Should fix soon            | Missing core features, performance issues     |
+| **Medium**   | Plan for near-term         | Enhancements, i18n gaps                       |
+| **Low**      | Backlog                    | Nice-to-have features                         |
 
 ### Phase 4: Recommendations (5 min)
 
@@ -93,21 +94,27 @@ Strategic improvement plan:
 ## Valid Blocks
 
 ### Core
+
 `dashboard` `profile` `settings` `admin`
 
 ### People
+
 `students` `teachers` `parents` `staff`
 
 ### Academic
+
 `subjects` `classes` `lessons` `timetable` `attendance`
 
 ### Assessment
+
 `exams` `assignments` `grades`
 
 ### Finance
+
 `finance` `fees` `billing` `invoice` `receipt` `banking` `salary` `expenses` `payroll` `budget` `wallet` `accounts`
 
 ### Operations
+
 `announcements` `messaging` `notifications` `events` `library`
 
 ## Output
@@ -119,6 +126,7 @@ Reports are saved to:
 ```
 
 Each report contains:
+
 1. **Research findings** - Competitor analysis, feature gaps
 2. **Technical assessment** - Scores and issues found
 3. **Production checklist** - Prioritized tasks with estimates
@@ -128,21 +136,21 @@ Each report contains:
 
 Block Rebound integrates with existing agents:
 
-| Agent | Purpose |
-|-------|---------|
-| `/agents/security` | Security deep-dive |
+| Agent                  | Purpose                       |
+| ---------------------- | ----------------------------- |
+| `/agents/security`     | Security deep-dive            |
 | `/agents/multi-tenant` | Tenant isolation verification |
-| `/agents/performance` | Performance optimization |
-| `/agents/i18n` | Translation audit |
+| `/agents/performance`  | Performance optimization      |
+| `/agents/i18n`         | Translation audit             |
 
 And skills:
 
-| Skill | Purpose |
-|-------|---------|
-| `multi-tenant-validator` | schoolId verification |
-| `security-scanner` | OWASP compliance |
-| `prisma-optimizer` | Query analysis |
-| `react-performance` | Component optimization |
+| Skill                    | Purpose                |
+| ------------------------ | ---------------------- |
+| `multi-tenant-validator` | schoolId verification  |
+| `security-scanner`       | OWASP compliance       |
+| `prisma-optimizer`       | Query analysis         |
+| `react-performance`      | Component optimization |
 
 ## Success Criteria
 
@@ -193,12 +201,12 @@ Week 4: Polish
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `CLAUDE.md` | Natural language recognition |
-| `.claude/skills/rebound.md` | Workflow logic |
-| `.claude/commands/rebound.md` | Slash command |
-| `.claude/agents/rebound.md` | Deep analysis agent |
+| File                          | Purpose                      |
+| ----------------------------- | ---------------------------- |
+| `CLAUDE.md`                   | Natural language recognition |
+| `.claude/skills/rebound.md`   | Workflow logic               |
+| `.claude/commands/rebound.md` | Slash command                |
+| `.claude/agents/rebound.md`   | Deep analysis agent          |
 
 ## Related
 

@@ -9,6 +9,7 @@ Prevents dangerous rebases and prepares the repository for safe rebasing.
 ## Safety Checks
 
 ### 1. Protect Published Branches
+
 ```bash
 # Prevent rebasing published branches
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -22,6 +23,7 @@ fi
 ```
 
 ### 2. Check for Uncommitted Changes
+
 ```bash
 # Ensure working directory is clean
 if ! git diff-index --quiet HEAD --; then
@@ -43,6 +45,7 @@ fi
 ```
 
 ### 3. Check Push Status
+
 ```bash
 # Warn if branch is already pushed
 if git branch -r --contains HEAD | grep -q "origin/$BRANCH"; then
@@ -58,6 +61,7 @@ fi
 ```
 
 ### 4. Backup Current State
+
 ```bash
 # Create backup branch
 BACKUP_BRANCH="backup-$(date +%Y%m%d_%H%M%S)-$BRANCH"
@@ -67,6 +71,7 @@ echo "Restore with: git reset --hard $BACKUP_BRANCH"
 ```
 
 ### 5. Check Migration Conflicts
+
 ```bash
 # Detect potential migration conflicts
 TARGET_BRANCH=$1  # Branch we're rebasing onto
@@ -86,6 +91,7 @@ fi
 ```
 
 ### 6. Save Rebase Plan
+
 ```bash
 # Document what we're doing
 cat > .git/rebase-plan.txt << EOF
@@ -110,6 +116,7 @@ echo "📋 Rebase plan saved to .git/rebase-plan.txt"
 ```
 
 ### 7. Test Suite Check
+
 ```bash
 # Ensure tests pass before rebase
 echo "🧪 Running tests before rebase..."
@@ -122,6 +129,7 @@ fi
 ```
 
 ### 8. Large File Check
+
 ```bash
 # Check for large files that might cause issues
 LARGE_FILES=$(find . -type f -size +10M 2>/dev/null | grep -v node_modules | grep -v .git)
@@ -215,6 +223,7 @@ Commits to rebase: 8
 ## Abort Recovery
 
 If rebase goes wrong:
+
 ```bash
 # Automatic recovery options
 git rebase --abort  # Cancel rebase
@@ -224,6 +233,7 @@ git reset --hard backup-20240115_103045-feature/student-search  # Full restore
 ## Post-Rebase Recommendations
 
 After successful rebase:
+
 ```bash
 # Cleanup
 git branch -D $BACKUP_BRANCH  # Delete backup if everything is OK

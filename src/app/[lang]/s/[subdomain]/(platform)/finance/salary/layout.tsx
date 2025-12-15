@@ -1,7 +1,7 @@
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,19 +15,17 @@ export default async function SalaryLayout({ children, params }: Props) {
 
   // Define salary page navigation
   const salaryPages: PageNavItem[] = [
-    { name: 'Overview', href: `/${lang}/finance/salary` },
-    { name: 'Salary Structure', href: `/${lang}/finance/salary/structure` },
-    { name: 'Salary Slips', href: `/${lang}/finance/salary/slips` },
-    { name: 'Increments', href: `/${lang}/finance/salary/increments` },
-    { name: 'Advances', href: `/${lang}/finance/salary/advances` },
-    { name: 'Reports', href: `/${lang}/finance/salary/reports` },
+    { name: "Overview", href: `/${lang}/finance/salary` },
+    { name: "Salary Structure", href: `/${lang}/finance/salary/structure` },
+    { name: "Salary Slips", href: `/${lang}/finance/salary/slips` },
+    { name: "Increments", href: `/${lang}/finance/salary/increments` },
+    { name: "Advances", href: `/${lang}/finance/salary/advances` },
+    { name: "Reports", href: `/${lang}/finance/salary/reports` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Salary'}
-      />
+      <PageHeadingSetter title={d?.title || "Salary"} />
       <PageNav pages={salaryPages} />
       {children}
     </div>

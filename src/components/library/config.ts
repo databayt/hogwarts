@@ -15,70 +15,70 @@ export const LIBRARY_CONFIG = {
   ADMIN_BOOKS_PER_PAGE: 20,
 
   // Colors
-  DEFAULT_COVER_COLOR: '#000000',
+  DEFAULT_COVER_COLOR: "#000000",
 
   // Status
   BORROW_STATUS: {
-    BORROWED: 'BORROWED',
-    RETURNED: 'RETURNED',
-    OVERDUE: 'OVERDUE',
+    BORROWED: "BORROWED",
+    RETURNED: "RETURNED",
+    OVERDUE: "OVERDUE",
   } as const,
 
   USER_STATUS: {
-    PENDING: 'PENDING',
-    APPROVED: 'APPROVED',
-    REJECTED: 'REJECTED',
+    PENDING: "PENDING",
+    APPROVED: "APPROVED",
+    REJECTED: "REJECTED",
   } as const,
-} as const;
+} as const
 
 // Genre options for book form
 export const BOOK_GENRES = [
-  'Fiction',
-  'Non-Fiction',
-  'Science',
-  'Technology',
-  'History',
-  'Biography',
-  'Self-Help',
-  'Business',
-  'Psychology',
-  'Philosophy',
-  'Art',
-  'Religion',
-  'Travel',
-  'Cooking',
-  'Health',
-  'Children',
-  'Young Adult',
-  'Romance',
-  'Mystery',
-  'Thriller',
-  'Fantasy',
-  'Science Fiction',
-  'Horror',
-  'Poetry',
-  'Drama',
-  'Comics',
-  'Other',
-] as const;
+  "Fiction",
+  "Non-Fiction",
+  "Science",
+  "Technology",
+  "History",
+  "Biography",
+  "Self-Help",
+  "Business",
+  "Psychology",
+  "Philosophy",
+  "Art",
+  "Religion",
+  "Travel",
+  "Cooking",
+  "Health",
+  "Children",
+  "Young Adult",
+  "Romance",
+  "Mystery",
+  "Thriller",
+  "Fantasy",
+  "Science Fiction",
+  "Horror",
+  "Poetry",
+  "Drama",
+  "Comics",
+  "Other",
+] as const
 
-export type BookGenre = typeof BOOK_GENRES[number];
+export type BookGenre = (typeof BOOK_GENRES)[number]
 
 // Admin navigation items
 export const ADMIN_NAV_ITEMS = [
   {
-    title: 'Dashboard',
-    href: '/library/admin',
-    icon: 'LayoutDashboard',
+    title: "Dashboard",
+    href: "/library/admin",
+    icon: "LayoutDashboard",
   },
   {
-    title: 'All Books',
-    href: '/library/admin/books',
-    icon: 'BookOpen',
+    title: "All Books",
+    href: "/library/admin/books",
+    icon: "BookOpen",
   },
   {
-    title: 'Add New Book',
-    href: '/library/admin/books/new',
-    icon: 'Plus',
+    title: "Add New Book",
+    href: "/library/admin/books/new",
+    icon: "Plus",
   },
-] as const;
+] as const

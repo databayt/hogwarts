@@ -1,27 +1,29 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import type { ActionResponse, ExamResultRow } from "./types";
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResponse, ExamResultRow } from "./types"
 
 /**
  * Get exam results with student details
  */
 export async function getExamResults(input: {
-  examId: string;
+  examId: string
 }): Promise<ActionResponse<ExamResultRow[]>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const { examId } = z.object({ examId: z.string().min(1) }).parse(input);
+    const { examId } = z.object({ examId: z.string().min(1) }).parse(input)
 
     const results = await db.examResult.findMany({
       where: { examId, schoolId },
@@ -37,7 +39,7 @@ export async function getExamResults(input: {
         },
       },
       orderBy: { marksObtained: "desc" },
-    });
+    })
 
     const mapped: ExamResultRow[] = results.map((result) => ({
       id: result.id,
@@ -51,19 +53,19 @@ export async function getExamResults(input: {
       grade: result.grade,
       isAbsent: result.isAbsent,
       remarks: result.remarks,
-    }));
+    }))
 
     return {
       success: true,
       data: mapped,
-    };
+    }
   } catch (error) {
-    console.error("Error getting exam results:", error);
+    console.error("Error getting exam results:", error)
     return {
       success: false,
       error: "Failed to get exam results",
       code: "RESULTS_FETCH_FAILED",
-    };
+    }
   }
 }
 
@@ -71,46 +73,46 @@ export async function getExamResults(input: {
  * Get student's all exam results
  */
 export async function getStudentResults(input: {
-  studentId: string;
-  termId?: string;
-  subjectId?: string;
+  studentId: string
+  termId?: string
+  subjectId?: string
 }): Promise<
   ActionResponse<
     Array<{
-      examTitle: string;
-      examDate: Date;
-      subjectName: string;
-      marksObtained: number;
-      totalMarks: number;
-      percentage: number;
-      grade: string | null;
-      rank?: number;
+      examTitle: string
+      examDate: Date
+      subjectName: string
+      marksObtained: number
+      totalMarks: number
+      percentage: number
+      grade: string | null
+      rank?: number
     }>
   >
 > {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const { studentId, termId, subjectId } = input;
+    const { studentId, termId, subjectId } = input
 
     // Build where clause
     const examWhere: Record<string, unknown> = {
       schoolId,
-    };
+    }
 
     if (termId) {
-      examWhere.termId = termId;
+      examWhere.termId = termId
     }
 
     if (subjectId) {
-      examWhere.subjectId = subjectId;
+      examWhere.subjectId = subjectId
     }
 
     const results = await db.examResult.findMany({
@@ -137,7 +139,7 @@ export async function getStudentResults(input: {
           examDate: "desc",
         },
       },
-    });
+    })
 
     // Calculate ranks for each exam
     const resultsWithRanks = await Promise.all(
@@ -152,10 +154,10 @@ export async function getStudentResults(input: {
           orderBy: {
             marksObtained: "desc",
           },
-        });
+        })
 
         const rank =
-          allExamResults.findIndex((r) => r.id === result.id) + 1 || undefined;
+          allExamResults.findIndex((r) => r.id === result.id) + 1 || undefined
 
         return {
           examTitle: result.exam.title,
@@ -166,21 +168,21 @@ export async function getStudentResults(input: {
           percentage: result.percentage,
           grade: result.grade,
           rank: result.isAbsent ? undefined : rank,
-        };
+        }
       })
-    );
+    )
 
     return {
       success: true,
       data: resultsWithRanks,
-    };
+    }
   } catch (error) {
-    console.error("Error getting student results:", error);
+    console.error("Error getting student results:", error)
     return {
       success: false,
       error: "Failed to get student results",
       code: "STUDENT_RESULTS_FAILED",
-    };
+    }
   }
 }
 
@@ -188,20 +190,20 @@ export async function getStudentResults(input: {
  * Get top performers for an exam
  */
 export async function getTopPerformers(input: {
-  examId: string;
-  limit?: number;
+  examId: string
+  limit?: number
 }): Promise<ActionResponse<ExamResultRow[]>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const { examId, limit = 10 } = input;
+    const { examId, limit = 10 } = input
 
     const topResults = await db.examResult.findMany({
       where: {
@@ -224,7 +226,7 @@ export async function getTopPerformers(input: {
         marksObtained: "desc",
       },
       take: limit,
-    });
+    })
 
     const mapped: ExamResultRow[] = topResults.map((result, index) => ({
       id: result.id,
@@ -238,19 +240,19 @@ export async function getTopPerformers(input: {
       grade: result.grade,
       isAbsent: result.isAbsent,
       remarks: result.remarks,
-    }));
+    }))
 
     return {
       success: true,
       data: mapped,
-    };
+    }
   } catch (error) {
-    console.error("Error getting top performers:", error);
+    console.error("Error getting top performers:", error)
     return {
       success: false,
       error: "Failed to get top performers",
       code: "TOP_PERFORMERS_FAILED",
-    };
+    }
   }
 }
 
@@ -258,20 +260,20 @@ export async function getTopPerformers(input: {
  * Publish exam results (make them visible to students)
  */
 export async function publishResults(input: {
-  examId: string;
-  notifyStudents?: boolean;
+  examId: string
+  notifyStudents?: boolean
 }): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
       return {
         success: false,
         error: "Missing school context",
         code: "NO_SCHOOL_CONTEXT",
-      };
+      }
     }
 
-    const { examId, notifyStudents = true } = input;
+    const { examId, notifyStudents = true } = input
 
     // Check if exam exists and all results are entered
     const exam = await db.exam.findFirst({
@@ -292,26 +294,26 @@ export async function publishResults(input: {
           },
         },
       },
-    });
+    })
 
     if (!exam) {
       return {
         success: false,
         error: "Exam not found",
         code: "EXAM_NOT_FOUND",
-      };
+      }
     }
 
     // Check if all students have results
-    const totalStudents = exam.class._count.studentClasses;
-    const resultsEntered = exam._count.results;
+    const totalStudents = exam.class._count.studentClasses
+    const resultsEntered = exam._count.results
 
     if (resultsEntered < totalStudents) {
       return {
         success: false,
         error: `Results incomplete. ${resultsEntered}/${totalStudents} students have results.`,
         code: "INCOMPLETE_RESULTS",
-      };
+      }
     }
 
     // Update exam status to indicate results are published
@@ -321,7 +323,7 @@ export async function publishResults(input: {
         status: "COMPLETED",
         // You might want to add a resultsPublishedAt field
       },
-    });
+    })
 
     // TODO: Send notifications if notifyStudents is true
     if (notifyStudents) {
@@ -331,13 +333,13 @@ export async function publishResults(input: {
 
     return {
       success: true,
-    };
+    }
   } catch (error) {
-    console.error("Error publishing results:", error);
+    console.error("Error publishing results:", error)
     return {
       success: false,
       error: "Failed to publish results",
       code: "PUBLISH_FAILED",
-    };
+    }
   }
 }

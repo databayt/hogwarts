@@ -3,32 +3,32 @@
  * Used with unified File Block ExportButton
  */
 
-import { createColumnHelpers, type ExportColumn } from "@/components/file";
+import { createColumnHelpers, type ExportColumn } from "@/components/file"
 
 // ============================================================================
 // Export Data Type
 // ============================================================================
 
 export interface AssignmentExportData {
-  id: string;
-  title: string;
-  description: string | null;
-  className: string | null;
-  subjectName: string | null;
-  teacherName: string | null;
-  dueDate: Date | null;
-  totalPoints: number | null;
-  status: string;
-  submissionCount: number;
-  gradedCount: number;
-  createdAt: Date;
+  id: string
+  title: string
+  description: string | null
+  className: string | null
+  subjectName: string | null
+  teacherName: string | null
+  dueDate: Date | null
+  totalPoints: number | null
+  status: string
+  submissionCount: number
+  gradedCount: number
+  createdAt: Date
 }
 
 // ============================================================================
 // Column Helpers
 // ============================================================================
 
-const { text, number, date } = createColumnHelpers<AssignmentExportData>();
+const { text, number, date } = createColumnHelpers<AssignmentExportData>()
 
 // ============================================================================
 // Export Columns
@@ -54,23 +54,27 @@ export const ASSIGNMENT_EXPORT_COLUMNS: ExportColumn<AssignmentExportData>[] = [
         ACTIVE: { en: "Active", ar: "نشط" },
         CLOSED: { en: "Closed", ar: "مغلق" },
         ARCHIVED: { en: "Archived", ar: "مؤرشف" },
-      };
-      const status = statusMap[String(value)] || { en: String(value), ar: String(value) };
-      return locale === "ar" ? status.ar : status.en;
+      }
+      const status = statusMap[String(value)] || {
+        en: String(value),
+        ar: String(value),
+      }
+      return locale === "ar" ? status.ar : status.en
     },
   },
   number("submissionCount", "Submissions", "عدد التسليمات"),
   number("gradedCount", "Graded", "المصححة"),
   date("createdAt", "Created Date", undefined, "تاريخ الإنشاء"),
-];
+]
 
 // ============================================================================
 // Compact Export Columns
 // ============================================================================
 
-export const ASSIGNMENT_EXPORT_COLUMNS_COMPACT: ExportColumn<AssignmentExportData>[] = [
-  text("title", "Title", "العنوان"),
-  text("className", "Class", "الفصل"),
-  date("dueDate", "Due Date", undefined, "تاريخ التسليم"),
-  number("submissionCount", "Submissions", "عدد التسليمات"),
-];
+export const ASSIGNMENT_EXPORT_COLUMNS_COMPACT: ExportColumn<AssignmentExportData>[] =
+  [
+    text("title", "Title", "العنوان"),
+    text("className", "Class", "الفصل"),
+    date("dueDate", "Due Date", undefined, "تاريخ التسليم"),
+    number("submissionCount", "Submissions", "عدد التسليمات"),
+  ]

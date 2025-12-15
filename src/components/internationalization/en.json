@@ -294,7 +294,7 @@
     },
     "parallax": {
       "design": "Design",
-      "automate": "Automate", 
+      "automate": "Automate",
       "analytics": "Analytics",
       "efficient": "Efficient"
     },
@@ -318,7 +318,7 @@
     },
     "footer": {
       "product": "Product",
-      "company": "Company", 
+      "company": "Company",
       "services": "Services",
       "support": "Support",
       "readyToBuild": "Ready to build?",
@@ -333,7 +333,7 @@
         "description": "App dir, Routing, Layouts, Loading UI and API routes."
       },
       "react": {
-        "title": "React 19", 
+        "title": "React 19",
         "description": "Server and Client Components.\nUse hook."
       },
       "database": {
@@ -474,7 +474,7 @@
         "title": "What We Do",
         "development": "Development - Enterprise-grade applications and platforms",
         "automation": "Automation - Streamlined workflows and process optimization",
-        "consulting": "Consulting - Technical expertise and implementation support", 
+        "consulting": "Consulting - Technical expertise and implementation support",
         "openSource": "Open Source - Community-driven development and innovation"
       },
       "businessModel": {
@@ -484,7 +484,7 @@
           "description": "Custom solutions tailored to specific client requirements and business processes. Each project delivers unique automation systems designed to solve particular challenges and operational needs."
         },
         "partners": {
-          "title": "Partners", 
+          "title": "Partners",
           "description": "Partnership opportunities for businesses seeking to outsource technology development, access specialized talent for temporary projects and specific technical expertise."
         },
         "codebase": {
@@ -548,10 +548,7 @@
         "ultra": {
           "title": "Ultra",
           "description": "For large organizations",
-          "benefits": [
-            "Unlimited pages and features",
-            "Custom integrations"
-          ]
+          "benefits": ["Unlimited pages and features", "Custom integrations"]
         }
       },
       "constants": {
@@ -754,22 +751,9 @@
         "WordPress",
         "Shopify"
       ],
-      "company": [
-        "About",
-        "Careers",
-        "Blog",
-        "Case Studies"
-      ],
-      "services": [
-        "Startups",
-        "Agencies"
-      ],
-      "support": [
-        "Help Center",
-        "Contact",
-        "Documentation",
-        "Service Status"
-      ]
+      "company": ["About", "Careers", "Blog", "Case Studies"],
+      "services": ["Startups", "Agencies"],
+      "support": ["Help Center", "Contact", "Documentation", "Service Status"]
     }
   },
   "errors": {

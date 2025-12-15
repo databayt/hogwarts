@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
 import type { ChartCardProps } from "./types"
 
 export function ChartCard({
@@ -25,7 +26,9 @@ export function ChartCard({
       </CardHeader>
       <CardContent className="flex-1">{children}</CardContent>
       {footer && (
-        <div className="px-6 pb-6 pt-0 text-sm text-muted-foreground">{footer}</div>
+        <div className="text-muted-foreground px-6 pt-0 pb-6 text-sm">
+          {footer}
+        </div>
       )}
     </Card>
   )

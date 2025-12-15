@@ -1,19 +1,24 @@
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Brain, Zap, Save } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { formatPoints, formatConfidence, getAIConfidenceIndicator } from "@/components/platform/exams/mark/utils"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { auth } from "@/auth"
+import { ArrowLeft, Brain, Save, Zap } from "lucide-react"
+
+import { db } from "@/lib/db"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import type { Locale } from "@/components/internationalization/config"
-import { Shell as PageContainer } from "@/components/table/shell"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import {
+  formatConfidence,
+  formatPoints,
+  getAIConfidenceIndicator,
+} from "@/components/platform/exams/mark/utils"
+import { Shell as PageContainer } from "@/components/table/shell"
 
 export default async function GradingPage({
   params,
@@ -93,28 +98,44 @@ export default async function GradingPage({
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
             <Card className="p-6">
-              <h3 className="font-semibold mb-2">{dict.grading.question}</h3>
+              <h3 className="mb-2 font-semibold">{dict.grading.question}</h3>
               <p className="mb-4">{question.questionText}</p>
               <div className="flex gap-2">
                 <Badge variant="outline">
-                  {dict.questionTypes[question.questionType as keyof typeof dict.questionTypes]}
+                  {
+                    dict.questionTypes[
+                      question.questionType as keyof typeof dict.questionTypes
+                    ]
+                  }
                 </Badge>
                 <Badge variant="secondary">
-                  {dict.difficulty[question.difficulty.toLowerCase() as keyof typeof dict.difficulty]}
+                  {
+                    dict.difficulty[
+                      question.difficulty.toLowerCase() as keyof typeof dict.difficulty
+                    ]
+                  }
                 </Badge>
-                <Badge variant="outline">{question.points.toString()} {dict.questionBank.points}</Badge>
+                <Badge variant="outline">
+                  {question.points.toString()} {dict.questionBank.points}
+                </Badge>
               </div>
             </Card>
 
             <Card className="p-6">
-              <h3 className="font-semibold mb-2">{dict.grading.studentAnswer}</h3>
+              <h3 className="mb-2 font-semibold">
+                {dict.grading.studentAnswer}
+              </h3>
               <div className="space-y-4">
                 <Badge variant="secondary" className="capitalize">
-                  {dict.submissionTypes[studentAnswer.submissionType.toLowerCase() as keyof typeof dict.submissionTypes]}
+                  {
+                    dict.submissionTypes[
+                      studentAnswer.submissionType.toLowerCase() as keyof typeof dict.submissionTypes
+                    ]
+                  }
                 </Badge>
 
                 {studentAnswer.submissionType === "DIGITAL" && (
-                  <p className="whitespace-pre-wrap bg-muted p-4 rounded">
+                  <p className="bg-muted rounded p-4 whitespace-pre-wrap">
                     {studentAnswer.answerText || dict.grading.noAnswer}
                   </p>
                 )}
@@ -122,46 +143,59 @@ export default async function GradingPage({
                 {studentAnswer.submissionType === "OCR" && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{dict.grading.ocrExtractedText}</span>
-                      <Badge variant={
-                        studentAnswer.ocrConfidence && studentAnswer.ocrConfidence > 0.9
-                          ? "default"
-                          : "destructive"
-                      }>
+                      <span className="text-muted-foreground text-sm">
+                        {dict.grading.ocrExtractedText}
+                      </span>
+                      <Badge
+                        variant={
+                          studentAnswer.ocrConfidence &&
+                          studentAnswer.ocrConfidence > 0.9
+                            ? "default"
+                            : "destructive"
+                        }
+                      >
                         {formatConfidence(studentAnswer.ocrConfidence || 0)}
                       </Badge>
                     </div>
-                    <p className="whitespace-pre-wrap bg-muted p-4 rounded">
+                    <p className="bg-muted rounded p-4 whitespace-pre-wrap">
                       {studentAnswer.ocrText || dict.grading.ocrPending}
                     </p>
                   </div>
                 )}
 
-                {studentAnswer.submissionType === "UPLOAD" && studentAnswer.uploadUrl && (
-                  <div className="space-y-2">
-                    <Label>{dict.grading.uploadedFile}</Label>
-                    <Button variant="outline" className="w-full" asChild>
-                      <a href={studentAnswer.uploadUrl} target="_blank" rel="noopener noreferrer">
-                        {dict.grading.viewUploadedFile}
-                      </a>
-                    </Button>
-                  </div>
-                )}
+                {studentAnswer.submissionType === "UPLOAD" &&
+                  studentAnswer.uploadUrl && (
+                    <div className="space-y-2">
+                      <Label>{dict.grading.uploadedFile}</Label>
+                      <Button variant="outline" className="w-full" asChild>
+                        <a
+                          href={studentAnswer.uploadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {dict.grading.viewUploadedFile}
+                        </a>
+                      </Button>
+                    </div>
+                  )}
               </div>
             </Card>
 
             {question.rubrics.length > 0 && (
               <Card className="p-6">
-                <h3 className="font-semibold mb-4">{dict.rubric.title}</h3>
+                <h3 className="mb-4 font-semibold">{dict.rubric.title}</h3>
                 <div className="space-y-3">
                   {question.rubrics[0].criteria.map((criterion) => (
                     <div key={criterion.id} className="border-l-2 pl-4">
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="mb-1 flex items-center justify-between">
                         <h4 className="font-medium">{criterion.criterion}</h4>
-                        <Badge variant="outline">{criterion.maxPoints.toString()} {dict.questionBank.points}</Badge>
+                        <Badge variant="outline">
+                          {criterion.maxPoints.toString()}{" "}
+                          {dict.questionBank.points}
+                        </Badge>
                       </div>
                       {criterion.description && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {criterion.description}
                         </p>
                       )}
@@ -175,40 +209,62 @@ export default async function GradingPage({
           <div className="space-y-4">
             {result && (
               <Card className="p-6">
-                <h3 className="font-semibold mb-4">{dict.grading.currentGrade}</h3>
+                <h3 className="mb-4 font-semibold">
+                  {dict.grading.currentGrade}
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <Label>{dict.grading.score}</Label>
                     <p className="text-2xl font-bold">
-                      {formatPoints(Number(result.pointsAwarded), Number(result.maxPoints))}
+                      {formatPoints(
+                        Number(result.pointsAwarded),
+                        Number(result.maxPoints)
+                      )}
                     </p>
                   </div>
 
                   <div>
                     <Label>{dict.grading.status}</Label>
                     <Badge variant="outline">
-                      {dict.status[result.status.toLowerCase().replace("_", "") as keyof typeof dict.status]}
+                      {
+                        dict.status[
+                          result.status
+                            .toLowerCase()
+                            .replace("_", "") as keyof typeof dict.status
+                        ]
+                      }
                     </Badge>
                   </div>
 
                   <div>
                     <Label>{dict.grading.gradingMethod}</Label>
                     <Badge variant="secondary">
-                      {dict.gradingMethods[result.gradingMethod.toLowerCase().replace("_", "") as keyof typeof dict.gradingMethods]}
+                      {
+                        dict.gradingMethods[
+                          result.gradingMethod
+                            .toLowerCase()
+                            .replace(
+                              "_",
+                              ""
+                            ) as keyof typeof dict.gradingMethods
+                        ]
+                      }
                     </Badge>
                   </div>
 
                   {result.aiConfidence && (
                     <div>
                       <Label>{dict.grading.aiConfidence}</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 bg-muted rounded-full h-2">
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="bg-muted h-2 flex-1 rounded-full">
                           <div
-                            className="bg-primary rounded-full h-2"
+                            className="bg-primary h-2 rounded-full"
                             style={{ width: `${result.aiConfidence * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm">{formatConfidence(result.aiConfidence)}</span>
+                        <span className="text-sm">
+                          {formatConfidence(result.aiConfidence)}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -216,7 +272,7 @@ export default async function GradingPage({
                   {result.aiReasoning && (
                     <div>
                       <Label>{dict.grading.aiReasoning}</Label>
-                      <p className="text-sm bg-muted p-3 rounded mt-1">
+                      <p className="bg-muted mt-1 rounded p-3 text-sm">
                         {result.aiReasoning}
                       </p>
                     </div>
@@ -225,7 +281,7 @@ export default async function GradingPage({
                   {result.feedback && (
                     <div>
                       <Label>{dict.grading.feedback}</Label>
-                      <p className="text-sm bg-muted p-3 rounded mt-1">
+                      <p className="bg-muted mt-1 rounded p-3 text-sm">
                         {result.feedback}
                       </p>
                     </div>
@@ -235,7 +291,9 @@ export default async function GradingPage({
             )}
 
             <Card className="p-6">
-              <h3 className="font-semibold mb-4">{dict.grading.manualGrading}</h3>
+              <h3 className="mb-4 font-semibold">
+                {dict.grading.manualGrading}
+              </h3>
               <form className="space-y-4">
                 <div>
                   <Label htmlFor="score">{dict.grading.pointsAwarded}</Label>
@@ -247,8 +305,9 @@ export default async function GradingPage({
                     step="0.1"
                     defaultValue={result ? Number(result.pointsAwarded) : 0}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {dict.grading.maxPoints}: {question.points.toString()} {dict.questionBank.points}
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {dict.grading.maxPoints}: {question.points.toString()}{" "}
+                    {dict.questionBank.points}
                   </p>
                 </div>
 

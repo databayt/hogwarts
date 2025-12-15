@@ -58,33 +58,35 @@
  * - Implement schedule optimization (minimize conflicts, balance teacher load)
  */
 
-"use server";
+"use server"
 
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import { auth } from '@/auth'
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import {
+  filterTimetableByRole,
+  getPermissionContext,
+  logTimetableAction,
+  requireAdminAccess,
+  requirePermission,
+  requireReadAccess,
+} from "./permissions"
 import {
   detectTimetableConflictsSchema,
-  getWeeklyTimetableSchema,
-  getScheduleConfigSchema,
   getClassesForSelectionSchema,
+  getScheduleConfigSchema,
   getTeachersForSelectionSchema,
-  upsertTimetableSlotSchema,
-  upsertSchoolWeekConfigSchema,
+  getWeeklyTimetableSchema,
   suggestFreeSlotsSchema,
-  type GetWeeklyTimetableInput as GetWeeklyTimetableValidated
-} from './validation'
-import {
-  requirePermission,
-  requireAdminAccess,
-  requireReadAccess,
-  logTimetableAction,
-  filterTimetableByRole,
-  getPermissionContext
-} from './permissions'
+  upsertSchoolWeekConfigSchema,
+  upsertTimetableSlotSchema,
+  type GetWeeklyTimetableInput as GetWeeklyTimetableValidated,
+} from "./validation"
 
 type Conflict = {
-  type: 'TEACHER' | 'ROOM'
+  type: "TEACHER" | "ROOM"
   classA: { id: string; name: string }
   classB: { id: string; name: string }
   teacher?: { id: string; name: string } | null
@@ -96,15 +98,15 @@ export async function detectTimetableConflicts(input?: unknown) {
   const validatedInput = detectTimetableConflictsSchema.parse(input)
 
   // Check permissions - only admins can detect conflicts
-  await requirePermission('manage_conflicts')
+  await requirePermission("manage_conflicts")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Log action for audit trail
-  await logTimetableAction('manage_conflicts', {
-    entityType: 'conflict',
-    metadata: { termId: validatedInput?.termId }
+  await logTimetableAction("manage_conflicts", {
+    entityType: "conflict",
+    metadata: { termId: validatedInput?.termId },
   })
 
   // If new Timetable model exists, perform slot-based conflict checks first
@@ -114,11 +116,16 @@ export async function detectTimetableConflicts(input?: unknown) {
 
     const slots = await (db as any).timetable.findMany({
       where,
-      select: { dayOfWeek: true, periodId: true, classId: true, teacherId: true, classroomId: true,
+      select: {
+        dayOfWeek: true,
+        periodId: true,
+        classId: true,
+        teacherId: true,
+        classroomId: true,
         class: { select: { id: true, name: true } },
         teacher: { select: { givenName: true, surname: true } },
         classroom: { select: { roomName: true } },
-      }
+      },
     })
 
     const conflicts: Conflict[] = []
@@ -131,17 +138,22 @@ export async function detectTimetableConflicts(input?: unknown) {
     }
     for (const [, group] of groups) {
       // Teacher conflicts in this time slot
-      const byTeacher = new Map<string, typeof group[number]>()
+      const byTeacher = new Map<string, (typeof group)[number]>()
       for (const s of group) {
         if (s.teacherId) {
           if (byTeacher.has(s.teacherId)) {
             const a = byTeacher.get(s.teacherId)!
             const b = s
             conflicts.push({
-              type: 'TEACHER',
+              type: "TEACHER",
               classA: { id: a.class.id, name: a.class.name },
               classB: { id: b.class.id, name: b.class.name },
-              teacher: { id: s.teacherId, name: [b.teacher?.givenName, b.teacher?.surname].filter(Boolean).join(' ') },
+              teacher: {
+                id: s.teacherId,
+                name: [b.teacher?.givenName, b.teacher?.surname]
+                  .filter(Boolean)
+                  .join(" "),
+              },
               room: null,
             })
           } else {
@@ -150,18 +162,21 @@ export async function detectTimetableConflicts(input?: unknown) {
         }
       }
       // Room conflicts
-      const byRoom = new Map<string, typeof group[number]>()
+      const byRoom = new Map<string, (typeof group)[number]>()
       for (const s of group) {
         if (s.classroomId) {
           if (byRoom.has(s.classroomId)) {
             const a = byRoom.get(s.classroomId)!
             const b = s
             conflicts.push({
-              type: 'ROOM',
+              type: "ROOM",
               classA: { id: a.class.id, name: a.class.name },
               classB: { id: b.class.id, name: b.class.name },
               teacher: null,
-              room: { id: s.classroomId, name: b.classroom?.roomName ?? s.classroomId },
+              room: {
+                id: s.classroomId,
+                name: b.classroom?.roomName ?? s.classroomId,
+              },
             })
           } else {
             byRoom.set(s.classroomId, s)
@@ -172,7 +187,8 @@ export async function detectTimetableConflicts(input?: unknown) {
     return { conflicts }
   }
 
-  if (!(db as any).class || !(db as any).period) return { conflicts: [] as Conflict[] }
+  if (!(db as any).class || !(db as any).period)
+    return { conflicts: [] as Conflict[] }
 
   const where: { schoolId: string; termId?: string } = { schoolId }
   if (validatedInput?.termId) where.termId = validatedInput.termId
@@ -193,7 +209,7 @@ export async function detectTimetableConflicts(input?: unknown) {
     },
   })
 
-  type Row = typeof classes[number]
+  type Row = (typeof classes)[number]
   const conflicts: Conflict[] = []
 
   const overlaps = (a: Row, b: Row) => {
@@ -211,20 +227,28 @@ export async function detectTimetableConflicts(input?: unknown) {
       if (!overlaps(a, b)) continue
       if (a.teacherId && b.teacherId && a.teacherId === b.teacherId) {
         conflicts.push({
-          type: 'TEACHER',
+          type: "TEACHER",
           classA: { id: a.id, name: a.name },
           classB: { id: b.id, name: b.name },
-          teacher: { id: a.teacherId, name: [a.teacher?.givenName, a.teacher?.surname].filter(Boolean).join(' ') },
+          teacher: {
+            id: a.teacherId,
+            name: [a.teacher?.givenName, a.teacher?.surname]
+              .filter(Boolean)
+              .join(" "),
+          },
           room: null,
         })
       }
       if (a.classroomId && b.classroomId && a.classroomId === b.classroomId) {
         conflicts.push({
-          type: 'ROOM',
+          type: "ROOM",
           classA: { id: a.id, name: a.name },
           classB: { id: b.id, name: b.name },
           teacher: null,
-          room: { id: a.classroomId, name: a.classroom?.roomName ?? a.classroomId },
+          room: {
+            id: a.classroomId,
+            name: a.classroom?.roomName ?? a.classroomId,
+          },
         })
       }
     }
@@ -238,17 +262,20 @@ export async function getTermsForSelection() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
-  if (!(db as any).term) return { terms: [] as Array<{ id: string; label: string }> }
+  if (!(db as any).term)
+    return { terms: [] as Array<{ id: string; label: string }> }
 
   const rows = await (db as any).term.findMany({
     where: { schoolId },
-    orderBy: { startDate: 'desc' },
-    select: { id: true, termNumber: true }
+    orderBy: { startDate: "desc" },
+    select: { id: true, termNumber: true },
   })
 
-  return { terms: rows.map((t: any) => ({ id: t.id, label: `Term ${t.termNumber}` })) }
+  return {
+    terms: rows.map((t: any) => ({ id: t.id, label: `Term ${t.termNumber}` })),
+  }
 }
 
 export async function getClassesForSelection(input: unknown) {
@@ -259,27 +286,29 @@ export async function getClassesForSelection(input: unknown) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   if ((db as any).timetable && validatedInput?.termId) {
     const rows = await (db as any).timetable.findMany({
       where: { schoolId, termId: validatedInput.termId },
       select: { class: { select: { id: true, name: true } } },
-      distinct: ['classId'],
+      distinct: ["classId"],
     })
-    return { classes: rows.map((r: any) => ({ id: r.class.id, label: r.class.name })) }
+    return {
+      classes: rows.map((r: any) => ({ id: r.class.id, label: r.class.name })),
+    }
   }
 
   // Fallback: list classes by term
   if ((db as any).class && validatedInput?.termId) {
     const rows = await (db as any).class.findMany({
       where: { schoolId, termId: validatedInput.termId },
-      select: { id: true, name: true }
+      select: { id: true, name: true },
     })
     return { classes: rows.map((c: any) => ({ id: c.id, label: c.name })) }
   }
 
-  return { classes: [] as Array<{ id: string, label: string }> }
+  return { classes: [] as Array<{ id: string; label: string }> }
 }
 
 export async function getTeachersForSelection(input: unknown) {
@@ -290,36 +319,40 @@ export async function getTeachersForSelection(input: unknown) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   if ((db as any).timetable && validatedInput?.termId) {
     const rows = await (db as any).timetable.findMany({
       where: { schoolId, termId: validatedInput.termId },
-      select: { teacher: { select: { id: true, givenName: true, surname: true } } },
-      distinct: ['teacherId'],
+      select: {
+        teacher: { select: { id: true, givenName: true, surname: true } },
+      },
+      distinct: ["teacherId"],
     })
     return {
       teachers: rows.map((r: any) => ({
         id: r.teacher.id,
-        label: [r.teacher.givenName, r.teacher.surname].filter(Boolean).join(' ')
-      }))
+        label: [r.teacher.givenName, r.teacher.surname]
+          .filter(Boolean)
+          .join(" "),
+      })),
     }
   }
 
   if ((db as any).teacher) {
     const rows = await (db as any).teacher.findMany({
       where: { schoolId },
-      select: { id: true, givenName: true, surname: true }
+      select: { id: true, givenName: true, surname: true },
     })
     return {
       teachers: rows.map((t: any) => ({
         id: t.id,
-        label: [t.givenName, t.surname].filter(Boolean).join(' ')
-      }))
+        label: [t.givenName, t.surname].filter(Boolean).join(" "),
+      })),
     }
   }
 
-  return { teachers: [] as Array<{ id: string, label: string }> }
+  return { teachers: [] as Array<{ id: string; label: string }> }
 }
 
 export async function upsertTimetableSlot(input: unknown) {
@@ -330,7 +363,7 @@ export async function upsertTimetableSlot(input: unknown) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
   const data = {
     schoolId,
     termId: validatedInput.termId,
@@ -352,7 +385,7 @@ export async function upsertTimetableSlot(input: unknown) {
         periodId: validatedInput.periodId,
         classId: validatedInput.classId,
         weekOffset: validatedInput.weekOffset,
-      }
+      },
     },
     update: {
       teacherId: validatedInput.teacherId,
@@ -362,10 +395,10 @@ export async function upsertTimetableSlot(input: unknown) {
   })
 
   // Log action for audit trail
-  await logTimetableAction('edit', {
-    entityType: 'slot',
+  await logTimetableAction("edit", {
+    entityType: "slot",
     entityId: row.id,
-    changes: data
+    changes: data,
   })
 
   return { id: row.id }
@@ -379,32 +412,32 @@ export async function upsertSchoolWeekConfig(input: unknown) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const row = await (db as any).schoolWeekConfig.upsert({
     where: {
       schoolId_termId: {
         schoolId,
-        termId: validatedInput.termId ?? null
-      }
+        termId: validatedInput.termId ?? null,
+      },
     },
     update: {
       workingDays: validatedInput.workingDays,
-      defaultLunchAfterPeriod: validatedInput.defaultLunchAfterPeriod ?? null
+      defaultLunchAfterPeriod: validatedInput.defaultLunchAfterPeriod ?? null,
     },
     create: {
       schoolId,
       termId: validatedInput.termId ?? null,
       workingDays: validatedInput.workingDays,
-      defaultLunchAfterPeriod: validatedInput.defaultLunchAfterPeriod ?? null
+      defaultLunchAfterPeriod: validatedInput.defaultLunchAfterPeriod ?? null,
     },
   })
 
   // Log action for audit trail
-  await logTimetableAction('configure_settings', {
-    entityType: 'config',
+  await logTimetableAction("configure_settings", {
+    entityType: "config",
     entityId: row.id,
-    changes: validatedInput
+    changes: validatedInput,
   })
 
   return { id: row.id }
@@ -415,27 +448,33 @@ export async function suggestFreeSlots(input: unknown) {
   const validatedInput = suggestFreeSlotsSchema.parse(input)
 
   // Admin access required for suggestions
-  await requirePermission('edit')
+  await requirePermission("edit")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   if (!validatedInput.teacherId && !validatedInput.classId) {
-    return { suggestions: [] as Array<{ dayOfWeek: number; periodId: string; periodName: string }> }
+    return {
+      suggestions: [] as Array<{
+        dayOfWeek: number
+        periodId: string
+        periodName: string
+      }>,
+    }
   }
 
   const { config } = await getScheduleConfig({ termId: validatedInput.termId })
 
   const term = await (db as any).term.findFirst({
     where: { id: validatedInput.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
   if (!term) return { suggestions: [] }
 
   const periods = await (db as any).period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true },
   })
 
   const where: any = { schoolId, termId: validatedInput.termId }
@@ -444,12 +483,18 @@ export async function suggestFreeSlots(input: unknown) {
 
   const occupied = await (db as any).timetable.findMany({
     where,
-    select: { dayOfWeek: true, periodId: true }
+    select: { dayOfWeek: true, periodId: true },
   })
 
-  const occupiedSet = new Set(occupied.map((o: any) => `${o.dayOfWeek}:${o.periodId}`))
+  const occupiedSet = new Set(
+    occupied.map((o: any) => `${o.dayOfWeek}:${o.periodId}`)
+  )
 
-  const suggestions: Array<{ dayOfWeek: number; periodId: string; periodName: string }> = []
+  const suggestions: Array<{
+    dayOfWeek: number
+    periodId: string
+    periodName: string
+  }> = []
 
   // Use preferred days if provided, otherwise use all working days
   const daysToCheck = validatedInput.preferredDays || config.workingDays
@@ -457,8 +502,10 @@ export async function suggestFreeSlots(input: unknown) {
   for (const d of daysToCheck) {
     for (const p of periods) {
       // Skip if preferred periods are specified and this isn't one
-      if (validatedInput.preferredPeriods &&
-          !validatedInput.preferredPeriods.includes(p.id)) {
+      if (
+        validatedInput.preferredPeriods &&
+        !validatedInput.preferredPeriods.includes(p.id)
+      ) {
         continue
       }
 
@@ -472,14 +519,13 @@ export async function suggestFreeSlots(input: unknown) {
   return { suggestions }
 }
 
-
 type ScheduleConfig = {
   workingDays: number[]
   defaultLunchAfterPeriod?: number | null
 }
 
 function formatTimeRange(start: Date, end: Date) {
-  const pad = (n: number) => n.toString().padStart(2, '0')
+  const pad = (n: number) => n.toString().padStart(2, "0")
   const sH = start.getUTCHours()
   const sM = start.getUTCMinutes()
   const eH = end.getUTCHours()
@@ -487,7 +533,9 @@ function formatTimeRange(start: Date, end: Date) {
   return `${pad(sH)}:${pad(sM)}~${pad(eH)}:${pad(eM)}`
 }
 
-export async function getScheduleConfig(input: unknown): Promise<{ config: ScheduleConfig }>{
+export async function getScheduleConfig(
+  input: unknown
+): Promise<{ config: ScheduleConfig }> {
   // Validate input
   const validatedInput = getScheduleConfigSchema.parse(input)
 
@@ -495,18 +543,22 @@ export async function getScheduleConfig(input: unknown): Promise<{ config: Sched
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Try per-term config then school default
   const cfg = await (db as any).schoolWeekConfig?.findFirst({
-    where: { schoolId, OR: [{ termId: validatedInput?.termId }, { termId: null }] },
-    orderBy: { termId: 'desc' },
+    where: {
+      schoolId,
+      OR: [{ termId: validatedInput?.termId }, { termId: null }],
+    },
+    orderBy: { termId: "desc" },
     select: { workingDays: true, defaultLunchAfterPeriod: true },
   })
 
-  const workingDays: number[] = Array.isArray(cfg?.workingDays) && cfg!.workingDays.length > 0
-    ? cfg!.workingDays
-    : [0,1,2,3,4] // Default Sun–Thu
+  const workingDays: number[] =
+    Array.isArray(cfg?.workingDays) && cfg!.workingDays.length > 0
+      ? cfg!.workingDays
+      : [0, 1, 2, 3, 4] // Default Sun–Thu
   const defaultLunchAfterPeriod = cfg?.defaultLunchAfterPeriod ?? null
 
   return { config: { workingDays, defaultLunchAfterPeriod } }
@@ -534,7 +586,7 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const weekOffset = validatedInput.weekOffset ?? 0
 
@@ -545,32 +597,33 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   // Determine yearId to fetch periods
   const term = await (db as any).term.findFirst({
     where: { id: validatedInput.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await (db as any).period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
+    orderBy: { startTime: "asc" },
     select: { id: true, name: true, startTime: true, endTime: true },
   })
 
-  const day_time = periods.map((p: any, idx: number) =>
-    `${idx + 1}(${formatTimeRange(new Date(p.startTime as Date), new Date(p.endTime as Date))})`
+  const day_time = periods.map(
+    (p: any, idx: number) =>
+      `${idx + 1}(${formatTimeRange(new Date(p.startTime as Date), new Date(p.endTime as Date))})`
   )
 
   // Build timetable grid for selected view
   const whereBase: any = { schoolId, termId: validatedInput.termId, weekOffset }
 
   // Apply role-based filtering
-  if (role === 'TEACHER') {
+  if (role === "TEACHER") {
     // Teacher can only view their own timetable
     const session = await auth()
     const teacherId = session?.user?.id // Assuming user ID maps to teacher ID
     if (teacherId) {
       whereBase.teacherId = teacherId
     }
-  } else if (role === 'STUDENT') {
+  } else if (role === "STUDENT") {
     // Student can only view their class timetable
     const session = await auth()
     const studentId = session?.user?.id
@@ -578,7 +631,7 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
       // Get student's class
       const student = await (db as any).student?.findFirst({
         where: { id: studentId, schoolId },
-        select: { classId: true }
+        select: { classId: true },
       })
       if (student?.classId) {
         whereBase.classId = student.classId
@@ -586,8 +639,10 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
     }
   } else {
     // Admin/Developer can specify view filters
-    if (validatedInput.view?.classId) whereBase.classId = validatedInput.view.classId
-    if (validatedInput.view?.teacherId) whereBase.teacherId = validatedInput.view.teacherId
+    if (validatedInput.view?.classId)
+      whereBase.classId = validatedInput.view.classId
+    if (validatedInput.view?.teacherId)
+      whereBase.teacherId = validatedInput.view.teacherId
   }
 
   const rows = await (db as any).timetable.findMany({
@@ -595,13 +650,20 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
     select: {
       dayOfWeek: true,
       periodId: true,
-      class: { select: { id: true, name: true, subject: { select: { subjectName: true } }, teacher: { select: { givenName: true, surname: true } } } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+          teacher: { select: { givenName: true, surname: true } },
+        },
+      },
       teacher: { select: { givenName: true, surname: true } },
     },
   })
 
   // Map rows by (day, period) for quick lookup
-  const byKey = new Map<string, typeof rows[number]>
+  const byKey = new Map<string, (typeof rows)[number]>()
   for (const r of rows) {
     byKey.set(`${r.dayOfWeek}:${r.periodId}`, r)
   }
@@ -611,12 +673,30 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
       const key = `${day}:${p.id}`
       const row = byKey.get(key)
       if (!row) {
-        return { period: idx + 1, subject: '', teacher: '', replaced: false, original: null }
+        return {
+          period: idx + 1,
+          subject: "",
+          teacher: "",
+          replaced: false,
+          original: null,
+        }
       }
-      const teacherName = [row.teacher?.givenName, row.teacher?.surname].filter(Boolean).join(' ') ||
-        [row.class?.teacher?.givenName, row.class?.teacher?.surname].filter(Boolean).join(' ')
-      const subjectName = row.class?.subject?.subjectName ?? row.class?.name ?? ''
-      return { period: idx + 1, subject: subjectName, teacher: teacherName, replaced: false, original: null }
+      const teacherName =
+        [row.teacher?.givenName, row.teacher?.surname]
+          .filter(Boolean)
+          .join(" ") ||
+        [row.class?.teacher?.givenName, row.class?.teacher?.surname]
+          .filter(Boolean)
+          .join(" ")
+      const subjectName =
+        row.class?.subject?.subjectName ?? row.class?.name ?? ""
+      return {
+        period: idx + 1,
+        subject: subjectName,
+        teacher: teacherName,
+        replaced: false,
+        original: null,
+      }
     })
   })
 
@@ -640,44 +720,48 @@ export async function getRoomsForSelection() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const rows = await db.classroom.findMany({
     where: { schoolId },
-    orderBy: { roomName: 'asc' },
-    select: { id: true, roomName: true, capacity: true }
+    orderBy: { roomName: "asc" },
+    select: { id: true, roomName: true, capacity: true },
   })
 
   return {
     rooms: rows.map((r) => ({
       id: r.id,
       label: r.roomName,
-      capacity: r.capacity
-    }))
+      capacity: r.capacity,
+    })),
   }
 }
 
 /**
  * Get timetable filtered by a specific class
  */
-export async function getTimetableByClass(input: { termId: string; classId: string; weekOffset?: 0 | 1 }) {
+export async function getTimetableByClass(input: {
+  termId: string
+  classId: string
+  weekOffset?: 0 | 1
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   const slots = await db.timetable.findMany({
@@ -685,70 +769,88 @@ export async function getTimetableByClass(input: { termId: string; classId: stri
       schoolId,
       termId: input.termId,
       classId: input.classId,
-      weekOffset: input.weekOffset ?? 0
+      weekOffset: input.weekOffset ?? 0,
     },
     include: {
       teacher: { select: { id: true, givenName: true, surname: true } },
       classroom: { select: { id: true, roomName: true } },
-      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
-      period: { select: { id: true, name: true, startTime: true, endTime: true } }
-    }
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
   })
 
   const classInfo = await db.class.findFirst({
     where: { id: input.classId, schoolId },
-    select: { id: true, name: true, subject: { select: { subjectName: true } } }
+    select: {
+      id: true,
+      name: true,
+      subject: { select: { subjectName: true } },
+    },
   })
 
   return {
-    classInfo: classInfo ? {
-      id: classInfo.id,
-      name: classInfo.name,
-      subject: classInfo.subject?.subjectName
-    } : null,
+    classInfo: classInfo
+      ? {
+          id: classInfo.id,
+          name: classInfo.name,
+          subject: classInfo.subject?.subjectName,
+        }
+      : null,
     workingDays: config.workingDays,
-    periods: periods.map(p => ({
+    periods: periods.map((p) => ({
       id: p.id,
       name: p.name,
       startTime: p.startTime,
-      endTime: p.endTime
+      endTime: p.endTime,
     })),
-    slots: slots.map(s => ({
+    slots: slots.map((s) => ({
       id: s.id,
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : '',
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
       teacherId: s.teacherId,
-      room: s.classroom?.roomName || '',
+      room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || ''
+      subject: s.class?.subject?.subjectName || s.class?.name || "",
     })),
-    lunchAfterPeriod: config.defaultLunchAfterPeriod
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
 }
 
 /**
  * Get timetable filtered by a specific teacher
  */
-export async function getTimetableByTeacher(input: { termId: string; teacherId: string; weekOffset?: 0 | 1 }) {
+export async function getTimetableByTeacher(input: {
+  termId: string
+  teacherId: string
+  weekOffset?: 0 | 1
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   const slots = await db.timetable.findMany({
@@ -756,78 +858,92 @@ export async function getTimetableByTeacher(input: { termId: string; teacherId: 
       schoolId,
       termId: input.termId,
       teacherId: input.teacherId,
-      weekOffset: input.weekOffset ?? 0
+      weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
       classroom: { select: { id: true, roomName: true } },
-      period: { select: { id: true, name: true, startTime: true, endTime: true } }
-    }
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
   })
 
   const teacherInfo = await db.teacher.findFirst({
     where: { id: input.teacherId, schoolId },
-    select: { id: true, givenName: true, surname: true, emailAddress: true }
+    select: { id: true, givenName: true, surname: true, emailAddress: true },
   })
 
   // Calculate workload
-  const uniqueDays = new Set(slots.map(s => s.dayOfWeek))
+  const uniqueDays = new Set(slots.map((s) => s.dayOfWeek))
   const totalPeriods = slots.length
 
   return {
-    teacherInfo: teacherInfo ? {
-      id: teacherInfo.id,
-      name: `${teacherInfo.givenName} ${teacherInfo.surname}`,
-      email: teacherInfo.emailAddress
-    } : null,
+    teacherInfo: teacherInfo
+      ? {
+          id: teacherInfo.id,
+          name: `${teacherInfo.givenName} ${teacherInfo.surname}`,
+          email: teacherInfo.emailAddress,
+        }
+      : null,
     workingDays: config.workingDays,
-    periods: periods.map(p => ({
+    periods: periods.map((p) => ({
       id: p.id,
       name: p.name,
       startTime: p.startTime,
-      endTime: p.endTime
+      endTime: p.endTime,
     })),
-    slots: slots.map(s => ({
+    slots: slots.map((s) => ({
       id: s.id,
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      className: s.class?.name || '',
+      className: s.class?.name || "",
       classId: s.classId,
-      room: s.classroom?.roomName || '',
+      room: s.classroom?.roomName || "",
       roomId: s.classroomId,
-      subject: s.class?.subject?.subjectName || s.class?.name || ''
+      subject: s.class?.subject?.subjectName || s.class?.name || "",
     })),
     workload: {
       daysPerWeek: uniqueDays.size,
       periodsPerWeek: totalPeriods,
-      classesTeaching: [...new Set(slots.map(s => s.classId))].length
+      classesTeaching: [...new Set(slots.map((s) => s.classId))].length,
     },
-    lunchAfterPeriod: config.defaultLunchAfterPeriod
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
 }
 
 /**
  * Get timetable filtered by a specific room
  */
-export async function getTimetableByRoom(input: { termId: string; roomId: string; weekOffset?: 0 | 1 }) {
+export async function getTimetableByRoom(input: {
+  termId: string
+  roomId: string
+  weekOffset?: 0 | 1
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   const slots = await db.timetable.findMany({
@@ -835,54 +951,69 @@ export async function getTimetableByRoom(input: { termId: string; roomId: string
       schoolId,
       termId: input.termId,
       classroomId: input.roomId,
-      weekOffset: input.weekOffset ?? 0
+      weekOffset: input.weekOffset ?? 0,
     },
     include: {
-      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
       teacher: { select: { id: true, givenName: true, surname: true } },
-      period: { select: { id: true, name: true, startTime: true, endTime: true } }
-    }
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
   })
 
   const roomInfo = await db.classroom.findFirst({
     where: { id: input.roomId, schoolId },
-    select: { id: true, roomName: true, capacity: true }
+    select: { id: true, roomName: true, capacity: true },
   })
 
   // Calculate utilization
-  const totalPossibleSlots = config.workingDays.length * periods.filter(p => !p.name.includes('Break') && !p.name.includes('Lunch')).length
-  const utilizationRate = totalPossibleSlots > 0 ? (slots.length / totalPossibleSlots) * 100 : 0
+  const totalPossibleSlots =
+    config.workingDays.length *
+    periods.filter(
+      (p) => !p.name.includes("Break") && !p.name.includes("Lunch")
+    ).length
+  const utilizationRate =
+    totalPossibleSlots > 0 ? (slots.length / totalPossibleSlots) * 100 : 0
 
   return {
-    roomInfo: roomInfo ? {
-      id: roomInfo.id,
-      name: roomInfo.roomName,
-      capacity: roomInfo.capacity
-    } : null,
+    roomInfo: roomInfo
+      ? {
+          id: roomInfo.id,
+          name: roomInfo.roomName,
+          capacity: roomInfo.capacity,
+        }
+      : null,
     workingDays: config.workingDays,
-    periods: periods.map(p => ({
+    periods: periods.map((p) => ({
       id: p.id,
       name: p.name,
       startTime: p.startTime,
-      endTime: p.endTime
+      endTime: p.endTime,
     })),
-    slots: slots.map(s => ({
+    slots: slots.map((s) => ({
       id: s.id,
       dayOfWeek: s.dayOfWeek,
       periodId: s.periodId,
       periodName: s.period.name,
-      className: s.class?.name || '',
+      className: s.class?.name || "",
       classId: s.classId,
-      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : '',
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
       teacherId: s.teacherId,
-      subject: s.class?.subject?.subjectName || s.class?.name || ''
+      subject: s.class?.subject?.subjectName || s.class?.name || "",
     })),
     utilization: {
       usedSlots: slots.length,
       totalSlots: totalPossibleSlots,
-      rate: Math.round(utilizationRate)
+      rate: Math.round(utilizationRate),
     },
-    lunchAfterPeriod: config.defaultLunchAfterPeriod
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
 }
 
@@ -890,22 +1021,22 @@ export async function getTimetableByRoom(input: { termId: string; roomId: string
  * Get timetable analytics data
  */
 export async function getTimetableAnalytics(input: { termId: string }) {
-  await requirePermission('view_analytics')
+  await requirePermission("view_analytics")
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const { config } = await getScheduleConfig({ termId: input.termId })
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' }
+    orderBy: { startTime: "asc" },
   })
 
   const slots = await db.timetable.findMany({
@@ -913,12 +1044,26 @@ export async function getTimetableAnalytics(input: { termId: string }) {
     include: {
       teacher: { select: { id: true, givenName: true, surname: true } },
       classroom: { select: { id: true, roomName: true, capacity: true } },
-      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } }
-    }
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
+    },
   })
 
   // Teacher workload analysis
-  const teacherWorkload = new Map<string, { name: string; periods: number; classes: Set<string>; subjects: Set<string> }>()
+  const teacherWorkload = new Map<
+    string,
+    {
+      name: string
+      periods: number
+      classes: Set<string>
+      subjects: Set<string>
+    }
+  >()
   for (const slot of slots) {
     if (slot.teacher) {
       const key = slot.teacherId
@@ -926,11 +1071,12 @@ export async function getTimetableAnalytics(input: { termId: string }) {
         name: `${slot.teacher.givenName} ${slot.teacher.surname}`,
         periods: 0,
         classes: new Set(),
-        subjects: new Set()
+        subjects: new Set(),
       }
       existing.periods++
       existing.classes.add(slot.classId)
-      if (slot.class?.subject?.subjectName) existing.subjects.add(slot.class.subject.subjectName)
+      if (slot.class?.subject?.subjectName)
+        existing.subjects.add(slot.class.subject.subjectName)
       teacherWorkload.set(key, existing)
     }
   }
@@ -938,29 +1084,42 @@ export async function getTimetableAnalytics(input: { termId: string }) {
   // Room utilization analysis
   const rooms = await db.classroom.findMany({
     where: { schoolId },
-    select: { id: true, roomName: true, capacity: true }
+    select: { id: true, roomName: true, capacity: true },
   })
 
-  const teachingPeriods = periods.filter(p => !p.name.includes('Break') && !p.name.includes('Lunch'))
+  const teachingPeriods = periods.filter(
+    (p) => !p.name.includes("Break") && !p.name.includes("Lunch")
+  )
   const maxSlotsPerRoom = config.workingDays.length * teachingPeriods.length
 
-  const roomUtilization = rooms.map(room => {
-    const roomSlots = slots.filter(s => s.classroomId === room.id)
+  const roomUtilization = rooms.map((room) => {
+    const roomSlots = slots.filter((s) => s.classroomId === room.id)
     return {
       id: room.id,
       name: room.roomName,
       capacity: room.capacity,
       usedSlots: roomSlots.length,
       totalSlots: maxSlotsPerRoom,
-      utilizationRate: maxSlotsPerRoom > 0 ? Math.round((roomSlots.length / maxSlotsPerRoom) * 100) : 0
+      utilizationRate:
+        maxSlotsPerRoom > 0
+          ? Math.round((roomSlots.length / maxSlotsPerRoom) * 100)
+          : 0,
     }
   })
 
   // Subject distribution
-  const subjectDist = new Map<string, { name: string; periods: number; classes: Set<string> }>()
+  const subjectDist = new Map<
+    string,
+    { name: string; periods: number; classes: Set<string> }
+  >()
   for (const slot of slots) {
-    const subject = slot.class?.subject?.subjectName || slot.class?.name || 'Unknown'
-    const existing = subjectDist.get(subject) || { name: subject, periods: 0, classes: new Set() }
+    const subject =
+      slot.class?.subject?.subjectName || slot.class?.name || "Unknown"
+    const existing = subjectDist.get(subject) || {
+      name: subject,
+      periods: 0,
+      classes: new Set(),
+    }
     existing.periods++
     existing.classes.add(slot.classId)
     subjectDist.set(subject, existing)
@@ -974,23 +1133,29 @@ export async function getTimetableAnalytics(input: { termId: string }) {
       totalSlots: slots.length,
       totalTeachers: teacherWorkload.size,
       totalRooms: rooms.length,
-      totalClasses: [...new Set(slots.map(s => s.classId))].length,
-      conflictCount: conflicts.length
+      totalClasses: [...new Set(slots.map((s) => s.classId))].length,
+      conflictCount: conflicts.length,
     },
-    teacherWorkload: Array.from(teacherWorkload.entries()).map(([id, data]) => ({
-      id,
-      name: data.name,
-      periodsPerWeek: data.periods,
-      classesCount: data.classes.size,
-      subjects: Array.from(data.subjects)
-    })).sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
-    roomUtilization: roomUtilization.sort((a, b) => b.utilizationRate - a.utilizationRate),
-    subjectDistribution: Array.from(subjectDist.entries()).map(([name, data]) => ({
-      name,
-      periodsPerWeek: data.periods,
-      classesCount: data.classes.size
-    })).sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
-    conflicts
+    teacherWorkload: Array.from(teacherWorkload.entries())
+      .map(([id, data]) => ({
+        id,
+        name: data.name,
+        periodsPerWeek: data.periods,
+        classesCount: data.classes.size,
+        subjects: Array.from(data.subjects),
+      }))
+      .sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
+    roomUtilization: roomUtilization.sort(
+      (a, b) => b.utilizationRate - a.utilizationRate
+    ),
+    subjectDistribution: Array.from(subjectDist.entries())
+      .map(([name, data]) => ({
+        name,
+        periodsPerWeek: data.periods,
+        classesCount: data.classes.size,
+      }))
+      .sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
+    conflicts,
   }
 }
 
@@ -1007,7 +1172,7 @@ export async function deleteTimetableSlot(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   await db.timetable.delete({
     where: {
@@ -1017,14 +1182,14 @@ export async function deleteTimetableSlot(input: {
         dayOfWeek: input.dayOfWeek,
         periodId: input.periodId,
         classId: input.classId,
-        weekOffset: input.weekOffset
-      }
-    }
+        weekOffset: input.weekOffset,
+      },
+    },
   })
 
-  await logTimetableAction('delete', {
-    entityType: 'slot',
-    metadata: input
+  await logTimetableAction("delete", {
+    entityType: "slot",
+    metadata: input,
   })
 
   return { success: true }
@@ -1037,18 +1202,18 @@ export async function getPeriodsForTerm(input: { termId: string }) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const term = await db.term.findFirst({
     where: { id: input.termId, schoolId },
-    select: { yearId: true }
+    select: { yearId: true },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   return {
@@ -1058,8 +1223,10 @@ export async function getPeriodsForTerm(input: { termId: string }) {
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak: p.name.toLowerCase().includes('break') || p.name.toLowerCase().includes('lunch')
-    }))
+      isBreak:
+        p.name.toLowerCase().includes("break") ||
+        p.name.toLowerCase().includes("lunch"),
+    })),
   }
 }
 
@@ -1075,7 +1242,7 @@ export async function getActiveTerm() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const today = new Date()
 
@@ -1087,8 +1254,8 @@ export async function getActiveTerm() {
       termNumber: true,
       startDate: true,
       endDate: true,
-      schoolYear: { select: { id: true, yearName: true } }
-    }
+      schoolYear: { select: { id: true, yearName: true } },
+    },
   })
 
   if (activeTerm) {
@@ -1099,9 +1266,9 @@ export async function getActiveTerm() {
         label: `${activeTerm.schoolYear.yearName} - Term ${activeTerm.termNumber}`,
         startDate: activeTerm.startDate,
         endDate: activeTerm.endDate,
-        yearId: activeTerm.schoolYear.id
+        yearId: activeTerm.schoolYear.id,
       },
-      source: 'explicit' as const
+      source: "explicit" as const,
     }
   }
 
@@ -1110,15 +1277,15 @@ export async function getActiveTerm() {
     where: {
       schoolId,
       startDate: { lte: today },
-      endDate: { gte: today }
+      endDate: { gte: today },
     },
     select: {
       id: true,
       termNumber: true,
       startDate: true,
       endDate: true,
-      schoolYear: { select: { id: true, yearName: true } }
-    }
+      schoolYear: { select: { id: true, yearName: true } },
+    },
   })
 
   if (currentTerm) {
@@ -1129,23 +1296,23 @@ export async function getActiveTerm() {
         label: `${currentTerm.schoolYear.yearName} - Term ${currentTerm.termNumber}`,
         startDate: currentTerm.startDate,
         endDate: currentTerm.endDate,
-        yearId: currentTerm.schoolYear.id
+        yearId: currentTerm.schoolYear.id,
       },
-      source: 'date_range' as const
+      source: "date_range" as const,
     }
   }
 
   // Priority 3: Most recent term
   const recentTerm = await db.term.findFirst({
     where: { schoolId },
-    orderBy: { startDate: 'desc' },
+    orderBy: { startDate: "desc" },
     select: {
       id: true,
       termNumber: true,
       startDate: true,
       endDate: true,
-      schoolYear: { select: { id: true, yearName: true } }
-    }
+      schoolYear: { select: { id: true, yearName: true } },
+    },
   })
 
   if (recentTerm) {
@@ -1156,13 +1323,13 @@ export async function getActiveTerm() {
         label: `${recentTerm.schoolYear.yearName} - Term ${recentTerm.termNumber}`,
         startDate: recentTerm.startDate,
         endDate: recentTerm.endDate,
-        yearId: recentTerm.schoolYear.id
+        yearId: recentTerm.schoolYear.id,
       },
-      source: 'most_recent' as const
+      source: "most_recent" as const,
     }
   }
 
-  return { term: null, source: 'none' as const }
+  return { term: null, source: "none" as const }
 }
 
 /**
@@ -1172,62 +1339,69 @@ export async function setActiveTerm(input: { termId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Deactivate all terms for this school
   await db.term.updateMany({
     where: { schoolId },
-    data: { isActive: false }
+    data: { isActive: false },
   })
 
   // Activate the selected term
   await db.term.update({
     where: { id: input.termId },
-    data: { isActive: true }
+    data: { isActive: true },
   })
 
-  await logTimetableAction('configure_settings', {
-    entityType: 'term',
+  await logTimetableAction("configure_settings", {
+    entityType: "term",
     entityId: input.termId,
-    changes: { isActive: true }
+    changes: { isActive: true },
   })
 
   return { success: true }
 }
 
-type ViewType = 'admin' | 'teacher' | 'student' | 'guardian'
+type ViewType = "admin" | "teacher" | "student" | "guardian"
 
 /**
  * Get personalized timetable based on user role
  * Returns appropriate view type and data based on session
  */
-export async function getPersonalizedTimetable(input: { termId: string; weekOffset?: 0 | 1 }) {
+export async function getPersonalizedTimetable(input: {
+  termId: string
+  weekOffset?: 0 | 1
+}) {
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error('Not authenticated')
+  if (!userId) throw new Error("Not authenticated")
 
   // Determine view type based on role
-  let viewType: ViewType = 'admin'
-  let filterData: { teacherId?: string; classId?: string; childrenIds?: string[] } = {}
+  let viewType: ViewType = "admin"
+  let filterData: {
+    teacherId?: string
+    classId?: string
+    childrenIds?: string[]
+  } = {}
 
   switch (role) {
-    case 'DEVELOPER':
-    case 'ADMIN':
-      viewType = 'admin'
+    case "DEVELOPER":
+    case "ADMIN":
+      viewType = "admin"
       break
 
-    case 'TEACHER': {
-      viewType = 'teacher'
+    case "TEACHER": {
+      viewType = "teacher"
       // Get teacher record linked to user
       const teacher = await db.teacher.findFirst({
         where: { userId, schoolId },
-        select: { id: true }
+        select: { id: true },
       })
       if (teacher) {
         filterData.teacherId = teacher.id
@@ -1235,19 +1409,19 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
       break
     }
 
-    case 'STUDENT': {
-      viewType = 'student'
+    case "STUDENT": {
+      viewType = "student"
       // Get student record and their class
       const student = await db.student.findFirst({
         where: { userId, schoolId },
-        select: { id: true }
+        select: { id: true },
       })
       if (student) {
         // Get current class enrollment
         const enrollment = await db.studentClass.findFirst({
           where: { studentId: student.id, schoolId },
-          orderBy: { createdAt: 'desc' },
-          select: { classId: true }
+          orderBy: { createdAt: "desc" },
+          select: { classId: true },
         })
         if (enrollment) {
           filterData.classId = enrollment.classId
@@ -1256,12 +1430,12 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
       break
     }
 
-    case 'GUARDIAN': {
-      viewType = 'guardian'
+    case "GUARDIAN": {
+      viewType = "guardian"
       // Get guardian record
       const guardian = await db.guardian.findFirst({
         where: { userId, schoolId },
-        select: { id: true }
+        select: { id: true },
       })
       if (guardian) {
         // Get linked children (students)
@@ -1272,18 +1446,18 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
               select: {
                 id: true,
                 givenName: true,
-                surname: true
-              }
-            }
-          }
+                surname: true,
+              },
+            },
+          },
         })
-        filterData.childrenIds = studentGuardians.map(sg => sg.student.id)
+        filterData.childrenIds = studentGuardians.map((sg) => sg.student.id)
       }
       break
     }
 
     default:
-      viewType = 'student' // Default to most restricted view
+      viewType = "student" // Default to most restricted view
   }
 
   // Get base schedule data
@@ -1294,15 +1468,15 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
     select: {
       yearId: true,
       termNumber: true,
-      schoolYear: { select: { yearName: true } }
-    }
+      schoolYear: { select: { yearName: true } },
+    },
   })
-  if (!term) throw new Error('Invalid term')
+  if (!term) throw new Error("Invalid term")
 
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   return {
@@ -1312,7 +1486,7 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
       id: input.termId,
       termNumber: term.termNumber,
       yearName: term.schoolYear.yearName,
-      label: `${term.schoolYear.yearName} - Term ${term.termNumber}`
+      label: `${term.schoolYear.yearName} - Term ${term.termNumber}`,
     },
     workingDays: config.workingDays,
     periods: periods.map((p, idx) => ({
@@ -1321,9 +1495,11 @@ export async function getPersonalizedTimetable(input: { termId: string; weekOffs
       order: idx + 1,
       startTime: p.startTime,
       endTime: p.endTime,
-      isBreak: p.name.toLowerCase().includes('break') || p.name.toLowerCase().includes('lunch')
+      isBreak:
+        p.name.toLowerCase().includes("break") ||
+        p.name.toLowerCase().includes("lunch"),
     })),
-    lunchAfterPeriod: config.defaultLunchAfterPeriod
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
   }
 }
 
@@ -1334,17 +1510,17 @@ export async function getGuardianChildren() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error('Not authenticated')
+  if (!userId) throw new Error("Not authenticated")
 
   // Get guardian record
   const guardian = await db.guardian.findFirst({
     where: { userId, schoolId },
-    select: { id: true }
+    select: { id: true },
   })
 
   if (!guardian) {
@@ -1360,10 +1536,10 @@ export async function getGuardianChildren() {
           id: true,
           givenName: true,
           surname: true,
-          profilePhotoUrl: true
-        }
-      }
-    }
+          profilePhotoUrl: true,
+        },
+      },
+    },
   })
 
   // Get each student's current class
@@ -1371,10 +1547,10 @@ export async function getGuardianChildren() {
     studentGuardians.map(async (sg) => {
       const enrollment = await db.studentClass.findFirst({
         where: { studentId: sg.student.id, schoolId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         select: {
-          class: { select: { id: true, name: true } }
-        }
+          class: { select: { id: true, name: true } },
+        },
       })
 
       return {
@@ -1382,7 +1558,7 @@ export async function getGuardianChildren() {
         name: `${sg.student.givenName} ${sg.student.surname}`,
         photoUrl: sg.student.profilePhotoUrl,
         classId: enrollment?.class.id,
-        className: enrollment?.class.name
+        className: enrollment?.class.name,
       }
     })
   )
@@ -1393,23 +1569,27 @@ export async function getGuardianChildren() {
 /**
  * Get timetable for a specific child (guardian view)
  */
-export async function getChildTimetable(input: { termId: string; childId: string; weekOffset?: 0 | 1 }) {
+export async function getChildTimetable(input: {
+  termId: string
+  childId: string
+  weekOffset?: 0 | 1
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
   const role = session?.user?.role
 
-  if (!userId) throw new Error('Not authenticated')
+  if (!userId) throw new Error("Not authenticated")
 
   // Verify guardian has access to this child (unless admin)
-  if (role !== 'DEVELOPER' && role !== 'ADMIN') {
+  if (role !== "DEVELOPER" && role !== "ADMIN") {
     const guardian = await db.guardian.findFirst({
       where: { userId, schoolId },
-      select: { id: true }
+      select: { id: true },
     })
 
     if (guardian) {
@@ -1417,12 +1597,12 @@ export async function getChildTimetable(input: { termId: string; childId: string
         where: {
           guardianId: guardian.id,
           studentId: input.childId,
-          schoolId
-        }
+          schoolId,
+        },
       })
 
       if (!hasAccess) {
-        throw new Error('Access denied to this student')
+        throw new Error("Access denied to this student")
       }
     }
   }
@@ -1430,8 +1610,8 @@ export async function getChildTimetable(input: { termId: string; childId: string
   // Get student's class
   const enrollment = await db.studentClass.findFirst({
     where: { studentId: input.childId, schoolId },
-    orderBy: { createdAt: 'desc' },
-    select: { classId: true }
+    orderBy: { createdAt: "desc" },
+    select: { classId: true },
   })
 
   if (!enrollment) {
@@ -1440,29 +1620,31 @@ export async function getChildTimetable(input: { termId: string; childId: string
       slots: [],
       workingDays: [],
       periods: [],
-      lunchAfterPeriod: null
+      lunchAfterPeriod: null,
     }
   }
 
   // Get student info
   const student = await db.student.findFirst({
     where: { id: input.childId, schoolId },
-    select: { id: true, givenName: true, surname: true }
+    select: { id: true, givenName: true, surname: true },
   })
 
   // Use existing getTimetableByClass
   const timetableData = await getTimetableByClass({
     termId: input.termId,
     classId: enrollment.classId,
-    weekOffset: input.weekOffset
+    weekOffset: input.weekOffset,
   })
 
   return {
-    studentInfo: student ? {
-      id: student.id,
-      name: `${student.givenName} ${student.surname}`
-    } : null,
-    ...timetableData
+    studentInfo: student
+      ? {
+          id: student.id,
+          name: `${student.givenName} ${student.surname}`,
+        }
+      : null,
+    ...timetableData,
   }
 }
 
@@ -1473,12 +1655,12 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   await requireReadAccess()
 
   const { schoolId, role } = await getPermissionContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
 
-  if (!userId) throw new Error('Not authenticated')
+  if (!userId) throw new Error("Not authenticated")
 
   const targetDate = input?.date || new Date()
   const dayOfWeek = targetDate.getDay() // 0 = Sunday
@@ -1486,14 +1668,14 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   // Get active term
   const { term } = await getActiveTerm()
   if (!term) {
-    return { schedule: [], dayOfWeek, message: 'No active term' }
+    return { schedule: [], dayOfWeek, message: "No active term" }
   }
 
   // Get periods for this term
   const periods = await db.period.findMany({
     where: { schoolId, yearId: term.yearId },
-    orderBy: { startTime: 'asc' },
-    select: { id: true, name: true, startTime: true, endTime: true }
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
   })
 
   // Build filter based on role
@@ -1508,25 +1690,25 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     schoolId,
     termId: term.id,
     dayOfWeek,
-    weekOffset: 0
+    weekOffset: 0,
   }
 
-  if (role === 'TEACHER') {
+  if (role === "TEACHER") {
     const teacher = await db.teacher.findFirst({
       where: { userId, schoolId },
-      select: { id: true }
+      select: { id: true },
     })
     if (teacher) where.teacherId = teacher.id
-  } else if (role === 'STUDENT') {
+  } else if (role === "STUDENT") {
     const student = await db.student.findFirst({
       where: { userId, schoolId },
-      select: { id: true }
+      select: { id: true },
     })
     if (student) {
       const enrollment = await db.studentClass.findFirst({
         where: { studentId: student.id, schoolId },
-        orderBy: { createdAt: 'desc' },
-        select: { classId: true }
+        orderBy: { createdAt: "desc" },
+        select: { classId: true },
       })
       if (enrollment) where.classId = enrollment.classId
     }
@@ -1535,41 +1717,49 @@ export async function getTodaySchedule(input?: { date?: Date }) {
   const slots = await db.timetable.findMany({
     where,
     include: {
-      class: { select: { name: true, subject: { select: { subjectName: true } } } },
+      class: {
+        select: { name: true, subject: { select: { subjectName: true } } },
+      },
       teacher: { select: { givenName: true, surname: true } },
       classroom: { select: { roomName: true } },
-      period: { select: { id: true, name: true, startTime: true, endTime: true } }
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
     },
-    orderBy: { period: { startTime: 'asc' } }
+    orderBy: { period: { startTime: "asc" } },
   })
 
-  const schedule = slots.map(slot => ({
+  const schedule = slots.map((slot) => ({
     periodId: slot.periodId,
     periodName: slot.period.name,
     startTime: slot.period.startTime,
     endTime: slot.period.endTime,
-    subject: slot.class?.subject?.subjectName || slot.class?.name || '',
-    className: slot.class?.name || '',
-    teacher: slot.teacher ? `${slot.teacher.givenName} ${slot.teacher.surname}` : '',
-    room: slot.classroom?.roomName || ''
+    subject: slot.class?.subject?.subjectName || slot.class?.name || "",
+    className: slot.class?.name || "",
+    teacher: slot.teacher
+      ? `${slot.teacher.givenName} ${slot.teacher.surname}`
+      : "",
+    room: slot.classroom?.roomName || "",
   }))
 
   // Fill in empty periods
-  const fullSchedule = periods.map(period => {
-    const existing = schedule.find(s => s.periodId === period.id)
+  const fullSchedule = periods.map((period) => {
+    const existing = schedule.find((s) => s.periodId === period.id)
     if (existing) return existing
 
-    const isBreak = period.name.toLowerCase().includes('break') || period.name.toLowerCase().includes('lunch')
+    const isBreak =
+      period.name.toLowerCase().includes("break") ||
+      period.name.toLowerCase().includes("lunch")
     return {
       periodId: period.id,
       periodName: period.name,
       startTime: period.startTime,
       endTime: period.endTime,
-      subject: isBreak ? period.name : '',
-      className: '',
-      teacher: '',
-      room: '',
-      isBreak
+      subject: isBreak ? period.name : "",
+      className: "",
+      teacher: "",
+      room: "",
+      isBreak,
     }
   })
 
@@ -1577,7 +1767,7 @@ export async function getTodaySchedule(input?: { date?: Date }) {
     schedule: fullSchedule,
     dayOfWeek,
     date: targetDate.toISOString(),
-    termLabel: term.label
+    termLabel: term.label,
   }
 }
 
@@ -1588,26 +1778,26 @@ export async function getTodaySchedule(input?: { date?: Date }) {
 /**
  * Get teacher constraints
  */
-export async function getTeacherConstraints(input: { teacherId: string; termId?: string }) {
+export async function getTeacherConstraints(input: {
+  teacherId: string
+  termId?: string
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const constraint = await db.teacherConstraint.findFirst({
     where: {
       schoolId,
       teacherId: input.teacherId,
-      OR: [
-        { termId: input.termId },
-        { termId: null }
-      ]
+      OR: [{ termId: input.termId }, { termId: null }],
     },
     include: {
       unavailableBlocks: true,
-      teacher: { select: { givenName: true, surname: true } }
+      teacher: { select: { givenName: true, surname: true } },
     },
-    orderBy: { termId: 'desc' }
+    orderBy: { termId: "desc" },
   })
 
   if (!constraint) {
@@ -1629,15 +1819,15 @@ export async function getTeacherConstraints(input: { teacherId: string; termId?:
       enforceSubjectMatch: constraint.enforceSubjectMatch,
       lunchBreakRequired: constraint.lunchBreakRequired,
       notes: constraint.notes,
-      unavailableBlocks: constraint.unavailableBlocks.map(block => ({
+      unavailableBlocks: constraint.unavailableBlocks.map((block) => ({
         id: block.id,
         dayOfWeek: block.dayOfWeek,
         periodId: block.periodId,
         reason: block.reason,
         isRecurring: block.isRecurring,
-        specificDate: block.specificDate
-      }))
-    }
+        specificDate: block.specificDate,
+      })),
+    },
   }
 }
 
@@ -1660,7 +1850,7 @@ export async function upsertTeacherConstraints(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const data = {
     schoolId,
@@ -1674,7 +1864,7 @@ export async function upsertTeacherConstraints(input: {
     periodPreferences: input.periodPreferences ?? {},
     enforceSubjectMatch: input.enforceSubjectMatch ?? true,
     lunchBreakRequired: input.lunchBreakRequired ?? true,
-    notes: input.notes ?? null
+    notes: input.notes ?? null,
   }
 
   // Find existing constraint (handling nullable termId)
@@ -1682,21 +1872,21 @@ export async function upsertTeacherConstraints(input: {
     where: {
       schoolId,
       teacherId: input.teacherId,
-      termId: input.termId ?? null
-    }
+      termId: input.termId ?? null,
+    },
   })
 
   const constraint = existing
     ? await db.teacherConstraint.update({
         where: { id: existing.id },
-        data
+        data,
       })
     : await db.teacherConstraint.create({ data })
 
-  await logTimetableAction('configure_settings', {
-    entityType: 'teacher_constraint',
+  await logTimetableAction("configure_settings", {
+    entityType: "teacher_constraint",
     entityId: constraint.id,
-    changes: input
+    changes: input,
   })
 
   return { id: constraint.id }
@@ -1716,7 +1906,7 @@ export async function addTeacherUnavailableBlock(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const block = await db.teacherUnavailableBlock.create({
     data: {
@@ -1726,8 +1916,8 @@ export async function addTeacherUnavailableBlock(input: {
       periodId: input.periodId,
       reason: input.reason,
       isRecurring: input.isRecurring ?? true,
-      specificDate: input.specificDate
-    }
+      specificDate: input.specificDate,
+    },
   })
 
   return { id: block.id }
@@ -1736,14 +1926,16 @@ export async function addTeacherUnavailableBlock(input: {
 /**
  * Remove unavailable block
  */
-export async function removeTeacherUnavailableBlock(input: { blockId: string }) {
+export async function removeTeacherUnavailableBlock(input: {
+  blockId: string
+}) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   await db.teacherUnavailableBlock.delete({
-    where: { id: input.blockId, schoolId }
+    where: { id: input.blockId, schoolId },
   })
 
   return { success: true }
@@ -1756,25 +1948,25 @@ export async function removeTeacherUnavailableBlock(input: { blockId: string }) 
 /**
  * Get room constraints
  */
-export async function getRoomConstraints(input: { classroomId: string; termId?: string }) {
+export async function getRoomConstraints(input: {
+  classroomId: string
+  termId?: string
+}) {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const constraint = await db.roomConstraint.findFirst({
     where: {
       schoolId,
       classroomId: input.classroomId,
-      OR: [
-        { termId: input.termId },
-        { termId: null }
-      ]
+      OR: [{ termId: input.termId }, { termId: null }],
     },
     include: {
-      classroom: { select: { roomName: true, capacity: true } }
+      classroom: { select: { roomName: true, capacity: true } },
     },
-    orderBy: { termId: 'desc' }
+    orderBy: { termId: "desc" },
   })
 
   if (!constraint) {
@@ -1801,8 +1993,8 @@ export async function getRoomConstraints(input: { classroomId: string; termId?: 
         reason: string
         startDate?: string
         endDate?: string
-      }>
-    }
+      }>,
+    },
   }
 }
 
@@ -1830,7 +2022,7 @@ export async function upsertRoomConstraints(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const data = {
     schoolId,
@@ -1843,7 +2035,7 @@ export async function upsertRoomConstraints(input: {
     hasElevatorAccess: input.hasElevatorAccess ?? false,
     floorLevel: input.floorLevel ?? null,
     reservedPeriods: input.reservedPeriods ?? {},
-    maintenanceBlocks: input.maintenanceBlocks ?? []
+    maintenanceBlocks: input.maintenanceBlocks ?? [],
   }
 
   // Find existing constraint (handling nullable termId)
@@ -1851,21 +2043,21 @@ export async function upsertRoomConstraints(input: {
     where: {
       schoolId,
       classroomId: input.classroomId,
-      termId: input.termId ?? null
-    }
+      termId: input.termId ?? null,
+    },
   })
 
   const constraint = existing
     ? await db.roomConstraint.update({
         where: { id: existing.id },
-        data
+        data,
       })
     : await db.roomConstraint.create({ data })
 
-  await logTimetableAction('configure_settings', {
-    entityType: 'room_constraint',
+  await logTimetableAction("configure_settings", {
+    entityType: "room_constraint",
     entityId: constraint.id,
-    changes: input
+    changes: input,
   })
 
   return { id: constraint.id }
@@ -1882,11 +2074,11 @@ export async function listTimetableTemplates() {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const templates = await db.timetableTemplate.findMany({
     where: { schoolId, isActive: true },
-    orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
       name: true,
@@ -1899,12 +2091,17 @@ export async function listTimetableTemplates() {
       teacherCount: true,
       createdAt: true,
       createdBy: { select: { email: true } },
-      sourceTerm: { select: { termNumber: true, schoolYear: { select: { yearName: true } } } }
-    }
+      sourceTerm: {
+        select: {
+          termNumber: true,
+          schoolYear: { select: { yearName: true } },
+        },
+      },
+    },
   })
 
   return {
-    templates: templates.map(t => ({
+    templates: templates.map((t) => ({
       id: t.id,
       name: t.name,
       description: t.description,
@@ -1914,23 +2111,29 @@ export async function listTimetableTemplates() {
       stats: {
         totalSlots: t.totalSlots,
         classCount: t.classCount,
-        teacherCount: t.teacherCount
+        teacherCount: t.teacherCount,
       },
-      source: t.sourceTerm ? `${t.sourceTerm.schoolYear.yearName} Term ${t.sourceTerm.termNumber}` : null,
+      source: t.sourceTerm
+        ? `${t.sourceTerm.schoolYear.yearName} Term ${t.sourceTerm.termNumber}`
+        : null,
       createdBy: t.createdBy?.email,
-      createdAt: t.createdAt
-    }))
+      createdAt: t.createdAt,
+    })),
   }
 }
 
 /**
  * Create a template from an existing term's timetable
  */
-export async function createTemplateFromTerm(input: { name: string; description?: string; sourceTermId: string }) {
+export async function createTemplateFromTerm(input: {
+  name: string
+  description?: string
+  sourceTermId: string
+}) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
@@ -1944,32 +2147,32 @@ export async function createTemplateFromTerm(input: { name: string; description?
       classId: true,
       teacherId: true,
       classroomId: true,
-      rotationWeek: true
-    }
+      rotationWeek: true,
+    },
   })
 
   // Get working days config
   const { config } = await getScheduleConfig({ termId: input.sourceTermId })
 
   // Build slot patterns (anonymized for template reuse)
-  const slotPatterns = slots.map(s => ({
+  const slotPatterns = slots.map((s) => ({
     dayOfWeek: s.dayOfWeek,
     periodId: s.periodId,
     classId: s.classId,
     teacherId: s.teacherId,
     classroomId: s.classroomId,
-    rotationWeek: s.rotationWeek
+    rotationWeek: s.rotationWeek,
   }))
 
   // Calculate statistics
-  const uniqueClasses = new Set(slots.map(s => s.classId))
-  const uniqueTeachers = new Set(slots.map(s => s.teacherId))
+  const uniqueClasses = new Set(slots.map((s) => s.classId))
+  const uniqueTeachers = new Set(slots.map((s) => s.teacherId))
 
   // Check for existing template with same name
   const existing = await db.timetableTemplate.findFirst({
     where: { schoolId, name: input.name },
-    orderBy: { version: 'desc' },
-    select: { version: true }
+    orderBy: { version: "desc" },
+    select: { version: true },
   })
 
   const version = existing ? existing.version + 1 : 1
@@ -1986,14 +2189,14 @@ export async function createTemplateFromTerm(input: { name: string; description?
       slotPatterns,
       totalSlots: slots.length,
       classCount: uniqueClasses.size,
-      teacherCount: uniqueTeachers.size
-    }
+      teacherCount: uniqueTeachers.size,
+    },
   })
 
-  await logTimetableAction('configure_settings', {
-    entityType: 'template',
+  await logTimetableAction("configure_settings", {
+    entityType: "template",
     entityId: template.id,
-    changes: { name: input.name, sourceTermId: input.sourceTermId }
+    changes: { name: input.name, sourceTermId: input.sourceTermId },
   })
 
   return { id: template.id, version }
@@ -2012,7 +2215,7 @@ export async function applyTemplateToTerm(input: {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const session = await auth()
   const userId = session?.user?.id
@@ -2020,15 +2223,15 @@ export async function applyTemplateToTerm(input: {
   // Get template
   const template = await db.timetableTemplate.findUnique({
     where: { id: input.templateId },
-    select: { slotPatterns: true, workingDays: true }
+    select: { slotPatterns: true, workingDays: true },
   })
 
-  if (!template) throw new Error('Template not found')
+  if (!template) throw new Error("Template not found")
 
   // Clear existing slots if requested
   if (input.clearExisting) {
     await db.timetable.deleteMany({
-      where: { schoolId, termId: input.targetTermId }
+      where: { schoolId, termId: input.targetTermId },
     })
   }
 
@@ -2046,8 +2249,10 @@ export async function applyTemplateToTerm(input: {
   let conflictsFound = 0
 
   for (const pattern of slotPatterns) {
-    const teacherId = input.teacherMapping?.[pattern.teacherId] || pattern.teacherId
-    const classroomId = input.roomMapping?.[pattern.classroomId] || pattern.classroomId
+    const teacherId =
+      input.teacherMapping?.[pattern.teacherId] || pattern.teacherId
+    const classroomId =
+      input.roomMapping?.[pattern.classroomId] || pattern.classroomId
 
     try {
       await db.timetable.create({
@@ -2060,8 +2265,8 @@ export async function applyTemplateToTerm(input: {
           teacherId,
           classroomId,
           weekOffset: 0,
-          rotationWeek: pattern.rotationWeek
-        }
+          rotationWeek: pattern.rotationWeek,
+        },
       })
       slotsCreated++
     } catch {
@@ -2080,16 +2285,19 @@ export async function applyTemplateToTerm(input: {
       options: {
         clearExisting: input.clearExisting,
         teacherMapping: input.teacherMapping,
-        roomMapping: input.roomMapping
+        roomMapping: input.roomMapping,
       },
       slotsCreated,
-      conflictsFound
-    }
+      conflictsFound,
+    },
   })
 
-  await logTimetableAction('configure_settings', {
-    entityType: 'template_application',
-    metadata: { templateId: input.templateId, targetTermId: input.targetTermId }
+  await logTimetableAction("configure_settings", {
+    entityType: "template_application",
+    metadata: {
+      templateId: input.templateId,
+      targetTermId: input.targetTermId,
+    },
   })
 
   return { slotsCreated, conflictsFound }
@@ -2102,17 +2310,17 @@ export async function deleteTemplate(input: { templateId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Soft delete by marking inactive
   await db.timetableTemplate.update({
     where: { id: input.templateId, schoolId },
-    data: { isActive: false }
+    data: { isActive: false },
   })
 
-  await logTimetableAction('delete', {
-    entityType: 'template',
-    entityId: input.templateId
+  await logTimetableAction("delete", {
+    entityType: "template",
+    entityId: input.templateId,
   })
 
   return { success: true }
@@ -2125,18 +2333,18 @@ export async function setDefaultTemplate(input: { templateId: string }) {
   await requireAdminAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Remove default from all templates
   await db.timetableTemplate.updateMany({
     where: { schoolId },
-    data: { isDefault: false }
+    data: { isDefault: false },
   })
 
   // Set new default
   await db.timetableTemplate.update({
     where: { id: input.templateId, schoolId },
-    data: { isDefault: true }
+    data: { isDefault: true },
   })
 
   return { success: true }
@@ -2149,8 +2357,14 @@ export async function setDefaultTemplate(input: { templateId: string }) {
 type ValidationResult = {
   isValid: boolean
   violations: Array<{
-    type: 'teacher_unavailable' | 'teacher_overload' | 'room_reserved' | 'room_capacity' | 'conflict' | 'consecutive_limit'
-    severity: 'error' | 'warning'
+    type:
+      | "teacher_unavailable"
+      | "teacher_overload"
+      | "room_reserved"
+      | "room_capacity"
+      | "conflict"
+      | "consecutive_limit"
+    severity: "error" | "warning"
     message: string
     details?: Record<string, unknown>
   }>
@@ -2171,47 +2385,52 @@ export async function validateSlotConstraints(input: {
   await requireReadAccess()
 
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
-  const violations: ValidationResult['violations'] = []
+  const violations: ValidationResult["violations"] = []
 
   // 1. Check teacher unavailability
   const teacherConstraint = await db.teacherConstraint.findFirst({
     where: {
       schoolId,
       teacherId: input.teacherId,
-      OR: [{ termId: input.termId }, { termId: null }]
+      OR: [{ termId: input.termId }, { termId: null }],
     },
-    include: { unavailableBlocks: true }
+    include: { unavailableBlocks: true },
   })
 
   if (teacherConstraint) {
     // Check unavailable blocks
     const isUnavailable = teacherConstraint.unavailableBlocks.some(
-      block => block.dayOfWeek === input.dayOfWeek && block.periodId === input.periodId && block.isRecurring
+      (block) =>
+        block.dayOfWeek === input.dayOfWeek &&
+        block.periodId === input.periodId &&
+        block.isRecurring
     )
 
     if (isUnavailable) {
       violations.push({
-        type: 'teacher_unavailable',
-        severity: 'error',
-        message: 'Teacher is marked as unavailable for this time slot'
+        type: "teacher_unavailable",
+        severity: "error",
+        message: "Teacher is marked as unavailable for this time slot",
       })
     }
 
     // Check day preference
-    const dayPref = (teacherConstraint.dayPreferences as Record<string, string>)?.[input.dayOfWeek.toString()]
-    if (dayPref === 'unavailable') {
+    const dayPref = (
+      teacherConstraint.dayPreferences as Record<string, string>
+    )?.[input.dayOfWeek.toString()]
+    if (dayPref === "unavailable") {
       violations.push({
-        type: 'teacher_unavailable',
-        severity: 'error',
-        message: 'Teacher has marked this day as unavailable'
+        type: "teacher_unavailable",
+        severity: "error",
+        message: "Teacher has marked this day as unavailable",
       })
-    } else if (dayPref === 'avoid') {
+    } else if (dayPref === "avoid") {
       violations.push({
-        type: 'teacher_unavailable',
-        severity: 'warning',
-        message: 'Teacher prefers to avoid this day'
+        type: "teacher_unavailable",
+        severity: "warning",
+        message: "Teacher prefers to avoid this day",
       })
     }
 
@@ -2221,16 +2440,19 @@ export async function validateSlotConstraints(input: {
         schoolId,
         termId: input.termId,
         teacherId: input.teacherId,
-        weekOffset: input.weekOffset ?? 0
-      }
+        weekOffset: input.weekOffset ?? 0,
+      },
     })
 
     if (teacherSlots >= teacherConstraint.maxPeriodsPerWeek) {
       violations.push({
-        type: 'teacher_overload',
-        severity: 'error',
+        type: "teacher_overload",
+        severity: "error",
         message: `Teacher would exceed max periods per week (${teacherConstraint.maxPeriodsPerWeek})`,
-        details: { current: teacherSlots, max: teacherConstraint.maxPeriodsPerWeek }
+        details: {
+          current: teacherSlots,
+          max: teacherConstraint.maxPeriodsPerWeek,
+        },
       })
     }
 
@@ -2241,17 +2463,17 @@ export async function validateSlotConstraints(input: {
         termId: input.termId,
         teacherId: input.teacherId,
         dayOfWeek: input.dayOfWeek,
-        weekOffset: input.weekOffset ?? 0
+        weekOffset: input.weekOffset ?? 0,
       },
       include: { period: { select: { startTime: true } } },
-      orderBy: { period: { startTime: 'asc' } }
+      orderBy: { period: { startTime: "asc" } },
     })
 
     if (sameDay.length >= teacherConstraint.maxConsecutivePeriods) {
       violations.push({
-        type: 'consecutive_limit',
-        severity: 'warning',
-        message: `Teacher may have too many consecutive periods (limit: ${teacherConstraint.maxConsecutivePeriods})`
+        type: "consecutive_limit",
+        severity: "warning",
+        message: `Teacher may have too many consecutive periods (limit: ${teacherConstraint.maxConsecutivePeriods})`,
       })
     }
   }
@@ -2261,18 +2483,20 @@ export async function validateSlotConstraints(input: {
     where: {
       schoolId,
       classroomId: input.classroomId,
-      OR: [{ termId: input.termId }, { termId: null }]
-    }
+      OR: [{ termId: input.termId }, { termId: null }],
+    },
   })
 
   if (roomConstraint) {
     // Check reserved periods
-    const reserved = (roomConstraint.reservedPeriods as Record<string, string[]>)?.[input.dayOfWeek.toString()]
+    const reserved = (
+      roomConstraint.reservedPeriods as Record<string, string[]>
+    )?.[input.dayOfWeek.toString()]
     if (reserved?.includes(input.periodId)) {
       violations.push({
-        type: 'room_reserved',
-        severity: 'error',
-        message: 'Room is reserved during this period'
+        type: "room_reserved",
+        severity: "error",
+        message: "Room is reserved during this period",
       })
     }
   }
@@ -2285,37 +2509,34 @@ export async function validateSlotConstraints(input: {
       dayOfWeek: input.dayOfWeek,
       periodId: input.periodId,
       weekOffset: input.weekOffset ?? 0,
-      OR: [
-        { teacherId: input.teacherId },
-        { classroomId: input.classroomId }
-      ],
-      NOT: { classId: input.classId }
+      OR: [{ teacherId: input.teacherId }, { classroomId: input.classroomId }],
+      NOT: { classId: input.classId },
     },
     include: {
       class: { select: { name: true } },
-      teacher: { select: { givenName: true, surname: true } }
-    }
+      teacher: { select: { givenName: true, surname: true } },
+    },
   })
 
   if (existingSlot) {
     if (existingSlot.teacherId === input.teacherId) {
       violations.push({
-        type: 'conflict',
-        severity: 'error',
-        message: `Teacher is already assigned to ${existingSlot.class.name} at this time`
+        type: "conflict",
+        severity: "error",
+        message: `Teacher is already assigned to ${existingSlot.class.name} at this time`,
       })
     }
     if (existingSlot.classroomId === input.classroomId) {
       violations.push({
-        type: 'conflict',
-        severity: 'error',
-        message: `Room is already used by ${existingSlot.class.name} at this time`
+        type: "conflict",
+        severity: "error",
+        message: `Room is already used by ${existingSlot.class.name} at this time`,
       })
     }
   }
 
   return {
-    isValid: violations.filter(v => v.severity === 'error').length === 0,
-    violations
+    isValid: violations.filter((v) => v.severity === "error").length === 0,
+    violations,
   }
 }

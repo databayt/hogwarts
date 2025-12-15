@@ -19,7 +19,9 @@ export interface GenerationPromptParams {
  * Based on research from PassMedicine, Pastest, and BMJ OnExamination
  */
 export const MRCP_PART_1_PROMPTS = {
-  MULTIPLE_CHOICE: (params: GenerationPromptParams) => `You are an expert medical educator creating MRCP Part 1 examination questions.
+  MULTIPLE_CHOICE: (
+    params: GenerationPromptParams
+  ) => `You are an expert medical educator creating MRCP Part 1 examination questions.
 
 **Context (Source Material):**
 ${params.context}
@@ -32,7 +34,7 @@ ${params.context}
 - Include relevant patient details (age, gender, presenting symptoms, examination findings, investigation results)
 - Clear and unambiguous wording
 - Follows MRCP Part 1 style (scenario → question)
-- Subject: ${params.subject || 'Medical Sciences'}
+- Subject: ${params.subject || "Medical Sciences"}
 
 **2. OPTIONS (5 options total):**
 - Exactly 1 clearly correct answer based on current medical guidelines
@@ -91,7 +93,7 @@ ${params.context}
   "difficulty": "${params.difficulty}",
   "bloomLevel": "${params.bloomLevel}",
   "tags": ["cardiology", "heart-failure", "investigation"],
-  "subject": "${params.subject || 'Medical Sciences'}",
+  "subject": "${params.subject || "Medical Sciences"}",
   "points": 1,
   "timeEstimate": 2
 }
@@ -99,7 +101,9 @@ ${params.context}
 
 Generate the question now.`,
 
-  TRUE_FALSE: (params: GenerationPromptParams) => `You are an expert medical educator creating MRCP Part 1 true/false questions.
+  TRUE_FALSE: (
+    params: GenerationPromptParams
+  ) => `You are an expert medical educator creating MRCP Part 1 true/false questions.
 
 **Context (Source Material):**
 ${params.context}
@@ -110,7 +114,7 @@ ${params.context}
 - Clear, specific medical statement
 - 20-50 words
 - Tests understanding of a specific concept, guideline, or fact
-- Subject: ${params.subject || 'Medical Sciences'}
+- Subject: ${params.subject || "Medical Sciences"}
 
 **2. ANSWER:**
 - Definitively true OR definitively false
@@ -139,7 +143,7 @@ ${params.context}
   "difficulty": "${params.difficulty}",
   "bloomLevel": "${params.bloomLevel}",
   "tags": ["cardiology", "pharmacology"],
-  "subject": "${params.subject || 'Medical Sciences'}",
+  "subject": "${params.subject || "Medical Sciences"}",
   "points": 1,
   "timeEstimate": 1
 }
@@ -147,7 +151,9 @@ ${params.context}
 
 Generate the question now.`,
 
-  SHORT_ANSWER: (params: GenerationPromptParams) => `You are an expert medical educator creating MRCP Part 1 short answer questions.
+  SHORT_ANSWER: (
+    params: GenerationPromptParams
+  ) => `You are an expert medical educator creating MRCP Part 1 short answer questions.
 
 **Context (Source Material):**
 ${params.context}
@@ -158,7 +164,7 @@ ${params.context}
 - Clinical scenario or direct question
 - Requires 1-2 sentence answer
 - 30-80 words
-- Subject: ${params.subject || 'Medical Sciences'}
+- Subject: ${params.subject || "Medical Sciences"}
 
 **2. SAMPLE ANSWER:**
 - Model answer (20-50 words)
@@ -182,7 +188,7 @@ ${params.context}
   "difficulty": "${params.difficulty}",
   "bloomLevel": "${params.bloomLevel}",
   "tags": ["diagnosis", "clinical-reasoning"],
-  "subject": "${params.subject || 'Medical Sciences'}",
+  "subject": "${params.subject || "Medical Sciences"}",
   "points": 4,
   "timeEstimate": 3
 }
@@ -199,7 +205,7 @@ export function getGenerationPrompt(params: GenerationPromptParams): string {
   const { examType, questionType } = params
 
   // MRCP Part 1
-  if (examType === 'MRCP_PART_1') {
+  if (examType === "MRCP_PART_1") {
     const prompts = MRCP_PART_1_PROMPTS as any
     if (prompts[questionType]) {
       return prompts[questionType](params)
@@ -237,7 +243,7 @@ export function getValidationPrompt(question: any): string {
 ${question.questionText}
 
 **Options:**
-${question.options?.map((o: any, i: number) => `${i + 1}. ${o.text} ${o.isCorrect ? '(CORRECT)' : ''}`).join('\n')}
+${question.options?.map((o: any, i: number) => `${i + 1}. ${o.text} ${o.isCorrect ? "(CORRECT)" : ""}`).join("\n")}
 
 **Explanation:**
 ${question.explanation}

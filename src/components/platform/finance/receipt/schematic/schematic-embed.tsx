@@ -2,8 +2,8 @@
 
 import React from "react"
 import {
-  SchematicEmbed as SchematicEmbedComponent,
   EmbedProvider,
+  SchematicEmbed as SchematicEmbedComponent,
 } from "@schematichq/schematic-components"
 
 function SchematicEmbed({

@@ -67,17 +67,21 @@ export interface TeacherWorkload {
 /**
  * Get school's workload configuration with fallback defaults
  */
-export async function getWorkloadConfig(schoolId: string): Promise<WorkloadConfig> {
+export async function getWorkloadConfig(
+  schoolId: string
+): Promise<WorkloadConfig> {
   const config = await db.workloadConfig.findUnique({
     where: { schoolId },
   })
 
-  return config || {
-    minPeriodsPerWeek: 15,
-    normalPeriodsPerWeek: 20,
-    maxPeriodsPerWeek: 25,
-    overloadThreshold: 25,
-  }
+  return (
+    config || {
+      minPeriodsPerWeek: 15,
+      normalPeriodsPerWeek: 20,
+      maxPeriodsPerWeek: 25,
+      overloadThreshold: 25,
+    }
+  )
 }
 
 /**
@@ -152,7 +156,9 @@ export async function calculateTeacherWorkload(
   // Calculate metrics
   const totalPeriodsPerWeek = timetableEntries.length
   const uniqueClassIds = new Set(timetableEntries.map((t) => t.classId))
-  const uniqueSubjectIds = new Set(timetableEntries.map((t) => t.class.subjectId))
+  const uniqueSubjectIds = new Set(
+    timetableEntries.map((t) => t.class.subjectId)
+  )
 
   // Get total periods in a week to calculate free periods
   const allPeriods = await db.period.findMany({
@@ -164,7 +170,10 @@ export async function calculateTeacherWorkload(
   const freePeriodsCount = totalPeriodsAvailable - totalPeriodsPerWeek
 
   const workloadStatus = calculateWorkloadStatus(totalPeriodsPerWeek, config)
-  const workloadPercentage = calculateWorkloadPercentage(totalPeriodsPerWeek, config)
+  const workloadPercentage = calculateWorkloadPercentage(
+    totalPeriodsPerWeek,
+    config
+  )
 
   return {
     teacherId: teacher.id,

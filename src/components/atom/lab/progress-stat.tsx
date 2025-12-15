@@ -1,8 +1,10 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import { ProgressBar } from "./progress-bar"
-import { StatValue } from "./stat-value"
 import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import type { BaseComponentProps } from "./types"
 
 interface ProgressStatProps extends BaseComponentProps {

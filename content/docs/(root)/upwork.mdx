@@ -17,8 +17,6 @@ We position ourselves not just as developers, but as **time-savers** — helping
 
 **Underway Code**: Telemedicine integration, prescription handling, health status tracking, virtual tours, mortgage calculators, neighborhood information displays, entertainment packages, event timeline features, kitchen management, delivery tracking, customer reviews, reservation systems, loyalty programs, grade management systems, course scheduling, parent communication, teacher dashboards, exam systems, collaborative editing features.
 
-
-
 #### Optimization Opportunities
 
 - Add client testimonials to existing projects
@@ -30,11 +28,11 @@ We position ourselves not just as developers, but as **time-savers** — helping
 - Add GitHub contribution metrics
 - Showcase multi-industry expertise clearly
 
-
 ---
 
 ### Job Scoring
-<div className='-mt-4'></div>
+
+<div className="-mt-4"></div>
 Scoring Criteria (1-10 scale)
 
 #### Technical Alignment (Weight: 30%)
@@ -78,9 +76,8 @@ Scoring Criteria (1-10 scale)
 
 ---
 
-
-
 ### Proposal Generation
+
 <div className="">
 ```
 INPUT VARIABLES:
@@ -93,11 +90,13 @@ INPUT VARIABLES:
 - Client Background: {CLIENT_BACKGROUND}
 
 OUTPUT VARIANTS:
+
 - Automation Focus: Time-saving, process optimization, ROI calculations
-- Web Design Focus: UI/UX, responsive design, conversion optimization  
+- Web Design Focus: UI/UX, responsive design, conversion optimization
 - Enterprise Focus: Scalable architecture, security compliance, multi-tenant
 - Startup Focus: MVP development, rapid prototyping, component reusability
-```
+
+````
 
 </div>
 ### Proposal Formula
@@ -142,13 +141,11 @@ I'd love to discuss how we can save your team {X} hours per week. Available for 
 Best regards,
 {YOUR_NAME}
 Databayt | Reclaim Your Time Through Automation
-```
+````
 
 ### Prompt Generator
 
 Use this AI prompt template for automated proposal generation:
-
-
 
 ---
 
@@ -170,7 +167,7 @@ Use this AI prompt template for automated proposal generation:
 #### Professional Overview (2,000 chars)
 
 ```
-AUTOMATE THE BORING, 
+AUTOMATE THE BORING,
 
 Help businesses reclaim their most valuable asset: TIME.
 
@@ -178,7 +175,7 @@ We've built 8+ production automation systems across multiple industries, serving
 
 PROVEN INDUSTRY EXPERTISE:
 Healthcare Management (HIPAA-compliant) - health-underway.vercel.app
-Education Platforms (Student/Parent portals) - ed.databayt.org  
+Education Platforms (Student/Parent portals) - ed.databayt.org
 Restaurant POS & Kitchen Management Systems
 Real Estate & Property Management Platforms
 E-commerce & Inventory Solutions
@@ -209,6 +206,7 @@ Available for consultation calls - I'll show you exactly how I'll automate your 
 Real Production Projects:
 
 **Project 1: Healthcare Management Platform**
+
 - **Title:** "HIPAA-Compliant Patient Management System"
 - **Live Demo:** [health-underway.vercel.app](https://health-underway.vercel.app)
 - **Repository:** [github.com/abdout/health-underway](https://github.com/abdout/health-underway)
@@ -218,6 +216,7 @@ Real Production Projects:
 - **Impact:** Streamlined medical practice operations, reduced appointment scheduling time by 80%
 
 **Project 2: Education Management System**
+
 - **Title:** "Comprehensive School Management Platform"
 - **Live Demo:** [ed.databayt.org](https://ed.databayt.org)
 - **Repository:** [github.com/abdout/hogwarts](https://github.com/abdout/hogwarts)
@@ -227,6 +226,7 @@ Real Production Projects:
 - **Impact:** 70% reduction in administrative tasks, improved parent engagement
 
 **Project 3: Multi-Industry Automation Suite**
+
 - **Title:** "Scalable Business Automation Solutions"
 - **Live Demo:** [databayt.org](https://databayt.org)
 - **Repository:** [github.com/abdout/databayt](https://github.com/abdout/databayt)
@@ -240,8 +240,9 @@ Real Production Projects:
 Based on Production Experience:
 
 **Primary Skills (Top 12):**
+
 1. **Healthcare Systems Development** (Live production system)
-2. **Education Platform Development** (Live production system)  
+2. **Education Platform Development** (Live production system)
 3. **Next.js 15 Development** (Latest version expertise)
 4. **React 19 Development** (Cutting-edge features)
 5. **Business Process Automation** (8+ industry solutions)
@@ -256,11 +257,13 @@ Based on Production Experience:
 #### Pricing Strategy
 
 **Hourly Rate Recommendation:** (Based on Production Portfolio)
+
 - **Starting Rate:** $55-65/hour (justified by live production systems)
 - **Target Rate:** $75-95/hour (after initial 5-star reviews)
 - **Premium Rate:** $120+/hour (for HIPAA-compliant & enterprise automation)
 
 **Project-Based Pricing:** (Based on Actual Project Scope)
+
 - **Simple Automation:** $3,000-7,000 (Basic POS, simple management)
 - **Industry Platform:** $8,000-20,000 (Healthcare, Education, Real Estate)
 - **Enterprise Solution:** $20,000-50,000 (Multi-location, complex integrations)
@@ -392,6 +395,7 @@ src/
 ```
 
 **Flow Overview**
+
 1. `UpworkBot` (client component) renders a `Chat` powered by the generic template/chatbot components.
 2. When the user pastes a job description and hits **Send**:
    - `bot.tsx` calls the async `analyze()` helper which in turn delegates to either:
@@ -406,6 +410,7 @@ src/
 5. The user can iterate, copy, or tweak the generated proposal directly in the chat.
 
 ### Brainstorm
+
 - **TypeScript vs. Rust vs. LangGraph**: Compare our current Node/TypeScript implementation against:
   • **Rust (e.g. using axum + Wasm/Edge)** – Pros: near-native speed, lower memory, strong type guarantees. Cons: longer compile times, smaller LLM ecosystem.  
   • **LangGraph / Python orchestration** – Pros: rich AI tooling, graph-based agent flows, mature community. Cons: additional runtime, bridging to Next.js.  
@@ -420,6 +425,7 @@ src/
 - Prompt-based refactor assistant ("shorten", "add timeline", "focus on ROI") to post-process generated proposals.
 
 ### Issues
+
 1. **Modularize core logic**: Split `src/components/agent/upwork/logic.ts` into focused files:  
    • `scoring.ts` → `scoreJob` & weight constants  
    • `extract.ts` → `extractJobDetails`  
@@ -436,6 +442,7 @@ src/
 9. **CI/CD**: GitHub Action for lint, test, and type-check on every PR.
 
 ### Prompt Library
+
 ```text
 // Generate Upwork analyze server action
 Create `src/components/agent/upwork/actions.ts` exporting an async `analyze` server action that:

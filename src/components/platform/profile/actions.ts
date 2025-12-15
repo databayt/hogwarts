@@ -1,10 +1,11 @@
-"use server";
+"use server"
 
-import { z } from 'zod'
-import { db } from '@/lib/db'
-import { auth } from '@/auth'
-import { revalidatePath } from 'next/cache'
-import { getTenantContext } from '@/lib/tenant-context'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // ============================================================================
 // Validation Schemas
@@ -12,8 +13,8 @@ import { getTenantContext } from '@/lib/tenant-context'
 
 const updateProfileSchema = z.object({
   displayName: z.string().min(1),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
-  locale: z.enum(['ar', 'en']).default('ar'),
+  avatarUrl: z.string().url().optional().or(z.literal("")),
+  locale: z.enum(["ar", "en"]).default("ar"),
 })
 
 const updateBioSchema = z.object({
@@ -21,8 +22,8 @@ const updateBioSchema = z.object({
 })
 
 const updateSettingsSchema = z.object({
-  theme: z.enum(['light', 'dark', 'system']).optional(),
-  language: z.enum(['ar', 'en']).optional(),
+  theme: z.enum(["light", "dark", "system"]).optional(),
+  language: z.enum(["ar", "en"]).optional(),
   allowMessages: z.boolean().optional(),
   emailNotifications: z.boolean().optional(),
   pushNotifications: z.boolean().optional(),
@@ -36,12 +37,12 @@ export async function getStudentProfile(studentId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: 'School context not found' }
+      return { success: false as const, error: "School context not found" }
     }
 
     // Use provided ID or current user's ID
@@ -86,13 +87,13 @@ export async function getStudentProfile(studentId?: string) {
     })
 
     if (!student) {
-      return { success: false as const, error: 'Student not found' }
+      return { success: false as const, error: "Student not found" }
     }
 
     return { success: true as const, data: student }
   } catch (error) {
-    console.error('Error fetching student profile:', error)
-    return { success: false as const, error: 'Failed to fetch student profile' }
+    console.error("Error fetching student profile:", error)
+    return { success: false as const, error: "Failed to fetch student profile" }
   }
 }
 
@@ -100,12 +101,12 @@ export async function getTeacherProfile(teacherId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: 'School context not found' }
+      return { success: false as const, error: "School context not found" }
     }
 
     const targetId = teacherId || session.user.id
@@ -140,13 +141,13 @@ export async function getTeacherProfile(teacherId?: string) {
     })
 
     if (!teacher) {
-      return { success: false as const, error: 'Teacher not found' }
+      return { success: false as const, error: "Teacher not found" }
     }
 
     return { success: true as const, data: teacher }
   } catch (error) {
-    console.error('Error fetching teacher profile:', error)
-    return { success: false as const, error: 'Failed to fetch teacher profile' }
+    console.error("Error fetching teacher profile:", error)
+    return { success: false as const, error: "Failed to fetch teacher profile" }
   }
 }
 
@@ -154,12 +155,12 @@ export async function getParentProfile(parentId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: 'School context not found' }
+      return { success: false as const, error: "School context not found" }
     }
 
     const targetId = parentId || session.user.id
@@ -198,13 +199,13 @@ export async function getParentProfile(parentId?: string) {
     })
 
     if (!parent) {
-      return { success: false as const, error: 'Parent not found' }
+      return { success: false as const, error: "Parent not found" }
     }
 
     return { success: true as const, data: parent }
   } catch (error) {
-    console.error('Error fetching parent profile:', error)
-    return { success: false as const, error: 'Failed to fetch parent profile' }
+    console.error("Error fetching parent profile:", error)
+    return { success: false as const, error: "Failed to fetch parent profile" }
   }
 }
 
@@ -212,12 +213,12 @@ export async function getStaffProfile(staffId?: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false as const, error: 'School context not found' }
+      return { success: false as const, error: "School context not found" }
     }
 
     const targetId = staffId || session.user.id
@@ -228,19 +229,19 @@ export async function getStaffProfile(staffId?: string) {
         id: targetId,
         schoolId,
         role: {
-          in: ['STAFF', 'ACCOUNTANT', 'ADMIN', 'DEVELOPER'],
+          in: ["STAFF", "ACCOUNTANT", "ADMIN", "DEVELOPER"],
         },
       },
     })
 
     if (!user) {
-      return { success: false as const, error: 'Staff not found' }
+      return { success: false as const, error: "Staff not found" }
     }
 
     return { success: true as const, data: user }
   } catch (error) {
-    console.error('Error fetching staff profile:', error)
-    return { success: false as const, error: 'Failed to fetch staff profile' }
+    console.error("Error fetching staff profile:", error)
+    return { success: false as const, error: "Failed to fetch staff profile" }
   }
 }
 
@@ -248,11 +249,13 @@ export async function getStaffProfile(staffId?: string) {
 // Profile Update Actions
 // ============================================================================
 
-export async function updateProfile(input: z.infer<typeof updateProfileSchema>) {
+export async function updateProfile(
+  input: z.infer<typeof updateProfileSchema>
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const parsed = updateProfileSchema.parse(input)
@@ -265,14 +268,14 @@ export async function updateProfile(input: z.infer<typeof updateProfileSchema>) 
       },
     })
 
-    revalidatePath('/profile')
+    revalidatePath("/profile")
     return { success: true as const }
   } catch (error) {
-    console.error('Error updating profile:', error)
+    console.error("Error updating profile:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: 'Invalid input data' }
+      return { success: false as const, error: "Invalid input data" }
     }
-    return { success: false as const, error: 'Failed to update profile' }
+    return { success: false as const, error: "Failed to update profile" }
   }
 }
 
@@ -280,7 +283,7 @@ export async function updateProfileBio(input: z.infer<typeof updateBioSchema>) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const parsed = updateBioSchema.parse(input)
@@ -294,22 +297,24 @@ export async function updateProfileBio(input: z.infer<typeof updateBioSchema>) {
     //   },
     // })
 
-    revalidatePath('/profile')
+    revalidatePath("/profile")
     return { success: true as const }
   } catch (error) {
-    console.error('Error updating bio:', error)
+    console.error("Error updating bio:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: 'Invalid input data' }
+      return { success: false as const, error: "Invalid input data" }
     }
-    return { success: false as const, error: 'Failed to update bio' }
+    return { success: false as const, error: "Failed to update bio" }
   }
 }
 
-export async function updateProfileSettings(input: z.infer<typeof updateSettingsSchema>) {
+export async function updateProfileSettings(
+  input: z.infer<typeof updateSettingsSchema>
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     const parsed = updateSettingsSchema.parse(input)
@@ -325,15 +330,15 @@ export async function updateProfileSettings(input: z.infer<typeof updateSettings
       },
     })
 
-    revalidatePath('/profile')
-    revalidatePath('/profile/settings')
+    revalidatePath("/profile")
+    revalidatePath("/profile/settings")
     return { success: true as const }
   } catch (error) {
-    console.error('Error updating settings:', error)
+    console.error("Error updating settings:", error)
     if (error instanceof z.ZodError) {
-      return { success: false as const, error: 'Invalid input data' }
+      return { success: false as const, error: "Invalid input data" }
     }
-    return { success: false as const, error: 'Failed to update settings' }
+    return { success: false as const, error: "Failed to update settings" }
   }
 }
 
@@ -341,7 +346,7 @@ export async function uploadProfileAvatar(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false as const, error: 'Not authenticated' }
+      return { success: false as const, error: "Not authenticated" }
     }
 
     // This is a placeholder for file upload logic
@@ -351,9 +356,9 @@ export async function uploadProfileAvatar(formData: FormData) {
     // 3. Get the URL
     // 4. Update user's image field
 
-    const file = formData.get('avatar') as File
+    const file = formData.get("avatar") as File
     if (!file) {
-      return { success: false as const, error: 'No file provided' }
+      return { success: false as const, error: "No file provided" }
     }
 
     // Placeholder for upload logic
@@ -364,12 +369,13 @@ export async function uploadProfileAvatar(formData: FormData) {
     //   data: { image: uploadedUrl },
     // })
 
-    revalidatePath('/profile')
-    return { success: true as const, message: 'Avatar upload not yet implemented' }
+    revalidatePath("/profile")
+    return {
+      success: true as const,
+      message: "Avatar upload not yet implemented",
+    }
   } catch (error) {
-    console.error('Error uploading avatar:', error)
-    return { success: false as const, error: 'Failed to upload avatar' }
+    console.error("Error uploading avatar:", error)
+    return { success: false as const, error: "Failed to upload avatar" }
   }
 }
-
-

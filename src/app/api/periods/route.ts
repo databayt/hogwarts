@@ -37,9 +37,10 @@
  */
 
 import { NextRequest } from "next/server"
+
+import { createErrorResponse } from "@/lib/auth-security"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/components/operator/lib/tenant"
-import { createErrorResponse } from "@/lib/auth-security"
 
 // WHY: Period definitions change during setup
 export const dynamic = "force-dynamic"
@@ -54,13 +55,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const termId = searchParams.get("termId")
     if (!termId) {
-      return new Response(JSON.stringify({ error: "Missing termId" }), { status: 400 })
+      return new Response(JSON.stringify({ error: "Missing termId" }), {
+        status: 400,
+      })
     }
 
     // Use proper Prisma client without unsafe type casting
-    const term = await db.term.findFirst({ 
-      where: { id: termId, schoolId }, 
-      select: { yearId: true } 
+    const term = await db.term.findFirst({
+      where: { id: termId, schoolId },
+      select: { yearId: true },
     })
 
     if (!term) {
@@ -69,18 +72,16 @@ export async function GET(req: NextRequest) {
 
     const periods = await db.period.findMany({
       where: { schoolId, yearId: term.yearId },
-      orderBy: { startTime: 'asc' },
+      orderBy: { startTime: "asc" },
       select: { id: true, name: true },
     })
 
-    return new Response(
-      JSON.stringify({ periods }), 
-      { status: 200, headers: { "content-type": "application/json" } }
-    )
+    return new Response(JSON.stringify({ periods }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    })
   } catch (error) {
     console.error("Error fetching periods:", error)
     return createErrorResponse(error)
   }
 }
-
-

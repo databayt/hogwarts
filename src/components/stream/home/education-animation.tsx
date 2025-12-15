@@ -1,6 +1,7 @@
 "use client"
 
 import Lottie from "lottie-react"
+
 import animationData from "../../../../public/stream/education-animation.json"
 
 interface EducationAnimationProps {

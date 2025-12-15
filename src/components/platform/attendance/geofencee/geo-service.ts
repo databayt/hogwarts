@@ -4,8 +4,9 @@
  * Part of the Hogwarts School Management System
  */
 
-import { db } from '@/lib/db'
-import type { Decimal } from '@prisma/client/runtime/library'
+import type { Decimal } from "@prisma/client/runtime/library"
+
+import { db } from "@/lib/db"
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -21,7 +22,7 @@ export type GeofenceCheckResult = {
   geofenceName: string
   isInside: boolean
   distance: number // Distance in meters
-  eventType: 'ENTER' | 'EXIT' | 'INSIDE' | null
+  eventType: "ENTER" | "EXIT" | "INSIDE" | null
 }
 
 export type LocationData = {
@@ -75,7 +76,10 @@ export function calculateDistance(
   // Haversine formula
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    Math.cos(lat1Rad) *
+      Math.cos(lat2Rad) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
@@ -96,7 +100,12 @@ export function isInsideCircularGeofence(
   center: Coordinates,
   radiusMeters: number
 ): boolean {
-  const distance = calculateDistance(point.lat, point.lon, center.lat, center.lon)
+  const distance = calculateDistance(
+    point.lat,
+    point.lon,
+    center.lat,
+    center.lon
+  )
   return distance <= radiusMeters
 }
 
@@ -154,13 +163,20 @@ export async function checkGeofences(
       const centerLon = Number(geofence.centerLon)
       const radiusMeters = geofence.radiusMeters
 
-      distance = calculateDistance(location.lat, location.lon, centerLat, centerLon)
+      distance = calculateDistance(
+        location.lat,
+        location.lon,
+        centerLat,
+        centerLon
+      )
       isInside = distance <= radiusMeters
     }
     // Check polygon geofences with PostGIS (accurate for complex shapes)
     else if (geofence.polygonGeoJSON !== null) {
       // Use PostGIS ST_Contains for polygon geofences
-      const result = await db.$queryRaw<Array<{ is_inside: boolean; distance: number }>>`
+      const result = await db.$queryRaw<
+        Array<{ is_inside: boolean; distance: number }>
+      >`
         SELECT
           ST_Contains(
             ST_GeomFromGeoJSON(${geofence.polygonGeoJSON}),
@@ -179,15 +195,15 @@ export async function checkGeofences(
     }
 
     // Determine event type (ENTER, EXIT, INSIDE)
-    let eventType: 'ENTER' | 'EXIT' | 'INSIDE' | null = null
+    let eventType: "ENTER" | "EXIT" | "INSIDE" | null = null
     const wasInside = previousGeofenceIds.includes(geofence.id)
 
     if (isInside && !wasInside) {
-      eventType = 'ENTER'
+      eventType = "ENTER"
     } else if (!isInside && wasInside) {
-      eventType = 'EXIT'
+      eventType = "EXIT"
     } else if (isInside && wasInside) {
-      eventType = 'INSIDE'
+      eventType = "INSIDE"
     }
 
     results.push({
@@ -226,7 +242,7 @@ export async function processGeofenceEvents(
 
   // Filter only events that need to be recorded (ENTER/EXIT)
   const eventsToRecord = geofenceResults.filter(
-    (result) => result.eventType === 'ENTER' || result.eventType === 'EXIT'
+    (result) => result.eventType === "ENTER" || result.eventType === "EXIT"
   )
 
   for (const result of eventsToRecord) {
@@ -255,8 +271,8 @@ export async function processGeofenceEvents(
     // NOTE: Disabled temporarily - requires classId from Attendance model
     // TODO: Implement auto-attendance with proper class association
     if (
-      result.eventType === 'ENTER' &&
-      event.geofence.type === 'SCHOOL_GROUNDS'
+      result.eventType === "ENTER" &&
+      event.geofence.type === "SCHOOL_GROUNDS"
     ) {
       // Mark event as processed (attendance creation happens separately)
       await db.geoAttendanceEvent.update({
@@ -315,7 +331,7 @@ export async function getLatestLocation(
       studentId,
     },
     orderBy: {
-      timestamp: 'desc',
+      timestamp: "desc",
     },
     select: {
       lat: true,

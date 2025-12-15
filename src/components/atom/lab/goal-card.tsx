@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface GoalCardProps {
@@ -86,7 +88,7 @@ export function GoalCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -95,8 +97,8 @@ export function GoalCard({
         {loading ? (
           <div className="space-y-3">
             <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-16 w-16 rounded-full mx-auto" />
-            <Skeleton className="h-4 w-24 mx-auto" />
+            <Skeleton className="mx-auto h-16 w-16 rounded-full" />
+            <Skeleton className="mx-auto h-4 w-24" />
           </div>
         ) : (
           <div className="space-y-4">

@@ -9,6 +9,7 @@ Automatically updates dependencies, runs migrations, and syncs environment after
 ## Execution Flow
 
 ### 1. Check Package Changes
+
 ```bash
 # Detect package.json or pnpm-lock.yaml changes
 if git diff HEAD@{1} --name-only | grep -qE "(package\.json|pnpm-lock\.yaml)"; then
@@ -25,6 +26,7 @@ fi
 ```
 
 ### 2. Run Database Migrations
+
 ```bash
 # Check for new migrations
 if git diff HEAD@{1} --name-only | grep -q "prisma/migrations/"; then
@@ -44,6 +46,7 @@ fi
 ```
 
 ### 3. Check Prisma Schema Changes
+
 ```bash
 # Detect schema changes
 if git diff HEAD@{1} --name-only | grep -q "\.prisma$"; then
@@ -53,6 +56,7 @@ fi
 ```
 
 ### 4. Update Environment Variables
+
 ```bash
 # Check for .env.example changes
 if git diff HEAD@{1} --name-only | grep -q "\.env\.example"; then
@@ -70,6 +74,7 @@ fi
 ```
 
 ### 5. Clear Build Cache
+
 ```bash
 # Clear if major changes detected
 CHANGED_FILES=$(git diff HEAD@{1} --name-only | wc -l)
@@ -81,6 +86,7 @@ fi
 ```
 
 ### 6. Run Type Check
+
 ```bash
 # Validate TypeScript after updates
 echo "✔️  Checking TypeScript..."
@@ -92,6 +98,7 @@ fi
 ```
 
 ### 7. Update Documentation
+
 ```bash
 # Pull latest documentation
 if git diff HEAD@{1} --name-only | grep -q "^docs/"; then
@@ -103,6 +110,7 @@ fi
 ```
 
 ### 8. Notify Team
+
 ```bash
 # If breaking changes
 if git log HEAD@{1}..HEAD --grep="BREAKING CHANGE" --oneline | grep -q .; then
@@ -178,21 +186,25 @@ Action Required: Update .env file
 ## Smart Features
 
 ### Dependency Optimization
+
 - Only installs if package files changed
 - Validates lockfile consistency
 - Auto-commits lockfile updates
 
 ### Migration Safety
+
 - Uses `migrate deploy` for production safety
 - Optional seeding with `--seed` flag
 - Validates schema before applying
 
 ### Cache Management
+
 - Clears cache only for major changes (>50 files)
 - Preserves cache for minor updates
 - Removes stale build artifacts
 
 ### Team Communication
+
 - Detects breaking changes via commit messages
 - Sends notifications for critical updates
 - Lists new environment variables needed
@@ -214,6 +226,7 @@ fi
 ## Performance
 
 Typical execution times:
+
 - Dependency update: ~15s
 - Migration run: ~3s
 - Prisma generation: ~2s

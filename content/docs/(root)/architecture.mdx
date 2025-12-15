@@ -26,6 +26,7 @@ Our architecture is engineered from the ground up for reusability, modularity, a
 Every URL route produces **two directories**: one in `app/` for routing and layouts, one in `components/` for all feature logic. This 1:1 mapping means if you know the URL, you instantly know where to find both the page and its components.
 
 For example, the route `/abc` creates:
+
 - `app/[lang]/abc/` — `page.tsx`, `layout.tsx`
 - `components/abc/` — `content.tsx`, `actions.ts`, `form.tsx`, `validation.ts`, `types.ts`, `use-abc.ts`, `README.md`, `ISSUE.md`, etc.
 
@@ -49,23 +50,23 @@ This predictable structure eliminates guesswork. New features follow the same pa
 
 Each feature directory follows these naming conventions:
 
-| File | Purpose |
-|------|---------|
-| `content.tsx` | Compose feature/page UI: headings, sections, layout orchestration |
-| `actions.ts` | Server actions & API calls: validate, scope tenant, mutate |
-| `config.ts` | Enums, option lists, labels, defaults for the feature |
-| `validation.ts` | Zod schemas & refinements; parse and infer types |
-| `types.ts` | Domain and UI types; generic helpers for forms/tables |
-| `form.tsx` | Typed forms (RHF) with resolvers and submit handling |
-| `card.tsx` | Card components for KPIs, summaries, quick actions |
-| `all.tsx` | List view with table, filters, pagination |
-| `featured.tsx` | Curated feature list showcasing selections |
-| `detail.tsx` | Detail view with sections, relations, actions |
-| `util.ts` | Pure utilities and mappers used in the feature |
-| `column.tsx` | Typed Table column builders and cell renderers |
-| `use-abc.ts` | Feature hooks: fetching, mutations, derived state |
-| `README.md` | Feature README: purpose, APIs, decisions |
-| `ISSUE.md` | Known issues and follow-ups for the feature |
+| File            | Purpose                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| `content.tsx`   | Compose feature/page UI: headings, sections, layout orchestration |
+| `actions.ts`    | Server actions & API calls: validate, scope tenant, mutate        |
+| `config.ts`     | Enums, option lists, labels, defaults for the feature             |
+| `validation.ts` | Zod schemas & refinements; parse and infer types                  |
+| `types.ts`      | Domain and UI types; generic helpers for forms/tables             |
+| `form.tsx`      | Typed forms (RHF) with resolvers and submit handling              |
+| `card.tsx`      | Card components for KPIs, summaries, quick actions                |
+| `all.tsx`       | List view with table, filters, pagination                         |
+| `featured.tsx`  | Curated feature list showcasing selections                        |
+| `detail.tsx`    | Detail view with sections, relations, actions                     |
+| `util.ts`       | Pure utilities and mappers used in the feature                    |
+| `column.tsx`    | Typed Table column builders and cell renderers                    |
+| `use-abc.ts`    | Feature hooks: fetching, mutations, derived state                 |
+| `README.md`     | Feature README: purpose, APIs, decisions                          |
+| `ISSUE.md`      | Known issues and follow-ups for the feature                       |
 
 ## Decision Framework
 
@@ -88,17 +89,17 @@ Each feature directory follows these naming conventions:
 
 ## Critical Files Reference
 
-| File | Purpose |
-|------|---------|
-| `src/auth.ts` | NextAuth configuration |
-| `src/middleware.ts` | Auth & i18n routing |
-| `src/routes.ts` | Public/private route definitions |
-| `prisma/schema.prisma` | Database schema |
-| `src/app/globals.css` | Theme variables |
-| `src/components/ui/` | Base shadcn/ui components |
-| `src/components/atom/` | Atomic design components |
-| `src/components/template/` | Layout templates (header, sidebar) |
-| `CLAUDE.md` | Project-wide architectural guidelines |
+| File                       | Purpose                               |
+| -------------------------- | ------------------------------------- |
+| `src/auth.ts`              | NextAuth configuration                |
+| `src/middleware.ts`        | Auth & i18n routing                   |
+| `src/routes.ts`            | Public/private route definitions      |
+| `prisma/schema.prisma`     | Database schema                       |
+| `src/app/globals.css`      | Theme variables                       |
+| `src/components/ui/`       | Base shadcn/ui components             |
+| `src/components/atom/`     | Atomic design components              |
+| `src/components/template/` | Layout templates (header, sidebar)    |
+| `CLAUDE.md`                | Project-wide architectural guidelines |
 
 ## Anti-Pattern Detection
 

@@ -1,23 +1,24 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+
+import {
+  getListing,
+  getSchoolSetupStatus,
+  getUserSchools,
+  proceedToTitle,
+  updateListing,
+} from "./actions"
+import { ONBOARDING_STEPS, STEP_ORDER } from "./config"
 import type {
+  OnboardingFormState,
+  OnboardingProgress,
   OnboardingSchoolData,
   OnboardingStep,
-  OnboardingProgress,
-  OnboardingFormState,
-  SchoolWithStatus
-} from './types';
-import { 
-  getListing, 
-  updateListing, 
-  getSchoolSetupStatus, 
-  proceedToTitle,
-  getUserSchools 
-} from './actions';
-import { validateStep } from './validation';
-import { ONBOARDING_STEPS, STEP_ORDER } from "./config";
+  SchoolWithStatus,
+} from "./types"
+import { validateStep } from "./validation"
 
 /**
  * useOnboarding Hook - School Setup Progress Tracking
@@ -39,39 +40,43 @@ import { ONBOARDING_STEPS, STEP_ORDER } from "./config";
 
 // Main onboarding hook
 export function useOnboarding(schoolId?: string) {
-  const router = useRouter();
-  const params = useParams();
-  
-  const [school, setSchool] = useState<OnboardingSchoolData | null>(null);
-  const [progress, setProgress] = useState<OnboardingProgress | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const params = useParams()
 
-  const currentSchoolId = schoolId || (params?.id as string);
-  const currentStep = params?.step as OnboardingStep || 'about-school';
+  const [school, setSchool] = useState<OnboardingSchoolData | null>(null)
+  const [progress, setProgress] = useState<OnboardingProgress | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const currentSchoolId = schoolId || (params?.id as string)
+  const currentStep = (params?.step as OnboardingStep) || "about-school"
 
   // Load school data and progress
   const loadSchoolData = useCallback(async () => {
-    if (!currentSchoolId) return;
+    if (!currentSchoolId) return
 
     try {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       const [schoolResponse, statusResponse] = await Promise.all([
         getListing(currentSchoolId),
-        getSchoolSetupStatus(currentSchoolId)
-      ]);
+        getSchoolSetupStatus(currentSchoolId),
+      ])
 
       if (schoolResponse.success && schoolResponse.data) {
-        setSchool(schoolResponse.data);
+        setSchool(schoolResponse.data)
       } else {
-        setError(typeof schoolResponse.error === 'string' ? schoolResponse.error : 'Failed to load school');
+        setError(
+          typeof schoolResponse.error === "string"
+            ? schoolResponse.error
+            : "Failed to load school"
+        )
       }
 
       if (statusResponse.success && statusResponse.data) {
-        const statusData = statusResponse.data as SchoolWithStatus;
+        const statusData = statusResponse.data as SchoolWithStatus
         setProgress({
           schoolId: currentSchoolId,
           currentStep,
@@ -79,105 +84,121 @@ export function useOnboarding(schoolId?: string) {
           completionPercentage: statusData.completionPercentage,
           nextStep: statusData.nextStep,
           canProceed: statusData.completionPercentage >= 80, // Can proceed if 80% complete
-        });
+        })
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
-      console.error('Error loading school data:', errorMessage);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred"
+      setError(errorMessage)
+      console.error("Error loading school data:", errorMessage)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [currentSchoolId, currentStep]);
+  }, [currentSchoolId, currentStep])
 
   // Update school data
-  const updateSchoolData = useCallback(async (data: Partial<OnboardingSchoolData>) => {
-    if (!currentSchoolId) return;
+  const updateSchoolData = useCallback(
+    async (data: Partial<OnboardingSchoolData>) => {
+      if (!currentSchoolId) return
 
-    try {
-      setIsSaving(true);
-      const response = await updateListing(currentSchoolId, data);
+      try {
+        setIsSaving(true)
+        const response = await updateListing(currentSchoolId, data)
 
-      if (response.success && response.data) {
-        setSchool(prev => ({ ...prev, ...response.data }));
-        console.log('Changes saved successfully');
-        
-        // Refresh progress after update
-        await loadSchoolData();
-      } else {
-        throw new Error(typeof response.error === 'string' ? response.error : 'Failed to update school');
+        if (response.success && response.data) {
+          setSchool((prev) => ({ ...prev, ...response.data }))
+          console.log("Changes saved successfully")
+
+          // Refresh progress after update
+          await loadSchoolData()
+        } else {
+          throw new Error(
+            typeof response.error === "string"
+              ? response.error
+              : "Failed to update school"
+          )
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to save changes"
+        console.error("Error updating school:", errorMessage)
+        throw err
+      } finally {
+        setIsSaving(false)
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save changes';
-      console.error('Error updating school:', errorMessage);
-      throw err;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [currentSchoolId, loadSchoolData]);
+    },
+    [currentSchoolId, loadSchoolData]
+  )
 
   // Navigate to next step
   const goToNextStep = useCallback(async () => {
-    if (!currentSchoolId || !progress?.nextStep) return;
+    if (!currentSchoolId || !progress?.nextStep) return
 
     try {
-      await proceedToTitle(currentSchoolId);
+      await proceedToTitle(currentSchoolId)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to proceed to next step';
-      console.error('Error proceeding to next step:', errorMessage);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to proceed to next step"
+      console.error("Error proceeding to next step:", errorMessage)
     }
-  }, [currentSchoolId, progress?.nextStep]);
+  }, [currentSchoolId, progress?.nextStep])
 
   // Navigate to specific step
-  const goToStep = useCallback((step: OnboardingStep) => {
-    if (!currentSchoolId) return;
-    router.push(`/onboarding/${currentSchoolId}/${step}`);
-  }, [currentSchoolId, router]);
+  const goToStep = useCallback(
+    (step: OnboardingStep) => {
+      if (!currentSchoolId) return
+      router.push(`/onboarding/${currentSchoolId}/${step}`)
+    },
+    [currentSchoolId, router]
+  )
 
   // Validate current step
   const validateCurrentStep = useCallback(() => {
-    if (!school) return { isValid: false, errors: {} };
-    return validateStep(currentStep, school);
-  }, [school, currentStep]);
+    if (!school) return { isValid: false, errors: {} }
+    return validateStep(currentStep, school)
+  }, [school, currentStep])
 
   // Check if step is accessible
-  const isStepAccessible = useCallback((step: OnboardingStep) => {
-    const stepConfig = ONBOARDING_STEPS[step];
-    if (!stepConfig.dependencies || stepConfig.dependencies.length === 0) {
-      return true;
-    }
+  const isStepAccessible = useCallback(
+    (step: OnboardingStep) => {
+      const stepConfig = ONBOARDING_STEPS[step]
+      if (!stepConfig.dependencies || stepConfig.dependencies.length === 0) {
+        return true
+      }
 
-    return stepConfig.dependencies.every(dep => 
-      progress?.completedSteps.includes(dep)
-    );
-  }, [progress?.completedSteps]);
+      return stepConfig.dependencies.every((dep) =>
+        progress?.completedSteps.includes(dep)
+      )
+    },
+    [progress?.completedSteps]
+  )
 
   // Load data on mount or when schoolId changes
   useEffect(() => {
-    loadSchoolData();
-  }, [loadSchoolData]);
+    loadSchoolData()
+  }, [loadSchoolData])
 
   return {
     // Data
     school,
     progress,
     currentStep,
-    
+
     // State
     isLoading,
     isSaving,
     error,
-    
+
     // Actions
     updateSchool: updateSchoolData,
     goToNextStep,
     goToStep,
     refreshData: loadSchoolData,
-    
+
     // Validation
     validateCurrentStep,
     isStepAccessible,
-  };
+  }
 }
 
 // Hook for managing form state
@@ -188,69 +209,77 @@ export function useOnboardingForm(initialData?: Partial<OnboardingSchoolData>) {
     errors: {},
     touched: {},
     isDirty: false,
-  });
-  
-  const [data, setData] = useState<Partial<OnboardingSchoolData>>(initialData || {});
+  })
 
-  const updateField = useCallback((field: keyof OnboardingSchoolData, value: any) => {
-    setData(prev => ({ ...prev, [field]: value }));
-    setFormState(prev => {
-      const newErrors = { ...prev.errors };
-      delete newErrors[field]; // Clear field error on change
-      return {
-        ...prev,
-        touched: { ...prev.touched, [field]: true },
-        isDirty: true,
-        errors: newErrors,
-      };
-    });
-  }, []);
+  const [data, setData] = useState<Partial<OnboardingSchoolData>>(
+    initialData || {}
+  )
+
+  const updateField = useCallback(
+    (field: keyof OnboardingSchoolData, value: any) => {
+      setData((prev) => ({ ...prev, [field]: value }))
+      setFormState((prev) => {
+        const newErrors = { ...prev.errors }
+        delete newErrors[field] // Clear field error on change
+        return {
+          ...prev,
+          touched: { ...prev.touched, [field]: true },
+          isDirty: true,
+          errors: newErrors,
+        }
+      })
+    },
+    []
+  )
 
   const updateFields = useCallback((fields: Partial<OnboardingSchoolData>) => {
-    setData(prev => ({ ...prev, ...fields }));
-    setFormState(prev => ({
+    setData((prev) => ({ ...prev, ...fields }))
+    setFormState((prev) => ({
       ...prev,
       isDirty: true,
-      touched: Object.keys(fields).reduce((acc, key) => ({ ...acc, [key]: true }), prev.touched),
-    }));
-  }, []);
+      touched: Object.keys(fields).reduce(
+        (acc, key) => ({ ...acc, [key]: true }),
+        prev.touched
+      ),
+    }))
+  }, [])
 
   const setFieldError = useCallback((field: string, error: string) => {
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       errors: { ...prev.errors, [field]: error },
-    }));
-  }, []);
+    }))
+  }, [])
 
   const clearFieldError = useCallback((field: string) => {
-    setFormState(prev => {
-      const newErrors = { ...prev.errors };
-      delete newErrors[field];
+    setFormState((prev) => {
+      const newErrors = { ...prev.errors }
+      delete newErrors[field]
       return {
         ...prev,
         errors: newErrors,
-      };
-    });
-  }, []);
+      }
+    })
+  }, [])
 
   const setLoading = useCallback((isLoading: boolean) => {
-    setFormState(prev => ({ ...prev, isLoading }));
-  }, []);
+    setFormState((prev) => ({ ...prev, isLoading }))
+  }, [])
 
   const setSubmitting = useCallback((isSubmitting: boolean) => {
-    setFormState(prev => ({ ...prev, isSubmitting }));
-  }, []);
+    setFormState((prev) => ({ ...prev, isSubmitting }))
+  }, [])
 
   const resetForm = useCallback((newData?: Partial<OnboardingSchoolData>) => {
-    setData(newData || {});
+    setData(newData || {})
     setFormState({
       isLoading: false,
       isSubmitting: false,
       errors: {},
       touched: {},
       isDirty: false,
-    });
-  }, []);
+    })
+  }, [])
 
   return {
     data,
@@ -262,76 +291,81 @@ export function useOnboardingForm(initialData?: Partial<OnboardingSchoolData>) {
     setLoading,
     setSubmitting,
     resetForm,
-  };
+  }
 }
 
 // Hook for managing multiple schools
 export function useUserSchools() {
-  const [schools, setSchools] = useState<OnboardingSchoolData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [schools, setSchools] = useState<OnboardingSchoolData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadSchools = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await getUserSchools();
-      
+      setIsLoading(true)
+      setError(null)
+
+      const response = await getUserSchools()
+
       if (response.success && response.data) {
-        setSchools(response.data);
+        setSchools(response.data)
       } else {
-        setError(typeof response.error === 'string' ? response.error : 'Failed to load schools');
+        setError(
+          typeof response.error === "string"
+            ? response.error
+            : "Failed to load schools"
+        )
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load schools';
-      setError(errorMessage);
-      console.error('Error loading schools:', errorMessage);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load schools"
+      setError(errorMessage)
+      console.error("Error loading schools:", errorMessage)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    loadSchools();
-  }, [loadSchools]);
+    loadSchools()
+  }, [loadSchools])
 
   return {
     schools,
     isLoading,
     error,
     refreshSchools: loadSchools,
-  };
+  }
 }
 
 // Helper function to determine completed steps
 function getCompletedSteps(statusData: SchoolWithStatus): OnboardingStep[] {
-  const completedSteps: OnboardingStep[] = [];
-  
+  const completedSteps: OnboardingStep[] = []
+
   // Check each step's completion based on data
-  if (statusData.name && statusData.name !== 'New School') {
-    completedSteps.push('title');
+  if (statusData.name && statusData.name !== "New School") {
+    completedSteps.push("title")
   }
-  
+
   if (statusData.description) {
-    completedSteps.push('description');
+    completedSteps.push("description")
   }
-  
+
   if (statusData.address) {
-    completedSteps.push('location');
+    completedSteps.push("location")
   }
-  
+
   if (statusData.maxStudents && statusData.maxTeachers) {
-    completedSteps.push('capacity');
+    completedSteps.push("capacity")
   }
-  
+
   if (statusData.logo || statusData.primaryColor) {
-    completedSteps.push('branding');
+    completedSteps.push("branding")
   }
-  
+
   if (statusData.tuitionFee && statusData.currency) {
-    completedSteps.push('price');
+    completedSteps.push("price")
   }
-  
-  return completedSteps;
+
+  return completedSteps
 }

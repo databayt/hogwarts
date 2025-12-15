@@ -1,11 +1,13 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react";
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import type { Task } from "@prisma/client"
+import { Loader } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
 import {
   Sheet,
   SheetClose,
@@ -14,20 +16,20 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import type { Task } from "@prisma/client";
+} from "@/components/ui/sheet"
 
-import { updateTask } from "../_lib/actions";
-import { type UpdateTaskSchema, updateTaskSchema } from "../_lib/validations";
-import { TaskForm } from "./task-form";
+import { updateTask } from "../_lib/actions"
+import { updateTaskSchema, type UpdateTaskSchema } from "../_lib/validations"
+import { TaskForm } from "./task-form"
 
-interface UpdateTaskSheetProps
-  extends React.ComponentPropsWithRef<typeof Sheet> {
-  task: Task | null;
+interface UpdateTaskSheetProps extends React.ComponentPropsWithRef<
+  typeof Sheet
+> {
+  task: Task | null
 }
 
 export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
-  const [isPending, startTransition] = React.useTransition();
+  const [isPending, startTransition] = React.useTransition()
 
   const form = useForm<UpdateTaskSchema>({
     resolver: zodResolver(updateTaskSchema),
@@ -37,26 +39,26 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
       status: task?.status,
       priority: task?.priority,
     },
-  });
+  })
 
   function onSubmit(input: UpdateTaskSchema) {
     startTransition(async () => {
-      if (!task) return;
+      if (!task) return
 
       const { error } = await updateTask({
         id: task.id,
         ...input,
-      });
+      })
 
       if (error) {
-        toast.error(error);
-        return;
+        toast.error(error)
+        return
       }
 
-      form.reset(input);
-      props.onOpenChange?.(false);
-      toast.success("Task updated");
-    });
+      form.reset(input)
+      props.onOpenChange?.(false)
+      toast.success("Task updated")
+    })
   }
 
   return (
@@ -88,5 +90,5 @@ export function UpdateTaskSheet({ task, ...props }: UpdateTaskSheetProps) {
         </TaskForm>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

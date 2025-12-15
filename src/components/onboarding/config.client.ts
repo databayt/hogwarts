@@ -3,69 +3,72 @@
  * These constants are used in client components
  */
 
-import type { OnboardingStep } from './types';
+import type { OnboardingStep } from "./types"
 
 // Step navigation map
-export const STEP_NAVIGATION: Record<OnboardingStep, { next?: OnboardingStep; previous?: OnboardingStep }> = {
-  'about-school': {
-    next: 'title',
+export const STEP_NAVIGATION: Record<
+  OnboardingStep,
+  { next?: OnboardingStep; previous?: OnboardingStep }
+> = {
+  "about-school": {
+    next: "title",
   },
-  'title': {
-    next: 'description',
-    previous: 'about-school',
+  title: {
+    next: "description",
+    previous: "about-school",
   },
-  'description': {
-    next: 'location',
-    previous: 'title',
+  description: {
+    next: "location",
+    previous: "title",
   },
-  'location': {
-    next: 'stand-out',
-    previous: 'description',
+  location: {
+    next: "stand-out",
+    previous: "description",
   },
-  'stand-out': {
-    next: 'capacity',
-    previous: 'location',
+  "stand-out": {
+    next: "capacity",
+    previous: "location",
   },
-  'capacity': {
-    next: 'branding',
-    previous: 'stand-out',
+  capacity: {
+    next: "branding",
+    previous: "stand-out",
   },
-  'branding': {
-    next: 'import',
-    previous: 'capacity',
+  branding: {
+    next: "import",
+    previous: "capacity",
   },
-  'import': {
-    next: 'finish-setup',
-    previous: 'branding',
+  import: {
+    next: "finish-setup",
+    previous: "branding",
   },
-  'finish-setup': {
-    next: 'join',
-    previous: 'import',
+  "finish-setup": {
+    next: "join",
+    previous: "import",
   },
-  'join': {
-    next: 'visibility',
-    previous: 'finish-setup',
+  join: {
+    next: "visibility",
+    previous: "finish-setup",
   },
-  'visibility': {
-    next: 'price',
-    previous: 'join',
+  visibility: {
+    next: "price",
+    previous: "join",
   },
-  'price': {
-    next: 'discount',
-    previous: 'visibility',
+  price: {
+    next: "discount",
+    previous: "visibility",
   },
-  'discount': {
-    next: 'legal',
-    previous: 'price',
+  discount: {
+    next: "legal",
+    previous: "price",
   },
-  'legal': {
-    next: 'subdomain',
-    previous: 'discount',
+  legal: {
+    next: "subdomain",
+    previous: "discount",
   },
-  'subdomain': {
-    previous: 'legal',
+  subdomain: {
+    previous: "legal",
   },
-};
+}
 
 // Form validation limits
 export const FORM_LIMITS = {
@@ -77,7 +80,7 @@ export const FORM_LIMITS = {
   SUBDOMAIN_MAX_LENGTH: 63,
   SCHOOL_NAME_MIN_LENGTH: 3,
   SCHOOL_NAME_MAX_LENGTH: 100,
-} as const;
+} as const
 
 // Error messages for validation
 export const ERROR_MESSAGES = {
@@ -87,6 +90,7 @@ export const ERROR_MESSAGES = {
   DESCRIPTION_TOO_LONG: `Description must be no more than ${FORM_LIMITS.DESCRIPTION_MAX_LENGTH} characters`,
   SUBDOMAIN_TOO_SHORT: `Subdomain must be at least ${FORM_LIMITS.SUBDOMAIN_MIN_LENGTH} characters`,
   SUBDOMAIN_TOO_LONG: `Subdomain must be no more than ${FORM_LIMITS.SUBDOMAIN_MAX_LENGTH} characters`,
-  SUBDOMAIN_INVALID_FORMAT: 'Only lowercase letters, numbers, and hyphens allowed',
-  SUBDOMAIN_INVALID_START_END: 'Cannot start or end with hyphen',
-} as const;
+  SUBDOMAIN_INVALID_FORMAT:
+    "Only lowercase letters, numbers, and hyphens allowed",
+  SUBDOMAIN_INVALID_START_END: "Cannot start or end with hyphen",
+} as const

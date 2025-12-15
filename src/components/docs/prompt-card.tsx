@@ -1,41 +1,41 @@
-"use client";
+"use client"
 
-import React from "react";
-import { Check, Copy } from "lucide-react";
+import React from "react"
+import { Check, Copy } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/card"
 
-import type { Prompt } from "./prompt-types";
+import type { Prompt } from "./prompt-types"
 
 interface PromptCardProps {
-  prompt: Prompt;
+  prompt: Prompt
 }
 
 export function PromptCard({ prompt }: PromptCardProps) {
-  const [hasCopied, setHasCopied] = React.useState(false);
+  const [hasCopied, setHasCopied] = React.useState(false)
 
   React.useEffect(() => {
     if (hasCopied) {
       const timeout = setTimeout(() => {
-        setHasCopied(false);
-      }, 2000);
-      return () => clearTimeout(timeout);
+        setHasCopied(false)
+      }, 2000)
+      return () => clearTimeout(timeout)
     }
-  }, [hasCopied]);
+  }, [hasCopied])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(prompt.content);
-    setHasCopied(true);
-  };
+    navigator.clipboard.writeText(prompt.content)
+    setHasCopied(true)
+  }
 
   return (
     <Card id={prompt.id} className="scroll-mt-20">
@@ -80,7 +80,7 @@ export function PromptCard({ prompt }: PromptCardProps) {
               {prompt.variables.map((variable) => (
                 <code
                   key={variable}
-                  className="rounded bg-muted px-2 py-1 font-mono text-sm"
+                  className="bg-muted rounded px-2 py-1 font-mono text-sm"
                 >
                   {variable}
                 </code>
@@ -93,7 +93,7 @@ export function PromptCard({ prompt }: PromptCardProps) {
         {prompt.usageExample && (
           <div>
             <h4>Usage Example</h4>
-            <pre className="mt-2 overflow-x-auto rounded-lg bg-muted p-4">
+            <pre className="bg-muted mt-2 overflow-x-auto rounded-lg p-4">
               <code className="text-sm">{prompt.usageExample}</code>
             </pre>
           </div>
@@ -109,12 +109,12 @@ export function PromptCard({ prompt }: PromptCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 interface PromptSectionProps {
-  category: string;
-  prompts: Prompt[];
+  category: string
+  prompts: Prompt[]
 }
 
 export function PromptSection({ category, prompts }: PromptSectionProps) {
@@ -127,5 +127,5 @@ export function PromptSection({ category, prompts }: PromptSectionProps) {
         ))}
       </div>
     </section>
-  );
+  )
 }

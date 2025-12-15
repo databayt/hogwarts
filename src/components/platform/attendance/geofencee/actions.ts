@@ -5,28 +5,29 @@
  * Location tracking, geofence management, and live monitoring
  * Part of the Hogwarts School Management System
  */
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
-import {
-  locationSchema,
-  circularGeofenceSchema,
-  polygonGeofenceSchema,
-  deleteGeofenceSchema,
-  updateGeofenceStatusSchema,
-  liveLocationsQuerySchema,
-  geofenceEventsQuerySchema,
-  type LocationInput,
-  type CircularGeofenceInput,
-  type PolygonGeofenceInput,
-} from './validation'
+import { db } from "@/lib/db"
+
 import {
   checkGeofences,
-  processGeofenceEvents,
   getCurrentGeofences,
+  processGeofenceEvents,
   type Coordinates,
-} from './geo-service'
+} from "./geo-service"
+import {
+  circularGeofenceSchema,
+  deleteGeofenceSchema,
+  geofenceEventsQuerySchema,
+  liveLocationsQuerySchema,
+  locationSchema,
+  polygonGeofenceSchema,
+  updateGeofenceStatusSchema,
+  type CircularGeofenceInput,
+  type LocationInput,
+  type PolygonGeofenceInput,
+} from "./validation"
 
 // ============================================================================
 // TYPES
@@ -57,7 +58,7 @@ export async function submitLocation(
     // 1. Authenticate and get session
     const session = await auth()
     if (!session?.user?.schoolId || !session.user.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
@@ -75,7 +76,7 @@ export async function submitLocation(
     })
 
     if (!student) {
-      return { success: false, error: 'User is not a student' }
+      return { success: false, error: "User is not a student" }
     }
 
     // 3. Validate location data
@@ -126,10 +127,11 @@ export async function submitLocation(
       data: { eventIds },
     }
   } catch (error) {
-    console.error('Error submitting location:', error)
+    console.error("Error submitting location:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to submit location',
+      error:
+        error instanceof Error ? error.message : "Failed to submit location",
     }
   }
 }
@@ -151,15 +153,15 @@ export async function createCircularGeofence(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate data
@@ -174,7 +176,7 @@ export async function createCircularGeofence(
     })
 
     if (existing) {
-      return { success: false, error: 'Geofence with this name already exists' }
+      return { success: false, error: "Geofence with this name already exists" }
     }
 
     // Create geofence
@@ -192,17 +194,18 @@ export async function createCircularGeofence(
       },
     })
 
-    revalidatePath('/[lang]/s/[subdomain]/(platform)/attendance/geo', 'page')
+    revalidatePath("/[lang]/s/[subdomain]/(platform)/attendance/geo", "page")
 
     return {
       success: true,
       data: { id: geofence.id },
     }
   } catch (error) {
-    console.error('Error creating circular geofence:', error)
+    console.error("Error creating circular geofence:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create geofence',
+      error:
+        error instanceof Error ? error.message : "Failed to create geofence",
     }
   }
 }
@@ -220,15 +223,15 @@ export async function createPolygonGeofence(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate data
@@ -243,7 +246,7 @@ export async function createPolygonGeofence(
     })
 
     if (existing) {
-      return { success: false, error: 'Geofence with this name already exists' }
+      return { success: false, error: "Geofence with this name already exists" }
     }
 
     // Create geofence
@@ -259,17 +262,18 @@ export async function createPolygonGeofence(
       },
     })
 
-    revalidatePath('/[lang]/s/[subdomain]/(platform)/attendance/geo', 'page')
+    revalidatePath("/[lang]/s/[subdomain]/(platform)/attendance/geo", "page")
 
     return {
       success: true,
       data: { id: geofence.id },
     }
   } catch (error) {
-    console.error('Error creating polygon geofence:', error)
+    console.error("Error creating polygon geofence:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create geofence',
+      error:
+        error instanceof Error ? error.message : "Failed to create geofence",
     }
   }
 }
@@ -285,15 +289,15 @@ export async function updateGeofenceStatus(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate input
@@ -308,7 +312,7 @@ export async function updateGeofenceStatus(
     })
 
     if (!geofence) {
-      return { success: false, error: 'Geofence not found' }
+      return { success: false, error: "Geofence not found" }
     }
 
     // Update status
@@ -317,14 +321,15 @@ export async function updateGeofenceStatus(
       data: { isActive: validated.isActive },
     })
 
-    revalidatePath('/[lang]/s/[subdomain]/(platform)/attendance/geo', 'page')
+    revalidatePath("/[lang]/s/[subdomain]/(platform)/attendance/geo", "page")
 
     return { success: true }
   } catch (error) {
-    console.error('Error updating geofence status:', error)
+    console.error("Error updating geofence status:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update geofence',
+      error:
+        error instanceof Error ? error.message : "Failed to update geofence",
     }
   }
 }
@@ -337,15 +342,18 @@ export async function deleteGeofence(id: string): Promise<ActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions (only ADMIN can delete)
-    if (role !== 'ADMIN') {
-      return { success: false, error: 'Only administrators can delete geofences' }
+    if (role !== "ADMIN") {
+      return {
+        success: false,
+        error: "Only administrators can delete geofences",
+      }
     }
 
     // Validate input
@@ -360,7 +368,7 @@ export async function deleteGeofence(id: string): Promise<ActionResult> {
     })
 
     if (!geofence) {
-      return { success: false, error: 'Geofence not found' }
+      return { success: false, error: "Geofence not found" }
     }
 
     // Delete geofence (cascade will delete events)
@@ -368,14 +376,15 @@ export async function deleteGeofence(id: string): Promise<ActionResult> {
       where: { id: validated.id },
     })
 
-    revalidatePath('/[lang]/s/[subdomain]/(platform)/attendance/geo', 'page')
+    revalidatePath("/[lang]/s/[subdomain]/(platform)/attendance/geo", "page")
 
     return { success: true }
   } catch (error) {
-    console.error('Error deleting geofence:', error)
+    console.error("Error deleting geofence:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete geofence',
+      error:
+        error instanceof Error ? error.message : "Failed to delete geofence",
     }
   }
 }
@@ -401,15 +410,15 @@ export async function getGeofences(): Promise<
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     const geofences = await db.geoFence.findMany({
@@ -424,7 +433,7 @@ export async function getGeofences(): Promise<
         radiusMeters: true,
         color: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     })
 
     const serialized = geofences.map((g) => ({
@@ -438,10 +447,10 @@ export async function getGeofences(): Promise<
       data: serialized,
     }
   } catch (error) {
-    console.error('Error fetching geofences:', error)
+    console.error("Error fetching geofences:", error)
     return {
       success: false,
-      error: 'Failed to fetch geofences',
+      error: "Failed to fetch geofences",
     }
   }
 }
@@ -455,7 +464,9 @@ export async function getGeofences(): Promise<
  * Only accessible by ADMIN and TEACHER roles
  * Used for live map view in admin lab
  */
-export async function getLiveStudentLocations(maxAgeMinutes: number = 5): Promise<
+export async function getLiveStudentLocations(
+  maxAgeMinutes: number = 5
+): Promise<
   ActionResult<
     Array<{
       studentId: string
@@ -472,19 +483,22 @@ export async function getLiveStudentLocations(maxAgeMinutes: number = 5): Promis
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate query
-    const validated = liveLocationsQuerySchema.parse({ schoolId, maxAgeMinutes })
+    const validated = liveLocationsQuerySchema.parse({
+      schoolId,
+      maxAgeMinutes,
+    })
 
     // Calculate cutoff time
     const cutoffTime = new Date()
@@ -520,7 +534,10 @@ export async function getLiveStudentLocations(maxAgeMinutes: number = 5): Promis
     // Get current geofences for each student
     const enrichedLocations = await Promise.all(
       locations.map(async (loc) => {
-        const currentGeofences = await getCurrentGeofences(schoolId, loc.student_id)
+        const currentGeofences = await getCurrentGeofences(
+          schoolId,
+          loc.student_id
+        )
         return {
           studentId: loc.student_id,
           studentName: loc.student_name,
@@ -539,10 +556,10 @@ export async function getLiveStudentLocations(maxAgeMinutes: number = 5): Promis
       data: enrichedLocations,
     }
   } catch (error) {
-    console.error('Error fetching live locations:', error)
+    console.error("Error fetching live locations:", error)
     return {
       success: false,
-      error: 'Failed to fetch live locations',
+      error: "Failed to fetch live locations",
     }
   }
 }
@@ -574,15 +591,15 @@ export async function getGeofenceEvents(
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const schoolId = session.user.schoolId
     const role = session.user.role
 
     // Check permissions
-    if (role !== 'ADMIN' && role !== 'TEACHER') {
-      return { success: false, error: 'Insufficient permissions' }
+    if (role !== "ADMIN" && role !== "TEACHER") {
+      return { success: false, error: "Insufficient permissions" }
     }
 
     // Validate query
@@ -612,7 +629,7 @@ export async function getGeofenceEvents(
           },
         },
       },
-      orderBy: { timestamp: 'desc' },
+      orderBy: { timestamp: "desc" },
       take: validated.limit,
     })
 
@@ -634,10 +651,10 @@ export async function getGeofenceEvents(
       data: serialized,
     }
   } catch (error) {
-    console.error('Error fetching geofence events:', error)
+    console.error("Error fetching geofence events:", error)
     return {
       success: false,
-      error: 'Failed to fetch geofence events',
+      error: "Failed to fetch geofence events",
     }
   }
 }

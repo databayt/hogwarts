@@ -4,30 +4,30 @@
  */
 
 import type {
-  User,
-  Student,
-  Teacher,
-  Guardian,
-  School,
-  Department,
-  TeacherQualification,
-  TeacherExperience,
-  TeacherSubjectExpertise,
-  StudentGuardian,
-  StudentClass,
-  StudentYearLevel,
   Achievement,
-  DisciplinaryRecord,
-  HealthRecord,
-  Attendance,
   Assignment,
   AssignmentSubmission,
-  Payment,
-  Subject,
+  Attendance,
   Class,
+  Department,
+  DisciplinaryRecord,
+  Guardian,
+  HealthRecord,
+  Payment,
+  School,
+  Student,
+  StudentClass,
+  StudentDocument,
+  StudentGuardian,
+  StudentYearLevel,
+  Subject,
+  Teacher,
+  TeacherExperience,
+  TeacherQualification,
+  TeacherSubjectExpertise,
+  User,
   YearLevel,
-  StudentDocument
-} from '@prisma/client'
+} from "@prisma/client"
 
 // ============================================================================
 // Core Profile Types
@@ -83,21 +83,21 @@ export interface BaseProfile {
  * User profile type enumeration
  */
 export enum UserProfileType {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER',
-  PARENT = 'PARENT',
-  STAFF = 'STAFF',
-  ADMIN = 'ADMIN'
+  STUDENT = "STUDENT",
+  TEACHER = "TEACHER",
+  PARENT = "PARENT",
+  STAFF = "STAFF",
+  ADMIN = "ADMIN",
 }
 
 /**
  * Profile visibility settings
  */
 export enum ProfileVisibility {
-  PUBLIC = 'PUBLIC',       // Anyone can view
-  SCHOOL = 'SCHOOL',       // Only school members can view
-  CONNECTIONS = 'CONNECTIONS', // Only connections can view
-  PRIVATE = 'PRIVATE'      // Only the user can view
+  PUBLIC = "PUBLIC", // Anyone can view
+  SCHOOL = "SCHOOL", // Only school members can view
+  CONNECTIONS = "CONNECTIONS", // Only connections can view
+  PRIVATE = "PRIVATE", // Only the user can view
 }
 
 /**
@@ -118,8 +118,8 @@ export interface SocialLinks {
  * Profile settings and preferences
  */
 export interface ProfileSettings {
-  theme?: 'light' | 'dark' | 'system'
-  language: 'ar' | 'en'
+  theme?: "light" | "dark" | "system"
+  language: "ar" | "en"
   emailNotifications: boolean
   pushNotifications: boolean
   showEmail: boolean
@@ -160,29 +160,29 @@ export interface ActivityItem {
  */
 export enum ActivityType {
   // Academic
-  ASSIGNMENT_SUBMITTED = 'ASSIGNMENT_SUBMITTED',
-  GRADE_RECEIVED = 'GRADE_RECEIVED',
-  COURSE_ENROLLED = 'COURSE_ENROLLED',
-  COURSE_COMPLETED = 'COURSE_COMPLETED',
+  ASSIGNMENT_SUBMITTED = "ASSIGNMENT_SUBMITTED",
+  GRADE_RECEIVED = "GRADE_RECEIVED",
+  COURSE_ENROLLED = "COURSE_ENROLLED",
+  COURSE_COMPLETED = "COURSE_COMPLETED",
 
   // Achievement
-  ACHIEVEMENT_EARNED = 'ACHIEVEMENT_EARNED',
-  CERTIFICATE_EARNED = 'CERTIFICATE_EARNED',
-  BADGE_EARNED = 'BADGE_EARNED',
+  ACHIEVEMENT_EARNED = "ACHIEVEMENT_EARNED",
+  CERTIFICATE_EARNED = "CERTIFICATE_EARNED",
+  BADGE_EARNED = "BADGE_EARNED",
 
   // Social
-  PROFILE_UPDATED = 'PROFILE_UPDATED',
-  CONNECTION_MADE = 'CONNECTION_MADE',
-  POST_CREATED = 'POST_CREATED',
-  COMMENT_MADE = 'COMMENT_MADE',
+  PROFILE_UPDATED = "PROFILE_UPDATED",
+  CONNECTION_MADE = "CONNECTION_MADE",
+  POST_CREATED = "POST_CREATED",
+  COMMENT_MADE = "COMMENT_MADE",
 
   // Administrative
-  FEE_PAID = 'FEE_PAID',
-  DOCUMENT_UPLOADED = 'DOCUMENT_UPLOADED',
-  ATTENDANCE_MARKED = 'ATTENDANCE_MARKED',
+  FEE_PAID = "FEE_PAID",
+  DOCUMENT_UPLOADED = "DOCUMENT_UPLOADED",
+  ATTENDANCE_MARKED = "ATTENDANCE_MARKED",
 
   // Other
-  CUSTOM = 'CUSTOM'
+  CUSTOM = "CUSTOM",
 }
 
 // ============================================================================
@@ -225,7 +225,7 @@ export interface StudentProfile extends BaseProfile {
     currentYearLevel?: string
     currentSection?: string
     house?: string | null
-    studentType: 'REGULAR' | 'TRANSFER' | 'INTERNATIONAL' | 'EXCHANGE'
+    studentType: "REGULAR" | "TRANSFER" | "INTERNATIONAL" | "EXCHANGE"
     enrollmentDate: Date
     expectedGraduation?: Date | null
     gpa?: number | null
@@ -264,7 +264,7 @@ export interface SubjectPerformance {
   subjectId: string
   subjectName: string
   currentGrade: number | null
-  trend: 'up' | 'down' | 'stable'
+  trend: "up" | "down" | "stable"
   attendance: number
   assignmentsCompleted: number
   assignmentsTotal: number
@@ -275,7 +275,7 @@ export interface SubjectPerformance {
  */
 export interface Skill {
   name: string
-  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  level: "beginner" | "intermediate" | "advanced" | "expert"
   verified: boolean
   endorsements: number
 }
@@ -285,7 +285,7 @@ export interface Skill {
  */
 export interface Language {
   name: string
-  proficiency: 'native' | 'fluent' | 'professional' | 'conversational' | 'basic'
+  proficiency: "native" | "fluent" | "professional" | "conversational" | "basic"
 }
 
 /**
@@ -323,8 +323,8 @@ export interface TeacherProfile extends BaseProfile {
   professionalInfo: {
     employeeId: string
     designation?: string | null
-    employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'VISITING'
-    employmentStatus: 'ACTIVE' | 'ON_LEAVE' | 'RESIGNED' | 'RETIRED'
+    employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "VISITING"
+    employmentStatus: "ACTIVE" | "ON_LEAVE" | "RESIGNED" | "RETIRED"
     joiningDate: Date
     totalExperience: number // in years
     specializations: string[]
@@ -359,7 +359,7 @@ export interface TeacherProfile extends BaseProfile {
  */
 export interface Publication {
   title: string
-  type: 'journal' | 'conference' | 'book' | 'chapter' | 'other'
+  type: "journal" | "conference" | "book" | "chapter" | "other"
   publisher?: string
   year: number
   doi?: string
@@ -393,7 +393,12 @@ export interface OfficeHour {
 /**
  * Availability status
  */
-export type AvailabilityStatus = 'available' | 'busy' | 'in_class' | 'on_leave' | 'offline'
+export type AvailabilityStatus =
+  | "available"
+  | "busy"
+  | "in_class"
+  | "on_leave"
+  | "offline"
 
 // ============================================================================
 // Parent Profile
@@ -437,7 +442,7 @@ export interface ParentProfile extends BaseProfile {
 
   // Family Information
   familyInfo: {
-    relationship: 'father' | 'mother' | 'guardian' | 'other'
+    relationship: "father" | "mother" | "guardian" | "other"
     occupation?: string | null
     employer?: string | null
     workPhone?: string | null
@@ -503,7 +508,7 @@ export interface ChildOverview {
   grade: string
   section: string
   attendanceRate: number
-  academicPerformance: 'excellent' | 'good' | 'average' | 'needs_improvement'
+  academicPerformance: "excellent" | "good" | "average" | "needs_improvement"
   upcomingEvents: number
   pendingFees?: number | null
   recentActivity: ActivityItem[]
@@ -523,8 +528,8 @@ export interface StaffProfile extends BaseProfile {
     designation: string
     role: string
     joiningDate: Date
-    employmentType: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT'
-    employmentStatus: 'ACTIVE' | 'ON_LEAVE' | 'RESIGNED'
+    employmentType: "FULL_TIME" | "PART_TIME" | "CONTRACT"
+    employmentStatus: "ACTIVE" | "ON_LEAVE" | "RESIGNED"
     reportingTo?: string | null
     responsibilities: string[]
   }
@@ -628,8 +633,8 @@ export interface ProfileTheme {
   accentColor?: string
   backgroundImage?: string
   backgroundPattern?: string
-  cardStyle?: 'flat' | 'elevated' | 'bordered'
-  layout?: 'classic' | 'modern' | 'compact'
+  cardStyle?: "flat" | "elevated" | "bordered"
+  layout?: "classic" | "modern" | "compact"
 }
 
 // ============================================================================
@@ -672,8 +677,8 @@ export interface ProfileSearchParams {
   department?: string
   grade?: string
   skills?: string[]
-  sortBy?: 'name' | 'joinedAt' | 'lastActive' | 'popularity'
-  sortOrder?: 'asc' | 'desc'
+  sortBy?: "name" | "joinedAt" | "lastActive" | "popularity"
+  sortOrder?: "asc" | "desc"
   limit?: number
   offset?: number
 }
@@ -685,12 +690,15 @@ export interface ProfileSearchParams {
 /**
  * Extract profile type from user role
  */
-export type ProfileTypeFromRole<R extends string> =
-  R extends 'STUDENT' ? StudentProfile :
-  R extends 'TEACHER' ? TeacherProfile :
-  R extends 'GUARDIAN' ? ParentProfile :
-  R extends 'STAFF' | 'ACCOUNTANT' ? StaffProfile :
-  BaseProfile
+export type ProfileTypeFromRole<R extends string> = R extends "STUDENT"
+  ? StudentProfile
+  : R extends "TEACHER"
+    ? TeacherProfile
+    : R extends "GUARDIAN"
+      ? ParentProfile
+      : R extends "STAFF" | "ACCOUNTANT"
+        ? StaffProfile
+        : BaseProfile
 
 /**
  * Profile permissions
@@ -708,7 +716,12 @@ export interface ProfilePermissions {
 /**
  * Profile connection status
  */
-export type ConnectionStatus = 'connected' | 'pending' | 'requested' | 'blocked' | 'none'
+export type ConnectionStatus =
+  | "connected"
+  | "pending"
+  | "requested"
+  | "blocked"
+  | "none"
 
 /**
  * Profile notification preferences

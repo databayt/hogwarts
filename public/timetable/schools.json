@@ -1,6 +1,20 @@
 [
-  { "SCHUL_NM": "Mokun Middle School", "ATPT_OFCDC_SC_NM": "Gyeonggi DOE", "SCHUL_KND_SC_NM": "Middle School", "SD_SCHUL_CODE": "7081492" },
-  { "SCHUL_NM": "Seoul High School", "ATPT_OFCDC_SC_NM": "Seoul DOE", "SCHUL_KND_SC_NM": "High School", "SD_SCHUL_CODE": "1234567" },
-  { "SCHUL_NM": "Sunflower Elementary School", "ATPT_OFCDC_SC_NM": "Gyeonggi DOE", "SCHUL_KND_SC_NM": "Elementary School", "SD_SCHUL_CODE": "7654321" }
+  {
+    "SCHUL_NM": "Mokun Middle School",
+    "ATPT_OFCDC_SC_NM": "Gyeonggi DOE",
+    "SCHUL_KND_SC_NM": "Middle School",
+    "SD_SCHUL_CODE": "7081492"
+  },
+  {
+    "SCHUL_NM": "Seoul High School",
+    "ATPT_OFCDC_SC_NM": "Seoul DOE",
+    "SCHUL_KND_SC_NM": "High School",
+    "SD_SCHUL_CODE": "1234567"
+  },
+  {
+    "SCHUL_NM": "Sunflower Elementary School",
+    "ATPT_OFCDC_SC_NM": "Gyeonggi DOE",
+    "SCHUL_KND_SC_NM": "Elementary School",
+    "SD_SCHUL_CODE": "7654321"
+  }
 ]
-

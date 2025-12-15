@@ -1,16 +1,21 @@
-import { ReportsContent } from '@/components/platform/attendance/reports/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { SearchParams } from 'nuqs/server'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
+import { SearchParams } from "nuqs/server"
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ReportsContent } from "@/components/platform/attendance/reports/content"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary?.school?.attendance?.reports || 'Attendance Reports',
-    description: 'Generate and export attendance reports',
+    title: dictionary?.school?.attendance?.reports || "Attendance Reports",
+    description: "Generate and export attendance reports",
   }
 }
 
@@ -41,6 +46,3 @@ export default async function Page({ params, searchParams }: Props) {
     />
   )
 }
-
-
-

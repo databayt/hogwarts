@@ -1,10 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import {
-  createClass,
-  updateClass,
-  deleteClass,
-  getClasses,
-} from "../actions"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import { createClass, deleteClass, getClasses, updateClass } from "../actions"
 
 // Mock dependencies
 vi.mock("@/lib/db", () => ({
@@ -19,16 +18,18 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      class: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-        findFirst: vi.fn(),
-        findMany: vi.fn(),
-        count: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        class: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+          count: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -39,9 +40,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Class Actions", () => {
   const mockSchoolId = "school-123"

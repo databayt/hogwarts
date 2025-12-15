@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useModal } from "@/components/atom/modal/context"
+import { GraduationCap, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Form,
   FormControl,
@@ -14,11 +14,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Loader2, GraduationCap } from "lucide-react"
-import { SuccessToast, ErrorToast } from "@/components/atom/toast"
-import { yearLevelCreateSchema, type YearLevelCreateInput } from "./validation"
-import { createYearLevel, updateYearLevel, getYearLevel } from "./actions"
+import { Input } from "@/components/ui/input"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+
+import { createYearLevel, getYearLevel, updateYearLevel } from "./actions"
+import { yearLevelCreateSchema, type YearLevelCreateInput } from "./validation"
 
 interface YearLevelFormProps {
   onSuccess?: () => void
@@ -39,17 +41,26 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
       : lang === "ar"
         ? "إضافة مرحلة دراسية"
         : "Add Year Level",
-    levelName: lang === "ar" ? "اسم المرحلة (بالإنجليزية)" : "Level Name (English)",
+    levelName:
+      lang === "ar" ? "اسم المرحلة (بالإنجليزية)" : "Level Name (English)",
     levelNamePlaceholder: lang === "ar" ? "مثال: Grade 1" : "e.g., Grade 1",
-    levelNameAr: lang === "ar" ? "اسم المرحلة (بالعربية)" : "Level Name (Arabic)",
-    levelNameArPlaceholder: lang === "ar" ? "مثال: الصف الأول" : "e.g., الصف الأول",
+    levelNameAr:
+      lang === "ar" ? "اسم المرحلة (بالعربية)" : "Level Name (Arabic)",
+    levelNameArPlaceholder:
+      lang === "ar" ? "مثال: الصف الأول" : "e.g., الصف الأول",
     levelOrder: lang === "ar" ? "ترتيب المرحلة" : "Level Order",
     levelOrderPlaceholder: lang === "ar" ? "مثال: 1" : "e.g., 1",
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
     save: lang === "ar" ? "حفظ" : "Save",
     saving: lang === "ar" ? "جاري الحفظ..." : "Saving...",
-    createSuccess: lang === "ar" ? "تم إنشاء المرحلة بنجاح" : "Year level created successfully",
-    updateSuccess: lang === "ar" ? "تم تحديث المرحلة بنجاح" : "Year level updated successfully",
+    createSuccess:
+      lang === "ar"
+        ? "تم إنشاء المرحلة بنجاح"
+        : "Year level created successfully",
+    updateSuccess:
+      lang === "ar"
+        ? "تم تحديث المرحلة بنجاح"
+        : "Year level updated successfully",
   }
 
   const form = useForm<YearLevelCreateInput>({
@@ -96,7 +107,7 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <GraduationCap className="h-5 w-5 text-primary" />
+        <GraduationCap className="text-primary h-5 w-5" />
         <h2 className="font-semibold">{t.title}</h2>
       </div>
 
@@ -152,7 +163,9 @@ export function YearLevelForm({ onSuccess, lang = "en" }: YearLevelFormProps) {
                     min={1}
                     placeholder={t.levelOrderPlaceholder}
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 1)
+                    }
                     disabled={isPending}
                   />
                 </FormControl>

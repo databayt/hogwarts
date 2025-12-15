@@ -3,17 +3,18 @@
  * PDF template for payment receipts
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { ReceiptData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { ReceiptData, TemplateStyle } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,15 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
 const createStyles = (locale: string = "en") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -282,27 +283,31 @@ const createStyles = (locale: string = "en") => {
       fontSize: 8,
       color: "#6b7280",
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-const formatCurrency = (amount: number, currency: string, locale: string): string => {
+const formatCurrency = (
+  amount: number,
+  currency: string,
+  locale: string
+): string => {
   return new Intl.NumberFormat(locale === "ar" ? "ar-SA" : "en-US", {
     style: "currency",
     currency,
-  }).format(amount);
-};
+  }).format(amount)
+}
 
 const formatDate = (date: Date, locale: string): string => {
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-SA" : "en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
 const formatPaymentMethod = (method: string, locale: string): string => {
   const methods: Record<string, { en: string; ar: string }> = {
@@ -311,24 +316,27 @@ const formatPaymentMethod = (method: string, locale: string): string => {
     bank_transfer: { en: "Bank Transfer", ar: "تحويل بنكي" },
     cheque: { en: "Cheque", ar: "شيك" },
     online: { en: "Online Payment", ar: "دفع إلكتروني" },
-  };
-  const m = methods[method] || { en: method, ar: method };
-  return locale === "ar" ? m.ar : m.en;
-};
+  }
+  const m = methods[method] || { en: method, ar: method }
+  return locale === "ar" ? m.ar : m.en
+}
 
 // ============================================================================
 // Receipt Template Component
 // ============================================================================
 
 interface ReceiptTemplateProps {
-  data: ReceiptData;
-  style?: TemplateStyle;
+  data: ReceiptData
+  style?: TemplateStyle
 }
 
-export function ReceiptTemplate({ data, style = "modern" }: ReceiptTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale);
-  const isRTL = locale === "ar";
+export function ReceiptTemplate({
+  data,
+  style = "modern",
+}: ReceiptTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale)
+  const isRTL = locale === "ar"
 
   const labels = {
     receipt: isRTL ? "إيصال دفع" : "PAYMENT RECEIPT",
@@ -350,7 +358,7 @@ export function ReceiptTemplate({ data, style = "modern" }: ReceiptTemplateProps
     notes: isRTL ? "ملاحظات" : "Notes",
     thankYou: isRTL ? "شكراً لك" : "Thank You",
     authorizedSignature: isRTL ? "التوقيع المعتمد" : "Authorized Signature",
-  };
+  }
 
   return (
     <Document>
@@ -414,13 +422,19 @@ export function ReceiptTemplate({ data, style = "modern" }: ReceiptTemplateProps
         {/* Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, styles.colItem]}>{labels.item}</Text>
-            <Text style={[styles.headerText, styles.colAmount]}>{labels.amount}</Text>
+            <Text style={[styles.headerText, styles.colItem]}>
+              {labels.item}
+            </Text>
+            <Text style={[styles.headerText, styles.colAmount]}>
+              {labels.amount}
+            </Text>
           </View>
 
           {data.items.map((item, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={[styles.cellText, styles.colItem]}>{item.description}</Text>
+              <Text style={[styles.cellText, styles.colItem]}>
+                {item.description}
+              </Text>
               <Text style={[styles.cellText, styles.colAmount]}>
                 {formatCurrency(item.amount, data.currency, locale)}
               </Text>
@@ -483,12 +497,14 @@ export function ReceiptTemplate({ data, style = "modern" }: ReceiptTemplateProps
 
           <View style={styles.signatureSection}>
             <View style={styles.signatureLine} />
-            <Text style={styles.signatureLabel}>{labels.authorizedSignature}</Text>
+            <Text style={styles.signatureLabel}>
+              {labels.authorizedSignature}
+            </Text>
           </View>
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles as createReceiptStyles };
+export { createStyles as createReceiptStyles }

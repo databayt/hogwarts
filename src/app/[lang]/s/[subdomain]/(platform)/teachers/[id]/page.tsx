@@ -1,21 +1,22 @@
-import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/operator/lib/tenant";
-import { TeacherDetailContent } from "@/components/platform/teachers/detail/content";
-import { ModalProvider } from "@/components/atom/modal/context";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { notFound } from "next/navigation"
+
+import { db } from "@/lib/db"
+import { ModalProvider } from "@/components/atom/modal/context"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getTenantContext } from "@/components/operator/lib/tenant"
+import { TeacherDetailContent } from "@/components/platform/teachers/detail/content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function TeacherDetailPage({ params }: Props) {
-  const { lang, id } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
-  if (!schoolId || !(db as any).teacher) return notFound();
+  if (!schoolId || !(db as any).teacher) return notFound()
 
   // Fetch teacher with all related data
   const teacher = await (db as any).teacher.findFirst({
@@ -96,39 +97,42 @@ export default async function TeacherDetailPage({ params }: Props) {
         },
       },
     },
-  });
+  })
 
-  if (!teacher) return notFound();
+  if (!teacher) return notFound()
 
   // Get workload data
-  let workload: {
-    totalPeriods: number;
-    classCount: number;
-    subjectCount: number;
-    workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD";
-  } | undefined = undefined;
+  let workload:
+    | {
+        totalPeriods: number
+        classCount: number
+        subjectCount: number
+        workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
+      }
+    | undefined = undefined
   try {
-    const timetableSlots = await (db as any).timetableSlot?.findMany?.({
-      where: { schoolId, teacherId: id },
-    }) || [];
+    const timetableSlots =
+      (await (db as any).timetableSlot?.findMany?.({
+        where: { schoolId, teacherId: id },
+      })) || []
 
-    const workloadConfig = await (db as any).workloadConfig?.findUnique?.({
+    const workloadConfig = (await (db as any).workloadConfig?.findUnique?.({
       where: { schoolId },
-    }) || {
+    })) || {
       minPeriodsPerWeek: 15,
       maxPeriodsPerWeek: 25,
       overloadThreshold: 25,
-    };
+    }
 
-    const totalPeriods = timetableSlots.length;
-    const uniqueClasses = new Set(timetableSlots.map((s: any) => s.classId));
-    const uniqueSubjects = new Set(timetableSlots.map((s: any) => s.subjectId));
+    const totalPeriods = timetableSlots.length
+    const uniqueClasses = new Set(timetableSlots.map((s: any) => s.classId))
+    const uniqueSubjects = new Set(timetableSlots.map((s: any) => s.subjectId))
 
-    let workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD" = "NORMAL";
+    let workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD" = "NORMAL"
     if (totalPeriods < workloadConfig.minPeriodsPerWeek) {
-      workloadStatus = "UNDERUTILIZED";
+      workloadStatus = "UNDERUTILIZED"
     } else if (totalPeriods > workloadConfig.overloadThreshold) {
-      workloadStatus = "OVERLOAD";
+      workloadStatus = "OVERLOAD"
     }
 
     workload = {
@@ -136,7 +140,7 @@ export default async function TeacherDetailPage({ params }: Props) {
       classCount: uniqueClasses.size,
       subjectCount: uniqueSubjects.size,
       workloadStatus,
-    };
+    }
   } catch {
     // Workload data optional
   }
@@ -150,7 +154,7 @@ export default async function TeacherDetailPage({ params }: Props) {
         workload={workload}
       />
     </ModalProvider>
-  );
+  )
 }
 
-export const metadata = { title: "Teacher Profile" };
+export const metadata = { title: "Teacher Profile" }

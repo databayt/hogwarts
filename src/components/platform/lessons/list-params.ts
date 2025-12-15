@@ -1,5 +1,6 @@
-import { z } from 'zod'
-import { getLessonsSchema } from './validation'
+import { z } from "zod"
+
+import { getLessonsSchema } from "./validation"
 
 export const lessonsSearchParams = z.object({
   page: z.coerce.number().default(1),
@@ -8,7 +9,9 @@ export const lessonsSearchParams = z.object({
   classId: z.string().optional(),
   status: z.string().optional(),
   lessonDate: z.string().optional(),
-  sort: z.array(z.object({ id: z.string(), desc: z.coerce.boolean() })).optional(),
+  sort: z
+    .array(z.object({ id: z.string(), desc: z.coerce.boolean() }))
+    .optional(),
 })
 
 export type LessonsSearchParams = z.infer<typeof lessonsSearchParams>

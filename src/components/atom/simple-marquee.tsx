@@ -1,8 +1,9 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
-import React, { useEffect, useState, useCallback } from "react";
-import Image from 'next/image';
+import React, { useCallback, useEffect, useState } from "react"
+import Image from "next/image"
+
+import { cn } from "@/lib/utils"
 
 export const InfiniteMovingCards = ({
   items,
@@ -12,20 +13,20 @@ export const InfiniteMovingCards = ({
   className,
 }: {
   items: {
-    quote?: string;
-    image?: string;
-    size?: string;
-    name: string;
-    title: string;
-  }[];
-  direction?: "left" | "right";
-  speed?: "fast" | "normal" | "slow";
-  pauseOnHover?: boolean;
-  className?: string;
+    quote?: string
+    image?: string
+    size?: string
+    name: string
+    title: string
+  }[]
+  direction?: "left" | "right"
+  speed?: "fast" | "normal" | "slow"
+  pauseOnHover?: boolean
+  className?: string
 }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const scrollerRef = React.useRef<HTMLUListElement>(null);
-  const [start, setStart] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const scrollerRef = React.useRef<HTMLUListElement>(null)
+  const [start, setStart] = useState(false)
 
   const addAnimation = useCallback(() => {
     const getDirection = () => {
@@ -33,55 +34,55 @@ export const InfiniteMovingCards = ({
         if (direction === "left") {
           containerRef.current.style.setProperty(
             "--animation-direction",
-            "forwards",
-          );
+            "forwards"
+          )
         } else {
           containerRef.current.style.setProperty(
             "--animation-direction",
-            "reverse",
-          );
+            "reverse"
+          )
         }
       }
-    };
+    }
 
     const getSpeed = () => {
       if (containerRef.current) {
         if (speed === "fast") {
-          containerRef.current.style.setProperty("--animation-duration", "20s");
+          containerRef.current.style.setProperty("--animation-duration", "20s")
         } else if (speed === "normal") {
-          containerRef.current.style.setProperty("--animation-duration", "40s");
+          containerRef.current.style.setProperty("--animation-duration", "40s")
         } else {
-          containerRef.current.style.setProperty("--animation-duration", "80s");
+          containerRef.current.style.setProperty("--animation-duration", "80s")
         }
       }
-    };
+    }
 
     if (containerRef.current && scrollerRef.current) {
-      const scrollerContent = Array.from(scrollerRef.current.children);
+      const scrollerContent = Array.from(scrollerRef.current.children)
 
       scrollerContent.forEach((item) => {
-        const duplicatedItem = item.cloneNode(true);
+        const duplicatedItem = item.cloneNode(true)
         if (scrollerRef.current) {
-          scrollerRef.current.appendChild(duplicatedItem);
+          scrollerRef.current.appendChild(duplicatedItem)
         }
-      });
+      })
 
-      getDirection();
-      getSpeed();
-      setStart(true);
+      getDirection()
+      getSpeed()
+      setStart(true)
     }
-  }, [direction, speed]);
+  }, [direction, speed])
 
   useEffect(() => {
-    addAnimation();
-  }, [addAnimation]);
+    addAnimation()
+  }, [addAnimation])
 
   return (
     <div
       ref={containerRef}
       className={cn(
         "scroller relative z-20 max-w-7xl overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
-        className,
+        className
       )}
     >
       <ul
@@ -89,15 +90,15 @@ export const InfiniteMovingCards = ({
         className={cn(
           "flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4",
           start && "animate-scroll",
-          pauseOnHover && "hover:[animation-play-state:paused]",
+          pauseOnHover && "hover:[animation-play-state:paused]"
         )}
       >
         {items.map((item) => (
           <li
             className={cn(
-              "relative shrink-0 mx-8 flex items-center justify-center",
-              item.image 
-                ? item.size || "w-[160px] h-[120px]"
+              "relative mx-8 flex shrink-0 items-center justify-center",
+              item.image
+                ? item.size || "h-[120px] w-[160px]"
                 : "w-[350px] max-w-full rounded-2xl border border-b-0 border-zinc-200 bg-[linear-gradient(180deg,#fafafa,#f5f5f5)] px-8 py-6 md:w-[450px] dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#27272a,#18181b)]"
             )}
             key={item.name}
@@ -135,5 +136,5 @@ export const InfiniteMovingCards = ({
         ))}
       </ul>
     </div>
-  );
-};
+  )
+}

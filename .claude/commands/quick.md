@@ -9,12 +9,14 @@ Ultra-fast cycle for tiny changes (typos, style fixes, config tweaks).
 ## Execute
 
 ### Step 1: Auto-Fix (3s)
+
 ```bash
 pnpm lint --fix --quiet
 npx prettier --write "src/**/*.{ts,tsx}" --log-level silent
 ```
 
 ### Step 2: Quick Check (2s)
+
 ```bash
 pnpm lint --quiet
 ```
@@ -22,6 +24,7 @@ pnpm lint --quiet
 If lint fails → STOP (change is not tiny, use `/dev` instead)
 
 ### Step 3: Commit & Push (5s)
+
 ```bash
 git add -A
 git commit -m "<type>: <brief description>
@@ -33,6 +36,7 @@ git push
 ```
 
 ### Step 4: Done
+
 ```
 ✅ Quick commit complete
 Commit: <hash>
@@ -43,6 +47,7 @@ Deploy: Auto-deploying to Vercel...
 ## When to Use
 
 ✅ Use `/quick` for:
+
 - Typo fixes
 - Comment updates
 - CSS/style tweaks
@@ -51,6 +56,7 @@ Deploy: Auto-deploying to Vercel...
 - Import reordering
 
 ❌ Don't use for:
+
 - Logic changes (use `/dev`)
 - New components (use `/dev` or `/validate`)
 - Bug fixes (use `/dev`)

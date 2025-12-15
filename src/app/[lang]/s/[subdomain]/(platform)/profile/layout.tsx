@@ -1,4 +1,4 @@
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
 
 interface Props {
   children: React.ReactNode

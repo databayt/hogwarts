@@ -1,215 +1,307 @@
-import React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import React from "react"
+import Image from "next/image"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border pt-16 pb-6 bg-muted -mx-[calc(var(--container-px)+3.5rem)] px-[calc(var(--container-px)+3.5rem)]">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-          {/* Map Section */}
-          <div className="lg:flex-[2] lg:min-w-0">
-            <div className="relative w-[75%] aspect-[3/2] mb-4 overflow-hidden">
-              <Image 
-                src="/site/map.jpeg" 
-                alt="Hogwarts Castle Map" 
-                fill
-                className="object-contain "
-                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 40vw, 33vw"
-              />
+    <footer className="border-border bg-muted -mx-[calc(var(--container-px)+3.5rem)] border-t px-[calc(var(--container-px)+3.5rem)] pt-16 pb-6">
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+        {/* Map Section */}
+        <div className="lg:min-w-0 lg:flex-[2]">
+          <div className="relative mb-4 aspect-[3/2] w-[75%] overflow-hidden">
+            <Image
+              src="/site/map.jpeg"
+              alt="Hogwarts Castle Map"
+              fill
+              className="object-contain"
+              sizes="(max-width: 768px) 70vw, (max-width: 1200px) 40vw, 33vw"
+            />
+          </div>
+
+          {/* Address & Hours */}
+          <div className="space-y-2 pb-4">
+            <div>
+              <p className="text-muted-foreground text-sm">
+                123 Magical Learning Lane, <br /> Education City, EC 12345
+              </p>
             </div>
-            
-            {/* Address & Hours */}
-            <div className="pb-4 space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  123 Magical Learning Lane, <br /> Education City, EC 12345
-                </p>
-              </div>
-              {/* <div>
+            {/* <div>
                 <p className="text-sm text-muted-foreground">
                   Mon-Fri: 8AM-5PM
                 </p>
               </div> */}
-            </div>
-            
-            <Button variant="ghost" asChild className='flex items-center justify-start hover:bg-transparent hover:underline p-0'>
-              <Link href="/#" className="flex items-end">
-                <Image src="/site/z.png" alt="Witch" width={40} height={40} className="dark:invert"/>
-                Get Directions
-              </Link>
-            </Button>
           </div>
 
-          {/* Navigation Columns */}
-          <div className="lg:flex-[3] grid grid-cols-2 md:flex md:justify-between gap-4 md:gap-0">
-            {/* Academics */}
-            <div>
-              <h3 className="muted tracking-wider uppercase mb-3">
-                Academics
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/houses" className="muted hover:text-primary transition-colors">
-                    Houses
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/curriculum" className="muted hover:text-primary transition-colors">
-                    Curriculum
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/faculty" className="muted hover:text-primary transition-colors">
-                    Faculty
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/library" className="muted hover:text-primary transition-colors">
-                    Library
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/subjects" className="muted hover:text-primary transition-colors">
-                    Subjects
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/exams" className="muted hover:text-primary transition-colors">
-                    Exams
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Campus */}
-            <div>
-              <h3 className="muted tracking-wider uppercase mb-3">
-                Campus
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/admission" className="muted hover:text-primary transition-colors">
-                    Admissions
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dormitories" className="muted hover:text-primary transition-colors">
-                    Dormitories
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/great-hall" className="muted hover:text-primary transition-colors">
-                    Great Hall
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/quidditch" className="muted hover:text-primary transition-colors">
-                    Quidditch
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/grounds" className="muted hover:text-primary transition-colors">
-                    Grounds
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Activities */}
-            <div>
-              <h3 className="muted tracking-wider uppercase mb-3">
-                Activities
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/clubs" className="muted hover:text-primary transition-colors">
-                    Clubs
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/events" className="muted hover:text-primary transition-colors">
-                    Events
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/sports" className="muted hover:text-primary transition-colors">
-                    Sports
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/competitions" className="muted hover:text-primary transition-colors">
-                    Competitions
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/tournaments" className="muted hover:text-primary transition-colors">
-                    Tournaments
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/ceremonies" className="muted hover:text-primary transition-colors">
-                    Ceremonies
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/traditions" className="muted hover:text-primary transition-colors">
-                    Traditions
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase mb-3">
-                Support
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/about" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/help" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
-                    Help Center
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/alumni" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
-                    Alumni
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/careers" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
-                    Careers
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <Button
+            variant="ghost"
+            asChild
+            className="flex items-center justify-start p-0 hover:bg-transparent hover:underline"
+          >
+            <Link href="/#" className="flex items-end">
+              <Image
+                src="/site/z.png"
+                alt="Witch"
+                width={40}
+                height={40}
+                className="dark:invert"
+              />
+              Get Directions
+            </Link>
+          </Button>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Image src="/logo.png" alt="Hogwarts Logo" width={32} height={32} className="dark:invert" />
-                <span className="text-lg font-bold text-foreground">Hogwarts</span>
-              </div>
-              <Link href="/terms" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">Terms</Link>
-              <Link href="/privacy" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">Privacy</Link>
+        {/* Navigation Columns */}
+        <div className="grid grid-cols-2 gap-4 md:flex md:justify-between md:gap-0 lg:flex-[3]">
+          {/* Academics */}
+          <div>
+            <h3 className="muted mb-3 tracking-wider uppercase">Academics</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/houses"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Houses
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/curriculum"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Curriculum
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/faculty"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Faculty
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/library"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Library
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/subjects"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Subjects
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/exams"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Exams
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Campus */}
+          <div>
+            <h3 className="muted mb-3 tracking-wider uppercase">Campus</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/admission"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Admissions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/dormitories"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Dormitories
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/great-hall"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Great Hall
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/quidditch"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Quidditch
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/grounds"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Grounds
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Activities */}
+          <div>
+            <h3 className="muted mb-3 tracking-wider uppercase">Activities</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/clubs"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Clubs
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/events"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/sports"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Sports
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/competitions"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Competitions
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/tournaments"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Tournaments
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/ceremonies"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Ceremonies
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/traditions"
+                  className="muted hover:text-primary transition-colors"
+                >
+                  Traditions
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h3 className="text-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+              Support
+            </h3>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/about"
+                  className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+                >
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+                >
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/help"
+                  className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+                >
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/alumni"
+                  className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+                >
+                  Alumni
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/careers"
+                  className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+                >
+                  Careers
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="border-border mt-8 border-t pt-6">
+        <div className="flex flex-col items-center md:flex-row">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="Hogwarts Logo"
+                width={32}
+                height={32}
+                className="dark:invert"
+              />
+              <span className="text-foreground text-lg font-bold">
+                Hogwarts
+              </span>
             </div>
-            
-            {/* Social Icons - Commented out as in original */}
-            {/* <div className="flex items-center gap-4 pl-8">
+            <Link
+              href="/terms"
+              className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-muted-foreground hover:text-primary text-base font-light transition-colors"
+            >
+              Privacy
+            </Link>
+          </div>
+
+          {/* Social Icons - Commented out as in original */}
+          {/* <div className="flex items-center gap-4 pl-8">
               <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 712.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 712 18.407a11.616 11.616 0 006.29 1.84" />
@@ -226,10 +318,10 @@ const Footer = () => {
                 </svg>
               </Link>
             </div> */}
-          </div>
         </div>
+      </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer

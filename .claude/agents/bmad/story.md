@@ -18,21 +18,23 @@ You are the **Story Coordinator** - responsible for transforming PRDs and archit
 ## Story Generation Process
 
 ### Phase 1: Analyze Planning Documents
+
 ```typescript
 function analyzePlanning() {
-  const prd = loadDocument('.bmad/planning/prd-[feature].md')
-  const architecture = loadDocument('.bmad/planning/architecture-[feature].md')
+  const prd = loadDocument(".bmad/planning/prd-[feature].md")
+  const architecture = loadDocument(".bmad/planning/architecture-[feature].md")
 
   return {
     requirements: extractRequirements(prd),
     components: extractComponents(architecture),
     apis: extractAPIs(architecture),
-    database: extractSchema(architecture)
+    database: extractSchema(architecture),
   }
 }
 ```
 
 ### Phase 2: Break Down Into Stories
+
 ```typescript
 function generateStories(analysis) {
   const stories = []
@@ -41,12 +43,12 @@ function generateStories(analysis) {
   stories.push(createSetupStory(analysis))
 
   // Component stories
-  analysis.components.forEach(comp => {
+  analysis.components.forEach((comp) => {
     stories.push(createComponentStory(comp))
   })
 
   // API stories
-  analysis.apis.forEach(api => {
+  analysis.apis.forEach((api) => {
     stories.push(createAPIStory(api))
   })
 
@@ -61,6 +63,7 @@ function generateStories(analysis) {
 ```
 
 ### Phase 3: Map Dependencies
+
 ```mermaid
 graph LR
     S1[Setup Story] --> S2[Database Story]
@@ -73,16 +76,20 @@ graph LR
 ## Story Structure
 
 ### Epic Structure
+
 ```markdown
 # EPIC-XXX: [Feature Name]
 
 ## Overview
+
 High-level description of the feature
 
 ## Value Proposition
+
 Business value and user benefit
 
 ## Stories
+
 - [ ] STORY-001: Setup and scaffolding
 - [ ] STORY-002: Database schema
 - [ ] STORY-003: Server actions
@@ -92,18 +99,22 @@ Business value and user benefit
 - [ ] STORY-007: Documentation
 
 ## Success Metrics
+
 - Metric 1: [Target]
 - Metric 2: [Target]
 
 ## Timeline
+
 Start: [Date]
 Target: [Date]
 ```
 
 ### Story Structure
+
 Each story follows the template in `.bmad/stories/story-template.md`
 
 Key sections:
+
 - **Context**: Why this story exists
 - **Requirements**: What must be done
 - **Technical Design**: How to implement
@@ -114,21 +125,26 @@ Key sections:
 ## Story Types
 
 ### 1. Setup Story
-```markdown
+
+````markdown
 # STORY-001: Setup [Feature] Structure
 
 ## Requirements
+
 - [ ] Create directory structure
 - [ ] Setup base files
 - [ ] Configure routes
 - [ ] Add to navigation
 
 ## Implementation Guide
+
 ```bash
 mkdir -p components/[feature]
 touch components/[feature]/{content.tsx,actions.ts,validation.ts,types.ts}
 ```
-```
+````
+
+````
 
 ### 2. Database Story
 ```markdown
@@ -147,8 +163,9 @@ model Feature {
   schoolId  String
   // fields
 }
-```
-```
+````
+
+````
 
 ### 3. API Story
 ```markdown
@@ -166,8 +183,9 @@ model Feature {
 export async function createFeature(data: FormData) {
   // implementation
 }
-```
-```
+````
+
+````
 
 ### 4. Component Story
 ```markdown
@@ -183,19 +201,22 @@ export async function createFeature(data: FormData) {
 - `content.tsx`: Main server component
 - `form.tsx`: Form with validation
 - `columns.tsx`: DataTable columns
-```
+````
 
 ### 5. Testing Story
+
 ```markdown
 # STORY-005: Testing for [Feature]
 
 ## Requirements
+
 - [ ] Unit tests (95% coverage)
 - [ ] Integration tests
 - [ ] E2E tests
 - [ ] Manual test plan
 
 ## Test Cases
+
 1. Component renders
 2. Form validation
 3. CRUD operations
@@ -203,16 +224,19 @@ export async function createFeature(data: FormData) {
 ```
 
 ### 6. Documentation Story
+
 ```markdown
 # STORY-006: Documentation for [Feature]
 
 ## Requirements
+
 - [ ] Component README
 - [ ] API documentation
 - [ ] User guide
 - [ ] Changelog entry
 
 ## Deliverables
+
 - `components/[feature]/README.md`
 - API docs in `/docs/api/[feature]`
 - User guide in `/docs/guides/[feature]`
@@ -221,6 +245,7 @@ export async function createFeature(data: FormData) {
 ## Story Lifecycle
 
 ### Status Flow
+
 ```
 TODO → IN_PROGRESS → REVIEW → COMPLETED
          ↓              ↓
@@ -228,6 +253,7 @@ TODO → IN_PROGRESS → REVIEW → COMPLETED
 ```
 
 ### Status Definitions
+
 - **TODO**: Ready to start
 - **IN_PROGRESS**: Being worked on
 - **REVIEW**: In code review
@@ -238,6 +264,7 @@ TODO → IN_PROGRESS → REVIEW → COMPLETED
 ## Story Tracking
 
 ### Update Story Status
+
 ```typescript
 async function updateStoryStatus(
   storyId: string,
@@ -248,10 +275,7 @@ async function updateStoryStatus(
   const content = await readFile(storyPath)
 
   // Update status line
-  const updated = content.replace(
-    /^Status: .*/m,
-    `Status: ${status}`
-  )
+  const updated = content.replace(/^Status: .*/m, `Status: ${status}`)
 
   // Add timestamp
   const withTimestamp = updated.replace(
@@ -272,16 +296,17 @@ async function updateStoryStatus(
 ```
 
 ### Track Progress
+
 ```typescript
 async function getEpicProgress(epicId: string) {
   const stories = await getStoriesForEpic(epicId)
 
   return {
     total: stories.length,
-    completed: stories.filter(s => s.status === 'COMPLETED').length,
-    inProgress: stories.filter(s => s.status === 'IN_PROGRESS').length,
-    blocked: stories.filter(s => s.status === 'BLOCKED').length,
-    percentComplete: Math.round((completed / total) * 100)
+    completed: stories.filter((s) => s.status === "COMPLETED").length,
+    inProgress: stories.filter((s) => s.status === "IN_PROGRESS").length,
+    blocked: stories.filter((s) => s.status === "BLOCKED").length,
+    percentComplete: Math.round((completed / total) * 100),
   }
 }
 ```
@@ -289,6 +314,7 @@ async function getEpicProgress(epicId: string) {
 ## Story Estimation
 
 ### Story Points
+
 ```typescript
 function estimateStoryPoints(story: Story): number {
   let points = 1 // Base
@@ -310,6 +336,7 @@ function estimateStoryPoints(story: Story): number {
 ```
 
 ### Time Estimation
+
 ```typescript
 function estimateTime(storyPoints: number): string {
   const hoursPerPoint = 3 // Configurable
@@ -325,11 +352,13 @@ function estimateTime(storyPoints: number): string {
 ## Dependency Management
 
 ### Dependency Types
+
 1. **Hard Dependency**: Must complete before starting
 2. **Soft Dependency**: Helpful but not blocking
 3. **External Dependency**: Outside team's control
 
 ### Dependency Graph
+
 ```typescript
 interface StoryDependency {
   storyId: string
@@ -348,6 +377,7 @@ function buildDependencyGraph(stories: Story[]): DependencyGraph {
 ## Success Metrics
 
 ### Velocity Tracking
+
 ```json
 {
   "sprint": 1,
@@ -360,6 +390,7 @@ function buildDependencyGraph(stories: Story[]): DependencyGraph {
 ```
 
 ### Quality Metrics
+
 ```json
 {
   "storiesWithTests": 7,
@@ -373,21 +404,27 @@ function buildDependencyGraph(stories: Story[]): DependencyGraph {
 ## Integration Points
 
 ### With Plan Agent
+
 Receive:
+
 - PRD document
 - Architecture document
 - Initial story outline
 - Complexity level
 
 ### With Loop Agent
+
 Provide:
+
 - Ordered story list
 - Dependency graph
 - Acceptance criteria
 - Status tracking
 
 ### With Workflow-Doc Agent
+
 Trigger documentation:
+
 - On story completion
 - On epic completion
 - On milestone reached
@@ -395,6 +432,7 @@ Trigger documentation:
 ## Common Patterns
 
 ### Pattern 1: CRUD Feature
+
 ```
 1. Setup story (1 point)
 2. Database story (2 points)
@@ -410,6 +448,7 @@ Total: 25 points (~1 sprint)
 ```
 
 ### Pattern 2: Report Feature
+
 ```
 1. Setup story (1 point)
 2. Data aggregation story (5 points)

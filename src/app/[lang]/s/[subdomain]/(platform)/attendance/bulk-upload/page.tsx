@@ -1,11 +1,12 @@
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import { BulkUploadContent } from '@/components/platform/attendance/bulk-upload/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
-import { Upload } from 'lucide-react'
+import { auth } from "@/auth"
+import { Upload } from "lucide-react"
 
-export const metadata = { title: 'Dashboard: Bulk Upload Attendance' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { BulkUploadContent } from "@/components/platform/attendance/bulk-upload/content"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+
+export const metadata = { title: "Dashboard: Bulk Upload Attendance" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -17,31 +18,33 @@ export default async function Page({ params }: Props) {
   const session = await auth()
 
   // Check permissions - only ADMIN and TEACHER can bulk upload
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER') {
-    const d = dictionary?.school?.attendance?.bulkUpload?.accessDenied;
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "TEACHER") {
+    const d = dictionary?.school?.attendance?.bulkUpload?.accessDenied
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2>{d?.title || 'Access Denied'}</h2>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <h2>{d?.title || "Access Denied"}</h2>
         <p className="muted">
-          {d?.description || 'You do not have permission to bulk upload attendance records.'}
+          {d?.description ||
+            "You do not have permission to bulk upload attendance records."}
         </p>
       </div>
     )
   }
 
-  const d = dictionary?.school?.attendance?.bulkUpload;
+  const d = dictionary?.school?.attendance?.bulkUpload
 
   return (
     <AttendanceProvider initialMethod="BULK_UPLOAD">
       <div className="space-y-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-blue-100 rounded-lg">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-lg bg-blue-100 p-3">
             <Upload className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h1>{d?.title || 'Bulk Upload Attendance'}</h1>
+            <h1>{d?.title || "Bulk Upload Attendance"}</h1>
             <p className="muted">
-              {d?.description || 'Upload attendance records in bulk from CSV or Excel files'}
+              {d?.description ||
+                "Upload attendance records in bulk from CSV or Excel files"}
             </p>
           </div>
         </div>

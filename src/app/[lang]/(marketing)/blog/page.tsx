@@ -1,6 +1,6 @@
-import BlogContent from "@/components/marketing/blog/content";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import BlogContent from "@/components/marketing/blog/content"
 
 export const metadata = {
   title: "Blog",
@@ -11,8 +11,8 @@ interface Props {
 }
 
 export default async function Blog({ params }: Props) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
-  return <BlogContent dictionary={dictionary} lang={lang} />;
+  return <BlogContent dictionary={dictionary} lang={lang} />
 }

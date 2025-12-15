@@ -18,8 +18,8 @@
 
 //   const formatDate = (dateString) => {
 //     const date = new Date(dateString);
-//     return new Intl.DateTimeFormat('en-US', { 
-//       month: 'short', 
+//     return new Intl.DateTimeFormat('en-US', {
+//       month: 'short',
 //       day: 'numeric',
 //       year: 'numeric'
 //     }).format(date);
@@ -91,9 +91,9 @@
 //                         {label}
 //                       </Badge>
 //                     ))}
-//                     <Button 
-//                       variant="outline" 
-//                       size="sm" 
+//                     <Button
+//                       variant="outline"
+//                       size="sm"
 //                       className="ml-2"
 //                       onClick={() => toggleStatus(issue.id)}
 //                     >

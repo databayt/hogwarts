@@ -8,6 +8,7 @@
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] CRUD operations
 - [x] Scope targeting (SCHOOL, CLASS, ROLE)
 - [x] Publish/unpublish workflow
@@ -18,6 +19,7 @@
 ## Enhancement Items
 
 ### Critical Issues (Priority 1) 🔴
+
 - [ ] Read receipts tracking
 - [ ] Push notifications
 - [ ] Email notifications
@@ -33,6 +35,7 @@
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -40,6 +43,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -47,18 +51,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod

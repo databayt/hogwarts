@@ -1,63 +1,65 @@
 .clock {
-    border-radius: 50%;
-    height: 10em;
-    position: relative;
-    width: 10em;
-    border: 3px solid #fcfcfc;
-    box-sizing: border-box;
+  border-radius: 50%;
+  height: 10em;
+  position: relative;
+  width: 10em;
+  border: 3px solid #fcfcfc;
+  box-sizing: border-box;
 }
 
 .clock.simple:after {
-    background: #fcfcfc;
-    border-radius: 50%;
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 6%;
-    height: 6%;
-    z-index: 10;
+  background: #fcfcfc;
+  border-radius: 50%;
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 6%;
+  height: 6%;
+  z-index: 10;
 }
 
-.minutes-container, .hours-container, .seconds-container {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+.minutes-container,
+.hours-container,
+.seconds-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .hours {
-    background: #fcfcfc;
-    height: 20%;
-    left: 48.5%;
-    position: absolute;
-    top: 30%;
-    transform-origin: 50% 100%;
-    width: 3%;
-    border-radius: 6px;
+  background: #fcfcfc;
+  height: 20%;
+  left: 48.5%;
+  position: absolute;
+  top: 30%;
+  transform-origin: 50% 100%;
+  width: 3%;
+  border-radius: 6px;
 }
 
 .minutes {
-    background: #fcfcfc;
-    height: 35%;
-    left: 48.85%;
-    position: absolute;
-    top: 15%;
-    transform-origin: 50% 100%;
-    width: 2.3%;
-    border-radius: 4px;
+  background: #fcfcfc;
+  height: 35%;
+  left: 48.85%;
+  position: absolute;
+  top: 15%;
+  transform-origin: 50% 100%;
+  width: 2.3%;
+  border-radius: 4px;
 }
 
 .seconds {
-    background: #fcfcfc;
-    height: 38%;
-    left: 49.25%;
-    position: absolute;
-    top: 12%;
-    transform-origin: 50% 100%;
-    width: 1.5%;
-    z-index: 8;
-    border-radius: 2px;
+  background: #fcfcfc;
+  height: 38%;
+  left: 49.25%;
+  position: absolute;
+  top: 12%;
+  transform-origin: 50% 100%;
+  width: 1.5%;
+  z-index: 8;
+  border-radius: 2px;
 }

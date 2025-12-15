@@ -1,12 +1,57 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo } from 'react';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isPast, isFuture, differenceInMinutes } from 'date-fns';
-import { Calendar, Clock, Users, BookOpen, FileText, TrendingUp, CircleAlert, ChevronRight, CircleCheck, CircleX, Timer, School, GraduationCap, Target, Award, Activity } from "lucide-react"
-import { BarChart3 } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useMemo, useState } from "react"
+import {
+  addDays,
+  differenceInMinutes,
+  endOfWeek,
+  format,
+  isFuture,
+  isPast,
+  isToday,
+  isTomorrow,
+  startOfWeek,
+} from "date-fns"
+import {
+  Activity,
+  Award,
+  BarChart3,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Clock,
+  FileText,
+  GraduationCap,
+  School,
+  Target,
+  Timer,
+  TrendingUp,
+  Users,
+} from "lucide-react"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,79 +59,73 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
-} from 'recharts';
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 
 interface ClassSession {
-  id: string;
-  className: string;
-  subject: string;
-  room: string;
-  startTime: string; // "09:00"
-  endTime: string; // "10:00"
-  studentCount: number;
-  status: 'upcoming' | 'current' | 'completed';
+  id: string
+  className: string
+  subject: string
+  room: string
+  startTime: string // "09:00"
+  endTime: string // "10:00"
+  studentCount: number
+  status: "upcoming" | "current" | "completed"
 }
 
 interface Assignment {
-  id: string;
-  title: string;
-  class: string;
-  dueDate: Date;
-  submittedCount: number;
-  totalCount: number;
-  status: 'active' | 'overdue' | 'graded';
+  id: string
+  title: string
+  class: string
+  dueDate: Date
+  submittedCount: number
+  totalCount: number
+  status: "active" | "overdue" | "graded"
 }
 
 interface Exam {
-  id: string;
-  title: string;
-  class: string;
-  date: Date;
-  time: string;
-  room: string;
-  studentCount: number;
+  id: string
+  title: string
+  class: string
+  date: Date
+  time: string
+  room: string
+  studentCount: number
 }
 
 interface StudentPerformance {
-  className: string;
-  average: number;
-  trend: 'up' | 'down' | 'stable';
-  attendanceRate: number;
-  submissionRate: number;
+  className: string
+  average: number
+  trend: "up" | "down" | "stable"
+  attendanceRate: number
+  submissionRate: number
 }
 
 interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  date: Date;
-  priority: 'low' | 'medium' | 'high';
+  id: string
+  title: string
+  content: string
+  date: Date
+  priority: "low" | "medium" | "high"
 }
 
 interface TeacherDashboardProps {
-  teacherId: string;
-  teacherName: string;
-  todaySchedule: ClassSession[];
-  weekSchedule: ClassSession[];
-  assignments: Assignment[];
-  upcomingExams: Exam[];
-  studentPerformance: StudentPerformance[];
-  announcements: Announcement[];
+  teacherId: string
+  teacherName: string
+  todaySchedule: ClassSession[]
+  weekSchedule: ClassSession[]
+  assignments: Assignment[]
+  upcomingExams: Exam[]
+  studentPerformance: StudentPerformance[]
+  announcements: Announcement[]
   stats: {
-    totalStudents: number;
-    totalClasses: number;
-    averageAttendance: number;
-    pendingGrading: number;
-  };
+    totalStudents: number
+    totalClasses: number
+    averageAttendance: number
+    pendingGrading: number
+  }
 }
 
 export function TeacherDashboard({
@@ -100,81 +139,93 @@ export function TeacherDashboard({
   announcements,
   stats,
 }: TeacherDashboardProps) {
-  const [selectedView, setSelectedView] = useState<'today' | 'week'>('today');
+  const [selectedView, setSelectedView] = useState<"today" | "week">("today")
 
   // Get current class
   const currentClass = useMemo(() => {
-    const now = new Date();
-    const currentTime = format(now, 'HH:mm');
+    const now = new Date()
+    const currentTime = format(now, "HH:mm")
 
-    return todaySchedule.find(session => {
-      return session.startTime <= currentTime && session.endTime > currentTime;
-    });
-  }, [todaySchedule]);
+    return todaySchedule.find((session) => {
+      return session.startTime <= currentTime && session.endTime > currentTime
+    })
+  }, [todaySchedule])
 
   // Get next class
   const nextClass = useMemo(() => {
-    const now = new Date();
-    const currentTime = format(now, 'HH:mm');
+    const now = new Date()
+    const currentTime = format(now, "HH:mm")
 
-    return todaySchedule.find(session => {
-      return session.startTime > currentTime;
-    });
-  }, [todaySchedule]);
+    return todaySchedule.find((session) => {
+      return session.startTime > currentTime
+    })
+  }, [todaySchedule])
 
   // Calculate assignment statistics
   const assignmentStats = useMemo(() => {
-    const active = assignments.filter(a => a.status === 'active').length;
-    const overdue = assignments.filter(a => a.status === 'overdue').length;
-    const needsGrading = assignments.filter(a =>
-      a.submittedCount > 0 && a.status !== 'graded'
-    ).length;
+    const active = assignments.filter((a) => a.status === "active").length
+    const overdue = assignments.filter((a) => a.status === "overdue").length
+    const needsGrading = assignments.filter(
+      (a) => a.submittedCount > 0 && a.status !== "graded"
+    ).length
 
-    const totalSubmissions = assignments.reduce((sum, a) => sum + a.submittedCount, 0);
-    const totalExpected = assignments.reduce((sum, a) => sum + a.totalCount, 0);
-    const submissionRate = totalExpected > 0 ? (totalSubmissions / totalExpected) * 100 : 0;
+    const totalSubmissions = assignments.reduce(
+      (sum, a) => sum + a.submittedCount,
+      0
+    )
+    const totalExpected = assignments.reduce((sum, a) => sum + a.totalCount, 0)
+    const submissionRate =
+      totalExpected > 0 ? (totalSubmissions / totalExpected) * 100 : 0
 
-    return { active, overdue, needsGrading, submissionRate };
-  }, [assignments]);
+    return { active, overdue, needsGrading, submissionRate }
+  }, [assignments])
 
   // Performance chart data
   const performanceChartData = useMemo(() => {
-    return studentPerformance.map(p => ({
+    return studentPerformance.map((p) => ({
       class: p.className,
       average: p.average,
       attendance: p.attendanceRate,
       submission: p.submissionRate,
-    }));
-  }, [studentPerformance]);
+    }))
+  }, [studentPerformance])
 
   // Today's workload
   const workloadData = useMemo(() => {
     return [
-      { name: 'Classes', value: todaySchedule.length, fill: '#3b82f6' },
-      { name: 'Assignments Due', value: assignments.filter(a => isToday(a.dueDate)).length, fill: '#10b981' },
-      { name: 'To Grade', value: stats.pendingGrading, fill: '#f59e0b' },
-    ];
-  }, [todaySchedule, assignments, stats]);
+      { name: "Classes", value: todaySchedule.length, fill: "#3b82f6" },
+      {
+        name: "Assignments Due",
+        value: assignments.filter((a) => isToday(a.dueDate)).length,
+        fill: "#10b981",
+      },
+      { name: "To Grade", value: stats.pendingGrading, fill: "#f59e0b" },
+    ]
+  }, [todaySchedule, assignments, stats])
 
   const getTimeUntilNext = (time: string) => {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    const nextTime = new Date();
-    nextTime.setHours(hours, minutes, 0, 0);
+    const now = new Date()
+    const [hours, minutes] = time.split(":").map(Number)
+    const nextTime = new Date()
+    nextTime.setHours(hours, minutes, 0, 0)
 
-    const diff = differenceInMinutes(nextTime, now);
-    if (diff < 60) return `${diff} minutes`;
-    return `${Math.floor(diff / 60)}h ${diff % 60}m`;
-  };
+    const diff = differenceInMinutes(nextTime, now)
+    if (diff < 60) return `${diff} minutes`
+    return `${Math.floor(diff / 60)}h ${diff % 60}m`
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'current': return 'bg-green-100 text-green-800';
-      case 'upcoming': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "current":
+        return "bg-green-100 text-green-800"
+      case "upcoming":
+        return "bg-blue-100 text-blue-800"
+      case "completed":
+        return "bg-gray-100 text-gray-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -183,25 +234,27 @@ export function TeacherDashboard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">Welcome back, {teacherName}!</CardTitle>
+              <CardTitle className="text-2xl">
+                Welcome back, {teacherName}!
+              </CardTitle>
               <CardDescription>
-                {format(new Date(), 'EEEE, MMMM dd, yyyy')}
+                {format(new Date(), "EEEE, MMMM dd, yyyy")}
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
               {currentClass ? (
-                <Badge variant="default" className="py-2 px-4">
-                  <Activity className="h-4 w-4 mr-2 animate-pulse" />
+                <Badge variant="default" className="px-4 py-2">
+                  <Activity className="mr-2 h-4 w-4 animate-pulse" />
                   In Class: {currentClass.className}
                 </Badge>
               ) : nextClass ? (
-                <Badge variant="outline" className="py-2 px-4">
-                  <Clock className="h-4 w-4 mr-2" />
+                <Badge variant="outline" className="px-4 py-2">
+                  <Clock className="mr-2 h-4 w-4" />
                   Next class in {getTimeUntilNext(nextClass.startTime)}
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="py-2 px-4">
-                  <CircleCheck className="h-4 w-4 mr-2" />
+                <Badge variant="secondary" className="px-4 py-2">
+                  <CircleCheck className="mr-2 h-4 w-4" />
                   No more classes today
                 </Badge>
               )}
@@ -211,14 +264,14 @@ export function TeacherDashboard({
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Students</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
+              <Users className="text-muted-foreground h-5 w-5" />
               <span className="text-2xl font-bold">{stats.totalStudents}</span>
             </div>
           </CardContent>
@@ -230,10 +283,11 @@ export function TeacherDashboard({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <School className="h-5 w-5 text-muted-foreground" />
+              <School className="text-muted-foreground h-5 w-5" />
               <span className="text-2xl font-bold">{todaySchedule.length}</span>
               <Badge variant="outline" className="ml-2">
-                {todaySchedule.filter(s => s.status === 'completed').length} done
+                {todaySchedule.filter((s) => s.status === "completed").length}{" "}
+                done
               </Badge>
             </div>
           </CardContent>
@@ -245,10 +299,14 @@ export function TeacherDashboard({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <span className="text-2xl font-bold text-orange-600">{stats.pendingGrading}</span>
+              <FileText className="text-muted-foreground h-5 w-5" />
+              <span className="text-2xl font-bold text-orange-600">
+                {stats.pendingGrading}
+              </span>
               {stats.pendingGrading > 10 && (
-                <Badge variant="destructive" className="ml-2">High</Badge>
+                <Badge variant="destructive" className="ml-2">
+                  High
+                </Badge>
               )}
             </div>
           </CardContent>
@@ -260,7 +318,9 @@ export function TeacherDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <span className="text-2xl font-bold">{stats.averageAttendance}%</span>
+              <span className="text-2xl font-bold">
+                {stats.averageAttendance}%
+              </span>
               <Progress value={stats.averageAttendance} className="h-2" />
             </div>
           </CardContent>
@@ -268,7 +328,7 @@ export function TeacherDashboard({
       </div>
 
       {/* Today's Schedule and Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Today's Schedule */}
         <Card>
           <CardHeader>
@@ -276,7 +336,7 @@ export function TeacherDashboard({
               <CardTitle>Today's Schedule</CardTitle>
               <Button variant="outline" size="sm">
                 View Full Timetable
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
@@ -288,39 +348,45 @@ export function TeacherDashboard({
                     <div key={session.id}>
                       <div
                         className={cn(
-                          "flex items-center justify-between p-3 rounded-lg border",
-                          session.status === 'current' && "border-primary bg-primary/5",
-                          session.status === 'completed' && "opacity-60"
+                          "flex items-center justify-between rounded-lg border p-3",
+                          session.status === "current" &&
+                            "border-primary bg-primary/5",
+                          session.status === "completed" && "opacity-60"
                         )}
                       >
                         <div className="flex items-start gap-3">
                           <div className="flex flex-col items-center">
-                            <Badge variant="outline" className={getStatusColor(session.status)}>
+                            <Badge
+                              variant="outline"
+                              className={getStatusColor(session.status)}
+                            >
                               {session.startTime}
                             </Badge>
-                            <div className="w-px h-4 bg-border my-1" />
-                            <span className="text-xs text-muted-foreground">
+                            <div className="bg-border my-1 h-4 w-px" />
+                            <span className="text-muted-foreground text-xs">
                               {session.endTime}
                             </span>
                           </div>
                           <div>
                             <p className="font-medium">{session.className}</p>
-                            <p className="text-sm text-muted-foreground">{session.subject}</p>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-sm">
+                              {session.subject}
+                            </p>
+                            <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                               <span>Room {session.room}</span>
                               <span>{session.studentCount} students</span>
                             </div>
                           </div>
                         </div>
-                        {session.status === 'current' && (
+                        {session.status === "current" && (
                           <Badge variant="default">In Progress</Badge>
                         )}
-                        {session.status === 'upcoming' && (
+                        {session.status === "upcoming" && (
                           <Badge variant="outline">
                             In {getTimeUntilNext(session.startTime)}
                           </Badge>
                         )}
-                        {session.status === 'completed' && (
+                        {session.status === "completed" && (
                           <CircleCheck className="h-5 w-5 text-green-600" />
                         )}
                       </div>
@@ -330,9 +396,11 @@ export function TeacherDashboard({
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No classes scheduled today</p>
+                  <div className="py-8 text-center">
+                    <Calendar className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+                    <p className="text-muted-foreground">
+                      No classes scheduled today
+                    </p>
                   </div>
                 )}
               </div>
@@ -344,7 +412,9 @@ export function TeacherDashboard({
         <Card>
           <CardHeader>
             <CardTitle>Class Performance</CardTitle>
-            <CardDescription>Average scores and metrics by class</CardDescription>
+            <CardDescription>
+              Average scores and metrics by class
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
@@ -356,7 +426,11 @@ export function TeacherDashboard({
                 <Legend />
                 <Bar dataKey="average" fill="#3b82f6" name="Avg Grade" />
                 <Bar dataKey="attendance" fill="#10b981" name="Attendance" />
-                <Bar dataKey="submission" fill="#f59e0b" name="Submission Rate" />
+                <Bar
+                  dataKey="submission"
+                  fill="#f59e0b"
+                  name="Submission Rate"
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -364,7 +438,7 @@ export function TeacherDashboard({
       </div>
 
       {/* Assignments and Exams */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Assignments */}
         <Card>
           <CardHeader>
@@ -373,36 +447,52 @@ export function TeacherDashboard({
               <div className="flex gap-2">
                 <Badge variant="outline">{assignmentStats.active} active</Badge>
                 {assignmentStats.overdue > 0 && (
-                  <Badge variant="destructive">{assignmentStats.overdue} overdue</Badge>
+                  <Badge variant="destructive">
+                    {assignmentStats.overdue} overdue
+                  </Badge>
                 )}
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {assignments.slice(0, 5).map(assignment => (
-                <div key={assignment.id} className="flex items-center justify-between">
+              {assignments.slice(0, 5).map((assignment) => (
+                <div
+                  key={assignment.id}
+                  className="flex items-center justify-between"
+                >
                   <div>
                     <p className="font-medium">{assignment.title}</p>
-                    <p className="text-sm text-muted-foreground">{assignment.class}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {assignment.class}
+                    </p>
                   </div>
                   <div className="text-right">
                     <div className="flex items-center gap-2">
                       <Progress
-                        value={(assignment.submittedCount / assignment.totalCount) * 100}
-                        className="w-20 h-2"
+                        value={
+                          (assignment.submittedCount / assignment.totalCount) *
+                          100
+                        }
+                        className="h-2 w-20"
                       />
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {assignment.submittedCount}/{assignment.totalCount}
                       </span>
                     </div>
                     <Badge
-                      variant={assignment.status === 'overdue' ? 'destructive' : 'outline'}
+                      variant={
+                        assignment.status === "overdue"
+                          ? "destructive"
+                          : "outline"
+                      }
                       className="mt-1"
                     >
-                      {isToday(assignment.dueDate) ? 'Due Today' :
-                       isTomorrow(assignment.dueDate) ? 'Due Tomorrow' :
-                       format(assignment.dueDate, 'MMM dd')}
+                      {isToday(assignment.dueDate)
+                        ? "Due Today"
+                        : isTomorrow(assignment.dueDate)
+                          ? "Due Tomorrow"
+                          : format(assignment.dueDate, "MMM dd")}
                     </Badge>
                   </div>
                 </div>
@@ -412,7 +502,7 @@ export function TeacherDashboard({
           <CardFooter>
             <Button variant="outline" className="w-full">
               View All Assignments
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </CardFooter>
         </Card>
@@ -426,12 +516,17 @@ export function TeacherDashboard({
           <CardContent>
             <div className="space-y-3">
               {upcomingExams.length > 0 ? (
-                upcomingExams.slice(0, 5).map(exam => (
-                  <div key={exam.id} className="flex items-center justify-between">
+                upcomingExams.slice(0, 5).map((exam) => (
+                  <div
+                    key={exam.id}
+                    className="flex items-center justify-between"
+                  >
                     <div>
                       <p className="font-medium">{exam.title}</p>
-                      <p className="text-sm text-muted-foreground">{exam.class}</p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
+                        {exam.class}
+                      </p>
+                      <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
                         <Clock className="h-3 w-3" />
                         <span>{exam.time}</span>
                         <span>•</span>
@@ -440,17 +535,17 @@ export function TeacherDashboard({
                     </div>
                     <div className="text-right">
                       <Badge variant="outline">
-                        {format(exam.date, 'MMM dd')}
+                        {format(exam.date, "MMM dd")}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1 text-xs">
                         {exam.studentCount} students
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8">
-                  <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <div className="py-8 text-center">
+                  <GraduationCap className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
                   <p className="text-muted-foreground">No upcoming exams</p>
                 </div>
               )}
@@ -467,32 +562,34 @@ export function TeacherDashboard({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {announcements.map(announcement => (
+            {announcements.map((announcement) => (
               <div key={announcement.id} className="flex items-start gap-3">
-                <CircleAlert className={cn(
-                  "h-5 w-5 mt-0.5",
-                  announcement.priority === 'high' && "text-red-600",
-                  announcement.priority === 'medium' && "text-yellow-600",
-                  announcement.priority === 'low' && "text-gray-600"
-                )} />
+                <CircleAlert
+                  className={cn(
+                    "mt-0.5 h-5 w-5",
+                    announcement.priority === "high" && "text-red-600",
+                    announcement.priority === "medium" && "text-yellow-600",
+                    announcement.priority === "low" && "text-gray-600"
+                  )}
+                />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-medium">{announcement.title}</p>
                     <Badge
                       variant="outline"
                       className={cn(
-                        announcement.priority === 'high' && "text-red-600",
-                        announcement.priority === 'medium' && "text-yellow-600"
+                        announcement.priority === "high" && "text-red-600",
+                        announcement.priority === "medium" && "text-yellow-600"
                       )}
                     >
                       {announcement.priority}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm">
                     {announcement.content}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {format(announcement.date, 'MMM dd, yyyy at h:mm a')}
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    {format(announcement.date, "MMM dd, yyyy at h:mm a")}
                   </p>
                 </div>
               </div>
@@ -501,5 +598,5 @@ export function TeacherDashboard({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -14,10 +14,8 @@ export function IconsPreview() {
           key={name}
           className="flex flex-col items-center justify-center gap-2 rounded-md border p-4"
         >
-          {typeof Icon === "function" ? (
-            <Icon className="h-6 w-6" />
-          ) : null}
-          <span className="text-xs text-muted-foreground truncate max-w-full">
+          {typeof Icon === "function" ? <Icon className="h-6 w-6" /> : null}
+          <span className="text-muted-foreground max-w-full truncate text-xs">
             {name}
           </span>
         </div>

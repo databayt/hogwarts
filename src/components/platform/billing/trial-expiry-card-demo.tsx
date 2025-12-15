@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { TrialExpiryCard } from "@/components/billingsdk/trial-expiry-card";
+import { TrialExpiryCard } from "@/components/billingsdk/trial-expiry-card"
 
 // Set trial end date 7 days from now for demo
-const trialEndDate = new Date();
-trialEndDate.setDate(trialEndDate.getDate() + 7);
+const trialEndDate = new Date()
+trialEndDate.setDate(trialEndDate.getDate() + 7)
 
 const features = [
   "Full access to all premium features",
   "Unlimited students and teachers",
   "Advanced analytics dashboard",
   "Priority customer support",
-];
+]
 
 export function TrialExpiryCardDemo() {
   return (
@@ -23,5 +23,5 @@ export function TrialExpiryCardDemo() {
       upgradeButtonText="Upgrade Now"
       features={features}
     />
-  );
+  )
 }

@@ -1,16 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { updateUserRole, type FormData } from "./user-role.action";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { User, UserRole } from "@prisma/client";
-import { useSession } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+import { useState, useTransition } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { User, UserRole } from "@prisma/client"
+import { useSession } from "next-auth/react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
-const userRoleSchema = z.object({ role: z.nativeEnum(UserRole) });
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -18,52 +16,56 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@/components/ui/form"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { SectionColumns } from "@/components/platform/dashboard/section-columns";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+} from "@/components/ui/select"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
+import { SectionColumns } from "@/components/platform/dashboard/section-columns"
+
+import { updateUserRole, type FormData } from "./user-role.action"
+
+const userRoleSchema = z.object({ role: z.nativeEnum(UserRole) })
 
 interface UserNameFormProps {
-  user: Pick<User, "id" | "role">;
+  user: Pick<User, "id" | "role">
 }
 
 export function UserRoleForm({ user }: UserNameFormProps) {
-  const { update } = useSession();
-  const [updated, setUpdated] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const updateUserRoleWithId = updateUserRole.bind(null, user.id);
+  const { update } = useSession()
+  const [updated, setUpdated] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const updateUserRoleWithId = updateUserRole.bind(null, user.id)
 
-  const roles = Object.values(UserRole);
-  const [role, setRole] = useState(user.role);
+  const roles = Object.values(UserRole)
+  const [role, setRole] = useState(user.role)
 
   const form = useForm<FormData>({
     resolver: zodResolver(userRoleSchema),
     values: {
       role: role,
     },
-  });
+  })
 
   const onSubmit = (data: z.infer<typeof userRoleSchema>) => {
     startTransition(async () => {
-      const { status } = await updateUserRoleWithId(data);
+      const { status } = await updateUserRoleWithId(data)
 
       if (status !== "success") {
         toast.error("Something went wrong.", {
           description: "Your role was not updated. Please try again.",
-        });
+        })
       } else {
-        await update();
-        setUpdated(false);
-        toast.success("Your role has been updated.");
+        await update()
+        setUpdated(false)
+        toast.success("Your role has been updated.")
       }
-    });
-  };
+    })
+  }
 
   return (
     <Form {...form}>
@@ -82,8 +84,8 @@ export function UserRoleForm({ user }: UserNameFormProps) {
                   <Select
                     // TODO:(FIX) Option value not update. Use useState for the moment
                     onValueChange={(value: UserRole) => {
-                      setUpdated(user.role !== value);
-                      setRole(value);
+                      setUpdated(user.role !== value)
+                      setRole(value)
                       // field.onChange;
                     }}
                     name={field.name}
@@ -130,5 +132,5 @@ export function UserRoleForm({ user }: UserNameFormProps) {
         </SectionColumns>
       </form>
     </Form>
-  );
+  )
 }

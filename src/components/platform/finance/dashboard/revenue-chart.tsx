@@ -1,22 +1,29 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format } from "date-fns"
 import {
-  AreaChart,
   Area,
-  BarChart,
+  AreaChart,
   Bar,
-  LineChart,
+  BarChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
 } from "recharts"
-import { format } from "date-fns"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface RevenueChartProps {
   revenueData: number[]
@@ -31,21 +38,23 @@ export function RevenueChart({
   expenseData,
   profitData,
   labels,
-  className
+  className,
 }: RevenueChartProps) {
   // Generate labels if not provided (last 12 months)
-  const monthLabels = labels || Array.from({ length: 12 }, (_, i) => {
-    const date = new Date()
-    date.setMonth(date.getMonth() - (11 - i))
-    return format(date, 'MMM')
-  })
+  const monthLabels =
+    labels ||
+    Array.from({ length: 12 }, (_, i) => {
+      const date = new Date()
+      date.setMonth(date.getMonth() - (11 - i))
+      return format(date, "MMM")
+    })
 
   // Prepare data for charts
   const chartData = monthLabels.map((label, index) => ({
     month: label,
     revenue: revenueData[index] || 0,
     expense: expenseData[index] || 0,
-    profit: profitData[index] || 0
+    profit: profitData[index] || 0,
   }))
 
   // Custom tooltip
@@ -53,17 +62,17 @@ export function RevenueChart({
     if (!active || !payload) return null
 
     return (
-      <div className="bg-background border rounded-lg shadow-lg p-3">
+      <div className="bg-background rounded-lg border p-3 shadow-lg">
         <p className="font-semibold">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
-              className="w-3 h-3 rounded-full"
+              className="h-3 w-3 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
             <span className="capitalize">{entry.name}:</span>
             <span className="font-medium">
-              SDG {new Intl.NumberFormat('en-SD').format(entry.value)}
+              SDG {new Intl.NumberFormat("en-SD").format(entry.value)}
             </span>
           </div>
         ))}
@@ -102,11 +111,23 @@ export function RevenueChart({
             <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={chartData}>
                 <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    id="revenueGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient
+                    id="expenseGradient"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
@@ -115,11 +136,11 @@ export function RevenueChart({
                 <XAxis
                   dataKey="month"
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                 />
                 <YAxis
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                   tickFormatter={formatYAxis}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -153,11 +174,11 @@ export function RevenueChart({
                 <XAxis
                   dataKey="month"
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                 />
                 <YAxis
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                   tickFormatter={formatYAxis}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -176,11 +197,11 @@ export function RevenueChart({
                 <XAxis
                   dataKey="month"
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                 />
                 <YAxis
                   className="text-xs"
-                  tick={{ fill: 'currentColor' }}
+                  tick={{ fill: "currentColor" }}
                   tickFormatter={formatYAxis}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -218,27 +239,32 @@ export function RevenueChart({
         </Tabs>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+        <div className="mt-6 grid grid-cols-3 gap-4 border-t pt-6">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Avg Monthly Revenue</p>
+            <p className="text-muted-foreground text-sm">Avg Monthly Revenue</p>
             <p className="text-lg font-semibold text-green-600">
-              SDG {new Intl.NumberFormat('en-SD').format(
+              SDG{" "}
+              {new Intl.NumberFormat("en-SD").format(
                 revenueData.reduce((a, b) => a + b, 0) / revenueData.length
               )}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Avg Monthly Expenses</p>
+            <p className="text-muted-foreground text-sm">
+              Avg Monthly Expenses
+            </p>
             <p className="text-lg font-semibold text-red-600">
-              SDG {new Intl.NumberFormat('en-SD').format(
+              SDG{" "}
+              {new Intl.NumberFormat("en-SD").format(
                 expenseData.reduce((a, b) => a + b, 0) / expenseData.length
               )}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">Avg Monthly Profit</p>
+            <p className="text-muted-foreground text-sm">Avg Monthly Profit</p>
             <p className="text-lg font-semibold text-blue-600">
-              SDG {new Intl.NumberFormat('en-SD').format(
+              SDG{" "}
+              {new Intl.NumberFormat("en-SD").format(
                 profitData.reduce((a, b) => a + b, 0) / profitData.length
               )}
             </p>

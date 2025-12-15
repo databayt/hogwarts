@@ -1,13 +1,14 @@
 import { z } from "zod"
-import { getValidationMessages } from "@/components/internationalization/helpers"
+
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getValidationMessages } from "@/components/internationalization/helpers"
 
 // ============================================================================
 // Schema Factory Functions (i18n-enabled)
 // ============================================================================
 
 export function createStudentBaseSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary);
+  const v = getValidationMessages(dictionary)
 
   return z.object({
     givenName: z.string().optional(),
@@ -17,19 +18,21 @@ export function createStudentBaseSchema(dictionary: Dictionary) {
     gender: z.enum(["male", "female"]).optional(),
     enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
     userId: z.string().optional(),
-  });
+  })
 }
 
 export function createStudentCreateSchema(dictionary: Dictionary) {
-  return createStudentBaseSchema(dictionary);
+  return createStudentBaseSchema(dictionary)
 }
 
 export function createStudentUpdateSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary);
+  const v = getValidationMessages(dictionary)
 
-  return createStudentBaseSchema(dictionary).partial().extend({
-    id: z.string().min(1, { message: v.required() }),
-  });
+  return createStudentBaseSchema(dictionary)
+    .partial()
+    .extend({
+      id: z.string().min(1, { message: v.required() }),
+    })
 }
 
 // ============================================================================
@@ -52,7 +55,10 @@ export const studentUpdateSchema = studentBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
 })
 
-export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })
+export const sortItemSchema = z.object({
+  id: z.string(),
+  desc: z.boolean().optional(),
+})
 
 export const getStudentsSchema = z.object({
   page: z.number().int().positive().default(1),
@@ -62,5 +68,3 @@ export const getStudentsSchema = z.object({
   status: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
 })
-
-

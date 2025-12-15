@@ -1,10 +1,23 @@
 "use client"
 
-import Link from "next/link"
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { ChevronRight, Pencil, QrCode, Upload, FileText, Activity } from "lucide-react"
 import type { ElementType } from "react"
+import Link from "next/link"
+import {
+  Activity,
+  ChevronRight,
+  FileText,
+  Pencil,
+  QrCode,
+  Upload,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 // Icon map for string-based icon names (prevents Server Component serialization issues)
 const iconMap: Record<string, ElementType> = {
@@ -42,18 +55,20 @@ export function ActionCard({
     <Link href={href} className="block">
       <Card
         className={cn(
-          "transition-all hover:shadow-md hover:border-primary/50 cursor-pointer group",
+          "hover:border-primary/50 group cursor-pointer transition-all hover:shadow-md",
           className
         )}
       >
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={cn("p-3 rounded-lg", iconBgColor)}>
+              <div className={cn("rounded-lg p-3", iconBgColor)}>
                 {Icon && <Icon className={cn("h-6 w-6", iconColor)} />}
               </div>
               <div>
-                <CardTitle className="text-base whitespace-pre-line">{title}</CardTitle>
+                <CardTitle className="text-base whitespace-pre-line">
+                  {title}
+                </CardTitle>
                 {description && (
                   <CardDescription className="text-sm">
                     {description}
@@ -61,7 +76,7 @@ export function ActionCard({
                 )}
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <ChevronRight className="text-muted-foreground group-hover:text-primary h-5 w-5 transition-colors" />
           </div>
         </CardHeader>
       </Card>

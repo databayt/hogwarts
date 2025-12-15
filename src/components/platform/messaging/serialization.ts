@@ -25,7 +25,7 @@ export function safeSerializeDate(date: Date | null | undefined): string {
   try {
     return new Date(date).toISOString()
   } catch (error) {
-    console.error('[safeSerializeDate] Invalid date:', date, error)
+    console.error("[safeSerializeDate] Invalid date:", date, error)
     return new Date().toISOString()
   }
 }
@@ -40,10 +40,14 @@ export function serializeParticipant(participant: any) {
     ...participant,
     joinedAt: safeSerializeDate(participant.joinedAt),
     lastReadAt: safeSerializeDate(participant.lastReadAt),
-    mutedUntil: participant.mutedUntil ? safeSerializeDate(participant.mutedUntil) : null,
-    user: participant.user ? {
-      ...participant.user,
-    } : null,
+    mutedUntil: participant.mutedUntil
+      ? safeSerializeDate(participant.mutedUntil)
+      : null,
+    user: participant.user
+      ? {
+          ...participant.user,
+        }
+      : null,
   }
 }
 
@@ -68,9 +72,11 @@ export function serializeReaction(reaction: any) {
   return {
     ...reaction,
     createdAt: safeSerializeDate(reaction.createdAt),
-    user: reaction.user ? {
-      ...reaction.user,
-    } : null,
+    user: reaction.user
+      ? {
+          ...reaction.user,
+        }
+      : null,
   }
 }
 
@@ -83,9 +89,11 @@ export function serializeReadReceipt(receipt: any) {
   return {
     ...receipt,
     readAt: safeSerializeDate(receipt.readAt),
-    user: receipt.user ? {
-      ...receipt.user,
-    } : null,
+    user: receipt.user
+      ? {
+          ...receipt.user,
+        }
+      : null,
   }
 }
 
@@ -98,9 +106,11 @@ export function serializeReplyTo(replyTo: any) {
   return {
     ...replyTo,
     createdAt: safeSerializeDate(replyTo.createdAt),
-    sender: replyTo.sender ? {
-      ...replyTo.sender,
-    } : null,
+    sender: replyTo.sender
+      ? {
+          ...replyTo.sender,
+        }
+      : null,
   }
 }
 
@@ -116,9 +126,11 @@ export function serializeMessage(message: any) {
     updatedAt: safeSerializeDate(message.updatedAt),
     editedAt: message.editedAt ? safeSerializeDate(message.editedAt) : null,
     deletedAt: message.deletedAt ? safeSerializeDate(message.deletedAt) : null,
-    sender: message.sender ? {
-      ...message.sender,
-    } : null,
+    sender: message.sender
+      ? {
+          ...message.sender,
+        }
+      : null,
     attachments: message.attachments?.map(serializeAttachment) || [],
     reactions: message.reactions?.map(serializeReaction) || [],
     readReceipts: message.readReceipts?.map(serializeReadReceipt) || [],
@@ -136,12 +148,18 @@ export function serializeConversation(conversation: any) {
     ...conversation,
     createdAt: safeSerializeDate(conversation.createdAt),
     updatedAt: safeSerializeDate(conversation.updatedAt),
-    lastMessageAt: conversation.lastMessageAt ? safeSerializeDate(conversation.lastMessageAt) : null,
+    lastMessageAt: conversation.lastMessageAt
+      ? safeSerializeDate(conversation.lastMessageAt)
+      : null,
     participants: conversation.participants?.map(serializeParticipant) || [],
-    createdBy: conversation.createdBy ? {
-      ...conversation.createdBy,
-    } : null,
-    lastMessage: conversation.lastMessage ? serializeMessage(conversation.lastMessage) : null,
+    createdBy: conversation.createdBy
+      ? {
+          ...conversation.createdBy,
+        }
+      : null,
+    lastMessage: conversation.lastMessage
+      ? serializeMessage(conversation.lastMessage)
+      : null,
   }
 }
 

@@ -1,9 +1,17 @@
-'use client'
+"use client"
 
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { useEffect } from "react"
+import { AlertTriangle, RefreshCw } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export default function BankingError({
   error,
@@ -14,23 +22,24 @@ export default function BankingError({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error('Banking module error:', error)
+    console.error("Banking module error:", error)
   }, [error])
 
   return (
-    <div className="layout-container min-h-[60vh] flex items-center justify-center">
+    <div className="layout-container flex min-h-[60vh] items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <AlertTriangle className="text-destructive h-5 w-5" />
             <CardTitle>Something went wrong!</CardTitle>
           </div>
           <CardDescription>
-            {error.message || 'An error occurred while loading your banking information.'}
+            {error.message ||
+              "An error occurred while loading your banking information."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {error.digest && (
               <>
                 Error ID: <code className="text-xs">{error.digest}</code>
@@ -41,7 +50,7 @@ export default function BankingError({
         <CardFooter className="flex justify-between">
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/banking'}
+            onClick={() => (window.location.href = "/banking")}
           >
             Go to Dashboard
           </Button>

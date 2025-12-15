@@ -1,16 +1,27 @@
-import type { Locale } from '@/components/internationalization/config'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import Link from "next/link"
+import {
+  CircleAlert,
+  CircleCheck,
+  CreditCard,
+  Globe,
+  Link2,
+  Mail,
+  Settings,
+  Shield,
+  Webhook,
+} from "lucide-react"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Link2, Mail, CreditCard, Webhook, Globe, Shield, CircleCheck, CircleAlert, Settings,  } from "lucide-react"
-import Link from 'next/link'
-import { getTenantContext } from '@/lib/tenant-context'
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   dictionary: Dictionary
@@ -27,8 +38,8 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
       google: { enabled: true, accounts: 234 },
       facebook: { enabled: true, accounts: 156 },
     },
-    email: { provider: 'resend', status: 'active' },
-    payment: { provider: 'stripe', status: 'active' },
+    email: { provider: "resend", status: "active" },
+    payment: { provider: "stripe", status: "active" },
     webhooks: 5,
   }
 
@@ -40,7 +51,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
         <Card className="border-primary/20 hover:border-primary/40 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
+              <Globe className="text-primary h-5 w-5" />
               OAuth Providers
             </CardTitle>
             <CardDescription>Social login configuration</CardDescription>
@@ -74,7 +85,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Email Service */}
-        <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
+        <Card className="border-blue-500/20 transition-colors hover:border-blue-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5 text-blue-500" />
@@ -85,11 +96,14 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
           <CardContent className="space-y-3">
             <div className="space-y-2">
               <p className="text-sm">
-                <span className="font-medium">Provider:</span> {integrations.email.provider}
+                <span className="font-medium">Provider:</span>{" "}
+                {integrations.email.provider}
               </p>
               <p className="text-sm">
-                <span className="font-medium">Status:</span>{' '}
-                <span className="text-green-600">{integrations.email.status}</span>
+                <span className="font-medium">Status:</span>{" "}
+                <span className="text-green-600">
+                  {integrations.email.status}
+                </span>
               </p>
             </div>
             <Button asChild variant="secondary" className="w-full">
@@ -102,7 +116,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Payment Gateway */}
-        <Card className="border-green-500/20 hover:border-green-500/40 transition-colors">
+        <Card className="border-green-500/20 transition-colors hover:border-green-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-green-500" />
@@ -113,11 +127,14 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
           <CardContent className="space-y-3">
             <div className="space-y-2">
               <p className="text-sm">
-                <span className="font-medium">Provider:</span> {integrations.payment.provider}
+                <span className="font-medium">Provider:</span>{" "}
+                {integrations.payment.provider}
               </p>
               <p className="text-sm">
-                <span className="font-medium">Status:</span>{' '}
-                <span className="text-green-600">{integrations.payment.status}</span>
+                <span className="font-medium">Status:</span>{" "}
+                <span className="text-green-600">
+                  {integrations.payment.status}
+                </span>
               </p>
             </div>
             <Button asChild variant="secondary" className="w-full">
@@ -130,7 +147,7 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Webhooks */}
-        <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
+        <Card className="border-purple-500/20 transition-colors hover:border-purple-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Webhook className="h-5 w-5 text-purple-500" />
@@ -140,7 +157,8 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm">
-              <span className="font-medium">Active Webhooks:</span> {integrations.webhooks}
+              <span className="font-medium">Active Webhooks:</span>{" "}
+              {integrations.webhooks}
             </p>
             <Button asChild variant="secondary" className="w-full">
               <Link href={`/${lang}/admin/integration/webhooks`}>

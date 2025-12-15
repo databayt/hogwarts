@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonDataTable } from '@/components/ui/skeleton-data-table'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
 
 export default function AttendanceBulkLoading() {
   return (

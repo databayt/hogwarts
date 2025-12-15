@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { UsageBasedPricing } from "@/components/billingsdk/usage-based-pricing";
+import { useState } from "react"
+
+import { UsageBasedPricing } from "@/components/billingsdk/usage-based-pricing"
 
 export function UsageBasedPricingDemo() {
-  const [credits, setCredits] = useState(4000);
+  const [credits, setCredits] = useState(4000)
 
   return (
     <UsageBasedPricing
@@ -19,5 +20,5 @@ export function UsageBasedPricingDemo() {
       title="Additional Credits"
       subtitle="Add more API credits to your plan as needed."
     />
-  );
+  )
 }

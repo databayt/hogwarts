@@ -4,6 +4,6 @@ export {
   GradeCertificatePrint,
   type CertificateData,
   type CertificateOptions,
-} from "./template";
+} from "./template"
 
-export { generateGradeCertificate } from "./actions";
+export { generateGradeCertificate } from "./actions"

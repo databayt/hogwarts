@@ -1,18 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { iconItems, getCategories } from "./config"
-import { IconPreviewCard } from "./icon-preview-card"
+import { Search } from "lucide-react"
+
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
 import type { IconCategory } from "@/components/icons/types"
+
+import { getCategories, iconItems } from "./config"
+import { IconPreviewCard } from "./icon-preview-card"
 
 export default function IconBrowser() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("all")
@@ -26,9 +28,7 @@ export default function IconBrowser() {
 
     // Filter by category
     if (selectedCategory !== "all") {
-      filtered = filtered.filter(
-        (icon) => icon.category === selectedCategory
-      )
+      filtered = filtered.filter((icon) => icon.category === selectedCategory)
     }
 
     // Filter by search query (name, id, tags, description)
@@ -80,7 +80,7 @@ export default function IconBrowser() {
 
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
             type="text"
             placeholder="Search icons by name, tag, or description..."
@@ -92,7 +92,7 @@ export default function IconBrowser() {
       </div>
 
       {/* Results Count */}
-      <div className="mb-4 text-sm text-muted-foreground">
+      <div className="text-muted-foreground mb-4 text-sm">
         Showing {filteredIcons.length} of {iconItems.length} icons
       </div>
 
@@ -108,27 +108,31 @@ export default function IconBrowser() {
           <p className="text-muted-foreground">
             No icons found matching your search.
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-2 text-sm">
             Try different keywords or category.
           </p>
         </div>
       )}
 
       {/* Usage Guide */}
-      <div className="mt-12 rounded-lg border bg-muted/50 p-6">
+      <div className="bg-muted/50 mt-12 rounded-lg border p-6">
         <h3 className="mb-4 font-semibold">Usage</h3>
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-sm font-medium">Namespace Pattern (Recommended)</p>
-            <code className="block rounded bg-background p-3 text-sm">
+            <p className="mb-2 text-sm font-medium">
+              Namespace Pattern (Recommended)
+            </p>
+            <code className="bg-background block rounded p-3 text-sm">
               {`import { Icons } from "@/components/icons"`}
               <br />
               {`<Icons.github className="w-6 h-6" />`}
             </code>
           </div>
           <div>
-            <p className="mb-2 text-sm font-medium">Individual Imports (Tree-shaking)</p>
-            <code className="block rounded bg-background p-3 text-sm">
+            <p className="mb-2 text-sm font-medium">
+              Individual Imports (Tree-shaking)
+            </p>
+            <code className="bg-background block rounded p-3 text-sm">
               {`import { GitHubIcon } from "@/components/icons"`}
               <br />
               {`<GitHubIcon className="w-6 h-6" />`}
@@ -136,7 +140,7 @@ export default function IconBrowser() {
           </div>
           <div>
             <p className="mb-2 text-sm font-medium">Dynamic Loading</p>
-            <code className="block rounded bg-background p-3 text-sm">
+            <code className="bg-background block rounded p-3 text-sm">
               {`import { Icon } from "@/components/icons"`}
               <br />
               {`<Icon name="github" className="w-6 h-6" />`}

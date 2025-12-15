@@ -1,25 +1,20 @@
-"use client";
+"use client"
 
-import { logout } from "./logout-action";
-
-
+import { logout } from "./logout-action"
 
 interface LogoutButtonProps {
-  children?: React.ReactNode;
-  className?: string;
-};
+  children?: React.ReactNode
+  className?: string
+}
 
-export const LogoutButton = ({
-  children,
-  className
-}: LogoutButtonProps) => {
+export const LogoutButton = ({ children, className }: LogoutButtonProps) => {
   const onClick = () => {
-    logout();
-  };
+    logout()
+  }
 
   return (
     <span onClick={onClick} className={className}>
       {children}
     </span>
-  );
-};
+  )
+}

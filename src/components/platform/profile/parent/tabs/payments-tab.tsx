@@ -5,17 +5,37 @@
 
 "use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CreditCard, Calendar, Download, ChevronRight, CircleAlert, CircleCheck, Clock, DollarSign, Receipt, TrendingUp, TrendingDown, FileText, Printer, ListFilter, Plus, ArrowUpRight, ArrowDownRight } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import type { ParentProfile } from '../../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import React, { useState } from "react"
+import { format } from "date-fns"
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Calendar,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  FileText,
+  ListFilter,
+  Plus,
+  Printer,
+  Receipt,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ParentProfile } from "../../types"
 
 // ============================================================================
 // Types
@@ -24,7 +44,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface PaymentsTabProps {
   profile: ParentProfile
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   isOwner?: boolean
   className?: string
 }
@@ -33,11 +53,18 @@ interface Fee {
   id: string
   childId: string
   childName: string
-  type: 'tuition' | 'activity' | 'uniform' | 'books' | 'transport' | 'meal' | 'other'
+  type:
+    | "tuition"
+    | "activity"
+    | "uniform"
+    | "books"
+    | "transport"
+    | "meal"
+    | "other"
   description: string
   amount: number
   dueDate: Date
-  status: 'paid' | 'pending' | 'overdue' | 'partial'
+  status: "paid" | "pending" | "overdue" | "partial"
   paidAmount?: number
   term: string
   year: number
@@ -47,8 +74,8 @@ interface Payment {
   id: string
   date: Date
   amount: number
-  method: 'credit_card' | 'bank_transfer' | 'cash' | 'check' | 'online'
-  status: 'completed' | 'pending' | 'failed' | 'refunded'
+  method: "credit_card" | "bank_transfer" | "cash" | "check" | "online"
+  status: "completed" | "pending" | "failed" | "refunded"
   reference: string
   fees: string[]
   childName?: string
@@ -62,7 +89,7 @@ interface Invoice {
   dueDate: Date
   totalAmount: number
   paidAmount: number
-  status: 'paid' | 'partial' | 'unpaid' | 'overdue'
+  status: "paid" | "partial" | "unpaid" | "overdue"
   items: {
     description: string
     amount: number
@@ -78,7 +105,7 @@ interface PaymentPlan {
   paidInstallments: number
   nextPaymentDate: Date
   nextPaymentAmount: number
-  status: 'active' | 'completed' | 'defaulted'
+  status: "active" | "completed" | "defaulted"
 }
 
 // ============================================================================
@@ -87,146 +114,170 @@ interface PaymentPlan {
 
 const mockFees: Fee[] = [
   {
-    id: 'fee-1',
-    childId: 'student-1',
-    childName: 'Alex Thompson',
-    type: 'tuition',
-    description: 'Spring 2024 Tuition Fee',
+    id: "fee-1",
+    childId: "student-1",
+    childName: "Alex Thompson",
+    type: "tuition",
+    description: "Spring 2024 Tuition Fee",
     amount: 5000,
     dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-    status: 'pending',
-    term: 'Spring',
-    year: 2024
+    status: "pending",
+    term: "Spring",
+    year: 2024,
   },
   {
-    id: 'fee-2',
-    childId: 'student-2',
-    childName: 'Emma Thompson',
-    type: 'tuition',
-    description: 'Spring 2024 Tuition Fee',
+    id: "fee-2",
+    childId: "student-2",
+    childName: "Emma Thompson",
+    type: "tuition",
+    description: "Spring 2024 Tuition Fee",
     amount: 4500,
     dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-    status: 'pending',
-    term: 'Spring',
-    year: 2024
+    status: "pending",
+    term: "Spring",
+    year: 2024,
   },
   {
-    id: 'fee-3',
-    childId: 'student-1',
-    childName: 'Alex Thompson',
-    type: 'activity',
-    description: 'Basketball Team Fee',
+    id: "fee-3",
+    childId: "student-1",
+    childName: "Alex Thompson",
+    type: "activity",
+    description: "Basketball Team Fee",
     amount: 250,
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    status: 'pending',
-    term: 'Spring',
-    year: 2024
+    status: "pending",
+    term: "Spring",
+    year: 2024,
   },
   {
-    id: 'fee-4',
-    childId: 'student-2',
-    childName: 'Emma Thompson',
-    type: 'books',
-    description: 'Textbooks - Grade 8',
+    id: "fee-4",
+    childId: "student-2",
+    childName: "Emma Thompson",
+    type: "books",
+    description: "Textbooks - Grade 8",
     amount: 450,
     dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    status: 'paid',
+    status: "paid",
     paidAmount: 450,
-    term: 'Spring',
-    year: 2024
+    term: "Spring",
+    year: 2024,
   },
   {
-    id: 'fee-5',
-    childId: 'student-1',
-    childName: 'Alex Thompson',
-    type: 'tuition',
-    description: 'Fall 2023 Tuition Fee',
+    id: "fee-5",
+    childId: "student-1",
+    childName: "Alex Thompson",
+    type: "tuition",
+    description: "Fall 2023 Tuition Fee",
     amount: 5000,
-    dueDate: new Date('2023-09-01'),
-    status: 'paid',
+    dueDate: new Date("2023-09-01"),
+    status: "paid",
     paidAmount: 5000,
-    term: 'Fall',
-    year: 2023
-  }
+    term: "Fall",
+    year: 2023,
+  },
 ]
 
 const mockPayments: Payment[] = [
   {
-    id: 'pay-1',
+    id: "pay-1",
     date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     amount: 5000,
-    method: 'credit_card',
-    status: 'completed',
-    reference: 'TXN-2024-001',
-    fees: ['fee-5'],
-    childName: 'Alex Thompson',
-    receiptUrl: '#'
+    method: "credit_card",
+    status: "completed",
+    reference: "TXN-2024-001",
+    fees: ["fee-5"],
+    childName: "Alex Thompson",
+    receiptUrl: "#",
   },
   {
-    id: 'pay-2',
+    id: "pay-2",
     date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     amount: 450,
-    method: 'online',
-    status: 'completed',
-    reference: 'TXN-2024-002',
-    fees: ['fee-4'],
-    childName: 'Emma Thompson',
-    receiptUrl: '#'
+    method: "online",
+    status: "completed",
+    reference: "TXN-2024-002",
+    fees: ["fee-4"],
+    childName: "Emma Thompson",
+    receiptUrl: "#",
   },
   {
-    id: 'pay-3',
+    id: "pay-3",
     date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
     amount: 4500,
-    method: 'bank_transfer',
-    status: 'completed',
-    reference: 'TXN-2023-015',
+    method: "bank_transfer",
+    status: "completed",
+    reference: "TXN-2023-015",
     fees: [],
-    childName: 'Emma Thompson',
-    receiptUrl: '#'
-  }
+    childName: "Emma Thompson",
+    receiptUrl: "#",
+  },
 ]
 
 const mockInvoices: Invoice[] = [
   {
-    id: 'inv-1',
-    invoiceNumber: 'INV-2024-001',
+    id: "inv-1",
+    invoiceNumber: "INV-2024-001",
     date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
     dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
     totalAmount: 10200,
     paidAmount: 0,
-    status: 'unpaid',
+    status: "unpaid",
     items: [
-      { description: 'Spring 2024 Tuition', amount: 5000, childName: 'Alex Thompson' },
-      { description: 'Spring 2024 Tuition', amount: 4500, childName: 'Emma Thompson' },
-      { description: 'Basketball Team Fee', amount: 250, childName: 'Alex Thompson' },
-      { description: 'Textbooks - Grade 8', amount: 450, childName: 'Emma Thompson' }
-    ]
+      {
+        description: "Spring 2024 Tuition",
+        amount: 5000,
+        childName: "Alex Thompson",
+      },
+      {
+        description: "Spring 2024 Tuition",
+        amount: 4500,
+        childName: "Emma Thompson",
+      },
+      {
+        description: "Basketball Team Fee",
+        amount: 250,
+        childName: "Alex Thompson",
+      },
+      {
+        description: "Textbooks - Grade 8",
+        amount: 450,
+        childName: "Emma Thompson",
+      },
+    ],
   },
   {
-    id: 'inv-2',
-    invoiceNumber: 'INV-2023-015',
-    date: new Date('2023-08-15'),
-    dueDate: new Date('2023-09-01'),
+    id: "inv-2",
+    invoiceNumber: "INV-2023-015",
+    date: new Date("2023-08-15"),
+    dueDate: new Date("2023-09-01"),
     totalAmount: 10000,
     paidAmount: 10000,
-    status: 'paid',
+    status: "paid",
     items: [
-      { description: 'Fall 2023 Tuition', amount: 5000, childName: 'Alex Thompson' },
-      { description: 'Fall 2023 Tuition', amount: 4500, childName: 'Emma Thompson' },
-      { description: 'Registration Fee', amount: 500, childName: 'Both' }
-    ]
-  }
+      {
+        description: "Fall 2023 Tuition",
+        amount: 5000,
+        childName: "Alex Thompson",
+      },
+      {
+        description: "Fall 2023 Tuition",
+        amount: 4500,
+        childName: "Emma Thompson",
+      },
+      { description: "Registration Fee", amount: 500, childName: "Both" },
+    ],
+  },
 ]
 
 const mockPaymentPlan: PaymentPlan = {
-  id: 'plan-1',
-  name: 'Annual Tuition Payment Plan',
+  id: "plan-1",
+  name: "Annual Tuition Payment Plan",
   totalAmount: 19000,
   installments: 4,
   paidInstallments: 2,
   nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   nextPaymentAmount: 4750,
-  status: 'active'
+  status: "active",
 }
 
 // ============================================================================
@@ -236,67 +287,79 @@ const mockPaymentPlan: PaymentPlan = {
 export function PaymentsTab({
   profile,
   dictionary,
-  lang = 'en',
+  lang = "en",
   isOwner = false,
-  className
+  className,
 }: PaymentsTabProps) {
-  const [selectedChild, setSelectedChild] = useState<string>('all')
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('current')
+  const [selectedChild, setSelectedChild] = useState<string>("all")
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("current")
 
   const { children, financialSummary } = profile
 
   // Filter fees based on selection
-  const filteredFees = mockFees.filter(fee => {
-    if (selectedChild !== 'all' && fee.childId !== selectedChild) return false
-    if (selectedPeriod === 'current' && fee.status === 'paid') return false
-    if (selectedPeriod === 'paid' && fee.status !== 'paid') return false
+  const filteredFees = mockFees.filter((fee) => {
+    if (selectedChild !== "all" && fee.childId !== selectedChild) return false
+    if (selectedPeriod === "current" && fee.status === "paid") return false
+    if (selectedPeriod === "paid" && fee.status !== "paid") return false
     return true
   })
 
   // Calculate totals
   const totalDue = filteredFees
-    .filter(f => f.status !== 'paid')
+    .filter((f) => f.status !== "paid")
     .reduce((sum, f) => sum + f.amount, 0)
   const totalPaid = mockPayments
-    .filter(p => p.status === 'completed')
+    .filter((p) => p.status === "completed")
     .reduce((sum, p) => sum + p.amount, 0)
   const overdueAmount = filteredFees
-    .filter(f => f.status === 'overdue')
+    .filter((f) => f.status === "overdue")
     .reduce((sum, f) => sum + f.amount, 0)
 
-  const getStatusColor = (status: Fee['status']) => {
+  const getStatusColor = (status: Fee["status"]) => {
     switch (status) {
-      case 'paid': return 'text-green-500'
-      case 'pending': return 'text-yellow-500'
-      case 'overdue': return 'text-red-500'
-      case 'partial': return 'text-orange-500'
-      default: return ''
+      case "paid":
+        return "text-green-500"
+      case "pending":
+        return "text-yellow-500"
+      case "overdue":
+        return "text-red-500"
+      case "partial":
+        return "text-orange-500"
+      default:
+        return ""
     }
   }
 
-  const getPaymentMethodIcon = (method: Payment['method']) => {
+  const getPaymentMethodIcon = (method: Payment["method"]) => {
     switch (method) {
-      case 'credit_card': return <CreditCard className="h-4 w-4" />
-      case 'bank_transfer': return <DollarSign className="h-4 w-4" />
-      case 'online': return <CreditCard className="h-4 w-4" />
-      case 'cash': return <DollarSign className="h-4 w-4" />
-      case 'check': return <FileText className="h-4 w-4" />
-      default: return <DollarSign className="h-4 w-4" />
+      case "credit_card":
+        return <CreditCard className="h-4 w-4" />
+      case "bank_transfer":
+        return <DollarSign className="h-4 w-4" />
+      case "online":
+        return <CreditCard className="h-4 w-4" />
+      case "cash":
+        return <DollarSign className="h-4 w-4" />
+      case "check":
+        return <FileText className="h-4 w-4" />
+      default:
+        return <DollarSign className="h-4 w-4" />
     }
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Alert for Overdue Fees */}
       {overdueAmount > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <CircleAlert className="h-5 w-5 text-destructive" />
+              <CircleAlert className="text-destructive h-5 w-5" />
               <div className="flex-1">
                 <p className="font-medium">Overdue Payment Alert</p>
-                <p className="text-sm text-muted-foreground">
-                  You have ${overdueAmount} in overdue fees. Please make payment to avoid late charges.
+                <p className="text-muted-foreground text-sm">
+                  You have ${overdueAmount} in overdue fees. Please make payment
+                  to avoid late charges.
                 </p>
               </div>
               <Button variant="destructive" size="sm">
@@ -308,16 +371,16 @@ export function PaymentsTab({
       )}
 
       {/* Financial Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-500/10">
+              <div className="rounded-lg bg-red-500/10 p-2">
                 <DollarSign className="h-4 w-4 text-red-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">${totalDue}</p>
-                <p className="text-xs text-muted-foreground">Total Due</p>
+                <p className="text-muted-foreground text-xs">Total Due</p>
               </div>
             </div>
           </CardContent>
@@ -326,12 +389,14 @@ export function PaymentsTab({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
+              <div className="rounded-lg bg-green-500/10 p-2">
                 <CircleCheck className="h-4 w-4 text-green-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">${totalPaid}</p>
-                <p className="text-xs text-muted-foreground">Total Paid (YTD)</p>
+                <p className="text-muted-foreground text-xs">
+                  Total Paid (YTD)
+                </p>
               </div>
             </div>
           </CardContent>
@@ -340,12 +405,12 @@ export function PaymentsTab({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/10">
+              <div className="rounded-lg bg-orange-500/10 p-2">
                 <CircleAlert className="h-4 w-4 text-orange-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">${overdueAmount}</p>
-                <p className="text-xs text-muted-foreground">Overdue</p>
+                <p className="text-muted-foreground text-xs">Overdue</p>
               </div>
             </div>
           </CardContent>
@@ -354,14 +419,17 @@ export function PaymentsTab({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
+              <div className="rounded-lg bg-blue-500/10 p-2">
                 <Calendar className="h-4 w-4 text-blue-500" />
               </div>
               <div>
                 <p className="text-lg font-bold">
-                  {format(financialSummary?.nextPaymentDate || new Date(), 'MMM dd')}
+                  {format(
+                    financialSummary?.nextPaymentDate || new Date(),
+                    "MMM dd"
+                  )}
                 </p>
-                <p className="text-xs text-muted-foreground">Next Due Date</p>
+                <p className="text-muted-foreground text-xs">Next Due Date</p>
               </div>
             </div>
           </CardContent>
@@ -372,7 +440,7 @@ export function PaymentsTab({
       {mockPaymentPlan && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between text-base">
               <span className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
                 {mockPaymentPlan.name}
@@ -385,30 +453,42 @@ export function PaymentsTab({
               <div className="flex justify-between text-sm">
                 <span>Payment Progress</span>
                 <span className="font-medium">
-                  {mockPaymentPlan.paidInstallments} / {mockPaymentPlan.installments} installments
+                  {mockPaymentPlan.paidInstallments} /{" "}
+                  {mockPaymentPlan.installments} installments
                 </span>
               </div>
               <Progress
-                value={(mockPaymentPlan.paidInstallments / mockPaymentPlan.installments) * 100}
+                value={
+                  (mockPaymentPlan.paidInstallments /
+                    mockPaymentPlan.installments) *
+                  100
+                }
                 className="h-2"
               />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                 <div>
                   <p className="text-muted-foreground">Total Amount</p>
                   <p className="font-medium">${mockPaymentPlan.totalAmount}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Per Installment</p>
-                  <p className="font-medium">${mockPaymentPlan.nextPaymentAmount}</p>
+                  <p className="font-medium">
+                    ${mockPaymentPlan.nextPaymentAmount}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Next Payment</p>
-                  <p className="font-medium">{format(mockPaymentPlan.nextPaymentDate, 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">
+                    {format(mockPaymentPlan.nextPaymentDate, "MMM dd, yyyy")}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Remaining</p>
                   <p className="font-medium">
-                    ${(mockPaymentPlan.installments - mockPaymentPlan.paidInstallments) * mockPaymentPlan.nextPaymentAmount}
+                    $
+                    {(mockPaymentPlan.installments -
+                      mockPaymentPlan.paidInstallments) *
+                      mockPaymentPlan.nextPaymentAmount}
                   </p>
                 </div>
               </div>
@@ -421,14 +501,14 @@ export function PaymentsTab({
       )}
 
       {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-wrap gap-2">
         <select
-          className="px-3 py-2 text-sm border rounded-md"
+          className="rounded-md border px-3 py-2 text-sm"
           value={selectedChild}
           onChange={(e) => setSelectedChild(e.target.value)}
         >
           <option value="all">All Children</option>
-          {(children || []).map(child => (
+          {(children || []).map((child) => (
             <option key={child.id} value={child.id}>
               {child.givenName} {child.surname}
             </option>
@@ -436,7 +516,7 @@ export function PaymentsTab({
         </select>
 
         <select
-          className="px-3 py-2 text-sm border rounded-md"
+          className="rounded-md border px-3 py-2 text-sm"
           value={selectedPeriod}
           onChange={(e) => setSelectedPeriod(e.target.value)}
         >
@@ -446,14 +526,14 @@ export function PaymentsTab({
         </select>
 
         <Button variant="outline" size="sm">
-          <ListFilter className="h-4 w-4 mr-1" />
+          <ListFilter className="mr-1 h-4 w-4" />
           More Filters
         </Button>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="fees" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="fees">Current Fees</TabsTrigger>
           <TabsTrigger value="history">Payment History</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
@@ -462,41 +542,43 @@ export function PaymentsTab({
         <TabsContent value="fees" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-base">
                 <span className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
                   Fees & Charges
                 </span>
-                <Button size="sm">
-                  Pay All (${totalDue})
-                </Button>
+                <Button size="sm">Pay All (${totalDue})</Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {filteredFees.map((fee) => (
-                <div key={fee.id} className="border rounded-lg p-4">
+                <div key={fee.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-sm">{fee.description}</h4>
+                        <h4 className="text-sm font-semibold">
+                          {fee.description}
+                        </h4>
                         <Badge variant="secondary" className="text-xs">
                           {fee.type}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
                         <span>{fee.childName}</span>
                         <span>•</span>
-                        <span>Due: {format(fee.dueDate, 'MMM dd, yyyy')}</span>
+                        <span>Due: {format(fee.dueDate, "MMM dd, yyyy")}</span>
                         <span>•</span>
-                        <span>{fee.term} {fee.year}</span>
+                        <span>
+                          {fee.term} {fee.year}
+                        </span>
                       </div>
-                      {fee.status === 'partial' && fee.paidAmount && (
+                      {fee.status === "partial" && fee.paidAmount && (
                         <div className="mt-2">
                           <Progress
                             value={(fee.paidAmount / fee.amount) * 100}
                             className="h-2"
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-muted-foreground mt-1 text-xs">
                             ${fee.paidAmount} of ${fee.amount} paid
                           </p>
                         </div>
@@ -507,27 +589,25 @@ export function PaymentsTab({
                         <p className="text-lg font-bold">${fee.amount}</p>
                         <Badge
                           variant={
-                            fee.status === 'paid' ? 'default' :
-                            fee.status === 'overdue' ? 'destructive' :
-                            'secondary'
+                            fee.status === "paid"
+                              ? "default"
+                              : fee.status === "overdue"
+                                ? "destructive"
+                                : "secondary"
                           }
                           className={cn("text-xs", getStatusColor(fee.status))}
                         >
                           {fee.status}
                         </Badge>
                       </div>
-                      {fee.status !== 'paid' && (
-                        <Button size="sm">
-                          Pay
-                        </Button>
-                      )}
+                      {fee.status !== "paid" && <Button size="sm">Pay</Button>}
                     </div>
                   </div>
                 </div>
               ))}
 
               {filteredFees.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-muted-foreground py-8 text-center">
                   No fees found
                 </div>
               )}
@@ -538,38 +618,46 @@ export function PaymentsTab({
         <TabsContent value="history" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Clock className="h-4 w-4" />
                 Payment History
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {mockPayments.map((payment) => (
-                <div key={payment.id} className="border rounded-lg p-4">
+                <div key={payment.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "p-2 rounded-lg",
-                        payment.status === 'completed' ? "bg-green-500/10" :
-                        payment.status === 'failed' ? "bg-red-500/10" :
-                        "bg-yellow-500/10"
-                      )}>
+                      <div
+                        className={cn(
+                          "rounded-lg p-2",
+                          payment.status === "completed"
+                            ? "bg-green-500/10"
+                            : payment.status === "failed"
+                              ? "bg-red-500/10"
+                              : "bg-yellow-500/10"
+                        )}
+                      >
                         {getPaymentMethodIcon(payment.method)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">
+                          <p className="text-sm font-semibold">
                             ${payment.amount}
                           </p>
                           <Badge
-                            variant={payment.status === 'completed' ? 'default' : 'secondary'}
+                            variant={
+                              payment.status === "completed"
+                                ? "default"
+                                : "secondary"
+                            }
                             className="text-xs"
                           >
                             {payment.status}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          <span>{format(payment.date, 'MMM dd, yyyy')}</span>
+                        <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+                          <span>{format(payment.date, "MMM dd, yyyy")}</span>
                           <span>•</span>
                           <span>Ref: {payment.reference}</span>
                           {payment.childName && (
@@ -581,7 +669,7 @@ export function PaymentsTab({
                         </div>
                         <div className="mt-1">
                           <Badge variant="outline" className="text-xs">
-                            {payment.method.replace('_', ' ')}
+                            {payment.method.replace("_", " ")}
                           </Badge>
                         </div>
                       </div>
@@ -608,7 +696,7 @@ export function PaymentsTab({
               <CardTitle className="text-base">Payment Trends</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-48 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground">
+              <div className="bg-muted/50 text-muted-foreground flex h-48 items-center justify-center rounded-lg">
                 Payment trends chart would go here
               </div>
             </CardContent>
@@ -618,38 +706,49 @@ export function PaymentsTab({
         <TabsContent value="invoices" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Receipt className="h-4 w-4" />
                 Invoices & Receipts
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {mockInvoices.map((invoice) => (
-                <div key={invoice.id} className="border rounded-lg p-4">
+                <div key={invoice.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-semibold">{invoice.invoiceNumber}</h4>
+                        <h4 className="font-semibold">
+                          {invoice.invoiceNumber}
+                        </h4>
                         <Badge
                           variant={
-                            invoice.status === 'paid' ? 'default' :
-                            invoice.status === 'overdue' ? 'destructive' :
-                            'secondary'
+                            invoice.status === "paid"
+                              ? "default"
+                              : invoice.status === "overdue"
+                                ? "destructive"
+                                : "secondary"
                           }
                         >
                           {invoice.status}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span>Issued: {format(invoice.date, 'MMM dd, yyyy')}</span>
+                      <div className="text-muted-foreground mt-1 flex items-center gap-3 text-xs">
+                        <span>
+                          Issued: {format(invoice.date, "MMM dd, yyyy")}
+                        </span>
                         <span>•</span>
-                        <span>Due: {format(invoice.dueDate, 'MMM dd, yyyy')}</span>
+                        <span>
+                          Due: {format(invoice.dueDate, "MMM dd, yyyy")}
+                        </span>
                       </div>
 
                       {/* Invoice Items */}
                       <div className="mt-3 space-y-1">
                         {invoice.items.map((item, idx) => (
-                          <div key={idx} className="flex justify-between text-sm">
+                          <div
+                            key={idx}
+                            className="flex justify-between text-sm"
+                          >
                             <span className="text-muted-foreground">
                               {item.description} ({item.childName})
                             </span>
@@ -659,18 +758,22 @@ export function PaymentsTab({
                       </div>
 
                       {/* Total */}
-                      <div className="flex justify-between pt-2 mt-2 border-t">
+                      <div className="mt-2 flex justify-between border-t pt-2">
                         <span className="font-semibold">Total</span>
-                        <span className="font-semibold">${invoice.totalAmount}</span>
+                        <span className="font-semibold">
+                          ${invoice.totalAmount}
+                        </span>
                       </div>
 
-                      {invoice.status === 'partial' && (
+                      {invoice.status === "partial" && (
                         <div className="mt-2">
                           <Progress
-                            value={(invoice.paidAmount / invoice.totalAmount) * 100}
+                            value={
+                              (invoice.paidAmount / invoice.totalAmount) * 100
+                            }
                             className="h-2"
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-muted-foreground mt-1 text-xs">
                             ${invoice.paidAmount} of ${invoice.totalAmount} paid
                           </p>
                         </div>
@@ -683,10 +786,8 @@ export function PaymentsTab({
                       <Button variant="ghost" size="sm">
                         <Printer className="h-4 w-4" />
                       </Button>
-                      {invoice.status !== 'paid' && (
-                        <Button size="sm">
-                          Pay Now
-                        </Button>
+                      {invoice.status !== "paid" && (
+                        <Button size="sm">Pay Now</Button>
                       )}
                     </div>
                   </div>

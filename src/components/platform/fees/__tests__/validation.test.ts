@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Fee validation schema tests
@@ -7,8 +7,23 @@ describe("Fee Validation Schemas", () => {
     name: z.string().min(1, "Fee name is required"),
     amount: z.number().positive("Amount must be positive"),
     currency: z.string().min(3).max(3).default("USD"),
-    category: z.enum(["TUITION", "REGISTRATION", "EXAMINATION", "LABORATORY", "LIBRARY", "SPORTS", "TRANSPORT", "MEAL", "UNIFORM", "OTHER"]).default("OTHER"),
-    frequency: z.enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "SEMESTER", "YEARLY"]).default("ONE_TIME"),
+    category: z
+      .enum([
+        "TUITION",
+        "REGISTRATION",
+        "EXAMINATION",
+        "LABORATORY",
+        "LIBRARY",
+        "SPORTS",
+        "TRANSPORT",
+        "MEAL",
+        "UNIFORM",
+        "OTHER",
+      ])
+      .default("OTHER"),
+    frequency: z
+      .enum(["ONE_TIME", "MONTHLY", "QUARTERLY", "SEMESTER", "YEARLY"])
+      .default("ONE_TIME"),
     description: z.string().optional(),
     isActive: z.boolean().default(true),
   })
@@ -17,24 +32,36 @@ describe("Fee Validation Schemas", () => {
     studentId: z.string().min(1, "Student is required"),
     feeStructureId: z.string().min(1, "Fee structure is required"),
     amount: z.number().positive("Amount must be positive"),
-    method: z.enum(["CASH", "BANK_TRANSFER", "CARD", "CHEQUE", "MOBILE_MONEY", "OTHER"]),
+    method: z.enum([
+      "CASH",
+      "BANK_TRANSFER",
+      "CARD",
+      "CHEQUE",
+      "MOBILE_MONEY",
+      "OTHER",
+    ]),
     reference: z.string().optional(),
     notes: z.string().optional(),
     paidDate: z.string().optional(),
   })
 
-  const scholarshipSchema = z.object({
-    name: z.string().min(1, "Scholarship name is required"),
-    percentage: z.number().min(0).max(100).optional(),
-    fixedAmount: z.number().positive().optional(),
-    studentId: z.string().min(1, "Student is required"),
-    feeStructureId: z.string().optional(),
-    startDate: z.string(),
-    endDate: z.string().optional(),
-    reason: z.string().optional(),
-  }).refine((data) => data.percentage !== undefined || data.fixedAmount !== undefined, {
-    message: "Either percentage or fixed amount is required",
-  })
+  const scholarshipSchema = z
+    .object({
+      name: z.string().min(1, "Scholarship name is required"),
+      percentage: z.number().min(0).max(100).optional(),
+      fixedAmount: z.number().positive().optional(),
+      studentId: z.string().min(1, "Student is required"),
+      feeStructureId: z.string().optional(),
+      startDate: z.string(),
+      endDate: z.string().optional(),
+      reason: z.string().optional(),
+    })
+    .refine(
+      (data) => data.percentage !== undefined || data.fixedAmount !== undefined,
+      {
+        message: "Either percentage or fixed amount is required",
+      }
+    )
 
   describe("feeStructureSchema", () => {
     it("validates complete fee structure data", () => {
@@ -94,8 +121,16 @@ describe("Fee Validation Schemas", () => {
 
     it("validates category enum", () => {
       const validCategories = [
-        "TUITION", "REGISTRATION", "EXAMINATION", "LABORATORY",
-        "LIBRARY", "SPORTS", "TRANSPORT", "MEAL", "UNIFORM", "OTHER"
+        "TUITION",
+        "REGISTRATION",
+        "EXAMINATION",
+        "LABORATORY",
+        "LIBRARY",
+        "SPORTS",
+        "TRANSPORT",
+        "MEAL",
+        "UNIFORM",
+        "OTHER",
       ]
 
       validCategories.forEach((category) => {
@@ -105,7 +140,13 @@ describe("Fee Validation Schemas", () => {
     })
 
     it("validates frequency enum", () => {
-      const validFrequencies = ["ONE_TIME", "MONTHLY", "QUARTERLY", "SEMESTER", "YEARLY"]
+      const validFrequencies = [
+        "ONE_TIME",
+        "MONTHLY",
+        "QUARTERLY",
+        "SEMESTER",
+        "YEARLY",
+      ]
 
       validFrequencies.forEach((frequency) => {
         const data = { name: "Fee", amount: 100, frequency }
@@ -158,7 +199,14 @@ describe("Fee Validation Schemas", () => {
     })
 
     it("validates payment method enum", () => {
-      const validMethods = ["CASH", "BANK_TRANSFER", "CARD", "CHEQUE", "MOBILE_MONEY", "OTHER"]
+      const validMethods = [
+        "CASH",
+        "BANK_TRANSFER",
+        "CARD",
+        "CHEQUE",
+        "MOBILE_MONEY",
+        "OTHER",
+      ]
 
       validMethods.forEach((method) => {
         const data = {

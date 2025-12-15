@@ -7,9 +7,9 @@
  * Run with: tsx prisma/seeds/covers.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 // All book covers using Open Library ISBN covers (reliable, public domain)
 const COVER_UPDATES: { title: string; coverUrl: string }[] = [
@@ -182,36 +182,36 @@ const COVER_UPDATES: { title: string; coverUrl: string }[] = [
     title: "قصص الأنبياء",
     coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892481-L.jpg",
   },
-];
+]
 
 export async function updateBookCovers() {
-  console.log("📚 Updating book covers with Open Library URLs...\n");
+  console.log("📚 Updating book covers with Open Library URLs...\n")
 
-  let updated = 0;
-  let notFound = 0;
+  let updated = 0
+  let notFound = 0
 
   for (const { title, coverUrl } of COVER_UPDATES) {
     const result = await prisma.book.updateMany({
       where: { title },
       data: { coverUrl },
-    });
+    })
 
     if (result.count > 0) {
-      console.log(`✅ ${title.substring(0, 40)}`);
-      updated += result.count;
+      console.log(`✅ ${title.substring(0, 40)}`)
+      updated += result.count
     } else {
-      console.log(`⚠️ Not found: ${title}`);
-      notFound++;
+      console.log(`⚠️ Not found: ${title}`)
+      notFound++
     }
   }
 
-  console.log(`\n✨ Done! Updated ${updated} books, ${notFound} not found.`);
-  return { updated, notFound };
+  console.log(`\n✨ Done! Updated ${updated} books, ${notFound} not found.`)
+  return { updated, notFound }
 }
 
 // Run directly if executed as script
 if (require.main === module) {
   updateBookCovers()
     .catch(console.error)
-    .finally(() => prisma.$disconnect());
+    .finally(() => prisma.$disconnect())
 }

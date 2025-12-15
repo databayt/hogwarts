@@ -1,16 +1,18 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { NotificationCard, NotificationCardCompact } from "./card"
+import { NotificationType } from "@prisma/client"
+import { AnimatePresence, motion } from "framer-motion"
+import { Bell, CheckCheck, Loader2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bell, CheckCheck, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
-import type { NotificationDTO } from "./types"
-import { NotificationType } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { NotificationCard, NotificationCardCompact } from "./card"
+import type { NotificationDTO } from "./types"
 
 interface NotificationListProps {
   notifications: NotificationDTO[]
@@ -57,7 +59,7 @@ export function NotificationList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
       </div>
     )
   }
@@ -69,13 +71,13 @@ export function NotificationList({
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-12 text-center"
       >
-        <div className="rounded-full bg-muted p-4 mb-4">
-          <Bell className="h-8 w-8 text-muted-foreground" />
+        <div className="bg-muted mb-4 rounded-full p-4">
+          <Bell className="text-muted-foreground h-8 w-8" />
         </div>
-        <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+        <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
           {dictionary.empty.noNotifications}
         </h3>
-        <p className="text-sm text-muted-foreground max-w-[250px]">
+        <p className="text-muted-foreground max-w-[250px] text-sm">
           {emptyMessage || dictionary.empty.noNotificationsDescription}
         </p>
       </motion.div>
@@ -87,7 +89,10 @@ export function NotificationList({
       {/* Header with filters */}
       {showFilters && (
         <div className="flex items-center justify-between">
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+          <Tabs
+            value={filter}
+            onValueChange={(v) => setFilter(v as typeof filter)}
+          >
             <TabsList>
               <TabsTrigger value="all">{dictionary.tabs.all}</TabsTrigger>
               <TabsTrigger value="unread">
@@ -122,7 +127,7 @@ export function NotificationList({
           animate={{ opacity: 1 }}
           className="py-8 text-center"
         >
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {filter === "unread"
               ? dictionary.empty.noUnread
               : dictionary.empty.noResults}
@@ -183,15 +188,20 @@ export function NotificationListScrollable({
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-card">
+      <div className="bg-card border-b px-4 py-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">{dictionary.notificationCenter}</h3>
+            <h3 className="text-sm font-semibold">
+              {dictionary.notificationCenter}
+            </h3>
             {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {unreadCount > 1
-                  ? dictionary.unreadCount_other.replace('{{count}}', unreadCount.toString())
-                  : dictionary.unreadCount_one.replace('{{count}}', '1')}
+                  ? dictionary.unreadCount_other.replace(
+                      "{{count}}",
+                      unreadCount.toString()
+                    )
+                  : dictionary.unreadCount_one.replace("{{count}}", "1")}
               </p>
             )}
           </div>
@@ -204,9 +214,9 @@ export function NotificationListScrollable({
               className="h-8 text-xs"
             >
               {isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin me-1" />
+                <Loader2 className="me-1 h-3 w-3 animate-spin" />
               ) : (
-                <CheckCheck className="h-3 w-3 me-1" />
+                <CheckCheck className="me-1 h-3 w-3" />
               )}
               {dictionary.markAllAsRead}
             </Button>
@@ -220,16 +230,18 @@ export function NotificationListScrollable({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-8 text-center px-4"
+            className="flex flex-col items-center justify-center px-4 py-8 text-center"
           >
-            <div className="rounded-full bg-muted p-3 mb-3">
-              <Bell className="h-6 w-6 text-muted-foreground" />
+            <div className="bg-muted mb-3 rounded-full p-3">
+              <Bell className="text-muted-foreground h-6 w-6" />
             </div>
-            <p className="text-sm text-muted-foreground">{dictionary.empty.noNotifications}</p>
+            <p className="text-muted-foreground text-sm">
+              {dictionary.empty.noNotifications}
+            </p>
           </motion.div>
         ) : (
           <AnimatePresence mode="popLayout">
-            <div className="p-2 space-y-1">
+            <div className="space-y-1 p-2">
               {(notifications ?? []).map((notification) => (
                 <NotificationCardCompact
                   key={notification.id}
@@ -247,7 +259,7 @@ export function NotificationListScrollable({
 
       {/* Footer */}
       {(notifications?.length ?? 0) > 0 && (
-        <div className="px-4 py-3 border-t bg-card">
+        <div className="bg-card border-t px-4 py-3">
           <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
             <a href={`/${locale}/notifications`}>{dictionary.viewAll}</a>
           </Button>
@@ -299,13 +311,13 @@ export function NotificationListGrouped({
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center py-12 text-center"
       >
-        <div className="rounded-full bg-muted p-4 mb-4">
-          <Bell className="h-8 w-8 text-muted-foreground" />
+        <div className="bg-muted mb-4 rounded-full p-4">
+          <Bell className="text-muted-foreground h-8 w-8" />
         </div>
-        <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+        <h3 className="mb-1 scroll-m-20 text-lg font-semibold tracking-tight">
           {dictionary.empty.noNotifications}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {dictionary.empty.noNotificationsDescription}
         </p>
       </motion.div>
@@ -314,9 +326,9 @@ export function NotificationListGrouped({
 
   // Map group keys to dictionary labels
   const groupLabels: Record<string, string> = {
-    "Today": dictionary.grouping.today,
-    "Yesterday": dictionary.grouping.yesterday,
-    "Older": dictionary.grouping.older,
+    Today: dictionary.grouping.today,
+    Yesterday: dictionary.grouping.yesterday,
+    Older: dictionary.grouping.older,
   }
 
   return (
@@ -329,7 +341,7 @@ export function NotificationListGrouped({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-2"
           >
-            <h4 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background py-1">
+            <h4 className="text-muted-foreground bg-background sticky top-0 py-1 text-sm font-medium">
               {groupLabels[group]}
             </h4>
             <div className="space-y-2">

@@ -2,8 +2,15 @@ import { z } from "zod"
 
 // Base schema for year level
 export const yearLevelBaseSchema = z.object({
-  levelName: z.string().min(1, "Level name is required").max(50, "Level name is too long"),
-  levelNameAr: z.string().max(50, "Arabic name is too long").optional().nullable(),
+  levelName: z
+    .string()
+    .min(1, "Level name is required")
+    .max(50, "Level name is too long"),
+  levelNameAr: z
+    .string()
+    .max(50, "Arabic name is too long")
+    .optional()
+    .nullable(),
   levelOrder: z.number().int().min(1, "Level order must be at least 1"),
 })
 

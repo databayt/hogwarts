@@ -5,20 +5,20 @@
  * with support for parameter interpolation.
  */
 
-import type { Dictionary } from '../dictionaries';
-import type { Locale } from '../config';
+import type { Locale } from "../config"
+import type { Dictionary } from "../dictionaries"
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
-export type Messages = Dictionary['messages'];
-export type ValidationMessages = Messages['validation'];
-export type ToastMessages = Messages['toast'];
-export type ErrorMessages = Messages['errors'];
+export type Messages = Dictionary["messages"]
+export type ValidationMessages = Messages["validation"]
+export type ToastMessages = Messages["toast"]
+export type ErrorMessages = Messages["errors"]
 
 // Parameter interpolation type
-type MessageParams = Record<string, string | number>;
+type MessageParams = Record<string, string | number>
 
 // ============================================================================
 // Interpolation Utility
@@ -31,11 +31,11 @@ type MessageParams = Record<string, string | number>;
  * @returns Interpolated string (e.g., "Must be at least 3 characters")
  */
 export function interpolate(message: string, params?: MessageParams): string {
-  if (!params) return message;
+  if (!params) return message
 
   return Object.entries(params).reduce((msg, [key, value]) => {
-    return msg.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value));
-  }, message);
+    return msg.replace(new RegExp(`\\{${key}\\}`, "g"), String(value))
+  }, message)
 }
 
 // ============================================================================
@@ -49,14 +49,14 @@ export class ValidationHelper {
    * Get a required field message
    */
   required(): string {
-    return this.messages.required;
+    return this.messages.required
   }
 
   /**
    * Get an email validation message
    */
   email(): string {
-    return this.messages.email;
+    return this.messages.email
   }
 
   /**
@@ -64,7 +64,7 @@ export class ValidationHelper {
    * @param min - Minimum length
    */
   minLength(min: number): string {
-    return interpolate(this.messages.minLength, { min });
+    return interpolate(this.messages.minLength, { min })
   }
 
   /**
@@ -72,7 +72,7 @@ export class ValidationHelper {
    * @param max - Maximum length
    */
   maxLength(max: number): string {
-    return interpolate(this.messages.maxLength, { max });
+    return interpolate(this.messages.maxLength, { max })
   }
 
   /**
@@ -80,7 +80,7 @@ export class ValidationHelper {
    * @param min - Minimum value
    */
   min(min: number): string {
-    return interpolate(this.messages.min, { min });
+    return interpolate(this.messages.min, { min })
   }
 
   /**
@@ -88,28 +88,28 @@ export class ValidationHelper {
    * @param max - Maximum value
    */
   max(max: number): string {
-    return interpolate(this.messages.max, { max });
+    return interpolate(this.messages.max, { max })
   }
 
   /**
    * Get a positive number message
    */
   positive(): string {
-    return this.messages.positive;
+    return this.messages.positive
   }
 
   /**
    * Get a password minimum length message
    */
   passwordMinLength(): string {
-    return this.messages.passwordMinLength;
+    return this.messages.passwordMinLength
   }
 
   /**
    * Get a password mismatch message
    */
   passwordMismatch(): string {
-    return this.messages.passwordMismatch;
+    return this.messages.passwordMismatch
   }
 
   /**
@@ -117,9 +117,11 @@ export class ValidationHelper {
    */
   title = {
     required: (): string => this.messages.titleRequired,
-    tooShort: (min: number): string => interpolate(this.messages.titleTooShort, { min }),
-    tooLong: (max: number): string => interpolate(this.messages.titleTooLong, { max }),
-  };
+    tooShort: (min: number): string =>
+      interpolate(this.messages.titleTooShort, { min }),
+    tooLong: (max: number): string =>
+      interpolate(this.messages.titleTooLong, { max }),
+  }
 
   /**
    * Get subdomain validation messages
@@ -129,7 +131,7 @@ export class ValidationHelper {
     tooShort: (): string => this.messages.subdomainTooShort,
     invalidFormat: (): string => this.messages.subdomainInvalidFormat,
     alreadyTaken: (): string => this.messages.subdomainAlreadyTaken,
-  };
+  }
 
   /**
    * Get amount validation messages
@@ -137,7 +139,7 @@ export class ValidationHelper {
   amount = {
     required: (): string => this.messages.amountRequired,
     positive: (): string => this.messages.amountPositive,
-  };
+  }
 
   /**
    * Get score validation messages
@@ -146,7 +148,7 @@ export class ValidationHelper {
     required: (): string => this.messages.scoreRequired,
     invalidRange: (min: number, max: number): string =>
       interpolate(this.messages.scoreInvalidRange, { min, max }),
-  };
+  }
 
   /**
    * Get any validation message by key
@@ -154,8 +156,10 @@ export class ValidationHelper {
    * @param params - Optional parameters for interpolation
    */
   get(key: keyof ValidationMessages, params?: MessageParams): string {
-    const message = this.messages[key];
-    return typeof message === 'string' ? interpolate(message, params) : String(message);
+    const message = this.messages[key]
+    return typeof message === "string"
+      ? interpolate(message, params)
+      : String(message)
   }
 }
 
@@ -203,7 +207,7 @@ export class ToastHelper {
       updated: (): string => this.messages.success.announcementUpdated,
       deleted: (): string => this.messages.success.announcementDeleted,
     },
-  };
+  }
 
   /**
    * Error messages
@@ -242,7 +246,7 @@ export class ToastHelper {
       updateFailed: (): string => this.messages.error.announcementUpdateFailed,
       deleteFailed: (): string => this.messages.error.announcementDeleteFailed,
     },
-  };
+  }
 
   /**
    * Warning messages
@@ -253,7 +257,7 @@ export class ToastHelper {
     confirmCancel: (): string => this.messages.warning.confirmCancel,
     dataLoss: (): string => this.messages.warning.dataLoss,
     irreversible: (): string => this.messages.warning.irreversible,
-  };
+  }
 
   /**
    * Info messages
@@ -264,7 +268,7 @@ export class ToastHelper {
     uploading: (): string => this.messages.info.uploading,
     processing: (): string => this.messages.info.processing,
     syncing: (): string => this.messages.info.syncing,
-  };
+  }
 }
 
 // ============================================================================
@@ -282,7 +286,7 @@ export class ErrorHelper {
     databaseError: (): string => this.messages.server.databaseError,
     connectionError: (): string => this.messages.server.connectionError,
     serviceUnavailable: (): string => this.messages.server.serviceUnavailable,
-  };
+  }
 
   /**
    * Authentication errors
@@ -294,16 +298,17 @@ export class ErrorHelper {
     sessionExpired: (): string => this.messages.auth.sessionExpired,
     permissionDenied: (): string => this.messages.auth.permissionDenied,
     notAuthenticated: (): string => this.messages.auth.notAuthenticated,
-  };
+  }
 
   /**
    * Tenant errors
    */
   tenant = {
-    missingSchoolContext: (): string => this.messages.tenant.missingSchoolContext,
+    missingSchoolContext: (): string =>
+      this.messages.tenant.missingSchoolContext,
     schoolNotFound: (): string => this.messages.tenant.schoolNotFound,
     subdomainTaken: (): string => this.messages.tenant.subdomainTaken,
-  };
+  }
 
   /**
    * Resource errors
@@ -313,7 +318,7 @@ export class ErrorHelper {
     alreadyExists: (): string => this.messages.resource.alreadyExists,
     cannotDelete: (): string => this.messages.resource.cannotDelete,
     cannotModify: (): string => this.messages.resource.cannotModify,
-  };
+  }
 
   /**
    * File errors
@@ -323,7 +328,7 @@ export class ErrorHelper {
     fileTooLarge: (): string => this.messages.file.fileTooLarge,
     invalidType: (): string => this.messages.file.invalidType,
     notFound: (): string => this.messages.file.notFound,
-  };
+  }
 
   /**
    * Payment errors
@@ -332,7 +337,7 @@ export class ErrorHelper {
     processingFailed: (): string => this.messages.payment.processingFailed,
     cardDeclined: (): string => this.messages.payment.cardDeclined,
     insufficientFunds: (): string => this.messages.payment.insufficientFunds,
-  };
+  }
 }
 
 // ============================================================================
@@ -349,7 +354,7 @@ export function createI18nHelpers(messages: Messages) {
     validation: new ValidationHelper(messages.validation),
     toast: new ToastHelper(messages.toast),
     error: new ErrorHelper(messages.errors),
-  };
+  }
 }
 
 /**
@@ -358,7 +363,7 @@ export function createI18nHelpers(messages: Messages) {
  * @returns Helper objects
  */
 export function useI18nMessages(dictionary: Dictionary) {
-  return createI18nHelpers(dictionary.messages);
+  return createI18nHelpers(dictionary.messages)
 }
 
 // ============================================================================
@@ -369,21 +374,21 @@ export function useI18nMessages(dictionary: Dictionary) {
  * Get validation messages from dictionary
  */
 export function getValidationMessages(dictionary: Dictionary) {
-  return new ValidationHelper(dictionary.messages.validation);
+  return new ValidationHelper(dictionary.messages.validation)
 }
 
 /**
  * Get toast messages from dictionary
  */
 export function getToastMessages(dictionary: Dictionary) {
-  return new ToastHelper(dictionary.messages.toast);
+  return new ToastHelper(dictionary.messages.toast)
 }
 
 /**
  * Get error messages from dictionary
  */
 export function getErrorMessages(dictionary: Dictionary) {
-  return new ErrorHelper(dictionary.messages.errors);
+  return new ErrorHelper(dictionary.messages.errors)
 }
 
 // ============================================================================

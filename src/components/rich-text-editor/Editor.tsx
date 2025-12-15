@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { Textarea } from "@/components/ui/textarea";
-import { ControllerRenderProps } from "react-hook-form";
+import { ControllerRenderProps } from "react-hook-form"
+
+import { Textarea } from "@/components/ui/textarea"
 
 interface RichTextEditorProps {
-  field: ControllerRenderProps<any, any>;
+  field: ControllerRenderProps<any, any>
 }
 
 /**
@@ -18,5 +19,5 @@ export function RichTextEditor({ field }: RichTextEditorProps) {
       className="min-h-[200px]"
       placeholder="Enter detailed description..."
     />
-  );
+  )
 }

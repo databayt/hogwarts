@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { TrendBadge } from "./trend-badge"
 import type { CardSize, TrendData } from "./types"
 
@@ -134,7 +136,7 @@ export function StackedStatCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -162,20 +164,25 @@ export function StackedStatCard({
             ))}
           </div>
         ) : (
-          <div className={cn("space-y-4", showDividers && "divide-y divide-border")}>
+          <div
+            className={cn(
+              "space-y-4",
+              showDividers && "divide-border divide-y"
+            )}
+          >
             {stats.map((stat, index) => (
               <div
                 key={index}
                 className={cn("space-y-2", showDividers && index > 0 && "pt-4")}
               >
                 {/* Label with Icon */}
-                <div className="flex items-center gap-2 muted">
+                <div className="muted flex items-center gap-2">
                   {stat.icon && <span className="shrink-0">{stat.icon}</span>}
                   <span className="text-sm">{stat.label}</span>
                 </div>
 
                 {/* Value and Trend */}
-                <div className="flex items-baseline gap-2 flex-wrap">
+                <div className="flex flex-wrap items-baseline gap-2">
                   <h3
                     className={cn(
                       "font-bold",

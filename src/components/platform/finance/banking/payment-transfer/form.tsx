@@ -1,38 +1,40 @@
-'use client';
+"use client"
 
-import { useActionState, useEffect, useMemo, useState, memo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { memo, useActionState, useEffect, useMemo, useState } from "react"
+import { CircleAlert, CircleCheckBig, LoaderCircle } from "lucide-react"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LoaderCircle, CircleAlert, CircleCheckBig } from "lucide-react";
-import { createTransfer } from './actions';
-import type { BankAccount } from '../types';
-import type { getDictionary } from '@/components/internationalization/dictionaries';
-import type { Locale } from '@/components/internationalization/config';
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import type { BankAccount } from "../types"
+import { createTransfer } from "./actions"
 
 // Utility function to format currency
 function formatAmount(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
 }
 
 interface Props {
-  accounts: BankAccount[];
-  dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
-  lang: Locale;
+  accounts: BankAccount[]
+  dictionary: Awaited<ReturnType<typeof getDictionary>>["banking"]
+  lang: Locale
 }
 
 interface AccountSelectProps {
@@ -54,16 +56,23 @@ const AccountSelect = useMemo(() => {
     dictionary,
   }: AccountSelectProps) {
     return (
-      <Select value={selectedAccount} onValueChange={onValueChange} name="accountId" required>
+      <Select
+        value={selectedAccount}
+        onValueChange={onValueChange}
+        name="accountId"
+        required
+      >
         <SelectTrigger id="source-account">
-          <SelectValue placeholder={dictionary?.selectAccount || 'Select an account'} />
+          <SelectValue
+            placeholder={dictionary?.selectAccount || "Select an account"}
+          />
         </SelectTrigger>
         <SelectContent>
           {accounts.map((account) => (
             <SelectItem key={account.id} value={account.id}>
-              <div className="flex items-center justify-between w-full">
+              <div className="flex w-full items-center justify-between">
                 <span>{account.name}</span>
-                <span className="ml-2 text-sm text-muted-foreground">
+                <span className="text-muted-foreground ml-2 text-sm">
                   {formatAmount(Number(account.currentBalance))}
                 </span>
               </div>
@@ -76,32 +85,43 @@ const AccountSelect = useMemo(() => {
 }, [])
 
 function PaymentTransferForm(props: Props) {
-  const [selectedFromAccount, setSelectedFromAccount] = useState('');
-  const [selectedToAccount, setSelectedToAccount] = useState('');
-  const [transferType, setTransferType] = useState<'internal' | 'external'>('internal');
-  const initialState: { success: false; error: { code: string; message: string } } = {
+  const [selectedFromAccount, setSelectedFromAccount] = useState("")
+  const [selectedToAccount, setSelectedToAccount] = useState("")
+  const [transferType, setTransferType] = useState<"internal" | "external">(
+    "internal"
+  )
+  const initialState: {
+    success: false
+    error: { code: string; message: string }
+  } = {
     success: false,
-    error: { code: '', message: '' },
-  };
-  const [state, formAction, isPending] = useActionState(createTransfer, initialState);
+    error: { code: "", message: "" },
+  }
+  const [state, formAction, isPending] = useActionState(
+    createTransfer,
+    initialState
+  )
 
   // Reset form on successful submission
   useEffect(() => {
     if (state.success) {
-      setSelectedFromAccount('');
-      setSelectedToAccount('');
+      setSelectedFromAccount("")
+      setSelectedToAccount("")
       // Reset form inputs
-      const form = document.getElementById('transfer-form') as HTMLFormElement;
-      if (form) form.reset();
+      const form = document.getElementById("transfer-form") as HTMLFormElement
+      if (form) form.reset()
     }
-  }, [state.success]);
+  }, [state.success])
 
   // Memoize account validation to prevent recalculation
   const selectedAccountData = useMemo(() => {
-    return props.accounts.find(acc => acc.id === selectedFromAccount);
-  }, [props.accounts, selectedFromAccount]);
+    return props.accounts.find((acc) => acc.id === selectedFromAccount)
+  }, [props.accounts, selectedFromAccount])
 
-  const availableBalance = selectedAccountData?.availableBalance || selectedAccountData?.currentBalance || 0;
+  const availableBalance =
+    selectedAccountData?.availableBalance ||
+    selectedAccountData?.currentBalance ||
+    0
 
   return (
     <form id="transfer-form" action={formAction} className="space-y-6">
@@ -109,14 +129,18 @@ function PaymentTransferForm(props: Props) {
       {!state.success && (
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
-          <AlertDescription>{state.error.message || 'An error occurred'}</AlertDescription>
+          <AlertDescription>
+            {state.error.message || "An error occurred"}
+          </AlertDescription>
         </Alert>
       )}
 
       {state.success && (
         <Alert>
           <CircleCheckBig className="h-4 w-4" />
-          <AlertDescription>{props.dictionary.transferSuccess}</AlertDescription>
+          <AlertDescription>
+            {props.dictionary.transferSuccess}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -126,16 +150,16 @@ function PaymentTransferForm(props: Props) {
         <div className="flex gap-4">
           <Button
             type="button"
-            variant={transferType === 'internal' ? 'default' : 'outline'}
-            onClick={() => setTransferType('internal')}
+            variant={transferType === "internal" ? "default" : "outline"}
+            onClick={() => setTransferType("internal")}
             size="sm"
           >
             {props.dictionary.betweenMyAccounts}
           </Button>
           <Button
             type="button"
-            variant={transferType === 'external' ? 'default' : 'outline'}
-            onClick={() => setTransferType('external')}
+            variant={transferType === "external" ? "default" : "outline"}
+            onClick={() => setTransferType("external")}
             size="sm"
           >
             {props.dictionary.toAnotherUser}
@@ -145,9 +169,7 @@ function PaymentTransferForm(props: Props) {
 
       {/* Source Account */}
       <div className="space-y-2">
-        <Label htmlFor="fromAccountId">
-          {props.dictionary.fromAccount}
-        </Label>
+        <Label htmlFor="fromAccountId">{props.dictionary.fromAccount}</Label>
         <Select
           value={selectedFromAccount}
           onValueChange={setSelectedFromAccount}
@@ -160,9 +182,9 @@ function PaymentTransferForm(props: Props) {
           <SelectContent>
             {props.accounts.map((account) => (
               <SelectItem key={account.id} value={account.id}>
-                <div className="flex items-center justify-between w-full">
+                <div className="flex w-full items-center justify-between">
                   <span>{account.name}</span>
-                  <span className="ml-2 text-sm text-muted-foreground">
+                  <span className="text-muted-foreground ml-2 text-sm">
                     {formatCurrency(account.currentBalance)}
                   </span>
                 </div>
@@ -171,18 +193,17 @@ function PaymentTransferForm(props: Props) {
           </SelectContent>
         </Select>
         {selectedAccountData && (
-          <p className="text-sm text-muted-foreground">
-            {props.dictionary.availableBalance}: {formatCurrency(availableBalance)}
+          <p className="text-muted-foreground text-sm">
+            {props.dictionary.availableBalance}:{" "}
+            {formatCurrency(availableBalance)}
           </p>
         )}
       </div>
 
       {/* Destination - Internal Transfer */}
-      {transferType === 'internal' && (
+      {transferType === "internal" && (
         <div className="space-y-2">
-          <Label htmlFor="toAccountId">
-            {props.dictionary.toAccount}
-          </Label>
+          <Label htmlFor="toAccountId">{props.dictionary.toAccount}</Label>
           <Select
             value={selectedToAccount}
             onValueChange={setSelectedToAccount}
@@ -193,12 +214,12 @@ function PaymentTransferForm(props: Props) {
             </SelectTrigger>
             <SelectContent>
               {props.accounts
-                .filter(acc => acc.id !== selectedFromAccount)
+                .filter((acc) => acc.id !== selectedFromAccount)
                 .map((account) => (
                   <SelectItem key={account.id} value={account.id}>
-                    <div className="flex items-center justify-between w-full">
+                    <div className="flex w-full items-center justify-between">
                       <span>{account.name}</span>
-                      <span className="ml-2 text-sm text-muted-foreground">
+                      <span className="text-muted-foreground ml-2 text-sm">
                         {formatCurrency(account.currentBalance)}
                       </span>
                     </div>
@@ -210,7 +231,7 @@ function PaymentTransferForm(props: Props) {
       )}
 
       {/* Destination - External Transfer */}
-      {transferType === 'external' && (
+      {transferType === "external" && (
         <div className="space-y-2">
           <Label htmlFor="recipientEmail">
             {props.dictionary.recipientEmail}
@@ -227,11 +248,9 @@ function PaymentTransferForm(props: Props) {
 
       {/* Amount */}
       <div className="space-y-2">
-        <Label htmlFor="amount">
-          {props.dictionary.amount}
-        </Label>
+        <Label htmlFor="amount">{props.dictionary.amount}</Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2">
             $
           </span>
           <Input
@@ -248,7 +267,7 @@ function PaymentTransferForm(props: Props) {
           />
         </div>
         {availableBalance > 0 && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {props.dictionary.maxAmount}: {formatCurrency(availableBalance)}
           </p>
         )}
@@ -256,9 +275,7 @@ function PaymentTransferForm(props: Props) {
 
       {/* Description */}
       <div className="space-y-2">
-        <Label htmlFor="description">
-          {props.dictionary.description}
-        </Label>
+        <Label htmlFor="description">{props.dictionary.description}</Label>
         <Textarea
           id="description"
           name="description"
@@ -273,7 +290,11 @@ function PaymentTransferForm(props: Props) {
       <Button
         type="submit"
         className="w-full"
-        disabled={isPending || !selectedFromAccount || (transferType === 'internal' && !selectedToAccount)}
+        disabled={
+          isPending ||
+          !selectedFromAccount ||
+          (transferType === "internal" && !selectedToAccount)
+        }
       >
         {isPending ? (
           <>
@@ -285,18 +306,18 @@ function PaymentTransferForm(props: Props) {
         )}
       </Button>
     </form>
-  );
+  )
 }
 
 // Utility function
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
 }
 
 // Export memoized component
-export default memo(PaymentTransferForm);
+export default memo(PaymentTransferForm)

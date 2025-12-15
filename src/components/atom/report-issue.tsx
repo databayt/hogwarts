@@ -2,12 +2,13 @@
 "use client"
 
 import * as React from "react"
-import type { getDictionary } from "@/components/internationalization/dictionaries"
-import { CardForm } from "@/components/atom/card-form"
-import { LabeledSelect } from "@/components/atom/labeled-select"
-import { LabeledInput } from "@/components/atom/labeled-input"
-import { LabeledTextarea } from "@/components/atom/labeled-textarea"
+
 import { ButtonGroup } from "@/components/atom/button-group"
+import { CardForm } from "@/components/atom/card-form"
+import { LabeledInput } from "@/components/atom/labeled-input"
+import { LabeledSelect } from "@/components/atom/labeled-select"
+import { LabeledTextarea } from "@/components/atom/labeled-textarea"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const areaOptions = [
   { value: "team", label: "Team" },
@@ -34,12 +35,7 @@ export function CardsReportIssue({ dictionary }: CardsReportIssueProps) {
       title="Report an issue"
       description="What area are you having problems with?"
       dir={dictionary?.locale === "ar" ? "rtl" : "ltr"}
-      footer={
-        <ButtonGroup
-          primaryLabel="Submit"
-          secondaryLabel="Cancel"
-        />
-      }
+      footer={<ButtonGroup primaryLabel="Submit" secondaryLabel="Cancel" />}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <LabeledSelect
@@ -55,10 +51,7 @@ export function CardsReportIssue({ dictionary }: CardsReportIssueProps) {
           triggerClassName="line-clamp-1 truncate"
         />
       </div>
-      <LabeledInput
-        label="Subject"
-        placeholder="I need help with..."
-      />
+      <LabeledInput label="Subject" placeholder="I need help with..." />
       <LabeledTextarea
         label="Description"
         placeholder="Please include all information relevant to your issue."

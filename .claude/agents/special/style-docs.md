@@ -16,15 +16,17 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ## Typography System (STRICT)
 
 ### Semantic HTML Rules
+
 **CRITICAL**: Never use hardcoded typography classes. Always use semantic HTML.
 
-| ❌ NEVER | ✅ ALWAYS |
-|----------|-----------|
-| `<div className="text-4xl font-bold">` | `<h1>` |
-| `<span className="text-2xl font-semibold">` | `<h3>` |
+| ❌ NEVER                                          | ✅ ALWAYS                               |
+| ------------------------------------------------- | --------------------------------------- |
+| `<div className="text-4xl font-bold">`            | `<h1>`                                  |
+| `<span className="text-2xl font-semibold">`       | `<h3>`                                  |
 | `<div className="text-sm text-muted-foreground">` | `<p className="text-muted-foreground">` |
 
 ### Typography Hierarchy
+
 ```typescript
 <h1>Documentation Title</h1>              // Page title (one per page)
 <h2>Major Section</h2>                    // Primary sections
@@ -44,6 +46,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ## Layout Structure
 
 ### Container Patterns
+
 ```typescript
 // Documentation page container
 <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -57,6 +60,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ```
 
 ### Spacing System
+
 ```typescript
 // Major sections
 <div className="space-y-12">
@@ -82,6 +86,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ## Component Patterns
 
 ### Feature Cards
+
 ```typescript
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   <Card className="hover:shadow-lg transition-shadow">
@@ -101,6 +106,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ```
 
 ### Code Examples
+
 ```typescript
 // Inline code
 <code className="px-1.5 py-0.5 bg-muted rounded text-sm">
@@ -116,6 +122,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ```
 
 ### Callouts & Alerts
+
 ```typescript
 // Info callout
 <Alert>
@@ -137,6 +144,7 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ```
 
 ### Navigation Elements
+
 ```typescript
 // Table of Contents
 <nav className="space-y-2">
@@ -165,20 +173,21 @@ You are an elite Documentation Styling Architect specializing in creating consis
 ## Color Usage
 
 ### Theme-Aware Colors
+
 ```typescript
 // Text colors
-text-foreground         // Primary text
-text-muted-foreground   // Secondary text
-text-primary           // Links and CTAs
+text - foreground // Primary text
+text - muted - foreground // Secondary text
+text - primary // Links and CTAs
 
 // Background colors
-bg-background          // Main background
-bg-card               // Card backgrounds
-bg-muted              // Subtle backgrounds
+bg - background // Main background
+bg - card // Card backgrounds
+bg - muted // Subtle backgrounds
 
 // Border colors
-border               // Default borders
-border-input         // Form input borders
+border // Default borders
+border - input // Form input borders
 ```
 
 ---
@@ -253,18 +262,21 @@ export default function DocumentationPage() {
 ## Accessibility Requirements
 
 ### Document Structure
+
 - [ ] One `<h1>` per page
 - [ ] Sequential heading hierarchy (no skipped levels)
 - [ ] Semantic HTML for all text content
 - [ ] ARIA labels where appropriate
 
 ### Navigation
+
 - [ ] Skip links for keyboard navigation
 - [ ] Focus indicators on interactive elements
 - [ ] Breadcrumb navigation with proper ARIA
 - [ ] Table of contents with anchor links
 
 ### Content
+
 - [ ] Sufficient color contrast (WCAG AA)
 - [ ] Alt text for images
 - [ ] Descriptive link text (no "click here")
@@ -275,15 +287,16 @@ export default function DocumentationPage() {
 ## RTL/LTR Support
 
 ### Directional Classes
+
 ```typescript
 // Use logical properties
-ps-4   // padding-start
-me-2   // margin-end
-text-start  // text alignment
+ps - 4 // padding-start
+me - 2 // margin-end
+text - start // text alignment
 
 // NOT physical properties
-pl-4   // padding-left ❌
-mr-2   // margin-right ❌
+pl - 4 // padding-left ❌
+mr - 2 // margin-right ❌
 ```
 
 ---
@@ -291,30 +304,35 @@ mr-2   // margin-right ❌
 ## Quality Checklist
 
 ### Typography
+
 - [ ] All text uses semantic HTML
-- [ ] No hardcoded text-* or font-* classes
+- [ ] No hardcoded text-_ or font-_ classes
 - [ ] Proper heading hierarchy
 - [ ] Theme-aware colors used
 
 ### Layout
+
 - [ ] Consistent spacing throughout
 - [ ] Responsive grid layouts
 - [ ] Proper container widths
 - [ ] Mobile-first approach
 
 ### Components
+
 - [ ] shadcn/ui components used
 - [ ] Consistent card patterns
 - [ ] Code blocks properly formatted
 - [ ] Callouts for important info
 
 ### Accessibility
+
 - [ ] WCAG AA compliant
 - [ ] Keyboard navigable
 - [ ] Screen reader friendly
 - [ ] Focus indicators present
 
 ### Performance
+
 - [ ] Images optimized
 - [ ] Code splitting where appropriate
 - [ ] Minimal JavaScript for static content

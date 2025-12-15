@@ -29,9 +29,9 @@
  * }
  * ```
  */
+import { type Role } from "@/routes"
 
 import { getTenantContext } from "@/lib/tenant-context"
-import { type Role } from "@/routes"
 
 /**
  * Authorization error for insufficient permissions
@@ -174,12 +174,17 @@ export async function checkAdminRole(): Promise<AuthContext | null> {
  * }
  * ```
  */
-export function handleAuthError(error: unknown): { success: false; message: string } | null {
+export function handleAuthError(
+  error: unknown
+): { success: false; message: string } | null {
   if (error instanceof SchoolNotFoundError) {
     return { success: false, message: "School not found" }
   }
   if (error instanceof AuthorizationError) {
-    return { success: false, message: error.message || "Insufficient permissions" }
+    return {
+      success: false,
+      message: error.message || "Insufficient permissions",
+    }
   }
   return null
 }
@@ -194,7 +199,15 @@ export function handleAuthError(error: unknown): { success: false; message: stri
  * Use for finance, fees, billing, invoice, banking, salary routes.
  */
 export async function requireFinanceRole(): Promise<AuthContext> {
-  return requireRoles(["ADMIN", "TEACHER", "STUDENT", "GUARDIAN", "ACCOUNTANT", "STAFF", "DEVELOPER"])
+  return requireRoles([
+    "ADMIN",
+    "TEACHER",
+    "STUDENT",
+    "GUARDIAN",
+    "ACCOUNTANT",
+    "STAFF",
+    "DEVELOPER",
+  ])
 }
 
 /**
@@ -217,7 +230,9 @@ export async function requireStaffRole(): Promise<AuthContext> {
  * Check if user has one of the allowed roles without throwing.
  * Returns null if not authorized or no school context.
  */
-export async function checkRoles(allowedRoles: Role[]): Promise<AuthContext | null> {
+export async function checkRoles(
+  allowedRoles: Role[]
+): Promise<AuthContext | null> {
   try {
     return await requireRoles(allowedRoles)
   } catch {

@@ -17,9 +17,7 @@ export function DocsSidebarNav({ items }: DocsSidebarNavProps) {
     <div className="w-full">
       {items.map((item, index) => (
         <div key={index} className={cn("pb-4")}>
-          <h6 className="mb-1 rounded-md px-2 py-1">
-            {item.title}
-          </h6>
+          <h6 className="mb-1 rounded-md px-2 py-1">{item.title}</h6>
           {item?.items?.length && (
             <DocsSidebarNavItems items={item.items} pathname={pathname} />
           )}
@@ -49,7 +47,7 @@ export function DocsSidebarNavItems({
               "group flex w-full items-center rounded-md border border-transparent px-2 py-1 hover:underline",
               item.disabled && "cursor-not-allowed opacity-60",
               pathname === item.href
-                ? "font-medium text-foreground"
+                ? "text-foreground font-medium"
                 : "text-muted-foreground"
             )}
             target={item.external ? "_blank" : ""}
@@ -77,7 +75,7 @@ export function DocsSidebarNavItems({
           <span
             key={index}
             className={cn(
-              "flex w-full cursor-not-allowed items-center rounded-md p-2 text-muted-foreground hover:underline",
+              "text-muted-foreground flex w-full cursor-not-allowed items-center rounded-md p-2 hover:underline",
               item.disabled && "cursor-not-allowed opacity-60"
             )}
           >
@@ -87,4 +85,4 @@ export function DocsSidebarNavItems({
       )}
     </div>
   ) : null
-} 
+}

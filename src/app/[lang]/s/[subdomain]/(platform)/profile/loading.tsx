@@ -1,7 +1,7 @@
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonFormSection } from "@/components/ui/skeleton-form"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonFormSection } from "@/components/ui/skeleton-form"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function Loading() {
   return (
@@ -19,7 +19,7 @@ export default function Loading() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-6">
               <Skeleton className="h-24 w-24 rounded-full" />
-              <div className="space-y-2 flex-1">
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-6 w-48" />
                 <Skeleton className="h-4 w-64" />
               </div>

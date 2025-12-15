@@ -1,14 +1,16 @@
 "use server"
 
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { ActionResult } from "./types"
 import {
   createYearLevelSchema,
-  updateYearLevelSchema,
   deleteYearLevelSchema,
+  updateYearLevelSchema,
 } from "./validation"
-import type { ActionResult } from "./types"
 
 // ============================================================================
 // Get Year Levels
@@ -48,7 +50,8 @@ export async function getYearLevels(): Promise<ActionResult> {
     console.error("Failed to fetch year levels:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to fetch year levels",
+      message:
+        error instanceof Error ? error.message : "Failed to fetch year levels",
     }
   }
 }
@@ -57,7 +60,9 @@ export async function getYearLevels(): Promise<ActionResult> {
 // Create Year Level
 // ============================================================================
 
-export async function createYearLevel(formData: FormData): Promise<ActionResult> {
+export async function createYearLevel(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -83,7 +88,10 @@ export async function createYearLevel(formData: FormData): Promise<ActionResult>
     })
 
     if (existingName) {
-      return { success: false, message: "A year level with this name already exists" }
+      return {
+        success: false,
+        message: "A year level with this name already exists",
+      }
     }
 
     // Check for duplicate level order
@@ -92,7 +100,10 @@ export async function createYearLevel(formData: FormData): Promise<ActionResult>
     })
 
     if (existingOrder) {
-      return { success: false, message: `Level order ${validated.levelOrder} is already in use` }
+      return {
+        success: false,
+        message: `Level order ${validated.levelOrder} is already in use`,
+      }
     }
 
     const yearLevel = await db.yearLevel.create({
@@ -114,7 +125,8 @@ export async function createYearLevel(formData: FormData): Promise<ActionResult>
     console.error("Failed to create year level:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to create year level",
+      message:
+        error instanceof Error ? error.message : "Failed to create year level",
     }
   }
 }
@@ -123,7 +135,9 @@ export async function createYearLevel(formData: FormData): Promise<ActionResult>
 // Update Year Level
 // ============================================================================
 
-export async function updateYearLevel(formData: FormData): Promise<ActionResult> {
+export async function updateYearLevel(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -140,7 +154,9 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
       id: formData.get("id") as string,
       levelName: (formData.get("levelName") as string) || undefined,
       levelNameAr: formData.get("levelNameAr") as string | null,
-      levelOrder: levelOrderValue ? parseInt(levelOrderValue as string, 10) : undefined,
+      levelOrder: levelOrderValue
+        ? parseInt(levelOrderValue as string, 10)
+        : undefined,
     }
 
     const validated = updateYearLevelSchema.parse(data)
@@ -164,12 +180,18 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
         },
       })
       if (duplicate) {
-        return { success: false, message: "A year level with this name already exists" }
+        return {
+          success: false,
+          message: "A year level with this name already exists",
+        }
       }
     }
 
     // Check for duplicate order if changing order
-    if (validated.levelOrder !== undefined && validated.levelOrder !== existing.levelOrder) {
+    if (
+      validated.levelOrder !== undefined &&
+      validated.levelOrder !== existing.levelOrder
+    ) {
       const duplicateOrder = await db.yearLevel.findFirst({
         where: {
           schoolId,
@@ -178,7 +200,10 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
         },
       })
       if (duplicateOrder) {
-        return { success: false, message: `Level order ${validated.levelOrder} is already in use` }
+        return {
+          success: false,
+          message: `Level order ${validated.levelOrder} is already in use`,
+        }
       }
     }
 
@@ -189,7 +214,9 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
         ...(validated.levelNameAr !== undefined && {
           levelNameAr: validated.levelNameAr || null,
         }),
-        ...(validated.levelOrder !== undefined && { levelOrder: validated.levelOrder }),
+        ...(validated.levelOrder !== undefined && {
+          levelOrder: validated.levelOrder,
+        }),
       },
     })
 
@@ -203,7 +230,8 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
     console.error("Failed to update year level:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to update year level",
+      message:
+        error instanceof Error ? error.message : "Failed to update year level",
     }
   }
 }
@@ -212,7 +240,9 @@ export async function updateYearLevel(formData: FormData): Promise<ActionResult>
 // Delete Year Level
 // ============================================================================
 
-export async function deleteYearLevel(formData: FormData): Promise<ActionResult> {
+export async function deleteYearLevel(
+  formData: FormData
+): Promise<ActionResult> {
   try {
     const { schoolId, role } = await getTenantContext()
 
@@ -272,7 +302,8 @@ export async function deleteYearLevel(formData: FormData): Promise<ActionResult>
     console.error("Failed to delete year level:", error)
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete year level",
+      message:
+        error instanceof Error ? error.message : "Failed to delete year level",
     }
   }
 }

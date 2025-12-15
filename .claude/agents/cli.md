@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### CLI Tool Development
+
 - **Developer Utilities**: Build tools for common development tasks
 - **Database Tools**: CLI for database seeding, migrations, backups
 - **Admin Tools**: Multi-tenant management utilities
@@ -22,6 +23,7 @@ model: sonnet
 - **Testing Tools**: Test data generation and cleanup utilities
 
 ### User Experience
+
 - **Interactive Prompts**: User-friendly CLI interactions
 - **Progress Indicators**: Visual feedback for long-running operations
 - **Error Handling**: Clear, actionable error messages
@@ -29,6 +31,7 @@ model: sonnet
 - **Shell Completions**: Bash/Zsh/Fish autocomplete support
 
 ### Performance Targets
+
 - Startup time: <50ms
 - Memory usage: <50MB
 - Response time: Instant feedback for user actions
@@ -39,6 +42,7 @@ model: sonnet
 ## Tech Stack
 
 ### CLI Frameworks
+
 - **Commander.js** - Command structure and argument parsing
 - **Inquirer.js** - Interactive prompts
 - **Chalk** - Terminal styling and colors
@@ -46,6 +50,7 @@ model: sonnet
 - **Boxen** - Create boxes in terminal output
 
 ### Integration Tools
+
 - **Node.js 20.x** - Runtime environment
 - **TypeScript** - Type-safe CLI development
 - **tsx** - Direct TypeScript execution
@@ -62,56 +67,55 @@ model: sonnet
 
 ```typescript
 // src/cli/db.ts
-import { Command } from 'commander'
-import { PrismaClient } from '@prisma/client'
-import ora from 'ora'
+import { PrismaClient } from "@prisma/client"
+import { Command } from "commander"
+import ora from "ora"
 
 const program = new Command()
 
-program
-  .name('db')
-  .description('Database management utilities')
-  .version('1.0.0')
+program.name("db").description("Database management utilities").version("1.0.0")
 
 program
-  .command('seed')
-  .description('Seed database with test data')
-  .option('-s, --school <id>', 'School ID to seed')
-  .option('-u, --users <count>', 'Number of users to create', '10')
+  .command("seed")
+  .description("Seed database with test data")
+  .option("-s, --school <id>", "School ID to seed")
+  .option("-u, --users <count>", "Number of users to create", "10")
   .action(async (options) => {
-    const spinner = ora('Seeding database...').start()
+    const spinner = ora("Seeding database...").start()
 
     try {
       // Seed logic
       await seedDatabase(options)
-      spinner.succeed('Database seeded successfully!')
+      spinner.succeed("Database seeded successfully!")
     } catch (error) {
-      spinner.fail('Seeding failed')
+      spinner.fail("Seeding failed")
       console.error(error)
       process.exit(1)
     }
   })
 
 program
-  .command('backup')
-  .description('Create database backup')
-  .option('-o, --output <path>', 'Output path for backup')
+  .command("backup")
+  .description("Create database backup")
+  .option("-o, --output <path>", "Output path for backup")
   .action(async (options) => {
     // Backup logic
   })
 
 program
-  .command('reset')
-  .description('Reset database (WARNING: Deletes all data)')
-  .option('--confirm', 'Confirm data deletion')
+  .command("reset")
+  .description("Reset database (WARNING: Deletes all data)")
+  .option("--confirm", "Confirm data deletion")
   .action(async (options) => {
     if (!options.confirm) {
-      const { confirmed } = await inquirer.prompt([{
-        type: 'confirm',
-        name: 'confirmed',
-        message: 'This will delete ALL data. Are you sure?',
-        default: false,
-      }])
+      const { confirmed } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirmed",
+          message: "This will delete ALL data. Are you sure?",
+          default: false,
+        },
+      ])
       if (!confirmed) return
     }
 
@@ -127,59 +131,59 @@ program.parse()
 
 ```typescript
 // src/cli/tenant.ts
-import { Command } from 'commander'
-import inquirer from 'inquirer'
-import chalk from 'chalk'
+import chalk from "chalk"
+import { Command } from "commander"
+import inquirer from "inquirer"
 
 const program = new Command()
 
 program
-  .name('tenant')
-  .description('Multi-tenant school management')
-  .version('1.0.0')
+  .name("tenant")
+  .description("Multi-tenant school management")
+  .version("1.0.0")
 
 program
-  .command('create')
-  .description('Create new school tenant')
+  .command("create")
+  .description("Create new school tenant")
   .action(async () => {
     const answers = await inquirer.prompt([
       {
-        type: 'input',
-        name: 'name',
-        message: 'School name:',
-        validate: (input) => input.length > 0 || 'Name required',
+        type: "input",
+        name: "name",
+        message: "School name:",
+        validate: (input) => input.length > 0 || "Name required",
       },
       {
-        type: 'input',
-        name: 'subdomain',
-        message: 'Subdomain:',
-        validate: (input) => /^[a-z0-9-]+$/.test(input) || 'Invalid subdomain',
+        type: "input",
+        name: "subdomain",
+        message: "Subdomain:",
+        validate: (input) => /^[a-z0-9-]+$/.test(input) || "Invalid subdomain",
       },
       {
-        type: 'input',
-        name: 'email',
-        message: 'Admin email:',
-        validate: (input) => input.includes('@') || 'Invalid email',
+        type: "input",
+        name: "email",
+        message: "Admin email:",
+        validate: (input) => input.includes("@") || "Invalid email",
       },
     ])
 
     // Create tenant logic
-    console.log(chalk.green('✓ Tenant created successfully!'))
+    console.log(chalk.green("✓ Tenant created successfully!"))
     console.log(chalk.cyan(`URL: https://${answers.subdomain}.databayt.org`))
   })
 
 program
-  .command('list')
-  .description('List all tenants')
-  .option('--active', 'Show only active tenants')
-  .option('--json', 'Output as JSON')
+  .command("list")
+  .description("List all tenants")
+  .option("--active", "Show only active tenants")
+  .option("--json", "Output as JSON")
   .action(async (options) => {
     // List tenants
   })
 
 program
-  .command('disable <id>')
-  .description('Disable school tenant')
+  .command("disable <id>")
+  .description("Disable school tenant")
   .action(async (id) => {
     // Disable tenant logic
   })
@@ -193,56 +197,55 @@ program.parse()
 
 ```typescript
 // src/cli/deploy.ts
-import { Command } from 'commander'
-import { execSync } from 'child_process'
-import ora from 'ora'
-import chalk from 'chalk'
+import { execSync } from "child_process"
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 const program = new Command()
 
 program
-  .name('deploy')
-  .description('Deploy to environment')
-  .argument('<environment>', 'staging or production')
-  .option('--skip-tests', 'Skip tests')
-  .option('--skip-build', 'Skip build verification')
+  .name("deploy")
+  .description("Deploy to environment")
+  .argument("<environment>", "staging or production")
+  .option("--skip-tests", "Skip tests")
+  .option("--skip-build", "Skip build verification")
   .action(async (environment, options) => {
     console.log(chalk.blue(`\n🚀 Deploying to ${environment}...\n`))
 
     // Pre-deployment checks
     if (!options.skipTests) {
-      const testSpinner = ora('Running tests...').start()
+      const testSpinner = ora("Running tests...").start()
       try {
-        execSync('pnpm test', { stdio: 'ignore' })
-        testSpinner.succeed('Tests passed')
+        execSync("pnpm test", { stdio: "ignore" })
+        testSpinner.succeed("Tests passed")
       } catch {
-        testSpinner.fail('Tests failed')
+        testSpinner.fail("Tests failed")
         process.exit(1)
       }
     }
 
     if (!options.skipBuild) {
-      const buildSpinner = ora('Verifying build...').start()
+      const buildSpinner = ora("Verifying build...").start()
       try {
-        execSync('pnpm build', { stdio: 'ignore' })
-        buildSpinner.succeed('Build successful')
+        execSync("pnpm build", { stdio: "ignore" })
+        buildSpinner.succeed("Build successful")
       } catch {
-        buildSpinner.fail('Build failed')
+        buildSpinner.fail("Build failed")
         process.exit(1)
       }
     }
 
     // Deploy
-    const deploySpinner = ora('Deploying to Vercel...').start()
+    const deploySpinner = ora("Deploying to Vercel...").start()
     try {
-      const output = execSync(
-        `vercel --prod --yes --token=$VERCEL_TOKEN`,
-        { encoding: 'utf-8' }
-      )
-      deploySpinner.succeed('Deployment successful!')
+      const output = execSync(`vercel --prod --yes --token=$VERCEL_TOKEN`, {
+        encoding: "utf-8",
+      })
+      deploySpinner.succeed("Deployment successful!")
       console.log(chalk.green(output))
     } catch (error) {
-      deploySpinner.fail('Deployment failed')
+      deploySpinner.fail("Deployment failed")
       console.error(error)
       process.exit(1)
     }
@@ -257,24 +260,21 @@ program.parse()
 
 ```typescript
 // src/cli/generate.ts
-import { Command } from 'commander'
-import { faker } from '@faker-js/faker'
-import { PrismaClient } from '@prisma/client'
+import { faker } from "@faker-js/faker"
+import { PrismaClient } from "@prisma/client"
+import { Command } from "commander"
 
 const program = new Command()
 const prisma = new PrismaClient()
 
-program
-  .name('generate')
-  .description('Generate test data')
-  .version('1.0.0')
+program.name("generate").description("Generate test data").version("1.0.0")
 
 program
-  .command('students')
-  .description('Generate test students')
-  .option('-n, --number <count>', 'Number of students', '50')
-  .option('-s, --school <id>', 'School ID (required)')
-  .requiredOption('-s, --school <id>', 'School ID is required')
+  .command("students")
+  .description("Generate test students")
+  .option("-n, --number <count>", "Number of students", "50")
+  .option("-s, --school <id>", "School ID (required)")
+  .requiredOption("-s, --school <id>", "School ID is required")
   .action(async (options) => {
     const students = Array.from({ length: parseInt(options.number) }, () => ({
       firstName: faker.person.firstName(),
@@ -289,10 +289,10 @@ program
   })
 
 program
-  .command('teachers')
-  .description('Generate test teachers')
-  .option('-n, --number <count>', 'Number of teachers', '20')
-  .option('-s, --school <id>', 'School ID (required)')
+  .command("teachers")
+  .description("Generate test teachers")
+  .option("-n, --number <count>", "Number of teachers", "20")
+  .option("-s, --school <id>", "School ID (required)")
   .action(async (options) => {
     // Generate teachers logic
   })
@@ -323,15 +323,15 @@ pnpm deployprod
 ```typescript
 // Good: Actionable error
 if (!schoolId) {
-  console.error(chalk.red('✗ Error: School ID is required'))
-  console.log(chalk.gray('Try: pnpm db seed --school <id>'))
-  console.log(chalk.gray('Get school IDs: pnpm tenant list'))
+  console.error(chalk.red("✗ Error: School ID is required"))
+  console.log(chalk.gray("Try: pnpm db seed --school <id>"))
+  console.log(chalk.gray("Get school IDs: pnpm tenant list"))
   process.exit(1)
 }
 
 // Bad: Cryptic error
 if (!schoolId) {
-  console.error('Missing parameter')
+  console.error("Missing parameter")
   process.exit(1)
 }
 ```
@@ -340,14 +340,14 @@ if (!schoolId) {
 
 ```typescript
 // Good: Visual feedback
-const spinner = ora('Processing...').start()
+const spinner = ora("Processing...").start()
 // ... long operation ...
-spinner.succeed('Complete!')
+spinner.succeed("Complete!")
 
 // Bad: No feedback
-console.log('Processing...')
+console.log("Processing...")
 // ... user waits in silence ...
-console.log('Done')
+console.log("Done")
 ```
 
 ### 4. Interactive Prompts
@@ -412,13 +412,13 @@ _hogwarts
 ### Graceful Failures
 
 ```typescript
-process.on('SIGINT', () => {
-  console.log(chalk.yellow('\n\n⚠ Operation cancelled by user'))
+process.on("SIGINT", () => {
+  console.log(chalk.yellow("\n\n⚠ Operation cancelled by user"))
   process.exit(130)
 })
 
-process.on('unhandledRejection', (error) => {
-  console.error(chalk.red('\n✗ Unexpected error:'))
+process.on("unhandledRejection", (error) => {
+  console.error(chalk.red("\n✗ Unexpected error:"))
   console.error(error)
   process.exit(1)
 })
@@ -430,7 +430,7 @@ process.on('unhandledRejection', (error) => {
 // Validate inputs before execution
 function validateSchoolId(id: string): boolean {
   if (!/^[a-z0-9]{8,}$/.test(id)) {
-    console.error(chalk.red('Invalid school ID format'))
+    console.error(chalk.red("Invalid school ID format"))
     return false
   }
   return true
@@ -439,7 +439,7 @@ function validateSchoolId(id: string): boolean {
 // Validate environment
 function validateEnvironment() {
   if (!process.env.DATABASE_URL) {
-    console.error(chalk.red('DATABASE_URL not set'))
+    console.error(chalk.red("DATABASE_URL not set"))
     process.exit(1)
   }
 }
@@ -470,6 +470,7 @@ function validateEnvironment() {
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/tooling` - Custom developer tools
 - `/agents/dx` - Developer experience optimization
 - `/agents/prisma` - Database operations
@@ -507,6 +508,7 @@ function validateEnvironment() {
 ## Success Metrics
 
 **Target Achievements**:
+
 - Startup time <50ms
 - Memory usage <50MB
 - 100% of commands have --help documentation

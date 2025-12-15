@@ -1,7 +1,7 @@
 export const BLOG_CATEGORIES: {
-  title: string;
-  slug: "news" | "education";
-  description: string;
+  title: string
+  slug: "news" | "education"
+  description: string
 }[] = [
   {
     title: "News",
@@ -13,7 +13,7 @@ export const BLOG_CATEGORIES: {
     slug: "education",
     description: "Educational content about SaaS management.",
   },
-];
+]
 
 export const BLOG_AUTHORS = {
   mickasmt: {
@@ -26,4 +26,4 @@ export const BLOG_AUTHORS = {
     image: "/_static/avatars/shadcn.jpeg",
     twitter: "shadcn",
   },
-};
+}

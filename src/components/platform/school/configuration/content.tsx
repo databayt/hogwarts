@@ -1,28 +1,42 @@
-import type { Locale } from '@/components/internationalization/config'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import {
+  AlertCircle,
+  Building,
+  Calendar,
+  CheckCircle2,
+  Crown,
+  School,
+  Settings,
+  Users,
+} from "lucide-react"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { School, Calendar, Building, Users, CheckCircle2, AlertCircle, Crown, Settings } from "lucide-react"
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import { SchoolIdentityForm } from './school-identity-form'
-import { CapacitySection } from './capacity-section'
-import { AcademicSection } from './academic-section'
-import { PlanLimitsSection } from './plan-limits-section'
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { AcademicSection } from "./academic-section"
+import { CapacitySection } from "./capacity-section"
+import { PlanLimitsSection } from "./plan-limits-section"
+import { SchoolIdentityForm } from "./school-identity-form"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
-export default async function ConfigurationContent({ dictionary, lang }: Props) {
+export default async function ConfigurationContent({
+  dictionary,
+  lang,
+}: Props) {
   const { schoolId } = await getTenantContext()
 
   // Get comprehensive configuration data
@@ -77,24 +91,26 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         scoreRangesCount,
         currentAcademicYear,
       ] = await Promise.all([
-        db.school.findUnique({
-          where: { id: schoolId },
-          select: {
-            id: true,
-            name: true,
-            domain: true,
-            logoUrl: true,
-            address: true,
-            phoneNumber: true,
-            email: true,
-            website: true,
-            timezone: true,
-            planType: true,
-            maxStudents: true,
-            maxTeachers: true,
-            isActive: true,
-          },
-        }).catch(() => null),
+        db.school
+          .findUnique({
+            where: { id: schoolId },
+            select: {
+              id: true,
+              name: true,
+              domain: true,
+              logoUrl: true,
+              address: true,
+              phoneNumber: true,
+              email: true,
+              website: true,
+              timezone: true,
+              planType: true,
+              maxStudents: true,
+              maxTeachers: true,
+              isActive: true,
+            },
+          })
+          .catch(() => null),
         db.schoolYear.count({ where: { schoolId } }).catch(() => 0),
         db.term.count({ where: { schoolId } }).catch(() => 0),
         db.yearLevel.count({ where: { schoolId } }).catch(() => 0),
@@ -103,31 +119,33 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         db.teacher.count({ where: { schoolId } }).catch(() => 0),
         db.student.count({ where: { schoolId } }).catch(() => 0),
         db.scoreRange.count({ where: { schoolId } }).catch(() => 0),
-        db.schoolYear.findFirst({
-          where: { schoolId },
-          orderBy: { startDate: 'desc' },
-          include: { terms: true },
-        }).catch(() => null),
+        db.schoolYear
+          .findFirst({
+            where: { schoolId },
+            orderBy: { startDate: "desc" },
+            include: { terms: true },
+          })
+          .catch(() => null),
       ])
     } catch (error) {
-      console.error('Error fetching configuration data:', error)
+      console.error("Error fetching configuration data:", error)
     }
   }
 
   // Calculate setup completion
   const setupSteps = [
-    { name: 'School Profile', completed: !!schoolInfo?.name },
-    { name: 'Location', completed: !!schoolInfo?.address },
-    { name: 'Plan Setup', completed: !!schoolInfo?.planType },
-    { name: 'Academic Year', completed: academicYearsCount > 0 },
-    { name: 'Year Levels', completed: yearLevelsCount > 0 },
-    { name: 'Departments', completed: departmentsCount > 0 },
-    { name: 'Grading System', completed: scoreRangesCount > 0 },
+    { name: "School Profile", completed: !!schoolInfo?.name },
+    { name: "Location", completed: !!schoolInfo?.address },
+    { name: "Plan Setup", completed: !!schoolInfo?.planType },
+    { name: "Academic Year", completed: academicYearsCount > 0 },
+    { name: "Year Levels", completed: yearLevelsCount > 0 },
+    { name: "Departments", completed: departmentsCount > 0 },
+    { name: "Grading System", completed: scoreRangesCount > 0 },
   ]
-  const completedSteps = setupSteps.filter(s => s.completed).length
+  const completedSteps = setupSteps.filter((s) => s.completed).length
   const setupProgress = Math.round((completedSteps / setupSteps.length) * 100)
 
-  const isArabic = lang === 'ar'
+  const isArabic = lang === "ar"
 
   return (
     <div className="space-y-6">
@@ -136,16 +154,25 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'ملف المدرسة' : 'School Profile'}
+              {isArabic ? "ملف المدرسة" : "School Profile"}
             </CardTitle>
-            <School className="h-4 w-4 text-muted-foreground" />
+            <School className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {schoolInfo?.name ? (isArabic ? 'مكتمل' : 'Configured') : (isArabic ? 'غير محدد' : 'Not Set')}
+              {schoolInfo?.name
+                ? isArabic
+                  ? "مكتمل"
+                  : "Configured"
+                : isArabic
+                  ? "غير محدد"
+                  : "Not Set"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {schoolInfo?.name || (isArabic ? 'قم بتكوين تفاصيل المدرسة' : 'Configure school details')}
+            <p className="text-muted-foreground text-xs">
+              {schoolInfo?.name ||
+                (isArabic
+                  ? "قم بتكوين تفاصيل المدرسة"
+                  : "Configure school details")}
             </p>
           </CardContent>
         </Card>
@@ -153,14 +180,14 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'السنوات الأكاديمية' : 'Academic Years'}
+              {isArabic ? "السنوات الأكاديمية" : "Academic Years"}
             </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{academicYearsCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {termsCount} {isArabic ? 'فصول مكونة' : 'terms configured'}
+            <p className="text-muted-foreground text-xs">
+              {termsCount} {isArabic ? "فصول مكونة" : "terms configured"}
             </p>
           </CardContent>
         </Card>
@@ -168,14 +195,14 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'الأقسام' : 'Departments'}
+              {isArabic ? "الأقسام" : "Departments"}
             </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{departmentsCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {isArabic ? 'أقسام أكاديمية' : 'Academic departments'}
+            <p className="text-muted-foreground text-xs">
+              {isArabic ? "أقسام أكاديمية" : "Academic departments"}
             </p>
           </CardContent>
         </Card>
@@ -183,14 +210,14 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'الفصول' : 'Classrooms'}
+              {isArabic ? "الفصول" : "Classrooms"}
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{classroomsCount}</div>
-            <p className="text-xs text-muted-foreground">
-              {yearLevelsCount} {isArabic ? 'مستويات سنوية' : 'year levels'}
+            <p className="text-muted-foreground text-xs">
+              {yearLevelsCount} {isArabic ? "مستويات سنوية" : "year levels"}
             </p>
           </CardContent>
         </Card>
@@ -201,11 +228,14 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-primary" />
-                {isArabic ? 'أكمل إعداد مدرستك' : 'Complete Your School Setup'}
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <AlertCircle className="text-primary h-4 w-4" />
+                {isArabic ? "أكمل إعداد مدرستك" : "Complete Your School Setup"}
               </CardTitle>
-              <Badge variant="secondary">{completedSteps}/{setupSteps.length} {isArabic ? 'خطوات' : 'Steps'}</Badge>
+              <Badge variant="secondary">
+                {completedSteps}/{setupSteps.length}{" "}
+                {isArabic ? "خطوات" : "Steps"}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -235,31 +265,37 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <School className="h-5 w-5 text-primary" />
+              <School className="text-primary h-5 w-5" />
               <div>
-                <CardTitle>{isArabic ? 'هوية المدرسة' : 'School Identity'}</CardTitle>
-                <CardDescription>{isArabic ? 'المعلومات الأساسية عن مدرستك' : 'Basic information about your school'}</CardDescription>
+                <CardTitle>
+                  {isArabic ? "هوية المدرسة" : "School Identity"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "المعلومات الأساسية عن مدرستك"
+                    : "Basic information about your school"}
+                </CardDescription>
               </div>
             </div>
             {schoolInfo?.name && (
               <Badge variant="outline" className="gap-1">
                 <CheckCircle2 className="h-3 w-3 text-green-500" />
-                {isArabic ? 'مكتمل' : 'Configured'}
+                {isArabic ? "مكتمل" : "Configured"}
               </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent>
           <SchoolIdentityForm
-            schoolId={schoolId || ''}
+            schoolId={schoolId || ""}
             initialData={{
-              name: schoolInfo?.name || '',
-              domain: schoolInfo?.domain || '',
-              email: schoolInfo?.email || '',
-              phoneNumber: schoolInfo?.phoneNumber || '',
-              address: schoolInfo?.address || '',
-              website: schoolInfo?.website || '',
-              timezone: schoolInfo?.timezone || 'Africa/Khartoum',
+              name: schoolInfo?.name || "",
+              domain: schoolInfo?.domain || "",
+              email: schoolInfo?.email || "",
+              phoneNumber: schoolInfo?.phoneNumber || "",
+              address: schoolInfo?.address || "",
+              website: schoolInfo?.website || "",
+              timezone: schoolInfo?.timezone || "Africa/Khartoum",
             }}
             lang={lang}
           />
@@ -273,23 +309,31 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
             <div className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-yellow-500" />
               <div>
-                <CardTitle>{isArabic ? 'الخطة والحدود' : 'Plan & Limits'}</CardTitle>
-                <CardDescription>{isArabic ? 'خطة الاشتراك وحدود السعة' : 'Subscription plan and capacity limits'}</CardDescription>
+                <CardTitle>
+                  {isArabic ? "الخطة والحدود" : "Plan & Limits"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "خطة الاشتراك وحدود السعة"
+                    : "Subscription plan and capacity limits"}
+                </CardDescription>
               </div>
             </div>
             {schoolInfo?.isActive && (
               <Badge variant="default" className="gap-1">
                 <CheckCircle2 className="h-3 w-3" />
-                {isArabic ? 'نشط' : 'Active'}
+                {isArabic ? "نشط" : "Active"}
               </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent>
           <PlanLimitsSection
-            schoolId={schoolId || ''}
+            schoolId={schoolId || ""}
             initialData={{
-              planType: (schoolInfo?.planType as "basic" | "premium" | "enterprise") || 'basic',
+              planType:
+                (schoolInfo?.planType as "basic" | "premium" | "enterprise") ||
+                "basic",
               maxStudents: schoolInfo?.maxStudents || 100,
               maxTeachers: schoolInfo?.maxTeachers || 10,
               isActive: schoolInfo?.isActive ?? true,
@@ -310,15 +354,21 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-500" />
               <div>
-                <CardTitle>{isArabic ? 'سعة المدرسة' : 'School Capacity'}</CardTitle>
-                <CardDescription>{isArabic ? 'نظرة عامة على الطلاب والمعلمين والمرافق' : 'Students, teachers, and facilities overview'}</CardDescription>
+                <CardTitle>
+                  {isArabic ? "سعة المدرسة" : "School Capacity"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "نظرة عامة على الطلاب والمعلمين والمرافق"
+                    : "Students, teachers, and facilities overview"}
+                </CardDescription>
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <CapacitySection
-            schoolId={schoolId || ''}
+            schoolId={schoolId || ""}
             initialData={{
               studentCount: studentsCount,
               teacherCount: teachersCount,
@@ -341,8 +391,14 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-green-500" />
               <div>
-                <CardTitle>{isArabic ? 'الهيكل الأكاديمي' : 'Academic Structure'}</CardTitle>
-                <CardDescription>{isArabic ? 'السنوات والفصول والدرجات والجدول' : 'Years, terms, grading, and schedule'}</CardDescription>
+                <CardTitle>
+                  {isArabic ? "الهيكل الأكاديمي" : "Academic Structure"}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic
+                    ? "السنوات والفصول والدرجات والجدول"
+                    : "Years, terms, grading, and schedule"}
+                </CardDescription>
               </div>
             </div>
             {currentAcademicYear && (
@@ -355,7 +411,7 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
         </CardHeader>
         <CardContent>
           <AcademicSection
-            schoolId={schoolId || ''}
+            schoolId={schoolId || ""}
             currentAcademicYear={currentAcademicYear}
             stats={{
               academicYears: academicYearsCount,
@@ -372,27 +428,49 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-muted-foreground" />
+            <Settings className="text-muted-foreground h-5 w-5" />
             <div>
-              <CardTitle>{isArabic ? 'الإعدادات السريعة' : 'Quick Settings'}</CardTitle>
-              <CardDescription>{isArabic ? 'إعدادات النظام والتفضيلات' : 'System settings and preferences'}</CardDescription>
+              <CardTitle>
+                {isArabic ? "الإعدادات السريعة" : "Quick Settings"}
+              </CardTitle>
+              <CardDescription>
+                {isArabic
+                  ? "إعدادات النظام والتفضيلات"
+                  : "System settings and preferences"}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg border">
-              <h4 className="font-medium text-sm">{isArabic ? 'المنطقة الزمنية' : 'Timezone'}</h4>
-              <p className="text-sm text-muted-foreground mt-1">{schoolInfo?.timezone || 'Africa/Khartoum'}</p>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <h4 className="text-sm font-medium">
+                {isArabic ? "المنطقة الزمنية" : "Timezone"}
+              </h4>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {schoolInfo?.timezone || "Africa/Khartoum"}
+              </p>
             </div>
-            <div className="p-4 rounded-lg border">
-              <h4 className="font-medium text-sm">{isArabic ? 'نوع الخطة' : 'Plan Type'}</h4>
-              <p className="text-sm text-muted-foreground mt-1 capitalize">{schoolInfo?.planType || 'basic'}</p>
+            <div className="rounded-lg border p-4">
+              <h4 className="text-sm font-medium">
+                {isArabic ? "نوع الخطة" : "Plan Type"}
+              </h4>
+              <p className="text-muted-foreground mt-1 text-sm capitalize">
+                {schoolInfo?.planType || "basic"}
+              </p>
             </div>
-            <div className="p-4 rounded-lg border">
-              <h4 className="font-medium text-sm">{isArabic ? 'حالة المدرسة' : 'School Status'}</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                {schoolInfo?.isActive ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive')}
+            <div className="rounded-lg border p-4">
+              <h4 className="text-sm font-medium">
+                {isArabic ? "حالة المدرسة" : "School Status"}
+              </h4>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {schoolInfo?.isActive
+                  ? isArabic
+                    ? "نشط"
+                    : "Active"
+                  : isArabic
+                    ? "غير نشط"
+                    : "Inactive"}
               </p>
             </div>
           </div>

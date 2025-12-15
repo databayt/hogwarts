@@ -1,59 +1,74 @@
 // Grade Certificate PDF Template - Wall-Worthy Design
-import React from "react";
+import React from "react"
 import {
+  Circle,
   Document,
+  Image,
   Page,
+  Path,
+  Rect,
+  StyleSheet,
+  Svg,
   Text,
   View,
-  StyleSheet,
-  Image,
-  Svg,
-  Path,
-  Circle,
-  Rect,
-} from "@react-pdf/renderer";
-import type { Locale } from "@/components/internationalization/config";
+} from "@react-pdf/renderer"
+
+import type { Locale } from "@/components/internationalization/config"
 
 export interface CertificateData {
   // Student info
-  studentName: string;
-  studentId?: string;
-  className?: string;
+  studentName: string
+  studentId?: string
+  className?: string
   // Grade info
-  title: string; // Assignment/exam title
-  type: "assignment" | "exam" | "grade";
-  subject?: string;
-  score: number;
-  maxScore: number;
-  percentage: number;
-  grade: string;
+  title: string // Assignment/exam title
+  type: "assignment" | "exam" | "grade"
+  subject?: string
+  score: number
+  maxScore: number
+  percentage: number
+  grade: string
   // School info
-  schoolName: string;
-  schoolLogo?: string;
+  schoolName: string
+  schoolLogo?: string
   // Dates
-  date: Date;
-  gradedAt?: Date;
+  date: Date
+  gradedAt?: Date
   // Optional
-  feedback?: string;
-  gradedBy?: string;
+  feedback?: string
+  gradedBy?: string
 }
 
 export interface CertificateOptions {
-  language: Locale;
-  template: "elegant" | "classic" | "modern";
-  includeSignatures: boolean;
-  includeFeedback: boolean;
+  language: Locale
+  template: "elegant" | "classic" | "modern"
+  includeSignatures: boolean
+  includeFeedback: boolean
 }
 
 // Decorative corner ornament component
-const CornerOrnament = ({ position }: { position: "tl" | "tr" | "bl" | "br" }) => {
+const CornerOrnament = ({
+  position,
+}: {
+  position: "tl" | "tr" | "bl" | "br"
+}) => {
   const rotation =
-    position === "tl" ? 0 : position === "tr" ? 90 : position === "bl" ? 270 : 180;
-  const x = position === "tl" || position === "bl" ? 20 : 555;
-  const y = position === "tl" || position === "tr" ? 20 : 801;
+    position === "tl"
+      ? 0
+      : position === "tr"
+        ? 90
+        : position === "bl"
+          ? 270
+          : 180
+  const x = position === "tl" || position === "bl" ? 20 : 555
+  const y = position === "tl" || position === "tr" ? 20 : 801
 
   return (
-    <Svg width="60" height="60" style={{ position: "absolute", left: x, top: y }}>
+    <Svg
+      width="60"
+      height="60"
+      style={{ position: "absolute", left: x, top: y }}
+    >
       <Path
         d={`M 0 50 Q 0 0 50 0`}
         stroke="#C9A962"
@@ -63,8 +78,8 @@ const CornerOrnament = ({ position }: { position: "tl" | "tr" | "bl" | "br" }) =
       />
       <Circle cx="10" cy="10" r="3" fill="#C9A962" />
     </Svg>
-  );
-};
+  )
+}
 
 // Create styles
 const styles = StyleSheet.create({
@@ -342,16 +357,16 @@ const styles = StyleSheet.create({
   failBadge: {
     backgroundColor: "#C53030",
   },
-});
+})
 
 // Format date helper
 function formatCertificateDate(date: Date, language: Locale): string {
-  const locale = language === "ar" ? "ar-SA" : "en-US";
+  const locale = language === "ar" ? "ar-SA" : "en-US"
   return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
+  }).format(date)
 }
 
 // Get grade description
@@ -370,19 +385,19 @@ function getGradeDescription(grade: string): string {
     D: "Minimum Pass",
     "D-": "Marginal Pass",
     F: "Did Not Pass",
-  };
-  return descriptions[grade] || "Achievement";
+  }
+  return descriptions[grade] || "Achievement"
 }
 
 export function GradeCertificate({
   data,
   options,
 }: {
-  data: CertificateData;
-  options: CertificateOptions;
+  data: CertificateData
+  options: CertificateOptions
 }) {
-  const isPassing = data.percentage >= 50;
-  const isRTL = options.language === "ar";
+  const isPassing = data.percentage >= 50
+  const isRTL = options.language === "ar"
 
   // Labels based on language
   const labels =
@@ -416,7 +431,7 @@ export function GradeCertificate({
           feedback: "Teacher's Feedback",
           class: "Class",
           subject: "Subject",
-        };
+        }
 
   return (
     <Document>
@@ -455,9 +470,7 @@ export function GradeCertificate({
 
           {/* Achievement text */}
           <View style={styles.achievementSection}>
-            <Text style={styles.achievementText}>
-              {labels.forAchieving}
-            </Text>
+            <Text style={styles.achievementText}>{labels.forAchieving}</Text>
             <View style={styles.infoSection}>
               <Text style={styles.infoTitle}>{data.title}</Text>
               {data.subject && (
@@ -488,7 +501,9 @@ export function GradeCertificate({
             </View>
 
             <View style={styles.scoreItem}>
-              <Text style={styles.scoreValue}>{data.percentage.toFixed(0)}%</Text>
+              <Text style={styles.scoreValue}>
+                {data.percentage.toFixed(0)}%
+              </Text>
               <Text style={styles.scoreLabel}>{labels.percentage}</Text>
             </View>
           </View>
@@ -540,7 +555,7 @@ export function GradeCertificate({
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
 // Print-optimized version (portrait, simpler design)
@@ -548,10 +563,10 @@ export function GradeCertificatePrint({
   data,
   options,
 }: {
-  data: CertificateData;
-  options: CertificateOptions;
+  data: CertificateData
+  options: CertificateOptions
 }) {
-  const isPassing = data.percentage >= 50;
+  const isPassing = data.percentage >= 50
 
   const labels =
     options.language === "ar"
@@ -600,7 +615,7 @@ export function GradeCertificatePrint({
           gradedBy: "Graded By",
           gradedOn: "Graded On",
           generated: "This report was generated on",
-        };
+        }
 
   const printStyles = StyleSheet.create({
     page: {
@@ -746,7 +761,7 @@ export function GradeCertificatePrint({
       fontSize: 9,
       color: "#718096",
     },
-  });
+  })
 
   return (
     <Document>
@@ -895,10 +910,11 @@ export function GradeCertificatePrint({
         {/* Footer */}
         <View style={printStyles.footer}>
           <Text style={printStyles.footerText}>
-            {labels.generated} {formatCertificateDate(new Date(), options.language)}
+            {labels.generated}{" "}
+            {formatCertificateDate(new Date(), options.language)}
           </Text>
         </View>
       </Page>
     </Document>
-  );
+  )
 }

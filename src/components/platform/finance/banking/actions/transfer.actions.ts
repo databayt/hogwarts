@@ -1,14 +1,16 @@
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { parseStringify } from '../lib/utils'
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { parseStringify } from "../lib/utils"
 
 export async function createTransfer({
   senderBankId,
   receiverBankId,
   amount,
-  note
+  note,
 }: {
   senderBankId: string
   receiverBankId: string
@@ -21,35 +23,35 @@ export async function createTransfer({
     const schoolId = session?.user?.schoolId
 
     if (!schoolId) {
-      throw new Error('School context not found')
+      throw new Error("School context not found")
     }
 
     // Check sender has sufficient funds and belongs to the same school
     const senderAccount = await db.bankAccount.findFirst({
       where: {
         id: senderBankId,
-        schoolId // Multi-tenant isolation
-      }
+        schoolId, // Multi-tenant isolation
+      },
     })
 
     if (!senderAccount) {
-      throw new Error('Sender account not found')
+      throw new Error("Sender account not found")
     }
 
     if (Number(senderAccount.currentBalance) < amount) {
-      throw new Error('Insufficient funds')
+      throw new Error("Insufficient funds")
     }
 
     // Verify receiver account belongs to the same school
     const receiverAccount = await db.bankAccount.findFirst({
       where: {
         id: receiverBankId,
-        schoolId // Multi-tenant isolation - transfers only within same school
-      }
+        schoolId, // Multi-tenant isolation - transfers only within same school
+      },
     })
 
     if (!receiverAccount) {
-      throw new Error('Receiver account not found or not in same school')
+      throw new Error("Receiver account not found or not in same school")
     }
 
     // Create transfer record
@@ -60,9 +62,9 @@ export async function createTransfer({
         receiverBankId,
         amount,
         note,
-        status: 'pending',
-        transferDate: new Date()
-      }
+        status: "pending",
+        transferDate: new Date(),
+      },
     })
 
     // In production, this would integrate with Dwolla API
@@ -73,29 +75,29 @@ export async function createTransfer({
       where: { id: senderBankId },
       data: {
         currentBalance: {
-          decrement: amount
-        }
-      }
+          decrement: amount,
+        },
+      },
     })
 
     await db.bankAccount.update({
       where: { id: receiverBankId },
       data: {
         currentBalance: {
-          increment: amount
-        }
-      }
+          increment: amount,
+        },
+      },
     })
 
     // Update transfer status
     await db.transfer.update({
       where: { id: transfer.id },
-      data: { status: 'completed' }
+      data: { status: "completed" },
     })
 
     return parseStringify(transfer)
   } catch (error) {
-    console.error('Error creating transfer:', error)
+    console.error("Error creating transfer:", error)
     return null
   }
 }
@@ -103,7 +105,7 @@ export async function createTransfer({
 export async function getTransferHistory({
   bankAccountId,
   page = 1,
-  limit = 10
+  limit = 10,
 }: {
   bankAccountId: string
   page?: number
@@ -125,20 +127,20 @@ export async function getTransferHistory({
         schoolId, // Multi-tenant isolation
         OR: [
           { senderBankId: bankAccountId },
-          { receiverBankId: bankAccountId }
-        ]
+          { receiverBankId: bankAccountId },
+        ],
       },
-      orderBy: { transferDate: 'desc' },
+      orderBy: { transferDate: "desc" },
       take: limit,
       skip,
       include: {
         senderBank: {
-          select: { name: true }
+          select: { name: true },
         },
         receiverBank: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     })
 
     const total = await db.transfer.count({
@@ -146,19 +148,19 @@ export async function getTransferHistory({
         schoolId, // Multi-tenant isolation
         OR: [
           { senderBankId: bankAccountId },
-          { receiverBankId: bankAccountId }
-        ]
-      }
+          { receiverBankId: bankAccountId },
+        ],
+      },
     })
 
     return parseStringify({
       data: transfers,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error('Error getting transfer history:', error)
+    console.error("Error getting transfer history:", error)
     return null
   }
 }

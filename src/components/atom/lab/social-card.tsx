@@ -1,10 +1,19 @@
-'use client'
+"use client"
 
 import * as React from "react"
+import {
+  Eye,
+  Heart,
+  MessageCircle,
+  Share2,
+  ThumbsUp,
+  Users,
+} from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Heart, MessageCircle, Share2, Eye, ThumbsUp, Users } from "lucide-react"
+
 import type { CardSize } from "./types"
 
 interface SocialMetric {
@@ -112,7 +121,7 @@ export function SocialCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -122,7 +131,7 @@ export function SocialCard({
           {loading ? (
             <Skeleton className="h-5 w-32" />
           ) : (
-            <h5 className="font-medium text-foreground">{title}</h5>
+            <h5 className="text-foreground font-medium">{title}</h5>
           )}
         </CardHeader>
       )}
@@ -145,12 +154,12 @@ export function SocialCard({
 
               return (
                 <div key={index} className="space-y-1">
-                  <div className="flex items-center gap-1.5 muted">
+                  <div className="muted flex items-center gap-1.5">
                     <Icon className="h-4 w-4 shrink-0" />
                     <span className="text-xs">{label}</span>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <h4 className="font-bold text-foreground">
+                    <h4 className="text-foreground font-bold">
                       {typeof metric.value === "number"
                         ? metric.value.toLocaleString()
                         : metric.value}

@@ -1,9 +1,10 @@
 "use client"
 
-import { cn } from "@/lib/utils"
-import { ArrowRight, Repeat2 } from "lucide-react";
 import { useState } from "react"
 import Link from "next/link"
+import { ArrowRight, Repeat2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface ExamInfo {
   label: string
@@ -46,14 +47,16 @@ export function ExamCardFlip({
           "relative h-full w-full",
           "[transform-style:preserve-3d]",
           "transition-all duration-700",
-          isFlipped ? "[transform:rotateY(180deg)]" : "[transform:rotateY(0deg)]"
+          isFlipped
+            ? "[transform:rotateY(180deg)]"
+            : "[transform:rotateY(0deg)]"
         )}
       >
         {/* Front of card */}
         <div
           className={cn(
             "absolute inset-0 h-full w-full",
-            "[backface-visibility:hidden] [transform:rotateY(0deg)]",
+            "[transform:rotateY(0deg)] [backface-visibility:hidden]",
             "overflow-hidden rounded-2xl",
             "bg-card",
             "border",
@@ -63,7 +66,7 @@ export function ExamCardFlip({
             isFlipped ? "opacity-0" : "opacity-100"
           )}
         >
-          <div className="relative h-full overflow-hidden bg-gradient-to-b from-muted/50 to-background">
+          <div className="from-muted/50 to-background relative h-full overflow-hidden bg-gradient-to-b">
             <div className="absolute inset-0 flex items-start justify-center pt-24">
               <div className="relative flex h-[100px] w-[200px] items-center justify-center">
                 {[...Array(10)].map((_, i) => (
@@ -86,13 +89,13 @@ export function ExamCardFlip({
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-5">
+          <div className="absolute right-0 bottom-0 left-0 p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-1.5">
-                <h3 className="text-lg font-semibold leading-snug tracking-tighter text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
+                <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tighter transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
                   {title}
                 </h3>
-                <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
+                <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
                   {subtitle}
                 </p>
               </div>
@@ -100,10 +103,10 @@ export function ExamCardFlip({
                 <div
                   className={cn(
                     "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
-                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent"
+                    "from-primary/20 via-primary/10 bg-gradient-to-br to-transparent"
                   )}
                 />
-                <Repeat2 className="relative z-10 h-4 w-4 text-primary transition-transform duration-300 group-hover/icon:-rotate-12 group-hover/icon:scale-110" />
+                <Repeat2 className="text-primary relative z-10 h-4 w-4 transition-transform duration-300 group-hover/icon:scale-110 group-hover/icon:-rotate-12" />
               </div>
             </div>
           </div>
@@ -113,9 +116,9 @@ export function ExamCardFlip({
         <div
           className={cn(
             "absolute inset-0 h-full w-full",
-            "[backface-visibility:hidden] [transform:rotateY(180deg)]",
+            "[transform:rotateY(180deg)] [backface-visibility:hidden]",
             "flex flex-col rounded-2xl border p-6",
-            "bg-gradient-to-b from-muted/50 to-background",
+            "from-muted/50 to-background bg-gradient-to-b",
             "shadow-sm",
             "transition-all duration-700",
             "group-hover:shadow-lg",
@@ -124,10 +127,10 @@ export function ExamCardFlip({
         >
           <div className="flex-1 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold leading-snug tracking-tight text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+              <h3 className="text-foreground text-lg leading-snug font-semibold tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
                 {title}
               </h3>
-              <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+              <p className="text-muted-foreground line-clamp-2 text-sm tracking-tight transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
                 {description}
               </p>
             </div>
@@ -138,18 +141,25 @@ export function ExamCardFlip({
                   key={detail.label}
                   className="flex items-center justify-between text-sm transition-all duration-500"
                   style={{
-                    transform: isFlipped ? "translateX(0)" : "translateX(-10px)",
+                    transform: isFlipped
+                      ? "translateX(0)"
+                      : "translateX(-10px)",
                     opacity: isFlipped ? 1 : 0,
                     transitionDelay: `${index * 100 + 200}ms`,
                   }}
                 >
                   <span className="text-muted-foreground">{detail.label}</span>
                   {detail.href ? (
-                    <Link href={detail.href} className="font-medium text-primary hover:underline">
+                    <Link
+                      href={detail.href}
+                      className="text-primary font-medium hover:underline"
+                    >
                       {detail.value}
                     </Link>
                   ) : (
-                    <span className="font-medium text-foreground">{detail.value}</span>
+                    <span className="text-foreground font-medium">
+                      {detail.value}
+                    </span>
                   )}
                 </div>
               ))}
@@ -169,18 +179,18 @@ export function ExamCardFlip({
                 "hover:scale-[1.02]"
               )}
             >
-              <span className="text-sm font-medium text-foreground transition-colors duration-300 group-hover/start:text-primary">
+              <span className="text-foreground group-hover/start:text-primary text-sm font-medium transition-colors duration-300">
                 {ctaText}
               </span>
               <div className="group/icon relative">
                 <div
                   className={cn(
                     "absolute inset-[-6px] rounded-lg transition-all duration-300",
-                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent",
+                    "from-primary/20 via-primary/10 bg-gradient-to-br to-transparent",
                     "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
                   )}
                 />
-                <ArrowRight className="relative z-10 h-4 w-4 text-primary transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+                <ArrowRight className="text-primary relative z-10 h-4 w-4 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
               </div>
             </Link>
           </div>

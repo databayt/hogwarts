@@ -12,17 +12,19 @@ Track production readiness and enhancements for the Classes feature.
 
 ### Teacher-Class Assignment (INCOMPLETE)
 
-| Property | Value |
-|----------|-------|
-| **URL** | `/[lang]/s/[subdomain]/(platform)/classes/[id]/teachers` |
-| **Current State** | Homeroom teacher works, subject teachers missing |
-| **Impact** | Cannot assign specific teachers to teach specific subjects in a class |
+| Property          | Value                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| **URL**           | `/[lang]/s/[subdomain]/(platform)/classes/[id]/teachers`              |
+| **Current State** | Homeroom teacher works, subject teachers missing                      |
+| **Impact**        | Cannot assign specific teachers to teach specific subjects in a class |
 
 **What Works:**
+
 - Homeroom teacher assignment via `teacherId` field on Class model
 - Basic teacher selection in class creation form
 
 **Missing Implementation:**
+
 - `assignSubjectTeacher(classId, subjectId, teacherId)` server action
 - `removeSubjectTeacher(classId, subjectId)` server action
 - `getClassSubjectTeachers(classId)` query
@@ -31,6 +33,7 @@ Track production readiness and enhancements for the Classes feature.
 - `ClassSubjectTeacher` junction model (or equivalent)
 
 **Files to Create/Modify:**
+
 - `src/components/platform/classes/subject-teachers.tsx` - Assignment UI
 - `src/components/platform/classes/actions.ts` - Add subject teacher actions
 - `prisma/models/class.prisma` - Consider adding `ClassSubjectTeacher` model
@@ -40,6 +43,7 @@ Track production readiness and enhancements for the Classes feature.
 ## Current Status
 
 **MVP Features Status**
+
 - [x] CRUD operations with Zod validation
 - [x] Homeroom teacher assignment
 - [ ] **Subject teacher assignment** ← BLOCKED
@@ -58,6 +62,7 @@ Track production readiness and enhancements for the Classes feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Create classes with multi-step form
 - [x] Assign homeroom teacher to class
 - [ ] **Assign subject teachers to class** ← BLOCKED (actions missing)
@@ -72,6 +77,7 @@ Track production readiness and enhancements for the Classes feature.
 - [x] Delete classes with cascade handling
 
 ### Role-Based Access
+
 - [x] Admin can create/edit/delete classes
 - [x] Teacher can view assigned classes
 - [x] Teacher can access student roster
@@ -80,6 +86,7 @@ Track production readiness and enhancements for the Classes feature.
 - [x] Staff can view class list (read-only)
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Unique constraints prevent duplicates
 - [x] Validation on all inputs (client + server)
@@ -94,6 +101,7 @@ Track production readiness and enhancements for the Classes feature.
 ### Critical Issues (Priority 1) 🔴
 
 **Class Performance Analytics**
+
 - [ ] Calculate class average across all subjects
 - [ ] Display grade distribution (A/B/C/D/F counts)
 - [ ] Track class performance trends over time
@@ -102,6 +110,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Performance reports per subject per class
 
 **Attendance Summary**
+
 - [ ] Calculate class attendance percentage
 - [ ] Display daily attendance trends
 - [ ] Identify students with low attendance
@@ -110,6 +119,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Export attendance reports for class
 
 **Enrollment Management Enhancement**
+
 - [ ] Visual enrollment capacity indicators (progress bars)
 - [ ] Waitlist functionality for full classes
 - [ ] Bulk enrollment from student list
@@ -118,6 +128,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Enrollment history tracking per student
 
 ### Seating Arrangement
+
 - [ ] Visual seating chart designer
 - [ ] Drag-and-drop student placement
 - [ ] Save multiple seating arrangements
@@ -126,6 +137,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Vision/hearing accommodation support
 
 ### Class Resources
+
 - [ ] Resource library per class (textbooks, materials)
 - [ ] Equipment assignment (projectors, laptops)
 - [ ] Resource request workflow
@@ -133,6 +145,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Shared resources across classes
 
 ### Subject Teacher Assignment Enhancement
+
 - [ ] Multiple subject teachers per class (co-teaching)
 - [ ] Subject teacher assignment with effective dates
 - [ ] Subject teacher rotation (different teachers per term)
@@ -141,6 +154,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Subject-specific permissions (grading, assignments)
 
 ### Bulk Operations
+
 - [ ] Bulk student enrollment (select multiple students, enroll in class)
 - [ ] Bulk class creation (create multiple sections of same grade)
 - [ ] Bulk teacher assignment across classes
@@ -148,6 +162,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Progress indicators for bulk operations
 
 ### Class Schedule Enhancement
+
 - [ ] Visual weekly schedule view per class
 - [ ] Period-by-period timetable display
 - [ ] Free periods highlighted
@@ -156,6 +171,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] iCal export for class schedules
 
 ### Class Communication
+
 - [ ] Class-specific announcement board
 - [ ] Message all class parents at once
 - [ ] Emergency alerts for class
@@ -163,6 +179,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Class newsletter functionality
 
 ### Performance Issues
+
 - [ ] Add indexes for search fields (name, subjectId, teacherId)
 - [ ] Optimize student roster queries (avoid N+1)
 - [ ] Cache class roster data
@@ -171,6 +188,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Optimize enrollment count calculations
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for class list and roster
 - [ ] Keyboard navigation for multi-step form
 - [ ] ARIA labels for interactive elements
@@ -178,6 +196,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] High contrast mode support
 
 ### UX Polish
+
 - [ ] Loading skeletons for table
 - [ ] Empty state with helpful guidance
 - [ ] Error handling with user-friendly messages
@@ -188,6 +207,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Class cards view (alternative to table)
 
 ### Export/Import Enhancement
+
 - [ ] Export class roster to CSV
 - [ ] Export with student contact information
 - [ ] Export class timetable to PDF
@@ -196,6 +216,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Custom column selection for exports
 
 ### Search & Filter Enhancement
+
 - [ ] Advanced search (multiple fields)
 - [ ] Grade level filter
 - [ ] Capacity filter (full, nearly full, available)
@@ -204,6 +225,7 @@ Track production readiness and enhancements for the Classes feature.
 - [ ] Saved filter presets
 
 ### Integration Enhancements
+
 - [ ] Link to class performance dashboard
 - [ ] Link to class attendance summary
 - [ ] Link to class grade distribution
@@ -216,6 +238,7 @@ Track production readiness and enhancements for the Classes feature.
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Class {
   id              String         @id @default(cuid())
@@ -262,6 +285,7 @@ model StudentClass {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `capacity` field (Int? - max students)
 - [ ] Add `enrollmentCount` calculated field or query
 - [ ] Add `status` field (ACTIVE, INACTIVE, ARCHIVED)
@@ -278,6 +302,7 @@ model StudentClass {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createClass(data: FormData)` - Create new class
 - [x] `updateClass(id: string, data: FormData)` - Update existing class
 - [x] `deleteClass(id: string)` - Delete class
@@ -285,6 +310,7 @@ model StudentClass {
 - [x] `getClasses(params)` - Fetch class list with filters/pagination
 
 ### Actions to Implement
+
 - [ ] `enrollStudent(classId: string, studentId: string)` - Enroll single student
 - [ ] `bulkEnrollStudents(classId: string, studentIds: string[])` - Bulk enrollment
 - [ ] `unenrollStudent(classId: string, studentId: string)` - Remove student
@@ -299,6 +325,7 @@ model StudentClass {
 - [ ] `duplicateClass(classId: string, newTermId: string)` - Copy class to new term
 
 ### Action Enhancements
+
 - [ ] Add typed return values for all actions
 - [ ] Add request ID logging
 - [ ] Add proper error handling with user messages
@@ -310,6 +337,7 @@ model StudentClass {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with data fetching
 - [x] `table.tsx` - Client data table
 - [x] `columns.tsx` - Column definitions
@@ -322,6 +350,7 @@ model StudentClass {
 - [x] `actions.ts` - Server actions
 
 ### Components to Create
+
 - [ ] `class-roster.tsx` - Student enrollment management
 - [ ] `class-schedule.tsx` - Weekly timetable view
 - [ ] `class-performance.tsx` - Analytics dashboard
@@ -333,6 +362,7 @@ model StudentClass {
 - [ ] `class-resources.tsx` - Resource management
 
 ### Component Enhancements
+
 - [ ] Add capacity progress bars to class cards
 - [ ] Add enrollment count badges
 - [ ] Add visual status indicators
@@ -346,6 +376,7 @@ model StudentClass {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions (create, update, delete, enroll)
 - [ ] Test multi-tenant scoping
@@ -353,6 +384,7 @@ model StudentClass {
 - [ ] Test enrollment/unenrollment logic
 
 ### Integration Tests
+
 - [ ] Test class creation with teacher assignment
 - [ ] Test student enrollment workflow
 - [ ] Test capacity limits enforcement
@@ -360,6 +392,7 @@ model StudentClass {
 - [ ] Test class deletion with cascade
 
 ### E2E Tests (Playwright)
+
 - [ ] Test class list rendering
 - [ ] Test create class multi-step form
 - [ ] Test student enrollment
@@ -387,6 +420,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -394,6 +428,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -401,18 +436,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -423,6 +461,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

@@ -1,11 +1,15 @@
+import type { ConversationType, ParticipantRole } from "@prisma/client"
+
+import {
+  canUserCreateConversationType,
+  CONVERSATION_CREATION_PERMISSIONS,
+} from "./config"
 import type {
-  MessagingAuthContext,
   ConversationContext,
   MessageContext,
   MessagingAction,
+  MessagingAuthContext,
 } from "./types"
-import type { ConversationType, ParticipantRole } from "@prisma/client"
-import { CONVERSATION_CREATION_PERMISSIONS, canUserCreateConversationType } from "./config"
 
 /**
  * Get auth context from session
@@ -48,7 +52,8 @@ export function checkMessagingPermission(
     case "update_conversation":
       // Owner or admin of conversation
       if (conversation?.createdById === userId) return true
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     case "delete_conversation":
@@ -63,13 +68,16 @@ export function checkMessagingPermission(
 
     case "add_participant":
       // Owner, admin, or based on conversation type
-      if (participantRole === "owner" || participantRole === "admin") return true
-      if (conversation?.type === "group" && participantRole === "member") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
+      if (conversation?.type === "group" && participantRole === "member")
+        return true
       return false
 
     case "remove_participant":
       // Owner or admin can remove others
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     case "send_message":
@@ -89,7 +97,8 @@ export function checkMessagingPermission(
     case "delete_message":
       // Can delete own messages or if admin/owner
       if (message?.senderId === userId) return true
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     case "react_to_message":
@@ -98,19 +107,22 @@ export function checkMessagingPermission(
 
     case "pin_message":
       // Owner or admin can pin
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     case "create_invite":
       // Owner or admin can invite
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     case "send_broadcast":
       // Only for announcement channels, admin/owner
       if (conversation?.type !== "announcement") return false
       if (role === "ADMIN") return true
-      if (participantRole === "owner" || participantRole === "admin") return true
+      if (participantRole === "owner" || participantRole === "admin")
+        return true
       return false
 
     default:
@@ -128,7 +140,15 @@ export function assertMessagingPermission(
   message?: MessageContext,
   participantRole?: ParticipantRole
 ): void {
-  if (!checkMessagingPermission(auth, action, conversation, message, participantRole)) {
+  if (
+    !checkMessagingPermission(
+      auth,
+      action,
+      conversation,
+      message,
+      participantRole
+    )
+  ) {
     throw new Error(`Permission denied: ${action}`)
   }
 }
@@ -178,9 +198,7 @@ export function validateConversationType(
 /**
  * Check if user can send messages in conversation
  */
-export function canSendMessage(
-  participantRole?: ParticipantRole
-): boolean {
+export function canSendMessage(participantRole?: ParticipantRole): boolean {
   if (!participantRole) return false
   return participantRole !== "read_only"
 }
@@ -208,9 +226,7 @@ export function canEditConversation(
 /**
  * Check if user can delete messages
  */
-export function canDeleteMessages(
-  participantRole?: ParticipantRole
-): boolean {
+export function canDeleteMessages(participantRole?: ParticipantRole): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
 }
@@ -218,9 +234,7 @@ export function canDeleteMessages(
 /**
  * Check if user can pin messages
  */
-export function canPinMessages(
-  participantRole?: ParticipantRole
-): boolean {
+export function canPinMessages(participantRole?: ParticipantRole): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
 }
@@ -315,7 +329,11 @@ export const MESSAGING_PERMISSIONS_MATRIX = {
  * Get permissions for a role
  */
 export function getRolePermissions(role: string) {
-  return MESSAGING_PERMISSIONS_MATRIX[role as keyof typeof MESSAGING_PERMISSIONS_MATRIX] || MESSAGING_PERMISSIONS_MATRIX.USER
+  return (
+    MESSAGING_PERMISSIONS_MATRIX[
+      role as keyof typeof MESSAGING_PERMISSIONS_MATRIX
+    ] || MESSAGING_PERMISSIONS_MATRIX.USER
+  )
 }
 
 /**
@@ -362,7 +380,10 @@ export function canChangeParticipantRole(
   if (!hasHigherOrEqualRole(currentUserRole, targetUserRole)) return false
 
   // Can't promote someone to or above your own role (unless owner)
-  if (currentUserRole !== "owner" && ROLE_HIERARCHY[newRole] >= ROLE_HIERARCHY[currentUserRole]) {
+  if (
+    currentUserRole !== "owner" &&
+    ROLE_HIERARCHY[newRole] >= ROLE_HIERARCHY[currentUserRole]
+  ) {
     return false
   }
 
@@ -383,7 +404,14 @@ export function canAccessConversationType(
 
     case "group":
       // Most roles can access group chats
-      return ["DEVELOPER", "ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "STAFF"].includes(role)
+      return [
+        "DEVELOPER",
+        "ADMIN",
+        "TEACHER",
+        "STUDENT",
+        "ACCOUNTANT",
+        "STAFF",
+      ].includes(role)
 
     case "class":
       // Teachers, students, and admins can access class channels
@@ -419,7 +447,10 @@ export function validateMessageContent(
 
   // Announcement channels may have stricter requirements
   if (conversationType === "announcement" && content.length < 10) {
-    return { valid: false, error: "Announcement messages must be at least 10 characters" }
+    return {
+      valid: false,
+      error: "Announcement messages must be at least 10 characters",
+    }
   }
 
   return { valid: true }

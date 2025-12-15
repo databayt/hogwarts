@@ -1,80 +1,103 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { GraduationCap, Clock, CheckCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React from "react"
+import { CheckCircle, Clock, GraduationCap } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface SchoolCardProps {
-  id: string;
-  name: string;
-  startDate: string;
-  status?: 'draft' | 'pending' | 'active';
-  subdomain?: string;
-  onClick?: (id: string) => void;
-  dictionary?: any;
+  id: string
+  name: string
+  startDate: string
+  status?: "draft" | "pending" | "active"
+  subdomain?: string
+  onClick?: (id: string) => void
+  dictionary?: any
 }
 
 const SchoolCard: React.FC<SchoolCardProps> = ({
   id,
   name,
   startDate,
-  status = 'draft',
+  status = "draft",
   subdomain,
   onClick,
-  dictionary
+  dictionary,
 }) => {
-  const dict = dictionary?.onboarding || {};
+  const dict = dictionary?.onboarding || {}
   const handleClick = () => {
-    onClick?.(id);
-  };
+    onClick?.(id)
+  }
 
   const getStatusIcon = () => {
     switch (status) {
-      case 'active':
-        return <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />;
-      case 'pending':
-        return <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />;
+      case "active":
+        return <CheckCircle className="h-4 w-4 text-green-600 sm:h-5 sm:w-5" />
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-600 sm:h-5 sm:w-5" />
       default:
-        return <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />;
+        return <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
     }
-  };
+  }
 
   const getStatusBadge = () => {
     switch (status) {
-      case 'active':
-        return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">{dict.activeStatus || 'Active'}</Badge>;
-      case 'pending':
-        return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">{dict.pendingStatus || 'Pending'}</Badge>;
+      case "active":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-green-100 text-xs text-green-800"
+          >
+            {dict.activeStatus || "Active"}
+          </Badge>
+        )
+      case "pending":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-yellow-100 text-xs text-yellow-800"
+          >
+            {dict.pendingStatus || "Pending"}
+          </Badge>
+        )
       default:
-        return <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">{dict.draftStatus || 'Draft'}</Badge>;
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-xs text-blue-800"
+          >
+            {dict.draftStatus || "Draft"}
+          </Badge>
+        )
     }
-  };
+  }
 
   return (
-    <Card 
-      className="border hover:border-foreground/50 py-2 sm:py-3 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg min-h-[50px] sm:min-h-[60px]"
+    <Card
+      className="hover:border-foreground/50 bg-card hover:bg-accent min-h-[50px] cursor-pointer rounded-lg border py-2 shadow-none transition-all hover:shadow-none sm:min-h-[60px] sm:py-3"
       onClick={handleClick}
     >
       <CardContent className="flex items-center px-2 sm:px-3">
-        <div className="flex items-center space-x-2 flex-1">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+        <div className="flex flex-1 items-center space-x-2">
+          <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md sm:h-10 sm:w-10">
             {getStatusIcon()}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h5 className="text-xs sm:text-sm font-medium truncate">
+              <h5 className="truncate text-xs font-medium sm:text-sm">
                 {name}
               </h5>
               {getStatusBadge()}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
-              <p className="text-xs text-muted-foreground">
+            <div className="mt-0.5 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+              <p className="text-muted-foreground text-xs">
                 Started {startDate}
               </p>
               {subdomain && (
-                <p className="text-xs text-muted-foreground">
-                  <span className="hidden sm:inline">•</span> {subdomain}.databayt.org
+                <p className="text-muted-foreground text-xs">
+                  <span className="hidden sm:inline">•</span> {subdomain}
+                  .databayt.org
                 </p>
               )}
             </div>
@@ -82,7 +105,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default SchoolCard;
+export default SchoolCard

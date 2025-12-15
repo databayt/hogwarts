@@ -1,9 +1,9 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
-import { Button } from "@/components/ui/button"
 import { Ellipsis, GraduationCap, Users } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
 import type { YearLevelRow } from "./types"
 
 export interface YearLevelColumnCallbacks {
@@ -47,7 +49,7 @@ export const getYearLevelColumns = (
       cell: ({ getValue }) => {
         const value = getValue<number>()
         return (
-          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-medium text-sm">
+          <span className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium">
             {value}
           </span>
         )
@@ -61,12 +63,13 @@ export const getYearLevelColumns = (
       meta: { label: t.levelName, variant: "text" },
       id: "levelName",
       cell: ({ row }) => {
-        const name = lang === "ar" && row.original.levelNameAr
-          ? row.original.levelNameAr
-          : row.original.levelName
+        const name =
+          lang === "ar" && row.original.levelNameAr
+            ? row.original.levelNameAr
+            : row.original.levelName
         return (
           <span className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <GraduationCap className="text-muted-foreground h-4 w-4" />
             <span className="font-medium">{name}</span>
           </span>
         )
@@ -83,7 +86,9 @@ export const getYearLevelColumns = (
       cell: ({ getValue }) => {
         const value = getValue<string | null>()
         return value ? (
-          <span className="text-sm" dir="rtl">{value}</span>
+          <span className="text-sm" dir="rtl">
+            {value}
+          </span>
         ) : (
           <span className="text-muted-foreground">-</span>
         )
@@ -112,7 +117,7 @@ export const getYearLevelColumns = (
         const count = row.original._count?.studentYearLevels ?? 0
         return (
           <span className="flex items-center gap-1 text-sm tabular-nums">
-            <Users className="h-3 w-3 text-muted-foreground" />
+            <Users className="text-muted-foreground h-3 w-3" />
             {count}
           </span>
         )
@@ -125,7 +130,7 @@ export const getYearLevelColumns = (
       ),
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
             lang === "ar" ? "ar-SA" : "en-US"
           )}

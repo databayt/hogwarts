@@ -1,27 +1,45 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { TriangleAlert, RefreshCw, CircleCheck, User, DoorOpen, ArrowRight } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { useEffect, useState, useTransition } from "react"
 import {
-  getTermsForSelection,
-  detectTimetableConflicts
-} from '../actions'
+  ArrowRight,
+  CircleCheck,
+  DoorOpen,
+  RefreshCw,
+  TriangleAlert,
+  User,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { detectTimetableConflicts, getTermsForSelection } from "../actions"
 
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
 }
 
 type Conflict = {
-  type: 'TEACHER' | 'ROOM'
+  type: "TEACHER" | "ROOM"
   classA: { id: string; name: string }
   classB: { id: string; name: string }
   teacher?: { id: string; name: string } | null
@@ -35,7 +53,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const [terms, setTerms] = useState<{ id: string; label: string }[]>([])
-  const [selectedTerm, setSelectedTerm] = useState<string>('')
+  const [selectedTerm, setSelectedTerm] = useState<string>("")
   const [conflicts, setConflicts] = useState<Conflict[]>([])
 
   // Load terms on mount
@@ -58,7 +76,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError('Failed to load terms')
+      setError("Failed to load terms")
     }
   }
 
@@ -66,16 +84,20 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
     startTransition(async () => {
       setError(null)
       try {
-        const { conflicts: detected } = await detectTimetableConflicts({ termId: selectedTerm })
+        const { conflicts: detected } = await detectTimetableConflicts({
+          termId: selectedTerm,
+        })
         setConflicts(detected)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to detect conflicts')
+        setError(
+          err instanceof Error ? err.message : "Failed to detect conflicts"
+        )
       }
     })
   }
 
-  const teacherConflicts = conflicts.filter(c => c.type === 'TEACHER')
-  const roomConflicts = conflicts.filter(c => c.type === 'ROOM')
+  const teacherConflicts = conflicts.filter((c) => c.type === "TEACHER")
+  const roomConflicts = conflicts.filter((c) => c.type === "ROOM")
 
   return (
     <div className="space-y-6">
@@ -83,10 +105,11 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TriangleAlert className="h-5 w-5" />
-            {d?.conflicts?.title || 'Timetable Conflicts'}
+            {d?.conflicts?.title || "Timetable Conflicts"}
           </CardTitle>
           <CardDescription>
-            {d?.conflicts?.description || 'Detect and resolve scheduling conflicts'}
+            {d?.conflicts?.description ||
+              "Detect and resolve scheduling conflicts"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -99,7 +122,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                   <SelectValue placeholder="Select term" />
                 </SelectTrigger>
                 <SelectContent>
-                  {terms.map(term => (
+                  {terms.map((term) => (
                     <SelectItem key={term.id} value={term.id}>
                       {term.label}
                     </SelectItem>
@@ -109,8 +132,15 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
             </div>
 
             <div className="flex items-end">
-              <Button variant="outline" size="sm" onClick={detectConflicts} disabled={isPending || !selectedTerm}>
-                <RefreshCw className={cn("h-4 w-4 me-2", isPending && "animate-spin")} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={detectConflicts}
+                disabled={isPending || !selectedTerm}
+              >
+                <RefreshCw
+                  className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
+                />
                 Scan for Conflicts
               </Button>
             </div>
@@ -137,18 +167,22 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
           {!isPending && selectedTerm && (
             <div className="space-y-6">
               {/* Summary */}
-              <div className={cn(
-                "p-4 rounded-lg border",
-                conflicts.length === 0
-                  ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800"
-                  : "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
-              )}>
+              <div
+                className={cn(
+                  "rounded-lg border p-4",
+                  conflicts.length === 0
+                    ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
+                    : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20"
+                )}
+              >
                 <div className="flex items-center gap-3">
                   {conflicts.length === 0 ? (
                     <>
                       <CircleCheck className="h-6 w-6 text-green-600" />
                       <div>
-                        <h3 className="font-semibold text-green-800 dark:text-green-200">No Conflicts Found</h3>
+                        <h3 className="font-semibold text-green-800 dark:text-green-200">
+                          No Conflicts Found
+                        </h3>
                         <p className="text-sm text-green-600 dark:text-green-400">
                           The timetable has no scheduling conflicts
                         </p>
@@ -159,10 +193,14 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                       <TriangleAlert className="h-6 w-6 text-red-600" />
                       <div>
                         <h3 className="font-semibold text-red-800 dark:text-red-200">
-                          {conflicts.length} Conflict{conflicts.length > 1 ? 's' : ''} Detected
+                          {conflicts.length} Conflict
+                          {conflicts.length > 1 ? "s" : ""} Detected
                         </h3>
                         <p className="text-sm text-red-600 dark:text-red-400">
-                          {teacherConflicts.length} teacher conflict{teacherConflicts.length !== 1 ? 's' : ''}, {roomConflicts.length} room conflict{roomConflicts.length !== 1 ? 's' : ''}
+                          {teacherConflicts.length} teacher conflict
+                          {teacherConflicts.length !== 1 ? "s" : ""},{" "}
+                          {roomConflicts.length} room conflict
+                          {roomConflicts.length !== 1 ? "s" : ""}
                         </p>
                       </div>
                     </>
@@ -173,7 +211,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
               {/* Teacher Conflicts */}
               {teacherConflicts.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
+                  <h3 className="flex items-center gap-2 font-semibold">
                     <User className="h-4 w-4" />
                     Teacher Conflicts
                   </h3>
@@ -181,17 +219,21 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                     {teacherConflicts.map((conflict, idx) => (
                       <div
                         key={`teacher-${idx}`}
-                        className="p-4 bg-muted rounded-lg flex flex-wrap items-center gap-3"
+                        className="bg-muted flex flex-wrap items-center gap-3 rounded-lg p-4"
                       >
                         <Badge variant="destructive">
-                          <User className="h-3 w-3 me-1" />
-                          {conflict.teacher?.name || 'Unknown Teacher'}
+                          <User className="me-1 h-3 w-3" />
+                          {conflict.teacher?.name || "Unknown Teacher"}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">assigned to both</span>
+                        <span className="text-muted-foreground text-sm">
+                          assigned to both
+                        </span>
                         <Badge variant="outline">{conflict.classA.name}</Badge>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowRight className="text-muted-foreground h-4 w-4" />
                         <Badge variant="outline">{conflict.classB.name}</Badge>
-                        <span className="text-sm text-muted-foreground">at the same time</span>
+                        <span className="text-muted-foreground text-sm">
+                          at the same time
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -201,7 +243,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
               {/* Room Conflicts */}
               {roomConflicts.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
+                  <h3 className="flex items-center gap-2 font-semibold">
                     <DoorOpen className="h-4 w-4" />
                     Room Conflicts
                   </h3>
@@ -209,17 +251,21 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                     {roomConflicts.map((conflict, idx) => (
                       <div
                         key={`room-${idx}`}
-                        className="p-4 bg-muted rounded-lg flex flex-wrap items-center gap-3"
+                        className="bg-muted flex flex-wrap items-center gap-3 rounded-lg p-4"
                       >
                         <Badge variant="destructive">
-                          <DoorOpen className="h-3 w-3 me-1" />
-                          {conflict.room?.name || 'Unknown Room'}
+                          <DoorOpen className="me-1 h-3 w-3" />
+                          {conflict.room?.name || "Unknown Room"}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">booked for both</span>
+                        <span className="text-muted-foreground text-sm">
+                          booked for both
+                        </span>
                         <Badge variant="outline">{conflict.classA.name}</Badge>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowRight className="text-muted-foreground h-4 w-4" />
                         <Badge variant="outline">{conflict.classB.name}</Badge>
-                        <span className="text-sm text-muted-foreground">at the same time</span>
+                        <span className="text-muted-foreground text-sm">
+                          at the same time
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -230,8 +276,8 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
 
           {/* No Term Selected */}
           {!selectedTerm && !isPending && (
-            <div className="text-center py-12 text-muted-foreground">
-              <TriangleAlert className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <div className="text-muted-foreground py-12 text-center">
+              <TriangleAlert className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p>Select a term to scan for conflicts</p>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const enrollmentSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -19,7 +19,9 @@ export const enrollmentSchema = z.object({
   transferReason: z.string().max(500).optional(),
 
   // Course Selection
-  mandatorySubjects: z.array(z.string()).min(1, "At least one mandatory subject is required"),
+  mandatorySubjects: z
+    .array(z.string())
+    .min(1, "At least one mandatory subject is required"),
   electiveSubjects: z.array(z.string()).default([]),
   languagePreference: z.string().optional(),
 
@@ -40,7 +42,7 @@ export const enrollmentSchema = z.object({
   migrationCertificate: z.boolean().optional(),
 
   notes: z.string().max(1000).optional(),
-});
+})
 
 export const batchTransferSchema = z.object({
   studentId: z.string().min(1, "Student is required"),
@@ -48,7 +50,7 @@ export const batchTransferSchema = z.object({
   toBatchId: z.string().min(1, "New batch is required"),
   reason: z.string().min(10, "Reason must be at least 10 characters").max(500),
   effectiveDate: z.date(),
-});
+})
 
 export const courseSchema = z.object({
   name: z.string().min(1, "Course name is required").max(100),
@@ -56,7 +58,7 @@ export const courseSchema = z.object({
   description: z.string().max(500).optional(),
   yearLevelId: z.string().min(1, "Year level is required"),
   duration: z.number().min(1).max(48), // Max 4 years
-});
+})
 
 export const subjectSchema = z.object({
   name: z.string().min(1, "Subject name is required").max(100),
@@ -66,7 +68,7 @@ export const subjectSchema = z.object({
   weeklyHours: z.number().min(1).max(20),
   yearLevelId: z.string().min(1, "Year level is required"),
   prerequisites: z.array(z.string()).optional(),
-});
+})
 
 export const sectionSchema = z.object({
   batchId: z.string().min(1, "Batch is required"),
@@ -74,10 +76,10 @@ export const sectionSchema = z.object({
   capacity: z.number().min(1).max(100),
   classTeacherId: z.string().optional(),
   roomId: z.string().optional(),
-});
+})
 
-export type EnrollmentFormInput = z.infer<typeof enrollmentSchema>;
-export type BatchTransferFormInput = z.infer<typeof batchTransferSchema>;
-export type CourseFormInput = z.infer<typeof courseSchema>;
-export type SubjectFormInput = z.infer<typeof subjectSchema>;
-export type SectionFormInput = z.infer<typeof sectionSchema>;
+export type EnrollmentFormInput = z.infer<typeof enrollmentSchema>
+export type BatchTransferFormInput = z.infer<typeof batchTransferSchema>
+export type CourseFormInput = z.infer<typeof courseSchema>
+export type SubjectFormInput = z.infer<typeof subjectSchema>
+export type SectionFormInput = z.infer<typeof sectionSchema>

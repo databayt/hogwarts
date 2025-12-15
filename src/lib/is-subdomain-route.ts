@@ -7,5 +7,5 @@
 export function isSubdomainRoute(pathname: string): boolean {
   // Check if the pathname contains '/s/' which indicates a subdomain route
   // Pattern: /en/s/school-name/... or /ar/s/school-name/...
-  return pathname.includes('/s/');
+  return pathname.includes("/s/")
 }

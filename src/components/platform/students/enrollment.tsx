@@ -1,22 +1,32 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { studentCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { StudentFormStepProps } from "./types";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+import { StudentFormStepProps } from "./types"
+import { studentCreateSchema } from "./validation"
 
 export function EnrollmentStep({ form, isView }: StudentFormStepProps) {
   return (
-    <div className="space-y-4 max-w-md mx-auto">
+    <div className="mx-auto max-w-md space-y-4">
       <FormField
         control={form.control}
         name="enrollmentDate"
@@ -46,7 +56,9 @@ export function EnrollmentStep({ form, isView }: StudentFormStepProps) {
                 <Calendar
                   mode="single"
                   selected={field.value ? new Date(field.value) : undefined}
-                  onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
+                  onSelect={(date) =>
+                    field.onChange(date?.toISOString().split("T")[0])
+                  }
                   disabled={isView}
                   initialFocus
                 />
@@ -63,12 +75,16 @@ export function EnrollmentStep({ form, isView }: StudentFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="User ID (optional)" disabled={isView} {...field} />
+              <Input
+                placeholder="User ID (optional)"
+                disabled={isView}
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
     </div>
-  );
+  )
 }

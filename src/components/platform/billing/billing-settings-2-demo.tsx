@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { BillingSettings2 } from "@/components/billingsdk/billing-settings-2";
+import { useState } from "react"
+
+import { BillingSettings2 } from "@/components/billingsdk/billing-settings-2"
 
 export function BillingSettings2Demo() {
-  const [fullName, setFullName] = useState("John Doe");
-  const [billingEmail, setBillingEmail] = useState("john@school.edu");
-  const [taxId, setTaxId] = useState("");
-  const [currency, setCurrency] = useState("usd");
-  const [autoRenewal, setAutoRenewal] = useState(true);
-  const [invoiceEmails, setInvoiceEmails] = useState(true);
-  const [promotionalEmails, setPromotionalEmails] = useState(false);
+  const [fullName, setFullName] = useState("John Doe")
+  const [billingEmail, setBillingEmail] = useState("john@school.edu")
+  const [taxId, setTaxId] = useState("")
+  const [currency, setCurrency] = useState("usd")
+  const [autoRenewal, setAutoRenewal] = useState(true)
+  const [invoiceEmails, setInvoiceEmails] = useState(true)
+  const [promotionalEmails, setPromotionalEmails] = useState(false)
 
   return (
     <BillingSettings2
@@ -66,7 +67,8 @@ export function BillingSettings2Demo() {
         {
           id: "promotional-emails",
           label: "Promotional Emails",
-          description: "Receive occasional updates about new features and offers",
+          description:
+            "Receive occasional updates about new features and offers",
           enabled: promotionalEmails,
           onToggle: setPromotionalEmails,
         },
@@ -79,5 +81,5 @@ export function BillingSettings2Demo() {
       saveButtonText="Save Changes"
       cancelButtonText="Cancel"
     />
-  );
+  )
 }

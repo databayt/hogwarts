@@ -4,9 +4,15 @@
  * Core utilities for double-entry bookkeeping
  */
 
-import { db } from '@/lib/db'
-import type { JournalEntryInput, JournalEntryLine, PostingResult, AccountBalance } from './types'
-import { AccountType } from './types'
+import { db } from "@/lib/db"
+
+import type {
+  AccountBalance,
+  JournalEntryInput,
+  JournalEntryLine,
+  PostingResult,
+} from "./types"
+import { AccountType } from "./types"
 
 /**
  * Validate that debits equal credits
@@ -22,7 +28,10 @@ export function validateDoubleEntry(lines: JournalEntryLine[]): boolean {
 /**
  * Generate next journal entry number
  */
-export async function generateEntryNumber(schoolId: string, fiscalYearId: string): Promise<string> {
+export async function generateEntryNumber(
+  schoolId: string,
+  fiscalYearId: string
+): Promise<string> {
   const fiscalYear = await db.fiscalYear.findUnique({
     where: { id: fiscalYearId },
     select: { name: true },
@@ -33,8 +42,9 @@ export async function generateEntryNumber(schoolId: string, fiscalYearId: string
   })
 
   // Extract year from name format "FY 2024-2025" -> "2024"
-  const yearCode = fiscalYear?.name?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()
-  const sequence = String(count + 1).padStart(6, '0')
+  const yearCode =
+    fiscalYear?.name?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()
+  const sequence = String(count + 1).padStart(6, "0")
 
   return `JE-${yearCode}-${sequence}`
 }
@@ -52,7 +62,7 @@ export async function createJournalEntry(
     if (!validateDoubleEntry(input.lines)) {
       return {
         success: false,
-        errors: ['Debits do not equal credits. Journal entry must balance.'],
+        errors: ["Debits do not equal credits. Journal entry must balance."],
       }
     }
 
@@ -183,10 +193,12 @@ export async function createJournalEntry(
       journalEntryId: journalEntry.id,
     }
   } catch (error) {
-    console.error('Error creating journal entry:', error)
+    console.error("Error creating journal entry:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+      errors: [
+        error instanceof Error ? error.message : "Unknown error occurred",
+      ],
     }
   }
 }
@@ -207,14 +219,14 @@ export async function postJournalEntry(
     if (!entry) {
       return {
         success: false,
-        errors: ['Journal entry not found'],
+        errors: ["Journal entry not found"],
       }
     }
 
     if (entry.isPosted) {
       return {
         success: false,
-        errors: ['Journal entry is already posted'],
+        errors: ["Journal entry is already posted"],
       }
     }
 
@@ -237,10 +249,9 @@ export async function postJournalEntry(
 
         if (!account) continue
 
-        const isDebitNormal = [
-          AccountType.ASSET,
-          AccountType.EXPENSE,
-        ].includes(account.type as AccountType)
+        const isDebitNormal = [AccountType.ASSET, AccountType.EXPENSE].includes(
+          account.type as AccountType
+        )
 
         let balanceChange: number
         if (isDebitNormal) {
@@ -283,10 +294,12 @@ export async function postJournalEntry(
       journalEntryId: entry.id,
     }
   } catch (error) {
-    console.error('Error posting journal entry:', error)
+    console.error("Error posting journal entry:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+      errors: [
+        error instanceof Error ? error.message : "Unknown error occurred",
+      ],
     }
   }
 }
@@ -308,33 +321,35 @@ export async function reverseJournalEntry(
     if (!originalEntry) {
       return {
         success: false,
-        errors: ['Original journal entry not found'],
+        errors: ["Original journal entry not found"],
       }
     }
 
     if (!originalEntry.isPosted) {
       return {
         success: false,
-        errors: ['Cannot reverse an unposted entry'],
+        errors: ["Cannot reverse an unposted entry"],
       }
     }
 
     if (originalEntry.isReversed) {
       return {
         success: false,
-        errors: ['Entry is already reversed'],
+        errors: ["Entry is already reversed"],
       }
     }
 
     // Create reversing entry
-    const reversingLines: JournalEntryLine[] = originalEntry.ledgerEntries.map((line) => ({
-      accountId: line.accountId,
-      accountCode: line.account.code,
-      accountName: line.account.name,
-      debit: Number(line.credit), // Swap debits and credits
-      credit: Number(line.debit),
-      description: `Reversal: ${line.description}`,
-    }))
+    const reversingLines: JournalEntryLine[] = originalEntry.ledgerEntries.map(
+      (line) => ({
+        accountId: line.accountId,
+        accountCode: line.account.code,
+        accountName: line.account.name,
+        debit: Number(line.credit), // Swap debits and credits
+        credit: Number(line.debit),
+        description: `Reversal: ${line.description}`,
+      })
+    )
 
     const reversingEntry = await createJournalEntry(
       originalEntry.schoolId,
@@ -365,10 +380,12 @@ export async function reverseJournalEntry(
 
     return reversingEntry
   } catch (error) {
-    console.error('Error reversing journal entry:', error)
+    console.error("Error reversing journal entry:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+      errors: [
+        error instanceof Error ? error.message : "Unknown error occurred",
+      ],
     }
   }
 }
@@ -400,7 +417,7 @@ export async function getAccountBalance(
       },
     },
     orderBy: {
-      asOfDate: 'desc',
+      asOfDate: "desc",
     },
   })
 
@@ -438,14 +455,13 @@ export async function calculateTrialBalance(
         },
       },
       orderBy: {
-        asOfDate: 'desc',
+        asOfDate: "desc",
       },
     })
 
-    const isDebitNormal = [
-      AccountType.ASSET,
-      AccountType.EXPENSE,
-    ].includes(account.type as AccountType)
+    const isDebitNormal = [AccountType.ASSET, AccountType.EXPENSE].includes(
+      account.type as AccountType
+    )
 
     const netBalance = Number(balance?.balance || 0)
 
@@ -466,9 +482,12 @@ export async function calculateTrialBalance(
 /**
  * Format currency amount
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+export function formatCurrency(
+  amount: number,
+  currency: string = "USD"
+): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
   }).format(amount / 100)
 }

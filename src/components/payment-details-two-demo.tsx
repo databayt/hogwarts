@@ -1,10 +1,11 @@
 "use client"
 
-import { PaymentDetailsTwo, type PaymentFormData } from "@/components/billingsdk/payment-details-two";
-
+import {
+  PaymentDetailsTwo,
+  type PaymentFormData,
+} from "@/components/billingsdk/payment-details-two"
 
 export function PaymentDetailsTwoDemo() {
-
   //Function that handles onSubmit in the Form
   const handleSubmit = async (_data: PaymentFormData) => {
     // _data contains all the form values entered by the user:
@@ -15,21 +16,15 @@ export function PaymentDetailsTwoDemo() {
     return await new Promise((resolve) => {
       setTimeout(() => {
         console.log("Handle Submit Function")
-        resolve('The promise is resolved')
+        resolve("The promise is resolved")
       }, 3000)
     })
   }
-
 
   //Function that handles onCancel in the Form
   const handleDiscard = () => {
     console.log("The Discard Function")
   }
 
-  return (
-    <PaymentDetailsTwo
-      onSubmit={handleSubmit}
-      onDiscard={handleDiscard}
-    />
-  )
+  return <PaymentDetailsTwo onSubmit={handleSubmit} onDiscard={handleDiscard} />
 }

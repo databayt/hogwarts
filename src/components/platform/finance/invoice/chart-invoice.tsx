@@ -51,18 +51,37 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
   })
 
   return (
-    <Card className="p-0 col-span-2">
+    <Card className="col-span-2 p-0">
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-80 lg:h-96 w-full">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-80 w-full lg:h-96"
+        >
           <AreaChart data={filteredData}>
             <defs>
               <linearGradient id="fillTotalRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-totalRevenue)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-totalRevenue)" stopOpacity={0.1} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-totalRevenue)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-totalRevenue)"
+                  stopOpacity={0.1}
+                />
               </linearGradient>
               <linearGradient id="fillPaidRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-paidRevenue)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-paidRevenue)" stopOpacity={0.1} />
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-paidRevenue)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-paidRevenue)"
+                  stopOpacity={0.1}
+                />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -74,7 +93,10 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               minTickGap={32}
               tickFormatter={(value) => {
                 const date = new Date(value)
-                return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                return date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })
               }}
             />
             <ChartTooltip
@@ -82,14 +104,31 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                    new Date(value).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })
                   }
                   indicator="dot"
                 />
               }
             />
-            <Area dataKey="paidRevenue" type="natural" fill="url(#fillPaidRevenue)" stroke="var(--color-paidRevenue)" stackId="a" name="Paid Revenue" />
-            <Area dataKey="totalRevenue" type="natural" fill="url(#fillTotalRevenue)" stroke="var(--color-totalRevenue)" stackId="a" name="Total Revenue" />
+            <Area
+              dataKey="paidRevenue"
+              type="natural"
+              fill="url(#fillPaidRevenue)"
+              stroke="var(--color-paidRevenue)"
+              stackId="a"
+              name="Paid Revenue"
+            />
+            <Area
+              dataKey="totalRevenue"
+              type="natural"
+              fill="url(#fillTotalRevenue)"
+              stroke="var(--color-totalRevenue)"
+              stackId="a"
+              name="Total Revenue"
+            />
             <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
@@ -97,5 +136,3 @@ export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
     </Card>
   )
 }
-
-

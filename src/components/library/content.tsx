@@ -1,100 +1,104 @@
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import BookOverview from "./book-list/book-overview";
-import BookList from "./book-list/content";
-import { CollaborateSection } from "./collaborate-section";
-import { LibraryHero } from "./hero";
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import BookOverview from "./book-list/book-overview"
+import BookList from "./book-list/content"
+import { CollaborateSection } from "./collaborate-section"
+import { LibraryHero } from "./hero"
 
 interface Props {
-  userId: string;
-  dictionary?: Record<string, unknown>;
-  lang?: string;
+  userId: string
+  dictionary?: Record<string, unknown>
+  lang?: string
 }
 
-export default async function LibraryContent({ userId, dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext();
+export default async function LibraryContent({
+  userId,
+  dictionary,
+  lang,
+}: Props) {
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2 className="mb-4">School context not found</h2>
-        <p className="muted">
-          Unable to load library. Please contact support.
-        </p>
+        <p className="muted">Unable to load library. Please contact support.</p>
       </div>
-    );
+    )
   }
 
   // First try to get Harry Potter specifically
   let heroBook = await db.book.findFirst({
     where: {
       schoolId,
-      title: { contains: "Harry Potter" }
+      title: { contains: "Harry Potter" },
     },
-  });
+  })
 
   // Fallback to most recent if Harry Potter not found
   if (!heroBook) {
     heroBook = await db.book.findFirst({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
-    });
+    })
   }
 
   // Fetch other books in parallel
-  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
-    // Latest Books - exclude Harry Potter (hero), get 12 books
-    db.book.findMany({
-      where: {
-        schoolId,
-        NOT: { title: { contains: "Harry Potter" } }
-      },
-      orderBy: { createdAt: "desc" },
-      take: 12,
-    }),
-    // Featured - skip latest 13 to show different ones
-    db.book.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      skip: 13,
-      take: 12,
-    }),
-    // Literature - fiction, classic, drama, poetry genres
-    db.book.findMany({
-      where: {
-        schoolId,
-        OR: [
-          { genre: { contains: "Fiction" } },
-          { genre: { contains: "Classic" } },
-          { genre: { contains: "Drama" } },
-          { genre: { contains: "أدب" } },
-          { genre: { contains: "شعر" } },
-        ],
-      },
-      take: 12,
-    }),
-    // Science - science, history genres
-    db.book.findMany({
-      where: {
-        schoolId,
-        OR: [
-          { genre: { contains: "Science" } },
-          { genre: { contains: "History" } },
-          { genre: { contains: "فلسفة" } },
-        ],
-      },
-      take: 12,
-    }),
-  ]);
+  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] =
+    await Promise.all([
+      // Latest Books - exclude Harry Potter (hero), get 12 books
+      db.book.findMany({
+        where: {
+          schoolId,
+          NOT: { title: { contains: "Harry Potter" } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 12,
+      }),
+      // Featured - skip latest 13 to show different ones
+      db.book.findMany({
+        where: { schoolId },
+        orderBy: { createdAt: "desc" },
+        skip: 13,
+        take: 12,
+      }),
+      // Literature - fiction, classic, drama, poetry genres
+      db.book.findMany({
+        where: {
+          schoolId,
+          OR: [
+            { genre: { contains: "Fiction" } },
+            { genre: { contains: "Classic" } },
+            { genre: { contains: "Drama" } },
+            { genre: { contains: "أدب" } },
+            { genre: { contains: "شعر" } },
+          ],
+        },
+        take: 12,
+      }),
+      // Science - science, history genres
+      db.book.findMany({
+        where: {
+          schoolId,
+          OR: [
+            { genre: { contains: "Science" } },
+            { genre: { contains: "History" } },
+            { genre: { contains: "فلسفة" } },
+          ],
+        },
+        take: 12,
+      }),
+    ])
 
-  const hasBooks = heroBook || latestBooks.length > 0;
+  const hasBooks = heroBook || latestBooks.length > 0
 
   if (!hasBooks) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-24 h-24 mb-6 rounded-full bg-muted flex items-center justify-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="bg-muted mb-6 flex h-24 w-24 items-center justify-center rounded-full">
           <svg
-            className="w-12 h-12 text-muted-foreground"
+            className="text-muted-foreground h-12 w-12"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -107,17 +111,17 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold mb-2">No books available</h2>
-        <p className="text-muted-foreground text-center max-w-md">
+        <h2 className="mb-2 text-xl font-semibold">No books available</h2>
+        <p className="text-muted-foreground max-w-md text-center">
           The library is empty. Check back later or contact your library
           administrator to add books.
         </p>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="space-y-12 min-w-0 w-full overflow-hidden">
+    <div className="w-full min-w-0 space-y-12 overflow-hidden">
       {/* Hero Section - Stream style */}
       <LibraryHero lang={lang} dictionary={dictionary} />
 
@@ -160,5 +164,5 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
         />
       )}
     </div>
-  );
+  )
 }

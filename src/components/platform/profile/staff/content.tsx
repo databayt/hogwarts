@@ -5,27 +5,33 @@
 
 "use client"
 
-import React, { useState, useMemo } from 'react'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
-import { ProfileHeader } from '../shared/profile-header'
-import { ProfileHeaderCompact } from '../shared/profile-header-compact'
-import { ProfileGitHubLayout } from '../shared/profile-github-layout'
-import { ProfileSidebar } from '../shared/profile-sidebar'
-import { ContributionGraph } from '../shared/contribution-graph'
-import { ActivityTimeline } from '../shared/activity-timeline'
-import { OverviewTab } from './tabs/overview-tab'
-import { ResponsibilitiesTab } from './tabs/responsibilities-tab'
-import { ScheduleTab } from './tabs/schedule-tab'
-import { TasksTab } from './tabs/tasks-tab'
-import { ReportsTab } from './tabs/reports-tab'
-import { SettingsTab } from './tabs/settings-tab'
-import { useProfile, useProfileActivity, useProfileContributions } from '../hooks'
-import { useSidebar } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
-import type { StaffProfile, ConnectionStatus } from '../types'
-import { UserProfileType } from '../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import React, { useMemo, useState } from "react"
+
+import { cn } from "@/lib/utils"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { useSidebar } from "@/components/ui/sidebar"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  useProfile,
+  useProfileActivity,
+  useProfileContributions,
+} from "../hooks"
+import { ActivityTimeline } from "../shared/activity-timeline"
+import { ContributionGraph } from "../shared/contribution-graph"
+import { ProfileGitHubLayout } from "../shared/profile-github-layout"
+import { ProfileHeader } from "../shared/profile-header"
+import { ProfileHeaderCompact } from "../shared/profile-header-compact"
+import { ProfileSidebar } from "../shared/profile-sidebar"
+import type { ConnectionStatus, StaffProfile } from "../types"
+import { UserProfileType } from "../types"
+import { OverviewTab } from "./tabs/overview-tab"
+import { ReportsTab } from "./tabs/reports-tab"
+import { ResponsibilitiesTab } from "./tabs/responsibilities-tab"
+import { ScheduleTab } from "./tabs/schedule-tab"
+import { SettingsTab } from "./tabs/settings-tab"
+import { TasksTab } from "./tabs/tasks-tab"
 
 // ============================================================================
 // Types
@@ -34,7 +40,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 interface StaffProfileContentProps {
   staffId?: string
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   isOwner?: boolean
   className?: string
 }
@@ -50,44 +56,45 @@ interface TabConfig {
 // ============================================================================
 
 const generateMockStaffProfile = (): any => ({
-  id: 'staff-1',
+  id: "staff-1",
   type: UserProfileType.STAFF,
-  userId: 'user-4',
-  schoolId: 'school-1',
-  displayName: 'Michael Anderson',
-  email: 'michael.anderson@hogwarts.edu',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-  coverImage: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&h=400&fit=crop',
-  bio: 'Experienced administrative professional with 8+ years in educational institution management. Passionate about creating efficient systems and supporting school operations.',
+  userId: "user-4",
+  schoolId: "school-1",
+  displayName: "Michael Anderson",
+  email: "michael.anderson@hogwarts.edu",
+  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+  coverImage:
+    "https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&h=400&fit=crop",
+  bio: "Experienced administrative professional with 8+ years in educational institution management. Passionate about creating efficient systems and supporting school operations.",
 
-  phone: '+1 234 567 8905',
-  address: '200 Admin Building',
-  city: 'New York',
-  state: 'New York',
-  country: 'United States',
-  postalCode: '10001',
+  phone: "+1 234 567 8905",
+  address: "200 Admin Building",
+  city: "New York",
+  state: "New York",
+  country: "United States",
+  postalCode: "10001",
 
   socialLinks: {
-    linkedin: 'https://linkedin.com/in/michaelanderson',
-    email: 'michael.anderson@hogwarts.edu'
+    linkedin: "https://linkedin.com/in/michaelanderson",
+    email: "michael.anderson@hogwarts.edu",
   },
 
-  joinedAt: new Date('2016-03-15'),
+  joinedAt: new Date("2016-03-15"),
   lastActive: new Date(),
   isOnline: true,
-  visibility: 'SCHOOL' as any,
+  visibility: "SCHOOL" as any,
   completionPercentage: 92,
 
   settings: {
-    theme: 'system',
-    language: 'en',
+    theme: "system",
+    language: "en",
     emailNotifications: true,
     pushNotifications: true,
     showEmail: true,
     showPhone: false,
     showLocation: true,
     allowMessages: true,
-    allowConnectionRequests: true
+    allowConnectionRequests: true,
   },
 
   activityStats: {
@@ -96,91 +103,102 @@ const generateMockStaffProfile = (): any => ({
     totalPosts: 25,
     totalAchievements: 12,
     contributionStreak: 23,
-    lastContribution: new Date()
+    lastContribution: new Date(),
   },
 
   recentActivity: [
     {
-      id: '1',
-      type: 'TASK_COMPLETED' as any,
-      title: 'Completed monthly financial report',
-      description: 'Finance department report for February 2024',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
+      id: "1",
+      type: "TASK_COMPLETED" as any,
+      title: "Completed monthly financial report",
+      description: "Finance department report for February 2024",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     },
     {
-      id: '2',
-      type: 'DOCUMENT_CREATED' as any,
-      title: 'Created staff meeting agenda',
-      description: 'Agenda for weekly staff meeting',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      id: "2",
+      type: "DOCUMENT_CREATED" as any,
+      title: "Created staff meeting agenda",
+      description: "Agenda for weekly staff meeting",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
     },
     {
-      id: '3',
-      type: 'SYSTEM_UPDATE' as any,
-      title: 'Updated payroll records',
-      description: 'Processed March 2024 payroll',
+      id: "3",
+      type: "SYSTEM_UPDATE" as any,
+      title: "Updated payroll records",
+      description: "Processed March 2024 payroll",
       timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      metadata: { count: 45 }
-    }
+      metadata: { count: 45 },
+    },
   ],
 
   staff: {
-    id: 'staff-1',
-    employeeId: 'EMP2016003',
-    schoolId: 'school-1',
-    givenName: 'Michael',
-    surname: 'Anderson',
-    gender: 'MALE',
-    emailAddress: 'michael.anderson@hogwarts.edu',
-    birthDate: new Date('1980-07-20'),
-    joiningDate: new Date('2016-03-15'),
-    employmentStatus: 'ACTIVE',
-    employmentType: 'FULL_TIME',
-    profilePhotoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-    createdAt: new Date('2016-03-15'),
-    updatedAt: new Date()
+    id: "staff-1",
+    employeeId: "EMP2016003",
+    schoolId: "school-1",
+    givenName: "Michael",
+    surname: "Anderson",
+    gender: "MALE",
+    emailAddress: "michael.anderson@hogwarts.edu",
+    birthDate: new Date("1980-07-20"),
+    joiningDate: new Date("2016-03-15"),
+    employmentStatus: "ACTIVE",
+    employmentType: "FULL_TIME",
+    profilePhotoUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+    createdAt: new Date("2016-03-15"),
+    updatedAt: new Date(),
   } as any,
 
   staffInfo: {
-    employeeId: 'EMP2016003',
-    department: 'Finance & Administration',
-    designation: 'Senior Administrative Officer',
-    role: 'ACCOUNTANT',
-    employmentType: 'FULL_TIME',
-    employmentStatus: 'ACTIVE',
-    joiningDate: new Date('2016-03-15'),
-    reportingTo: 'Principal Williams',
+    employeeId: "EMP2016003",
+    department: "Finance & Administration",
+    designation: "Senior Administrative Officer",
+    role: "ACCOUNTANT",
+    employmentType: "FULL_TIME",
+    employmentStatus: "ACTIVE",
+    joiningDate: new Date("2016-03-15"),
+    reportingTo: "Principal Williams",
     yearsOfService: 8,
-    skills: ['Financial Management', 'Excel', 'QuickBooks', 'Reporting', 'Budget Planning', 'Data Analysis'],
+    skills: [
+      "Financial Management",
+      "Excel",
+      "QuickBooks",
+      "Reporting",
+      "Budget Planning",
+      "Data Analysis",
+    ],
     certifications: [
       {
-        name: 'Certified Public Accountant (CPA)',
-        issuer: 'AICPA',
-        date: new Date('2018-06-15'),
-        expiry: new Date('2025-06-15')
+        name: "Certified Public Accountant (CPA)",
+        issuer: "AICPA",
+        date: new Date("2018-06-15"),
+        expiry: new Date("2025-06-15"),
       },
       {
-        name: 'Advanced Excel Certification',
-        issuer: 'Microsoft',
-        date: new Date('2020-03-10')
-      }
-    ]
+        name: "Advanced Excel Certification",
+        issuer: "Microsoft",
+        date: new Date("2020-03-10"),
+      },
+    ],
   } as any,
 
   responsibilities: {
     primary: [
-      'Manage school financial records and accounts',
-      'Process monthly payroll for all staff',
-      'Prepare financial reports for board meetings',
-      'Monitor budget compliance across departments'
+      "Manage school financial records and accounts",
+      "Process monthly payroll for all staff",
+      "Prepare financial reports for board meetings",
+      "Monitor budget compliance across departments",
     ],
     secondary: [
-      'Assist with procurement processes',
-      'Support HR with employee documentation',
-      'Coordinate with external auditors',
-      'Maintain vendor relationships'
+      "Assist with procurement processes",
+      "Support HR with employee documentation",
+      "Coordinate with external auditors",
+      "Maintain vendor relationships",
     ],
-    committees: ['Finance Committee', 'Budget Planning Committee', 'IT Committee']
+    committees: [
+      "Finance Committee",
+      "Budget Planning Committee",
+      "IT Committee",
+    ],
   },
 
   workMetrics: {
@@ -191,16 +209,16 @@ const generateMockStaffProfile = (): any => ({
     onTimeCompletionRate: 94.5,
     reportsGenerated: 48,
     documentsProcessed: 567,
-    meetingsAttended: 89
+    meetingsAttended: 89,
   } as any,
 
   schedule: {
-    workingHours: '8:30 AM - 5:00 PM',
-    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-    breakTime: '12:30 PM - 1:30 PM',
-    currentAvailability: 'available',
+    workingHours: "8:30 AM - 5:00 PM",
+    workingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    breakTime: "12:30 PM - 1:30 PM",
+    currentAvailability: "available",
     upcomingLeave: [],
-    officeLocation: 'Admin Building, Room 204'
+    officeLocation: "Admin Building, Room 204",
   } as any,
 
   contributionData: {
@@ -210,19 +228,19 @@ const generateMockStaffProfile = (): any => ({
     contributions: generateMockContributions(),
     monthlyStats: [
       {
-        month: '2024-02',
+        month: "2024-02",
         totalContributions: 56,
         averagePerDay: 2,
-        mostActiveDay: '2024-02-15',
+        mostActiveDay: "2024-02-15",
         categories: {
           academic: 0,
           extracurricular: 0,
           social: 10,
-          other: 46
-        }
-      }
-    ]
-  }
+          other: 46,
+        },
+      },
+    ],
+  },
 })
 
 // Generate mock contribution data
@@ -234,15 +252,15 @@ function generateMockContributions() {
     date.setDate(date.getDate() - i)
     const count = Math.floor(Math.random() * 8)
     contributions.push({
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString().split("T")[0],
       count,
       level: Math.min(4, Math.floor(count / 2)) as any,
       details: {
         assignments: 0,
         attendance: 1,
         activities: Math.floor(Math.random() * count),
-        achievements: Math.random() > 0.95 ? 1 : 0
-      }
+        achievements: Math.random() > 0.95 ? 1 : 0,
+      },
     })
   }
   return contributions.reverse()
@@ -255,11 +273,11 @@ function generateMockContributions() {
 export function StaffProfileContent({
   staffId,
   dictionary,
-  lang = 'en',
+  lang = "en",
   isOwner = false,
-  className
+  className,
 }: StaffProfileContentProps) {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState("overview")
   const { open: sidebarOpen } = useSidebar()
 
   // Use mock data for now (replace with real API calls)
@@ -269,20 +287,20 @@ export function StaffProfileContent({
 
   // Tab configuration
   const tabs: TabConfig[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'responsibilities', label: 'Responsibilities' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'tasks', label: 'Tasks', badge: 12 },
-    { id: 'reports', label: 'Reports' },
-    { id: 'settings', label: 'Settings' }
+    { id: "overview", label: "Overview" },
+    { id: "responsibilities", label: "Responsibilities" },
+    { id: "schedule", label: "Schedule" },
+    { id: "tasks", label: "Tasks", badge: 12 },
+    { id: "reports", label: "Reports" },
+    { id: "settings", label: "Settings" },
   ]
 
   // Handle loading and error states
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-2">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="space-y-2 text-center">
+          <div className="border-primary mx-auto h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
           <p className="text-muted-foreground">Loading profile...</p>
         </div>
       </div>
@@ -291,10 +309,12 @@ export function StaffProfileContent({
 
   if (error || !profile) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-2">
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="space-y-2 text-center">
           <p className="text-destructive">Failed to load profile</p>
-          <p className="text-sm text-muted-foreground">Please try again later</p>
+          <p className="text-muted-foreground text-sm">
+            Please try again later
+          </p>
         </div>
       </div>
     )
@@ -307,23 +327,25 @@ export function StaffProfileContent({
       <div className="border-b">
         <ScrollArea className="max-w-[600px] lg:max-w-none">
           <nav className="flex items-center gap-6 rtl:flex-row-reverse">
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                  "hover:text-primary relative px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors",
+                  activeTab === tab.id
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 {tab.label}
                 {tab.badge && (
-                  <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                  <span className="bg-primary/10 text-primary ml-1.5 rounded-full px-1.5 py-0.5 text-xs">
                     {tab.badge}
                   </span>
                 )}
                 {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                  <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5" />
                 )}
               </button>
             ))}
@@ -338,7 +360,7 @@ export function StaffProfileContent({
           data={profile.contributionData}
           dictionary={dictionary}
           lang={lang}
-          onDayClick={(date) => console.log('Day clicked:', date)}
+          onDayClick={(date) => console.log("Day clicked:", date)}
         />
 
         {/* Recent Activity */}
@@ -346,16 +368,14 @@ export function StaffProfileContent({
           activities={profile.recentActivity}
           dictionary={dictionary}
           lang={lang}
-          onActivityClick={(activity) => console.log('Activity clicked:', activity)}
+          onActivityClick={(activity) =>
+            console.log("Activity clicked:", activity)
+          }
           maxItems={10}
         />
 
         {/* Overview Tab Content */}
-        <OverviewTab
-          profile={profile}
-          dictionary={dictionary}
-          lang={lang}
-        />
+        <OverviewTab profile={profile} dictionary={dictionary} lang={lang} />
       </TabsContent>
 
       <TabsContent value="responsibilities">
@@ -367,11 +387,7 @@ export function StaffProfileContent({
       </TabsContent>
 
       <TabsContent value="schedule">
-        <ScheduleTab
-          profile={profile}
-          dictionary={dictionary}
-          lang={lang}
-        />
+        <ScheduleTab profile={profile} dictionary={dictionary} lang={lang} />
       </TabsContent>
 
       <TabsContent value="tasks">
@@ -406,44 +422,42 @@ export function StaffProfileContent({
   // Sidebar ON: Compact horizontal layout
   if (sidebarOpen) {
     return (
-      <div className={cn('space-y-0', className)}>
+      <div className={cn("space-y-0", className)}>
         {/* Compact Profile Header */}
         <ProfileHeaderCompact
           profile={profile}
           dictionary={dictionary}
           lang={lang}
           isOwner={isOwner}
-          connectionStatus={isOwner ? undefined : 'none'}
-          onEdit={() => console.log('Edit profile')}
-          onConnect={() => console.log('Connect')}
-          onMessage={() => console.log('Message')}
-          onShare={() => console.log('Share')}
-          onFollow={() => console.log('Follow')}
+          connectionStatus={isOwner ? undefined : "none"}
+          onEdit={() => console.log("Edit profile")}
+          onConnect={() => console.log("Connect")}
+          onMessage={() => console.log("Message")}
+          onShare={() => console.log("Share")}
+          onFollow={() => console.log("Follow")}
           showExperience={true}
         />
 
         {/* Main Content */}
-        <div className="p-6 space-y-6">
-          {tabsContent}
-        </div>
+        <div className="space-y-6 p-6">{tabsContent}</div>
       </div>
     )
   }
 
   // Sidebar OFF: Full GitHub layout
   return (
-    <div className={cn('', className)}>
+    <div className={cn("", className)}>
       <ProfileGitHubLayout
         profile={profile}
         dictionary={dictionary}
         lang={lang}
         isOwner={isOwner}
-        connectionStatus={isOwner ? undefined : 'none'}
-        onEdit={() => console.log('Edit profile')}
-        onConnect={() => console.log('Connect')}
-        onMessage={() => console.log('Message')}
-        onShare={() => console.log('Share')}
-        onFollow={() => console.log('Follow')}
+        connectionStatus={isOwner ? undefined : "none"}
+        onEdit={() => console.log("Edit profile")}
+        onConnect={() => console.log("Connect")}
+        onMessage={() => console.log("Message")}
+        onShare={() => console.log("Share")}
+        onFollow={() => console.log("Follow")}
       >
         {tabsContent}
       </ProfileGitHubLayout>

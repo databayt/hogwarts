@@ -1,6 +1,6 @@
-import { LucideProps, type Icon as LucideIcon } from "lucide-react";
+import { LucideProps, type Icon as LucideIcon } from "lucide-react"
 
-export type Icon = typeof LucideIcon;
+export type Icon = typeof LucideIcon
 
 export const Icons = {
   edit: ({ ...props }: LucideProps) => (
@@ -167,4 +167,4 @@ export const Icons = {
       <polyline points="22,6 12,13 2,6"></polyline>
     </svg>
   ),
-};
+}

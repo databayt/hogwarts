@@ -2,20 +2,47 @@
 
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { SectionHeading } from "./section-heading"
-import { Check, Eye, TriangleAlert, ChevronRight, TrendingUp } from "lucide-react"
+import Link from "next/link"
+import {
+  Check,
+  ChevronRight,
+  Eye,
+  TrendingUp,
+  TriangleAlert,
+} from "lucide-react"
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Label,
+  PolarGrid,
+  PolarRadiusAxis,
+  RadialBar,
+  RadialBarChart,
+  XAxis,
+} from "recharts"
+
 import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, XAxis, Area, AreaChart, RadialBarChart, RadialBar, PolarGrid, PolarRadiusAxis, Label } from "recharts"
+
 import { getFinancialOverviewByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
-import Link from "next/link"
+import { SectionHeading } from "./section-heading"
 
 // ============================================================================
 // TYPES
@@ -199,65 +226,233 @@ const defaultChartData: ChartDataPoint[] = [
 const defaultDataByRole: Record<DashboardRole, FinancialOverviewData> = {
   STUDENT: {
     stats: [
-      { name: "Fee Balance", stat: "2,500 SAR", goalsAchieved: 3, totalGoals: 4, status: "observe", href: "#" },
-      { name: "Total Paid", stat: "7,500 SAR", goalsAchieved: 4, totalGoals: 4, status: "within", href: "#" },
-      { name: "Next Payment", stat: "Jan 1", goalsAchieved: 1, totalGoals: 1, status: "within", href: "#" },
+      {
+        name: "Fee Balance",
+        stat: "2,500 SAR",
+        goalsAchieved: 3,
+        totalGoals: 4,
+        status: "observe",
+        href: "#",
+      },
+      {
+        name: "Total Paid",
+        stat: "7,500 SAR",
+        goalsAchieved: 4,
+        totalGoals: 4,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Next Payment",
+        stat: "Jan 1",
+        goalsAchieved: 1,
+        totalGoals: 1,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: undefined,
   },
   TEACHER: {
     stats: [
-      { name: "Dept Budget", stat: "15,000 SAR", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
-      { name: "Used", stat: "8,500 SAR", goalsAchieved: 3, totalGoals: 5, status: "observe", href: "#" },
-      { name: "Available", stat: "6,500 SAR", goalsAchieved: 2, totalGoals: 5, status: "within", href: "#" },
+      {
+        name: "Dept Budget",
+        stat: "15,000 SAR",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Used",
+        stat: "8,500 SAR",
+        goalsAchieved: 3,
+        totalGoals: 5,
+        status: "observe",
+        href: "#",
+      },
+      {
+        name: "Available",
+        stat: "6,500 SAR",
+        goalsAchieved: 2,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: undefined,
   },
   GUARDIAN: {
     stats: [
-      { name: "Total Due", stat: "4,800 SAR", goalsAchieved: 2, totalGoals: 4, status: "observe", href: "#" },
-      { name: "Total Paid", stat: "12,700 SAR", goalsAchieved: 4, totalGoals: 4, status: "within", href: "#" },
-      { name: "Children", stat: "2 active", goalsAchieved: 2, totalGoals: 2, status: "within", href: "#" },
+      {
+        name: "Total Due",
+        stat: "4,800 SAR",
+        goalsAchieved: 2,
+        totalGoals: 4,
+        status: "observe",
+        href: "#",
+      },
+      {
+        name: "Total Paid",
+        stat: "12,700 SAR",
+        goalsAchieved: 4,
+        totalGoals: 4,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Children",
+        stat: "2 active",
+        goalsAchieved: 2,
+        totalGoals: 2,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: undefined,
   },
   STAFF: {
     stats: [
-      { name: "Budget", stat: "25,000 SAR", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
-      { name: "Expenses", stat: "18,200 SAR", goalsAchieved: 3, totalGoals: 5, status: "observe", href: "#" },
-      { name: "Available", stat: "6,800 SAR", goalsAchieved: 2, totalGoals: 5, status: "within", href: "#" },
+      {
+        name: "Budget",
+        stat: "25,000 SAR",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Expenses",
+        stat: "18,200 SAR",
+        goalsAchieved: 3,
+        totalGoals: 5,
+        status: "observe",
+        href: "#",
+      },
+      {
+        name: "Available",
+        stat: "6,800 SAR",
+        goalsAchieved: 2,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: undefined,
   },
   ACCOUNTANT: {
     stats: [
-      { name: "Revenue", stat: "1.2M SAR", goalsAchieved: 5, totalGoals: 5, status: "within", href: "#" },
-      { name: "Collection", stat: "87%", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
-      { name: "Outstanding", stat: "156K SAR", goalsAchieved: 2, totalGoals: 5, status: "critical", href: "#" },
+      {
+        name: "Revenue",
+        stat: "1.2M SAR",
+        goalsAchieved: 5,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Collection",
+        stat: "87%",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Outstanding",
+        stat: "156K SAR",
+        goalsAchieved: 2,
+        totalGoals: 5,
+        status: "critical",
+        href: "#",
+      },
     ],
     chartData: defaultChartData,
   },
   PRINCIPAL: {
     stats: [
-      { name: "Budget", stat: "5.5M SAR", goalsAchieved: 5, totalGoals: 5, status: "within", href: "#" },
-      { name: "Spent YTD", stat: "3.2M SAR", goalsAchieved: 3, totalGoals: 5, status: "observe", href: "#" },
-      { name: "Collection", stat: "87%", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
+      {
+        name: "Budget",
+        stat: "5.5M SAR",
+        goalsAchieved: 5,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Spent YTD",
+        stat: "3.2M SAR",
+        goalsAchieved: 3,
+        totalGoals: 5,
+        status: "observe",
+        href: "#",
+      },
+      {
+        name: "Collection",
+        stat: "87%",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: defaultChartData,
   },
   ADMIN: {
     stats: [
-      { name: "Revenue", stat: "$45.2K", goalsAchieved: 5, totalGoals: 5, status: "within", href: "#" },
-      { name: "Subscriptions", stat: "156", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
-      { name: "Churn", stat: "2.1%", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
+      {
+        name: "Revenue",
+        stat: "$45.2K",
+        goalsAchieved: 5,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Subscriptions",
+        stat: "156",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Churn",
+        stat: "2.1%",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
     ],
     chartData: defaultChartData,
   },
   DEVELOPER: {
     stats: [
-      { name: "ARR", stat: "$542K", goalsAchieved: 5, totalGoals: 5, status: "within", href: "#" },
-      { name: "Schools", stat: "45", goalsAchieved: 4, totalGoals: 5, status: "within", href: "#" },
-      { name: "Enterprise", stat: "35%", goalsAchieved: 3, totalGoals: 5, status: "observe", href: "#" },
+      {
+        name: "ARR",
+        stat: "$542K",
+        goalsAchieved: 5,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Schools",
+        stat: "45",
+        goalsAchieved: 4,
+        totalGoals: 5,
+        status: "within",
+        href: "#",
+      },
+      {
+        name: "Enterprise",
+        stat: "35%",
+        goalsAchieved: 3,
+        totalGoals: 5,
+        status: "observe",
+        href: "#",
+      },
     ],
     chartData: defaultChartData,
   },
@@ -269,11 +464,11 @@ const defaultDataByRole: Record<DashboardRole, FinancialOverviewData> = {
 
 function StatsStatusCard({ item }: { item: FinancialStat }) {
   return (
-    <Card className="p-6 relative">
+    <Card className="relative p-6">
       <CardContent className="p-0">
-        <p className="text-sm font-medium text-muted-foreground">{item.name}</p>
-        <p className="text-3xl font-semibold text-foreground">{item.stat}</p>
-        <div className="group relative mt-6 flex items-center space-x-4 rounded-md bg-muted/60 p-2 hover:bg-muted">
+        <p className="text-muted-foreground text-sm font-medium">{item.name}</p>
+        <p className="text-foreground text-3xl font-semibold">{item.stat}</p>
+        <div className="group bg-muted/60 hover:bg-muted relative mt-6 flex items-center space-x-4 rounded-md p-2">
           <div className="flex w-full items-center justify-between truncate">
             <div className="flex items-center space-x-3">
               <span
@@ -291,11 +486,14 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
                 ) : item.status === "observe" ? (
                   <Eye className="size-4 shrink-0" aria-hidden={true} />
                 ) : (
-                  <TriangleAlert className="size-4 shrink-0" aria-hidden={true} />
+                  <TriangleAlert
+                    className="size-4 shrink-0"
+                    aria-hidden={true}
+                  />
                 )}
               </span>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   <Link href={item.href} className="focus:outline-none">
                     <span className="absolute inset-0" aria-hidden={true} />
                     {item.goalsAchieved}/{item.totalGoals} goals
@@ -316,7 +514,7 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
               </div>
             </div>
             <ChevronRight
-              className="size-5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground"
+              className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0"
               aria-hidden={true}
             />
           </div>
@@ -331,7 +529,9 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
 // ============================================================================
 
 function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
-  const [activeChart, setActiveChart] = React.useState<"income" | "expenses">("income")
+  const [activeChart, setActiveChart] = React.useState<"income" | "expenses">(
+    "income"
+  )
 
   const total = React.useMemo(
     () => ({
@@ -342,13 +542,11 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
   )
 
   return (
-    <Card className="border-none shadow-none bg-muted">
+    <Card className="bg-muted border-none shadow-none">
       <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <CardTitle>Financial Trend</CardTitle>
-          <CardDescription>
-            Showing total for the last 3 months
-          </CardDescription>
+          <CardDescription>Showing total for the last 3 months</CardDescription>
         </div>
         <div className="flex">
           {(["income", "expenses"] as const).map((key) => {
@@ -356,13 +554,13 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
               <button
                 key={key}
                 data-active={activeChart === key}
-                className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
+                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
                 onClick={() => setActiveChart(key)}
               >
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {barChartConfig[key].label}
                 </span>
-                <span className="text-lg font-bold leading-none sm:text-3xl">
+                <span className="text-lg leading-none font-bold sm:text-3xl">
                   {total[key].toLocaleString()}
                 </span>
               </button>
@@ -427,7 +625,7 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
 
 function RadialTextChart() {
   return (
-    <Card className="flex flex-col border-none shadow-none bg-muted">
+    <Card className="bg-muted flex flex-col border-none shadow-none">
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={radialChartConfig}
@@ -482,11 +680,11 @@ function RadialTextChart() {
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
+        <div className="flex items-center gap-2 leading-none font-medium">
           Trending up by 5.2% this month <TrendingUp className="size-4" />
         </div>
-        <div className="leading-none text-muted-foreground">
+        <div className="text-muted-foreground leading-none">
           Fee collection rate
         </div>
       </CardFooter>
@@ -500,9 +698,8 @@ function RadialTextChart() {
 
 function AreaChartStacked() {
   return (
-    <Card className="flex flex-col border-none shadow-none bg-muted">
-      <CardHeader>
-      </CardHeader>
+    <Card className="bg-muted flex flex-col border-none shadow-none">
+      <CardHeader></CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={areaChartConfig}>
           <AreaChart
@@ -544,11 +741,11 @@ function AreaChartStacked() {
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
+        <div className="flex items-center gap-2 leading-none font-medium">
           Trending up by 5.2% this month <TrendingUp className="size-4" />
         </div>
-        <div className="leading-none text-muted-foreground">
+        <div className="text-muted-foreground leading-none">
           January - June 2024
         </div>
       </CardFooter>
@@ -635,8 +832,10 @@ export function StaticFinancialOverviewSection({
   data,
   className,
 }: StaticFinancialOverviewSectionProps) {
-  const financialData = data || defaultDataByRole[role] || defaultDataByRole.ADMIN
-  const showChart = financialData.chartData && financialData.chartData.length > 0
+  const financialData =
+    data || defaultDataByRole[role] || defaultDataByRole.ADMIN
+  const showChart =
+    financialData.chartData && financialData.chartData.length > 0
 
   return (
     <section className={className}>
@@ -651,7 +850,7 @@ export function StaticFinancialOverviewSection({
                 Enable client-side rendering for interactive charts
               </CardDescription>
             </CardHeader>
-            <CardContent className="h-[250px] flex items-center justify-center text-muted-foreground">
+            <CardContent className="text-muted-foreground flex h-[250px] items-center justify-center">
               Chart available in client component
             </CardContent>
           </Card>

@@ -11,6 +11,7 @@ If you need any help, feel free to reach out to the maintainers on [Discord](htt
 Hogwarts is a **feature-based Next.js application** for multi-tenant school management and automation.
 
 **Tech Stack:**
+
 - **Next.js 15.4.4** with App Router and Turbopack (dev + production)
 - **React 19.1.0** with Server Components and concurrent features
 - **pnpm 9.x** for package management (required for Vercel deployments)
@@ -22,6 +23,7 @@ Hogwarts is a **feature-based Next.js application** for multi-tenant school mana
 - **Playwright 1.55.0** for end-to-end testing
 
 **Architecture:**
+
 - Feature-based structure with mirror pattern (URL ↔ directory)
 - Multi-tenant with subdomain-based routing
 - Bilingual support (Arabic RTL + English LTR)
@@ -61,23 +63,23 @@ src/
 └── public/                      # Static assets
 ```
 
-| Path              | Description                                   |
-| ----------------- | --------------------------------------------- |
-| `src/app`         | Next.js application (routes/layouts).         |
-| `src/components`  | React components organized by feature.        |
-| `src/app/docs`    | Documentation app (top-level reference).      |
-| `src/components/docs` | Documentation components (top-level).    |
-| `src/app/table`   | Data-table area (top-level reference).        |
-| `src/components/table` | Data-table components (top-level).       |
-| `src/app/(platform)/dashboard` | Dashboard area (top-level reference). |
-| `src/components/platform/dashboard` | Dashboard components (top-level). |
-| `src/lib`         | Utilities and database helpers.               |
-| `src/hooks`       | Shared React hooks.                          |
-| `prisma/models`   | Multi-file Prisma schema (38 model files).   |
-| `prisma/generator`| Database seed scripts.                       |
-| `.claude/`        | AI automation (33 agents, 22 commands, 7 skills). |
-| `server.js`       | Custom Node.js server with WebSocket.        |
-| `public`          | Static assets.                               |
+| Path                                | Description                                       |
+| ----------------------------------- | ------------------------------------------------- |
+| `src/app`                           | Next.js application (routes/layouts).             |
+| `src/components`                    | React components organized by feature.            |
+| `src/app/docs`                      | Documentation app (top-level reference).          |
+| `src/components/docs`               | Documentation components (top-level).             |
+| `src/app/table`                     | Data-table area (top-level reference).            |
+| `src/components/table`              | Data-table components (top-level).                |
+| `src/app/(platform)/dashboard`      | Dashboard area (top-level reference).             |
+| `src/components/platform/dashboard` | Dashboard components (top-level).                 |
+| `src/lib`                           | Utilities and database helpers.                   |
+| `src/hooks`                         | Shared React hooks.                               |
+| `prisma/models`                     | Multi-file Prisma schema (38 model files).        |
+| `prisma/generator`                  | Database seed scripts.                            |
+| `.claude/`                          | AI automation (33 agents, 22 commands, 7 skills). |
+| `server.js`                         | Custom Node.js server with WebSocket.             |
+| `public`                            | Static assets.                                    |
 
 ### Mirror pattern: URL ↔ directory
 
@@ -94,23 +96,23 @@ src/components/feature-x/ # Component logic for that route
 
 For deeper feature directories (e.g., under `src/components/platform/dashboard`), follow the standardized file pattern inspired by our documentation (`src/app/docs/architecture/page.mdx`) and its reference table (`src/app/docs/architecture/standardized-file-patterns.tsx`):
 
-| File                    | Purpose                                                             |
-| ----------------------- | ------------------------------------------------------------------- |
-| `content.tsx`           | Compose feature/page UI: headings, sections, layout orchestration. |
-| `action.ts`             | Server actions & API calls: validate, scope tenant, mutate.        |
-| `config.ts`             | Enums, option lists, labels, defaults for the feature.             |
-| `validation.ts`         | Zod schemas & refinements; parse and infer types.                  |\
-| `types.ts`              | Domain and UI types; generic helpers for forms/tables.             |
-| `form.tsx`              | Typed forms (RHF) with resolvers and submit handling.              |
-| `card.tsx`              | Card components for KPIs, summaries, quick actions.                |
-| `all.tsx`               | List view with table, filters, pagination.                         |
-| `featured.tsx`          | Curated feature list showcasing selections.                        |
-| `detail.tsx`            | Detail view with sections, relations, actions.                     |
-| `util.ts`               | Pure utilities and mappers used in the feature.                    |
-| `column.tsx`            | Typed table column builders and cell renderers.                    |
-| `use-abc.ts`            | Feature hooks: fetching, mutations, derived state.                 |
-| `README.md`             | Feature README: purpose, APIs, decisions.                          |
-| `ISSUE.md`              | Known issues and follow-ups for the feature.                       |
+| File            | Purpose                                                            |
+| --------------- | ------------------------------------------------------------------ | --- |
+| `content.tsx`   | Compose feature/page UI: headings, sections, layout orchestration. |
+| `action.ts`     | Server actions & API calls: validate, scope tenant, mutate.        |
+| `config.ts`     | Enums, option lists, labels, defaults for the feature.             |
+| `validation.ts` | Zod schemas & refinements; parse and infer types.                  | \   |
+| `types.ts`      | Domain and UI types; generic helpers for forms/tables.             |
+| `form.tsx`      | Typed forms (RHF) with resolvers and submit handling.              |
+| `card.tsx`      | Card components for KPIs, summaries, quick actions.                |
+| `all.tsx`       | List view with table, filters, pagination.                         |
+| `featured.tsx`  | Curated feature list showcasing selections.                        |
+| `detail.tsx`    | Detail view with sections, relations, actions.                     |
+| `util.ts`       | Pure utilities and mappers used in the feature.                    |
+| `column.tsx`    | Typed table column builders and cell renderers.                    |
+| `use-abc.ts`    | Feature hooks: fetching, mutations, derived state.                 |
+| `README.md`     | Feature README: purpose, APIs, decisions.                          |
+| `ISSUE.md`      | Known issues and follow-ups for the feature.                       |
 
 Use these names consistently across features to keep the codebase discoverable and composable.
 
@@ -189,24 +191,30 @@ pnpm db:seed:community    # Community data
 ### Running development servers
 
 **Standard development (with WebSocket support):**
+
 ```bash
 pnpm dev
 ```
+
 This runs the custom `server.js` with WebSocket integration for real-time features.
 
 **Next.js development only (no WebSocket):**
+
 ```bash
 pnpm dev:next
 ```
+
 Use this for faster HMR when WebSocket features are not needed.
 
 **Access the application:**
+
 - Main app: `http://localhost:3000`
 - With subdomain: `http://subdomain.localhost:3000`
 
 ### Build for production
 
 **Before building, always validate TypeScript:**
+
 ```bash
 pnpm tsc --noEmit
 ```
@@ -214,11 +222,13 @@ pnpm tsc --noEmit
 This is **critical** to prevent build hangs. The build process will hang at "Environments: .env" if TypeScript errors exist.
 
 **Standard build:**
+
 ```bash
 pnpm build
 ```
 
 **Smart build with validation (recommended):**
+
 ```bash
 /build
 ```
@@ -232,6 +242,7 @@ Open `http://localhost:3000` with your browser to see the result.
 Hogwarts includes powerful CLI commands for development automation:
 
 ### Component Generation
+
 ```bash
 /component <name>        # Generate React component with tests
 /page <path>             # Create Next.js page with mirror pattern
@@ -239,6 +250,7 @@ Hogwarts includes powerful CLI commands for development automation:
 ```
 
 ### Quality Assurance
+
 ```bash
 /review                  # Comprehensive code review
 /test <file>             # Generate and run tests
@@ -247,6 +259,7 @@ Hogwarts includes powerful CLI commands for development automation:
 ```
 
 ### Build & Validation
+
 ```bash
 /build                   # Smart build with 4-phase validation
 /scan-errors [pattern]   # Detect 204+ error patterns (7s)
@@ -255,17 +268,20 @@ Hogwarts includes powerful CLI commands for development automation:
 ```
 
 ### Performance & Optimization
+
 ```bash
 /optimize <file>         # Performance optimization
 /benchmark [target]      # Performance benchmarking
 ```
 
 ### Database
+
 ```bash
 /migration <name>        # Generate Prisma migration
 ```
 
 ### Deployment
+
 ```bash
 /ship <env>              # Deploy with validation pipeline (staging/production)
 ```
@@ -279,6 +295,7 @@ See `.claude/commands/` for all 22 available commands.
 Hogwarts uses subdomain-based multi-tenancy with strict tenant isolation:
 
 **URL Structure:**
+
 - Production: `school.databayt.org`
 - Preview: `tenant---branch.vercel.app`
 - Development: `school.localhost:3000`
@@ -288,16 +305,16 @@ Hogwarts uses subdomain-based multi-tenancy with strict tenant isolation:
 ```typescript
 // ✅ CORRECT - includes schoolId
 await db.student.findMany({
-  where: { schoolId, yearLevel: "10" }
+  where: { schoolId, yearLevel: "10" },
 })
 
 await db.class.create({
-  data: { name: "Math 101", schoolId }
+  data: { name: "Math 101", schoolId },
 })
 
 // ❌ WRONG - missing schoolId (breaks tenant isolation)
 await db.student.findMany({
-  where: { yearLevel: "10" }
+  where: { yearLevel: "10" },
 })
 ```
 
@@ -305,11 +322,14 @@ await db.student.findMany({
 
 ```typescript
 // In server components
-import { getTenantContext } from "@/lib/tenant-context"
-const { schoolId, subdomain } = await getTenantContext()
 
 // In server actions
 import { auth } from "@/auth"
+
+import { getTenantContext } from "@/lib/tenant-context"
+
+const { schoolId, subdomain } = await getTenantContext()
+
 const session = await auth()
 const schoolId = session?.user?.schoolId
 ```
@@ -324,9 +344,11 @@ See the [Multi-Tenant Documentation](https://ed.databayt.org/docs/multi-tenant) 
 // actions.ts
 "use server"
 
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
 import { itemSchema } from "./validation"
 
 export async function createItem(data: FormData) {
@@ -341,7 +363,7 @@ export async function createItem(data: FormData) {
 
   // 3. Execute with schoolId scope (CRITICAL for multi-tenant safety)
   const item = await db.item.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   // 4. Revalidate or redirect (never return without this)
@@ -352,6 +374,7 @@ export async function createItem(data: FormData) {
 ```
 
 **Requirements:**
+
 - Start with `"use server"` directive
 - Include `schoolId` from session in ALL queries
 - Validate with Zod on both client (UX) and server (security)
@@ -383,9 +406,9 @@ When adding or modifying components:
    - **NEVER** hardcode `text-*` or `font-*` classes
    - Use predefined styles from `src/styles/typography.css`
 
-   | Instead of | Use |
-   |------------|-----|
-   | `<div className="text-3xl font-bold">` | `<h2>` |
+   | Instead of                                        | Use                     |
+   | ------------------------------------------------- | ----------------------- |
+   | `<div className="text-3xl font-bold">`            | `<h2>`                  |
    | `<div className="text-sm text-muted-foreground">` | `<p className="muted">` |
 
 5. **Multi-Tenant Safety**
@@ -401,11 +424,13 @@ When adding or modifying components:
    - Export inferred types: `export type FormData = z.infer<typeof schema>`
 
 7. **Import Aliases**
+
    ```typescript
-   import { Button } from "@/components/ui/button"
-   import { db } from "@/lib/db"
    import { auth } from "@/auth"
+
+   import { db } from "@/lib/db"
    import { useFeature } from "@/hooks/use-feature"
+   import { Button } from "@/components/ui/button"
    ```
 
 8. **Testing**
@@ -420,6 +445,7 @@ See the [Architecture Documentation](https://ed.databayt.org/docs/architecture) 
 The platform supports **Arabic (RTL, default)** and **English (LTR)**:
 
 **Route Structure:**
+
 - `/ar/...` - Arabic routes (right-to-left)
 - `/en/...` - English routes (left-to-right)
 
@@ -432,15 +458,15 @@ export const dictionaries = {
   en: {
     feature: {
       title: "Feature Title",
-      description: "Feature description"
-    }
+      description: "Feature description",
+    },
   },
   ar: {
     feature: {
       title: "عنوان الميزة",
-      description: "وصف الميزة"
-    }
-  }
+      description: "وصف الميزة",
+    },
+  },
 }
 ```
 
@@ -453,6 +479,7 @@ export const dictionaries = {
 3. Test both RTL and LTR layouts in your browser.
 
 **Font System:**
+
 - **Arabic:** Tajawal
 - **English:** Inter
 
@@ -465,16 +492,19 @@ See the [i18n Documentation](https://ed.databayt.org/docs/i18n) for detailed gui
 ### Unit Tests (Vitest)
 
 Run all tests:
+
 ```bash
 pnpm test
 ```
 
 Run specific tests:
+
 ```bash
 pnpm test src/components/platform/students/**/*.test.tsx
 ```
 
 Run in watch mode:
+
 ```bash
 pnpm test -- --watch
 ```
@@ -482,21 +512,25 @@ pnpm test -- --watch
 ### E2E Tests (Playwright)
 
 Run all E2E tests:
+
 ```bash
 pnpm test:e2e
 ```
 
 Run with UI mode (interactive):
+
 ```bash
 pnpm test:e2e:ui
 ```
 
 Run in debug mode:
+
 ```bash
 pnpm test:e2e:debug
 ```
 
 View test report:
+
 ```bash
 pnpm test:e2e:report
 ```
@@ -570,6 +604,7 @@ Scan for common errors before building:
 ```
 
 **Detects:**
+
 - Dictionary property errors (173+ patterns)
 - Prisma field type errors (13+ patterns)
 - Enum completeness issues (2+ patterns)
@@ -582,6 +617,7 @@ Auto-fix detected errors:
 ```
 
 **Best practice workflow:**
+
 ```bash
 /scan-errors && /fix-build && pnpm tsc --noEmit && pnpm build
 ```
@@ -593,16 +629,19 @@ See the [Build Documentation](https://ed.databayt.org/docs/build) for troublesho
 Hogwarts includes automated pre-commit validation configured in `.claude/settings.json`:
 
 **Runs automatically on commit:**
+
 - TypeScript compilation (`pnpm tsc --noEmit`)
 - Prisma client sync (if schema changed)
 - ESLint validation
 - Tests for changed files
 
 **Branch-aware validation:**
+
 - **Protected branches** (main/master/production): STRICT blocking on errors
 - **Feature branches**: Warning with override option
 
 **Override (not recommended):**
+
 ```bash
 git commit --no-verify
 ```
@@ -656,6 +695,7 @@ Categories:
 - `chore`: repository chores
 
 **Examples:**
+
 - `feat(students): add bulk enrollment feature`
 - `fix(attendance): correct geofence validation`
 - `refactor(finance): optimize invoice queries`

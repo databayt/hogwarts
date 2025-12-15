@@ -11,12 +11,12 @@ export type {
   PrintResult,
   PrintProgress,
   UsePrintReturn,
-} from "./types";
+} from "./types"
 
-export { PAGE_SIZES, DEFAULT_MARGINS } from "./types";
+export { PAGE_SIZES, DEFAULT_MARGINS } from "./types"
 
 // Hook
-export { usePrint } from "./use-print";
+export { usePrint } from "./use-print"
 
 // Components
 export {
@@ -26,4 +26,4 @@ export {
   PageBreak,
   type PrintButtonProps,
   type PrintAreaProps,
-} from "./print-button";
+} from "./print-button"

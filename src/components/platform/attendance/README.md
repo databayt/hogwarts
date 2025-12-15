@@ -6,18 +6,19 @@ The Attendance feature empowers school administrators and teachers to track stud
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/attendance` | Mark Attendance | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/history` | Attendance History | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/attendance/reports` | Reports & Export | ✅ Ready |
+| URL                                                     | Page                | Status         |
+| ------------------------------------------------------- | ------------------- | -------------- |
+| `/[lang]/s/[subdomain]/(platform)/attendance`           | Mark Attendance     | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/attendance/history`   | Attendance History  | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/attendance/reports`   | Reports & Export    | ✅ Ready       |
 | `/[lang]/s/[subdomain]/(platform)/attendance/analytics` | Analytics Dashboard | 🚧 In Progress |
-| `/[lang]/s/[subdomain]/(platform)/attendance/qr` | QR Code Attendance | 🚧 In Progress |
-| `/[lang]/s/[subdomain]/(platform)/attendance/geofence` | Geofence Attendance | ⏸️ Planned |
+| `/[lang]/s/[subdomain]/(platform)/attendance/qr`        | QR Code Attendance  | 🚧 In Progress |
+| `/[lang]/s/[subdomain]/(platform)/attendance/geofence`  | Geofence Attendance | ⏸️ Planned     |
 
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - ✅ Mark daily attendance for all classes
 - 📊 View attendance reports and statistics
 - 🔍 Search attendance records by student, class, date range
@@ -29,6 +30,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 - 🔄 Bulk attendance marking for entire class
 
 ### What Teachers Can Do
+
 - ✅ Mark attendance for their assigned classes
 - ✅ View class attendance roster for the day
 - ✅ Update attendance marks (present/absent/late)
@@ -38,12 +40,14 @@ The Attendance feature empowers school administrators and teachers to track stud
 - ❌ Cannot view other teachers' class attendance
 
 ### What Students Can View
+
 - ✅ View their own attendance record
 - ✅ See attendance percentage
 - ✅ View absence history
 - ❌ Cannot view other students' attendance
 
 ### What Parents Can View
+
 - ✅ View their child's attendance record
 - ✅ See daily attendance status
 - ✅ View absence summaries
@@ -51,9 +55,11 @@ The Attendance feature empowers school administrators and teachers to track stud
 - ❌ Cannot view other students
 
 ### Current Implementation Status
+
 **Production-Ready with Advanced Features ✅**
 
 **Completed (Phase 1 - Core):**
+
 - ✅ Daily attendance marking (present/absent/late/excused/sick/holiday)
 - ✅ Class roster view with attendance status
 - ✅ Bulk marking for entire class
@@ -64,6 +70,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 - ✅ Class selection for teachers
 
 **Completed (Phase 2 - Optimizations):**
+
 - ✅ **Error Boundaries** - Graceful error handling with recovery options
 - ✅ **Loading Skeletons** - Professional loading states for better UX
 - ✅ **Empty States** - Helpful messages when no data available
@@ -77,6 +84,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 - ✅ **Keyboard Shortcuts** - P (present), A (absent), L (late), Ctrl+S (save)
 
 **Completed (Phase 3 - Advanced Features):**
+
 - ✅ **QR Code Infrastructure** - Session management with expiration
 - ✅ **Barcode Infrastructure** - Student ID card scanning support
 - ✅ **Student Identifier System** - Multiple identification methods per student
@@ -86,11 +94,13 @@ The Attendance feature empowers school administrators and teachers to track stud
 - ✅ **Confidence Scoring** - Accuracy metrics for biometric methods
 
 **In Progress:**
+
 - 🚧 QR Code UI Implementation - Scanner and generator components
 - 🚧 Analytics Dashboard - Real-time charts and graphs
 - 🚧 Period-by-period tracking - Secondary school support
 
 **Planned:**
+
 - ⏸️ Parent notifications for absences
 - ⏸️ Geofence attendance (PostGIS required)
 - ⏸️ Biometric attendance (fingerprint/face)
@@ -102,6 +112,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 ## Admin Workflows
 
 ### 1. Mark Daily Attendance for a Class
+
 **Prerequisites:** Students enrolled in classes, current academic term active
 
 1. Navigate to `/attendance`
@@ -118,9 +129,11 @@ The Attendance feature empowers school administrators and teachers to track stud
 9. Data saved to database with schoolId, classId, studentId, date, status
 
 ### 2. Bulk Mark Entire Class
+
 **Quick marking for routine attendance:**
 
 **Mark All Present:**
+
 1. Open attendance marking page
 2. Select class and date
 3. Click "Mark All Present" button
@@ -129,11 +142,13 @@ The Attendance feature empowers school administrators and teachers to track stud
 6. All students marked as present at once
 
 **Mark All Absent (Special Cases):**
+
 - Use case: Field trip where entire class is absent from school
 - Use case: Class cancelled, all marked absent
 - Follow same flow with "Mark All Absent" button
 
 ### 3. Update Attendance After Initial Marking
+
 **Scenario:** Student arrives late or was marked incorrectly
 
 1. Navigate to attendance page
@@ -145,7 +160,9 @@ The Attendance feature empowers school administrators and teachers to track stud
 7. Updated status reflected in reports
 
 ### 4. View Attendance History
+
 **Class Attendance History:**
+
 1. Navigate to class detail page
 2. Click "Attendance" tab
 3. View attendance records by date:
@@ -155,6 +172,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 4. Click specific date to see detailed roster
 
 **Student Attendance History:**
+
 1. Navigate to student detail page
 2. Click "Attendance" tab
 3. View attendance timeline:
@@ -164,7 +182,9 @@ The Attendance feature empowers school administrators and teachers to track stud
 4. Calculate attendance percentage
 
 ### 5. Search and Filter Attendance Records
+
 **By Student:**
+
 1. Navigate to `/attendance/reports`
 2. Select "Student" filter
 3. Choose student from dropdown
@@ -173,6 +193,7 @@ The Attendance feature empowers school administrators and teachers to track stud
 6. Export to CSV
 
 **By Class:**
+
 1. Select "Class" filter
 2. Choose class from dropdown
 3. Select date range
@@ -180,18 +201,21 @@ The Attendance feature empowers school administrators and teachers to track stud
 5. See summary: X% attendance rate
 
 **By Status:**
+
 1. Select "Status" filter → Choose "Absent" or "Late"
 2. Select date range
 3. View all absence or tardy records
 4. Identify patterns (e.g., Mondays have high absences)
 
 **By Date Range:**
+
 1. Set start and end dates
 2. Optionally combine with class/student filters
 3. Generate comprehensive report
 4. Export results
 
 ### 6. Export Attendance Reports (CSV)
+
 **For Compliance and Analysis:**
 
 1. Navigate to `/attendance/reports`
@@ -215,6 +239,7 @@ The Attendance feature empowers school administrators and teachers to track stud
    - Data analysis
 
 **CSV Format:**
+
 ```csv
 date,studentId,classId,status
 2025-10-10,student123,class456,PRESENT
@@ -223,6 +248,7 @@ date,studentId,classId,status
 ```
 
 ### 7. Identify Students with Low Attendance
+
 **Proactive Intervention:**
 
 1. Navigate to attendance analytics dashboard
@@ -237,6 +263,7 @@ date,studentId,classId,status
 7. Initiate parent contact or intervention
 
 ### 8. Generate Monthly Attendance Report
+
 **End-of-Month Reporting:**
 
 1. Navigate to `/attendance/reports`
@@ -256,6 +283,7 @@ date,studentId,classId,status
 7. Submit to school board or government agency
 
 ### 9. Period-by-Period Attendance (Advanced)
+
 **For Secondary Schools:**
 
 1. Navigate to timetable-integrated attendance
@@ -269,18 +297,22 @@ date,studentId,classId,status
    - More accurate tracking for secondary schools
 
 ### 10. Handle Special Attendance Cases
+
 **Excused Absences (Future Enhancement):**
+
 - Medical appointment
 - Family emergency
 - School-approved activity
 - Religious observance
 
 **Unexcused Absences:**
+
 - No reason provided
 - Parent did not notify school
 - Truancy cases
 
 **Workflow:**
+
 1. Mark as absent initially
 2. Parent provides excuse (via portal or phone)
 3. Admin updates absence reason
@@ -292,6 +324,7 @@ date,studentId,classId,status
 ## Integration with Other Features
 
 ### Links to Students
+
 - Attendance records reference studentId
 - Student profile shows attendance history
 - Attendance percentage calculated per student
@@ -299,30 +332,35 @@ date,studentId,classId,status
 - Alerts generated for excessive absences
 
 ### Links to Classes
+
 - Attendance marked per class per day
 - Class roster used for attendance marking
 - Class attendance statistics (% present per day)
 - Homeroom teacher sees class attendance summary
 
 ### Links to Teachers
+
 - Teachers mark attendance for their classes
 - Teacher dashboard shows attendance tasks
 - Attendance marking integrated with class schedule
 - Teachers can view historical attendance
 
 ### Links to Timetable
+
 - Period-by-period attendance uses timetable data
 - Current period's class auto-selected for marking
 - Attendance knows which class is active now
 - Schedule conflicts affect attendance workflow
 
 ### Links to Parents
+
 - Parents view child's attendance via parent portal
 - Automated absence notifications sent to parents
 - Parents can submit excuse notes digitally
 - Monthly attendance summaries emailed
 
 ### Links to Dashboard
+
 - Admin dashboard shows:
   - Today's attendance percentage (school-wide)
   - Classes with unmarked attendance
@@ -332,6 +370,7 @@ date,studentId,classId,status
   - Classes needing attendance marking
 
 ### Links to Announcements
+
 - Send announcement to all students absent today
 - Notify parents of absent students
 - Alerts for patterns (e.g., flu outbreak)
@@ -351,6 +390,7 @@ date,studentId,classId,status
 ### Server Actions
 
 **`markAttendance(input)`**
+
 - Input: `{ classId, date, records: [{ studentId, status }] }`
 - Validates with `markAttendanceSchema`
 - Upserts attendance records (update if exists, create if new)
@@ -359,6 +399,7 @@ date,studentId,classId,status
 - Returns `{ success: true }`
 
 **`getAttendanceList(input)`**
+
 - Input: `{ classId, date }`
 - Fetches StudentClass enrollments for roster
 - Fetches existing attendance marks for date
@@ -367,11 +408,13 @@ date,studentId,classId,status
 - Default status: "present" if no record exists
 
 **`getClassesForSelection()`**
+
 - Fetches all classes for current school
 - Returns: `{ classes: [{ id, name }] }`
 - Used in class dropdown selector
 
 **`getAttendanceReportCsv(input)`**
+
 - Input: `{ classId?, studentId?, status?, from?, to?, limit? }`
 - Filters attendance records by parameters
 - Supports date range filtering
@@ -498,11 +541,13 @@ model QRCodeSession {
 ### Validation
 
 **Client-Side:**
+
 - Class selection required
 - Date required and valid
 - Status must be "present", "absent", or "late"
 
 **Server-Side:**
+
 - `markAttendanceSchema` validates input shape
 - Status mapped to uppercase enum: PRESENT, ABSENT, LATE
 - Date converted to Date object
@@ -547,37 +592,44 @@ The component is used in the platform dashboard at `/dashboard/attendance` and a
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

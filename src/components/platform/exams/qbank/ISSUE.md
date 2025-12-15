@@ -25,6 +25,7 @@ Part of the [Exam Block System](../README.md) | [Question Bank README](./README.
 ### Issue: MCQ Options Not Saving Correctly
 
 **Symptoms:**
+
 - Create MCQ with 4 options
 - Save question
 - Options missing or duplicated in database
@@ -32,12 +33,13 @@ Part of the [Exam Block System](../README.md) | [Question Bank README](./README.
 **Root Cause:** Incorrect relation handling in Prisma create
 
 **Solution:**
+
 ```typescript
 // actions.ts
 export async function createQuestion(data: QuestionBankFormData) {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // ✅ CORRECT - Use nested create
   const question = await db.questionBank.create({
@@ -48,20 +50,21 @@ export async function createQuestion(data: QuestionBankFormData) {
       questionType: data.questionType,
       // ... other fields
       options: {
-        create: data.options?.map((opt, index) => ({
-          text: opt.text,
-          isCorrect: opt.isCorrect,
-          explanation: opt.explanation,
-          order: index
-        })) || []
-      }
+        create:
+          data.options?.map((opt, index) => ({
+            text: opt.text,
+            isCorrect: opt.isCorrect,
+            explanation: opt.explanation,
+            order: index,
+          })) || [],
+      },
     },
     include: {
-      options: true
-    }
-  });
+      options: true,
+    },
+  })
 
-  return question;
+  return question
 }
 ```
 
@@ -72,8 +75,9 @@ export async function createQuestion(data: QuestionBankFormData) {
 ### Issue: Fill-in-the-Blank Without Blank Marker Accepted
 
 **Symptoms:**
+
 - Create fill-blank question: "What is photosynthesis?"
-- No _____ or [blank] in question text
+- No **\_** or [blank] in question text
 - Validation should reject but doesn't
 
 **Root Cause:** Validation not checking for blank marker
@@ -82,20 +86,25 @@ export async function createQuestion(data: QuestionBankFormData) {
 
 ```typescript
 // validation.ts
-export const fillBlankSchema = questionBankSchema.extend({
-  questionText: z.string(),
-  acceptedAnswers: z.array(z.string()).min(1)
-}).refine(
-  (data) => {
-    return data.questionText.includes('_____') ||
-           data.questionText.includes('[blank]') ||
-           data.questionText.includes('___');
-  },
-  {
-    message: "Fill-in-the-blank questions must include a blank marker (_____ or [blank])",
-    path: ['questionText']
-  }
-);
+export const fillBlankSchema = questionBankSchema
+  .extend({
+    questionText: z.string(),
+    acceptedAnswers: z.array(z.string()).min(1),
+  })
+  .refine(
+    (data) => {
+      return (
+        data.questionText.includes("_____") ||
+        data.questionText.includes("[blank]") ||
+        data.questionText.includes("___")
+      )
+    },
+    {
+      message:
+        "Fill-in-the-blank questions must include a blank marker (_____ or [blank])",
+      path: ["questionText"],
+    }
+  )
 ```
 
 ---
@@ -103,6 +112,7 @@ export const fillBlankSchema = questionBankSchema.extend({
 ### Issue: Explanation Field Not Saving
 
 **Symptoms:**
+
 - Enter explanation for MCQ option
 - Save question
 - Explanation is null in database
@@ -110,14 +120,15 @@ export const fillBlankSchema = questionBankSchema.extend({
 **Root Cause:** Optional field not included in create mutation
 
 **Solution:**
+
 ```typescript
 // Ensure explanation is explicitly passed
 options: {
   create: data.options?.map((opt, index) => ({
     text: opt.text,
     isCorrect: opt.isCorrect,
-    explanation: opt.explanation || null,  // ✅ Explicitly pass
-    order: index
+    explanation: opt.explanation || null, // ✅ Explicitly pass
+    order: index,
   }))
 }
 ```
@@ -127,6 +138,7 @@ options: {
 ### Issue: Points Calculation Incorrect
 
 **Symptoms:**
+
 - Set difficulty to HARD
 - Question type ESSAY
 - Expected 10 points, shows 3
@@ -141,13 +153,15 @@ export function calculateDefaultPoints(
   type: QuestionType,
   difficulty: DifficultyLevel
 ): number {
-  const basePoints = DEFAULT_POINTS_BY_TYPE[type];
+  const basePoints = DEFAULT_POINTS_BY_TYPE[type]
   const difficultyMultiplier =
-    difficulty === DifficultyLevel.EASY ? 1 :
-    difficulty === DifficultyLevel.MEDIUM ? 1.5 :
-    2; // HARD
+    difficulty === DifficultyLevel.EASY
+      ? 1
+      : difficulty === DifficultyLevel.MEDIUM
+        ? 1.5
+        : 2 // HARD
 
-  return Math.round(basePoints * difficultyMultiplier);
+  return Math.round(basePoints * difficultyMultiplier)
 }
 
 // Example:
@@ -163,6 +177,7 @@ export function calculateDefaultPoints(
 ### Issue: AI Generation Timeout
 
 **Symptoms:**
+
 - Request 20 questions via AI
 - Request times out after 60 seconds
 - Partial generation or complete failure
@@ -174,34 +189,34 @@ export function calculateDefaultPoints(
 ```typescript
 // actions.ts
 export async function generateQuestionsWithAI(params: AIGenerationFormData) {
-  "use server";
+  "use server"
 
-  const { numberOfQuestions } = params;
-  const batchSize = 5;  // Generate 5 at a time
-  const batches = Math.ceil(numberOfQuestions / batchSize);
+  const { numberOfQuestions } = params
+  const batchSize = 5 // Generate 5 at a time
+  const batches = Math.ceil(numberOfQuestions / batchSize)
 
-  const allQuestions: AIGeneratedQuestion[] = [];
+  const allQuestions: AIGeneratedQuestion[] = []
 
   for (let i = 0; i < batches; i++) {
-    const batchCount = Math.min(batchSize, numberOfQuestions - i * batchSize);
+    const batchCount = Math.min(batchSize, numberOfQuestions - i * batchSize)
 
     const batchQuestions = await aiService.generate({
       ...params,
-      numberOfQuestions: batchCount
-    });
+      numberOfQuestions: batchCount,
+    })
 
-    allQuestions.push(...batchQuestions);
+    allQuestions.push(...batchQuestions)
 
     // Small delay to avoid rate limits
     if (i < batches - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 
   return {
     success: true,
-    data: allQuestions
-  };
+    data: allQuestions,
+  }
 }
 ```
 
@@ -210,6 +225,7 @@ export async function generateQuestionsWithAI(params: AIGenerationFormData) {
 ### Issue: AI Generated MCQ Has All Wrong Answers
 
 **Symptoms:**
+
 - AI generates MCQ
 - All 4 options marked as `isCorrect: false`
 - No correct answer exists
@@ -220,40 +236,45 @@ export async function generateQuestionsWithAI(params: AIGenerationFormData) {
 
 ```typescript
 // actions.ts
-async function validateAIQuestion(question: AIGeneratedQuestion): Promise<boolean> {
+async function validateAIQuestion(
+  question: AIGeneratedQuestion
+): Promise<boolean> {
   // For MCQ/TF, ensure at least one correct answer
-  if (question.questionType === 'MULTIPLE_CHOICE' || question.questionType === 'TRUE_FALSE') {
+  if (
+    question.questionType === "MULTIPLE_CHOICE" ||
+    question.questionType === "TRUE_FALSE"
+  ) {
     if (!question.options || question.options.length === 0) {
-      throw new Error('MCQ must have options');
+      throw new Error("MCQ must have options")
     }
 
-    const hasCorrect = question.options.some(opt => opt.isCorrect);
+    const hasCorrect = question.options.some((opt) => opt.isCorrect)
     if (!hasCorrect) {
-      throw new Error('MCQ must have at least one correct answer');
+      throw new Error("MCQ must have at least one correct answer")
     }
   }
 
   // For Fill Blank, ensure accepted answers exist
-  if (question.questionType === 'FILL_BLANK') {
+  if (question.questionType === "FILL_BLANK") {
     if (!question.acceptedAnswers || question.acceptedAnswers.length === 0) {
-      throw new Error('Fill-blank must have accepted answers');
+      throw new Error("Fill-blank must have accepted answers")
     }
   }
 
-  return true;
+  return true
 }
 
 // Use in generation
-const questions = await aiService.generate(params);
-const validatedQuestions = questions.filter(q => {
+const questions = await aiService.generate(params)
+const validatedQuestions = questions.filter((q) => {
   try {
-    validateAIQuestion(q);
-    return true;
+    validateAIQuestion(q)
+    return true
   } catch (error) {
-    console.error(`Invalid AI question: ${error.message}`);
-    return false;
+    console.error(`Invalid AI question: ${error.message}`)
+    return false
   }
-});
+})
 ```
 
 ---
@@ -261,6 +282,7 @@ const validatedQuestions = questions.filter(q => {
 ### Issue: AI Generation Returns Non-JSON Response
 
 **Symptoms:**
+
 - AI returns plain text instead of JSON
 - Parsing fails with `SyntaxError: Unexpected token`
 
@@ -268,7 +290,7 @@ const validatedQuestions = questions.filter(q => {
 
 **Solution:** Improve prompt and add parsing fallback
 
-```typescript
+````typescript
 // config.ts - Update AI prompts
 export const AI_GENERATION_PROMPTS = {
   systemPrompt: `You are an expert educator. You MUST respond with valid JSON only.
@@ -284,34 +306,35 @@ IMPORTANT: Return ONLY valid JSON in this EXACT format (no markdown, no code blo
   ],
   "explanation": "Overall explanation"
 }
-`
-};
+`,
+}
 
 // actions.ts - Add robust parsing
 function parseAIResponse(response: string): AIGeneratedQuestion {
   // Remove markdown code blocks if present
-  let cleaned = response.trim();
-  if (cleaned.startsWith('```json')) {
-    cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-  } else if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/```\n?/g, '');
+  let cleaned = response.trim()
+  if (cleaned.startsWith("```json")) {
+    cleaned = cleaned.replace(/```json\n?/g, "").replace(/```\n?$/g, "")
+  } else if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/```\n?/g, "")
   }
 
   // Try parsing
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned)
   } catch (error) {
-    console.error('Failed to parse AI response:', response);
-    throw new Error('AI returned invalid JSON format');
+    console.error("Failed to parse AI response:", response)
+    throw new Error("AI returned invalid JSON format")
   }
 }
-```
+````
 
 ---
 
 ### Issue: AI Generated Questions Too Similar
 
 **Symptoms:**
+
 - Request 10 questions on "Photosynthesis"
 - All questions are nearly identical
 - Low variety in question types/difficulty
@@ -331,7 +354,7 @@ Generate ${numberOfQuestions} DISTINCT questions. Ensure variety by:
 5. Avoiding repetitive phrasing
 
 Each question should test a unique aspect of ${topic}.
-`;
+`
 ```
 
 ---
@@ -341,6 +364,7 @@ Each question should test a unique aspect of ${topic}.
 ### Issue: Search Returns No Results for Valid Query
 
 **Symptoms:**
+
 - Search for "photosynthesis"
 - Question bank has 50 questions on topic
 - Search returns 0 results
@@ -351,10 +375,13 @@ Each question should test a unique aspect of ${topic}.
 
 ```typescript
 // actions.ts
-export async function searchQuestions(query: string, filters?: QuestionBankFilters) {
-  "use server";
+export async function searchQuestions(
+  query: string,
+  filters?: QuestionBankFilters
+) {
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   return await db.questionBank.findMany({
     where: {
@@ -362,15 +389,15 @@ export async function searchQuestions(query: string, filters?: QuestionBankFilte
       AND: [
         {
           OR: [
-            { questionText: { contains: query, mode: 'insensitive' } },  // ✅ Case-insensitive
-            { explanation: { contains: query, mode: 'insensitive' } },
-            { tags: { has: query.toLowerCase() } }
-          ]
+            { questionText: { contains: query, mode: "insensitive" } }, // ✅ Case-insensitive
+            { explanation: { contains: query, mode: "insensitive" } },
+            { tags: { has: query.toLowerCase() } },
+          ],
         },
         // ... other filters
-      ]
-    }
-  });
+      ],
+    },
+  })
 }
 ```
 
@@ -391,10 +418,10 @@ const results = await db.questionBank.findMany({
     schoolId,
     OR: [
       { questionText: { search: query } },
-      { explanation: { search: query } }
-    ]
-  }
-});
+      { explanation: { search: query } },
+    ],
+  },
+})
 ```
 
 ---
@@ -402,6 +429,7 @@ const results = await db.questionBank.findMany({
 ### Issue: Tag Filter Not Working
 
 **Symptoms:**
+
 - Filter by tag "biology"
 - Questions with tag show but also unrelated questions
 
@@ -412,22 +440,30 @@ const results = await db.questionBank.findMany({
 ```typescript
 // ❌ WRONG - Substring match
 where: {
-  tags: { has: 'bio' }  // Matches "biology", "microbiology", "biochemistry"
+  tags: {
+    has: "bio"
+  } // Matches "biology", "microbiology", "biochemistry"
 }
 
 // ✅ CORRECT - Exact match
 where: {
-  tags: { has: 'biology' }  // Only matches exact tag
+  tags: {
+    has: "biology"
+  } // Only matches exact tag
 }
 
 // ✅ CORRECT - Multiple tags (AND)
 where: {
-  tags: { hasEvery: ['biology', 'plants'] }  // Must have both
+  tags: {
+    hasEvery: ["biology", "plants"]
+  } // Must have both
 }
 
 // ✅ CORRECT - Multiple tags (OR)
 where: {
-  tags: { hasSome: ['biology', 'chemistry'] }  // Has either
+  tags: {
+    hasSome: ["biology", "chemistry"]
+  } // Has either
 }
 ```
 
@@ -438,6 +474,7 @@ where: {
 ### Issue: Tags Not Displaying in Correct Order
 
 **Symptoms:**
+
 - Add tags: ["math", "algebra", "grade-10"]
 - Display shows: ["grade-10", "math", "algebra"]
 - Order not preserved
@@ -462,6 +499,7 @@ model QuestionBank {
 ### Issue: Duplicate Tags Created
 
 **Symptoms:**
+
 - Tag "photosynthesis" and "Photosynthesis" both exist
 - Creates confusion and duplicates
 
@@ -472,17 +510,21 @@ model QuestionBank {
 ```typescript
 // validation.ts
 export const questionBankSchema = z.object({
-  tags: z.array(z.string())
-    .transform(tags =>
-      tags.map(tag => tag.toLowerCase().trim())  // ✅ Normalize
+  tags: z
+    .array(z.string())
+    .transform(
+      (tags) => tags.map((tag) => tag.toLowerCase().trim()) // ✅ Normalize
     )
-    .refine(tags => {
-      const unique = new Set(tags);
-      return unique.size === tags.length;
-    }, {
-      message: "Duplicate tags not allowed"
-    })
-});
+    .refine(
+      (tags) => {
+        const unique = new Set(tags)
+        return unique.size === tags.length
+      },
+      {
+        message: "Duplicate tags not allowed",
+      }
+    ),
+})
 ```
 
 ---
@@ -490,6 +532,7 @@ export const questionBankSchema = z.object({
 ### Issue: Tag Autocomplete Slow with 1000+ Tags
 
 **Symptoms:**
+
 - Tag input has autocomplete
 - Loads all tags from database
 - UI freezes with many tags
@@ -501,28 +544,28 @@ export const questionBankSchema = z.object({
 ```typescript
 // actions.ts
 export async function searchTags(query: string, limit = 10) {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get unique tags matching query
   const questions = await db.questionBank.findMany({
     where: {
       schoolId,
-      tags: { has: query }  // Approximate match
+      tags: { has: query }, // Approximate match
     },
     select: { tags: true },
-    take: 100
-  });
+    take: 100,
+  })
 
   // Flatten and filter
-  const allTags = questions.flatMap(q => q.tags);
-  const uniqueTags = [...new Set(allTags)];
+  const allTags = questions.flatMap((q) => q.tags)
+  const uniqueTags = [...new Set(allTags)]
   const filtered = uniqueTags
-    .filter(tag => tag.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, limit);
+    .filter((tag) => tag.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, limit)
 
-  return filtered;
+  return filtered
 }
 ```
 
@@ -533,6 +576,7 @@ export async function searchTags(query: string, limit = 10) {
 ### Issue: Success Rate Shows >100%
 
 **Symptoms:**
+
 - Question analytics show 120% success rate
 - Mathematically impossible
 
@@ -545,45 +589,45 @@ export async function searchTags(query: string, limit = 10) {
 export async function updateQuestionAnalytics(
   questionId: string,
   stats: {
-    totalAttempts: number;
-    correctAttempts: number;
-    totalTimeSpent: number;
+    totalAttempts: number
+    correctAttempts: number
+    totalTimeSpent: number
   }
 ) {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // ✅ Validate input
   if (stats.correctAttempts > stats.totalAttempts) {
-    throw new Error('Correct attempts cannot exceed total attempts');
+    throw new Error("Correct attempts cannot exceed total attempts")
   }
 
-  const successRate = stats.totalAttempts > 0
-    ? Math.round((stats.correctAttempts / stats.totalAttempts) * 100)
-    : null;
+  const successRate =
+    stats.totalAttempts > 0
+      ? Math.round((stats.correctAttempts / stats.totalAttempts) * 100)
+      : null
 
   // ✅ Clamp to 0-100 range
-  const validSuccessRate = successRate !== null
-    ? Math.max(0, Math.min(100, successRate))
-    : null;
+  const validSuccessRate =
+    successRate !== null ? Math.max(0, Math.min(100, successRate)) : null
 
   await db.questionAnalytics.upsert({
     where: {
-      questionId_schoolId: { questionId, schoolId }
+      questionId_schoolId: { questionId, schoolId },
     },
     create: {
       questionId,
       schoolId,
       timesUsed: 1,
       avgScore: successRate,
-      successRate: validSuccessRate
+      successRate: validSuccessRate,
     },
     update: {
       timesUsed: { increment: 1 },
-      successRate: validSuccessRate
-    }
-  });
+      successRate: validSuccessRate,
+    },
+  })
 }
 ```
 
@@ -592,6 +636,7 @@ export async function updateQuestionAnalytics(
 ### Issue: Analytics Not Updating After Exam
 
 **Symptoms:**
+
 - Student takes exam with question
 - Question analytics remain unchanged
 - `timesUsed` still shows 0
@@ -606,14 +651,14 @@ export async function markExam(examId: string, results: StudentResults[]) {
   // ... mark exam logic
 
   // Update question analytics
-  const questionStats = calculateQuestionStats(results);
+  const questionStats = calculateQuestionStats(results)
 
   for (const [questionId, stats] of Object.entries(questionStats)) {
     await updateQuestionAnalytics(questionId, {
       totalAttempts: stats.attempts,
       correctAttempts: stats.correct,
-      totalTimeSpent: stats.timeSpent
-    });
+      totalTimeSpent: stats.timeSpent,
+    })
   }
 }
 ```
@@ -625,6 +670,7 @@ export async function markExam(examId: string, results: StudentResults[]) {
 ### Issue: CSV Import Fails with Special Characters
 
 **Symptoms:**
+
 - Import CSV with Arabic or special characters
 - Import fails or shows garbled text
 
@@ -657,6 +703,7 @@ export async function importQuestionsFromCSV(file: File) {
 ### Issue: Export Missing Some Questions
 
 **Symptoms:**
+
 - Export 100 questions
 - CSV contains only 50
 - No error shown
@@ -668,30 +715,30 @@ export async function importQuestionsFromCSV(file: File) {
 ```typescript
 // actions.ts
 export async function exportQuestionsToCSV(filters?: QuestionBankFilters) {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // ✅ Fetch ALL matching questions (use cursor pagination for huge datasets)
-  const allQuestions: QuestionBank[] = [];
-  let cursor: string | undefined;
+  const allQuestions: QuestionBank[] = []
+  let cursor: string | undefined
 
   do {
     const batch = await db.questionBank.findMany({
       where: {
         schoolId,
-        ...buildFiltersWhere(filters)
+        ...buildFiltersWhere(filters),
       },
       take: 100,
-      ...(cursor && { cursor: { id: cursor }, skip: 1 })
-    });
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+    })
 
-    allQuestions.push(...batch);
-    cursor = batch.length === 100 ? batch[batch.length - 1].id : undefined;
-  } while (cursor);
+    allQuestions.push(...batch)
+    cursor = batch.length === 100 ? batch[batch.length - 1].id : undefined
+  } while (cursor)
 
   // Generate CSV
-  return generateCSV(allQuestions);
+  return generateCSV(allQuestions)
 }
 ```
 
@@ -702,6 +749,7 @@ export async function exportQuestionsToCSV(filters?: QuestionBankFilters) {
 ### Issue: Question List Loads Slowly (>5 seconds)
 
 **Symptoms:**
+
 - Question bank has 5000+ questions
 - List page takes 5+ seconds to load
 - Browser becomes unresponsive
@@ -753,6 +801,7 @@ model QuestionBank {
 ### Issue: AI Generation Blocks UI
 
 **Symptoms:**
+
 - Click "Generate 10 Questions"
 - UI freezes for 30 seconds
 - Cannot interact with page
@@ -849,6 +898,7 @@ export function AIGenerationForm() {
 ### Planned Features
 
 #### 1. Image Upload Support (Priority: High)
+
 ```typescript
 // Upload image to Vercel Blob or S3
 export async function uploadQuestionImage(file: File) {
@@ -864,6 +914,7 @@ export async function uploadQuestionImage(file: File) {
 ```
 
 #### 2. Question Versioning (Priority: Medium)
+
 ```prisma
 model QuestionVersion {
   id            String   @id @default(cuid())
@@ -880,6 +931,7 @@ model QuestionVersion {
 ```
 
 #### 3. Question Pool/Collections (Priority: Medium)
+
 ```typescript
 model QuestionCollection {
   id          String   @id @default(cuid())
@@ -891,12 +943,14 @@ model QuestionCollection {
 ```
 
 #### 4. Advanced Analytics Dashboard (Priority: Low)
+
 - Question difficulty vs. success rate chart
 - Bloom level distribution across subjects
 - Most/least used questions over time
 - Recommendation engine for underused questions
 
 #### 5. Collaborative Review System (Priority: Low)
+
 ```prisma
 model QuestionReview {
   id         String   @id @default(cuid())

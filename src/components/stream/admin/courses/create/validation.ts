@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const createCourseSchema = z.object({
   title: z
@@ -18,11 +18,11 @@ export const createCourseSchema = z.object({
     .optional()
     .nullable(),
   imageUrl: z.string().url("Invalid image URL").optional().nullable(),
-});
+})
 
 export const updateCourseSchema = createCourseSchema.partial().extend({
   isPublished: z.boolean().optional(),
-});
+})
 
 export const createChapterSchema = z.object({
   title: z
@@ -36,7 +36,7 @@ export const createChapterSchema = z.object({
     .nullable(),
   position: z.number().int().min(0),
   isFree: z.boolean().default(false),
-});
+})
 
 export const createLessonSchema = z.object({
   title: z
@@ -58,17 +58,17 @@ export const createLessonSchema = z.object({
     .optional()
     .nullable(),
   isFree: z.boolean(),
-});
+})
 
 export const createCategorySchema = z.object({
   name: z
     .string()
     .min(1, "Category name is required")
     .max(50, "Category name must be less than 50 characters"),
-});
+})
 
-export type CreateCourseInput = z.infer<typeof createCourseSchema>;
-export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
-export type CreateChapterInput = z.infer<typeof createChapterSchema>;
-export type CreateLessonInput = z.infer<typeof createLessonSchema>;
-export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
+export type CreateCourseInput = z.infer<typeof createCourseSchema>
+export type UpdateCourseInput = z.infer<typeof updateCourseSchema>
+export type CreateChapterInput = z.infer<typeof createChapterSchema>
+export type CreateLessonInput = z.infer<typeof createLessonSchema>
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>

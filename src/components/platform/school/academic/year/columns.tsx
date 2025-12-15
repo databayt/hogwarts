@@ -1,9 +1,9 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+import { Calendar, Ellipsis, Layers } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
-import { Ellipsis, Calendar, Layers } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
 import type { SchoolYearRow } from "./types"
 
 export interface SchoolYearColumnCallbacks {
@@ -48,7 +50,7 @@ export const getSchoolYearColumns = (
         const value = getValue<string>()
         return (
           <span className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="text-muted-foreground h-4 w-4" />
             <span className="font-medium">{value}</span>
           </span>
         )
@@ -104,7 +106,7 @@ export const getSchoolYearColumns = (
         const count = row.original._count?.terms ?? 0
         return (
           <span className="flex items-center gap-1 text-sm tabular-nums">
-            <Layers className="h-3 w-3 text-muted-foreground" />
+            <Layers className="text-muted-foreground h-3 w-3" />
             {count}
           </span>
         )
@@ -129,7 +131,7 @@ export const getSchoolYearColumns = (
       ),
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
             lang === "ar" ? "ar-SA" : "en-US"
           )}

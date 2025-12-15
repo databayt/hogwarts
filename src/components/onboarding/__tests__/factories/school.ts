@@ -5,27 +5,39 @@
  * Uses faker for realistic test data generation.
  */
 
-import { faker } from '@faker-js/faker'
+import { faker } from "@faker-js/faker"
+
 import type {
-  OnboardingSchoolData,
-  SchoolType,
-  SchoolCategory,
-  Currency,
-  PaymentSchedule,
   BorderRadius,
+  Currency,
+  OnboardingSchoolData,
+  PaymentSchedule,
+  SchoolCategory,
+  SchoolType,
   ShadowSize,
-} from '../../types'
+} from "../../types"
 
 // ============================================================================
 // Type Constants for Random Selection
 // ============================================================================
 
-const SCHOOL_TYPES: SchoolType[] = ['primary', 'secondary', 'both']
-const SCHOOL_CATEGORIES: SchoolCategory[] = ['private', 'public', 'international', 'technical', 'special']
-const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
-const PAYMENT_SCHEDULES: PaymentSchedule[] = ['monthly', 'quarterly', 'semester', 'annual']
-const BORDER_RADII: BorderRadius[] = ['none', 'sm', 'md', 'lg', 'xl', 'full']
-const SHADOW_SIZES: ShadowSize[] = ['none', 'sm', 'md', 'lg', 'xl']
+const SCHOOL_TYPES: SchoolType[] = ["primary", "secondary", "both"]
+const SCHOOL_CATEGORIES: SchoolCategory[] = [
+  "private",
+  "public",
+  "international",
+  "technical",
+  "special",
+]
+const CURRENCIES: Currency[] = ["USD", "EUR", "GBP", "CAD", "AUD"]
+const PAYMENT_SCHEDULES: PaymentSchedule[] = [
+  "monthly",
+  "quarterly",
+  "semester",
+  "annual",
+]
+const BORDER_RADII: BorderRadius[] = ["none", "sm", "md", "lg", "xl", "full"]
+const SHADOW_SIZES: ShadowSize[] = ["none", "sm", "md", "lg", "xl"]
 
 // ============================================================================
 // Helper Functions
@@ -51,7 +63,7 @@ function generateValidDomain(): string {
  * Generate a valid hex color
  */
 function generateHexColor(): string {
-  return faker.color.rgb({ format: 'hex' })
+  return faker.color.rgb({ format: "hex" })
 }
 
 // ============================================================================
@@ -62,13 +74,15 @@ function generateHexColor(): string {
  * Create a full mock school with all fields populated
  * @param overrides - Optional partial school data to override defaults
  */
-export function createMockSchool(overrides: Partial<OnboardingSchoolData> = {}): OnboardingSchoolData {
+export function createMockSchool(
+  overrides: Partial<OnboardingSchoolData> = {}
+): OnboardingSchoolData {
   const schoolId = faker.string.cuid()
   const createdAt = faker.date.past()
 
   return {
     id: schoolId,
-    name: faker.company.name() + ' School',
+    name: faker.company.name() + " School",
     description: faker.lorem.paragraph({ min: 2, max: 4 }),
     address: faker.location.streetAddress(),
     city: faker.location.city(),
@@ -87,7 +101,7 @@ export function createMockSchool(overrides: Partial<OnboardingSchoolData> = {}):
     // School details
     schoolLevel: randomFrom(SCHOOL_TYPES),
     schoolType: randomFrom(SCHOOL_CATEGORIES),
-    planType: faker.helpers.arrayElement(['basic', 'pro', 'enterprise']),
+    planType: faker.helpers.arrayElement(["basic", "pro", "enterprise"]),
 
     // Pricing
     tuitionFee: faker.number.int({ min: 1000, max: 50000 }),
@@ -119,10 +133,12 @@ export function createMockSchool(overrides: Partial<OnboardingSchoolData> = {}):
  * Useful for quick unit tests that don't need full data
  * @param overrides - Optional partial school data to override defaults
  */
-export function createMinimalSchool(overrides: Partial<OnboardingSchoolData> = {}): OnboardingSchoolData {
+export function createMinimalSchool(
+  overrides: Partial<OnboardingSchoolData> = {}
+): OnboardingSchoolData {
   return {
     id: faker.string.cuid(),
-    name: faker.company.name() + ' School',
+    name: faker.company.name() + " School",
     description: faker.lorem.sentence(),
     address: faker.location.streetAddress(),
     city: faker.location.city(),
@@ -130,8 +146,8 @@ export function createMinimalSchool(overrides: Partial<OnboardingSchoolData> = {
     maxStudents: faker.number.int({ min: 100, max: 1000 }),
     maxTeachers: faker.number.int({ min: 10, max: 100 }),
     tuitionFee: faker.number.int({ min: 1000, max: 10000 }),
-    currency: 'USD',
-    paymentSchedule: 'annual',
+    currency: "USD",
+    paymentSchedule: "annual",
     ...overrides,
   }
 }
@@ -140,10 +156,12 @@ export function createMinimalSchool(overrides: Partial<OnboardingSchoolData> = {
  * Create a draft school (incomplete onboarding state)
  * @param overrides - Optional partial school data to override defaults
  */
-export function createDraftSchool(overrides: Partial<OnboardingSchoolData> = {}): OnboardingSchoolData {
+export function createDraftSchool(
+  overrides: Partial<OnboardingSchoolData> = {}
+): OnboardingSchoolData {
   return {
     id: faker.string.cuid(),
-    name: faker.company.name() + ' School',
+    name: faker.company.name() + " School",
     draft: true,
     isPublished: false,
     isComplete: false,
@@ -174,20 +192,23 @@ export function createMockSchools(
  */
 export function createTitleStepData(overrides: { name?: string } = {}) {
   return {
-    name: overrides.name ?? faker.company.name() + ' Academy',
+    name: overrides.name ?? faker.company.name() + " Academy",
   }
 }
 
 /**
  * Create valid description step data
  */
-export function createDescriptionStepData(overrides: Partial<{
-  description: string
-  schoolLevel: SchoolType
-  schoolType: SchoolCategory
-}> = {}) {
+export function createDescriptionStepData(
+  overrides: Partial<{
+    description: string
+    schoolLevel: SchoolType
+    schoolType: SchoolCategory
+  }> = {}
+) {
   return {
-    description: overrides.description ?? faker.lorem.paragraph({ min: 2, max: 4 }),
+    description:
+      overrides.description ?? faker.lorem.paragraph({ min: 2, max: 4 }),
     schoolLevel: overrides.schoolLevel ?? randomFrom(SCHOOL_TYPES),
     schoolType: overrides.schoolType ?? randomFrom(SCHOOL_CATEGORIES),
   }
@@ -196,12 +217,14 @@ export function createDescriptionStepData(overrides: Partial<{
 /**
  * Create valid location step data
  */
-export function createLocationStepData(overrides: Partial<{
-  address: string
-  city: string
-  state: string
-  country: string
-}> = {}) {
+export function createLocationStepData(
+  overrides: Partial<{
+    address: string
+    city: string
+    state: string
+    country: string
+  }> = {}
+) {
   return {
     address: overrides.address ?? faker.location.streetAddress(),
     city: overrides.city ?? faker.location.city(),
@@ -213,14 +236,18 @@ export function createLocationStepData(overrides: Partial<{
 /**
  * Create valid capacity step data
  */
-export function createCapacityStepData(overrides: Partial<{
-  maxStudents: number
-  maxTeachers: number
-  maxClasses: number
-}> = {}) {
+export function createCapacityStepData(
+  overrides: Partial<{
+    maxStudents: number
+    maxTeachers: number
+    maxClasses: number
+  }> = {}
+) {
   return {
-    maxStudents: overrides.maxStudents ?? faker.number.int({ min: 100, max: 5000 }),
-    maxTeachers: overrides.maxTeachers ?? faker.number.int({ min: 10, max: 500 }),
+    maxStudents:
+      overrides.maxStudents ?? faker.number.int({ min: 100, max: 5000 }),
+    maxTeachers:
+      overrides.maxTeachers ?? faker.number.int({ min: 10, max: 500 }),
     maxClasses: overrides.maxClasses ?? faker.number.int({ min: 5, max: 200 }),
   }
 }
@@ -228,17 +255,22 @@ export function createCapacityStepData(overrides: Partial<{
 /**
  * Create valid price step data
  */
-export function createPriceStepData(overrides: Partial<{
-  tuitionFee: number
-  registrationFee: number
-  applicationFee: number
-  currency: Currency
-  paymentSchedule: PaymentSchedule
-}> = {}) {
+export function createPriceStepData(
+  overrides: Partial<{
+    tuitionFee: number
+    registrationFee: number
+    applicationFee: number
+    currency: Currency
+    paymentSchedule: PaymentSchedule
+  }> = {}
+) {
   return {
-    tuitionFee: overrides.tuitionFee ?? faker.number.int({ min: 1000, max: 50000 }),
-    registrationFee: overrides.registrationFee ?? faker.number.int({ min: 50, max: 500 }),
-    applicationFee: overrides.applicationFee ?? faker.number.int({ min: 10, max: 100 }),
+    tuitionFee:
+      overrides.tuitionFee ?? faker.number.int({ min: 1000, max: 50000 }),
+    registrationFee:
+      overrides.registrationFee ?? faker.number.int({ min: 50, max: 500 }),
+    applicationFee:
+      overrides.applicationFee ?? faker.number.int({ min: 10, max: 100 }),
     currency: overrides.currency ?? randomFrom(CURRENCIES),
     paymentSchedule: overrides.paymentSchedule ?? randomFrom(PAYMENT_SCHEDULES),
   }
@@ -247,12 +279,14 @@ export function createPriceStepData(overrides: Partial<{
 /**
  * Create valid branding step data
  */
-export function createBrandingStepData(overrides: Partial<{
-  logo: string
-  primaryColor: string
-  borderRadius: BorderRadius
-  shadow: ShadowSize
-}> = {}) {
+export function createBrandingStepData(
+  overrides: Partial<{
+    logo: string
+    primaryColor: string
+    borderRadius: BorderRadius
+    shadow: ShadowSize
+  }> = {}
+) {
   return {
     logo: overrides.logo ?? faker.image.url(),
     primaryColor: overrides.primaryColor ?? generateHexColor(),
@@ -264,11 +298,13 @@ export function createBrandingStepData(overrides: Partial<{
 /**
  * Create valid legal step data
  */
-export function createLegalStepData(overrides: Partial<{
-  termsAccepted: boolean
-  privacyAccepted: boolean
-  dataProcessingAccepted: boolean
-}> = {}) {
+export function createLegalStepData(
+  overrides: Partial<{
+    termsAccepted: boolean
+    privacyAccepted: boolean
+    dataProcessingAccepted: boolean
+  }> = {}
+) {
   return {
     termsAccepted: overrides.termsAccepted ?? true,
     privacyAccepted: overrides.privacyAccepted ?? true,
@@ -285,13 +321,13 @@ export function createLegalStepData(overrides: Partial<{
  */
 export function createInvalidSchoolData() {
   return {
-    name: '', // Too short
-    description: 'Short', // Less than 10 chars
-    domain: 'INVALID--DOMAIN', // Has consecutive hyphens, uppercase
+    name: "", // Too short
+    description: "Short", // Less than 10 chars
+    domain: "INVALID--DOMAIN", // Has consecutive hyphens, uppercase
     maxStudents: -1, // Negative
     maxTeachers: 0, // Zero not allowed
     tuitionFee: -100, // Negative
-    primaryColor: 'not-a-hex', // Invalid hex
+    primaryColor: "not-a-hex", // Invalid hex
   }
 }
 
@@ -300,13 +336,13 @@ export function createInvalidSchoolData() {
  */
 export function createEdgeCaseSchoolData() {
   return {
-    name: 'AB', // Exactly 2 chars (minimum)
-    description: '1234567890', // Exactly 10 chars (minimum)
-    domain: 'abc', // Exactly 3 chars (minimum)
+    name: "AB", // Exactly 2 chars (minimum)
+    description: "1234567890", // Exactly 10 chars (minimum)
+    domain: "abc", // Exactly 3 chars (minimum)
     maxStudents: 1, // Minimum
     maxTeachers: 1, // Minimum
     maxClasses: 1, // Minimum
     tuitionFee: 0, // Zero is valid
-    primaryColor: '#000000', // Valid black
+    primaryColor: "#000000", // Valid black
   }
 }

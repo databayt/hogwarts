@@ -1,11 +1,16 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { assignmentCreateSchema, assignmentUpdateSchema, getAssignmentsSchema } from "@/components/platform/assignments/validation";
-import { arrayToCSV } from "@/components/file";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { arrayToCSV } from "@/components/file"
+import {
+  assignmentCreateSchema,
+  assignmentUpdateSchema,
+  getAssignmentsSchema,
+} from "@/components/platform/assignments/validation"
 
 // ============================================================================
 // Types
@@ -13,34 +18,34 @@ import { arrayToCSV } from "@/components/file";
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 type AssignmentSelectResult = {
-  id: string;
-  schoolId: string;
-  title: string;
-  description: string | null;
-  classId: string;
-  type: string;
-  totalPoints: number;
-  weight: number;
-  dueDate: Date;
-  instructions: string | null;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  schoolId: string
+  title: string
+  description: string | null
+  classId: string
+  type: string
+  totalPoints: number
+  weight: number
+  dueDate: Date
+  instructions: string | null
+  status: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 type AssignmentListResult = {
-  id: string;
-  title: string;
-  type: string;
-  totalPoints: number;
-  dueDate: string;
-  createdAt: string;
-};
+  id: string
+  title: string
+  type: string
+  totalPoints: number
+  dueDate: string
+  createdAt: string
+}
 
-const ASSIGNMENTS_PATH = "/assignments";
+const ASSIGNMENTS_PATH = "/assignments"
 
 // ============================================================================
 // Mutations
@@ -50,12 +55,12 @@ export async function createAssignment(
   input: z.infer<typeof assignmentCreateSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = assignmentCreateSchema.parse(input);
+    const parsed = assignmentCreateSchema.parse(input)
 
     const row = await (db as any).assignment.create({
       data: {
@@ -70,24 +75,25 @@ export async function createAssignment(
         instructions: parsed.instructions || null,
         status: "DRAFT",
       },
-    });
+    })
 
-    revalidatePath(ASSIGNMENTS_PATH);
-    return { success: true, data: { id: row.id as string } };
+    revalidatePath(ASSIGNMENTS_PATH)
+    return { success: true, data: { id: row.id as string } }
   } catch (error) {
-    console.error("[createAssignment] Error:", error);
+    console.error("[createAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create assignment"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to create assignment",
+    }
   }
 }
 
@@ -95,94 +101,99 @@ export async function updateAssignment(
   input: z.infer<typeof assignmentUpdateSchema>
 ): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = assignmentUpdateSchema.parse(input);
-    const { id, ...rest } = parsed;
+    const parsed = assignmentUpdateSchema.parse(input)
+    const { id, ...rest } = parsed
 
     // Verify assignment exists
     const existing = await (db as any).assignment.findFirst({
       where: { id, schoolId },
       select: { id: true },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" };
+      return { success: false, error: "Assignment not found" }
     }
 
-    const data: Record<string, unknown> = {};
-    if (typeof rest.title !== "undefined") data.title = rest.title;
-    if (typeof rest.description !== "undefined") data.description = rest.description || null;
-    if (typeof rest.classId !== "undefined") data.classId = rest.classId;
-    if (typeof rest.type !== "undefined") data.type = rest.type;
-    if (typeof rest.totalPoints !== "undefined") data.totalPoints = rest.totalPoints;
-    if (typeof rest.weight !== "undefined") data.weight = rest.weight;
-    if (typeof rest.dueDate !== "undefined") data.dueDate = rest.dueDate;
-    if (typeof rest.instructions !== "undefined") data.instructions = rest.instructions || null;
+    const data: Record<string, unknown> = {}
+    if (typeof rest.title !== "undefined") data.title = rest.title
+    if (typeof rest.description !== "undefined")
+      data.description = rest.description || null
+    if (typeof rest.classId !== "undefined") data.classId = rest.classId
+    if (typeof rest.type !== "undefined") data.type = rest.type
+    if (typeof rest.totalPoints !== "undefined")
+      data.totalPoints = rest.totalPoints
+    if (typeof rest.weight !== "undefined") data.weight = rest.weight
+    if (typeof rest.dueDate !== "undefined") data.dueDate = rest.dueDate
+    if (typeof rest.instructions !== "undefined")
+      data.instructions = rest.instructions || null
 
-    await (db as any).assignment.updateMany({ where: { id, schoolId }, data });
+    await (db as any).assignment.updateMany({ where: { id, schoolId }, data })
 
-    revalidatePath(ASSIGNMENTS_PATH);
-    return { success: true, data: undefined };
+    revalidatePath(ASSIGNMENTS_PATH)
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[updateAssignment] Error:", error);
+    console.error("[updateAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update assignment"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to update assignment",
+    }
   }
 }
 
-export async function deleteAssignment(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteAssignment(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Verify assignment exists
     const existing = await (db as any).assignment.findFirst({
       where: { id, schoolId },
       select: { id: true },
-    });
+    })
 
     if (!existing) {
-      return { success: false, error: "Assignment not found" };
+      return { success: false, error: "Assignment not found" }
     }
 
-    await (db as any).assignment.deleteMany({ where: { id, schoolId } });
+    await (db as any).assignment.deleteMany({ where: { id, schoolId } })
 
-    revalidatePath(ASSIGNMENTS_PATH);
-    return { success: true, data: undefined };
+    revalidatePath(ASSIGNMENTS_PATH)
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("[deleteAssignment] Error:", error);
+    console.error("[deleteAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete assignment"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to delete assignment",
+    }
   }
 }
 
@@ -190,19 +201,19 @@ export async function deleteAssignment(
 // Queries
 // ============================================================================
 
-export async function getAssignment(
-  input: { id: string }
-): Promise<ActionResponse<AssignmentSelectResult | null>> {
+export async function getAssignment(input: {
+  id: string
+}): Promise<ActionResponse<AssignmentSelectResult | null>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     if (!(db as any).assignment) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     const assignment = await (db as any).assignment.findFirst({
@@ -222,23 +233,24 @@ export async function getAssignment(
         createdAt: true,
         updatedAt: true,
       },
-    });
+    })
 
-    return { success: true, data: assignment as AssignmentSelectResult | null };
+    return { success: true, data: assignment as AssignmentSelectResult | null }
   } catch (error) {
-    console.error("[getAssignment] Error:", error);
+    console.error("[getAssignment] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch assignment"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch assignment",
+    }
   }
 }
 
@@ -246,15 +258,15 @@ export async function getAssignments(
   input: Partial<z.infer<typeof getAssignmentsSchema>>
 ): Promise<ActionResponse<{ rows: AssignmentListResult[]; total: number }>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const sp = getAssignmentsSchema.parse(input ?? {});
+    const sp = getAssignmentsSchema.parse(input ?? {})
 
     if (!(db as any).assignment) {
-      return { success: true, data: { rows: [], total: 0 } };
+      return { success: true, data: { rows: [], total: 0 } }
     }
 
     const where: any = {
@@ -262,19 +274,16 @@ export async function getAssignments(
       ...(sp.title
         ? { title: { contains: sp.title, mode: "insensitive" } }
         : {}),
-      ...(sp.type
-        ? { type: sp.type }
-        : {}),
-      ...(sp.classId
-        ? { classId: sp.classId }
-        : {}),
-    };
+      ...(sp.type ? { type: sp.type } : {}),
+      ...(sp.classId ? { classId: sp.classId } : {}),
+    }
 
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
-    const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-      : [{ createdAt: "desc" }];
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
 
     const [rows, count] = await Promise.all([
       (db as any).assignment.findMany({
@@ -285,13 +294,13 @@ export async function getAssignments(
         include: {
           class: {
             select: {
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       }),
       (db as any).assignment.count({ where }),
-    ]);
+    ])
 
     const mapped: AssignmentListResult[] = (rows as Array<any>).map((a) => ({
       id: a.id as string,
@@ -300,23 +309,24 @@ export async function getAssignments(
       totalPoints: a.totalPoints as number,
       dueDate: (a.dueDate as Date).toISOString(),
       createdAt: (a.createdAt as Date).toISOString(),
-    }));
+    }))
 
-    return { success: true, data: { rows: mapped, total: count as number } };
+    return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {
-    console.error("[getAssignments] Error:", error);
+    console.error("[getAssignments] Error:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch assignments"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch assignments",
+    }
   }
 }
 
@@ -327,24 +337,26 @@ export async function getAssignmentsCSV(
   input?: Partial<z.infer<typeof getAssignmentsSchema>>
 ): Promise<ActionResponse<string>> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const sp = getAssignmentsSchema.parse(input ?? {});
+    const sp = getAssignmentsSchema.parse(input ?? {})
 
     if (!(db as any).assignment) {
-      return { success: true, data: "" };
+      return { success: true, data: "" }
     }
 
     // Build where clause with filters
     const where: any = {
       schoolId,
-      ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+      ...(sp.title
+        ? { title: { contains: sp.title, mode: "insensitive" } }
+        : {}),
       ...(sp.type ? { type: sp.type } : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
-    };
+    }
 
     // Fetch ALL assignments matching filters (no pagination for export)
     const assignments = await (db as any).assignment.findMany({
@@ -367,7 +379,7 @@ export async function getAssignmentsCSV(
         },
       },
       orderBy: [{ dueDate: "asc" }],
-    });
+    })
 
     // Transform data for CSV export
     const exportData = assignments.map((assignment: any) => ({
@@ -385,7 +397,7 @@ export async function getAssignmentsCSV(
       status: assignment.status || "",
       submissions: assignment._count.assignmentSubmissions,
       createdAt: new Date(assignment.createdAt).toISOString().split("T")[0],
-    }));
+    }))
 
     // Define CSV columns
     const columns = [
@@ -401,17 +413,18 @@ export async function getAssignmentsCSV(
       { key: "status" as const, label: "Status" },
       { key: "submissions" as const, label: "Submissions Count" },
       { key: "createdAt" as const, label: "Created Date" },
-    ];
+    ]
 
-    const csv = arrayToCSV(exportData, { columns });
-    return { success: true, data: csv };
+    const csv = arrayToCSV(exportData, { columns })
+    return { success: true, data: csv }
   } catch (error) {
-    console.error("[getAssignmentsCSV] Error:", error);
+    console.error("[getAssignmentsCSV] Error:", error)
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export assignments"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to export assignments",
+    }
   }
 }
 
@@ -421,39 +434,45 @@ export async function getAssignmentsCSV(
  */
 export async function getAssignmentsExportData(
   input?: Partial<z.infer<typeof getAssignmentsSchema>>
-): Promise<ActionResponse<Array<{
-  id: string;
-  title: string;
-  description: string | null;
-  className: string | null;
-  subjectName: string | null;
-  teacherName: string | null;
-  dueDate: Date | null;
-  totalPoints: number | null;
-  status: string;
-  submissionCount: number;
-  gradedCount: number;
-  createdAt: Date;
-}>>> {
+): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      title: string
+      description: string | null
+      className: string | null
+      subjectName: string | null
+      teacherName: string | null
+      dueDate: Date | null
+      totalPoints: number | null
+      status: string
+      submissionCount: number
+      gradedCount: number
+      createdAt: Date
+    }>
+  >
+> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const sp = getAssignmentsSchema.parse(input ?? {});
+    const sp = getAssignmentsSchema.parse(input ?? {})
 
     if (!(db as any).assignment) {
-      return { success: true, data: [] };
+      return { success: true, data: [] }
     }
 
     // Build where clause with filters
     const where: any = {
       schoolId,
-      ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+      ...(sp.title
+        ? { title: { contains: sp.title, mode: "insensitive" } }
+        : {}),
       ...(sp.type ? { type: sp.type } : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
-    };
+    }
 
     // Fetch ALL assignments matching filters (no pagination for export)
     const assignments = await (db as any).assignment.findMany({
@@ -487,7 +506,7 @@ export async function getAssignmentsExportData(
         },
       },
       orderBy: [{ dueDate: "asc" }],
-    });
+    })
 
     // Transform data for export
     const exportData = assignments.map((assignment: any) => ({
@@ -503,17 +522,23 @@ export async function getAssignmentsExportData(
       totalPoints: assignment.totalPoints as number | null,
       status: assignment.status as string,
       submissionCount: assignment._count.assignmentSubmissions as number,
-      gradedCount: assignment.assignmentSubmissions?.filter((s: any) => s.gradedAt !== null).length || 0,
+      gradedCount:
+        assignment.assignmentSubmissions?.filter(
+          (s: any) => s.gradedAt !== null
+        ).length || 0,
       createdAt: assignment.createdAt as Date,
-    }));
+    }))
 
-    return { success: true, data: exportData };
+    return { success: true, data: exportData }
   } catch (error) {
-    console.error("[getAssignmentsExportData] Error:", error);
+    console.error("[getAssignmentsExportData] Error:", error)
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch assignment export data"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch assignment export data",
+    }
   }
 }

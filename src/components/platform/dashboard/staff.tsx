@@ -1,27 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
+import Link from "next/link"
 import { format } from "date-fns"
+import { ChevronRight } from "lucide-react"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { getQuickLookData, getStaffDashboardData } from "./actions"
-import { getWeatherData } from "./weather-actions"
+import { ActivityRings } from "./activity-rings"
+import { ChartSection } from "./chart-section"
+import { EmptyState } from "./empty-state"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { MetricCard } from "./metric-card"
+import { PerformanceGauge } from "./performance-gauge"
+import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { getTenantContext } from "@/lib/tenant-context"
-import { MetricCard } from "./metric-card"
-import { ActivityRings } from "./activity-rings"
-import { ProgressCard } from "./progress-card"
-import { EmptyState } from "./empty-state"
-import { WeeklyActivityChart } from "./weekly-chart"
-import { PerformanceGauge } from "./performance-gauge"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { InvoiceHistorySection } from "./invoice-history-section"
-import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
-import Link from "next/link"
-import { ChevronRight } from "lucide-react"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
+import { getWeatherData } from "./weather-actions"
+import { WeeklyActivityChart } from "./weekly-chart"
 
 interface StaffDashboardProps {
   user: {
@@ -96,7 +98,12 @@ export async function StaffDashboard({
       maintenance: mockMaintenanceRequests = [],
       inventory: mockInventoryAlerts = [],
       visitors: mockVisitorLog = [],
-      workflow: mockWorkflowStatus = { inQueue: 0, completedToday: 0, overdue: 0, totalTasks: 0 },
+      workflow: mockWorkflowStatus = {
+        inQueue: 0,
+        completedToday: 0,
+        overdue: 0,
+        totalTasks: 0,
+      },
       weeklyTaskCompletion = [],
     } = staffData || {}
 
@@ -104,9 +111,12 @@ export async function StaffDashboard({
     const productivityRings = [
       {
         label: "Tasks",
-        value: mockWorkflowStatus.totalTasks > 0
-          ? (mockWorkflowStatus.completedToday / mockWorkflowStatus.totalTasks) * 100
-          : 0,
+        value:
+          mockWorkflowStatus.totalTasks > 0
+            ? (mockWorkflowStatus.completedToday /
+                mockWorkflowStatus.totalTasks) *
+              100
+            : 0,
         color: "#22c55e",
         current: mockWorkflowStatus.completedToday,
         target: mockWorkflowStatus.totalTasks,
@@ -114,17 +124,26 @@ export async function StaffDashboard({
       },
       {
         label: "Requests",
-        value: mockPendingRequests.length > 0 ? Math.max(0, 100 - mockPendingRequests.length * 10) : 100,
+        value:
+          mockPendingRequests.length > 0
+            ? Math.max(0, 100 - mockPendingRequests.length * 10)
+            : 100,
         color: "#3b82f6",
-        current: mockPendingRequests.filter(r => r.urgency === "high").length,
+        current: mockPendingRequests.filter((r) => r.urgency === "high").length,
         target: mockPendingRequests.length,
         unit: "urgent",
       },
       {
         label: "Queue",
-        value: mockWorkflowStatus.inQueue > 0
-          ? Math.max(0, 100 - (mockWorkflowStatus.overdue / mockWorkflowStatus.inQueue) * 100)
-          : 100,
+        value:
+          mockWorkflowStatus.inQueue > 0
+            ? Math.max(
+                0,
+                100 -
+                  (mockWorkflowStatus.overdue / mockWorkflowStatus.inQueue) *
+                    100
+              )
+            : 100,
         color: mockWorkflowStatus.overdue > 2 ? "#ef4444" : "#f59e0b",
         current: mockWorkflowStatus.overdue,
         target: 0,
@@ -132,14 +151,20 @@ export async function StaffDashboard({
       },
     ]
 
-    const completedTasksToday = mockTodayTasks.filter(t => t.status === "completed").length
+    const completedTasksToday = mockTodayTasks.filter(
+      (t) => t.status === "completed"
+    ).length
 
     return (
       <div className="space-y-6">
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming role="STAFF" locale={locale} subdomain={school?.domain || ""} />
+          <Upcoming
+            role="STAFF"
+            locale={locale}
+            subdomain={school?.domain || ""}
+          />
           <Weather
             current={weatherData?.current}
             forecast={weatherData?.forecast}
@@ -148,13 +173,20 @@ export async function StaffDashboard({
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
+        <QuickLookSection
+          locale={locale}
+          subdomain={school?.domain || ""}
+          data={quickLookData}
+        />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("STAFF", school?.domain ?? undefined)}
+            actions={getQuickActionsByRole(
+              "STAFF",
+              school?.domain ?? undefined
+            )}
             locale={locale}
           />
         </section>
@@ -170,7 +202,7 @@ export async function StaffDashboard({
 
         {/* ============ STAFF-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             title="Today's Tasks"
             value={mockTodayTasks.length}
@@ -182,18 +214,28 @@ export async function StaffDashboard({
             title="Pending Requests"
             value={mockPendingRequests.length}
             iconName="FileText"
-            iconColor={mockPendingRequests.filter(r => r.urgency === "high").length > 2 ? "text-destructive" : "text-amber-500"}
+            iconColor={
+              mockPendingRequests.filter((r) => r.urgency === "high").length > 2
+                ? "text-destructive"
+                : "text-amber-500"
+            }
             href={`/${locale}/s/${school?.domain}/school`}
           />
           <MetricCard
             title="Visitors Today"
-            value={mockVisitorLog.filter(v => v.status === "checked-in").length}
+            value={
+              mockVisitorLog.filter((v) => v.status === "checked-in").length
+            }
             iconName="Users"
             iconColor="text-purple-500"
           />
           <MetricCard
             title="Alerts"
-            value={mockInventoryAlerts.length + mockMaintenanceRequests.filter(m => m.priority === "high").length}
+            value={
+              mockInventoryAlerts.length +
+              mockMaintenanceRequests.filter((m) => m.priority === "high")
+                .length
+            }
             iconName="Bell"
             iconColor="text-amber-500"
           />
@@ -205,20 +247,26 @@ export async function StaffDashboard({
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Today&apos;s Tasks</CardTitle>
-              <Badge variant="outline">{format(new Date(), "EEEE, MMM d")}</Badge>
+              <Badge variant="outline">
+                {format(new Date(), "EEEE, MMM d")}
+              </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
               {mockTodayTasks.length > 0 ? (
                 mockTodayTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`font-medium ${task.status === "completed" ? "text-muted-foreground line-through" : ""}`}
+                      >
                         {task.task}
                       </p>
-                      <p className="text-sm text-muted-foreground">Due: {task.dueTime}</p>
+                      <p className="text-muted-foreground text-sm">
+                        Due: {task.dueTime}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge
@@ -240,7 +288,11 @@ export async function StaffDashboard({
                               ? "secondary"
                               : "outline"
                         }
-                        className={task.status === "completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : ""}
+                        className={
+                          task.status === "completed"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                            : ""
+                        }
                       >
                         {task.status.replace("-", " ")}
                       </Badge>
@@ -258,7 +310,10 @@ export async function StaffDashboard({
           </Card>
 
           {/* Productivity Rings */}
-          <ActivityRings activities={productivityRings} title="Daily Productivity" />
+          <ActivityRings
+            activities={productivityRings}
+            title="Daily Productivity"
+          />
         </div>
 
         {/* Secondary Content Grid */}
@@ -273,7 +328,11 @@ export async function StaffDashboard({
 
           {/* Workflow Efficiency Gauge */}
           <PerformanceGauge
-            value={Math.round((mockWorkflowStatus.completedToday / mockWorkflowStatus.totalTasks) * 100)}
+            value={Math.round(
+              (mockWorkflowStatus.completedToday /
+                mockWorkflowStatus.totalTasks) *
+                100
+            )}
             label="Efficiency"
             description="Daily task completion rate"
             maxValue={100}
@@ -287,8 +346,16 @@ export async function StaffDashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Pending Requests</CardTitle>
-              <Badge variant={mockPendingRequests.filter(r => r.urgency === "high").length > 0 ? "destructive" : "secondary"}>
-                {mockPendingRequests.filter(r => r.urgency === "high").length} urgent
+              <Badge
+                variant={
+                  mockPendingRequests.filter((r) => r.urgency === "high")
+                    .length > 0
+                    ? "destructive"
+                    : "secondary"
+                }
+              >
+                {mockPendingRequests.filter((r) => r.urgency === "high").length}{" "}
+                urgent
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -296,11 +363,11 @@ export async function StaffDashboard({
                 mockPendingRequests.slice(0, 4).map((request) => (
                   <div
                     key={request.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{request.type}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {request.requester} • {request.department}
                       </p>
                     </div>
@@ -316,8 +383,9 @@ export async function StaffDashboard({
                       >
                         {request.urgency}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {request.daysOpen} day{request.daysOpen !== 1 ? "s" : ""} open
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {request.daysOpen} day
+                        {request.daysOpen !== 1 ? "s" : ""} open
                       </p>
                     </div>
                   </div>
@@ -338,7 +406,7 @@ export async function StaffDashboard({
               <CardTitle className="text-base">Pending Approvals</CardTitle>
               <Link
                 href={`/${locale}/s/${school?.domain}/school`}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
+                className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4" />
               </Link>
@@ -348,17 +416,26 @@ export async function StaffDashboard({
                 mockPendingApprovals.map((approval) => (
                   <div
                     key={approval.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{approval.item}</p>
-                      <p className="text-sm text-muted-foreground">{approval.requester}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {approval.requester}
+                      </p>
                     </div>
                     <div className="text-right">
                       <Badge
-                        variant={approval.daysLeft <= 2 ? "destructive" : approval.daysLeft <= 5 ? "secondary" : "outline"}
+                        variant={
+                          approval.daysLeft <= 2
+                            ? "destructive"
+                            : approval.daysLeft <= 5
+                              ? "secondary"
+                              : "outline"
+                        }
                       >
-                        {approval.daysLeft} day{approval.daysLeft !== 1 ? "s" : ""} left
+                        {approval.daysLeft} day
+                        {approval.daysLeft !== 1 ? "s" : ""} left
                       </Badge>
                     </div>
                   </div>
@@ -380,8 +457,19 @@ export async function StaffDashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Maintenance</CardTitle>
-              <Badge variant={mockMaintenanceRequests.filter(m => m.priority === "high").length > 0 ? "destructive" : "secondary"}>
-                {mockMaintenanceRequests.filter(m => m.priority === "high").length} urgent
+              <Badge
+                variant={
+                  mockMaintenanceRequests.filter((m) => m.priority === "high")
+                    .length > 0
+                    ? "destructive"
+                    : "secondary"
+                }
+              >
+                {
+                  mockMaintenanceRequests.filter((m) => m.priority === "high")
+                    .length
+                }{" "}
+                urgent
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -389,11 +477,13 @@ export async function StaffDashboard({
                 mockMaintenanceRequests.map((request) => (
                   <div
                     key={request.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{request.issue}</p>
-                      <p className="text-sm text-muted-foreground">{request.assignedTo}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{request.issue}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {request.assignedTo}
+                      </p>
                     </div>
                     <Badge
                       variant={
@@ -422,7 +512,13 @@ export async function StaffDashboard({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Inventory Alerts</CardTitle>
-              <Badge variant={mockInventoryAlerts.filter(i => i.quantity === 0).length > 0 ? "destructive" : "secondary"}>
+              <Badge
+                variant={
+                  mockInventoryAlerts.filter((i) => i.quantity === 0).length > 0
+                    ? "destructive"
+                    : "secondary"
+                }
+              >
                 {mockInventoryAlerts.length} alerts
               </Badge>
             </CardHeader>
@@ -431,15 +527,19 @@ export async function StaffDashboard({
                 mockInventoryAlerts.map((alert) => (
                   <div
                     key={alert.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{alert.item}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {alert.quantity} in stock (min: {alert.threshold})
                       </p>
                     </div>
-                    <Badge variant={alert.quantity === 0 ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={
+                        alert.quantity === 0 ? "destructive" : "secondary"
+                      }
+                    >
                       {alert.status}
                     </Badge>
                   </div>
@@ -459,7 +559,8 @@ export async function StaffDashboard({
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Visitor Log</CardTitle>
               <Badge variant="outline">
-                {mockVisitorLog.filter(v => v.status === "checked-in").length} on-site
+                {mockVisitorLog.filter((v) => v.status === "checked-in").length}{" "}
+                on-site
               </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -467,17 +568,27 @@ export async function StaffDashboard({
                 mockVisitorLog.map((visitor) => (
                   <div
                     key={visitor.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{visitor.visitor}</p>
-                      <p className="text-sm text-muted-foreground">{visitor.purpose}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {visitor.purpose}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <Badge variant={visitor.status === "checked-in" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          visitor.status === "checked-in"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
                         {visitor.status.replace("-", " ")}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">{visitor.time}</p>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {visitor.time}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -499,29 +610,38 @@ export async function StaffDashboard({
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-4">
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {mockWorkflowStatus.inQueue}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">In Queue</p>
+                <p className="text-muted-foreground mt-1 text-sm">In Queue</p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                   {mockWorkflowStatus.completedToday}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Completed Today</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Completed Today
+                </p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
-                <p className="text-3xl font-bold text-destructive">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <p className="text-destructive text-3xl font-bold">
                   {mockWorkflowStatus.overdue}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Overdue</p>
+                <p className="text-muted-foreground mt-1 text-sm">Overdue</p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
-                <p className="text-3xl font-bold text-primary">
-                  {Math.round((mockWorkflowStatus.completedToday / mockWorkflowStatus.totalTasks) * 100)}%
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <p className="text-primary text-3xl font-bold">
+                  {Math.round(
+                    (mockWorkflowStatus.completedToday /
+                      mockWorkflowStatus.totalTasks) *
+                      100
+                  )}
+                  %
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Completion Rate</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Completion Rate
+                </p>
               </div>
             </div>
           </CardContent>
@@ -539,7 +659,10 @@ export async function StaffDashboard({
           />
           <ProgressCard
             title="Request Processing"
-            current={mockPendingRequests.length - mockPendingRequests.filter(r => r.urgency === "high").length}
+            current={
+              mockPendingRequests.length -
+              mockPendingRequests.filter((r) => r.urgency === "high").length
+            }
             total={mockPendingRequests.length}
             unit="handled"
             iconName="FileText"
@@ -559,8 +682,10 @@ export async function StaffDashboard({
   } catch (renderError) {
     // Catch any rendering errors and log them
     console.error("[StaffDashboard] Rendering error:", renderError)
-    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
-    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    const errorMessage =
+      renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack =
+      renderError instanceof Error ? renderError.stack : undefined
     console.error("[StaffDashboard] Error message:", errorMessage)
     console.error("[StaffDashboard] Error stack:", errorStack)
     return (
@@ -568,8 +693,12 @@ export async function StaffDashboard({
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4">Dashboard Rendering Error</h3>
-            <p className="text-muted-foreground mb-2">An error occurred while rendering the dashboard.</p>
-            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">{errorMessage}</pre>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
+              {errorMessage}
+            </pre>
           </CardContent>
         </Card>
       </div>

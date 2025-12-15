@@ -1,6 +1,8 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import * as React from "react"
+import type { Task } from "@prisma/client"
+import type { ColumnDef } from "@tanstack/react-table"
 import {
   ArrowUpDown,
   CalendarIcon,
@@ -8,13 +10,12 @@ import {
   Clock,
   Ellipsis,
   Text,
-} from "lucide-react";
-import * as React from "react";
-import { toast } from "sonner";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,22 +28,22 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type { Task } from "@prisma/client";
-import { formatDate } from "@/components/table/lib/format";
-import { getErrorMessage } from "@/components/table/lib/handle-error";
-import type { DataTableRowAction } from "@/components/table/types";
+} from "@/components/ui/dropdown-menu"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+import { formatDate } from "@/components/table/lib/format"
+import { getErrorMessage } from "@/components/table/lib/handle-error"
+import type { DataTableRowAction } from "@/components/table/types"
 
-import { updateTask } from "../_lib/actions";
-import { getPriorityIcon, getStatusIcon } from "../_lib/utils";
+import { updateTask } from "../_lib/actions"
+import { getPriorityIcon, getStatusIcon } from "../_lib/utils"
 
 interface GetTasksTableColumnsProps {
-  statusCounts: Record<Task["status"], number>;
-  priorityCounts: Record<Task["priority"], number>;
-  estimatedHoursRange: { min: number; max: number };
+  statusCounts: Record<Task["status"], number>
+  priorityCounts: Record<Task["priority"], number>
+  estimatedHoursRange: { min: number; max: number }
   setRowAction: React.Dispatch<
     React.SetStateAction<DataTableRowAction<Task> | null>
-  >;
+  >
 }
 
 export function getTasksTableColumns({
@@ -94,9 +95,9 @@ export function getTasksTableColumns({
         <DataTableColumnHeader column={column} title="Title" />
       ),
       cell: ({ row }) => {
-        const label = (["bug", "feature", "enhancement", "documentation"] as const).find(
-          (label) => label === row.original.label,
-        );
+        const label = (
+          ["bug", "feature", "enhancement", "documentation"] as const
+        ).find((label) => label === row.original.label)
 
         return (
           <div className="flex items-center gap-2">
@@ -105,7 +106,7 @@ export function getTasksTableColumns({
               {row.getValue("title")}
             </span>
           </div>
-        );
+        )
       },
       meta: {
         label: "Title",
@@ -122,30 +123,32 @@ export function getTasksTableColumns({
         <DataTableColumnHeader column={column} title="Status" />
       ),
       cell: ({ cell }) => {
-        const status = (["todo", "in_progress", "done", "canceled"] as const).find(
-          (status) => status === cell.getValue<Task["status"]>(),
-        );
+        const status = (
+          ["todo", "in_progress", "done", "canceled"] as const
+        ).find((status) => status === cell.getValue<Task["status"]>())
 
-        if (!status) return null;
+        if (!status) return null
 
-        const Icon = getStatusIcon(status);
+        const Icon = getStatusIcon(status)
 
         return (
           <Badge variant="outline" className="py-1 [&>svg]:size-3.5">
             <Icon />
             <span className="capitalize">{status}</span>
           </Badge>
-        );
+        )
       },
       meta: {
         label: "Status",
         variant: "multiSelect",
-        options: (["todo", "in_progress", "done", "canceled"] as const).map((status) => ({
-          label: status.charAt(0).toUpperCase() + status.slice(1),
-          value: status,
-          count: statusCounts[status],
-          icon: getStatusIcon(status),
-        })),
+        options: (["todo", "in_progress", "done", "canceled"] as const).map(
+          (status) => ({
+            label: status.charAt(0).toUpperCase() + status.slice(1),
+            value: status,
+            count: statusCounts[status],
+            icon: getStatusIcon(status),
+          })
+        ),
         icon: CircleDashed,
       },
       enableColumnFilter: true,
@@ -158,19 +161,19 @@ export function getTasksTableColumns({
       ),
       cell: ({ cell }) => {
         const priority = (["low", "medium", "high"] as const).find(
-          (priority) => priority === cell.getValue<Task["priority"]>(),
-        );
+          (priority) => priority === cell.getValue<Task["priority"]>()
+        )
 
-        if (!priority) return null;
+        if (!priority) return null
 
-        const Icon = getPriorityIcon(priority);
+        const Icon = getPriorityIcon(priority)
 
         return (
           <Badge variant="outline" className="py-1 [&>svg]:size-3.5">
             <Icon />
             <span className="capitalize">{priority}</span>
           </Badge>
-        );
+        )
       },
       meta: {
         label: "Priority",
@@ -192,8 +195,8 @@ export function getTasksTableColumns({
         <DataTableColumnHeader column={column} title="Est. Hours" />
       ),
       cell: ({ cell }) => {
-        const estimatedHours = cell.getValue<number>();
-        return <div className="w-20 text-right">{estimatedHours}</div>;
+        const estimatedHours = cell.getValue<number>()
+        return <div className="w-20 text-right">{estimatedHours}</div>
       },
       meta: {
         label: "Est. Hours",
@@ -221,7 +224,7 @@ export function getTasksTableColumns({
     {
       id: "actions",
       cell: function Cell({ row }) {
-        const [isUpdatePending, startUpdateTransition] = React.useTransition();
+        const [isUpdatePending, startUpdateTransition] = React.useTransition()
 
         return (
           <DropdownMenu>
@@ -229,7 +232,7 @@ export function getTasksTableColumns({
               <Button
                 aria-label="Open menu"
                 variant="ghost"
-                className="flex size-8 p-0 data-[state=open]:bg-muted"
+                className="data-[state=open]:bg-muted flex size-8 p-0"
               >
                 <Ellipsis className="size-4" aria-hidden="true" />
               </Button>
@@ -256,12 +259,19 @@ export function getTasksTableColumns({
                             loading: "Updating...",
                             success: "Label updated",
                             error: (err) => getErrorMessage(err),
-                          },
-                        );
-                      });
+                          }
+                        )
+                      })
                     }}
                   >
-                    {(["bug", "feature", "enhancement", "documentation"] as const).map((label) => (
+                    {(
+                      [
+                        "bug",
+                        "feature",
+                        "enhancement",
+                        "documentation",
+                      ] as const
+                    ).map((label) => (
                       <DropdownMenuRadioItem
                         key={label}
                         value={label}
@@ -283,9 +293,9 @@ export function getTasksTableColumns({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        );
+        )
       },
       size: 40,
     },
-  ];
+  ]
 }

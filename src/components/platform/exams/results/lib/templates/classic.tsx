@@ -1,19 +1,20 @@
 // Classic PDF Template - Traditional Report Card Style
 
-import React from "react";
+import React from "react"
 import {
   Document,
+  Image,
   Page,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  Image,
-} from "@react-pdf/renderer";
-import type { PDFResultData } from "../../types";
-import { formatPDFDate, formatPDFNumber } from "../pdf-generator";
+} from "@react-pdf/renderer"
+
+import type { PDFResultData } from "../../types"
+import { formatPDFDate, formatPDFNumber } from "../pdf-generator"
 
 interface ClassicTemplateProps {
-  data: PDFResultData;
+  data: PDFResultData
 }
 
 // Create styles for A4 page (595.28 x 841.89 points)
@@ -249,19 +250,17 @@ const styles = StyleSheet.create({
     color: "#78350F",
     lineHeight: 1.5,
   },
-});
+})
 
 export function ClassicTemplate({ data }: ClassicTemplateProps) {
-  const { student, exam, school, analytics, metadata } = data;
+  const { student, exam, school, analytics, metadata } = data
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header with School Info */}
         <View style={styles.header}>
-          {school.logo && (
-            <Image src={school.logo} style={styles.schoolLogo} />
-          )}
+          {school.logo && <Image src={school.logo} style={styles.schoolLogo} />}
           <Text style={styles.schoolName}>{school.name}</Text>
           {school.address && (
             <Text style={styles.schoolInfo}>{school.address}</Text>
@@ -379,16 +378,30 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
             <Text style={styles.questionTitle}>Question-wise Performance</Text>
             <View style={styles.questionTable}>
               <View style={styles.questionTableHeader}>
-                <Text style={[styles.questionTableCellHeader, { width: "10%" }]}>
+                <Text
+                  style={[styles.questionTableCellHeader, { width: "10%" }]}
+                >
                   Q.No
                 </Text>
-                <Text style={[styles.questionTableCellHeader, { width: "50%" }]}>
+                <Text
+                  style={[styles.questionTableCellHeader, { width: "50%" }]}
+                >
                   Question Type
                 </Text>
-                <Text style={[styles.questionTableCellHeader, { width: "20%", textAlign: "right" }]}>
+                <Text
+                  style={[
+                    styles.questionTableCellHeader,
+                    { width: "20%", textAlign: "right" },
+                  ]}
+                >
                   Max Points
                 </Text>
-                <Text style={[styles.questionTableCellHeader, { width: "20%", textAlign: "right" }]}>
+                <Text
+                  style={[
+                    styles.questionTableCellHeader,
+                    { width: "20%", textAlign: "right" },
+                  ]}
+                >
                   Obtained
                 </Text>
               </View>
@@ -401,10 +414,20 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
                   <Text style={[styles.questionTableCell, { width: "50%" }]}>
                     {q.questionType}
                   </Text>
-                  <Text style={[styles.questionTableCell, { width: "20%", textAlign: "right" }]}>
+                  <Text
+                    style={[
+                      styles.questionTableCell,
+                      { width: "20%", textAlign: "right" },
+                    ]}
+                  >
                     {formatPDFNumber(q.maxPoints, "en")}
                   </Text>
-                  <Text style={[styles.questionTableCell, { width: "20%", textAlign: "right" }]}>
+                  <Text
+                    style={[
+                      styles.questionTableCell,
+                      { width: "20%", textAlign: "right" },
+                    ]}
+                  >
                     {formatPDFNumber(q.pointsAwarded, "en")}
                   </Text>
                 </View>
@@ -442,7 +465,7 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
 // Helper function
@@ -456,7 +479,7 @@ function getGradeDescription(grade: string): string {
     C: "Satisfactory",
     D: "Pass",
     F: "Fail",
-  };
+  }
 
-  return descriptions[grade] || "";
+  return descriptions[grade] || ""
 }

@@ -1,29 +1,30 @@
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Pencil, Calendar, Clock, FileText, Users } from "lucide-react";
-import { notFound } from "next/navigation";
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Calendar, Clock, FileText, Pencil, Users } from "lucide-react"
 
-export const metadata = { title: "Exam Details" };
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+export const metadata = { title: "Exam Details" }
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string; id: string }>;
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function Page({ params }: Props) {
-  const { lang, id } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return notFound();
+    return notFound()
   }
 
   const exam = await db.exam.findUnique({
@@ -37,13 +38,13 @@ export default async function Page({ params }: Props) {
         },
       },
     },
-  });
+  })
 
   if (!exam) {
-    return notFound();
+    return notFound()
   }
 
-  const d = dictionary?.school?.exams;
+  const d = dictionary?.school?.exams
 
   return (
     <PageContainer>
@@ -64,7 +65,7 @@ export default async function Page({ params }: Props) {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Calendar className="h-4 w-4" />
                 {d?.examDate || "Exam Date"}
               </CardTitle>
@@ -78,7 +79,7 @@ export default async function Page({ params }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Clock className="h-4 w-4" />
                 {d?.time || "Time"}
               </CardTitle>
@@ -87,7 +88,7 @@ export default async function Page({ params }: Props) {
               <p className="text-2xl font-bold">
                 {exam.startTime} - {exam.endTime}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {exam.duration} {d?.minutes || "minutes"}
               </p>
             </CardContent>
@@ -95,14 +96,14 @@ export default async function Page({ params }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <FileText className="h-4 w-4" />
                 {d?.marks || "Marks"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{exam.totalMarks}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {d?.passing || "Passing"}: {exam.passingMarks}
               </p>
             </CardContent>
@@ -110,7 +111,7 @@ export default async function Page({ params }: Props) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Users className="h-4 w-4" />
                 {d?.class || "Class"}
               </CardTitle>
@@ -127,7 +128,9 @@ export default async function Page({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">{exam.subject?.subjectName}</p>
+              <p className="text-lg font-semibold">
+                {exam.subject?.subjectName}
+              </p>
             </CardContent>
           </Card>
 
@@ -138,10 +141,12 @@ export default async function Page({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge variant={exam.status === "COMPLETED" ? "default" : "secondary"}>
+              <Badge
+                variant={exam.status === "COMPLETED" ? "default" : "secondary"}
+              >
                 {exam.status}
               </Badge>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-sm">
                 {exam.examType}
               </p>
             </CardContent>
@@ -164,12 +169,12 @@ export default async function Page({ params }: Props) {
             <CardTitle>{d?.statistics || "Statistics"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {d?.totalResults || "Total Results"}: {exam._count.examResults}
             </p>
           </CardContent>
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

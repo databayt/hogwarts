@@ -1,17 +1,23 @@
-"use client";
+"use client"
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useTransition } from "react"
+import Link from "next/link"
+import { useParams, useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ArrowLeft, Loader2, PlusIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { tryCatch } from "@/hooks/try-catch"
+import { useConfetti } from "@/hooks/use-confetti"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, Loader2, PlusIcon } from "lucide-react";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+} from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -19,29 +25,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { RichTextEditor } from "@/components/stream/shared/rich-text-editor";
-import { useTransition } from "react";
-import { tryCatch } from "@/hooks/try-catch";
-import { toast } from "sonner";
-import { useRouter, useParams } from "next/navigation";
-import { useConfetti } from "@/hooks/use-confetti";
-import { createCourseSchema, type CreateCourseInput } from "./validation";
-import { createCourseAction } from "./actions";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { RichTextEditor } from "@/components/stream/shared/rich-text-editor"
+
+import { createCourseAction } from "./actions"
+import { createCourseSchema, type CreateCourseInput } from "./validation"
 
 interface Props {
-  dictionary: any;
-  lang: string;
-  schoolId: string | null;
-  userId: string;
+  dictionary: any
+  lang: string
+  schoolId: string | null
+  userId: string
 }
 
-export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: Props) {
-  const [pending, startTransition] = useTransition();
-  const router = useRouter();
-  const { subdomain } = useParams<{ subdomain: string }>();
-  const triggerConfetti = useConfetti();
+export function StreamCourseCreateForm({
+  dictionary,
+  lang,
+  schoolId,
+  userId,
+}: Props) {
+  const [pending, startTransition] = useTransition()
+  const router = useRouter()
+  const { subdomain } = useParams<{ subdomain: string }>()
+  const triggerConfetti = useConfetti()
 
   const form = useForm<CreateCourseInput>({
     resolver: zodResolver(createCourseSchema),
@@ -52,34 +59,34 @@ export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: P
       price: undefined,
       imageUrl: undefined,
     },
-  });
+  })
 
   function onSubmit(values: CreateCourseInput) {
     startTransition(async () => {
-      const formData = new FormData();
-      formData.append("title", values.title);
-      if (values.description) formData.append("description", values.description);
-      if (values.categoryId) formData.append("categoryId", values.categoryId);
+      const formData = new FormData()
+      formData.append("title", values.title)
+      if (values.description) formData.append("description", values.description)
+      if (values.categoryId) formData.append("categoryId", values.categoryId)
       if (values.price !== undefined && values.price !== null) {
-        formData.append("price", values.price.toString());
+        formData.append("price", values.price.toString())
       }
 
       const { data: result, error } = await tryCatch(
         createCourseAction(subdomain, formData)
-      );
+      )
 
       if (error) {
-        toast.error(error.message || "Failed to create course");
-        return;
+        toast.error(error.message || "Failed to create course")
+        return
       }
 
       if (result?.success) {
-        toast.success("Course created successfully!");
-        triggerConfetti();
-        form.reset();
-        router.push(`/stream/admin/courses`);
+        toast.success("Course created successfully!")
+        triggerConfetti()
+        form.reset()
+        router.push(`/stream/admin/courses`)
       }
-    });
+    })
   }
 
   return (
@@ -153,8 +160,10 @@ export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: P
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e) => {
-                          const val = e.target.value;
-                          field.onChange(val === "" ? undefined : parseFloat(val));
+                          const val = e.target.value
+                          field.onChange(
+                            val === "" ? undefined : parseFloat(val)
+                          )
                         }}
                       />
                     </FormControl>
@@ -167,7 +176,7 @@ export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: P
                 {pending ? (
                   <>
                     Creating...
-                    <Loader2 className="animate-spin ml-1 size-4" />
+                    <Loader2 className="ml-1 size-4 animate-spin" />
                   </>
                 ) : (
                   <>
@@ -180,5 +189,5 @@ export function StreamCourseCreateForm({ dictionary, lang, schoolId, userId }: P
         </CardContent>
       </Card>
     </>
-  );
+  )
 }

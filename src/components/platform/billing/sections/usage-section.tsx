@@ -1,20 +1,23 @@
-"use client";
+"use client"
 
-import { UsageBasedPricing, type UsageBasedPricingProps } from "@/components/billingsdk/usage-based-pricing";
-import { DetailedUsageTable } from "@/components/billingsdk/detailed-usage-table";
-import type { UsageResource } from "@/lib/billingsdk-config";
+import type { UsageResource } from "@/lib/billingsdk-config"
+import { DetailedUsageTable } from "@/components/billingsdk/detailed-usage-table"
+import {
+  UsageBasedPricing,
+  type UsageBasedPricingProps,
+} from "@/components/billingsdk/usage-based-pricing"
 
 interface UsageSectionProps {
-  resources: UsageResource[];
+  resources: UsageResource[]
   // Usage-based pricing props (optional - only if plan supports usage-based billing)
-  showUsageSlider?: boolean;
-  usageValue?: number;
-  onUsageChange?: (value: number) => void;
-  onUsageChangeEnd?: (value: number) => void;
-  minCredits?: number;
-  maxCredits?: number;
-  basePrice?: number;
-  includedCredits?: number;
+  showUsageSlider?: boolean
+  usageValue?: number
+  onUsageChange?: (value: number) => void
+  onUsageChangeEnd?: (value: number) => void
+  minCredits?: number
+  maxCredits?: number
+  basePrice?: number
+  includedCredits?: number
 }
 
 export function UsageSection({
@@ -60,5 +63,5 @@ export function UsageSection({
         />
       )}
     </section>
-  );
+  )
 }

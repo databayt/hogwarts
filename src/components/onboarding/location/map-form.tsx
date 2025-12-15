@@ -1,18 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { MapPin } from "lucide-react";
-import { type LocationFormData } from "./validation";
+import { useEffect, useState } from "react"
+import { MapPin } from "lucide-react"
+
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+
+import { type LocationFormData } from "./validation"
 
 interface MapFormProps {
-  initialData?: Partial<LocationFormData>;
-  onLocationChange: (data: LocationFormData) => void;
-  dictionary?: any;
+  initialData?: Partial<LocationFormData>
+  onLocationChange: (data: LocationFormData) => void
+  dictionary?: any
 }
 
-export function MapForm({ initialData, onLocationChange, dictionary }: MapFormProps) {
+export function MapForm({
+  initialData,
+  onLocationChange,
+  dictionary,
+}: MapFormProps) {
   const [locationData, setLocationData] = useState<LocationFormData>({
     address: initialData?.address || "",
     city: initialData?.city || "",
@@ -21,29 +27,29 @@ export function MapForm({ initialData, onLocationChange, dictionary }: MapFormPr
     postalCode: "", // Always empty for database compatibility
     latitude: 0, // Always 0 for database compatibility
     longitude: 0, // Always 0 for database compatibility
-  });
+  })
 
   // Update parent component when location data changes
   useEffect(() => {
-    onLocationChange(locationData);
-  }, [locationData, onLocationChange]);
+    onLocationChange(locationData)
+  }, [locationData, onLocationChange])
 
   const handleInputChange = (field: keyof LocationFormData, value: string) => {
-    setLocationData(prev => ({
+    setLocationData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
   return (
-    <Card className="p-0 bg-transparent border-0 shadow-none">
+    <Card className="border-0 bg-transparent p-0 shadow-none">
       <div className="grid gap-4">
         {/* Address */}
         <Input
           type="text"
           placeholder="Street Address (e.g., 123 Main Street)"
           value={locationData.address}
-          onChange={(e) => handleInputChange('address', e.target.value)}
+          onChange={(e) => handleInputChange("address", e.target.value)}
           className="w-full"
         />
 
@@ -53,14 +59,14 @@ export function MapForm({ initialData, onLocationChange, dictionary }: MapFormPr
             type="text"
             placeholder="City (e.g., New York)"
             value={locationData.city}
-            onChange={(e) => handleInputChange('city', e.target.value)}
+            onChange={(e) => handleInputChange("city", e.target.value)}
           />
 
           <Input
             type="text"
             placeholder="State/Province (e.g., NY)"
             value={locationData.state}
-            onChange={(e) => handleInputChange('state', e.target.value)}
+            onChange={(e) => handleInputChange("state", e.target.value)}
           />
         </div>
 
@@ -69,10 +75,10 @@ export function MapForm({ initialData, onLocationChange, dictionary }: MapFormPr
           type="text"
           placeholder="Country (e.g., United States)"
           value={locationData.country}
-          onChange={(e) => handleInputChange('country', e.target.value)}
+          onChange={(e) => handleInputChange("country", e.target.value)}
           className="w-full"
         />
       </div>
     </Card>
-  );
+  )
 }

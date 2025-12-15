@@ -86,7 +86,7 @@ export function SkeletonStatCard() {
       </CardHeader>
       <CardContent>
         <Skeleton className="h-7 w-32" />
-        <Skeleton className="h-3 w-24 mt-1" />
+        <Skeleton className="mt-1 h-3 w-24" />
       </CardContent>
     </Card>
   )

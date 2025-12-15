@@ -1,44 +1,49 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Field Components
-import {
-  ShadcnFieldDemo,
-  ShadcnFieldCheckbox,
-  ShadcnFieldChoiceCard,
-  ShadcnFieldSlider,
-  ShadcnFieldHear,
-} from "./index"
 
 // Input Groups
-import {
-  ShadcnInputGroupDemo,
-  ShadcnInputGroupButton,
-  ShadcnInputGroupTextarea,
-  ShadcnEmptyInputGroup,
-} from "./index"
 
 // Button Groups
+
+// Display Components
+
+// Feedback Components
+
+// Settings Components
+
+// Forms
 import {
+  ShadcnAppearanceSettings,
   ShadcnButtonGroupDemo,
   ShadcnButtonGroupInputGroup,
   ShadcnButtonGroupNested,
   ShadcnButtonGroupPopover,
+  ShadcnEmptyAvatarGroup,
+  ShadcnEmptyInputGroup,
+  ShadcnFieldCheckbox,
+  ShadcnFieldChoiceCard,
+  ShadcnFieldDemo,
+  ShadcnFieldHear,
+  ShadcnFieldSlider,
+  ShadcnInputGroupButton,
+  ShadcnInputGroupDemo,
+  ShadcnInputGroupTextarea,
+  ShadcnItemAvatar,
+  ShadcnItemDemo,
+  ShadcnNotionPromptForm,
+  ShadcnSpinnerBadge,
+  ShadcnSpinnerEmpty,
 } from "./index"
-
-// Display Components
-import { ShadcnItemDemo, ShadcnItemAvatar, ShadcnEmptyAvatarGroup } from "./index"
-
-// Feedback Components
-import { ShadcnSpinnerBadge, ShadcnSpinnerEmpty } from "./index"
-
-// Settings Components
-import { ShadcnAppearanceSettings } from "./index"
-
-// Forms
-import { ShadcnNotionPromptForm } from "./index"
 
 /**
  * ShadcnShowcase - Comprehensive shadcn/ui v4 component showcase
@@ -65,8 +70,9 @@ export function ShadcnShowcase() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">shadcn/ui v4 Component Showcase</h1>
         <p className="text-muted-foreground">
-          21 components from the official shadcn/ui v4 repository, adapted to project
-          standards with semantic tokens, TypeScript strict mode, and full accessibility.
+          21 components from the official shadcn/ui v4 repository, adapted to
+          project standards with semantic tokens, TypeScript strict mode, and
+          full accessibility.
         </p>
       </div>
 
@@ -87,7 +93,8 @@ export function ShadcnShowcase() {
             <CardHeader>
               <CardTitle>Field Components</CardTitle>
               <CardDescription>
-                Form field wrappers demonstrating various input patterns and field layouts
+                Form field wrappers demonstrating various input patterns and
+                field layouts
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -102,7 +109,9 @@ export function ShadcnShowcase() {
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">Choice Card (Radio Group)</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Choice Card (Radio Group)
+                </h3>
                 <ShadcnFieldChoiceCard />
               </div>
 
@@ -130,17 +139,23 @@ export function ShadcnShowcase() {
             </CardHeader>
             <CardContent className="space-y-8">
               <div>
-                <h3 className="mb-4 text-lg font-medium">Input Group Patterns</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Input Group Patterns
+                </h3>
                 <ShadcnInputGroupDemo />
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">Input with Action Buttons</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Input with Action Buttons
+                </h3>
                 <ShadcnInputGroupButton />
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">Code Editor Interface</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Code Editor Interface
+                </h3>
                 <ShadcnInputGroupTextarea />
               </div>
 
@@ -168,17 +183,23 @@ export function ShadcnShowcase() {
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">Messaging Interface</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Messaging Interface
+                </h3>
                 <ShadcnButtonGroupInputGroup />
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">Nested Button Groups</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Nested Button Groups
+                </h3>
                 <ShadcnButtonGroupNested />
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">AI Assistant Interface</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  AI Assistant Interface
+                </h3>
                 <ShadcnButtonGroupPopover />
               </div>
             </CardContent>
@@ -191,7 +212,8 @@ export function ShadcnShowcase() {
             <CardHeader>
               <CardTitle>Display Components</CardTitle>
               <CardDescription>
-                List items, avatars, and display patterns for content presentation
+                List items, avatars, and display patterns for content
+                presentation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -201,7 +223,9 @@ export function ShadcnShowcase() {
               </div>
 
               <div>
-                <h3 className="mb-4 text-lg font-medium">User List with Avatars</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  User List with Avatars
+                </h3>
                 <ShadcnItemAvatar />
               </div>
 
@@ -247,7 +271,9 @@ export function ShadcnShowcase() {
             </CardHeader>
             <CardContent className="space-y-8">
               <div>
-                <h3 className="mb-4 text-lg font-medium">Compute Environment Settings</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Compute Environment Settings
+                </h3>
                 <ShadcnAppearanceSettings />
               </div>
             </CardContent>
@@ -265,7 +291,9 @@ export function ShadcnShowcase() {
             </CardHeader>
             <CardContent className="space-y-8">
               <div>
-                <h3 className="mb-4 text-lg font-medium">Notion-Style AI Prompt</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Notion-Style AI Prompt
+                </h3>
                 <ShadcnNotionPromptForm />
               </div>
             </CardContent>

@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -125,13 +125,11 @@ export function countTransactionCategories(
     totalCount++
   })
 
-  const aggregatedCategories = Object.keys(categoryCounts).map(
-    (category) => ({
-      name: category,
-      count: categoryCounts[category],
-      totalCount,
-    })
-  )
+  const aggregatedCategories = Object.keys(categoryCounts).map((category) => ({
+    name: category,
+    count: categoryCounts[category],
+    totalCount,
+  }))
 
   aggregatedCategories.sort((a, b) => b.count - a.count)
 

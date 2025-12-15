@@ -1,51 +1,77 @@
 // @ts-nocheck
 // TODO: Fix prop interface mismatches (36+ errors) - see admin-lab.tsx for details
-'use client'
+"use client"
 
 import * as React from "react"
-import { Users, GraduationCap, BookOpen, Calendar, TrendingUp, TrendingDown, FileText, Bell, Clock, CircleCheck, CircleAlert, DollarSign, Award, Target, Activity, Zap, Heart, Star, Mail, Phone, MapPin, Settings, Sun, Cloud, CloudRain } from "lucide-react"
+import {
+  Activity,
+  Award,
+  Bell,
+  BookOpen,
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Cloud,
+  CloudRain,
+  DollarSign,
+  FileText,
+  GraduationCap,
+  Heart,
+  Mail,
+  MapPin,
+  Phone,
+  Settings,
+  Star,
+  Sun,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react"
 
-// Import all atom lab cards
-import { StatCard } from "@/components/atom/lab/stat-card"
-import { ProgressCard } from "@/components/atom/lab/progress-card"
-import { ListCard } from "@/components/atom/lab/list-card"
-import { MultiStatCard } from "@/components/atom/lab/multi-stat-card"
-import { ChartCard } from "@/components/atom/lab/chart-card"
-import { HeroStatCard } from "@/components/atom/lab/hero-stat-card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ActionCard } from "@/components/atom/lab/action-card"
-import { ComparisonCard } from "@/components/atom/lab/comparison-card"
-import { MediaCard } from "@/components/atom/lab/media-card"
-import { CollapsibleCard } from "@/components/atom/lab/collapsible-card"
-import { EmptyStateCard } from "@/components/atom/lab/empty-state-card"
-import { SkeletonCard } from "@/components/atom/lab/skeleton-card"
-import { FlipCard } from "@/components/atom/lab/flip-card"
-import { MetricCard } from "@/components/atom/lab/metric-card"
-import { NotificationCard } from "@/components/atom/lab/notification-card"
-import { TimelineCard } from "@/components/atom/lab/timeline-card"
-import { ProfileCard } from "@/components/atom/lab/profile-card"
-import { GoalCard } from "@/components/atom/lab/goal-card"
-import { WeatherCard } from "@/components/atom/lab/weather-card"
-import { CalendarCard } from "@/components/atom/lab/calendar-card"
-import { QuickActionCard } from "@/components/atom/lab/quick-action-card"
-import { SocialCard } from "@/components/atom/lab/social-card"
-import { GlanceCard } from "@/components/atom/lab/glance-card"
-import { IconStatCard } from "@/components/atom/lab/icon-stat-card"
-import { RecentSalesCard } from "@/components/atom/lab/recent-sales-card"
 import { ActivityFeedCard } from "@/components/atom/lab/activity-feed-card"
-import { TeamMembersCard } from "@/components/atom/lab/team-members-card"
-import { TopPerformersCard } from "@/components/atom/lab/top-performers-card"
-import { TaskListCard } from "@/components/atom/lab/task-list-card"
-import { DataTableCard } from "@/components/atom/lab/data-table-card"
-import { StackedStatCard } from "@/components/atom/lab/stacked-stat-card"
 import { BannerCard } from "@/components/atom/lab/banner-card"
+import { CalendarCard } from "@/components/atom/lab/calendar-card"
+import { ChartCard } from "@/components/atom/lab/chart-card"
+import { CollapsibleCard } from "@/components/atom/lab/collapsible-card"
+import { ComparisonCard } from "@/components/atom/lab/comparison-card"
 import { DashboardGrid } from "@/components/atom/lab/dashboard-grid"
 import { DashboardSection } from "@/components/atom/lab/dashboard-section"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { DataTableCard } from "@/components/atom/lab/data-table-card"
+import { EmptyStateCard } from "@/components/atom/lab/empty-state-card"
+import { FlipCard } from "@/components/atom/lab/flip-card"
+import { GlanceCard } from "@/components/atom/lab/glance-card"
+import { GoalCard } from "@/components/atom/lab/goal-card"
+import { HeroStatCard } from "@/components/atom/lab/hero-stat-card"
+import { IconStatCard } from "@/components/atom/lab/icon-stat-card"
+import { ListCard } from "@/components/atom/lab/list-card"
+import { MediaCard } from "@/components/atom/lab/media-card"
+import { MetricCard } from "@/components/atom/lab/metric-card"
+import { MultiStatCard } from "@/components/atom/lab/multi-stat-card"
+import { NotificationCard } from "@/components/atom/lab/notification-card"
+import { ProfileCard } from "@/components/atom/lab/profile-card"
+import { ProgressCard } from "@/components/atom/lab/progress-card"
+import { QuickActionCard } from "@/components/atom/lab/quick-action-card"
+import { RecentSalesCard } from "@/components/atom/lab/recent-sales-card"
+import { SkeletonCard } from "@/components/atom/lab/skeleton-card"
+import { SocialCard } from "@/components/atom/lab/social-card"
+import { StackedStatCard } from "@/components/atom/lab/stacked-stat-card"
+// Import all atom lab cards
+import { StatCard } from "@/components/atom/lab/stat-card"
+import { TaskListCard } from "@/components/atom/lab/task-list-card"
+import { TeamMembersCard } from "@/components/atom/lab/team-members-card"
+import { TimelineCard } from "@/components/atom/lab/timeline-card"
+import { TopPerformersCard } from "@/components/atom/lab/top-performers-card"
+import { WeatherCard } from "@/components/atom/lab/weather-card"
 
 export function DashboardShowcase() {
   return (
-    <div className="space-y-8 mt-12 pt-8 border-t">
+    <div className="mt-12 space-y-8 border-t pt-8">
       {/* Section Header */}
       <div className="space-y-2">
         <h2 className="text-foreground">Dashboard Card Component Showcase</h2>
@@ -212,14 +238,26 @@ export function DashboardShowcase() {
             icon={<Bell className="h-6 w-6" />}
             title="Send Announcement"
             description="Notify students and parents"
-            action={<Button size="sm" variant="outline">Send</Button>}
+            action={
+              <Button size="sm" variant="outline">
+                Send
+              </Button>
+            }
             variant="default"
           />
 
           <ComparisonCard
             title="Performance Comparison"
-            current={{ label: "This Year", value: 94.2, color: "hsl(var(--primary))" }}
-            previous={{ label: "Last Year", value: 87.8, color: "hsl(var(--muted))" }}
+            current={{
+              label: "This Year",
+              value: 94.2,
+              color: "hsl(var(--primary))",
+            }}
+            previous={{
+              label: "Last Year",
+              value: 87.8,
+              color: "hsl(var(--muted))",
+            }}
             trend={{ value: 7.3, direction: "up" }}
           />
         </DashboardGrid>
@@ -230,13 +268,17 @@ export function DashboardShowcase() {
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
           <MediaCard
             media={
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 h-48 rounded-md flex items-center justify-center">
+              <div className="flex h-48 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-purple-600">
                 <GraduationCap className="h-24 w-24 text-white opacity-50" />
               </div>
             }
             title="School Tour 2025"
             description="Virtual campus walkthrough"
-            action={<Button variant="outline" size="sm">Watch Tour</Button>}
+            action={
+              <Button variant="outline" size="sm">
+                Watch Tour
+              </Button>
+            }
           />
 
           <CollapsibleCard
@@ -244,17 +286,23 @@ export function DashboardShowcase() {
             preview="View upcoming examination dates"
           >
             <div className="space-y-2">
-              <div className="flex justify-between p-2 border rounded">
+              <div className="flex justify-between rounded border p-2">
                 <span className="text-sm">Mathematics</span>
-                <span className="text-sm text-muted-foreground">Dec 15, 2024</span>
+                <span className="text-muted-foreground text-sm">
+                  Dec 15, 2024
+                </span>
               </div>
-              <div className="flex justify-between p-2 border rounded">
+              <div className="flex justify-between rounded border p-2">
                 <span className="text-sm">Science</span>
-                <span className="text-sm text-muted-foreground">Dec 18, 2024</span>
+                <span className="text-muted-foreground text-sm">
+                  Dec 18, 2024
+                </span>
               </div>
-              <div className="flex justify-between p-2 border rounded">
+              <div className="flex justify-between rounded border p-2">
                 <span className="text-sm">English</span>
-                <span className="text-sm text-muted-foreground">Dec 20, 2024</span>
+                <span className="text-muted-foreground text-sm">
+                  Dec 20, 2024
+                </span>
               </div>
             </div>
           </CollapsibleCard>
@@ -263,7 +311,11 @@ export function DashboardShowcase() {
             icon={<FileText className="h-12 w-12" />}
             title="No Assignments"
             description="You're all caught up! No pending assignments."
-            action={<Button variant="outline" size="sm">View Archive</Button>}
+            action={
+              <Button variant="outline" size="sm">
+                View Archive
+              </Button>
+            }
           />
         </DashboardGrid>
       </DashboardSection>
@@ -273,17 +325,25 @@ export function DashboardShowcase() {
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} gap={6}>
           <FlipCard
             front={
-              <div className="p-6 space-y-2">
+              <div className="space-y-2 p-6">
                 <h3>Student ID Card</h3>
                 <p className="text-muted-foreground">Click to view details</p>
               </div>
             }
             back={
-              <div className="p-6 space-y-2">
-                <p className="text-sm"><strong>Name:</strong> John Doe</p>
-                <p className="text-sm"><strong>ID:</strong> STU-2024-1234</p>
-                <p className="text-sm"><strong>Grade:</strong> 10th</p>
-                <p className="text-sm"><strong>Section:</strong> A</p>
+              <div className="space-y-2 p-6">
+                <p className="text-sm">
+                  <strong>Name:</strong> John Doe
+                </p>
+                <p className="text-sm">
+                  <strong>ID:</strong> STU-2024-1234
+                </p>
+                <p className="text-sm">
+                  <strong>Grade:</strong> 10th
+                </p>
+                <p className="text-sm">
+                  <strong>Section:</strong> A
+                </p>
               </div>
             }
           />
@@ -303,15 +363,15 @@ export function DashboardShowcase() {
                 description: "Mathematics Chapter 5 homework",
                 timestamp: "2 hours ago",
                 type: "info",
-                unread: true
+                unread: true,
               },
               {
                 title: "Parent-Teacher Meeting",
                 description: "Scheduled for Dec 20, 2024",
                 timestamp: "1 day ago",
                 type: "default",
-                unread: false
-              }
+                unread: false,
+              },
             ]}
             maxItems={3}
           />
@@ -329,22 +389,22 @@ export function DashboardShowcase() {
                 description: "John submitted Physics homework",
                 timestamp: "2 hours ago",
                 icon: <CircleCheck className="h-4 w-4" />,
-                type: "success"
+                type: "success",
               },
               {
                 title: "Grade Updated",
                 description: "Mathematics exam results published",
                 timestamp: "5 hours ago",
                 icon: <Award className="h-4 w-4" />,
-                type: "default"
+                type: "default",
               },
               {
                 title: "Attendance Marked",
                 description: "Present for all classes today",
                 timestamp: "1 day ago",
                 icon: <CircleCheck className="h-4 w-4" />,
-                type: "success"
-              }
+                type: "success",
+              },
             ]}
           />
 
@@ -356,16 +416,16 @@ export function DashboardShowcase() {
             stats={[
               { label: "GPA", value: "3.95" },
               { label: "Attendance", value: "98%" },
-              { label: "Credits", value: "24" }
+              { label: "Credits", value: "24" },
             ]}
             actions={
               <div className="flex gap-2">
                 <Button size="sm" variant="outline">
-                  <Mail className="h-4 w-4 mr-2" />
+                  <Mail className="mr-2 h-4 w-4" />
                   Message
                 </Button>
                 <Button size="sm" variant="outline">
-                  <Phone className="h-4 w-4 mr-2" />
+                  <Phone className="mr-2 h-4 w-4" />
                   Call
                 </Button>
               </div>
@@ -412,9 +472,24 @@ export function DashboardShowcase() {
             location="School Campus"
             icon={<Cloud className="h-12 w-12" />}
             forecast={[
-              { day: "Mon", high: 24, low: 18, icon: <Sun className="h-5 w-5" /> },
-              { day: "Tue", high: 22, low: 17, icon: <Cloud className="h-5 w-5" /> },
-              { day: "Wed", high: 20, low: 15, icon: <CloudRain className="h-5 w-5" /> }
+              {
+                day: "Mon",
+                high: 24,
+                low: 18,
+                icon: <Sun className="h-5 w-5" />,
+              },
+              {
+                day: "Tue",
+                high: 22,
+                low: 17,
+                icon: <Cloud className="h-5 w-5" />,
+              },
+              {
+                day: "Wed",
+                high: 20,
+                low: 15,
+                icon: <CloudRain className="h-5 w-5" />,
+              },
             ]}
           />
 
@@ -423,17 +498,33 @@ export function DashboardShowcase() {
             events={[
               { date: "Dec 15", title: "Math Exam", time: "9:00 AM" },
               { date: "Dec 18", title: "Science Fair", time: "2:00 PM" },
-              { date: "Dec 20", title: "Parent Meeting", time: "4:00 PM" }
+              { date: "Dec 20", title: "Parent Meeting", time: "4:00 PM" },
             ]}
           />
 
           <QuickActionCard
             title="Quick Actions"
             actions={[
-              { icon: <FileText className="h-4 w-4" />, label: "View Grades", onClick: () => {} },
-              { icon: <Calendar className="h-4 w-4" />, label: "Check Schedule", onClick: () => {} },
-              { icon: <Bell className="h-4 w-4" />, label: "Announcements", onClick: () => {} },
-              { icon: <Settings className="h-4 w-4" />, label: "Settings", onClick: () => {} }
+              {
+                icon: <FileText className="h-4 w-4" />,
+                label: "View Grades",
+                onClick: () => {},
+              },
+              {
+                icon: <Calendar className="h-4 w-4" />,
+                label: "Check Schedule",
+                onClick: () => {},
+              },
+              {
+                icon: <Bell className="h-4 w-4" />,
+                label: "Announcements",
+                onClick: () => {},
+              },
+              {
+                icon: <Settings className="h-4 w-4" />,
+                label: "Settings",
+                onClick: () => {},
+              },
             ]}
           />
         </DashboardGrid>
@@ -553,32 +644,32 @@ export function DashboardShowcase() {
                 avatar: "/avatars/01.png",
                 name: "Olivia Martin",
                 email: "Grade 10-A",
-                amount: "+$2,500"
+                amount: "+$2,500",
               },
               {
                 avatar: "/avatars/02.png",
                 name: "Jackson Lee",
                 email: "Grade 11-B",
-                amount: "+$2,500"
+                amount: "+$2,500",
               },
               {
                 avatar: "/avatars/03.png",
                 name: "Isabella Nguyen",
                 email: "Grade 9-C",
-                amount: "+$2,500"
+                amount: "+$2,500",
               },
               {
                 avatar: "/avatars/04.png",
                 name: "William Kim",
                 email: "Grade 12-A",
-                amount: "+$2,500"
+                amount: "+$2,500",
               },
               {
                 avatar: "/avatars/05.png",
                 name: "Sofia Davis",
                 email: "Grade 10-B",
-                amount: "+$2,500"
-              }
+                amount: "+$2,500",
+              },
             ]}
             maxItems={5}
           />
@@ -592,29 +683,29 @@ export function DashboardShowcase() {
                 title: "New assignment posted",
                 description: "Ms. Johnson posted Math homework",
                 timestamp: "2 hours ago",
-                type: "default"
+                type: "default",
               },
               {
                 avatar: "/avatars/student.png",
                 title: "Grade updated",
                 description: "John's Physics exam graded",
                 timestamp: "5 hours ago",
-                type: "success"
+                type: "success",
               },
               {
                 title: "System maintenance",
                 description: "Scheduled downtime completed",
                 timestamp: "1 day ago",
                 type: "default",
-                icon: <Settings className="h-4 w-4" />
+                icon: <Settings className="h-4 w-4" />,
               },
               {
                 title: "New announcement",
                 description: "Holiday schedule published",
                 timestamp: "2 days ago",
                 type: "default",
-                icon: <Bell className="h-4 w-4" />
-              }
+                icon: <Bell className="h-4 w-4" />,
+              },
             ]}
             maxItems={4}
             showAvatars={true}
@@ -633,26 +724,26 @@ export function DashboardShowcase() {
                 avatar: "/avatars/teacher1.png",
                 name: "Dr. Sarah Johnson",
                 role: "Mathematics Department Head",
-                status: "active"
+                status: "active",
               },
               {
                 avatar: "/avatars/teacher2.png",
                 name: "Prof. Michael Chen",
                 role: "Science Teacher",
-                status: "active"
+                status: "active",
               },
               {
                 avatar: "/avatars/teacher3.png",
                 name: "Ms. Emily Brown",
                 role: "English Teacher",
-                status: "active"
+                status: "active",
               },
               {
                 avatar: "/avatars/teacher4.png",
                 name: "Mr. David Wilson",
                 role: "Physical Education",
-                status: "away"
-              }
+                status: "away",
+              },
             ]}
             maxItems={4}
           />
@@ -666,28 +757,28 @@ export function DashboardShowcase() {
                 avatar: "/avatars/student1.png",
                 name: "Emma Thompson",
                 score: 98.5,
-                badge: <Badge variant="default">🥇 1st</Badge>
+                badge: <Badge variant="default">🥇 1st</Badge>,
               },
               {
                 rank: 2,
                 avatar: "/avatars/student2.png",
                 name: "Liam Anderson",
                 score: 97.2,
-                badge: <Badge variant="secondary">🥈 2nd</Badge>
+                badge: <Badge variant="secondary">🥈 2nd</Badge>,
               },
               {
                 rank: 3,
                 avatar: "/avatars/student3.png",
                 name: "Sophia Martinez",
                 score: 96.8,
-                badge: <Badge variant="secondary">🥉 3rd</Badge>
+                badge: <Badge variant="secondary">🥉 3rd</Badge>,
               },
               {
                 rank: 4,
                 avatar: "/avatars/student4.png",
                 name: "Noah Davis",
-                score: 95.5
-              }
+                score: 95.5,
+              },
             ]}
             maxItems={4}
           />
@@ -705,26 +796,26 @@ export function DashboardShowcase() {
                 title: "Grade Math Exams",
                 completed: true,
                 priority: "high",
-                dueDate: "2024-12-10"
+                dueDate: "2024-12-10",
               },
               {
                 title: "Prepare Science Lesson",
                 completed: false,
                 priority: "high",
-                dueDate: "2024-12-11"
+                dueDate: "2024-12-11",
               },
               {
                 title: "Parent Meeting",
                 completed: false,
                 priority: "medium",
-                dueDate: "2024-12-12"
+                dueDate: "2024-12-12",
               },
               {
                 title: "Update Course Materials",
                 completed: false,
                 priority: "low",
-                dueDate: "2024-12-15"
-              }
+                dueDate: "2024-12-15",
+              },
             ]}
             maxItems={4}
           />
@@ -732,10 +823,26 @@ export function DashboardShowcase() {
           <MultiStatCard
             title="Performance Metrics"
             stats={[
-              { value: "94.2%", label: "Pass Rate", trend: { value: 2.1, direction: "up" } },
-              { value: "3.85", label: "Avg GPA", trend: { value: 0.15, direction: "up" } },
-              { value: "96.8%", label: "Attendance", trend: { value: 1.2, direction: "up" } },
-              { value: "87%", label: "Satisfaction", trend: { value: 3, direction: "neutral" } }
+              {
+                value: "94.2%",
+                label: "Pass Rate",
+                trend: { value: 2.1, direction: "up" },
+              },
+              {
+                value: "3.85",
+                label: "Avg GPA",
+                trend: { value: 0.15, direction: "up" },
+              },
+              {
+                value: "96.8%",
+                label: "Attendance",
+                trend: { value: 1.2, direction: "up" },
+              },
+              {
+                value: "87%",
+                label: "Satisfaction",
+                trend: { value: 3, direction: "neutral" },
+              },
             ]}
             columns={2}
           />
@@ -752,26 +859,26 @@ export function DashboardShowcase() {
                 icon: <FileText className="h-4 w-4" />,
                 title: "Academic Reports",
                 subtitle: "View detailed reports",
-                trailing: <Badge variant="outline">12 new</Badge>
+                trailing: <Badge variant="outline">12 new</Badge>,
               },
               {
                 icon: <Calendar className="h-4 w-4" />,
                 title: "Event Calendar",
                 subtitle: "Upcoming school events",
-                trailing: <Badge variant="outline">5 events</Badge>
+                trailing: <Badge variant="outline">5 events</Badge>,
               },
               {
                 icon: <Users className="h-4 w-4" />,
                 title: "Student Directory",
                 subtitle: "Browse all students",
-                trailing: <Badge variant="outline">4,812</Badge>
+                trailing: <Badge variant="outline">4,812</Badge>,
               },
               {
                 icon: <Bell className="h-4 w-4" />,
                 title: "Announcements",
                 subtitle: "Important updates",
-                trailing: <Badge variant="default">3 unread</Badge>
-              }
+                trailing: <Badge variant="default">3 unread</Badge>,
+              },
             ]}
             maxItems={4}
           />
@@ -782,7 +889,7 @@ export function DashboardShowcase() {
               { label: "Grade 9", value: 1245, color: "hsl(var(--chart-1))" },
               { label: "Grade 10", value: 1189, color: "hsl(var(--chart-2))" },
               { label: "Grade 11", value: 1098, color: "hsl(var(--chart-3))" },
-              { label: "Grade 12", value: 1280, color: "hsl(var(--chart-4))" }
+              { label: "Grade 12", value: 1280, color: "hsl(var(--chart-4))" },
             ]}
             total={4812}
             showPercentages

@@ -1,5 +1,7 @@
 import * as React from "react"
+
 import { cn, nFormatter } from "@/lib/utils"
+
 import type { BaseComponentProps, BaseVariant, ComponentSize } from "./types"
 
 interface StatValueProps extends BaseComponentProps {
@@ -65,7 +67,7 @@ export function StatValue({
   return (
     <div
       className={cn(
-        "font-semibold tabular-nums tracking-tight",
+        "font-semibold tracking-tight tabular-nums",
         sizeStyles[size],
         variantStyles[variant],
         className

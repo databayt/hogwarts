@@ -1,7 +1,11 @@
 import { Suspense } from "react"
-import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+
 import type { Locale } from "@/components/internationalization/config"
-import { NotificationCenterContent, NotificationCenterSkeleton } from "@/components/platform/notifications/content"
+import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+import {
+  NotificationCenterContent,
+  NotificationCenterSkeleton,
+} from "@/components/platform/notifications/content"
 
 interface NotificationsPageProps {
   params: Promise<{

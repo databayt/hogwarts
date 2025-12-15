@@ -1,7 +1,10 @@
-import { ClassDetailContent } from "@/components/platform/classes/detail"
-import { getClassById, getClassSubjectTeachers } from "@/components/platform/classes/actions"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import {
+  getClassById,
+  getClassSubjectTeachers,
+} from "@/components/platform/classes/actions"
+import { ClassDetailContent } from "@/components/platform/classes/detail"
 
 export const metadata = { title: "Dashboard: Class Details" }
 

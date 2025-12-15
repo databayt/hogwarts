@@ -1,29 +1,30 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { LayoutGrid, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react"
+import { LayoutGrid, List } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import type { ViewMode } from "@/hooks/use-platform-view"
+import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import type { ViewMode } from "@/hooks/use-platform-view";
+} from "@/components/ui/tooltip"
 
 interface ViewToggleProps {
-  view: ViewMode;
-  onToggle: () => void;
+  view: ViewMode
+  onToggle: () => void
   translations?: {
-    tableView?: string;
-    gridView?: string;
-    switchToTable?: string;
-    switchToGrid?: string;
-  };
-  size?: "default" | "sm" | "lg" | "icon";
-  variant?: "default" | "outline" | "ghost";
-  className?: string;
+    tableView?: string
+    gridView?: string
+    switchToTable?: string
+    switchToGrid?: string
+  }
+  size?: "default" | "sm" | "lg" | "icon"
+  variant?: "default" | "outline" | "ghost"
+  className?: string
 }
 
 export function ViewToggle({
@@ -39,10 +40,10 @@ export function ViewToggle({
     gridView: translations.gridView || "Grid View",
     switchToTable: translations.switchToTable || "Switch to table view",
     switchToGrid: translations.switchToGrid || "Switch to grid view",
-  };
+  }
 
-  const isTable = view === "table";
-  const tooltipText = isTable ? t.switchToGrid : t.switchToTable;
+  const isTable = view === "table"
+  const tooltipText = isTable ? t.switchToGrid : t.switchToTable
 
   return (
     <TooltipProvider>
@@ -52,10 +53,7 @@ export function ViewToggle({
             variant={variant}
             size={size}
             onClick={onToggle}
-            className={cn(
-              size === "icon" && "h-9 w-9 p-0",
-              className
-            )}
+            className={cn(size === "icon" && "h-9 w-9 p-0", className)}
             aria-label={tooltipText}
           >
             {isTable ? (
@@ -70,20 +68,20 @@ export function ViewToggle({
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
+  )
 }
 
 /**
  * Segmented control variant for view toggle
  */
 interface ViewToggleSegmentedProps {
-  view: ViewMode;
-  setView: (view: ViewMode) => void;
+  view: ViewMode
+  setView: (view: ViewMode) => void
   translations?: {
-    tableView?: string;
-    gridView?: string;
-  };
-  className?: string;
+    tableView?: string
+    gridView?: string
+  }
+  className?: string
 }
 
 export function ViewToggleSegmented({
@@ -95,12 +93,12 @@ export function ViewToggleSegmented({
   const t = {
     tableView: translations.tableView || "Table",
     gridView: translations.gridView || "Grid",
-  };
+  }
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-md border bg-muted p-1",
+        "bg-muted inline-flex items-center rounded-md border p-1",
         className
       )}
       role="group"
@@ -113,7 +111,7 @@ export function ViewToggleSegmented({
         className="h-7 px-2.5"
         aria-pressed={view === "table"}
       >
-        <List className="h-4 w-4 mr-1.5" />
+        <List className="mr-1.5 h-4 w-4" />
         {t.tableView}
       </Button>
       <Button
@@ -123,9 +121,9 @@ export function ViewToggleSegmented({
         className="h-7 px-2.5"
         aria-pressed={view === "grid"}
       >
-        <LayoutGrid className="h-4 w-4 mr-1.5" />
+        <LayoutGrid className="mr-1.5 h-4 w-4" />
         {t.gridView}
       </Button>
     </div>
-  );
+  )
 }

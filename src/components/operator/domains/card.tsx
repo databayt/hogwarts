@@ -1,32 +1,40 @@
-"use client";
+"use client"
 
 /**
  * Domain card components for displaying domain request information
  *
  * Reusable card components for showing domain details in various layouts.
  */
+import { AlertCircle, Check, Clock, ExternalLink, Globe, X } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Globe, Check, X, AlertCircle, Clock, ExternalLink } from "lucide-react";
-import type { DomainRequestWithSchool, DomainStatus, DNSRecord } from "./types";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  getDomainStatusLabel,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import { DOMAIN_STATUS_VARIANTS } from "./config"
+import type { DNSRecord, DomainRequestWithSchool, DomainStatus } from "./types"
+import {
   formatDomainStatus,
-  normalizeDomain,
-  getDomainHealth,
   formatTimeSince,
-} from "./util";
-import { DOMAIN_STATUS_VARIANTS } from "./config";
+  getDomainHealth,
+  getDomainStatusLabel,
+  normalizeDomain,
+} from "./util"
 
 interface DomainCardProps {
-  domain: DomainRequestWithSchool;
-  showActions?: boolean;
-  onApprove?: (domainId: string) => void;
-  onReject?: (domainId: string) => void;
-  onVerify?: (domainId: string) => void;
-  onViewDetails?: (domainId: string) => void;
+  domain: DomainRequestWithSchool
+  showActions?: boolean
+  onApprove?: (domainId: string) => void
+  onReject?: (domainId: string) => void
+  onVerify?: (domainId: string) => void
+  onViewDetails?: (domainId: string) => void
 }
 
 /**
@@ -40,11 +48,11 @@ export function DomainCard({
   onVerify,
   onViewDetails,
 }: DomainCardProps) {
-  const normalized = normalizeDomain(domain.domain);
-  const health = getDomainHealth(domain.status as DomainStatus);
+  const normalized = normalizeDomain(domain.domain)
+  const health = getDomainHealth(domain.status as DomainStatus)
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -54,7 +62,9 @@ export function DomainCard({
             </CardTitle>
             <CardDescription>{domain.school.name}</CardDescription>
           </div>
-          <Badge variant={DOMAIN_STATUS_VARIANTS[domain.status as DomainStatus]}>
+          <Badge
+            variant={DOMAIN_STATUS_VARIANTS[domain.status as DomainStatus]}
+          >
             {getDomainStatusLabel(domain.status as DomainStatus)}
           </Badge>
         </div>
@@ -68,7 +78,9 @@ export function DomainCard({
         {domain.verifiedAt && (
           <div className="flex items-center justify-between">
             <small className="muted">Verified</small>
-            <div className="font-medium">{new Date(domain.verifiedAt).toLocaleDateString()}</div>
+            <div className="font-medium">
+              {new Date(domain.verifiedAt).toLocaleDateString()}
+            </div>
           </div>
         )}
         {domain.notes && (
@@ -83,42 +95,64 @@ export function DomainCard({
         <CardFooter className="gap-2">
           {domain.status === "pending" && (
             <>
-              <Button variant="outline" size="sm" onClick={() => onReject?.(domain.id)} className="flex-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onReject?.(domain.id)}
+                className="flex-1"
+              >
                 <X className="mr-2 size-4" />
                 Reject
               </Button>
-              <Button size="sm" onClick={() => onApprove?.(domain.id)} className="flex-1">
+              <Button
+                size="sm"
+                onClick={() => onApprove?.(domain.id)}
+                className="flex-1"
+              >
                 <Check className="mr-2 size-4" />
                 Approve
               </Button>
             </>
           )}
           {domain.status === "approved" && (
-            <Button size="sm" onClick={() => onVerify?.(domain.id)} className="w-full">
+            <Button
+              size="sm"
+              onClick={() => onVerify?.(domain.id)}
+              className="w-full"
+            >
               <Check className="mr-2 size-4" />
               Verify Domain
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => onViewDetails?.(domain.id)} className="w-full">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onViewDetails?.(domain.id)}
+            className="w-full"
+          >
             View Details
           </Button>
         </CardFooter>
       )}
     </Card>
-  );
+  )
 }
 
 /**
  * Compact domain card for list views
  */
-export function DomainCompactCard({ domain }: { domain: DomainRequestWithSchool }) {
-  const normalized = normalizeDomain(domain.domain);
+export function DomainCompactCard({
+  domain,
+}: {
+  domain: DomainRequestWithSchool
+}) {
+  const normalized = normalizeDomain(domain.domain)
 
   return (
     <Card className="flex items-center justify-between p-4">
       <div className="flex items-center gap-4">
-        <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-          <Globe className="size-5 text-primary" />
+        <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+          <Globe className="text-primary size-5" />
         </div>
         <div>
           <h6>{normalized}</h6>
@@ -129,7 +163,7 @@ export function DomainCompactCard({ domain }: { domain: DomainRequestWithSchool 
         {domain.status}
       </Badge>
     </Card>
-  );
+  )
 }
 
 /**
@@ -141,10 +175,10 @@ export function DomainStatsCard({
   icon: Icon,
   description,
 }: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  description?: string;
+  title: string
+  value: string | number
+  icon: React.ComponentType<{ className?: string }>
+  description?: string
 }) {
   return (
     <Card>
@@ -152,14 +186,14 @@ export function DomainStatsCard({
         <CardTitle>
           <small>{title}</small>
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground size-4" />
       </CardHeader>
       <CardContent>
         <h2 className="font-bold">{value}</h2>
         {description && <small className="muted">{description}</small>}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -170,15 +204,19 @@ export function DNSConfigCard({ records }: { records: DNSRecord[] }) {
     <Card>
       <CardHeader>
         <CardTitle>DNS Configuration</CardTitle>
-        <CardDescription>Add these records to your DNS provider</CardDescription>
+        <CardDescription>
+          Add these records to your DNS provider
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {records.map((record, index) => (
-            <div key={index} className="rounded-lg border p-3 bg-muted/50">
-              <div className="flex items-center justify-between mb-2">
+            <div key={index} className="bg-muted/50 rounded-lg border p-3">
+              <div className="mb-2 flex items-center justify-between">
                 <Badge variant="outline">{record.type}</Badge>
-                {record.ttl && <small className="muted">TTL: {record.ttl}</small>}
+                {record.ttl && (
+                  <small className="muted">TTL: {record.ttl}</small>
+                )}
               </div>
               <div className="space-y-1">
                 <div>
@@ -195,7 +233,7 @@ export function DNSConfigCard({ records }: { records: DNSRecord[] }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -206,9 +244,9 @@ export function DomainVerificationCard({
   isVerified,
   onVerify,
 }: {
-  domain: string;
-  isVerified: boolean;
-  onVerify?: () => void;
+  domain: string
+  isVerified: boolean
+  onVerify?: () => void
 }) {
   return (
     <Card>
@@ -218,20 +256,26 @@ export function DomainVerificationCard({
       </CardHeader>
       <CardContent>
         {isVerified ? (
-          <div className="flex items-center gap-3 rounded-lg bg-green-50 dark:bg-green-950/10 p-4">
+          <div className="flex items-center gap-3 rounded-lg bg-green-50 p-4 dark:bg-green-950/10">
             <Check className="size-5 text-green-600" />
             <div>
               <div className="font-medium text-green-600">Domain Verified</div>
-              <small className="muted">This domain is active and verified</small>
+              <small className="muted">
+                This domain is active and verified
+              </small>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg bg-amber-50 dark:bg-amber-950/10 p-4">
+            <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-4 dark:bg-amber-950/10">
               <Clock className="size-5 text-amber-600" />
               <div>
-                <div className="font-medium text-amber-600">Pending Verification</div>
-                <small className="muted">DNS records may take up to 24 hours to propagate</small>
+                <div className="font-medium text-amber-600">
+                  Pending Verification
+                </div>
+                <small className="muted">
+                  DNS records may take up to 24 hours to propagate
+                </small>
               </div>
             </div>
             {onVerify && (
@@ -244,14 +288,18 @@ export function DomainVerificationCard({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
  * Domain health indicator card
  */
-export function DomainHealthCard({ domain }: { domain: DomainRequestWithSchool }) {
-  const health = getDomainHealth(domain.status as DomainStatus);
+export function DomainHealthCard({
+  domain,
+}: {
+  domain: DomainRequestWithSchool
+}) {
+  const health = getDomainHealth(domain.status as DomainStatus)
   const healthConfig = {
     healthy: {
       icon: Check,
@@ -263,7 +311,10 @@ export function DomainHealthCard({ domain }: { domain: DomainRequestWithSchool }
       icon: Clock,
       color: "text-amber-600",
       bg: "bg-amber-50 dark:bg-amber-950/10",
-      label: domain.status === "pending" ? "Pending Review" : "Awaiting Verification",
+      label:
+        domain.status === "pending"
+          ? "Pending Review"
+          : "Awaiting Verification",
     },
     critical: {
       icon: AlertCircle,
@@ -271,27 +322,33 @@ export function DomainHealthCard({ domain }: { domain: DomainRequestWithSchool }
       bg: "bg-red-50 dark:bg-red-950/10",
       label: "Rejected",
     },
-  };
+  }
 
-  const config = healthConfig[health];
-  const Icon = config.icon;
+  const config = healthConfig[health]
+  const Icon = config.icon
 
   return (
     <div className={`flex items-center gap-3 rounded-lg ${config.bg} p-4`}>
       <Icon className={`size-5 ${config.color}`} />
       <div>
         <div className={`font-medium ${config.color}`}>{config.label}</div>
-        <small className="muted">{formatDomainStatus(domain.status as DomainStatus, domain.verifiedAt)}</small>
+        <small className="muted">
+          {formatDomainStatus(domain.status as DomainStatus, domain.verifiedAt)}
+        </small>
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Domain info card with metadata
  */
-export function DomainInfoCard({ domain }: { domain: DomainRequestWithSchool }) {
-  const normalized = normalizeDomain(domain.domain);
+export function DomainInfoCard({
+  domain,
+}: {
+  domain: DomainRequestWithSchool
+}) {
+  const normalized = normalizeDomain(domain.domain)
 
   return (
     <Card>
@@ -301,7 +358,7 @@ export function DomainInfoCard({ domain }: { domain: DomainRequestWithSchool }) 
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2">
-          <Globe className="size-4 text-muted-foreground" />
+          <Globe className="text-muted-foreground size-4" />
           <div>
             <small className="muted">Domain</small>
             <div className="font-medium">
@@ -309,7 +366,7 @@ export function DomainInfoCard({ domain }: { domain: DomainRequestWithSchool }) 
                 href={`https://${normalized}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline inline-flex items-center gap-1"
+                className="inline-flex items-center gap-1 hover:underline"
               >
                 {normalized}
                 <ExternalLink className="size-3" />
@@ -319,7 +376,12 @@ export function DomainInfoCard({ domain }: { domain: DomainRequestWithSchool }) 
         </div>
         <div>
           <small className="muted">Status</small>
-          <div className="font-medium">{formatDomainStatus(domain.status as DomainStatus, domain.verifiedAt)}</div>
+          <div className="font-medium">
+            {formatDomainStatus(
+              domain.status as DomainStatus,
+              domain.verifiedAt
+            )}
+          </div>
         </div>
         <div>
           <small className="muted">Requested</small>
@@ -333,5 +395,5 @@ export function DomainInfoCard({ domain }: { domain: DomainRequestWithSchool }) 
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

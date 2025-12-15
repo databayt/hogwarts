@@ -19,87 +19,87 @@ Our shared economy framework ensures every contributor is recognized fairly and 
 
 ### Technical Contributions (40% weight)
 
-| Category | Points |
-|----------|--------|
-| Lines of code | LOC × language weight (TS: 1.0, CSS: 0.3, Config: 0.1) |
-| Complexity multiplier | Simple: 1x, Complex: 2.5x |
-| New feature | 10 points × complexity |
-| Bug fix | 5 points × severity (critical: 5x, minor: 1x) |
-| Refactoring | 3 points × files affected |
-| Test coverage | 2 points × coverage increase % |
-| PRD/technical docs | 50 points × scope (feature: 1x, module: 3x, system: 10x) |
-| Architecture decisions | 100 points (tracked in ADR) |
-| Performance optimization | 20 points × % improvement |
-| Code review | 5 points per substantive comment |
-| Mentoring in review | 10 points if reviewer teaches |
-| Catch critical bugs | 50 points per security/data loss bug |
+| Category                 | Points                                                   |
+| ------------------------ | -------------------------------------------------------- |
+| Lines of code            | LOC × language weight (TS: 1.0, CSS: 0.3, Config: 0.1)   |
+| Complexity multiplier    | Simple: 1x, Complex: 2.5x                                |
+| New feature              | 10 points × complexity                                   |
+| Bug fix                  | 5 points × severity (critical: 5x, minor: 1x)            |
+| Refactoring              | 3 points × files affected                                |
+| Test coverage            | 2 points × coverage increase %                           |
+| PRD/technical docs       | 50 points × scope (feature: 1x, module: 3x, system: 10x) |
+| Architecture decisions   | 100 points (tracked in ADR)                              |
+| Performance optimization | 20 points × % improvement                                |
+| Code review              | 5 points per substantive comment                         |
+| Mentoring in review      | 10 points if reviewer teaches                            |
+| Catch critical bugs      | 50 points per security/data loss bug                     |
 
 **Quality Multipliers:** Tests pass first try (1.2x) · Zero review iterations (1.3x) · Includes tests (1.5x) · Includes docs (1.4x) · Zero regressions in 30 days (1.5x) · **Max: 3.9x**
 
 ### Community Contributions (30% weight)
 
-| Category | Points |
-|----------|--------|
-| First response | 3 points (encourages newcomers) |
-| Issue clarification | 5 points (reduces noise) |
-| Issue resolution | 10 points × unblocked users |
-| Duplicate detection | 2 points (saves maintainer time) |
-| Tutorial written | 100 points × depth (quick: 1x, comprehensive: 5x) |
-| API docs | 20 points × endpoints documented |
-| Translation | 50 points × language + 0.5 points/key |
-| Video/visual content | 150 points × length (quality-adjusted) |
-| Onboarding contributors | 50 points per successful first PR |
-| Forum/Discord support | 2 points per helpful response (upvote-weighted) |
-| Public presentation | 200 points per talk/article |
-| Community events | 100 points per event |
+| Category                | Points                                            |
+| ----------------------- | ------------------------------------------------- |
+| First response          | 3 points (encourages newcomers)                   |
+| Issue clarification     | 5 points (reduces noise)                          |
+| Issue resolution        | 10 points × unblocked users                       |
+| Duplicate detection     | 2 points (saves maintainer time)                  |
+| Tutorial written        | 100 points × depth (quick: 1x, comprehensive: 5x) |
+| API docs                | 20 points × endpoints documented                  |
+| Translation             | 50 points × language + 0.5 points/key             |
+| Video/visual content    | 150 points × length (quality-adjusted)            |
+| Onboarding contributors | 50 points per successful first PR                 |
+| Forum/Discord support   | 2 points per helpful response (upvote-weighted)   |
+| Public presentation     | 200 points per talk/article                       |
+| Community events        | 100 points per event                              |
 
 ### Strategic Contributions (20% weight)
 
-| Category | Points |
-|----------|--------|
-| Feature proposals (accepted) | 50 points |
-| User research | 30 points × users interviewed |
-| Competitive analysis | 40 points |
-| Business model innovation | 100 points if implemented |
-| Release coordination | 100 points per release |
-| Dependency maintenance | 20 points × critical deps updated |
-| Security audits | 200 points + 50 per vulnerability found |
+| Category                     | Points                                  |
+| ---------------------------- | --------------------------------------- |
+| Feature proposals (accepted) | 50 points                               |
+| User research                | 30 points × users interviewed           |
+| Competitive analysis         | 40 points                               |
+| Business model innovation    | 100 points if implemented               |
+| Release coordination         | 100 points per release                  |
+| Dependency maintenance       | 20 points × critical deps updated       |
+| Security audits              | 200 points + 50 per vulnerability found |
 
 ### Ecosystem Contributions (10% weight)
 
-| Category | Points |
-|----------|--------|
-| Blog posts | 20 points × reach (1k views = 1x) |
-| Integration/plugin creation | 150 points × users |
-| Educational content | 50 points × students reached |
-| Case studies | 100 points |
+| Category                    | Points                            |
+| --------------------------- | --------------------------------- |
+| Blog posts                  | 20 points × reach (1k views = 1x) |
+| Integration/plugin creation | 150 points × users                |
+| Educational content         | 50 points × students reached      |
+| Case studies                | 100 points                        |
 
 ## Anti-Gaming Mechanisms
 
 ### Detection Systems
 
-| Mechanism | Rule |
-|-----------|------|
-| Sybil prevention | GitHub account > 6 months, verified email required |
-| Velocity limits | Max 100 commits/day reviewed |
-| Peer validation | Large contributions need 2+ maintainer reviews |
-| Commit splitting | If 10+ commits could be 1, apply 0.5x multiplier |
-| Code churn tax | Code deleted within 30 days = retroactive -50% points |
-| Test quality | Tests that mock everything = 0 points |
-| Collusion detection | 80%+ review overlap flagged for human review |
-| Circular endorsement | A↔B mutual reviews = 0.7x multiplier |
+| Mechanism            | Rule                                                  |
+| -------------------- | ----------------------------------------------------- |
+| Sybil prevention     | GitHub account > 6 months, verified email required    |
+| Velocity limits      | Max 100 commits/day reviewed                          |
+| Peer validation      | Large contributions need 2+ maintainer reviews        |
+| Commit splitting     | If 10+ commits could be 1, apply 0.5x multiplier      |
+| Code churn tax       | Code deleted within 30 days = retroactive -50% points |
+| Test quality         | Tests that mock everything = 0 points                 |
+| Collusion detection  | 80%+ review overlap flagged for human review          |
+| Circular endorsement | A↔B mutual reviews = 0.7x multiplier                  |
 
 ### Transparency Layer
 
-| Feature | Description |
-|---------|-------------|
-| Public ledger | Every contribution → permanent record with hash |
-| Formula visibility | Point calculation in `src/contribution-engine/formulas.ts` |
-| Monthly reports | Auto-generated contribution reports (Markdown + PDF) |
-| Dispute process | Any contributor can challenge valuation via issue |
-| Audit trail | Auto-generated breakdown in commit metadata |
-| Historical changes | All formula changes tracked in git with rationale |
-| Maintainer override | Requires 2/3 vote + public justification |
+| Feature             | Description                                                |
+| ------------------- | ---------------------------------------------------------- |
+| Public ledger       | Every contribution → permanent record with hash            |
+| Formula visibility  | Point calculation in `src/contribution-engine/formulas.ts` |
+| Monthly reports     | Auto-generated contribution reports (Markdown + PDF)       |
+| Dispute process     | Any contributor can challenge valuation via issue          |
+| Audit trail         | Auto-generated breakdown in commit metadata                |
+| Historical changes  | All formula changes tracked in git with rationale          |
+| Maintainer override | Requires 2/3 vote + public justification                   |
 
 ## Valuation Formula
 
@@ -107,51 +107,57 @@ Our shared economy framework ensures every contributor is recognized fairly and 
 
 Based on 2024 research: **$45 USD/hour minimum** (COCOMO standard)
 
-<div className="p-4 bg-muted/50 rounded-lg my-4 font-mono text-sm">
-  <p>Contribution Value = (Base Points × Quality Multiplier × Impact Factor) / Effort Hours</p>
-  <p className="mt-2">If Contribution Value is below $45/hour → Adjusted Value = $45 × Effort Hours</p>
+<div className="bg-muted/50 my-4 rounded-lg p-4 font-mono text-sm">
+  <p>
+    Contribution Value = (Base Points × Quality Multiplier × Impact Factor) /
+    Effort Hours
+  </p>
+  <p className="mt-2">
+    If Contribution Value is below $45/hour → Adjusted Value = $45 × Effort
+    Hours
+  </p>
 </div>
 
-| Effort Estimation | Method |
-|-------------------|--------|
-| Self-reported | Honor system + peer validation |
-| Auto-detected | Commit timestamps via GitHub API |
-| Code contributions | COCOMO II formula (industry-standard) |
-| Outlier detection | 100 lines claimed as 20 hours → flagged |
+| Effort Estimation  | Method                                  |
+| ------------------ | --------------------------------------- |
+| Self-reported      | Honor system + peer validation          |
+| Auto-detected      | Commit timestamps via GitHub API        |
+| Code contributions | COCOMO II formula (industry-standard)   |
+| Outlier detection  | 100 lines claimed as 20 hours → flagged |
 
 ### Underpayment Prevention
 
-| Protection | Description |
-|------------|-------------|
-| Market rate adjustment | Quarterly review vs Upwork/Toptal rates |
-| Cost-of-living index | High-COL contributors not penalized |
-| Skill premium | Senior developers get 1.5-2x multiplier |
-| Minimum wage alert | Earnings below local equivalent → alert |
-| Profit redistribution | 40%+ margin while under $30/hr pay → redistribution |
-| Satisfaction survey | Annual anonymous contributor review |
+| Protection             | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| Market rate adjustment | Quarterly review vs Upwork/Toptal rates             |
+| Cost-of-living index   | High-COL contributors not penalized                 |
+| Skill premium          | Senior developers get 1.5-2x multiplier             |
+| Minimum wage alert     | Earnings below local equivalent → alert             |
+| Profit redistribution  | 40%+ margin while under $30/hr pay → redistribution |
+| Satisfaction survey    | Annual anonymous contributor review                 |
 
 ## Diverse Contribution Recognition
 
 ### Non-Code Contributions
 
-| Category | Points |
-|----------|--------|
-| UI/UX mockups | 100 points × screens designed |
-| Design system | 500 points (one-time) + 50/component |
-| User testing | 30 points × tests conducted |
-| Accessibility audit | 200 points + 20/issue found |
-| Moderation | 5 points/hour (emotionally taxing work) |
-| Conflict resolution | 50 points per resolved dispute |
-| Policy creation | 100 points (governance work) |
+| Category                | Points                                    |
+| ----------------------- | ----------------------------------------- |
+| UI/UX mockups           | 100 points × screens designed             |
+| Design system           | 500 points (one-time) + 50/component      |
+| User testing            | 30 points × tests conducted               |
+| Accessibility audit     | 200 points + 20/issue found               |
+| Moderation              | 5 points/hour (emotionally taxing work)   |
+| Conflict resolution     | 50 points per resolved dispute            |
+| Policy creation         | 100 points (governance work)              |
 | Onboarding improvements | 40 points × % completion rate improvement |
 
 ### Invisible Labor
 
-| Category | Points |
-|----------|--------|
-| Meeting attendance | 10 points/hour (capped at 4 hours/week) |
-| Email/DM support | 2 points per substantive response |
-| Emotional support | Peer nomination = 50 bonus points monthly |
+| Category           | Points                                    |
+| ------------------ | ----------------------------------------- |
+| Meeting attendance | 10 points/hour (capped at 4 hours/week)   |
+| Email/DM support   | 2 points per substantive response         |
+| Emotional support  | Peer nomination = 50 bonus points monthly |
 
 ### Skill Development
 
@@ -163,12 +169,12 @@ Based on 2024 research: **$45 USD/hour minimum** (COCOMO standard)
 
 ### Contribution Dashboard
 
-| Feature | Description |
-|---------|-------------|
-| Public leaderboard | Top contributors (opt-in display) |
+| Feature            | Description                            |
+| ------------------ | -------------------------------------- |
+| Public leaderboard | Top contributors (opt-in display)      |
 | Personal dashboard | Your points, rank, earnings projection |
-| Team view | Organization total contributions |
-| Historical trends | Contribution health metrics |
+| Team view          | Organization total contributions       |
+| Historical trends  | Contribution health metrics            |
 
 ### Contestable Valuations
 
@@ -182,14 +188,14 @@ Based on 2024 research: **$45 USD/hour minimum** (COCOMO standard)
 
 ### Immutable History (Blockchain)
 
-| Feature | Description |
-|---------|-------------|
-| Permanent records | Contributions cannot be erased or devalued |
-| Decentralized proof | Leadership changes don't affect contributor rights |
-| Smart contracts | Automated profit distribution |
-| Git timestamping | Commit → hash → Ethereum/Polygon (under $0.01/commit) |
-| Contribution NFT | Major contributions = NFT with metadata |
-| Portable reputation | Prove value across projects |
+| Feature             | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| Permanent records   | Contributions cannot be erased or devalued            |
+| Decentralized proof | Leadership changes don't affect contributor rights    |
+| Smart contracts     | Automated profit distribution                         |
+| Git timestamping    | Commit → hash → Ethereum/Polygon (under $0.01/commit) |
+| Contribution NFT    | Major contributions = NFT with metadata               |
+| Portable reputation | Prove value across projects                           |
 
 ## Formula Evolution & Governance
 
@@ -204,12 +210,12 @@ Based on 2024 research: **$45 USD/hour minimum** (COCOMO standard)
 
 ### Protection Against Capture
 
-| Safeguard | Description |
-|-----------|-------------|
-| Voting cap | No contributor > 10% voting power |
-| Power decay | Founding team voting power -10%/year |
-| Emergency brake | 100+ objections pauses change for review |
-| Arbitration | External mediator for major disputes (DAO-style) |
+| Safeguard       | Description                                      |
+| --------------- | ------------------------------------------------ |
+| Voting cap      | No contributor > 10% voting power                |
+| Power decay     | Founding team voting power -10%/year             |
+| Emergency brake | 100+ objections pauses change for review         |
+| Arbitration     | External mediator for major disputes (DAO-style) |
 
 ## Example Calculations
 
@@ -217,89 +223,107 @@ Based on 2024 research: **$45 USD/hour minimum** (COCOMO standard)
 
 Bug fix in authentication flow (50 lines TypeScript)
 
-| Calculation | Value |
-|-------------|-------|
-| Base points | 50 lines × 1.0 (TS) × 1.5 (bug fix) = 75 |
-| Quality multiplier | 1.2 (tests pass) × 1.5 (includes tests) = 1.8 |
-| Impact factor | Critical bug = 5x |
-| Total points | 75 × 1.8 × 5 = **675** |
-| Effort | 4 hours |
-| Raw value | $67.50 (675/10 rate) |
-| Adjusted | $45/hour floor = $180 |
-| First contribution bonus | 1.5x = **$270** |
+| Calculation              | Value                                         |
+| ------------------------ | --------------------------------------------- |
+| Base points              | 50 lines × 1.0 (TS) × 1.5 (bug fix) = 75      |
+| Quality multiplier       | 1.2 (tests pass) × 1.5 (includes tests) = 1.8 |
+| Impact factor            | Critical bug = 5x                             |
+| Total points             | 75 × 1.8 × 5 = **675**                        |
+| Effort                   | 4 hours                                       |
+| Raw value                | $67.50 (675/10 rate)                          |
+| Adjusted                 | $45/hour floor = $180                         |
+| First contribution bonus | 1.5x = **$270**                               |
 
 ### Designer Creates Onboarding Flow
 
 5 screens, user testing with 10 users, Figma documentation
 
-| Calculation | Value |
-|-------------|-------|
-| UI mockups | 100 × 5 screens = 500 |
-| User testing | 30 × 10 users = 300 |
-| Documentation | 20 |
-| Total points | **820** |
-| Effort | 16 hours |
-| Hourly rate | $51.25 (above floor) |
+| Calculation   | Value                 |
+| ------------- | --------------------- |
+| UI mockups    | 100 × 5 screens = 500 |
+| User testing  | 30 × 10 users = 300   |
+| Documentation | 20                    |
+| Total points  | **820**               |
+| Effort        | 16 hours              |
+| Hourly rate   | $51.25 (above floor)  |
 
 ### Community Manager Monthly Work
 
 Forum moderation, onboarded 3 contributors, organized 1 event
 
-| Calculation | Value |
-|-------------|-------|
-| Moderation | 5 pts/hr × 20 hours = 100 |
-| Onboarding | 50 × 3 = 150 |
-| Event | 100 |
-| Discord support | 2 × 50 responses = 100 |
-| Total points | **450** |
-| Effort | ~25 hours |
-| Adjusted | $45/hour = **$1,125** |
+| Calculation     | Value                     |
+| --------------- | ------------------------- |
+| Moderation      | 5 pts/hr × 20 hours = 100 |
+| Onboarding      | 50 × 3 = 150              |
+| Event           | 100                       |
+| Discord support | 2 × 50 responses = 100    |
+| Total points    | **450**                   |
+| Effort          | ~25 hours                 |
+| Adjusted        | $45/hour = **$1,125**     |
 
 ## Open Questions
 
-| Question | Consideration |
-|----------|---------------|
-| Time Decay | Should old contributions lose value over time? |
-| Team Contributions | How to split points for pair programming? |
-| Failed Experiments | Should exploratory work that doesn't ship earn points? |
-| Competitive Dynamics | Does leaderboard create toxic vs. healthy motivation? |
-| Global Equity | How to balance COL differences without geographic arbitrage? |
+| Question             | Consideration                                                |
+| -------------------- | ------------------------------------------------------------ |
+| Time Decay           | Should old contributions lose value over time?               |
+| Team Contributions   | How to split points for pair programming?                    |
+| Failed Experiments   | Should exploratory work that doesn't ship earn points?       |
+| Competitive Dynamics | Does leaderboard create toxic vs. healthy motivation?        |
+| Global Equity        | How to balance COL differences without geographic arbitrage? |
 
 ## Next Steps
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">RFC Template</h4>
-    <p className="text-sm text-muted-foreground">Build Request for Comments template for community input and transparent decision-making process.</p>
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">RFC Template</h4>
+    <p className="text-muted-foreground text-sm">
+      Build Request for Comments template for community input and transparent
+      decision-making process.
+    </p>
   </div>
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">Contribution Tracker</h4>
-    <p className="text-sm text-muted-foreground">Create contribution tracker using GitHub Actions + SQLite to start measuring and recording contributions.</p>
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">Contribution Tracker</h4>
+    <p className="text-muted-foreground text-sm">
+      Create contribution tracker using GitHub Actions + SQLite to start
+      measuring and recording contributions.
+    </p>
   </div>
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">Simulation</h4>
-    <p className="text-sm text-muted-foreground">Test formulas on existing GitHub history (6 months data) to validate fairness and identify edge cases.</p>
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">Simulation</h4>
+    <p className="text-muted-foreground text-sm">
+      Test formulas on existing GitHub history (6 months data) to validate
+      fairness and identify edge cases.
+    </p>
   </div>
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">Pilot Program</h4>
-    <p className="text-sm text-muted-foreground">Invite 5-10 early contributors to pilot program, gather feedback, and iterate on the system.</p>
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">Pilot Program</h4>
+    <p className="text-muted-foreground text-sm">
+      Invite 5-10 early contributors to pilot program, gather feedback, and
+      iterate on the system.
+    </p>
   </div>
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">Iterate & Improve</h4>
-    <p className="text-sm text-muted-foreground">3-month iteration cycles based on real-world feedback and contribution patterns.</p>
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">Iterate & Improve</h4>
+    <p className="text-muted-foreground text-sm">
+      3-month iteration cycles based on real-world feedback and contribution
+      patterns.
+    </p>
   </div>
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-semibold mb-2">Documentation</h4>
-    <p className="text-sm text-muted-foreground">Public documentation of all decisions, formulas, and changes to build trust from day one.</p>
+  <div className="rounded-lg border p-4">
+    <h4 className="mb-2 font-semibold">Documentation</h4>
+    <p className="text-muted-foreground text-sm">
+      Public documentation of all decisions, formulas, and changes to build
+      trust from day one.
+    </p>
   </div>
 </div>
 
 ## Justice Pillars
 
-| Pillar | Description |
-|--------|-------------|
-| **Evidence** | Objective, measurable, auditable contribution data |
-| **Transparency** | Public formulas, contestable outcomes |
-| **Dignity** | No contributor earns below fair wage, all work is valued |
+| Pillar           | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| **Evidence**     | Objective, measurable, auditable contribution data       |
+| **Transparency** | Public formulas, contestable outcomes                    |
+| **Dignity**      | No contributor earns below fair wage, all work is valued |
 
 This framework ensures that every contributor is recognized fairly, compensated justly, and empowered to build together.

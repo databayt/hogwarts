@@ -5,12 +5,12 @@
  * semantic similarity search for question generation.
  */
 
-import { OpenAIEmbeddings } from '@langchain/openai'
+import { OpenAIEmbeddings } from "@langchain/openai"
 
 // Initialize OpenAI embeddings (text-embedding-3-small is cost-effective)
 const embeddings = new OpenAIEmbeddings({
   openAIApiKey: process.env.OPENAI_API_KEY,
-  modelName: 'text-embedding-3-small', // 1536 dimensions, $0.02/1M tokens
+  modelName: "text-embedding-3-small", // 1536 dimensions, $0.02/1M tokens
 })
 
 /**
@@ -21,9 +21,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     const embedding = await embeddings.embedQuery(text)
     return embedding
   } catch (error) {
-    console.error('Error generating embedding:', error)
+    console.error("Error generating embedding:", error)
     throw new Error(
-      `Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to generate embedding: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -38,9 +38,9 @@ export async function generateEmbeddingBatch(
     const embeddingsList = await embeddings.embedDocuments(texts)
     return embeddingsList
   } catch (error) {
-    console.error('Error generating embeddings batch:', error)
+    console.error("Error generating embeddings batch:", error)
     throw new Error(
-      `Failed to generate embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to generate embeddings: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -97,13 +97,13 @@ export async function findRelevantChunks(params: {
     // ```
 
     console.warn(
-      'findRelevantChunks not fully implemented - requires pgvector extension'
+      "findRelevantChunks not fully implemented - requires pgvector extension"
     )
     return []
   } catch (error) {
-    console.error('Error finding relevant chunks:', error)
+    console.error("Error finding relevant chunks:", error)
     throw new Error(
-      `Failed to find relevant chunks: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to find relevant chunks: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -114,7 +114,7 @@ export async function findRelevantChunks(params: {
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
-    throw new Error('Embeddings must have the same dimension')
+    throw new Error("Embeddings must have the same dimension")
   }
 
   let dotProduct = 0

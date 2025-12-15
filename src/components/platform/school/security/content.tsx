@@ -1,17 +1,27 @@
-import type { Locale } from '@/components/internationalization/config'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import Link from "next/link"
+import {
+  Activity,
+  CircleCheck,
+  FileWarning,
+  Key,
+  Lock,
+  Shield,
+  TriangleAlert,
+  UserX,
+} from "lucide-react"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Shield, Lock, Key, TriangleAlert, UserX, Activity, FileWarning, CircleCheck,  } from "lucide-react"
-import Link from 'next/link'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   dictionary: Dictionary
@@ -35,10 +45,12 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         Promise.resolve(0),
         // No loginAttempts field in User model
         Promise.resolve(0),
-        db.user.count({ where: { schoolId, isTwoFactorEnabled: true } }).catch(() => 0),
+        db.user
+          .count({ where: { schoolId, isTwoFactorEnabled: true } })
+          .catch(() => 0),
       ])
     } catch (error) {
-      console.error('Error fetching security data:', error)
+      console.error("Error fetching security data:", error)
     }
   }
 
@@ -48,45 +60,51 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Active Sessions
+            </CardTitle>
+            <Activity className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeSessions}</div>
-            <p className="text-xs text-muted-foreground">Current active users</p>
+            <p className="text-muted-foreground text-xs">
+              Current active users
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Failed Logins</CardTitle>
-            <UserX className="h-4 w-4 text-muted-foreground" />
+            <UserX className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{failedLogins}</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
+            <p className="text-muted-foreground text-xs">Last 24 hours</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">2FA Enabled</CardTitle>
-            <Key className="h-4 w-4 text-muted-foreground" />
+            <Key className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{twoFactorUsers}</div>
-            <p className="text-xs text-muted-foreground">Protected accounts</p>
+            <p className="text-muted-foreground text-xs">Protected accounts</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Security Score</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Security Score
+            </CardTitle>
+            <Shield className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">Good protection</p>
+            <p className="text-muted-foreground text-xs">Good protection</p>
           </CardContent>
         </Card>
       </div>
@@ -97,14 +115,15 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         <Card className="border-primary/20 hover:border-primary/40 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileWarning className="h-5 w-5 text-primary" />
+              <FileWarning className="text-primary h-5 w-5" />
               Security Logs
             </CardTitle>
             <CardDescription>Security event monitoring</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Monitor login attempts, permission denials, and suspicious activities.
+            <p className="text-muted-foreground text-sm">
+              Monitor login attempts, permission denials, and suspicious
+              activities.
             </p>
             <Button asChild>
               <Link href={`/${lang}/admin/security/logs`}>
@@ -115,7 +134,7 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Session Management */}
-        <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
+        <Card className="border-blue-500/20 transition-colors hover:border-blue-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-blue-500" />
@@ -124,8 +143,9 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
             <CardDescription>User session management</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              View active sessions, terminate suspicious sessions, and manage session policies.
+            <p className="text-muted-foreground text-sm">
+              View active sessions, terminate suspicious sessions, and manage
+              session policies.
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/admin/security/sessions`}>
@@ -136,7 +156,7 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Security Policies */}
-        <Card className="border-green-500/20 hover:border-green-500/40 transition-colors">
+        <Card className="border-green-500/20 transition-colors hover:border-green-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-green-500" />
@@ -145,8 +165,9 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
             <CardDescription>Password and access policies</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Configure password requirements, session timeouts, and access control policies.
+            <p className="text-muted-foreground text-sm">
+              Configure password requirements, session timeouts, and access
+              control policies.
             </p>
             <Button asChild variant="secondary">
               <Link href={`/${lang}/admin/security/policies`}>
@@ -157,7 +178,7 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         </Card>
 
         {/* Threat Detection */}
-        <Card className="border-red-500/20 hover:border-red-500/40 transition-colors">
+        <Card className="border-red-500/20 transition-colors hover:border-red-500/40">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TriangleAlert className="h-5 w-5 text-red-500" />
@@ -166,13 +187,12 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
             <CardDescription>Security threat monitoring</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Monitor for brute force attacks, suspicious IPs, and unusual activity patterns.
+            <p className="text-muted-foreground text-sm">
+              Monitor for brute force attacks, suspicious IPs, and unusual
+              activity patterns.
             </p>
             <Button asChild variant="secondary">
-              <Link href={`/${lang}/admin/security/threats`}>
-                View Threats
-              </Link>
+              <Link href={`/${lang}/admin/security/threats`}>View Threats</Link>
             </Button>
           </CardContent>
         </Card>

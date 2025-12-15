@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -14,12 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { createSchoolYearSchema } from "./validation"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { createSchoolYear, updateSchoolYear } from "./actions"
 import type { SchoolYear } from "./types"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { createSchoolYearSchema } from "./validation"
 
 interface YearFormProps {
   open: boolean
@@ -37,7 +39,10 @@ export function YearForm({
   dictionary,
 }: YearFormProps) {
   // Academic dictionary - fallback to empty for now
-  const dict = (dictionary?.school as Record<string, unknown>)?.academic as Record<string, string> | undefined ?? {}
+  const dict =
+    ((dictionary?.school as Record<string, unknown>)?.academic as
+      | Record<string, string>
+      | undefined) ?? {}
   const [isPending, setIsPending] = React.useState(false)
 
   const {
@@ -50,7 +55,9 @@ export function YearForm({
     defaultValues: editingYear
       ? {
           yearName: editingYear.yearName,
-          startDate: new Date(editingYear.startDate).toISOString().split("T")[0],
+          startDate: new Date(editingYear.startDate)
+            .toISOString()
+            .split("T")[0],
           endDate: new Date(editingYear.endDate).toISOString().split("T")[0],
         }
       : {
@@ -66,7 +73,9 @@ export function YearForm({
       if (editingYear) {
         reset({
           yearName: editingYear.yearName,
-          startDate: new Date(editingYear.startDate).toISOString().split("T")[0],
+          startDate: new Date(editingYear.startDate)
+            .toISOString()
+            .split("T")[0],
           endDate: new Date(editingYear.endDate).toISOString().split("T")[0],
         })
       } else {
@@ -79,7 +88,11 @@ export function YearForm({
     }
   }, [editingYear, open, reset])
 
-  const onSubmit = async (data: { yearName: string; startDate: string; endDate: string }) => {
+  const onSubmit = async (data: {
+    yearName: string
+    startDate: string
+    endDate: string
+  }) => {
     setIsPending(true)
 
     try {
@@ -97,7 +110,9 @@ export function YearForm({
       }
 
       if (result.success) {
-        toast.success(result.message || (editingYear ? "Year updated" : "Year created"))
+        toast.success(
+          result.message || (editingYear ? "Year updated" : "Year created")
+        )
         onOpenChange(false)
         onSuccess()
       } else {
@@ -120,8 +135,8 @@ export function YearForm({
         <DialogHeader>
           <DialogTitle>
             {editingYear
-              ? (dict.editYear || "Edit Academic Year")
-              : (dict.addYear || "Add Academic Year")}
+              ? dict.editYear || "Edit Academic Year"
+              : dict.addYear || "Add Academic Year"}
           </DialogTitle>
           <DialogDescription>
             {dict.yearFormDescription ||
@@ -129,11 +144,14 @@ export function YearForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit as unknown as Parameters<typeof handleSubmit>[0])} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(
+            onSubmit as unknown as Parameters<typeof handleSubmit>[0]
+          )}
+          className="space-y-4"
+        >
           <div className="space-y-2">
-            <Label htmlFor="yearName">
-              {dict.yearName || "Year Name"}
-            </Label>
+            <Label htmlFor="yearName">{dict.yearName || "Year Name"}</Label>
             <Input
               id="yearName"
               placeholder={suggestedYearName}
@@ -141,9 +159,11 @@ export function YearForm({
               className={errors.yearName ? "border-destructive" : ""}
             />
             {errors.yearName && (
-              <p className="text-xs text-destructive">{errors.yearName.message}</p>
+              <p className="text-destructive text-xs">
+                {errors.yearName.message}
+              </p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {dict.yearNameHint || "Format: YYYY-YYYY (e.g., 2024-2025)"}
             </p>
           </div>
@@ -160,14 +180,14 @@ export function YearForm({
                 className={errors.startDate ? "border-destructive" : ""}
               />
               {errors.startDate && (
-                <p className="text-xs text-destructive">{errors.startDate.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.startDate.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">
-                {dict.endDate || "End Date"}
-              </Label>
+              <Label htmlFor="endDate">{dict.endDate || "End Date"}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -175,7 +195,9 @@ export function YearForm({
                 className={errors.endDate ? "border-destructive" : ""}
               />
               {errors.endDate && (
-                <p className="text-xs text-destructive">{errors.endDate.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.endDate.message}
+                </p>
               )}
             </div>
           </div>
@@ -192,8 +214,8 @@ export function YearForm({
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingYear
-                ? (dict.saveChanges || "Save Changes")
-                : (dict.addYear || "Add Year")}
+                ? dict.saveChanges || "Save Changes"
+                : dict.addYear || "Add Year"}
             </Button>
           </DialogFooter>
         </form>

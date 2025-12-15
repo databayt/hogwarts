@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface IconStatCardProps {
@@ -104,7 +106,7 @@ export function IconStatCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -112,9 +114,11 @@ export function IconStatCard({
       <CardContent className={cn(sizeClasses[size])}>
         {loading ? (
           <div className="space-y-3 text-center">
-            <Skeleton className={cn(iconSizeClasses[size], "rounded-full mx-auto")} />
-            <Skeleton className="h-8 w-24 mx-auto" />
-            <Skeleton className="h-4 w-20 mx-auto" />
+            <Skeleton
+              className={cn(iconSizeClasses[size], "mx-auto rounded-full")}
+            />
+            <Skeleton className="mx-auto h-8 w-24" />
+            <Skeleton className="mx-auto h-4 w-20" />
           </div>
         ) : (
           <div className="space-y-3 text-center">
@@ -133,7 +137,7 @@ export function IconStatCard({
 
             {/* Value */}
             <div className="space-y-1">
-              <h2 className="font-bold text-foreground">
+              <h2 className="text-foreground font-bold">
                 {typeof value === "number" ? value.toLocaleString() : value}
               </h2>
               <p className="muted">{label}</p>

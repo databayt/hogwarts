@@ -11,12 +11,14 @@ model: sonnet
 ## Performance Metrics
 
 ### Core Web Vitals
+
 - **LCP** (Largest Contentful Paint): < 2.5s
 - **FID** (First Input Delay): < 100ms
 - **CLS** (Cumulative Layout Shift): < 0.1
 - **INP** (Interaction to Next Paint): < 200ms
 
 ### Custom Metrics
+
 - Bundle size per route: < 100KB
 - Time to Interactive: < 3s
 - Database query time: < 100ms
@@ -25,6 +27,7 @@ model: sonnet
 ## React Performance Optimization
 
 ### 1. Memoization
+
 ```typescript
 // useMemo for expensive calculations
 const expensiveValue = useMemo(() => {
@@ -43,6 +46,7 @@ export default memo(MyComponent, (prevProps, nextProps) => {
 ```
 
 ### 2. Code Splitting
+
 ```typescript
 // Dynamic imports
 const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
@@ -54,9 +58,10 @@ const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
 ```
 
 ### 3. Virtual Scrolling
+
 ```typescript
 // For large lists
-import { useVirtual } from '@tanstack/react-virtual'
+import { useVirtual } from "@tanstack/react-virtual"
 
 function VirtualList({ items }) {
   const parentRef = useRef()
@@ -69,6 +74,7 @@ function VirtualList({ items }) {
 ```
 
 ### 4. Image Optimization
+
 ```typescript
 import Image from 'next/image'
 
@@ -86,24 +92,26 @@ import Image from 'next/image'
 ## Database Query Optimization
 
 ### 1. Avoid N+1 Queries
+
 ```typescript
 // ❌ Bad - N+1 queries
 const classes = await db.class.findMany()
 for (const cls of classes) {
   cls.students = await db.student.findMany({
-    where: { classId: cls.id }
+    where: { classId: cls.id },
   })
 }
 
 // ✅ Good - Single query with includes
 const classes = await db.class.findMany({
   include: {
-    students: true
-  }
+    students: true,
+  },
 })
 ```
 
 ### 2. Select Only Needed Fields
+
 ```typescript
 // ❌ Bad - Fetches all columns
 const users = await db.user.findMany()
@@ -113,12 +121,13 @@ const users = await db.user.findMany({
   select: {
     id: true,
     name: true,
-    email: true
-  }
+    email: true,
+  },
 })
 ```
 
 ### 3. Pagination
+
 ```typescript
 const PAGE_SIZE = 20
 
@@ -126,11 +135,12 @@ const items = await db.item.findMany({
   where: { schoolId },
   skip: (page - 1) * PAGE_SIZE,
   take: PAGE_SIZE,
-  orderBy: { createdAt: 'desc' }
+  orderBy: { createdAt: "desc" },
 })
 ```
 
 ### 4. Indexes
+
 ```prisma
 model Student {
   schoolId String
@@ -145,35 +155,38 @@ model Student {
 ## Bundle Size Optimization
 
 ### 1. Tree Shaking
+
 ```typescript
 // ❌ Bad - Imports entire library
-import _ from 'lodash'
-
+import _ from "lodash"
 // ✅ Good - Imports specific function
-import debounce from 'lodash/debounce'
+import debounce from "lodash/debounce"
 ```
 
 ### 2. Dynamic Imports
+
 ```typescript
 // Heavy components loaded on demand
 if (showChart) {
-  const { Chart } = await import('./Chart')
+  const { Chart } = await import("./Chart")
 }
 ```
 
 ### 3. Optimize Dependencies
+
 ```javascript
 // next.config.js
 module.exports = {
   experimental: {
-    optimizePackageImports: ['lodash', 'date-fns', '@icons']
-  }
+    optimizePackageImports: ["lodash", "date-fns", "@icons"],
+  },
 }
 ```
 
 ## Server Component Optimization
 
 ### 1. Streaming
+
 ```typescript
 import { Suspense } from 'react'
 
@@ -187,21 +200,20 @@ export default function Page() {
 ```
 
 ### 2. Parallel Data Fetching
+
 ```typescript
 // ❌ Sequential
 const user = await getUser()
 const posts = await getPosts()
 
 // ✅ Parallel
-const [user, posts] = await Promise.all([
-  getUser(),
-  getPosts()
-])
+const [user, posts] = await Promise.all([getUser(), getPosts()])
 ```
 
 ### 3. Request Memoization
+
 ```typescript
-import { cache } from 'react'
+import { cache } from "react"
 
 const getUser = cache(async (id: string) => {
   return db.user.findUnique({ where: { id } })
@@ -211,24 +223,27 @@ const getUser = cache(async (id: string) => {
 ## Caching Strategies
 
 ### 1. Static Generation
+
 ```typescript
 // Cached at build time
-export const dynamic = 'force-static'
+export const dynamic = "force-static"
 ```
 
 ### 2. Incremental Static Regeneration
+
 ```typescript
 export const revalidate = 3600 // Revalidate every hour
 ```
 
 ### 3. Client-Side Caching (SWR)
+
 ```typescript
-import useSWR from 'swr'
+import useSWR from "swr"
 
 function Profile() {
-  const { data, error } = useSWR('/api/user', fetcher, {
+  const { data, error } = useSWR("/api/user", fetcher, {
     revalidateOnFocus: false,
-    dedupingInterval: 60000
+    dedupingInterval: 60000,
   })
 }
 ```
@@ -236,6 +251,7 @@ function Profile() {
 ## Performance Monitoring
 
 ### 1. Web Vitals
+
 ```typescript
 // app/layout.tsx
 import { Analytics } from '@vercel/analytics/react'
@@ -255,16 +271,18 @@ export default function RootLayout({ children }) {
 ```
 
 ### 2. Custom Performance Marks
+
 ```typescript
-performance.mark('myFeature-start')
+performance.mark("myFeature-start")
 // ... feature code ...
-performance.mark('myFeature-end')
-performance.measure('myFeature', 'myFeature-start', 'myFeature-end')
+performance.mark("myFeature-end")
+performance.measure("myFeature", "myFeature-start", "myFeature-end")
 ```
 
 ## Performance Checklist
 
 ### React
+
 - [ ] Components memoized where appropriate
 - [ ] useCallback/useMemo for expensive operations
 - [ ] Virtual scrolling for long lists
@@ -272,6 +290,7 @@ performance.measure('myFeature', 'myFeature-start', 'myFeature-end')
 - [ ] Debounced/throttled event handlers
 
 ### Database
+
 - [ ] No N+1 queries
 - [ ] Proper indexes in place
 - [ ] Pagination implemented
@@ -279,6 +298,7 @@ performance.measure('myFeature', 'myFeature-start', 'myFeature-end')
 - [ ] Query execution < 100ms
 
 ### Bundle
+
 - [ ] Route bundles < 100KB
 - [ ] Code splitting implemented
 - [ ] Tree shaking working
@@ -286,6 +306,7 @@ performance.measure('myFeature', 'myFeature-start', 'myFeature-end')
 - [ ] Images optimized
 
 ### Server
+
 - [ ] Streaming enabled
 - [ ] Parallel data fetching
 - [ ] Edge runtime where appropriate
@@ -293,6 +314,7 @@ performance.measure('myFeature', 'myFeature-start', 'myFeature-end')
 - [ ] Compression enabled
 
 ### Monitoring
+
 - [ ] Core Web Vitals tracked
 - [ ] Error boundaries in place
 - [ ] Performance budgets set

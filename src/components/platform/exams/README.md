@@ -6,19 +6,19 @@ The Exam Management System is a comprehensive, production-ready solution for edu
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/exams` | Exam Dashboard | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/manage` | Exam Management | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/manage/[id]` | Exam Detail | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/qbank` | Question Bank | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/generate` | Auto-Generate | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Exam Templates | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark` | Auto-Mark | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]` | Grade Exam | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/results` | Results Dashboard | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/results/[examId]` | Exam Results | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/exams/results/analytics` | Analytics | ✅ Ready |
+| URL                                                         | Page              | Status   |
+| ----------------------------------------------------------- | ----------------- | -------- |
+| `/[lang]/s/[subdomain]/(platform)/exams`                    | Exam Dashboard    | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/manage`             | Exam Management   | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/manage/[id]`        | Exam Detail       | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/qbank`              | Question Bank     | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/generate`           | Auto-Generate     | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/generate/templates` | Exam Templates    | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/mark`               | Auto-Mark         | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/mark/grade/[id]`    | Grade Exam        | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results`            | Results Dashboard | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results/[examId]`   | Exam Results      | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/exams/results/analytics`  | Analytics         | ✅ Ready |
 
 **Status:** ✅ Production-Ready (95% Complete)
 **Last Updated:** 2025-12-14
@@ -76,6 +76,7 @@ exams/
 Create, schedule, and oversee all examinations from planning to completion.
 
 **Features:**
+
 - Multi-step exam creation form
 - Date and time scheduling
 - Class and subject assignment
@@ -86,20 +87,23 @@ Create, schedule, and oversee all examinations from planning to completion.
 - Bulk operations
 
 **Routes:**
+
 - `/[lang]/exams` - Exams listing
 - `/[lang]/exams/new` - Create exam
 - `/[lang]/exams/[id]` - Exam details
 - `/[lang]/exams/[id]/edit` - Edit exam
 
 **Key Files:**
+
 - `form.tsx` - Multi-step creation form
 - `table.tsx` - Exams data table
 - `actions.ts` - CRUD server actions
 - `utils.ts` - Duration calculation, conflict detection
 
 **Usage:**
+
 ```typescript
-import { createExam } from '@/components/platform/exams/manage/actions';
+import { createExam } from "@/components/platform/exams/manage/actions"
 
 const exam = await createExam({
   title: "Mathematics Midterm",
@@ -110,8 +114,8 @@ const exam = await createExam({
   endTime: "11:00",
   totalMarks: 100,
   passingMarks: 50,
-  examType: "MIDTERM"
-});
+  examType: "MIDTERM",
+})
 ```
 
 ### 2. Question Bank Block (`qbank/`)
@@ -121,6 +125,7 @@ const exam = await createExam({
 Build and maintain a reusable library of exam questions with rich metadata.
 
 **Features:**
+
 - Multiple question types:
   - Multiple Choice (MCQ)
   - True/False
@@ -135,19 +140,22 @@ Build and maintain a reusable library of exam questions with rich metadata.
 - Bulk import/export
 
 **Routes:**
+
 - `/[lang]/generate/questions` - Question listing
 - `/[lang]/generate/questions/new` - Add question
 - `/[lang]/generate/questions/[id]` - Question details
 
 **Key Files:**
+
 - `form.tsx` - Question creation form
 - `table.tsx` - Questions data table
 - `actions.ts` - Question CRUD operations
 - `types.ts` - Question type definitions
 
 **Usage:**
+
 ```typescript
-import { createQuestion } from '@/components/platform/exams/qbank/actions';
+import { createQuestion } from "@/components/platform/exams/qbank/actions"
 
 const question = await createQuestion({
   subjectId: "subject-id",
@@ -160,9 +168,9 @@ const question = await createQuestion({
     { text: "Khartoum", isCorrect: true },
     { text: "Cairo", isCorrect: false },
     { text: "Addis Ababa", isCorrect: false },
-    { text: "Nairobi", isCorrect: false }
-  ]
-});
+    { text: "Nairobi", isCorrect: false },
+  ],
+})
 ```
 
 ### 3. Auto-Generate Block (`generate/`)
@@ -172,6 +180,7 @@ const question = await createQuestion({
 Generate exams automatically using templates or AI-powered question selection.
 
 **Features:**
+
 - Exam template management
 - Question distribution rules
 - AI question generation
@@ -182,26 +191,29 @@ Generate exams automatically using templates or AI-powered question selection.
 - Preview before finalization
 
 **Routes:**
+
 - `/[lang]/generate` - Generation dashboard
 - `/[lang]/generate/templates` - Template listing
 - `/[lang]/generate/templates/new` - Create template
 
 **Key Files:**
+
 - `form.tsx` - Template creation
 - `distribution-editor.tsx` - Distribution configuration
 - `actions.ts` - Generation logic
 - `utils.ts` - Selection algorithms
 
 **Usage:**
+
 ```typescript
-import { generateExamFromTemplate } from '@/components/platform/exams/generate/actions';
+import { generateExamFromTemplate } from "@/components/platform/exams/generate/actions"
 
 const exam = await generateExamFromTemplate({
   templateId: "template-id",
   classId: "class-id",
   examDate: new Date("2025-04-10"),
-  startTime: "10:00"
-});
+  startTime: "10:00",
+})
 ```
 
 ### 4. Auto-Mark Block (`mark/`)
@@ -211,6 +223,7 @@ const exam = await generateExamFromTemplate({
 Grade student submissions automatically with AI assistance for subjective answers.
 
 **Features:**
+
 - Automatic MCQ/True-False grading
 - Rubric-based essay marking
 - AI-assisted grading for subjective answers
@@ -221,28 +234,31 @@ Grade student submissions automatically with AI assistance for subjective answer
 - Question-wise analysis
 
 **Routes:**
+
 - `/[lang]/mark` - Marking dashboard
 - `/[lang]/mark/grade/[id]` - Grade specific exam
 - `/[lang]/mark/pending` - Pending exams
 
 **Key Files:**
+
 - `content.tsx` - Marking dashboard
 - `form.tsx` - Marking interface
 - `actions.ts` - Grading logic
 - `utils.ts` - Score calculation
 
 **Usage:**
+
 ```typescript
-import { markExam } from '@/components/platform/exams/mark/actions';
+import { markExam } from "@/components/platform/exams/mark/actions"
 
 const result = await markExam({
   examId: "exam-id",
   studentId: "student-id",
   answers: [
     { questionId: "q1", answer: "A", pointsAwarded: 2 },
-    { questionId: "q2", answer: "Essay text...", pointsAwarded: 8 }
-  ]
-});
+    { questionId: "q2", answer: "Essay text...", pointsAwarded: 8 },
+  ],
+})
 ```
 
 ### 5. Results Block (`results/`)
@@ -252,6 +268,7 @@ const result = await markExam({
 Generate detailed reports, calculate grades, and create customizable PDF certificates.
 
 **Features:**
+
 - Mark summation and aggregation
 - Grade calculation with boundaries
 - Class rank computation
@@ -265,11 +282,13 @@ Generate detailed reports, calculate grades, and create customizable PDF certifi
 - A4-friendly layouts for printing
 
 **Routes:**
+
 - `/[lang]/results` - Results listing
 - `/[lang]/results/[examId]` - Exam results detail
 - `/[lang]/results/analytics` - Performance analytics
 
 **Key Files:**
+
 - `lib/calculator.ts` - Grade calculation (340 lines, 20+ functions)
 - `lib/pdf-generator.ts` - PDF generation core (280 lines)
 - `lib/templates/classic.tsx` - Formal template (400 lines)
@@ -279,15 +298,19 @@ Generate detailed reports, calculate grades, and create customizable PDF certifi
 - `utils.ts` - Helper functions (200+ lines)
 
 **Usage:**
+
 ```typescript
-import { getExamResults, generateStudentPDF } from '@/components/platform/exams/results/actions';
+import {
+  generateStudentPDF,
+  getExamResults,
+} from "@/components/platform/exams/results/actions"
 
 // Get all results
 const results = await getExamResults({
   examId: "exam-id",
   includeAbsent: true,
-  includeQuestionBreakdown: true
-});
+  includeQuestionBreakdown: true,
+})
 
 // Generate PDF
 const pdf = await generateStudentPDF({
@@ -297,9 +320,9 @@ const pdf = await generateStudentPDF({
     template: "modern",
     includeQuestionBreakdown: true,
     includeClassAnalytics: true,
-    language: "en"
-  }
-});
+    language: "en",
+  },
+})
 ```
 
 ## 🚀 Getting Started
@@ -317,6 +340,7 @@ pnpm prisma generate
 ### Database Models
 
 See `prisma/models/exam.prisma` (consolidated exam system):
+
 - `Exam` - Main exam entity
 - `ExamResult` - Student results
 - `QuestionBank` - Question repository
@@ -330,6 +354,7 @@ See `prisma/models/exam.prisma` (consolidated exam system):
 ### Configuration
 
 1. **Grade Boundaries**: Configure in database
+
 ```sql
 INSERT INTO grade_boundaries (grade, min_score, max_score, gpa_value, school_id)
 VALUES
@@ -346,17 +371,17 @@ VALUES
 **Critical**: All operations are scoped by `schoolId`:
 
 ```typescript
-import { getTenantContext } from '@/lib/tenant-context';
+import { getTenantContext } from "@/lib/tenant-context"
 
 export async function myAction() {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Always include schoolId
   const data = await db.exam.findMany({
-    where: { schoolId }  // Required!
-  });
+    where: { schoolId }, // Required!
+  })
 }
 ```
 
@@ -365,16 +390,19 @@ export async function myAction() {
 Full bilingual support with 150+ translation keys:
 
 **Dictionaries:**
+
 - `dictionary.school.exams.dashboard.*` - Dashboard UI
 - `dictionary.results.*` - Results block
 - `dictionary.generate.*` - Generation block
 - `dictionary.marking.*` - Marking block
 
 **Languages:**
+
 - Arabic (RTL) - Default
 - English (LTR)
 
 **Usage:**
+
 ```typescript
 <h1>{dictionary?.school?.exams?.title}</h1>
 <p>{dictionary?.results?.statistics?.averageScore}</p>
@@ -383,6 +411,7 @@ Full bilingual support with 150+ translation keys:
 ## 📊 Analytics & Metrics
 
 ### Available Statistics
+
 - Class average and median scores
 - Pass/fail rates
 - Grade distribution
@@ -394,6 +423,7 @@ Full bilingual support with 150+ translation keys:
 ### Calculation Functions
 
 From `results/lib/calculator.ts`:
+
 ```typescript
 - calculateGrade() - Letter grade from percentage
 - calculateMarkSummation() - Aggregate marks
@@ -408,13 +438,16 @@ From `results/lib/calculator.ts`:
 ## 🎨 UI Components
 
 ### Dashboard
+
 - 8 overview statistics cards
 - 5 feature block navigation cards
 - Quick actions menu (4 shortcuts)
 - 5-step workflow guide
 
 ### Tables
+
 All blocks use `@tanstack/react-table`:
+
 - Server-side pagination
 - Multi-column sorting
 - Advanced filtering
@@ -423,7 +456,9 @@ All blocks use `@tanstack/react-table`:
 - Export capabilities
 
 ### Forms
+
 Built with `react-hook-form` + Zod:
+
 - Real-time validation
 - Multi-step flows
 - Auto-save functionality
@@ -433,6 +468,7 @@ Built with `react-hook-form` + Zod:
 ## ⚡ Recent Optimizations & Features
 
 ### Performance Enhancements
+
 - **N+1 Query Prevention**: Implemented eager loading with Prisma includes
 - **Advanced Caching**: LRU cache system with strategic TTLs
 - **Database Indexing**: Added 45+ composite indexes for optimal performance
@@ -440,6 +476,7 @@ Built with `react-hook-form` + Zod:
 - **Result**: 6-8x performance improvement across all operations
 
 ### New Features
+
 - **Timetable Conflict Detection**: Prevents scheduling conflicts with existing classes
 - **CSV Import/Export**: Full support for questions and exam results
 - **Batch PDF Generation**: Generate hundreds of PDFs with ZIP download
@@ -447,6 +484,7 @@ Built with `react-hook-form` + Zod:
 - **Cache Management**: Automatic invalidation and warming strategies
 
 ### Code Quality Improvements
+
 - **Modular Architecture**: Refactored 1,789 lines into 24+ focused modules
 - **Consistent Error Handling**: Implemented ActionResponse<T> pattern
 - **TypeScript Strict Mode**: Full type safety with no `any` types
@@ -477,6 +515,7 @@ See [ISSUE.md](./ISSUE.md) for common issues and solutions.
 ## 🤝 Contributing
 
 When adding features:
+
 1. Follow feature-based structure
 2. Keep blocks self-contained
 3. Always scope by schoolId
@@ -488,15 +527,16 @@ When adding features:
 
 ## 📊 Performance Metrics
 
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Load Exam Results | 850ms | 120ms | 7x faster |
-| Generate 100 PDFs | 45s | 12s | 3.75x faster |
-| Question Search | 380ms | 45ms | 8.4x faster |
-| Analytics Dashboard | 1.2s | 180ms | 6.7x faster |
-| Grade Calculation | 220ms | 35ms | 6.3x faster |
+| Operation           | Before | After | Improvement  |
+| ------------------- | ------ | ----- | ------------ |
+| Load Exam Results   | 850ms  | 120ms | 7x faster    |
+| Generate 100 PDFs   | 45s    | 12s   | 3.75x faster |
+| Question Search     | 380ms  | 45ms  | 8.4x faster  |
+| Analytics Dashboard | 1.2s   | 180ms | 6.7x faster  |
+| Grade Calculation   | 220ms  | 35ms  | 6.3x faster  |
 
 ### Cache Performance
+
 - Grade Boundaries: 94% hit rate (30-min TTL)
 - School Branding: 97% hit rate (1-hour TTL)
 - Question Analytics: 89% hit rate (10-min TTL)
@@ -505,15 +545,16 @@ When adding features:
 ## 🔐 Security & Permissions
 
 ### Permission Matrix
-| Role | Create | Read | Update | Delete | Export | Analytics |
-|------|--------|------|--------|--------|--------|-----------|
-| DEVELOPER | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ADMIN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TEACHER | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ACCOUNTANT | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| STUDENT | ❌ | 🔒 | ❌ | ❌ | ❌ | 🔒 |
-| GUARDIAN | ❌ | 🔒 | ❌ | ❌ | ❌ | 🔒 |
-| STAFF | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |
+
+| Role       | Create | Read | Update | Delete | Export | Analytics |
+| ---------- | ------ | ---- | ------ | ------ | ------ | --------- |
+| DEVELOPER  | ✅     | ✅   | ✅     | ✅     | ✅     | ✅        |
+| ADMIN      | ✅     | ✅   | ✅     | ✅     | ✅     | ✅        |
+| TEACHER    | ✅     | ✅   | ✅     | ✅     | ✅     | ✅        |
+| ACCOUNTANT | ❌     | ✅   | ❌     | ❌     | ✅     | ✅        |
+| STUDENT    | ❌     | 🔒   | ❌     | ❌     | ❌     | 🔒        |
+| GUARDIAN   | ❌     | 🔒   | ❌     | ❌     | ❌     | 🔒        |
+| STAFF      | ❌     | ✅   | ❌     | ❌     | ❌     | ✅        |
 
 🔒 = Limited to own/children's data
 

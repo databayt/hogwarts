@@ -1,8 +1,7 @@
-import Link from "next/link";
-import * as React from "react";
+import * as React from "react"
+import Link from "next/link"
 
-import { CustomerPortalButton } from "@/components/platform/school/billing/customer-portal-button";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -10,14 +9,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn, formatDate } from "@/components/marketing/pricing/lib/utils";
-import { UserSubscriptionPlan } from "@/components/marketing/pricing/types";
-import type { Locale } from "@/components/internationalization/config";
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { cn, formatDate } from "@/components/marketing/pricing/lib/utils"
+import { UserSubscriptionPlan } from "@/components/marketing/pricing/types"
+import { CustomerPortalButton } from "@/components/platform/school/billing/customer-portal-button"
 
 interface BillingInfoProps extends React.HTMLAttributes<HTMLFormElement> {
-  userSubscriptionPlan: UserSubscriptionPlan;
-  lang?: Locale;
+  userSubscriptionPlan: UserSubscriptionPlan
+  lang?: Locale
 }
 
 export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
@@ -28,7 +28,7 @@ export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
     isPaid,
     isCanceled,
     stripeCurrentPeriodEnd,
-  } = userSubscriptionPlan;
+  } = userSubscriptionPlan
 
   return (
     <Card>
@@ -39,7 +39,7 @@ export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>{description}</CardContent>
-      <CardFooter className="flex flex-col items-center space-y-2 border-t bg-accent py-2 md:flex-row md:justify-between md:space-y-0">
+      <CardFooter className="bg-accent flex flex-col items-center space-y-2 border-t py-2 md:flex-row md:justify-between md:space-y-0">
         {isPaid ? (
           <p className="muted">
             {isCanceled
@@ -58,5 +58,5 @@ export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
         )}
       </CardFooter>
     </Card>
-  );
+  )
 }

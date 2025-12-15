@@ -1,12 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { Users, UserCheck, Clock, CircleCheck, ListOrdered, CircleX, GraduationCap, TrendingUp } from "lucide-react"
-import { TrendingStats } from "../trending-stats"
-import { ProgressStats, ProgressStatStacked } from "../progress-stats"
+import {
+  CircleCheck,
+  CircleX,
+  Clock,
+  GraduationCap,
+  ListOrdered,
+  TrendingUp,
+  UserCheck,
+  Users,
+} from "lucide-react"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import type { TrendingStatItem, AdmissionStatsData } from "../types"
+
+import { ProgressStats, ProgressStatStacked } from "../progress-stats"
+import { TrendingStats } from "../trending-stats"
+import type { AdmissionStatsData, TrendingStatItem } from "../types"
 
 interface AdmissionStatsProps {
   /** Admission data */
@@ -59,9 +70,10 @@ export function AdmissionStats({
 }: AdmissionStatsProps) {
   const labels = dictionary || {}
 
-  const conversionRate = data.totalApplications > 0
-    ? ((data.admitted / data.totalApplications) * 100).toFixed(1)
-    : "0"
+  const conversionRate =
+    data.totalApplications > 0
+      ? ((data.admitted / data.totalApplications) * 100).toFixed(1)
+      : "0"
 
   const items: TrendingStatItem[] = [
     {
@@ -226,7 +238,7 @@ export function SeatUtilization({
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {labels.seatsFilled || "Seats Filled"}
             </p>
             <p className="text-2xl font-bold">
@@ -234,7 +246,7 @@ export function SeatUtilization({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {labels.seatsAvailable || "Available"}
             </p>
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
@@ -243,7 +255,7 @@ export function SeatUtilization({
           </div>
         </div>
         <Progress value={utilizationRate} className="h-2" />
-        <p className="text-sm text-muted-foreground text-center">
+        <p className="text-muted-foreground text-center text-sm">
           {utilizationRate.toFixed(1)}% {labels.utilized || "utilized"}
         </p>
       </CardContent>
@@ -295,7 +307,9 @@ export function AdmissionDashboardFull({
         {data.seatsFilled !== undefined && (
           <SeatUtilization
             seatsFilled={data.seatsFilled}
-            seatsAvailable={data.totalSeats ? data.totalSeats - data.seatsFilled : 0}
+            seatsAvailable={
+              data.totalSeats ? data.totalSeats - data.seatsFilled : 0
+            }
             dictionary={dictionary}
           />
         )}

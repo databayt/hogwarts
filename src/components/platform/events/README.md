@@ -7,6 +7,7 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📅 Create and schedule events
 - 🎯 Manage event categories
 - 👥 Track attendance/RSVP
@@ -14,25 +15,30 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 - 📁 Export event calendar
 
 ### What Teachers Can Do
+
 - ✅ Create class events
 - ✅ View school calendar
 - ✅ RSVP to events
 - ❌ Cannot create school-wide events
 
 ### What Students Can View
+
 - ✅ View upcoming events
 - ✅ RSVP to events
 - ✅ View event details
 
 ### What Parents Can View
+
 - ✅ View school events
 - ✅ RSVP on behalf of child
 - ✅ Add to personal calendar
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations
 - ✅ Event scheduling (date, time, location)
 - ✅ Attendee targeting
@@ -40,6 +46,7 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 - ✅ Multi-tenant isolation
 
 **Planned:**
+
 - ⏸️ Recurring events
 - ⏸️ iCal export
 - ⏸️ Email reminders
@@ -50,6 +57,7 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 ## Admin Workflows
 
 ### 1. Create School Event
+
 1. Navigate to `/events`
 2. Click "Create Event"
 3. Fill in details:
@@ -62,12 +70,14 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 5. Users receive notifications
 
 ### 2. Track RSVPs
+
 1. Open event detail page
 2. View RSVP list
 3. See attending/not attending counts
 4. Export attendee list
 
 ### 3. View Calendar
+
 1. Navigate to `/events/calendar`
 2. View monthly calendar
 3. Filter by event type
@@ -78,10 +88,12 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 ## Integration with Other Features
 
 ### Links to Dashboard
+
 - Upcoming events widget
 - Event reminders
 
 ### Links to Announcements
+
 - Event announcements
 - Reminder notifications
 
@@ -90,6 +102,7 @@ The Events feature enables schools to manage calendars, schedule activities, tra
 ## Technical Implementation
 
 **Database Schema:**
+
 ```prisma
 model Event {
   id          String   @id @default(cuid())
@@ -116,37 +129,44 @@ model Event {
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

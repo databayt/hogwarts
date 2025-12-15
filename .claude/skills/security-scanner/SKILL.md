@@ -8,6 +8,7 @@ category: security
 # Security Scanning Skill
 
 ## OWASP Top 10
+
 1. Access Control - Auth + RBAC
 2. Cryptographic - HTTPS + encryption
 3. Injection - Validation + parameterized queries
@@ -20,4 +21,5 @@ category: security
 10. SSRF - URL validation
 
 ## Checklist
+
 - [ ] All OWASP Top 10 addressed

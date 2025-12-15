@@ -1,36 +1,39 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { stripe } from "@/components/marketing/pricing/lib/stripe";
-import { getUserSubscriptionPlan } from "@/components/marketing/pricing/lib/subscription";
-import { absoluteUrl } from "@/components/marketing/pricing/lib/utils";
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
+import { stripe } from "@/components/marketing/pricing/lib/stripe"
+import { getUserSubscriptionPlan } from "@/components/marketing/pricing/lib/subscription"
+import { absoluteUrl } from "@/components/marketing/pricing/lib/utils"
 
 export type responseAction = {
-  status: "success" | "error";
-  stripeUrl?: string;
+  status: "success" | "error"
+  stripeUrl?: string
 }
 
 const billingUrl = absoluteUrl("/starter/admin/billing")
 const pricingUrl = absoluteUrl("/pricing")
 
-export async function generateUserStripe(priceId: string): Promise<responseAction> {
-  let redirectUrl: string = "";
+export async function generateUserStripe(
+  priceId: string
+): Promise<responseAction> {
+  let redirectUrl: string = ""
 
   try {
     if (!stripe) {
-      throw new Error("Stripe is not configured");
+      throw new Error("Stripe is not configured")
     }
 
     const session = await auth()
-    const user = session?.user;
+    const user = session?.user
 
     if (!user || !user.email || !user.id) {
-      throw new Error("Unauthorized");
+      throw new Error("Unauthorized")
     }
 
     if (!priceId || typeof priceId !== "string") {
-      throw new Error("Missing Stripe price id");
+      throw new Error("Missing Stripe price id")
     }
 
     const subscriptionPlan = await getUserSubscriptionPlan(user.id)
@@ -66,8 +69,8 @@ export async function generateUserStripe(priceId: string): Promise<responseActio
       redirectUrl = stripeSession.url as string
     }
   } catch (error) {
-    console.error("Stripe session creation failed:", error);
-    throw new Error("Failed to generate user stripe session");
+    console.error("Stripe session creation failed:", error)
+    throw new Error("Failed to generate user stripe session")
   }
 
   // no revalidatePath because redirect

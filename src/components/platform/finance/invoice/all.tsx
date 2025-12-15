@@ -1,71 +1,82 @@
-"use client";
+"use client"
 
 /**
  * All invoices view component
  *
  * Displays all invoices with filtering, sorting, and bulk actions.
  */
+import { useState } from "react"
+import { Download, Plus, Search } from "lucide-react"
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, Plus } from "lucide-react";
-import { formatCurrency, formatDueStatus, getInvoiceStatusColor } from "./util";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { formatCurrency, formatDueStatus, getInvoiceStatusColor } from "./util"
 
 interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  clientName: string;
-  amount: number;
-  status: string;
-  dueDate: Date;
-  createdAt: Date;
+  id: string
+  invoiceNumber: string
+  clientName: string
+  amount: number
+  status: string
+  dueDate: Date
+  createdAt: Date
 }
 
 interface AllInvoicesProps {
-  invoices: Invoice[];
-  onCreateNew?: () => void;
-  onViewInvoice?: (id: string) => void;
+  invoices: Invoice[]
+  onCreateNew?: () => void
+  onViewInvoice?: (id: string) => void
 }
 
-export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoicesProps) {
+export function AllInvoices({
+  invoices,
+  onCreateNew,
+  onViewInvoice,
+}: AllInvoicesProps) {
   const [filters, setFilters] = useState({
     search: "",
     status: "",
-  });
-  const [sortBy, setSortBy] = useState<"date" | "amount" | "client">("date");
+  })
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "client">("date")
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filters.search) {
-      const search = filters.search.toLowerCase();
+      const search = filters.search.toLowerCase()
       if (
         !invoice.invoiceNumber.toLowerCase().includes(search) &&
         !invoice.clientName.toLowerCase().includes(search)
       ) {
-        return false;
+        return false
       }
     }
 
     if (filters.status && invoice.status !== filters.status) {
-      return false;
+      return false
     }
 
-    return true;
-  });
+    return true
+  })
 
   const sortedInvoices = [...filteredInvoices].sort((a, b) => {
     switch (sortBy) {
       case "amount":
-        return b.amount - a.amount;
+        return b.amount - a.amount
       case "client":
-        return a.clientName.localeCompare(b.clientName);
+        return a.clientName.localeCompare(b.clientName)
       case "date":
       default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     }
-  });
+  })
 
   return (
     <div className="space-y-4">
@@ -73,7 +84,7 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3>All Invoices</h3>
-          <span className="rounded-full bg-muted px-2 py-1">
+          <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedInvoices.length}</small>
           </span>
         </div>
@@ -94,7 +105,7 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
       {/* Filters */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             placeholder="Search invoices..."
             value={filters.search}
@@ -103,7 +114,10 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
           />
         </div>
 
-        <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+        <Select
+          value={filters.status}
+          onValueChange={(value) => setFilters({ ...filters, status: value })}
+        >
           <SelectTrigger>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
@@ -135,7 +149,7 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
           <div
             key={invoice.id}
             onClick={() => onViewInvoice?.(invoice.id)}
-            className="flex items-center justify-between rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+            className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors"
           >
             <div className="flex items-center gap-4">
               <div>
@@ -145,16 +159,20 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="font-medium tabular-nums">{formatCurrency(invoice.amount)}</div>
-                <small className="muted">{formatDueStatus(invoice.dueDate, invoice.status)}</small>
+                <div className="font-medium tabular-nums">
+                  {formatCurrency(invoice.amount)}
+                </div>
+                <small className="muted">
+                  {formatDueStatus(invoice.dueDate, invoice.status)}
+                </small>
               </div>
               <Badge
                 variant={
                   invoice.status === "paid"
                     ? "default"
                     : invoice.status === "overdue"
-                    ? "destructive"
-                    : "outline"
+                      ? "destructive"
+                      : "outline"
                 }
               >
                 {invoice.status}
@@ -169,10 +187,12 @@ export function AllInvoices({ invoices, onCreateNew, onViewInvoice }: AllInvoice
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8">
           <h4 className="mt-4">No invoices found</h4>
           <p className="muted mt-2">
-            {filters.search || filters.status ? "Try adjusting your filters" : "Create your first invoice to get started"}
+            {filters.search || filters.status
+              ? "Try adjusting your filters"
+              : "Create your first invoice to get started"}
           </p>
         </div>
       )}
     </div>
-  );
+  )
 }

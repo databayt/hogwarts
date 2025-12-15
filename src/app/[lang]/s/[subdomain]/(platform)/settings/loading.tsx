@@ -1,6 +1,6 @@
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonFormSection } from "@/components/ui/skeleton-form"
 import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonFormSection } from "@/components/ui/skeleton-form"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function Loading() {
   return (

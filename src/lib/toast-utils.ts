@@ -70,22 +70,28 @@
  * ```
  */
 
-import { SuccessToast, ErrorToast, InfoToast, DeleteToast, confirmDeleteDialog } from '@/components/atom/toast';
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+  InfoToast,
+  SuccessToast,
+} from "@/components/atom/toast"
 
 export interface ToastOptions {
   /** Custom message to display */
-  message?: string;
+  message?: string
   /** Fallback message if primary message is not provided */
-  fallback?: string;
+  fallback?: string
   /** Duration in milliseconds */
-  duration?: number;
+  duration?: number
 }
 
 export interface CrudToastMessages {
-  create?: string;
-  update?: string;
-  delete?: string;
-  error?: string;
+  create?: string
+  update?: string
+  delete?: string
+  error?: string
 }
 
 /**
@@ -93,9 +99,9 @@ export interface CrudToastMessages {
  */
 export function showSuccess(
   message: string | undefined,
-  fallback: string = 'Operation successful'
+  fallback: string = "Operation successful"
 ) {
-  SuccessToast(message || fallback);
+  SuccessToast(message || fallback)
 }
 
 /**
@@ -103,9 +109,9 @@ export function showSuccess(
  */
 export function showError(
   message: string | undefined,
-  fallback: string = 'Operation failed'
+  fallback: string = "Operation failed"
 ) {
-  ErrorToast(message || fallback);
+  ErrorToast(message || fallback)
 }
 
 /**
@@ -113,9 +119,9 @@ export function showError(
  */
 export function showInfo(
   message: string | undefined,
-  fallback: string = 'Information'
+  fallback: string = "Information"
 ) {
-  InfoToast(message || fallback);
+  InfoToast(message || fallback)
 }
 
 /**
@@ -123,46 +129,43 @@ export function showInfo(
  */
 export function showDelete(
   message: string | undefined,
-  fallback: string = 'Deleted successfully'
+  fallback: string = "Deleted successfully"
 ) {
-  DeleteToast(message || fallback);
+  DeleteToast(message || fallback)
 }
 
 /**
  * Show a toast based on CRUD operation result
  */
 export function showCrudToast(
-  operation: 'create' | 'update' | 'delete',
+  operation: "create" | "update" | "delete",
   success: boolean,
   messages?: CrudToastMessages,
   dictionary?: any
 ) {
   if (success) {
     switch (operation) {
-      case 'create':
+      case "create":
         showSuccess(
           messages?.create || dictionary?.common?.success,
-          'Created successfully'
-        );
-        break;
-      case 'update':
+          "Created successfully"
+        )
+        break
+      case "update":
         showSuccess(
           messages?.update || dictionary?.common?.success,
-          'Updated successfully'
-        );
-        break;
-      case 'delete':
+          "Updated successfully"
+        )
+        break
+      case "delete":
         showDelete(
           messages?.delete || dictionary?.common?.success,
-          'Deleted successfully'
-        );
-        break;
+          "Deleted successfully"
+        )
+        break
     }
   } else {
-    showError(
-      messages?.error || dictionary?.common?.error,
-      'Operation failed'
-    );
+    showError(messages?.error || dictionary?.common?.error, "Operation failed")
   }
 }
 
@@ -173,11 +176,12 @@ export async function confirmDelete(
   message?: string,
   dictionary?: any
 ): Promise<boolean> {
-  const confirmMessage = message ||
+  const confirmMessage =
+    message ||
     dictionary?.common?.confirm_delete ||
-    'This action cannot be undone.';
+    "This action cannot be undone."
 
-  return confirmDeleteDialog(confirmMessage);
+  return confirmDeleteDialog(confirmMessage)
 }
 
 /**
@@ -186,29 +190,29 @@ export async function confirmDelete(
 export async function withToast<T>(
   promise: Promise<T>,
   options: {
-    loading?: string;
-    success?: string;
-    error?: string;
-    dictionary?: any;
+    loading?: string
+    success?: string
+    error?: string
+    dictionary?: any
   } = {}
 ): Promise<T | null> {
   try {
-    const result = await promise;
+    const result = await promise
 
     if (options.success) {
       showSuccess(
         options.success,
-        options.dictionary?.common?.success || 'Success'
-      );
+        options.dictionary?.common?.success || "Success"
+      )
     }
 
-    return result;
+    return result
   } catch (error) {
     showError(
       options.error || (error as Error)?.message,
-      options.dictionary?.common?.error || 'Failed'
-    );
-    return null;
+      options.dictionary?.common?.error || "Failed"
+    )
+    return null
   }
 }
 
@@ -217,21 +221,21 @@ export async function withToast<T>(
  */
 export function formatErrorMessage(
   error: unknown,
-  fallback: string = 'An error occurred'
+  fallback: string = "An error occurred"
 ): string {
   if (error instanceof Error) {
-    return error.message;
+    return error.message
   }
 
-  if (typeof error === 'string') {
-    return error;
+  if (typeof error === "string") {
+    return error
   }
 
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String(error.message);
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message)
   }
 
-  return fallback;
+  return fallback
 }
 
 /**
@@ -242,14 +246,14 @@ export function extractValidationErrors(
 ): Record<string, string> | null {
   if (
     error &&
-    typeof error === 'object' &&
-    'errors' in error &&
-    typeof error.errors === 'object'
+    typeof error === "object" &&
+    "errors" in error &&
+    typeof error.errors === "object"
   ) {
-    return error.errors as Record<string, string>;
+    return error.errors as Record<string, string>
   }
 
-  return null;
+  return null
 }
 
 // Re-export toast functions for convenience
@@ -258,5 +262,5 @@ export {
   ErrorToast,
   InfoToast,
   DeleteToast,
-  confirmDeleteDialog
-} from '@/components/atom/toast';
+  confirmDeleteDialog,
+} from "@/components/atom/toast"

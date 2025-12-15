@@ -1,40 +1,42 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import { LIBRARY_CONFIG } from "./config"
+import type { ActionResponse, Book } from "./types"
 import {
   bookSchema,
   borrowBookSchema,
-  returnBookSchema,
   deleteBookSchema,
+  returnBookSchema,
   type BookSchema,
   type BorrowBookSchema,
+  type DeleteBookSchema,
   type ReturnBookSchema,
-  type DeleteBookSchema
-} from "./validation";
-import { LIBRARY_CONFIG } from "./config";
-import type { ActionResponse, Book } from "./types";
+} from "./validation"
 
 // Create a new book
 export async function createBook(
   data: BookSchema & { schoolId: string }
 ): Promise<ActionResponse<Book>> {
   try {
-    const { schoolId: contextSchoolId } = await getTenantContext();
+    const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
       return {
         success: false,
         message: "School context not found",
-      };
+      }
     }
 
     // Use context schoolId for additional security, ignore client-provided schoolId
-    const schoolId = contextSchoolId;
+    const schoolId = contextSchoolId
 
     // Validate input
-    const validatedData = bookSchema.parse(data);
+    const validatedData = bookSchema.parse(data)
 
     // Create book in database
     const book = await db.book.create({
@@ -43,23 +45,23 @@ export async function createBook(
         schoolId,
         availableCopies: validatedData.totalCopies,
       },
-    });
+    })
 
-    revalidatePath("/library");
-    revalidatePath("/library/admin/books");
+    revalidatePath("/library")
+    revalidatePath("/library/admin/books")
 
     return {
       success: true,
       message: "Book created successfully",
       data: book as Book,
-    };
+    }
   } catch (error) {
-    console.error("Create book error:", error);
+    console.error("Create book error:", error)
     return {
       success: false,
       message: "Failed to create book",
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -68,30 +70,30 @@ export async function borrowBook(
   data: Omit<BorrowBookSchema, "dueDate"> & { schoolId: string }
 ): Promise<ActionResponse> {
   try {
-    const { schoolId: contextSchoolId } = await getTenantContext();
+    const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
       return {
         success: false,
         message: "School context not found",
-      };
+      }
     }
 
     // Use context schoolId for security
-    const schoolId = contextSchoolId;
-    const { bookId, userId } = data;
+    const schoolId = contextSchoolId
+    const { bookId, userId } = data
 
     // Verify the user exists in the database
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { id: true },
-    });
+    })
 
     if (!user) {
       return {
         success: false,
         message: "User not found. Please log in again.",
-      };
+      }
     }
 
     // Check if book exists and is available
@@ -100,20 +102,20 @@ export async function borrowBook(
         id: bookId,
         schoolId, // Ensure book belongs to this school
       },
-    });
+    })
 
     if (!book) {
       return {
         success: false,
         message: "Book not found",
-      };
+      }
     }
 
     if (book.availableCopies <= 0) {
       return {
         success: false,
         message: "No copies available",
-      };
+      }
     }
 
     // Check if user already borrowed this book
@@ -124,18 +126,18 @@ export async function borrowBook(
         schoolId,
         status: "BORROWED",
       },
-    });
+    })
 
     if (existingBorrow) {
       return {
         success: false,
         message: "You have already borrowed this book",
-      };
+      }
     }
 
     // Calculate due date (14 days from now)
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + LIBRARY_CONFIG.MAX_BORROW_DAYS);
+    const dueDate = new Date()
+    dueDate.setDate(dueDate.getDate() + LIBRARY_CONFIG.MAX_BORROW_DAYS)
 
     // Create borrow record and update book availability
     await db.$transaction([
@@ -156,23 +158,23 @@ export async function borrowBook(
           },
         },
       }),
-    ]);
+    ])
 
-    revalidatePath("/library");
-    revalidatePath(`/library/books/${bookId}`);
-    revalidatePath("/library/my-profile");
+    revalidatePath("/library")
+    revalidatePath(`/library/books/${bookId}`)
+    revalidatePath("/library/my-profile")
 
     return {
       success: true,
       message: `Book borrowed successfully. Due date: ${dueDate.toLocaleDateString()}`,
-    };
+    }
   } catch (error) {
-    console.error("Borrow book error:", error);
+    console.error("Borrow book error:", error)
     return {
       success: false,
       message: "Failed to borrow book",
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -181,17 +183,17 @@ export async function returnBook(
   data: ReturnBookSchema
 ): Promise<ActionResponse> {
   try {
-    const { schoolId: contextSchoolId } = await getTenantContext();
+    const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
       return {
         success: false,
         message: "School context not found",
-      };
+      }
     }
 
-    const schoolId = contextSchoolId;
-    const { borrowRecordId } = data;
+    const schoolId = contextSchoolId
+    const { borrowRecordId } = data
 
     // Find borrow record (ensure it belongs to this school)
     const borrowRecord = await db.borrowRecord.findFirst({
@@ -200,20 +202,20 @@ export async function returnBook(
         schoolId,
       },
       include: { book: true },
-    });
+    })
 
     if (!borrowRecord) {
       return {
         success: false,
         message: "Borrow record not found",
-      };
+      }
     }
 
     if (borrowRecord.status === "RETURNED") {
       return {
         success: false,
         message: "Book already returned",
-      };
+      }
     }
 
     // Update borrow record and increment available copies
@@ -233,23 +235,23 @@ export async function returnBook(
           },
         },
       }),
-    ]);
+    ])
 
-    revalidatePath("/library");
-    revalidatePath(`/library/books/${borrowRecord.bookId}`);
-    revalidatePath("/library/my-profile");
+    revalidatePath("/library")
+    revalidatePath(`/library/books/${borrowRecord.bookId}`)
+    revalidatePath("/library/my-profile")
 
     return {
       success: true,
       message: "Book returned successfully",
-    };
+    }
   } catch (error) {
-    console.error("Return book error:", error);
+    console.error("Return book error:", error)
     return {
       success: false,
       message: "Failed to return book",
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
@@ -258,17 +260,17 @@ export async function deleteBook(
   data: DeleteBookSchema
 ): Promise<ActionResponse> {
   try {
-    const { schoolId: contextSchoolId } = await getTenantContext();
+    const { schoolId: contextSchoolId } = await getTenantContext()
 
     if (!contextSchoolId) {
       return {
         success: false,
         message: "School context not found",
-      };
+      }
     }
 
-    const schoolId = contextSchoolId;
-    const { id } = data;
+    const schoolId = contextSchoolId
+    const { id } = data
 
     // Verify book belongs to this school
     const book = await db.book.findFirst({
@@ -276,13 +278,13 @@ export async function deleteBook(
         id,
         schoolId,
       },
-    });
+    })
 
     if (!book) {
       return {
         success: false,
         message: "Book not found",
-      };
+      }
     }
 
     // Check if book has active borrows
@@ -292,50 +294,50 @@ export async function deleteBook(
         schoolId,
         status: "BORROWED",
       },
-    });
+    })
 
     if (activeBorrows > 0) {
       return {
         success: false,
         message: "Cannot delete book with active borrows",
-      };
+      }
     }
 
     // Delete book (this will cascade delete borrow records)
     await db.book.delete({
       where: { id },
-    });
+    })
 
-    revalidatePath("/library");
-    revalidatePath("/library/admin/books");
+    revalidatePath("/library")
+    revalidatePath("/library/admin/books")
 
     return {
       success: true,
       message: "Book deleted successfully",
-    };
+    }
   } catch (error) {
-    console.error("Delete book error:", error);
+    console.error("Delete book error:", error)
     return {
       success: false,
       message: "Failed to delete book",
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }
 
 // Mark overdue books
 export async function markOverdueBooks(): Promise<ActionResponse> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
 
     if (!schoolId) {
       return {
         success: false,
         message: "School context not found",
-      };
+      }
     }
 
-    const now = new Date();
+    const now = new Date()
 
     await db.borrowRecord.updateMany({
       where: {
@@ -348,21 +350,21 @@ export async function markOverdueBooks(): Promise<ActionResponse> {
       data: {
         status: "OVERDUE",
       },
-    });
+    })
 
-    revalidatePath("/library/admin");
-    revalidatePath("/library/my-profile");
+    revalidatePath("/library/admin")
+    revalidatePath("/library/my-profile")
 
     return {
       success: true,
       message: "Overdue books updated",
-    };
+    }
   } catch (error) {
-    console.error("Mark overdue books error:", error);
+    console.error("Mark overdue books error:", error)
     return {
       success: false,
       message: "Failed to mark overdue books",
       error: error instanceof Error ? error.message : "Unknown error",
-    };
+    }
   }
 }

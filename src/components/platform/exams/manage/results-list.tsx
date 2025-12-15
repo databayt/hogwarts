@@ -1,5 +1,11 @@
-import { getExamResults } from "./actions";
-import type { ExamResultRow } from "./actions/types";
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -7,23 +13,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/table"
+
+import { getExamResults } from "./actions"
+import type { ExamResultRow } from "./actions/types"
 
 interface Props {
-  examId: string;
+  examId: string
 }
 
 export async function ExamResultsList({ examId }: Props) {
-  const response = await getExamResults({ examId });
-  const results = response.success && response.data ? response.data : [];
+  const response = await getExamResults({ examId })
+  const results = response.success && response.data ? response.data : []
 
   if (results.length === 0) {
     return (
@@ -33,12 +34,12 @@ export async function ExamResultsList({ examId }: Props) {
           <CardDescription>Student performance overview</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center py-8 text-muted-foreground">
+          <p className="text-muted-foreground py-8 text-center">
             No results available yet
           </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -112,5 +113,5 @@ export async function ExamResultsList({ examId }: Props) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

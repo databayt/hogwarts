@@ -1,13 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Plus } from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { Plus } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
-  dictionary?: Dictionary;
+  dictionary?: Dictionary
 }
 
 export default async function FacilityContent({ dictionary }: Props) {
@@ -21,11 +28,15 @@ export default async function FacilityContent({ dictionary }: Props) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">Total Facilities</CardTitle>
+            <CardTitle className="text-base font-medium">
+              Total Facilities
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">42</div>
-            <p className="text-xs text-muted-foreground">Across all categories</p>
+            <p className="text-muted-foreground text-xs">
+              Across all categories
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -34,7 +45,7 @@ export default async function FacilityContent({ dictionary }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">35</div>
-            <p className="text-xs text-muted-foreground">Ready for use</p>
+            <p className="text-muted-foreground text-xs">Ready for use</p>
           </CardContent>
         </Card>
         <Card>
@@ -43,7 +54,7 @@ export default async function FacilityContent({ dictionary }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">5</div>
-            <p className="text-xs text-muted-foreground">Currently booked</p>
+            <p className="text-muted-foreground text-xs">Currently booked</p>
           </CardContent>
         </Card>
         <Card>
@@ -52,7 +63,7 @@ export default async function FacilityContent({ dictionary }: Props) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-500">2</div>
-            <p className="text-xs text-muted-foreground">Under maintenance</p>
+            <p className="text-muted-foreground text-xs">Under maintenance</p>
           </CardContent>
         </Card>
       </div>
@@ -87,14 +98,21 @@ export default async function FacilityContent({ dictionary }: Props) {
                   { name: "Computer Lab 1", capacity: 40, status: "available" },
                   { name: "Library Hall", capacity: 100, status: "available" },
                 ].map((room) => (
-                  <div key={room.name} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={room.name}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
                     <div>
                       <h3 className="font-semibold">{room.name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         Capacity: {room.capacity} people
                       </p>
                     </div>
-                    <Badge variant={room.status === "available" ? "secondary" : "default"}>
+                    <Badge
+                      variant={
+                        room.status === "available" ? "secondary" : "default"
+                      }
+                    >
                       {room.status === "available" ? "Available" : "In Use"}
                     </Badge>
                   </div>
@@ -122,19 +140,38 @@ export default async function FacilityContent({ dictionary }: Props) {
               <div className="grid gap-4">
                 {[
                   { name: "Physics Lab", equipment: 45, status: "operational" },
-                  { name: "Chemistry Lab", equipment: 52, status: "operational" },
+                  {
+                    name: "Chemistry Lab",
+                    equipment: 52,
+                    status: "operational",
+                  },
                   { name: "Biology Lab", equipment: 38, status: "maintenance" },
-                  { name: "Computer Lab", equipment: 40, status: "operational" },
+                  {
+                    name: "Computer Lab",
+                    equipment: 40,
+                    status: "operational",
+                  },
                 ].map((lab) => (
-                  <div key={lab.name} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={lab.name}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
                     <div>
                       <h3 className="font-semibold">{lab.name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {lab.equipment} equipment items
                       </p>
                     </div>
-                    <Badge variant={lab.status === "operational" ? "secondary" : "destructive"}>
-                      {lab.status === "operational" ? "Operational" : "Maintenance"}
+                    <Badge
+                      variant={
+                        lab.status === "operational"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                    >
+                      {lab.status === "operational"
+                        ? "Operational"
+                        : "Maintenance"}
                     </Badge>
                   </div>
                 ))}
@@ -159,17 +196,19 @@ export default async function FacilityContent({ dictionary }: Props) {
                   { name: "Sports Equipment", total: 100, available: 85 },
                   { name: "Musical Instruments", total: 30, available: 28 },
                 ].map((item) => (
-                  <div key={item.name} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
+                  <div key={item.name} className="rounded-lg border p-4">
+                    <div className="mb-2 flex items-center justify-between">
                       <h3 className="font-semibold">{item.name}</h3>
                       <span className="text-sm font-medium">
                         {item.available}/{item.total} available
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="h-2 w-full rounded-full bg-gray-200">
                       <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${(item.available / item.total) * 100}%` }}
+                        className="h-2 rounded-full bg-blue-500"
+                        style={{
+                          width: `${(item.available / item.total) * 100}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -196,19 +235,48 @@ export default async function FacilityContent({ dictionary }: Props) {
             <CardContent>
               <div className="grid gap-4">
                 {[
-                  { number: "Bus 001", capacity: 50, route: "North Route", status: "active" },
-                  { number: "Bus 002", capacity: 50, route: "South Route", status: "active" },
-                  { number: "Bus 003", capacity: 40, route: "East Route", status: "maintenance" },
-                  { number: "Van 001", capacity: 15, route: "Special", status: "active" },
+                  {
+                    number: "Bus 001",
+                    capacity: 50,
+                    route: "North Route",
+                    status: "active",
+                  },
+                  {
+                    number: "Bus 002",
+                    capacity: 50,
+                    route: "South Route",
+                    status: "active",
+                  },
+                  {
+                    number: "Bus 003",
+                    capacity: 40,
+                    route: "East Route",
+                    status: "maintenance",
+                  },
+                  {
+                    number: "Van 001",
+                    capacity: 15,
+                    route: "Special",
+                    status: "active",
+                  },
                 ].map((vehicle) => (
-                  <div key={vehicle.number} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={vehicle.number}
+                    className="flex items-center justify-between rounded-lg border p-4"
+                  >
                     <div>
                       <h3 className="font-semibold">{vehicle.number}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {vehicle.route} • Capacity: {vehicle.capacity}
                       </p>
                     </div>
-                    <Badge variant={vehicle.status === "active" ? "secondary" : "destructive"}>
+                    <Badge
+                      variant={
+                        vehicle.status === "active"
+                          ? "secondary"
+                          : "destructive"
+                      }
+                    >
                       {vehicle.status === "active" ? "Active" : "Maintenance"}
                     </Badge>
                   </div>
@@ -219,5 +287,5 @@ export default async function FacilityContent({ dictionary }: Props) {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

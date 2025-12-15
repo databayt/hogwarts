@@ -1,73 +1,100 @@
-"use client";
+"use client"
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Bell, X, TriangleAlert, CircleCheck, Info, CircleX } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
+import {
+  Bell,
+  CircleCheck,
+  CircleX,
+  Info,
+  TriangleAlert,
+  X,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 /**
  * Notification Service
  * Real-time notification system for lab alerts
  */
 
-export type NotificationType = "info" | "success" | "warning" | "error" | "critical";
+export type NotificationType =
+  | "info"
+  | "success"
+  | "warning"
+  | "error"
+  | "critical"
 
 export interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  timestamp: Date;
-  read?: boolean;
-  actionUrl?: string;
-  actionLabel?: string;
-  persistent?: boolean; // If true, notification won't auto-dismiss
-  priority?: "low" | "medium" | "high" | "urgent";
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  timestamp: Date
+  read?: boolean
+  actionUrl?: string
+  actionLabel?: string
+  persistent?: boolean // If true, notification won't auto-dismiss
+  priority?: "low" | "medium" | "high" | "urgent"
 }
 
 interface NotificationContextType {
-  notifications: Notification[];
-  unreadCount: number;
-  addNotification: (notification: Omit<Notification, "id" | "timestamp">) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  removeNotification: (id: string) => void;
-  clearAll: () => void;
+  notifications: Notification[]
+  unreadCount: number
+  addNotification: (
+    notification: Omit<Notification, "id" | "timestamp">
+  ) => void
+  markAsRead: (id: string) => void
+  markAllAsRead: () => void
+  removeNotification: (id: string) => void
+  clearAll: () => void
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+)
 
 /**
  * Notification Provider
  * Wraps the app to provide notification functionality
  */
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   // Load notifications from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("lab-notifications");
+    const stored = localStorage.getItem("lab-notifications")
     if (stored) {
       try {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored)
         setNotifications(
           parsed.map((n: any) => ({
             ...n,
             timestamp: new Date(n.timestamp),
           }))
-        );
+        )
       } catch (error) {
-        console.error("Failed to load notifications:", error);
+        console.error("Failed to load notifications:", error)
       }
     }
-  }, []);
+  }, [])
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("lab-notifications", JSON.stringify(notifications));
-  }, [notifications]);
+    localStorage.setItem("lab-notifications", JSON.stringify(notifications))
+  }, [notifications])
 
   const addNotification = useCallback(
     (notification: Omit<Notification, "id" | "timestamp">) => {
@@ -76,44 +103,49 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         timestamp: new Date(),
         read: false,
-      };
+      }
 
-      setNotifications((prev) => [newNotification, ...prev].slice(0, 50)); // Keep max 50
+      setNotifications((prev) => [newNotification, ...prev].slice(0, 50)) // Keep max 50
 
       // Auto-dismiss non-persistent notifications after 10 seconds
       if (!notification.persistent) {
         setTimeout(() => {
-          setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
-        }, 10000);
+          setNotifications((prev) =>
+            prev.filter((n) => n.id !== newNotification.id)
+          )
+        }, 10000)
       }
 
       // Play sound for high priority notifications
-      if (notification.priority === "urgent" || notification.priority === "high") {
-        playNotificationSound();
+      if (
+        notification.priority === "urgent" ||
+        notification.priority === "high"
+      ) {
+        playNotificationSound()
       }
     },
     []
-  );
+  )
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  }, []);
+    )
+  }, [])
 
   const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+  }, [])
 
   const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  }, [])
 
   const clearAll = useCallback(() => {
-    setNotifications([]);
-  }, []);
+    setNotifications([])
+  }, [])
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
     <NotificationContext.Provider
@@ -129,41 +161,36 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     >
       {children}
     </NotificationContext.Provider>
-  );
+  )
 }
 
 /**
  * Hook to use notification context
  */
 export function useNotifications() {
-  const context = useContext(NotificationContext);
+  const context = useContext(NotificationContext)
   if (!context) {
-    throw new Error("useNotifications must be used within NotificationProvider");
+    throw new Error("useNotifications must be used within NotificationProvider")
   }
-  return context;
+  return context
 }
 
 /**
  * Notification Bell Icon with Badge
  */
 export function NotificationBell({ onClick }: { onClick?: () => void }) {
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotifications()
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="relative"
-      onClick={onClick}
-    >
+    <Button variant="ghost" size="icon" className="relative" onClick={onClick}>
       <Bell className="h-5 w-5" />
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
     </Button>
-  );
+  )
 }
 
 /**
@@ -177,37 +204,37 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
     markAllAsRead,
     removeNotification,
     clearAll,
-  } = useNotifications();
+  } = useNotifications()
 
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case "success":
-        return <CircleCheck className="h-4 w-4 text-green-500" />;
+        return <CircleCheck className="h-4 w-4 text-green-500" />
       case "warning":
-        return <TriangleAlert className="h-4 w-4 text-yellow-500" />;
+        return <TriangleAlert className="h-4 w-4 text-yellow-500" />
       case "error":
-        return <CircleX className="h-4 w-4 text-red-500" />;
+        return <CircleX className="h-4 w-4 text-red-500" />
       case "critical":
-        return <TriangleAlert className="h-4 w-4 text-red-600" />;
+        return <TriangleAlert className="h-4 w-4 text-red-600" />
       default:
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-4 w-4 text-blue-500" />
     }
-  };
+  }
 
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case "urgent":
-        return "destructive";
+        return "destructive"
       case "high":
-        return "secondary";
+        return "secondary"
       default:
-        return "outline";
+        return "outline"
     }
-  };
+  }
 
   return (
-    <Card className="w-96 max-h-[600px] overflow-hidden">
-      <div className="p-4 border-b flex items-center justify-between">
+    <Card className="max-h-[600px] w-96 overflow-hidden">
+      <div className="flex items-center justify-between border-b p-4">
         <div className="flex items-center space-x-2">
           <h3 className="font-semibold">Notifications</h3>
           {unreadCount > 0 && (
@@ -216,39 +243,27 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
         </div>
         <div className="flex items-center space-x-2">
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-            >
+            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
               Mark all read
             </Button>
           )}
           {notifications.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-            >
+            <Button variant="ghost" size="sm" onClick={clearAll}>
               Clear all
             </Button>
           )}
           {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-            >
+            <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           )}
         </div>
       </div>
 
-      <div className="overflow-y-auto max-h-[500px]">
+      <div className="max-h-[500px] overflow-y-auto">
         {notifications.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <Bell className="h-8 w-8 mx-auto mb-3 opacity-50" />
+          <div className="text-muted-foreground p-8 text-center">
+            <Bell className="mx-auto mb-3 h-8 w-8 opacity-50" />
             <p>No notifications</p>
           </div>
         ) : (
@@ -257,43 +272,45 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
               <div
                 key={notification.id}
                 className={cn(
-                  "p-4 hover:bg-muted/50 transition-colors cursor-pointer",
+                  "hover:bg-muted/50 cursor-pointer p-4 transition-colors",
                   !notification.read && "bg-muted/20"
                 )}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start space-x-3">
                   <div className="mt-1">{getIcon(notification.type)}</div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-medium text-sm">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm font-medium">
+                          {notification.title}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-sm">
                           {notification.message}
                         </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 -mt-1 -mr-2"
+                        className="-mt-1 -mr-2 h-6 w-6"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          removeNotification(notification.id);
+                          e.stopPropagation()
+                          removeNotification(notification.id)
                         }}
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="mt-2 flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {formatTimestamp(notification.timestamp)}
                         </span>
                         {notification.priority && (
                           <Badge
                             variant={getPriorityColor(notification.priority)}
-                            className="text-xs px-1 py-0"
+                            className="px-1 py-0 text-xs"
                           >
                             {notification.priority}
                           </Badge>
@@ -305,8 +322,8 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
                           size="sm"
                           className="h-auto p-0 text-xs"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = notification.actionUrl!;
+                            e.stopPropagation()
+                            window.location.href = notification.actionUrl!
                           }}
                         >
                           {notification.actionLabel || "View"}
@@ -321,7 +338,7 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
         )}
       </div>
     </Card>
-  );
+  )
 }
 
 /**
@@ -331,47 +348,47 @@ export function NotificationToast({
   notification,
   onClose,
 }: {
-  notification: Notification;
-  onClose: () => void;
+  notification: Notification
+  onClose: () => void
 }) {
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case "success":
-        return <CircleCheck className="h-5 w-5 text-green-500" />;
+        return <CircleCheck className="h-5 w-5 text-green-500" />
       case "warning":
-        return <TriangleAlert className="h-5 w-5 text-yellow-500" />;
+        return <TriangleAlert className="h-5 w-5 text-yellow-500" />
       case "error":
-        return <CircleX className="h-5 w-5 text-red-500" />;
+        return <CircleX className="h-5 w-5 text-red-500" />
       case "critical":
-        return <TriangleAlert className="h-5 w-5 text-red-600 animate-pulse" />;
+        return <TriangleAlert className="h-5 w-5 animate-pulse text-red-600" />
       default:
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-blue-500" />
     }
-  };
+  }
 
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 z-50 max-w-sm",
+        "fixed right-4 bottom-4 z-50 max-w-sm",
         "animate-in slide-in-from-bottom-2 duration-300"
       )}
     >
-      <Card className="shadow-lg border-l-4 border-l-primary">
+      <Card className="border-l-primary border-l-4 shadow-lg">
         <CardContent className="p-4">
           <div className="flex items-start space-x-3">
             {getIcon(notification.type)}
             <div className="flex-1">
               <p className="font-medium">{notification.title}</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {notification.message}
               </p>
               {notification.actionUrl && (
                 <Button
                   variant="link"
                   size="sm"
-                  className="h-auto p-0 mt-2 text-xs"
+                  className="mt-2 h-auto p-0 text-xs"
                   onClick={() => {
-                    window.location.href = notification.actionUrl!;
+                    window.location.href = notification.actionUrl!
                   }}
                 >
                   {notification.actionLabel || "View Details"}
@@ -381,7 +398,7 @@ export function NotificationToast({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 -mt-1 -mr-2"
+              className="-mt-1 -mr-2 h-6 w-6"
               onClick={onClose}
             >
               <X className="h-3 w-3" />
@@ -390,23 +407,23 @@ export function NotificationToast({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 // Helper functions
 function formatTimestamp(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
 
-  if (seconds < 60) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
+  if (seconds < 60) return "just now"
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days < 7) return `${days}d ago`
+  return date.toLocaleDateString()
 }
 
 function playNotificationSound() {
@@ -422,7 +439,7 @@ function playNotificationSound() {
  * In production, this would connect to WebSocket or SSE
  */
 export function useRealTimeNotifications() {
-  const { addNotification } = useNotifications();
+  const { addNotification } = useNotifications()
 
   useEffect(() => {
     // Simulate receiving notifications
@@ -457,13 +474,14 @@ export function useRealTimeNotifications() {
             priority: "urgent" as const,
             persistent: true,
           },
-        ];
+        ]
 
-        const randomNotif = notifications[Math.floor(Math.random() * notifications.length)];
-        addNotification(randomNotif);
+        const randomNotif =
+          notifications[Math.floor(Math.random() * notifications.length)]
+        addNotification(randomNotif)
       }
-    }, 30000); // Check every 30 seconds
+    }, 30000) // Check every 30 seconds
 
-    return () => clearInterval(interval);
-  }, [addNotification]);
+    return () => clearInterval(interval)
+  }, [addNotification])
 }

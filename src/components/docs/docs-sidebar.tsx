@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import type { docsSource } from "@/lib/source"
-import type { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 // Configuration with translation keys and fallback names
 const DOCS_LINKS = [
@@ -33,7 +33,11 @@ const DOCS_LINKS = [
   { key: "attendance", href: "/docs/attendance", fallback: "Attendance" },
   { key: "localhost", href: "/docs/localhost", fallback: "Localhost" },
   { key: "contributing", href: "/docs/contributing", fallback: "Contributing" },
-  { key: "sharedEconomy", href: "/docs/shared-economy", fallback: "Shared Economy" },
+  {
+    key: "sharedEconomy",
+    href: "/docs/shared-economy",
+    fallback: "Shared Economy",
+  },
   { key: "competitors", href: "/docs/competitors", fallback: "Competitors" },
   { key: "inspiration", href: "/docs/inspiration", fallback: "Inspiration" },
   { key: "demo", href: "/docs/demo", fallback: "Demo" },
@@ -59,24 +63,29 @@ export function DocsSidebar({
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="overflow-y-auto overflow-x-hidden">
-        <div className="pb-4 pt-2 pl-0">
+      <SidebarContent className="overflow-x-hidden overflow-y-auto">
+        <div className="pt-2 pb-4 pl-0">
           <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>
                 {DOCS_LINKS.map(({ key, href, fallback }) => {
                   const fullHref = `${prefix}${href}`
                   const isActive = pathname === fullHref || pathname === href
-                  const name = dictionary?.docs?.sidebar?.[key as keyof typeof dictionary.docs.sidebar] || fallback
+                  const name =
+                    dictionary?.docs?.sidebar?.[
+                      key as keyof typeof dictionary.docs.sidebar
+                    ] || fallback
 
                   return (
                     <SidebarMenuItem key={href}>
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        className="relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
+                        className="relative h-[30px] w-full border border-transparent p-0 text-[0.8rem] font-medium"
                       >
-                        <Link href={fullHref} className="block w-full">{name}</Link>
+                        <Link href={fullHref} className="block w-full">
+                          {name}
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

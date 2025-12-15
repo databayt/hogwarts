@@ -1,6 +1,7 @@
 # Geo Real-Time Attendance System - Pure Stack Architecture
 
 ## Tech Stack (100% Current Infrastructure)
+
 - **Backend**: Next.js 15 Server Actions + API Routes (TypeScript)
 - **Geospatial Database**: PostgreSQL with PostGIS extension (Neon)
 - **ORM**: Prisma 6.14 (existing)
@@ -61,6 +62,7 @@
 ## Phase 1: Database Schema & PostGIS Setup
 
 ### 1.1 Enable PostGIS Extension
+
 ```sql
 -- Run in Neon console
 CREATE EXTENSION IF NOT EXISTS postgis;
@@ -68,6 +70,7 @@ SELECT PostGIS_version(); -- Verify installation
 ```
 
 ### 1.2 Prisma Schema Extensions
+
 **File**: `prisma/models/geo-attendance.prisma`
 
 ```prisma
@@ -177,6 +180,7 @@ model GeoAttendanceEvent {
 ```
 
 ### 1.3 PostgreSQL Triggers for Real-time Events
+
 **File**: `prisma/migrations/XXX_geo_triggers.sql`
 
 ```sql
@@ -229,6 +233,7 @@ USING GIST (
 ## Phase 2: Service Layer (lib/geo-service.ts)
 
 ### 2.1 Core Geospatial Service
+
 **File**: `src/lib/geo-service.ts`
 
 ```typescript
@@ -238,9 +243,10 @@ USING GIST (
  * Uses PostGIS for all spatial calculations (no external services)
  */
 
-import { db } from '@/lib/db'
-import { logger } from '@/lib/logger'
-import { Decimal } from '@prisma/client/runtime/library'
+import { Decimal } from "@prisma/client/runtime/library"
+
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
 
 // === TYPE DEFINITIONS ===
 
@@ -281,9 +287,9 @@ export function calculateDistance(p1: Coordinates, p2: Coordinates): number {
   const Δφ = ((p2.lat - p1.lat) * Math.PI) / 180
   const Δλ = ((p2.lon - p1.lon) * Math.PI) / 180
 
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
   return R * c // Distance in meters
@@ -312,7 +318,7 @@ export async function checkGeofences(
       centerLon: true,
       radiusMeters: true,
       polygonGeoJSON: true,
-    }
+    },
   })
 
   for (const fence of geofences) {
@@ -321,14 +327,16 @@ export async function checkGeofences(
 
     if (fence.radiusMeters && fence.centerLat && fence.centerLon) {
       // Circular geofence - use Haversine (faster than PostGIS for circles)
-      distance = calculateDistance(
-        location,
-        { lat: Number(fence.centerLat), lon: Number(fence.centerLon) }
-      )
+      distance = calculateDistance(location, {
+        lat: Number(fence.centerLat),
+        lon: Number(fence.centerLon),
+      })
       isInside = distance <= fence.radiusMeters
     } else if (fence.polygonGeoJSON) {
       // Polygon geofence - use PostGIS ST_Contains
-      const result = await db.$queryRaw<Array<{ inside: boolean; distance: number }>>`
+      const result = await db.$queryRaw<
+        Array<{ inside: boolean; distance: number }>
+      >`
         SELECT
           ST_Contains(
             ST_GeomFromGeoJSON(${fence.polygonGeoJSON}),
@@ -343,13 +351,14 @@ export async function checkGeofences(
       distance = result[0]?.distance || 0
     }
 
-    if (isInside || distance < 100) { // Include near-boundary locations
+    if (isInside || distance < 100) {
+      // Include near-boundary locations
       results.push({
         isInside,
         geofenceId: fence.id,
         geofenceName: fence.name,
         geofenceType: fence.type,
-        distance
+        distance,
       })
     }
   }
@@ -373,7 +382,7 @@ export async function saveLocationTrace(update: LocationUpdate) {
       battery: update.battery,
       deviceId: update.deviceId,
       timestamp: update.timestamp,
-    }
+    },
   })
 }
 
@@ -400,28 +409,28 @@ export async function processGeofenceEvents(
         studentId,
         geofenceId: check.geofenceId,
         timestamp: {
-          gte: new Date(Date.now() - 5 * 60 * 1000) // Last 5 minutes
-        }
+          gte: new Date(Date.now() - 5 * 60 * 1000), // Last 5 minutes
+        },
       },
-      orderBy: { timestamp: 'desc' }
+      orderBy: { timestamp: "desc" },
     })
 
     // New entry event
-    if (!recentEvent || recentEvent.eventType === 'EXIT') {
+    if (!recentEvent || recentEvent.eventType === "EXIT") {
       await db.geoAttendanceEvent.create({
         data: {
           schoolId,
           studentId,
           geofenceId: check.geofenceId,
-          eventType: 'ENTER',
+          eventType: "ENTER",
           lat: new Decimal(location.lat),
           lon: new Decimal(location.lon),
-          timestamp
-        }
+          timestamp,
+        },
       })
 
       // Auto-mark attendance if SCHOOL_GROUNDS during attendance window
-      if (check.geofenceType === 'SCHOOL_GROUNDS') {
+      if (check.geofenceType === "SCHOOL_GROUNDS") {
         await autoMarkAttendance(studentId, schoolId, timestamp)
       }
     } else {
@@ -431,11 +440,11 @@ export async function processGeofenceEvents(
           schoolId,
           studentId,
           geofenceId: check.geofenceId,
-          eventType: 'INSIDE',
+          eventType: "INSIDE",
           lat: new Decimal(location.lat),
           lon: new Decimal(location.lon),
-          timestamp
-        }
+          timestamp,
+        },
       })
     }
   }
@@ -455,20 +464,20 @@ async function autoMarkAttendance(
 
   // Only auto-mark during morning window (7-9 AM)
   if (hour < 7 || hour > 9) {
-    logger.info('Outside attendance window', { studentId, hour })
+    logger.info("Outside attendance window", { studentId, hour })
     return
   }
 
   // Get student's classes
   const studentClasses = await db.studentClass.findMany({
     where: { schoolId, studentId },
-    select: { classId: true }
+    select: { classId: true },
   })
 
   const today = new Date(timestamp)
   today.setHours(0, 0, 0, 0)
 
-  const status = hour >= 8 && hour <= 8.5 ? 'PRESENT' : 'LATE' // 8:30 AM cutoff
+  const status = hour >= 8 && hour <= 8.5 ? "PRESENT" : "LATE" // 8:30 AM cutoff
 
   // Mark attendance for all classes
   for (const sc of studentClasses) {
@@ -478,8 +487,8 @@ async function autoMarkAttendance(
           schoolId,
           studentId,
           classId: sc.classId,
-          date: today
-        }
+          date: today,
+        },
       },
       create: {
         schoolId,
@@ -487,16 +496,16 @@ async function autoMarkAttendance(
         classId: sc.classId,
         date: today,
         status,
-        notes: `Auto-marked via geofence at ${timestamp.toLocaleTimeString()}`
+        notes: `Auto-marked via geofence at ${timestamp.toLocaleTimeString()}`,
       },
       update: {
         status,
-        notes: `Auto-marked via geofence at ${timestamp.toLocaleTimeString()}`
-      }
+        notes: `Auto-marked via geofence at ${timestamp.toLocaleTimeString()}`,
+      },
     })
   }
 
-  logger.info('Auto-marked attendance', { studentId, status, time: timestamp })
+  logger.info("Auto-marked attendance", { studentId, status, time: timestamp })
 }
 
 // === LOCATION HISTORY ===
@@ -516,17 +525,17 @@ export async function getLocationHistory(
       studentId,
       timestamp: {
         gte: startDate,
-        lte: endDate
-      }
+        lte: endDate,
+      },
     },
-    orderBy: { timestamp: 'asc' },
+    orderBy: { timestamp: "asc" },
     select: {
       lat: true,
       lon: true,
       accuracy: true,
       battery: true,
-      timestamp: true
-    }
+      timestamp: true,
+    },
   })
 }
 
@@ -543,12 +552,15 @@ export async function cleanupOldLocationTraces(retentionDays: number = 30) {
   const result = await db.locationTrace.deleteMany({
     where: {
       timestamp: {
-        lt: cutoffDate
-      }
-    }
+        lt: cutoffDate,
+      },
+    },
   })
 
-  logger.info('Cleaned up location traces', { deleted: result.count, cutoffDate })
+  logger.info("Cleaned up location traces", {
+    deleted: result.count,
+    cutoffDate,
+  })
   return result.count
 }
 ```
@@ -558,22 +570,24 @@ export async function cleanupOldLocationTraces(retentionDays: number = 30) {
 ## Phase 3: Server Actions & API Routes
 
 ### 3.1 Server Actions
+
 **File**: `src/components/platform/attendance/geo/actions.ts`
 
 ```typescript
 "use server"
 
-import { z } from 'zod'
-import { getTenantContext } from '@/lib/tenant-context'
-import { auth } from '@/auth'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 import {
-  saveLocationTrace,
-  processGeofenceEvents,
+  checkGeofences,
   getLocationHistory,
-  checkGeofences
-} from '@/lib/geo-service'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
+  processGeofenceEvents,
+  saveLocationTrace,
+} from "@/lib/geo-service"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // === VALIDATION SCHEMAS ===
 
@@ -588,7 +602,14 @@ const locationSchema = z.object({
 
 const geofenceSchema = z.object({
   name: z.string().min(1).max(100),
-  type: z.enum(['SCHOOL_GROUNDS', 'CLASSROOM', 'BUS_ROUTE', 'PLAYGROUND', 'CAFETERIA', 'LIBRARY']),
+  type: z.enum([
+    "SCHOOL_GROUNDS",
+    "CLASSROOM",
+    "BUS_ROUTE",
+    "PLAYGROUND",
+    "CAFETERIA",
+    "LIBRARY",
+  ]),
   description: z.string().optional(),
   // Circular geofence
   centerLat: z.number().min(-90).max(90).optional(),
@@ -596,7 +617,10 @@ const geofenceSchema = z.object({
   radiusMeters: z.number().int().min(10).max(10000).optional(),
   // Polygon geofence
   polygonGeoJSON: z.string().optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
 })
 
 // === LOCATION SUBMISSION ===
@@ -605,8 +629,8 @@ export async function submitLocation(input: z.infer<typeof locationSchema>) {
   const session = await auth()
   const { schoolId } = await getTenantContext()
 
-  if (!schoolId) throw new Error('Missing school context')
-  if (!session?.user) throw new Error('Unauthorized')
+  if (!schoolId) throw new Error("Missing school context")
+  if (!session?.user) throw new Error("Unauthorized")
 
   const parsed = locationSchema.parse(input)
   const timestamp = new Date()
@@ -615,7 +639,7 @@ export async function submitLocation(input: z.infer<typeof locationSchema>) {
   await saveLocationTrace({
     ...parsed,
     schoolId,
-    timestamp
+    timestamp,
   })
 
   // 2. Process geofence events (async - don't block response)
@@ -624,7 +648,7 @@ export async function submitLocation(input: z.infer<typeof locationSchema>) {
     schoolId,
     { lat: parsed.lat, lon: parsed.lon },
     timestamp
-  ).catch(err => console.error('Geofence processing failed:', err))
+  ).catch((err) => console.error("Geofence processing failed:", err))
 
   return { success: true as const, timestamp: timestamp.toISOString() }
 }
@@ -633,16 +657,19 @@ export async function submitLocation(input: z.infer<typeof locationSchema>) {
 
 export async function createGeofence(input: z.infer<typeof geofenceSchema>) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const parsed = geofenceSchema.parse(input)
 
   // Validate that either circular OR polygon data is provided
-  const hasCircular = parsed.centerLat && parsed.centerLon && parsed.radiusMeters
+  const hasCircular =
+    parsed.centerLat && parsed.centerLon && parsed.radiusMeters
   const hasPolygon = parsed.polygonGeoJSON
 
   if (!hasCircular && !hasPolygon) {
-    throw new Error('Must provide either circular (center + radius) or polygon geofence data')
+    throw new Error(
+      "Must provide either circular (center + radius) or polygon geofence data"
+    )
   }
 
   const geofence = await db.geoFence.create({
@@ -655,11 +682,11 @@ export async function createGeofence(input: z.infer<typeof geofenceSchema>) {
       centerLon: parsed.centerLon,
       radiusMeters: parsed.radiusMeters,
       polygonGeoJSON: parsed.polygonGeoJSON,
-      color: parsed.color || '#3b82f6',
-    }
+      color: parsed.color || "#3b82f6",
+    },
   })
 
-  revalidatePath('/attendance/geo')
+  revalidatePath("/attendance/geo")
   return { success: true as const, geofenceId: geofence.id }
 }
 
@@ -668,36 +695,36 @@ export async function updateGeofence(
   input: Partial<z.infer<typeof geofenceSchema>>
 ) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   await db.geoFence.update({
     where: { id: geofenceId, schoolId },
-    data: input
+    data: input,
   })
 
-  revalidatePath('/attendance/geo')
+  revalidatePath("/attendance/geo")
   return { success: true as const }
 }
 
 export async function deleteGeofence(geofenceId: string) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   await db.geoFence.delete({
-    where: { id: geofenceId, schoolId }
+    where: { id: geofenceId, schoolId },
   })
 
-  revalidatePath('/attendance/geo')
+  revalidatePath("/attendance/geo")
   return { success: true as const }
 }
 
 export async function getGeofences() {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const geofences = await db.geoFence.findMany({
     where: { schoolId },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
   })
 
   return { geofences }
@@ -707,20 +734,22 @@ export async function getGeofences() {
 
 export async function getLiveStudentLocations() {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // Get latest location for each student (last 5 minutes)
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
 
-  const locations = await db.$queryRaw<Array<{
-    student_id: string
-    student_name: string
-    lat: string
-    lon: string
-    accuracy: number | null
-    battery: number | null
-    timestamp: Date
-  }>>`
+  const locations = await db.$queryRaw<
+    Array<{
+      student_id: string
+      student_name: string
+      lat: string
+      lon: string
+      accuracy: number | null
+      battery: number | null
+      timestamp: Date
+    }>
+  >`
     SELECT DISTINCT ON (lt.student_id)
       lt.student_id,
       CONCAT(s.given_name, ' ', s.surname) as student_name,
@@ -737,15 +766,15 @@ export async function getLiveStudentLocations() {
   `
 
   return {
-    students: locations.map(loc => ({
+    students: locations.map((loc) => ({
       studentId: loc.student_id,
       name: loc.student_name,
       lat: parseFloat(loc.lat),
       lon: parseFloat(loc.lon),
       accuracy: loc.accuracy,
       battery: loc.battery,
-      lastUpdate: loc.timestamp
-    }))
+      lastUpdate: loc.timestamp,
+    })),
   }
 }
 
@@ -758,36 +787,38 @@ export async function getGeofenceEvents(
   endDate?: Date
 ) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   const events = await db.geoAttendanceEvent.findMany({
     where: {
       schoolId,
       ...(studentId && { studentId }),
       ...(geofenceId && { geofenceId }),
-      ...(startDate || endDate ? {
-        timestamp: {
-          ...(startDate && { gte: startDate }),
-          ...(endDate && { lte: endDate })
-        }
-      } : {})
+      ...(startDate || endDate
+        ? {
+            timestamp: {
+              ...(startDate && { gte: startDate }),
+              ...(endDate && { lte: endDate }),
+            },
+          }
+        : {}),
     },
     include: {
       student: {
         select: {
           givenName: true,
-          surname: true
-        }
+          surname: true,
+        },
       },
       geofence: {
         select: {
           name: true,
-          type: true
-        }
-      }
+          type: true,
+        },
+      },
     },
-    orderBy: { timestamp: 'desc' },
-    take: 100
+    orderBy: { timestamp: "desc" },
+    take: 100,
   })
 
   return { events }
@@ -795,34 +826,36 @@ export async function getGeofenceEvents(
 ```
 
 ### 3.2 API Route with Rate Limiting
+
 **File**: `src/app/api/geo/location/route.ts`
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
-import { submitLocation } from '@/components/platform/attendance/geo/actions'
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { submitLocation } from "@/components/platform/attendance/geo/actions"
 
 export async function POST(req: NextRequest) {
   // 1. Authentication
   const session = await auth()
   if (!session?.user?.schoolId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   // 2. Rate limiting (20 requests per 10 seconds)
   const rateLimitResult = await checkRateLimit(
     req,
-    'geo-location',
+    "geo-location",
     RATE_LIMITS.GEO_LOCATION
   )
 
   if (!rateLimitResult.allowed) {
     return NextResponse.json(
-      { error: 'Too many requests', retryAfter: rateLimitResult.retryAfter },
+      { error: "Too many requests", retryAfter: rateLimitResult.retryAfter },
       {
         status: 429,
-        headers: { 'Retry-After': String(rateLimitResult.retryAfter || 10) }
+        headers: { "Retry-After": String(rateLimitResult.retryAfter || 10) },
       }
     )
   }
@@ -834,9 +867,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
-    console.error('Location submission error:', error)
+    console.error("Location submission error:", error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Invalid request' },
+      { error: error instanceof Error ? error.message : "Invalid request" },
       { status: 400 }
     )
   }
@@ -846,14 +879,14 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session?.user?.isPlatformAdmin) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   return NextResponse.json({
-    status: 'ok',
-    endpoint: '/api/geo/location',
-    methods: ['POST'],
-    rateLimit: RATE_LIMITS.GEO_LOCATION
+    status: "ok",
+    endpoint: "/api/geo/location",
+    methods: ["POST"],
+    rateLimit: RATE_LIMITS.GEO_LOCATION,
   })
 }
 ```
@@ -863,17 +896,18 @@ export async function GET(req: NextRequest) {
 ## Phase 4: Real-time WebSocket Server (PostgreSQL LISTEN/NOTIFY)
 
 ### 4.1 Custom Next.js Server with WebSockets
+
 **File**: `server.js` (root directory)
 
 ```javascript
-const { createServer } = require('http')
-const { parse } = require('url')
-const next = require('next')
-const { WebSocketServer } = require('ws')
-const { Client } = require('pg')
+const { createServer } = require("http")
+const { parse } = require("url")
+const next = require("next")
+const { WebSocketServer } = require("ws")
+const { Client } = require("pg")
 
-const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const dev = process.env.NODE_ENV !== "production"
+const hostname = "localhost"
 const port = process.env.PORT || 3000
 
 const app = next({ dev, hostname, port })
@@ -890,56 +924,64 @@ app.prepare().then(() => {
 
   // PostgreSQL client for LISTEN/NOTIFY
   const pgClient = new Client({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
   })
 
-  pgClient.connect().then(() => {
-    console.log('✅ Connected to PostgreSQL for LISTEN/NOTIFY')
+  pgClient
+    .connect()
+    .then(() => {
+      console.log("✅ Connected to PostgreSQL for LISTEN/NOTIFY")
 
-    // Listen to all school geofence events
-    // In production, you might listen to specific schools
-    pgClient.query('LISTEN geofence_events')
+      // Listen to all school geofence events
+      // In production, you might listen to specific schools
+      pgClient.query("LISTEN geofence_events")
 
-    pgClient.on('notification', (msg) => {
-      console.log('📍 Geofence event:', msg.payload)
+      pgClient.on("notification", (msg) => {
+        console.log("📍 Geofence event:", msg.payload)
 
-      // Broadcast to all connected WebSocket clients
-      wss.clients.forEach((client) => {
-        if (client.readyState === 1) { // WebSocket.OPEN
-          client.send(JSON.stringify({
-            type: 'geofence_event',
-            data: JSON.parse(msg.payload)
-          }))
-        }
+        // Broadcast to all connected WebSocket clients
+        wss.clients.forEach((client) => {
+          if (client.readyState === 1) {
+            // WebSocket.OPEN
+            client.send(
+              JSON.stringify({
+                type: "geofence_event",
+                data: JSON.parse(msg.payload),
+              })
+            )
+          }
+        })
       })
     })
-  }).catch(err => {
-    console.error('❌ PostgreSQL LISTEN/NOTIFY error:', err)
-  })
-
-  // WebSocket connection handling
-  wss.on('connection', (ws, req) => {
-    console.log('🔌 WebSocket client connected')
-
-    ws.on('message', (message) => {
-      console.log('📨 Received:', message.toString())
+    .catch((err) => {
+      console.error("❌ PostgreSQL LISTEN/NOTIFY error:", err)
     })
 
-    ws.on('close', () => {
-      console.log('🔌 WebSocket client disconnected')
+  // WebSocket connection handling
+  wss.on("connection", (ws, req) => {
+    console.log("🔌 WebSocket client connected")
+
+    ws.on("message", (message) => {
+      console.log("📨 Received:", message.toString())
+    })
+
+    ws.on("close", () => {
+      console.log("🔌 WebSocket client disconnected")
     })
 
     // Send initial connection confirmation
-    ws.send(JSON.stringify({ type: 'connected', message: 'WebSocket connected' }))
+    ws.send(
+      JSON.stringify({ type: "connected", message: "WebSocket connected" })
+    )
   })
 
   // Handle WebSocket upgrade
-  server.on('upgrade', (request, socket, head) => {
+  server.on("upgrade", (request, socket, head) => {
     const { pathname } = parse(request.url)
 
-    if (pathname === '/api/geo/ws') {
+    if (pathname === "/api/geo/ws") {
       wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request)
+        wss.emit("connection", ws, request)
       })
     } else {
       socket.destroy()
@@ -948,12 +990,15 @@ app.prepare().then(() => {
 
   server.listen(port, () => {
     console.log(`🚀 Server ready on http://${hostname}:${port}`)
-    console.log(`🔌 WebSocket server ready on ws://${hostname}:${port}/api/geo/ws`)
+    console.log(
+      `🔌 WebSocket server ready on ws://${hostname}:${port}/api/geo/ws`
+    )
   })
 })
 ```
 
 **Update package.json**:
+
 ```json
 {
   "scripts": {
@@ -973,6 +1018,7 @@ app.prepare().then(() => {
 ## Phase 5: PWA Frontend Components
 
 ### 5.1 Location Tracker Component
+
 **File**: `src/components/platform/attendance/geo/tracker.tsx`
 
 ```typescript
@@ -1162,6 +1208,7 @@ function openDB(name: string, version: number): Promise<IDBDatabase> {
 ```
 
 ### 5.2 Live Map Dashboard
+
 **File**: `src/components/platform/attendance/geo/live-map.tsx`
 
 ```typescript
@@ -1357,7 +1404,9 @@ export function GeoLiveMap({ schoolId }: { schoolId: string }) {
 ## Phase 6: Deployment & Performance Optimization
 
 ### 6.1 Environment Variables
+
 Add to `.env`:
+
 ```bash
 # PostGIS (already in DATABASE_URL - just enable extension in Neon console)
 DATABASE_URL=postgresql://...
@@ -1368,11 +1417,13 @@ PORT=3000
 ```
 
 ### 6.2 Install Dependencies
+
 ```bash
 pnpm add ws pg leaflet react-leaflet @types/leaflet @types/ws
 ```
 
 ### 6.3 PostGIS Performance Tuning
+
 ```sql
 -- Create spatial indexes (run after migrations)
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_location_traces_geom
@@ -1391,17 +1442,19 @@ ANALYZE geo_attendance_events;
 ```
 
 ### 6.4 Scheduled Cleanup (Cron Job)
+
 **File**: `src/app/api/cron/cleanup-locations/route.ts`
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { cleanupOldLocationTraces } from '@/lib/geo-service'
+import { NextRequest, NextResponse } from "next/server"
+
+import { cleanupOldLocationTraces } from "@/lib/geo-service"
 
 export async function GET(req: NextRequest) {
   // Verify cron secret (Vercel Cron or custom scheduler)
-  const authHeader = req.headers.get('authorization')
+  const authHeader = req.headers.get("authorization")
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const deleted = await cleanupOldLocationTraces(30) // 30 days retention
@@ -1409,12 +1462,13 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     success: true,
     deletedTraces: deleted,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 ```
 
 **Add to `vercel.json`**:
+
 ```json
 {
   "crons": [

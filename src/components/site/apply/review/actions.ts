@@ -1,13 +1,14 @@
-"use server";
+"use server"
 
-import { submitApplication } from '@/components/site/admission/actions';
-import type { ApplicationFormData } from '../types';
+import { submitApplication } from "@/components/site/admission/actions"
+
+import type { ApplicationFormData } from "../types"
 
 export interface SubmitApplicationResult {
-  success: boolean;
-  applicationNumber?: string;
-  accessToken?: string;
-  error?: string;
+  success: boolean
+  applicationNumber?: string
+  accessToken?: string
+  error?: string
 }
 
 export async function submitApplicationAction(
@@ -18,28 +19,32 @@ export async function submitApplicationAction(
   try {
     // Flatten form data for submission
     const flattenedData = {
-      campaignId: formData.campaignId || '',
+      campaignId: formData.campaignId || "",
       ...formData,
-    } as ApplicationFormData;
+    } as ApplicationFormData
 
-    const result = await submitApplication(subdomain, sessionToken, flattenedData);
+    const result = await submitApplication(
+      subdomain,
+      sessionToken,
+      flattenedData
+    )
 
     if (result.success && result.data) {
       return {
         success: true,
         applicationNumber: result.data.applicationNumber,
-        accessToken: result.data.accessToken
-      };
+        accessToken: result.data.accessToken,
+      }
     }
 
     return {
       success: false,
-      error: result.error || 'Failed to submit application'
-    };
+      error: result.error || "Failed to submit application",
+    }
   } catch (error) {
     if (error instanceof Error) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.message }
     }
-    return { success: false, error: 'Failed to submit application' };
+    return { success: false, error: "Failed to submit application" }
   }
 }

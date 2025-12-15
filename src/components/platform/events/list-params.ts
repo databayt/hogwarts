@@ -1,5 +1,6 @@
-import { z } from 'zod'
-import { getEventsSchema } from './validation'
+import { z } from "zod"
+
+import { getEventsSchema } from "./validation"
 
 export const eventsSearchParams = z.object({
   page: z.coerce.number().default(1),
@@ -9,7 +10,9 @@ export const eventsSearchParams = z.object({
   status: z.string().optional(),
   eventDate: z.string().optional(),
   location: z.string().optional(),
-  sort: z.array(z.object({ id: z.string(), desc: z.coerce.boolean() })).optional(),
+  sort: z
+    .array(z.object({ id: z.string(), desc: z.coerce.boolean() }))
+    .optional(),
 })
 
 export type EventsSearchParams = z.infer<typeof eventsSearchParams>

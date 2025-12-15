@@ -36,35 +36,36 @@
  *    - Cleans up in-progress uploads on cancel
  */
 
-'use client';
+"use client"
 
-import { useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { useCallback, useRef, useState } from "react"
+import type { FileCategory } from "@prisma/client"
+import { toast } from "sonner"
+
+import { uploadFile as uploadFileBasic } from "./actions"
 import {
+  completeChunkedUpload,
   initiateChunkedUpload,
   uploadChunk,
-  completeChunkedUpload,
-} from './chunked-actions';
-import { uploadFile as uploadFileBasic } from './actions';
-import type { FileCategory } from '@prisma/client';
+} from "./chunked-actions"
 
 interface ChunkedUploadOptions {
-  chunkSize?: number;    // Default 5MB - balance between parallelism and memory
-  maxRetries?: number;   // Default 3 - total attempts before failing
-  retryDelay?: number;   // Default 1000ms - base delay for exponential backoff
-  onProgress?: (filename: string, progress: number) => void;
-  onSuccess?: (fileId: string) => void;
-  onError?: (error: string) => void;
+  chunkSize?: number // Default 5MB - balance between parallelism and memory
+  maxRetries?: number // Default 3 - total attempts before failing
+  retryDelay?: number // Default 1000ms - base delay for exponential backoff
+  onProgress?: (filename: string, progress: number) => void
+  onSuccess?: (fileId: string) => void
+  onError?: (error: string) => void
 }
 
 interface UploadProgress {
   [filename: string]: {
-    progress: number;
-    speed: number; // bytes per second
-    eta: number; // seconds remaining
-    status: 'pending' | 'uploading' | 'paused' | 'completed' | 'failed';
-    error?: string;
-  };
+    progress: number
+    speed: number // bytes per second
+    eta: number // seconds remaining
+    status: "pending" | "uploading" | "paused" | "completed" | "failed"
+    error?: string
+  }
 }
 
 export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
@@ -75,37 +76,39 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
     onProgress,
     onSuccess,
     onError,
-  } = options;
+  } = options
 
-  const [progress, setProgress] = useState<UploadProgress>({});
-  const [isUploading, setIsUploading] = useState(false);
-  const abortControllers = useRef<Map<string, AbortController>>(new Map());
+  const [progress, setProgress] = useState<UploadProgress>({})
+  const [isUploading, setIsUploading] = useState(false)
+  const abortControllers = useRef<Map<string, AbortController>>(new Map())
 
-  const calculateHash = useCallback(async (data: ArrayBuffer): Promise<string> => {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }, []);
+  const calculateHash = useCallback(
+    async (data: ArrayBuffer): Promise<string> => {
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+    },
+    []
+  )
 
   const uploadWithRetry = useCallback(
-    async (
-      uploadFn: () => Promise<any>,
-      retries = 0
-    ): Promise<any> => {
+    async (uploadFn: () => Promise<any>, retries = 0): Promise<any> => {
       try {
-        return await uploadFn();
+        return await uploadFn()
       } catch (error) {
         if (retries < maxRetries) {
           // Exponential backoff prevents hammering server on transient network failures (timeouts, 429s)
           // Formula: base * 2^attempt ensures increasing delays (1s, 2s, 4s, 8s...)
-          await new Promise(resolve => setTimeout(resolve, retryDelay * Math.pow(2, retries)));
-          return uploadWithRetry(uploadFn, retries + 1);
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryDelay * Math.pow(2, retries))
+          )
+          return uploadWithRetry(uploadFn, retries + 1)
         }
-        throw error;
+        throw error
       }
     },
     [maxRetries, retryDelay]
-  );
+  )
 
   const uploadSingleChunk = useCallback(
     async (
@@ -114,8 +117,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
       chunkNumber: number,
       _totalChunks: number
     ): Promise<void> => {
-      const hash = await calculateHash(chunk);
-      const chunkData = btoa(String.fromCharCode(...new Uint8Array(chunk)));
+      const hash = await calculateHash(chunk)
+      const chunkData = btoa(String.fromCharCode(...new Uint8Array(chunk)))
 
       await uploadWithRetry(() =>
         uploadChunk({
@@ -124,66 +127,66 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           chunkData,
           chunkHash: hash,
         })
-      );
+      )
     },
     [calculateHash, uploadWithRetry]
-  );
+  )
 
   const uploadFile = useCallback(
-    async (file: File, _category: FileCategory = 'OTHER') => {
-      const filename = file.name;
-      const startTime = Date.now();
-      let uploadedBytes = 0;
+    async (file: File, _category: FileCategory = "OTHER") => {
+      const filename = file.name
+      const startTime = Date.now()
+      let uploadedBytes = 0
 
       // Initialize progress
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         [filename]: {
           progress: 0,
           speed: 0,
           eta: 0,
-          status: 'uploading',
+          status: "uploading",
         },
-      }));
+      }))
 
       try {
         // For small files, use direct upload
         if (file.size <= chunkSize) {
-          const formData = new FormData();
-          formData.append('file', file);
+          const formData = new FormData()
+          formData.append("file", file)
 
           // Direct upload avoids chunking overhead for files under threshold
           const result = await uploadFileBasic(formData, {
-            folder: 'uploads',
-            category: 'document',
-          });
+            folder: "uploads",
+            category: "document",
+          })
 
           if (result.success) {
-            setProgress(prev => ({
+            setProgress((prev) => ({
               ...prev,
               [filename]: {
                 progress: 100,
                 speed: 0,
                 eta: 0,
-                status: 'completed',
+                status: "completed",
               },
-            }));
+            }))
             if (result.id) {
-              onSuccess?.(result.id);
+              onSuccess?.(result.id)
             }
           } else {
-            throw new Error(result.error);
+            throw new Error(result.error)
           }
-          return result;
+          return result
         }
 
         // For large files, use chunked upload to improve reliability and UX
-        const totalChunks = Math.ceil(file.size / chunkSize);
+        const totalChunks = Math.ceil(file.size / chunkSize)
 
         // Calculate file hash for integrity verification - detects corruption during network transit
         // Server compares hash to validate chunk wasn't modified in flight
-        const fileBuffer = await file.arrayBuffer();
-        const finalHash = await calculateHash(fileBuffer);
+        const fileBuffer = await file.arrayBuffer()
+        const finalHash = await calculateHash(fileBuffer)
 
         // Initiate chunked upload session on server to reserve storage space and track session state
         const initResult = await initiateChunkedUpload({
@@ -191,67 +194,75 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           mimeType: file.type,
           totalSize: file.size,
           totalChunks,
-        });
+        })
 
-        if (!initResult.success || !initResult.uploadId || !initResult.sessionId) {
-          throw new Error(initResult.error || 'Invalid chunked upload response');
+        if (
+          !initResult.success ||
+          !initResult.uploadId ||
+          !initResult.sessionId
+        ) {
+          throw new Error(initResult.error || "Invalid chunked upload response")
         }
 
-        const uploadId: string = initResult.uploadId;
+        const uploadId: string = initResult.uploadId
 
         // Create abort controller for cancellation support - allows pause/resume/cancel actions
-        const abortController = new AbortController();
-        abortControllers.current.set(filename, abortController);
+        const abortController = new AbortController()
+        abortControllers.current.set(filename, abortController)
 
         // Upload chunks in parallel with concurrency limit to balance throughput vs server load
         // Max 3 prevents overwhelming server with simultaneous requests; small files still benefit from parallelism
-        const maxConcurrent = 3;
-        const chunks: Promise<void>[] = [];
+        const maxConcurrent = 3
+        const chunks: Promise<void>[] = []
 
         for (let i = 0; i < totalChunks; i++) {
           // Check abort signal on each iteration to respect user cancellation
           if (abortController.signal.aborted) {
-            throw new Error('Upload cancelled');
+            throw new Error("Upload cancelled")
           }
 
-          const start = i * chunkSize;
-          const end = Math.min(start + chunkSize, file.size);
+          const start = i * chunkSize
+          const end = Math.min(start + chunkSize, file.size)
           // File.slice() is lazy - doesn't actually read bytes until arrayBuffer() is called
-          const chunk = await file.slice(start, end).arrayBuffer();
+          const chunk = await file.slice(start, end).arrayBuffer()
 
-          const chunkPromise = uploadSingleChunk(uploadId, chunk, i + 1, totalChunks)
-            .then(() => {
-              uploadedBytes += end - start;
+          const chunkPromise = uploadSingleChunk(
+            uploadId,
+            chunk,
+            i + 1,
+            totalChunks
+          ).then(() => {
+            uploadedBytes += end - start
 
-              // Calculate real-time metrics for progress UI feedback
-              // Speed helps user estimate if upload is stalled vs slow connection
-              // ETA helps user decide to cancel/retry vs wait
-              const elapsedTime = (Date.now() - startTime) / 1000; // seconds
-              const speed = uploadedBytes / elapsedTime; // bytes per second
-              const remainingBytes = file.size - uploadedBytes;
-              const eta = speed > 0 ? remainingBytes / speed : 0;
-              const progressPercent = (uploadedBytes / file.size) * 100;
+            // Calculate real-time metrics for progress UI feedback
+            // Speed helps user estimate if upload is stalled vs slow connection
+            // ETA helps user decide to cancel/retry vs wait
+            const elapsedTime = (Date.now() - startTime) / 1000 // seconds
+            const speed = uploadedBytes / elapsedTime // bytes per second
+            const remainingBytes = file.size - uploadedBytes
+            const eta = speed > 0 ? remainingBytes / speed : 0
+            const progressPercent = (uploadedBytes / file.size) * 100
 
-              setProgress(prev => ({
-                ...prev,
-                [filename]: {
-                  progress: progressPercent,
-                  speed,
-                  eta,
-                  status: 'uploading',
-                },
-              }));
+            setProgress((prev) => ({
+              ...prev,
+              [filename]: {
+                progress: progressPercent,
+                speed,
+                eta,
+                status: "uploading",
+              },
+            }))
 
-              onProgress?.(filename, progressPercent);
-            });
+            onProgress?.(filename, progressPercent)
+          })
 
-          chunks.push(chunkPromise);
+          chunks.push(chunkPromise)
 
           // Process chunks in batches to control concurrency - prevents connection pool exhaustion
           // Don't wait for final chunk (let it start immediately)
           if (chunks.length >= maxConcurrent || i === totalChunks - 1) {
-            await Promise.all(chunks);
-            chunks.length = 0;
+            await Promise.all(chunks)
+            chunks.length = 0
           }
         }
 
@@ -259,135 +270,147 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         const completeResult = await completeChunkedUpload({
           uploadId,
           finalHash,
-        });
+        })
 
         if (!completeResult.success) {
-          throw new Error(completeResult.error || 'Failed to complete upload');
+          throw new Error(completeResult.error || "Failed to complete upload")
         }
 
         // Mark as completed
-        setProgress(prev => ({
+        setProgress((prev) => ({
           ...prev,
           [filename]: {
             progress: 100,
             speed: 0,
             eta: 0,
-            status: 'completed',
+            status: "completed",
           },
-        }));
+        }))
 
         if (completeResult.fileId) {
-          onSuccess?.(completeResult.fileId);
+          onSuccess?.(completeResult.fileId)
         }
-        toast.success(`${filename} uploaded successfully`);
+        toast.success(`${filename} uploaded successfully`)
 
-        return { success: true, fileId: completeResult.fileId, url: completeResult.url };
+        return {
+          success: true,
+          fileId: completeResult.fileId,
+          url: completeResult.url,
+        }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+        const errorMessage =
+          error instanceof Error ? error.message : "Upload failed"
 
-        setProgress(prev => ({
+        setProgress((prev) => ({
           ...prev,
           [filename]: {
             ...prev[filename],
-            status: 'failed',
+            status: "failed",
             error: errorMessage,
           },
-        }));
+        }))
 
-        onError?.(errorMessage);
-        toast.error(`Failed to upload ${filename}: ${errorMessage}`);
+        onError?.(errorMessage)
+        toast.error(`Failed to upload ${filename}: ${errorMessage}`)
 
-        return { success: false, error: errorMessage };
+        return { success: false, error: errorMessage }
       } finally {
         // Clean up abort controller
-        abortControllers.current.delete(filename);
+        abortControllers.current.delete(filename)
       }
     },
-    [chunkSize, onProgress, onSuccess, onError, uploadSingleChunk, calculateHash]
-  );
+    [
+      chunkSize,
+      onProgress,
+      onSuccess,
+      onError,
+      uploadSingleChunk,
+      calculateHash,
+    ]
+  )
 
   const uploadMultiple = useCallback(
-    async (files: File[], category: FileCategory = 'OTHER') => {
-      setIsUploading(true);
+    async (files: File[], category: FileCategory = "OTHER") => {
+      setIsUploading(true)
 
-      const results = [];
+      const results = []
       for (const file of files) {
-        const result = await uploadFile(file, category);
-        results.push(result);
+        const result = await uploadFile(file, category)
+        results.push(result)
       }
 
-      setIsUploading(false);
-      return results;
+      setIsUploading(false)
+      return results
     },
     [uploadFile]
-  );
+  )
 
   const pauseUpload = useCallback((filename: string) => {
-    const controller = abortControllers.current.get(filename);
+    const controller = abortControllers.current.get(filename)
     if (controller) {
-      controller.abort();
-      setProgress(prev => ({
+      controller.abort()
+      setProgress((prev) => ({
         ...prev,
         [filename]: {
           ...prev[filename],
-          status: 'paused',
+          status: "paused",
         },
-      }));
+      }))
     }
-  }, []);
+  }, [])
 
   const resumeUpload = useCallback(
     async (file: File) => {
       // Resume from where it left off
       // This would require storing chunk progress in the database
       // For now, restart the upload
-      await uploadFile(file);
+      await uploadFile(file)
     },
     [uploadFile]
-  );
+  )
 
   const cancelUpload = useCallback((filename: string) => {
-    const controller = abortControllers.current.get(filename);
+    const controller = abortControllers.current.get(filename)
     if (controller) {
-      controller.abort();
-      abortControllers.current.delete(filename);
-      setProgress(prev => {
-        const newProgress = { ...prev };
-        delete newProgress[filename];
-        return newProgress;
-      });
+      controller.abort()
+      abortControllers.current.delete(filename)
+      setProgress((prev) => {
+        const newProgress = { ...prev }
+        delete newProgress[filename]
+        return newProgress
+      })
     }
-  }, []);
+  }, [])
 
   const clearCompleted = useCallback(() => {
-    setProgress(prev => {
-      const newProgress = { ...prev };
-      Object.keys(newProgress).forEach(key => {
-        if (newProgress[key].status === 'completed') {
-          delete newProgress[key];
+    setProgress((prev) => {
+      const newProgress = { ...prev }
+      Object.keys(newProgress).forEach((key) => {
+        if (newProgress[key].status === "completed") {
+          delete newProgress[key]
         }
-      });
-      return newProgress;
-    });
-  }, []);
+      })
+      return newProgress
+    })
+  }, [])
 
   const retryFailed = useCallback(
     async (file: File) => {
-      const filename = file.name;
-      if (progress[filename]?.status === 'failed') {
-        setProgress(prev => ({
+      const filename = file.name
+      if (progress[filename]?.status === "failed") {
+        setProgress((prev) => ({
           ...prev,
           [filename]: {
             ...prev[filename],
-            status: 'pending',
+            status: "pending",
             error: undefined,
           },
-        }));
-        await uploadFile(file);
+        }))
+        await uploadFile(file)
       }
     },
     [progress, uploadFile]
-  );
+  )
 
   return {
     uploadFile,
@@ -399,7 +422,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
     clearCompleted,
     progress,
     isUploading,
-  };
+  }
 }
 
 // ============================================================================
@@ -408,35 +431,35 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
 
 export function formatSpeed(bytesPerSecond: number): string {
   if (bytesPerSecond < 1024) {
-    return `${bytesPerSecond.toFixed(0)} B/s`;
+    return `${bytesPerSecond.toFixed(0)} B/s`
   } else if (bytesPerSecond < 1024 * 1024) {
-    return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`
   } else {
-    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`
   }
 }
 
 export function formatETA(seconds: number): string {
   if (seconds < 60) {
-    return `${Math.ceil(seconds)}s`;
+    return `${Math.ceil(seconds)}s`
   } else if (seconds < 3600) {
-    return `${Math.ceil(seconds / 60)}m`;
+    return `${Math.ceil(seconds / 60)}m`
   } else {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.ceil((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.ceil((seconds % 3600) / 60)
+    return `${hours}h ${minutes}m`
   }
 }
 
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) {
-    return `${bytes} B`;
+    return `${bytes} B`
   } else if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024).toFixed(1)} KB`
   } else if (bytes < 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   } else {
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
   }
 }
 
@@ -444,4 +467,4 @@ export function formatFileSize(bytes: number): string {
 // Type Exports
 // ============================================================================
 
-export type { ChunkedUploadOptions, UploadProgress };
+export type { ChunkedUploadOptions, UploadProgress }

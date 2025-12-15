@@ -1,3 +1,23 @@
+// Import all icons from categories
+import { ANTHROPIC_ILLUSTRATIONS, AnthropicIcons } from "./anthropic"
+import * as AppIcons from "./categories/apps"
+import * as ContentIcons from "./categories/content"
+import * as DevelopmentIcons from "./categories/development"
+import * as IntegrationIcons from "./categories/integrations"
+import * as ProductivityIcons from "./categories/productivity"
+import * as ProgrammingIcons from "./categories/programming"
+import * as RatingIcons from "./categories/ratings"
+import * as ShapeIcons from "./categories/shapes"
+import * as SystemIcons from "./categories/system"
+import { iconRegistry } from "./registry"
+/**
+ * Dynamic Icon Component
+ *
+ * Load icons by name from registry.
+ * Usage: <Icon name="github" className="w-6 h-6" />
+ */
+import type { IconComponent, IconProps } from "./types"
+
 /**
  * Icon System - Main Export
  *
@@ -16,18 +36,6 @@ export * from "./registry"
 // Export components
 export * from "./components/icon-wrapper"
 export * from "./anthropic-showcase"
-
-// Import all icons from categories
-import * as SystemIcons from "./categories/system"
-import * as IntegrationIcons from "./categories/integrations"
-import * as ContentIcons from "./categories/content"
-import * as AppIcons from "./categories/apps"
-import * as ProductivityIcons from "./categories/productivity"
-import * as DevelopmentIcons from "./categories/development"
-import * as ProgrammingIcons from "./categories/programming"
-import * as RatingIcons from "./categories/ratings"
-import * as ShapeIcons from "./categories/shapes"
-import { AnthropicIcons, ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
 
 // Re-export individual icons for tree-shaking
 export * from "./categories/system"
@@ -160,19 +168,7 @@ export const Icons = {
   anthropicTerminal: AnthropicIcons.Terminal,
 } as const
 
-/**
- * Dynamic Icon Component
- *
- * Load icons by name from registry.
- * Usage: <Icon name="github" className="w-6 h-6" />
- */
-import type { IconProps, IconComponent } from "./types"
-import { iconRegistry } from "./registry"
-
-export function Icon({
-  name,
-  ...props
-}: IconProps & { name: string }) {
+export function Icon({ name, ...props }: IconProps & { name: string }) {
   const icon = iconRegistry.find((i) => i.id === name)
   if (!icon) {
     console.warn(`Icon "${name}" not found in registry`)

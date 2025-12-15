@@ -2,4 +2,4 @@
  * Exam Column Definitions
  */
 
-export * from "./export";
+export * from "./export"

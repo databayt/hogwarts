@@ -12,7 +12,7 @@ export const linkGuardianSchema = z.object({
   occupation: z.string().optional(),
   workplace: z.string().optional(),
   notes: z.string().optional(),
-});
+})
 
 export const createGuardianAndLinkSchema = z.object({
   studentId: z.string().min(1, "Student ID is required"),
@@ -25,7 +25,7 @@ export const createGuardianAndLinkSchema = z.object({
   occupation: z.string().optional(),
   workplace: z.string().optional(),
   notes: z.string().optional(),
-});
+})
 
 export const updateGuardianLinkSchema = z.object({
   studentGuardianId: z.string().min(1, "Relationship ID is required"),
@@ -34,11 +34,11 @@ export const updateGuardianLinkSchema = z.object({
   occupation: z.string().optional(),
   workplace: z.string().optional(),
   notes: z.string().optional(),
-});
+})
 
 export const unlinkGuardianSchema = z.object({
   studentGuardianId: z.string().min(1, "Relationship ID is required"),
-});
+})
 
 // ============================================================================
 // Parent Base Schemas
@@ -47,7 +47,11 @@ export const unlinkGuardianSchema = z.object({
 export const parentBaseSchema = z.object({
   givenName: z.string().min(1, "Given name is required"),
   surname: z.string().min(1, "Surname is required"),
-  emailAddress: z.string().email("Valid email is required").optional().or(z.literal("")),
+  emailAddress: z
+    .string()
+    .email("Valid email is required")
+    .optional()
+    .or(z.literal("")),
   userId: z.string().optional(),
 })
 
@@ -57,7 +61,10 @@ export const parentUpdateSchema = parentBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
 })
 
-export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })
+export const sortItemSchema = z.object({
+  id: z.string(),
+  desc: z.boolean().optional(),
+})
 
 export const getParentsSchema = z.object({
   page: z.number().int().positive().default(1),

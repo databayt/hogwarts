@@ -4,12 +4,14 @@
  * Pattern based on receipt extraction implementation
  */
 
-import { anthropic } from '@ai-sdk/anthropic'
-import { generateObject } from 'ai'
-import { logger } from '@/lib/logger'
-import type { OnboardingStep } from './types'
-import { stepSchemaMap } from './schemas'
-import { getPromptForStep, systemMessage } from './prompts'
+import { anthropic } from "@ai-sdk/anthropic"
+import { generateObject } from "ai"
+
+import { logger } from "@/lib/logger"
+
+import { getPromptForStep, systemMessage } from "./prompts"
+import { stepSchemaMap } from "./schemas"
+import type { OnboardingStep } from "./types"
 
 /**
  * Extract structured data from document image using Claude 3.5 Sonnet
@@ -24,10 +26,10 @@ export async function extractWithClaude(
   const startTime = Date.now()
 
   try {
-    logger.info('Starting document extraction with Claude', {
-      action: 'extract_document_data',
+    logger.info("Starting document extraction with Claude", {
+      action: "extract_document_data",
       stepId,
-      fileUrl: fileUrl.substring(0, 50) + '...', // Log truncated URL
+      fileUrl: fileUrl.substring(0, 50) + "...", // Log truncated URL
     })
 
     // Get the appropriate schema for this step
@@ -35,23 +37,23 @@ export async function extractWithClaude(
     const prompt = getPromptForStep(stepId)
 
     // Determine if fileUrl is a URL or base64 data
-    const isBase64 = fileUrl.startsWith('data:')
+    const isBase64 = fileUrl.startsWith("data:")
     const imageInput = isBase64 ? fileUrl : fileUrl
 
     // Extract data using Vercel AI SDK with Claude 3.5 Sonnet
     const result = await generateObject({
-      model: anthropic('claude-3-5-sonnet-20241022'),
+      model: anthropic("claude-3-5-sonnet-20241022"),
       schema,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: [
             {
-              type: 'image',
+              type: "image",
               image: imageInput,
             },
             {
-              type: 'text',
+              type: "text",
               text: `${systemMessage}
 
 ${prompt}`,
@@ -63,8 +65,8 @@ ${prompt}`,
 
     const processingTime = Date.now() - startTime
 
-    logger.info('Document extraction completed', {
-      action: 'extract_document_success',
+    logger.info("Document extraction completed", {
+      action: "extract_document_success",
       stepId,
       processingTime,
       fields: Object.keys(result.object).length,
@@ -79,10 +81,10 @@ ${prompt}`,
     const processingTime = Date.now() - startTime
 
     logger.error(
-      'Document extraction failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Document extraction failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'extract_document_error',
+        action: "extract_document_error",
         stepId,
         processingTime,
       }
@@ -90,7 +92,7 @@ ${prompt}`,
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Extraction failed',
+      error: error instanceof Error ? error.message : "Extraction failed",
       processingTime,
     }
   }
@@ -111,7 +113,7 @@ export async function fileToBase64(file: File): Promise<string> {
     }
 
     reader.onerror = () => {
-      reject(new Error('Failed to read file'))
+      reject(new Error("Failed to read file"))
     }
 
     reader.readAsDataURL(file)
@@ -125,6 +127,6 @@ export async function fileToBase64(file: File): Promise<string> {
  * @returns Base64 data URL
  */
 export function bufferToBase64(buffer: Buffer, mimeType: string): string {
-  const base64 = buffer.toString('base64')
+  const base64 = buffer.toString("base64")
   return `data:${mimeType};base64,${base64}`
 }

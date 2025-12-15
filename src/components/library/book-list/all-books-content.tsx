@@ -1,19 +1,18 @@
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import BookList from "./content";
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import BookList from "./content"
 
 export default async function AllBooksContent() {
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2 className="mb-4">School context not found</h2>
-        <p className="muted">
-          Unable to load library. Please contact support.
-        </p>
+        <p className="muted">Unable to load library. Please contact support.</p>
       </div>
-    );
+    )
   }
 
   const allBooks = await db.book.findMany({
@@ -23,14 +22,14 @@ export default async function AllBooksContent() {
     orderBy: {
       createdAt: "desc",
     },
-  });
+  })
 
   if (allBooks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-24 h-24 mb-6 rounded-full bg-muted flex items-center justify-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="bg-muted mb-6 flex h-24 w-24 items-center justify-center rounded-full">
           <svg
-            className="w-12 h-12 text-muted-foreground"
+            className="text-muted-foreground h-12 w-12"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -43,13 +42,13 @@ export default async function AllBooksContent() {
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold mb-2">No books available</h2>
-        <p className="text-muted-foreground text-center max-w-md">
+        <h2 className="mb-2 text-xl font-semibold">No books available</h2>
+        <p className="text-muted-foreground max-w-md text-center">
           The library is empty. Check back later or contact your library
           administrator to add books.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -60,11 +59,7 @@ export default async function AllBooksContent() {
         </p>
       </div>
 
-      <BookList
-        title="All Books"
-        books={allBooks}
-        containerClassName=""
-      />
+      <BookList title="All Books" books={allBooks} containerClassName="" />
     </div>
-  );
+  )
 }

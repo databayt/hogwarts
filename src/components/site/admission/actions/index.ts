@@ -7,7 +7,7 @@ export {
   saveApplicationSession,
   resumeApplicationSession,
   submitApplication,
-} from "./application";
+} from "./application"
 
 // Status Tracker Actions
 export {
@@ -15,7 +15,7 @@ export {
   verifyStatusOTP,
   getApplicationStatus,
   getApplicationByNumber,
-} from "./status";
+} from "./status"
 
 // Tour Booking Actions
 export {
@@ -25,10 +25,7 @@ export {
   getBookingDetails,
   cancelTourBooking,
   rescheduleTourBooking,
-} from "./tour";
+} from "./tour"
 
 // Inquiry Actions
-export {
-  submitInquiry,
-  isInquiryFormEnabled,
-} from "./inquiry";
+export { submitInquiry, isInquiryFormEnabled } from "./inquiry"

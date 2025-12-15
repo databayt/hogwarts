@@ -1,10 +1,11 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { type ChartConfig, ChartContainer } from "@/components/ui/chart"
-import { ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { ExternalLink } from "lucide-react"
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+
+import { Card, CardContent } from "@/components/ui/card"
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 
 const data = [
   {
@@ -47,13 +48,13 @@ const chartConfig = {
 export default function StatsCircular() {
   return (
     <div className="w-full">
-      <h2 className="text-xl font-medium text-foreground">Plan overview</h2>
-      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+      <h2 className="text-foreground text-xl font-medium">Plan overview</h2>
+      <p className="text-muted-foreground mt-1 text-sm leading-6">
         You are currently on the{" "}
-        <span className="font-medium text-foreground">starter plan</span>.{" "}
+        <span className="text-foreground font-medium">starter plan</span>.{" "}
         <Link
           href="#"
-          className="inline-flex items-center gap-1 text-primary hover:underline hover:underline-offset-4"
+          className="text-primary inline-flex items-center gap-1 hover:underline hover:underline-offset-4"
         >
           View other plans
           <ExternalLink className="size-4" aria-hidden={true} />
@@ -62,9 +63,12 @@ export default function StatsCircular() {
       <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {data.map((item) => (
           <Card key={item.name} className="p-4">
-            <CardContent className="p-0 flex items-center space-x-4">
+            <CardContent className="flex items-center space-x-4 p-0">
               <div className="relative flex items-center justify-center">
-                <ChartContainer config={chartConfig} className="h-[80px] w-[80px]">
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[80px] w-[80px]"
+                >
                   <RadialBarChart
                     data={[item]}
                     innerRadius={30}
@@ -90,12 +94,16 @@ export default function StatsCircular() {
                   </RadialBarChart>
                 </ChartContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-base font-medium text-foreground">{item.capacity}%</span>
+                  <span className="text-foreground text-base font-medium">
+                    {item.capacity}%
+                  </span>
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">{item.name}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-foreground text-sm font-medium">
+                  {item.name}
+                </p>
+                <p className="text-muted-foreground text-sm">
                   {item.current} of {item.allowed} used
                 </p>
               </div>

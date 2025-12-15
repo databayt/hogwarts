@@ -1,29 +1,35 @@
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { StreamPaymentSuccessContent } from "@/components/stream/payment/success-content";
-import { Metadata } from "next";
-import { getTenantContext } from "@/lib/tenant-context";
+import { Metadata } from "next"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { StreamPaymentSuccessContent } from "@/components/stream/payment/success-content"
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string }>;
-  searchParams?: Promise<{ session_id?: string }>;
+  params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams?: Promise<{ session_id?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
   return {
     title: dictionary.stream?.payment?.success?.title || "Payment Successful",
-    description: dictionary.stream?.payment?.success?.description || "Your enrollment payment was successful",
-  };
+    description:
+      dictionary.stream?.payment?.success?.description ||
+      "Your enrollment payment was successful",
+  }
 }
 
-export default async function StreamPaymentSuccessPage({ params, searchParams }: Props) {
-  const { lang, subdomain } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
-  const search = await searchParams;
+export default async function StreamPaymentSuccessPage({
+  params,
+  searchParams,
+}: Props) {
+  const { lang, subdomain } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
+  const search = await searchParams
 
   return (
     <StreamPaymentSuccessContent
@@ -32,5 +38,5 @@ export default async function StreamPaymentSuccessPage({ params, searchParams }:
       schoolId={schoolId}
       sessionId={search?.session_id}
     />
-  );
+  )
 }

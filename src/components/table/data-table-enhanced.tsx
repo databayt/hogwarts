@@ -1,7 +1,16 @@
-'use client';
+"use client"
 
-import { useCallback, useEffect, useState } from 'react';
-import { flexRender, type Table as TanstackTable } from '@tanstack/react-table';
+import { useCallback, useEffect, useState } from "react"
+import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
+
+import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -9,55 +18,53 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { DataTablePagination } from '@/components/table/data-table-pagination';
-import { DataTableLoadMore } from '@/components/table/data-table-load-more';
-import { DataTableToolbar } from '@/components/table/data-table-toolbar';
-import { ViewToggle, type ViewMode } from '@/components/view-toggle';
-import { ExportButton, type ExportButtonProps } from '@/components/export';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCommonPinningStyles } from '@/components/table/utils';
-import { cn } from '@/lib/utils';
-import { useDictionary } from '@/components/internationalization/use-dictionary';
+} from "@/components/ui/table"
+import { ExportButton, type ExportButtonProps } from "@/components/export"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+import { DataTableLoadMore } from "@/components/table/data-table-load-more"
+import { DataTablePagination } from "@/components/table/data-table-pagination"
+import { DataTableToolbar } from "@/components/table/data-table-toolbar"
+import { getCommonPinningStyles } from "@/components/table/utils"
+import { ViewToggle, type ViewMode } from "@/components/view-toggle"
 
 export interface DataTableEnhancedProps<TData> {
   /** TanStack table instance */
-  table: TanstackTable<TData>;
+  table: TanstackTable<TData>
   /** Toolbar configuration */
   toolbar?: {
-    searchKey?: string;
-    searchPlaceholder?: string;
-    filters?: any[];
-    showViewToggle?: boolean;
-    showExport?: boolean;
-    customActions?: React.ReactNode;
-  };
+    searchKey?: string
+    searchPlaceholder?: string
+    filters?: any[]
+    showViewToggle?: boolean
+    showExport?: boolean
+    customActions?: React.ReactNode
+  }
   /** Export configuration */
-  exportConfig?: Omit<ExportButtonProps, 'variant' | 'size'>;
+  exportConfig?: Omit<ExportButtonProps, "variant" | "size">
   /** View mode configuration */
   viewMode?: {
-    enabled?: boolean;
-    defaultMode?: ViewMode;
-    storageKey?: string;
-    renderCard?: (item: TData) => React.ReactNode;
-  };
+    enabled?: boolean
+    defaultMode?: ViewMode
+    storageKey?: string
+    renderCard?: (item: TData) => React.ReactNode
+  }
   /** Pagination configuration */
-  paginationMode?: 'pagination' | 'load-more';
-  hasMore?: boolean;
-  isLoading?: boolean;
-  onLoadMore?: () => void;
+  paginationMode?: "pagination" | "load-more"
+  hasMore?: boolean
+  isLoading?: boolean
+  onLoadMore?: () => void
   /** Auto-refresh configuration */
   autoRefresh?: {
-    enabled?: boolean;
-    interval?: number;
-    onRefresh?: () => void | Promise<void>;
-  };
+    enabled?: boolean
+    interval?: number
+    onRefresh?: () => void | Promise<void>
+  }
   /** Action bar for bulk operations */
-  actionBar?: React.ReactNode;
+  actionBar?: React.ReactNode
   /** Additional class names */
-  className?: string;
+  className?: string
   /** Empty state message */
-  emptyMessage?: string;
+  emptyMessage?: string
 }
 
 export function DataTableEnhanced<TData>({
@@ -65,7 +72,7 @@ export function DataTableEnhanced<TData>({
   toolbar,
   exportConfig,
   viewMode,
-  paginationMode = 'pagination',
+  paginationMode = "pagination",
   hasMore = false,
   isLoading = false,
   onLoadMore,
@@ -74,51 +81,47 @@ export function DataTableEnhanced<TData>({
   className,
   emptyMessage,
 }: DataTableEnhancedProps<TData>) {
-  const { dictionary } = useDictionary();
+  const { dictionary } = useDictionary()
   const [currentViewMode, setCurrentViewMode] = useState<ViewMode>(
-    viewMode?.defaultMode || 'list'
-  );
+    viewMode?.defaultMode || "list"
+  )
 
   // Handle auto-refresh
   useEffect(() => {
-    if (!autoRefresh?.enabled || !autoRefresh?.onRefresh) return;
+    if (!autoRefresh?.enabled || !autoRefresh?.onRefresh) return
 
     const interval = setInterval(() => {
-      autoRefresh.onRefresh?.();
-    }, autoRefresh.interval || 30000); // Default 30 seconds
+      autoRefresh.onRefresh?.()
+    }, autoRefresh.interval || 30000) // Default 30 seconds
 
-    return () => clearInterval(interval);
-  }, [autoRefresh]);
+    return () => clearInterval(interval)
+  }, [autoRefresh])
 
   const handleViewModeChange = useCallback((mode: ViewMode) => {
-    setCurrentViewMode(mode);
-  }, []);
+    setCurrentViewMode(mode)
+  }, [])
 
   // Render grid view
   const renderGridView = () => {
-    const data = table.getRowModel().rows;
+    const data = table.getRowModel().rows
 
     if (!data.length) {
       return (
-        <div className="flex items-center justify-center h-32">
+        <div className="flex h-32 items-center justify-center">
           <p className="text-muted-foreground">
-            {emptyMessage || 'No results found.'}
+            {emptyMessage || "No results found."}
           </p>
         </div>
-      );
+      )
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {data.map((row) => {
-          const item = row.original;
+          const item = row.original
 
           if (viewMode?.renderCard) {
-            return (
-              <div key={row.id}>
-                {viewMode.renderCard(item)}
-              </div>
-            );
+            return <div key={row.id}>{viewMode.renderCard(item)}</div>
           }
 
           // Default card rendering
@@ -128,9 +131,9 @@ export function DataTableEnhanced<TData>({
                 <div className="space-y-2">
                   {row.getVisibleCells().map((cell) => (
                     <div key={cell.id} className="text-sm">
-                      <span className="font-medium text-muted-foreground">
+                      <span className="text-muted-foreground font-medium">
                         {cell.column.columnDef.header as string}:
-                      </span>{' '}
+                      </span>{" "}
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -140,11 +143,11 @@ export function DataTableEnhanced<TData>({
                 </div>
               </CardContent>
             </Card>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   // Render list view
   const renderListView = () => (
@@ -177,7 +180,7 @@ export function DataTableEnhanced<TData>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                data-state={row.getIsSelected() && 'selected'}
+                data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
@@ -186,10 +189,7 @@ export function DataTableEnhanced<TData>({
                       ...getCommonPinningStyles({ column: cell.column }),
                     }}
                   >
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
@@ -200,20 +200,20 @@ export function DataTableEnhanced<TData>({
                 colSpan={table.getAllColumns().length}
                 className="h-24 text-center"
               >
-                {emptyMessage || 'No results found.'}
+                {emptyMessage || "No results found."}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
     </div>
-  );
+  )
 
   return (
-    <div className={cn('flex w-full flex-col gap-4', className)}>
+    <div className={cn("flex w-full flex-col gap-4", className)}>
       {/* Toolbar */}
       {toolbar && (
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <DataTableToolbar table={table}>
             {/* Custom actions */}
             {toolbar.customActions}
@@ -237,13 +237,13 @@ export function DataTableEnhanced<TData>({
       )}
 
       {/* Content */}
-      {viewMode?.enabled && currentViewMode === 'grid'
+      {viewMode?.enabled && currentViewMode === "grid"
         ? renderGridView()
         : renderListView()}
 
       {/* Pagination or Load More */}
       <div className="flex flex-col gap-2.5">
-        {paginationMode === 'pagination' ? (
+        {paginationMode === "pagination" ? (
           <DataTablePagination table={table} />
         ) : (
           <DataTableLoadMore
@@ -260,5 +260,5 @@ export function DataTableEnhanced<TData>({
           actionBar}
       </div>
     </div>
-  );
+  )
 }

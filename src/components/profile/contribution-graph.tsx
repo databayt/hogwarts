@@ -1,9 +1,22 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { ProfileRole, ActivityDataPoint } from "./types"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import type { ActivityDataPoint, ProfileRole } from "./types"
 
 interface ActivityGraphProps {
   role: ProfileRole
@@ -28,11 +41,28 @@ const LEVEL_STYLES: Record<number, React.CSSProperties> = {
   4: { backgroundColor: "var(--contribution-level-4)" },
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
 const WEEKDAYS = ["Sun", "", "Mon", "", "Wed", "", "Fri", ""]
 
 // Generate activity data for a year
-function generateActivityData(startDate: Date, endDate: Date, role: ProfileRole): ActivityDataPoint[] {
+function generateActivityData(
+  startDate: Date,
+  endDate: Date,
+  role: ProfileRole
+): ActivityDataPoint[] {
   const data: ActivityDataPoint[] = []
   const current = new Date(startDate)
 
@@ -55,7 +85,8 @@ function generateActivityData(startDate: Date, endDate: Date, role: ProfileRole)
     if (!isSchoolMonth || isVacation) baseIntensity *= 0.2
 
     // Role-specific patterns
-    if (role === "teacher" && dayOfWeek >= 1 && dayOfWeek <= 5) baseIntensity *= 1.2
+    if (role === "teacher" && dayOfWeek >= 1 && dayOfWeek <= 5)
+      baseIntensity *= 1.2
     if (role === "parent" && dayOfWeek === 3) baseIntensity *= 0.8 // Less on Wednesdays
     if (role === "student" && dayOfWeek === 2) baseIntensity *= 1.3 // Busy on Tuesdays
 
@@ -82,10 +113,34 @@ function generateActivityData(startDate: Date, endDate: Date, role: ProfileRole)
 
 function generateActivityTypes(role: ProfileRole, count: number): string[] {
   const activityTypes = {
-    student: ["Attended class", "Submitted assignment", "Took quiz", "Library visit", "Club activity"],
-    teacher: ["Taught class", "Graded work", "Parent meeting", "Department meeting", "Curriculum planning"],
-    parent: ["Checked grades", "Teacher communication", "Event attendance", "Payment", "Portal login"],
-    staff: ["Processed request", "Updated records", "Meeting attended", "Report generated", "System update"],
+    student: [
+      "Attended class",
+      "Submitted assignment",
+      "Took quiz",
+      "Library visit",
+      "Club activity",
+    ],
+    teacher: [
+      "Taught class",
+      "Graded work",
+      "Parent meeting",
+      "Department meeting",
+      "Curriculum planning",
+    ],
+    parent: [
+      "Checked grades",
+      "Teacher communication",
+      "Event attendance",
+      "Payment",
+      "Portal login",
+    ],
+    staff: [
+      "Processed request",
+      "Updated records",
+      "Meeting attended",
+      "Report generated",
+      "System update",
+    ],
   }
 
   const types = activityTypes[role] || activityTypes.student
@@ -107,7 +162,10 @@ function formatDate(date: Date): string {
   })
 }
 
-export default function ActivityGraph({ role = "student", data }: ActivityGraphProps) {
+export default function ActivityGraph({
+  role = "student",
+  data,
+}: ActivityGraphProps) {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear.toString())
 
@@ -158,7 +216,7 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
     let lastMonth = -1
 
     weeks.forEach((week, weekIdx) => {
-      const firstDayWithData = week.find(d => d.count >= 0)
+      const firstDayWithData = week.find((d) => d.count >= 0)
       if (firstDayWithData) {
         const month = firstDayWithData.date.getMonth()
         if (month !== lastMonth) {
@@ -174,7 +232,9 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
     return positions
   }, [weeks])
 
-  const years = Array.from({ length: 5 }, (_, i) => (currentYear - i).toString())
+  const years = Array.from({ length: 5 }, (_, i) =>
+    (currentYear - i).toString()
+  )
 
   const roleLabel = {
     student: "activities",
@@ -188,11 +248,12 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-foreground">
-            {totalContributions.toLocaleString()} {roleLabel[role]} in {selectedYear}
+          <h3 className="text-foreground text-base font-semibold">
+            {totalContributions.toLocaleString()} {roleLabel[role]} in{" "}
+            {selectedYear}
           </h3>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-24 h-8 text-xs">
+            <SelectTrigger className="h-8 w-24 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -209,13 +270,16 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
         <div className="overflow-x-auto pb-2">
           <div className="min-w-max">
             {/* Month labels */}
-            <div className="flex ms-10 mb-1">
+            <div className="ms-10 mb-1 flex">
               {monthPositions.map(({ month, position }, idx) => (
                 <span
                   key={idx}
-                  className="text-[10px] text-muted-foreground"
+                  className="text-muted-foreground text-[10px]"
                   style={{
-                    marginInlineStart: idx === 0 ? `${position * 13}px` : `${(position - (monthPositions[idx - 1]?.position || 0) - 1) * 13}px`,
+                    marginInlineStart:
+                      idx === 0
+                        ? `${position * 13}px`
+                        : `${(position - (monthPositions[idx - 1]?.position || 0) - 1) * 13}px`,
                     minWidth: "26px",
                   }}
                 >
@@ -227,7 +291,7 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
             {/* Graph Grid */}
             <div className="flex">
               {/* Weekday labels */}
-              <div className="flex flex-col gap-[3px] me-2 text-[10px] text-muted-foreground">
+              <div className="text-muted-foreground me-2 flex flex-col gap-[3px] text-[10px]">
                 {WEEKDAYS.map((day, idx) => (
                   <span key={idx} className="h-[10px] leading-[10px]">
                     {day}
@@ -243,20 +307,27 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
                       <Tooltip key={`${weekIdx}-${dayIdx}`}>
                         <TooltipTrigger asChild>
                           <div
-                            className="size-[11px] rounded-[3px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/20"
+                            className="hover:ring-foreground/20 size-[11px] cursor-pointer rounded-[3px] transition-all hover:ring-1"
                             style={LEVEL_STYLES[day.level]}
                           />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-xs">
                           <div className="text-sm">
                             <p className="font-semibold">
-                              {day.count > 0 ? `${day.count} ${roleLabel[role]}` : `No ${roleLabel[role]}`}
+                              {day.count > 0
+                                ? `${day.count} ${roleLabel[role]}`
+                                : `No ${roleLabel[role]}`}
                             </p>
-                            <p className="text-muted-foreground">{formatDate(day.date)}</p>
+                            <p className="text-muted-foreground">
+                              {formatDate(day.date)}
+                            </p>
                             {day.activities && day.activities.length > 0 && (
-                              <div className="mt-1 pt-1 border-t border-border">
+                              <div className="border-border mt-1 border-t pt-1">
                                 {day.activities.map((activity, i) => (
-                                  <p key={i} className="text-xs text-muted-foreground">
+                                  <p
+                                    key={i}
+                                    className="text-muted-foreground text-xs"
+                                  >
                                     • {activity}
                                   </p>
                                 ))}
@@ -274,7 +345,7 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
           <a href="#" className="hover:text-primary transition-colors">
             Learn how we count {roleLabel[role]}
           </a>

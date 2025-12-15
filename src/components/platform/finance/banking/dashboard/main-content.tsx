@@ -1,5 +1,5 @@
-import { RecentTransactionsList } from './recent-transactions'
-import { AccountTabs } from './account-tabs'
+import { AccountTabs } from "./account-tabs"
+import { RecentTransactionsList } from "./recent-transactions"
 
 interface DashboardMainContentProps {
   accounts: any[]
@@ -24,10 +24,10 @@ export function DashboardMainContent({
         dictionary={dictionary}
       />
 
-      <div className="rounded-lg border bg-card">
+      <div className="bg-card rounded-lg border">
         <div className="border-b p-6">
           <h2 className="text-lg font-semibold">
-            {dictionary?.recentTransactions || 'Recent Transactions'}
+            {dictionary?.recentTransactions || "Recent Transactions"}
           </h2>
         </div>
         <div className="p-6">

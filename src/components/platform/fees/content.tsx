@@ -1,16 +1,23 @@
-import { Suspense } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { FeeDashboard } from "./dashboard";
-import { FeeStructuresList } from "./fee-structures-list";
-import { PaymentsList } from "./payments-list";
-import { ScholarshipsList } from "./scholarships-list";
-import { RefundsList } from "./refunds-list";
-import { getFeeStats, getFeeStructures, getPayments, getScholarships } from "./actions";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { Suspense } from "react"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+
+import {
+  getFeeStats,
+  getFeeStructures,
+  getPayments,
+  getScholarships,
+} from "./actions"
+import { FeeDashboard } from "./dashboard"
+import { FeeStructuresList } from "./fee-structures-list"
+import { PaymentsList } from "./payments-list"
+import { RefundsList } from "./refunds-list"
+import { ScholarshipsList } from "./scholarships-list"
 
 interface Props {
-  dictionary?: Dictionary;
+  dictionary?: Dictionary
 }
 
 export default async function FeesContent({ dictionary }: Props) {
@@ -20,7 +27,7 @@ export default async function FeesContent({ dictionary }: Props) {
     getFeeStructures(),
     getPayments(),
     getScholarships(),
-  ]);
+  ])
 
   return (
     <div className="space-y-6">
@@ -35,21 +42,11 @@ export default async function FeesContent({ dictionary }: Props) {
 
       <Tabs defaultValue="structures" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="structures">
-            Fee Structures
-          </TabsTrigger>
-          <TabsTrigger value="payments">
-            Payments
-          </TabsTrigger>
-          <TabsTrigger value="scholarships">
-            Scholarships
-          </TabsTrigger>
-          <TabsTrigger value="refunds">
-            Refunds
-          </TabsTrigger>
-          <TabsTrigger value="reports">
-            Reports
-          </TabsTrigger>
+          <TabsTrigger value="structures">Fee Structures</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
+          <TabsTrigger value="refunds">Refunds</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="structures" className="space-y-4">
@@ -61,7 +58,10 @@ export default async function FeesContent({ dictionary }: Props) {
         </TabsContent>
 
         <TabsContent value="scholarships" className="space-y-4">
-          <ScholarshipsList scholarships={scholarships} dictionary={dictionary} />
+          <ScholarshipsList
+            scholarships={scholarships}
+            dictionary={dictionary}
+          />
         </TabsContent>
 
         <TabsContent value="refunds" className="space-y-4">
@@ -69,11 +69,11 @@ export default async function FeesContent({ dictionary }: Props) {
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-muted-foreground py-12 text-center">
             Financial reports coming soon...
           </div>
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

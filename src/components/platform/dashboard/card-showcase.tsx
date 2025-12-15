@@ -1,6 +1,7 @@
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { DashboardHeader } from "@/components/platform/dashboard/header"
+
 import { CardsActivityGoal } from "./card-activity-goal"
 import { CardsChat } from "./card-chat"
 import { CardsCookieSettings } from "./card-cookie-settings"
@@ -23,7 +24,10 @@ interface CardsContentProps {
 export default function CardsContent({ dictionary, lang }: CardsContentProps) {
   return (
     <>
-      <DashboardHeader heading="Cards" text="Card components from shadcn/ui v4" />
+      <DashboardHeader
+        heading="Cards"
+        text="Card components from shadcn/ui v4"
+      />
       <div className="md:grids-col-2 grid py-4 pb-14 **:data-[slot=card]:shadow-none md:gap-4 lg:grid-cols-10 xl:grid-cols-11">
         {/* Left column */}
         <div className="grid gap-4 lg:col-span-4 xl:col-span-6">

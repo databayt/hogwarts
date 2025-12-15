@@ -10,6 +10,7 @@ model: sonnet
 **MCP**: Uses PostgreSQL MCP for direct database access
 
 ## Expertise
+
 - Prisma schema design
 - Database migrations
 - Query optimization & N+1 detection
@@ -18,13 +19,16 @@ model: sonnet
 - Multi-tenant data isolation
 
 ## Project Database
+
 - **ORM**: Prisma 6.14.0
 - **Database**: PostgreSQL (Neon)
 - **Models**: 27 files in `prisma/models/*.prisma`
 - **Pattern**: All business models include `schoolId`
 
 ## Critical Rule: Multi-Tenant Safety
+
 **EVERY** business model MUST include:
+
 ```prisma
 model Student {
   id        String   @id @default(cuid())
@@ -42,6 +46,7 @@ model Student {
 ## Schema Best Practices
 
 ### 1. Relations
+
 ```prisma
 model Student {
   id           String  @id @default(cuid())
@@ -58,6 +63,7 @@ model Student {
 ```
 
 ### 2. Enums
+
 ```prisma
 enum UserRole {
   DEVELOPER
@@ -72,6 +78,7 @@ enum UserRole {
 ```
 
 ### 3. Compound Unique Constraints
+
 ```prisma
 @@unique([email, schoolId])
 @@unique([code, schoolId])
@@ -80,25 +87,27 @@ enum UserRole {
 ## Query Patterns
 
 ### Safe Multi-Tenant Query
+
 ```typescript
 const schoolId = session?.user?.schoolId
 const students = await db.student.findMany({
   where: {
-    schoolId,  // ALWAYS include
-    status: 'ACTIVE'
+    schoolId, // ALWAYS include
+    status: "ACTIVE",
   },
   include: {
     yearLevel: true,
     guardian: {
       include: {
-        guardian: true
-      }
-    }
-  }
+        guardian: true,
+      },
+    },
+  },
 })
 ```
 
 ### Optimized Includes (Avoid N+1)
+
 ```typescript
 // Good - single query
 const classes = await db.class.findMany({
@@ -107,15 +116,15 @@ const classes = await db.class.findMany({
     subject: true,
     teacher: {
       include: {
-        teacher: true
-      }
+        teacher: true,
+      },
     },
     students: {
       include: {
-        student: true
-      }
-    }
-  }
+        student: true,
+      },
+    },
+  },
 })
 
 // Bad - N+1 queries
@@ -126,17 +135,19 @@ for (const cls of classes) {
 ```
 
 ### Transactions
+
 ```typescript
 const result = await db.$transaction(async (tx) => {
   const student = await tx.student.create({ data: { ...data, schoolId } })
   await tx.auditLog.create({
-    data: { action: 'CREATE_STUDENT', schoolId, userId, studentId: student.id }
+    data: { action: "CREATE_STUDENT", schoolId, userId, studentId: student.id },
   })
   return student
 })
 ```
 
 ## Migration Commands
+
 ```bash
 pnpm prisma migrate dev --name add_feature
 pnpm prisma generate
@@ -144,6 +155,7 @@ pnpm prisma migrate deploy  # Production
 ```
 
 ## Performance Checklist
+
 - [ ] All queries include schoolId
 - [ ] Indexes on foreign keys
 - [ ] Compound indexes for common filters

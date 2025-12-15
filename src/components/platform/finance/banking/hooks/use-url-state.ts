@@ -1,5 +1,5 @@
-import { useCallback, useTransition } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useCallback, useTransition } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 /**
  * useUrlState - Custom hook for managing state in URL search params
@@ -67,7 +67,7 @@ export function useUrlStates(keys: string[]) {
   const [isPending, startTransition] = useTransition()
 
   const values = Object.fromEntries(
-    keys.map(key => [key, searchParams.get(key)])
+    keys.map((key) => [key, searchParams.get(key)])
   )
 
   const setValues = useCallback(

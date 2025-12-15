@@ -8,13 +8,13 @@
  * - Mapping CSV columns to database fields
  */
 
-import { z } from "zod";
 import type {
-  QuestionType,
-  DifficultyLevel,
   BloomLevel,
+  DifficultyLevel,
   QuestionSource,
-} from "@prisma/client";
+  QuestionType,
+} from "@prisma/client"
+import { z } from "zod"
 
 // CSV Headers for export/import
 export const QUESTION_CSV_HEADERS = [
@@ -40,7 +40,7 @@ export const QUESTION_CSV_HEADERS = [
   "Grading Rubric",
   "Explanation",
   "Source",
-] as const;
+] as const
 
 // CSV Import Schema
 export const questionCSVRowSchema = z.object({
@@ -97,9 +97,9 @@ export const questionCSVRowSchema = z.object({
   "Grading Rubric": z.string().optional(),
   Explanation: z.string().optional(),
   Source: z.string().optional().default("IMPORTED"),
-});
+})
 
-export type QuestionCSVRow = z.infer<typeof questionCSVRowSchema>;
+export type QuestionCSVRow = z.infer<typeof questionCSVRowSchema>
 
 /**
  * Convert question data to CSV format
@@ -118,7 +118,7 @@ export function questionToCSVRow(question: any): Record<string, string> {
     "Grading Rubric": question.gradingRubric || "",
     Explanation: question.explanation || "",
     Source: question.source || "MANUAL",
-  };
+  }
 
   // Add options for MCQ/True-False questions
   if (
@@ -128,25 +128,25 @@ export function questionToCSVRow(question: any): Record<string, string> {
   ) {
     const options = Array.isArray(question.options)
       ? question.options
-      : JSON.parse(question.options);
+      : JSON.parse(question.options)
 
     options.forEach((option: any, index: number) => {
       if (index < 5) {
-        row[`Option ${index + 1}`] = option.text || "";
-        row[`Option ${index + 1} Correct`] = option.isCorrect ? "TRUE" : "FALSE";
+        row[`Option ${index + 1}`] = option.text || ""
+        row[`Option ${index + 1} Correct`] = option.isCorrect ? "TRUE" : "FALSE"
       }
-    });
+    })
   }
 
   // Fill remaining option columns
   for (let i = 1; i <= 5; i++) {
     if (!row[`Option ${i}`]) {
-      row[`Option ${i}`] = "";
-      row[`Option ${i} Correct`] = "";
+      row[`Option ${i}`] = ""
+      row[`Option ${i} Correct`] = ""
     }
   }
 
-  return row;
+  return row
 }
 
 /**
@@ -173,28 +173,28 @@ export function parseCSVRowToQuestion(
     sampleAnswer: row["Sample Answer"] || null,
     gradingRubric: row["Grading Rubric"] || null,
     explanation: row.Explanation || null,
-  };
+  }
 
   // Process options for MCQ/True-False
   if (
     row["Question Type"] === "MULTIPLE_CHOICE" ||
     row["Question Type"] === "TRUE_FALSE"
   ) {
-    const options = [];
+    const options = []
     for (let i = 1; i <= 5; i++) {
-      const optionText = row[`Option ${i}` as keyof QuestionCSVRow];
-      const isCorrect = row[`Option ${i} Correct` as keyof QuestionCSVRow];
+      const optionText = row[`Option ${i}` as keyof QuestionCSVRow]
+      const isCorrect = row[`Option ${i} Correct` as keyof QuestionCSVRow]
 
       if (optionText) {
         options.push({
           text: optionText,
           isCorrect: isCorrect || false,
-        });
+        })
       }
     }
 
     if (options.length > 0) {
-      questionData.options = JSON.stringify(options);
+      questionData.options = JSON.stringify(options)
     }
   }
 
@@ -203,32 +203,32 @@ export function parseCSVRowToQuestion(
     questionData.options = JSON.stringify({
       acceptedAnswers: row["Sample Answer"].split("|").map((a) => a.trim()),
       caseSensitive: false,
-    });
+    })
   }
 
-  return questionData;
+  return questionData
 }
 
 /**
  * Generate CSV content from questions
  */
 export function generateQuestionsCSV(questions: any[]): string {
-  const rows = [QUESTION_CSV_HEADERS.join(",")];
+  const rows = [QUESTION_CSV_HEADERS.join(",")]
 
   for (const question of questions) {
-    const rowData = questionToCSVRow(question);
+    const rowData = questionToCSVRow(question)
     const row = QUESTION_CSV_HEADERS.map((header) => {
-      const value = rowData[header] || "";
+      const value = rowData[header] || ""
       // Escape quotes and wrap in quotes if contains comma, newline, or quote
       if (value.includes(",") || value.includes("\n") || value.includes('"')) {
-        return `"${value.replace(/"/g, '""')}"`;
+        return `"${value.replace(/"/g, '""')}"`
       }
-      return value;
-    }).join(",");
-    rows.push(row);
+      return value
+    }).join(",")
+    rows.push(row)
   }
 
-  return rows.join("\n");
+  return rows.join("\n")
 }
 
 /**
@@ -240,97 +240,99 @@ export function parseQuestionsCSV(
   subjectId: string,
   createdBy: string
 ): {
-  valid: any[];
-  invalid: { row: number; errors: string[] }[];
+  valid: any[]
+  invalid: { row: number; errors: string[] }[]
 } {
-  const lines = csvContent.split("\n").map((line) => line.trim());
-  const headers = lines[0].split(",").map((h) => h.trim());
+  const lines = csvContent.split("\n").map((line) => line.trim())
+  const headers = lines[0].split(",").map((h) => h.trim())
 
   // Validate headers
-  const expectedHeaders = QUESTION_CSV_HEADERS;
-  const missingHeaders = expectedHeaders.filter((h) => !headers.includes(h));
+  const expectedHeaders = QUESTION_CSV_HEADERS
+  const missingHeaders = expectedHeaders.filter((h) => !headers.includes(h))
 
   if (missingHeaders.length > 0) {
-    throw new Error(`Missing required headers: ${missingHeaders.join(", ")}`);
+    throw new Error(`Missing required headers: ${missingHeaders.join(", ")}`)
   }
 
-  const valid: any[] = [];
-  const invalid: { row: number; errors: string[] }[] = [];
+  const valid: any[] = []
+  const invalid: { row: number; errors: string[] }[] = []
 
   // Parse each data row
   for (let i = 1; i < lines.length; i++) {
-    if (!lines[i]) continue; // Skip empty lines
+    if (!lines[i]) continue // Skip empty lines
 
     try {
-      const values = parseCSVLine(lines[i]);
-      const rowData: Record<string, string> = {};
+      const values = parseCSVLine(lines[i])
+      const rowData: Record<string, string> = {}
 
       headers.forEach((header, index) => {
-        rowData[header] = values[index] || "";
-      });
+        rowData[header] = values[index] || ""
+      })
 
       // Validate and parse row
-      const parsedRow = questionCSVRowSchema.parse(rowData);
+      const parsedRow = questionCSVRowSchema.parse(rowData)
       const questionData = parseCSVRowToQuestion(
         parsedRow,
         schoolId,
         subjectId,
         createdBy
-      );
+      )
 
-      valid.push(questionData);
+      valid.push(questionData)
     } catch (error) {
-      const errors: string[] = [];
+      const errors: string[] = []
 
       if (error instanceof z.ZodError) {
-        errors.push(...error.issues.map((e) => `${e.path.join(".")}: ${e.message}`));
+        errors.push(
+          ...error.issues.map((e) => `${e.path.join(".")}: ${e.message}`)
+        )
       } else if (error instanceof Error) {
-        errors.push(error.message);
+        errors.push(error.message)
       } else {
-        errors.push("Unknown error");
+        errors.push("Unknown error")
       }
 
-      invalid.push({ row: i + 1, errors });
+      invalid.push({ row: i + 1, errors })
     }
   }
 
-  return { valid, invalid };
+  return { valid, invalid }
 }
 
 /**
  * Parse a CSV line handling quoted values
  */
 function parseCSVLine(line: string): string[] {
-  const values: string[] = [];
-  let currentValue = "";
-  let inQuotes = false;
+  const values: string[] = []
+  let currentValue = ""
+  let inQuotes = false
 
   for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const nextChar = line[i + 1];
+    const char = line[i]
+    const nextChar = line[i + 1]
 
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
         // Escaped quote
-        currentValue += '"';
-        i++; // Skip next quote
+        currentValue += '"'
+        i++ // Skip next quote
       } else {
         // Toggle quote mode
-        inQuotes = !inQuotes;
+        inQuotes = !inQuotes
       }
     } else if (char === "," && !inQuotes) {
       // End of value
-      values.push(currentValue);
-      currentValue = "";
+      values.push(currentValue)
+      currentValue = ""
     } else {
-      currentValue += char;
+      currentValue += char
     }
   }
 
   // Add last value
-  values.push(currentValue);
+  values.push(currentValue)
 
-  return values;
+  return values
 }
 
 /**
@@ -413,20 +415,20 @@ export function generateQuestionCSVTemplate(): string {
       Explanation: "",
       Source: "MANUAL",
     },
-  ];
+  ]
 
-  const rows = [QUESTION_CSV_HEADERS.join(",")];
+  const rows = [QUESTION_CSV_HEADERS.join(",")]
 
   for (const sample of sampleRows) {
     const row = QUESTION_CSV_HEADERS.map((header) => {
-      const value = sample[header] || "";
+      const value = sample[header] || ""
       if (value.includes(",") || value.includes("\n") || value.includes('"')) {
-        return `"${value.replace(/"/g, '""')}"`;
+        return `"${value.replace(/"/g, '""')}"`
       }
-      return value;
-    }).join(",");
-    rows.push(row);
+      return value
+    }).join(",")
+    rows.push(row)
   }
 
-  return rows.join("\n");
+  return rows.join("\n")
 }

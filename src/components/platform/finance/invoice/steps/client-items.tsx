@@ -1,49 +1,70 @@
-"use client";
+"use client"
 
-import { useFormContext, useFieldArray } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
-import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { CURRENCY_OPTIONS } from "../config";
-import { z } from "zod";
-import { InvoiceSchemaZod } from "../validation";
-import { Icons } from "@/components/icons";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon, Plus } from "lucide-react"
+import { useFieldArray, useFormContext } from "react-hook-form"
+import { z } from "zod"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Icons } from "@/components/icons"
+
+import { CURRENCY_OPTIONS } from "../config"
+import { InvoiceSchemaZod } from "../validation"
 
 interface ClientItemsStepProps {
-  isView: boolean;
-  currentId?: string;
+  isView: boolean
+  currentId?: string
 }
 
 export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
-  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>();
-  const { register, watch, setValue, getValues, formState: { errors } } = form;
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
+  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
+  const {
+    register,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = form
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  })
 
   const calculateTotals = () => {
-    const items = watch("items") || [];
-    const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
-    setValue("sub_total", subTotal);
-  };
+    const items = watch("items") || []
+    const subTotal = items.reduce((sum, item) => sum + (item.total || 0), 0)
+    setValue("sub_total", subTotal)
+  }
 
   const handleAddNewItemRow = (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     append({
       item_name: "",
       quantity: 1,
       price: 0,
       total: 0,
-    });
-  };
+    })
+  }
 
   const handleRemoveItem = (index: number) => {
-    remove(index);
-    setTimeout(calculateTotals, 100);
-  };
+    remove(index)
+    setTimeout(calculateTotals, 100)
+  }
 
   return (
     <div className="space-y-6">
@@ -59,12 +80,12 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
               readOnly={!currentId} // Read-only when creating new invoice
             />
             {!currentId && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Invoice no. auto-gen.
               </p>
             )}
           </div>
-          
+
           <div className="flex-1">
             <Select
               onValueChange={(value) => setValue("currency", value)}
@@ -89,7 +110,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-10",
+                    "h-10 w-full justify-start text-left font-normal",
                     !watch("invoice_date") && "text-muted-foreground"
                   )}
                 >
@@ -105,12 +126,13 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Calendar
                   mode="single"
                   selected={watch("invoice_date")}
-                  onSelect={(date) => setValue("invoice_date", date || new Date())}
+                  onSelect={(date) =>
+                    setValue("invoice_date", date || new Date())
+                  }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
-
           </div>
 
           <div className="flex-1">
@@ -119,7 +141,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-10",
+                    "h-10 w-full justify-start text-left font-normal",
                     !watch("due_date") && "text-muted-foreground"
                   )}
                 >
@@ -140,7 +162,6 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                 />
               </PopoverContent>
             </Popover>
-
           </div>
         </div>
       </div>
@@ -149,38 +170,40 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-medium">Invoice Items</h3>
-          <button
-            type="button"
-            onClick={handleAddNewItemRow}
-            className=""
-          >
+          <button type="button" onClick={handleAddNewItemRow} className="">
             <Plus className="h-6 w-6" />
           </button>
         </div>
-        
+
         <div className="space-y-3">
           {fields.map((field, index) => (
-            <div key={field.id} className="grid grid-cols-12 gap-2 items-end">
+            <div key={field.id} className="grid grid-cols-12 items-end gap-2">
               <div className="col-span-5">
                 <Input
                   {...register(`items.${index}.item_name`)}
                   placeholder="Item Name"
-                  className={errors.items?.[index]?.item_name ? "border-red-500" : ""}
+                  className={
+                    errors.items?.[index]?.item_name ? "border-red-500" : ""
+                  }
                 />
               </div>
               <div className="col-span-2">
                 <Input
-                  {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                  {...register(`items.${index}.quantity`, {
+                    valueAsNumber: true,
+                  })}
                   type="number"
                   placeholder="Qty"
                   min="0"
                   step="1"
-                  className={errors.items?.[index]?.quantity ? "border-red-500" : ""}
+                  className={
+                    errors.items?.[index]?.quantity ? "border-red-500" : ""
+                  }
                   onChange={(e) => {
-                    const quantity = parseFloat(e.target.value) || 0;
-                    const price = watch(`items.${index}.price`) || 0;
-                    setValue(`items.${index}.total`, quantity * price);
-                    setTimeout(calculateTotals, 100);
+                    const quantity = parseFloat(e.target.value) || 0
+                    const price = watch(`items.${index}.price`) || 0
+                    setValue(`items.${index}.total`, quantity * price)
+                    setTimeout(calculateTotals, 100)
                   }}
                 />
               </div>
@@ -191,12 +214,14 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   placeholder="Price"
                   min="0"
                   step="0.01"
-                  className={errors.items?.[index]?.price ? "border-red-500" : ""}
+                  className={
+                    errors.items?.[index]?.price ? "border-red-500" : ""
+                  }
                   onChange={(e) => {
-                    const price = parseFloat(e.target.value) || 0;
-                    const quantity = watch(`items.${index}.quantity`) || 0;
-                    setValue(`items.${index}.total`, quantity * price);
-                    setTimeout(calculateTotals, 100);
+                    const price = parseFloat(e.target.value) || 0
+                    const quantity = watch(`items.${index}.quantity`) || 0
+                    setValue(`items.${index}.total`, quantity * price)
+                    setTimeout(calculateTotals, 100)
                   }}
                 />
               </div>
@@ -207,7 +232,9 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   placeholder="Total"
                   min="0"
                   step="0.01"
-                  className={errors.items?.[index]?.total ? "border-red-500" : ""}
+                  className={
+                    errors.items?.[index]?.total ? "border-red-500" : ""
+                  }
                   readOnly
                 />
               </div>
@@ -217,15 +244,13 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   onClick={() => handleRemoveItem(index)}
                   className=""
                 >
-                  <Icons.trash className="size-6 icon-destructive ml-2" />
+                  <Icons.trash className="icon-destructive ml-2 size-6" />
                 </button>
               </div>
             </div>
           ))}
         </div>
-        
-
       </div>
     </div>
-  );
+  )
 }

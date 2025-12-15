@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "next/image"
 
 const paymentMethods = [
   { name: "Visa", icon: "/payment/visa.svg" },
@@ -10,15 +10,15 @@ const paymentMethods = [
   { name: "Mada", icon: "/payment/mada.svg" },
   { name: "STCPay", icon: "/payment/stcpay.svg" },
   { name: "Fawry", icon: "/payment/fawry.svg" },
-];
+]
 
 export function SecurePayment() {
   return (
     <section className="w-full py-16">
-      <div className="flex flex-col md:flex-row gap-8 items-center">
+      <div className="flex flex-col items-center gap-8 md:flex-row">
         {/* Left side - Icon with blue bg */}
-        <div className="w-full md:w-[30%] flex justify-center">
-          <div className="w-56 h-56 rounded-3xl bg-[#6A9BCC] flex items-center justify-center">
+        <div className="flex w-full justify-center md:w-[30%]">
+          <div className="flex h-56 w-56 items-center justify-center rounded-3xl bg-[#6A9BCC]">
             <Image
               src="/anthropic/category-08.svg"
               alt="Secure Payment"
@@ -30,21 +30,24 @@ export function SecurePayment() {
         </div>
 
         {/* Right side - Content without bg */}
-        <div className="w-full md:w-[70%] flex flex-col gap-4">
+        <div className="flex w-full flex-col gap-4 md:w-[70%]">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Secure Payment</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Secure Payment
+            </h2>
             <p className="text-muted-foreground mt-2 max-w-xl">
               Your security is our priority. We use industry-leading encryption
-              and security protocols to ensure your payment information is always protected.
+              and security protocols to ensure your payment information is
+              always protected.
             </p>
           </div>
 
           {/* Payment Icons Row */}
-          <div className="flex flex-wrap items-center gap-3 mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             {paymentMethods.map((method) => (
               <div
                 key={method.name}
-                className="flex items-center justify-center w-14 h-9 bg-muted rounded-md p-2"
+                className="bg-muted flex h-9 w-14 items-center justify-center rounded-md p-2"
               >
                 <Image
                   src={method.icon}
@@ -58,12 +61,12 @@ export function SecurePayment() {
           </div>
 
           {/* Powered by Stripe */}
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm text-muted-foreground">Powered by</span>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">Powered by</span>
             <span className="font-semibold">Stripe</span>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

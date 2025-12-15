@@ -1,32 +1,37 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { updateUserName, type FormData } from "../../../marketing/pricing/forms/user-name.action";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useTransition } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 // Avoid tight coupling to Prisma User type; accept minimal shape
-import { useSession } from "next-auth/react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { userNameSchema } from "../validation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SectionColumns } from "@/components/platform/dashboard/section-columns";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { useSession } from "next-auth/react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
+import { SectionColumns } from "@/components/platform/dashboard/section-columns"
+
+import {
+  updateUserName,
+  type FormData,
+} from "../../../marketing/pricing/forms/user-name.action"
+import { userNameSchema } from "../validation"
 
 interface UserNameFormProps {
-  user: { id: string; name: string };
+  user: { id: string; name: string }
 }
 
 export function UserNameForm({ user }: UserNameFormProps) {
-  const { update } = useSession();
-  const [updated, setUpdated] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const updateUserNameWithId = updateUserName.bind(null, user.id);
+  const { update } = useSession()
+  const [updated, setUpdated] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const updateUserNameWithId = updateUserName.bind(null, user.id)
 
   const checkUpdate = (value: string) => {
-    setUpdated(user.name !== value);
-  };
+    setUpdated(user.name !== value)
+  }
 
   const {
     handleSubmit,
@@ -35,23 +40,23 @@ export function UserNameForm({ user }: UserNameFormProps) {
   } = useForm<FormData>({
     resolver: zodResolver(userNameSchema),
     defaultValues: { name: user.name || "" },
-  });
+  })
 
   const onSubmit = handleSubmit((data: FormData) => {
     startTransition(async () => {
-      const { status } = await updateUserNameWithId(data);
+      const { status } = await updateUserNameWithId(data)
 
       if (status !== "success") {
         toast.error("Something went wrong.", {
           description: "Your name was not updated. Please try again.",
-        });
+        })
       } else {
-        await update();
-        setUpdated(false);
-        toast.success("Your name has been updated.");
+        await update()
+        setUpdated(false)
+        toast.success("Your name has been updated.")
       }
-    });
-  });
+    })
+  })
 
   return (
     <form onSubmit={onSubmit} className="">
@@ -92,9 +97,9 @@ export function UserNameForm({ user }: UserNameFormProps) {
               {errors.name.message}
             </p>
           )}
-          <p className="text-[13px] text-muted-foreground">Max 32 characters</p>
+          <p className="text-muted-foreground text-[13px]">Max 32 characters</p>
         </div>
       </SectionColumns>
     </form>
-  );
+  )
 }

@@ -128,7 +128,7 @@ The main upload component with drag-and-drop support:
 ```tsx
 import { Uploader } from "@/components/file"
 
-<Uploader
+;<Uploader
   folder="avatars"
   category="image"
   accept={{ "image/*": [".jpg", ".png", ".webp"] }}
@@ -227,7 +227,12 @@ function CustomUploader() {
 Direct server action usage:
 
 ```tsx
-import { uploadFile, uploadFiles, deleteFile, getFiles } from "@/components/file"
+import {
+  deleteFile,
+  getFiles,
+  uploadFile,
+  uploadFiles,
+} from "@/components/file"
 
 // Upload single file
 const result = await uploadFile(formData, {
@@ -300,7 +305,7 @@ Single-format export without column selection:
 ```tsx
 import { SimpleExportButton } from "@/components/file"
 
-<SimpleExportButton
+;<SimpleExportButton
   data={attendance}
   config={{ columns: ATTENDANCE_COLUMNS, filename: "attendance-report" }}
   format="excel"
@@ -367,19 +372,16 @@ Each feature module has pre-defined column configurations:
 
 ```tsx
 // Students
-import { STUDENT_EXPORT_COLUMNS } from "@/components/platform/students/columns/export"
-
-// Teachers
-import { TEACHER_EXPORT_COLUMNS } from "@/components/platform/teachers/columns/export"
-
-// Classes
-import { CLASS_EXPORT_COLUMNS } from "@/components/platform/classes/columns/export"
 
 // Assignments
 import { ASSIGNMENT_EXPORT_COLUMNS } from "@/components/platform/assignments/columns/export"
-
+// Classes
+import { CLASS_EXPORT_COLUMNS } from "@/components/platform/classes/columns/export"
 // Exams
 import { EXAM_EXPORT_COLUMNS } from "@/components/platform/exams/manage/columns/export"
+import { STUDENT_EXPORT_COLUMNS } from "@/components/platform/students/columns/export"
+// Teachers
+import { TEACHER_EXPORT_COLUMNS } from "@/components/platform/teachers/columns/export"
 ```
 
 **Example: Student Export Columns**
@@ -414,7 +416,8 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
     header: "Full Name",
     headerAr: "الاسم الكامل",
     type: "string",
-    accessor: (row) => [row.givenName, row.middleName, row.surname].filter(Boolean).join(" "),
+    accessor: (row) =>
+      [row.givenName, row.middleName, row.surname].filter(Boolean).join(" "),
   },
   {
     key: "gender",
@@ -426,7 +429,10 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
         MALE: { en: "Male", ar: "ذكر" },
         FEMALE: { en: "Female", ar: "أنثى" },
       }
-      const g = genderMap[String(value)] || { en: String(value), ar: String(value) }
+      const g = genderMap[String(value)] || {
+        en: String(value),
+        ar: String(value),
+      }
       return locale === "ar" ? g.ar : g.en
     },
   },
@@ -446,8 +452,12 @@ export const STUDENT_EXPORT_COLUMNS: ExportColumn<StudentExportData>[] = [
 "use client"
 
 import { ExportButton as UnifiedExportButton } from "@/components/file"
-import { STUDENT_EXPORT_COLUMNS, type StudentExportData } from "./columns/export"
+
 import { getStudentsExportData } from "./actions"
+import {
+  STUDENT_EXPORT_COLUMNS,
+  type StudentExportData,
+} from "./columns/export"
 
 export function ExportButton({ filters, locale = "en" }) {
   const [data, setData] = useState<StudentExportData[]>([])
@@ -582,7 +592,7 @@ function CustomImporter() {
 Common validators for import columns:
 
 ```tsx
-import { commonValidators, commonSchemas } from "@/components/file"
+import { commonSchemas, commonValidators } from "@/components/file"
 
 const columns: ImportColumn<Student>[] = [
   {
@@ -617,7 +627,7 @@ const studentSchema = commonSchemas.object({
 Simple print trigger:
 
 ```tsx
-import { PrintButton, PrintArea, NoPrint, PageBreak } from "@/components/file"
+import { NoPrint, PageBreak, PrintArea, PrintButton } from "@/components/file"
 
 function ReportPage() {
   const printRef = useRef<HTMLDivElement>(null)
@@ -625,9 +635,7 @@ function ReportPage() {
   return (
     <div>
       <NoPrint>
-        <PrintButton contentRef={printRef}>
-          Print Report
-        </PrintButton>
+        <PrintButton contentRef={printRef}>Print Report</PrintButton>
       </NoPrint>
 
       <PrintArea ref={printRef}>
@@ -669,9 +677,7 @@ function InvoicePage({ invoice }) {
       <button onClick={handlePrint} disabled={isPrinting}>
         Print Invoice
       </button>
-      <div id="invoice-content">
-        {/* Invoice content */}
-      </div>
+      <div id="invoice-content">{/* Invoice content */}</div>
     </div>
   )
 }
@@ -735,14 +741,14 @@ function InvoicePage({ invoice }) {
 
 ### Available Templates
 
-| Template | Description | Use Case |
-|----------|-------------|----------|
-| `generateInvoice` | Professional invoice with line items | Fee collection, billing |
-| `generateReceipt` | Payment receipt confirmation | Payment acknowledgment |
-| `generateCertificate` | Award/completion certificate | Achievements, graduations |
-| `generateReportCard` | Student grades report | Academic reporting |
-| `generateIdCard` | Student/Staff ID card | Identification |
-| `generateTranscript` | Academic transcript | Official records |
+| Template              | Description                          | Use Case                  |
+| --------------------- | ------------------------------------ | ------------------------- |
+| `generateInvoice`     | Professional invoice with line items | Fee collection, billing   |
+| `generateReceipt`     | Payment receipt confirmation         | Payment acknowledgment    |
+| `generateCertificate` | Award/completion certificate         | Achievements, graduations |
+| `generateReportCard`  | Student grades report                | Academic reporting        |
+| `generateIdCard`      | Student/Staff ID card                | Identification            |
+| `generateTranscript`  | Academic transcript                  | Official records          |
 
 ### ID Card Example
 
@@ -918,7 +924,7 @@ Full-featured file manager:
 ```tsx
 import { FileBrowser } from "@/components/file"
 
-<FileBrowser
+;<FileBrowser
   rootFolder="/school/documents"
   initialFolder="/school/documents/contracts"
   config={{
@@ -966,7 +972,10 @@ function CustomFileBrowser() {
       {/* Breadcrumbs */}
       <nav>
         {breadcrumbs.map((crumb) => (
-          <button key={crumb.path} onClick={() => actions.navigateTo(crumb.path)}>
+          <button
+            key={crumb.path}
+            onClick={() => actions.navigateTo(crumb.path)}
+          >
             {crumb.name}
           </button>
         ))}
@@ -1006,11 +1015,19 @@ function CustomFileBrowser() {
 
       {/* Pagination */}
       <div>
-        <button onClick={() => setPage(currentPage - 1)} disabled={currentPage === 1}>
+        <button
+          onClick={() => setPage(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
           Previous
         </button>
-        <span>{currentPage} / {totalPages}</span>
-        <button onClick={() => setPage(currentPage + 1)} disabled={currentPage === totalPages}>
+        <span>
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
           Next
         </button>
       </div>
@@ -1033,26 +1050,26 @@ function CustomFileBrowser() {
 
 ```tsx
 type FileCategory =
-  | "image"      // Images (jpg, png, webp, gif)
-  | "document"   // Documents (pdf, doc, docx, xls, xlsx)
-  | "video"      // Videos (mp4, webm, mov)
-  | "audio"      // Audio (mp3, wav, ogg)
-  | "archive"    // Archives (zip, rar, 7z)
-  | "other"      // Other file types
+  | "image" // Images (jpg, png, webp, gif)
+  | "document" // Documents (pdf, doc, docx, xls, xlsx)
+  | "video" // Videos (mp4, webm, mov)
+  | "audio" // Audio (mp3, wav, ogg)
+  | "archive" // Archives (zip, rar, 7z)
+  | "other" // Other file types
 ```
 
 ### Size Limits
 
 Default size limits by category:
 
-| Category | Limit |
-|----------|-------|
-| Image | 5 MB |
-| Document | 10 MB |
-| Video | 100 MB |
-| Audio | 20 MB |
-| Archive | 50 MB |
-| Other | 10 MB |
+| Category | Limit  |
+| -------- | ------ |
+| Image    | 5 MB   |
+| Document | 10 MB  |
+| Video    | 100 MB |
+| Audio    | 20 MB  |
+| Archive  | 50 MB  |
+| Other    | 10 MB  |
 
 Override limits:
 
@@ -1067,12 +1084,12 @@ Override limits:
 
 The module supports multiple storage providers:
 
-| Provider | Use Case |
-|----------|----------|
-| Vercel Blob | Default, production files |
-| ImageKit | Image optimization, CDN |
-| AWS S3 | Large files, archives |
-| Cloudflare R2 | Cost-effective storage |
+| Provider      | Use Case                  |
+| ------------- | ------------------------- |
+| Vercel Blob   | Default, production files |
+| ImageKit      | Image optimization, CDN   |
+| AWS S3        | Large files, archives     |
+| Cloudflare R2 | Cost-effective storage    |
 
 Provider selection is automatic based on file type and size.
 
@@ -1169,13 +1186,13 @@ Full TypeScript support with generics:
 
 ```tsx
 import type {
+  ExportColumn,
+  ExportConfig,
   FileCategory,
   FileType,
-  ExportColumn,
   ImportColumn,
-  UploadOptions,
-  ExportConfig,
   ImportConfig,
+  UploadOptions,
 } from "@/components/file"
 
 // Typed export columns
@@ -1193,26 +1210,25 @@ const importColumns: ImportColumn<CreateStudentInput>[] = [
 
 The following legacy files are deprecated and re-export from the File module for backward compatibility:
 
-| Legacy Path | Status | Migration |
-|-------------|--------|-----------|
-| `src/lib/csv-export.ts` | Deprecated | Use `@/components/file` |
-| `src/lib/csv-import.ts` | Domain-specific | Use for bulk student/teacher DB imports |
-| `src/components/file-upload/` | Deprecated | Use `@/components/file` |
-| `src/components/platform/shared/export-button.tsx` | Deprecated | Use `ExportButton` from File module |
+| Legacy Path                                        | Status          | Migration                               |
+| -------------------------------------------------- | --------------- | --------------------------------------- |
+| `src/lib/csv-export.ts`                            | Deprecated      | Use `@/components/file`                 |
+| `src/lib/csv-import.ts`                            | Domain-specific | Use for bulk student/teacher DB imports |
+| `src/components/file-upload/`                      | Deprecated      | Use `@/components/file`                 |
+| `src/components/platform/shared/export-button.tsx` | Deprecated      | Use `ExportButton` from File module     |
 
 ### Migration Example
 
 ```tsx
 // OLD (deprecated)
 import { arrayToCSV, generateCSVFilename } from "@/lib/csv-export"
-import { FileUploader } from "@/components/file"
-
 // NEW (recommended)
 import {
+  ExportButton,
+  FileUploader,
   generateCsvContent,
   generateExportFilename,
   Uploader,
-  ExportButton,
   type ExportColumn,
 } from "@/components/file"
 ```
@@ -1251,12 +1267,14 @@ For large file uploads, show progress:
 ```tsx
 const { files, progress } = useUpload()
 
-{files.map((file) => (
-  <div key={file.id}>
-    {file.name}
-    <Progress value={file.progress} />
-  </div>
-))}
+{
+  files.map((file) => (
+    <div key={file.id}>
+      {file.name}
+      <Progress value={file.progress} />
+    </div>
+  ))
+}
 ```
 
 ### 4. Validate Imports
@@ -1293,13 +1311,13 @@ Organize files by type and context:
 
 ## Benefits
 
-| Benefit | Before | After |
-|---------|--------|-------|
-| Export formats | CSV only | CSV, Excel, PDF, JSON |
-| Column selection | None | Optional dialog |
-| Bilingual headers | Manual | Automatic |
-| RTL support | Inconsistent | Built-in |
-| Code duplication | 71+ files | 1 module |
-| Maintenance | Per-feature | Centralized |
-| TypeScript | Partial | Full coverage |
-| Templates | 3 | 6 (Invoice, Receipt, Certificate, Report Card, ID Card, Transcript) |
+| Benefit           | Before       | After                                                               |
+| ----------------- | ------------ | ------------------------------------------------------------------- |
+| Export formats    | CSV only     | CSV, Excel, PDF, JSON                                               |
+| Column selection  | None         | Optional dialog                                                     |
+| Bilingual headers | Manual       | Automatic                                                           |
+| RTL support       | Inconsistent | Built-in                                                            |
+| Code duplication  | 71+ files    | 1 module                                                            |
+| Maintenance       | Per-feature  | Centralized                                                         |
+| TypeScript        | Partial      | Full coverage                                                       |
+| Templates         | 3            | 6 (Invoice, Receipt, Certificate, Report Card, ID Card, Transcript) |

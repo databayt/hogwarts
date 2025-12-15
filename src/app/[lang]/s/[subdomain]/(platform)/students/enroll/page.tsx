@@ -1,8 +1,8 @@
-import EnrollStudentContent from '@/components/platform/students/enroll/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import EnrollStudentContent from "@/components/platform/students/enroll/content"
 
-export const metadata = { title: 'Dashboard: Enroll Student' }
+export const metadata = { title: "Dashboard: Enroll Student" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

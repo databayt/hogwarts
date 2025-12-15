@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonCalendar } from '@/components/ui/skeleton-calendar'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCalendar } from "@/components/ui/skeleton-calendar"
 
 export default function TeachersScheduleLoading() {
   return (

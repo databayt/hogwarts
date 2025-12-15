@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Dependency Management
+
 - **pnpm 9.x Exclusive**: All package operations use pnpm (no npm/yarn)
 - **Security Scanning**: Automated vulnerability detection and patching
 - **Version Conflict Resolution**: Resolve peer dependency issues
@@ -22,6 +23,7 @@ model: sonnet
 - **Bundle Size Optimization**: Monitor and reduce package impact
 
 ### Security & Compliance
+
 - **Zero Critical Vulnerabilities**: Maintain clean security posture
 - **Automated Scanning**: Daily security audits via pnpm audit
 - **Rapid Response**: <24 hour patch deployment for critical issues
@@ -29,6 +31,7 @@ model: sonnet
 - **Supply Chain Security**: Verify package integrity
 
 ### Performance Impact
+
 - **Bundle Size Tracking**: Monitor package contributions to bundle size
 - **Tree-Shaking Verification**: Ensure dead code elimination
 - **Dependency Analysis**: Identify heavy dependencies
@@ -39,17 +42,20 @@ model: sonnet
 ## Tech Stack Focus
 
 ### Package Manager
+
 - **pnpm 9.x** - Exclusive package manager
 - **pnpm workspaces** - Monorepo support (if needed)
 - **pnpm-lock.yaml** - Deterministic dependency resolution
 
 ### Next.js Ecosystem
+
 - **Next.js 15.4.4** - Framework compatibility
 - **React 19.1.0** - React ecosystem packages
-- **Vercel packages** - @vercel/* integrations
-- **TypeScript 5.x** - Type definition packages (@types/*)
+- **Vercel packages** - @vercel/\* integrations
+- **TypeScript 5.x** - Type definition packages (@types/\*)
 
 ### Key Dependencies (Current)
+
 - **Prisma 6.14.0** - Database ORM
 - **NextAuth 5.0.0-beta.29** - Authentication
 - **shadcn/ui** - Radix UI + Tailwind components
@@ -66,6 +72,7 @@ model: sonnet
 ## Dependency Management Checklist
 
 **Security** ✅
+
 - [ ] Zero critical vulnerabilities
 - [ ] Zero high vulnerabilities
 - [ ] Moderate vulnerabilities < 5
@@ -74,6 +81,7 @@ model: sonnet
 - [ ] All packages have valid licenses
 
 **Performance** ✅
+
 - [ ] Total bundle size <500KB (first load)
 - [ ] No duplicate dependencies
 - [ ] Tree-shaking verified
@@ -81,6 +89,7 @@ model: sonnet
 - [ ] Heavy packages lazy-loaded
 
 **Maintenance** ✅
+
 - [ ] Update lag <30 days for non-breaking changes
 - [ ] Major version updates tested in staging
 - [ ] Changelog reviewed before updates
@@ -88,10 +97,11 @@ model: sonnet
 - [ ] Rollback strategy defined
 
 **Development** ✅
+
 - [ ] pnpm-lock.yaml committed
 - [ ] No phantom dependencies
 - [ ] Peer dependencies resolved
-- [ ] Type definitions available (@types/*)
+- [ ] Type definitions available (@types/\*)
 - [ ] Development dependencies separated
 
 ---
@@ -181,21 +191,25 @@ pnpm exec next-bundle-analyzer
 ### Vulnerability Severity Levels
 
 **Critical** 🔴
+
 - **Action**: Immediate patch (within 4 hours)
 - **Examples**: Remote code execution, SQL injection, auth bypass
 - **Process**: Patch → Test → Deploy emergency hotfix
 
 **High** 🟠
+
 - **Action**: Patch within 24 hours
 - **Examples**: XSS, CSRF, privilege escalation
 - **Process**: Patch → Test → Deploy in next release
 
 **Moderate** 🟡
+
 - **Action**: Patch within 7 days
 - **Examples**: Information disclosure, DoS
 - **Process**: Patch → Test → Deploy with regular release
 
 **Low** 🟢
+
 - **Action**: Patch within 30 days
 - **Examples**: Minor information leaks, low-impact bugs
 - **Process**: Schedule in next maintenance window
@@ -295,17 +309,19 @@ pnpm test && pnpm test:e2e && pnpm build
 ### Framework Dependencies
 
 **Next.js 15.4.4 Requirements**:
+
 ```json
 {
   "dependencies": {
     "next": "15.4.4",
-    "react": "^19.0.0",  // React 19 required
+    "react": "^19.0.0", // React 19 required
     "react-dom": "^19.0.0"
   }
 }
 ```
 
 **Compatible Versions**:
+
 - **React**: 19.1.0 (current) - Full support
 - **React Router**: N/A (using App Router)
 - **TypeScript**: 5.7.3+ recommended
@@ -362,17 +378,19 @@ pnpm list --depth=0 | grep "MB"
 ### Optimization Strategies
 
 **1. Use Lighter Alternatives**:
+
 ```typescript
 // Before: moment.js (530KB)
-import moment from 'moment'
 
 // After: date-fns (13KB with tree-shaking)
-import { format } from 'date-fns/format'
+import { format } from "date-fns/format"
+import moment from "moment"
 
 // Savings: 517KB (97% reduction)
 ```
 
 **2. Dynamic Imports for Heavy Components**:
+
 ```typescript
 // Heavy charting library
 const ChartComponent = dynamic(() => import('recharts'), {
@@ -382,21 +400,23 @@ const ChartComponent = dynamic(() => import('recharts'), {
 ```
 
 **3. Optimize Package Imports**:
+
 ```typescript
 // next.config.ts
 export default {
   experimental: {
     optimizePackageImports: [
-      'lucide-react',      // Icons (only import used icons)
-      '@radix-ui/*',       // UI primitives
-      'date-fns',          // Date utilities
-      'recharts',          // Charts
+      "lucide-react", // Icons (only import used icons)
+      "@radix-ui/*", // UI primitives
+      "date-fns", // Date utilities
+      "recharts", // Charts
     ],
   },
 }
 ```
 
 **4. Remove Unused Dependencies**:
+
 ```bash
 # Find unused dependencies
 pnpm exec depcheck
@@ -444,11 +464,11 @@ pnpm test src/lib/db.test.ts
 ```json
 {
   "devDependencies": {
-    "@types/*": "Latest",        // Type definitions
-    "eslint": "^9.x",           // Linting
-    "prettier": "^3.x",         // Formatting
-    "vitest": "^2.0.6",         // Testing
-    "playwright": "^1.55.0",    // E2E testing
+    "@types/*": "Latest", // Type definitions
+    "eslint": "^9.x", // Linting
+    "prettier": "^3.x", // Formatting
+    "vitest": "^2.0.6", // Testing
+    "playwright": "^1.55.0", // E2E testing
     "@next/bundle-analyzer": "^15.4.4",
     "typescript": "^5.7.3"
   }
@@ -464,7 +484,7 @@ pnpm test src/lib/db.test.ts
   "dependencies": {
     "next": "15.4.4",
     "react": "19.1.0",
-    "prisma": "^6.14.0",        // CLI needed for builds
+    "prisma": "^6.14.0", // CLI needed for builds
     "@prisma/client": "^6.14.0",
     "next-auth": "^5.0.0-beta.29",
     "zod": "^4.0.14"
@@ -483,6 +503,7 @@ pnpm test src/lib/db.test.ts
 **Symptoms**: Merge conflicts in lock file
 
 **Solutions**:
+
 ```bash
 # Don't manually edit pnpm-lock.yaml
 # Instead, regenerate:
@@ -496,6 +517,7 @@ git add pnpm-lock.yaml
 **Symptoms**: Code imports package not in package.json
 
 **Solutions**:
+
 ```bash
 # Fix by adding missing dependency
 pnpm add <missing-package>
@@ -510,6 +532,7 @@ node-linker=isolated
 **Symptoms**: Warning about incompatible peer dependencies
 
 **Solutions**:
+
 ```bash
 # Option 1: Update dependent package
 pnpm update <package-with-peer-dep>
@@ -530,6 +553,7 @@ pnpm update <package-with-peer-dep>
 **Symptoms**: "Cannot find module" errors on Vercel
 
 **Solutions**:
+
 1. Commit pnpm-lock.yaml
 2. Check .gitignore doesn't exclude dependencies
 3. Verify Node version matches (.nvmrc)
@@ -567,7 +591,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit
       - run: pnpm test
@@ -579,6 +603,7 @@ jobs:
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/security` - Vulnerability assessment
 - `/agents/build` - Bundle size optimization
 - `/agents/typescript` - Type definition management
@@ -618,6 +643,7 @@ jobs:
 ## Success Metrics
 
 **Target Achievements**:
+
 - Zero critical vulnerabilities maintained
 - Dependency update lag <14 days average
 - Security patch response time <24 hours

@@ -1,30 +1,32 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
-import { Users, GraduationCap } from 'lucide-react'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { useEffect, useState } from "react"
+import { GraduationCap, Users } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
 import {
   getActiveTerm,
   getClassesForSelection,
   getTeachersForSelection,
   getTimetableByClass,
-  getTimetableByTeacher
-} from '../actions'
-import SimpleGrid from './simple-grid'
+  getTimetableByTeacher,
+} from "../actions"
+import SimpleGrid from "./simple-grid"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
 export default function TimetablePreview({ dictionary, lang }: Props) {
-  const isRTL = lang === 'ar'
+  const isRTL = lang === "ar"
 
   const [isTeacherView, setIsTeacherView] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,8 +37,14 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
   const [workingDays] = useState<number[]>([0, 1, 2, 3, 4])
 
   // Random selections
-  const [randomTeacher, setRandomTeacher] = useState<{ id: string; label: string } | null>(null)
-  const [randomClass, setRandomClass] = useState<{ id: string; label: string } | null>(null)
+  const [randomTeacher, setRandomTeacher] = useState<{
+    id: string
+    label: string
+  } | null>(null)
+  const [randomClass, setRandomClass] = useState<{
+    id: string
+    label: string
+  } | null>(null)
 
   // Timetable data
   const [teacherSlots, setTeacherSlots] = useState<any[]>([])
@@ -62,7 +70,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
       // Get random teacher and class
       const [teachersResult, classesResult] = await Promise.all([
         getTeachersForSelection({ termId: term.id }),
-        getClassesForSelection({ termId: term.id })
+        getClassesForSelection({ termId: term.id }),
       ])
 
       // Pick random ones
@@ -76,7 +84,10 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
         setRandomTeacher(randomT)
 
         // Load teacher timetable
-        const teacherData = await getTimetableByTeacher({ termId: term.id, teacherId: randomT.id })
+        const teacherData = await getTimetableByTeacher({
+          termId: term.id,
+          teacherId: randomT.id,
+        })
         setTeacherSlots(teacherData.slots)
         setTeacherWorkload(teacherData.workload)
         loadedPeriods = teacherData.periods
@@ -88,12 +99,15 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
         setRandomClass(randomC)
 
         // Load class timetable
-        const classData = await getTimetableByClass({ termId: term.id, classId: randomC.id })
+        const classData = await getTimetableByClass({
+          termId: term.id,
+          classId: randomC.id,
+        })
         setClassSlots(classData.slots)
         if (!loadedPeriods.length) setPeriods(classData.periods)
       }
     } catch (err) {
-      console.error('Failed to load preview data:', err)
+      console.error("Failed to load preview data:", err)
     } finally {
       setIsLoading(false)
     }
@@ -111,7 +125,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
   if (!termId) {
     return (
       <Card className="rounded-xl shadow-lg">
-        <CardContent className="py-12 text-center text-muted-foreground">
+        <CardContent className="text-muted-foreground py-12 text-center">
           No term configured. Create a term first.
         </CardContent>
       </Card>
@@ -124,29 +138,32 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Header Card */}
-      <Card className="rounded-xl shadow-lg border-border">
-        <CardContent className="py-5 px-8">
+      <Card className="border-border rounded-xl shadow-lg">
+        <CardContent className="px-8 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="bg-primary/10 rounded-lg p-2">
                 {isTeacherView ? (
-                  <Users className="h-5 w-5 text-primary" />
+                  <Users className="text-primary h-5 w-5" />
                 ) : (
-                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <GraduationCap className="text-primary h-5 w-5" />
                 )}
               </div>
               <div>
-                <p className="font-medium text-foreground">
-                  {isTeacherView ? 'Teacher View' : 'Student View'}
+                <p className="text-foreground font-medium">
+                  {isTeacherView ? "Teacher View" : "Student View"}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {currentEntity?.label || 'No data available'}
+                <p className="text-muted-foreground text-sm">
+                  {currentEntity?.label || "No data available"}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <Label htmlFor="view-toggle" className="text-sm text-muted-foreground">
+              <Label
+                htmlFor="view-toggle"
+                className="text-muted-foreground text-sm"
+              >
                 Student
               </Label>
               <Switch
@@ -154,7 +171,10 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
                 checked={isTeacherView}
                 onCheckedChange={setIsTeacherView}
               />
-              <Label htmlFor="view-toggle" className="text-sm text-muted-foreground">
+              <Label
+                htmlFor="view-toggle"
+                className="text-muted-foreground text-sm"
+              >
                 Teacher
               </Label>
             </div>
@@ -162,7 +182,7 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
 
           {/* Workload badges for teacher view */}
           {isTeacherView && teacherWorkload && (
-            <div className="flex gap-2 mt-4">
+            <div className="mt-4 flex gap-2">
               <Badge variant="secondary" className="px-3 py-1">
                 {teacherWorkload.periodsPerWeek} periods/week
               </Badge>
@@ -182,19 +202,19 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
           periods={periods}
           lunchAfterPeriod={4}
           isRTL={isRTL}
-          viewMode={isTeacherView ? 'teacher' : 'class'}
+          viewMode={isTeacherView ? "teacher" : "class"}
           editable={false}
         />
       ) : (
-        <Card className="rounded-xl shadow-lg border-border">
-          <CardContent className="py-12 text-center text-muted-foreground">
+        <Card className="border-border rounded-xl shadow-lg">
+          <CardContent className="text-muted-foreground py-12 text-center">
             No timetable data available
           </CardContent>
         </Card>
       )}
 
       {/* Footer info */}
-      <div className="text-center text-sm text-muted-foreground">
+      <div className="text-muted-foreground text-center text-sm">
         <p>Timetable Preview</p>
       </div>
     </div>

@@ -1,12 +1,12 @@
 // Public Admission Portal Types
 
 import type {
-  Gender,
   AdmissionApplicationStatus,
+  BookingStatus,
+  Gender,
   InquiryStatus,
   SlotType,
-  BookingStatus
-} from "@prisma/client";
+} from "@prisma/client"
 
 // ============================================
 // Application Form Types
@@ -14,73 +14,73 @@ import type {
 
 export interface ApplicationFormData {
   // Step 1: Campaign Selection
-  campaignId: string;
+  campaignId: string
 
   // Step 2: Personal Information
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: Gender;
-  nationality: string;
-  religion?: string;
-  category?: string;
+  firstName: string
+  middleName?: string
+  lastName: string
+  dateOfBirth: string
+  gender: Gender
+  nationality: string
+  religion?: string
+  category?: string
 
   // Step 3: Contact Information
-  email: string;
-  phone: string;
-  alternatePhone?: string;
-  address: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
+  email: string
+  phone: string
+  alternatePhone?: string
+  address: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
 
   // Step 4: Guardian Information
-  fatherName: string;
-  fatherOccupation?: string;
-  fatherPhone?: string;
-  fatherEmail?: string;
-  motherName: string;
-  motherOccupation?: string;
-  motherPhone?: string;
-  motherEmail?: string;
-  guardianName?: string;
-  guardianRelation?: string;
-  guardianPhone?: string;
-  guardianEmail?: string;
+  fatherName: string
+  fatherOccupation?: string
+  fatherPhone?: string
+  fatherEmail?: string
+  motherName: string
+  motherOccupation?: string
+  motherPhone?: string
+  motherEmail?: string
+  guardianName?: string
+  guardianRelation?: string
+  guardianPhone?: string
+  guardianEmail?: string
 
   // Step 5: Academic Information
-  previousSchool?: string;
-  previousClass?: string;
-  previousMarks?: string;
-  previousPercentage?: string;
-  achievements?: string;
-  applyingForClass: string;
-  preferredStream?: string;
-  secondLanguage?: string;
-  thirdLanguage?: string;
+  previousSchool?: string
+  previousClass?: string
+  previousMarks?: string
+  previousPercentage?: string
+  achievements?: string
+  applyingForClass: string
+  preferredStream?: string
+  secondLanguage?: string
+  thirdLanguage?: string
 
   // Step 6: Documents
-  photoUrl?: string;
-  signatureUrl?: string;
-  documents?: DocumentUpload[];
+  photoUrl?: string
+  signatureUrl?: string
+  documents?: DocumentUpload[]
 }
 
 export interface DocumentUpload {
-  type: string;
-  name: string;
-  url: string;
-  uploadedAt: string;
+  type: string
+  name: string
+  url: string
+  uploadedAt: string
 }
 
 export interface FormStep {
-  id: string;
-  label: string;
-  labelAr: string;
-  description: string;
-  descriptionAr: string;
-  fields: (keyof ApplicationFormData)[];
+  id: string
+  label: string
+  labelAr: string
+  description: string
+  descriptionAr: string
+  fields: (keyof ApplicationFormData)[]
 }
 
 export const FORM_STEPS: FormStep[] = [
@@ -90,7 +90,7 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "اختر البرنامج",
     description: "Choose the admission program you're applying for",
     descriptionAr: "اختر برنامج القبول الذي تتقدم إليه",
-    fields: ["campaignId"]
+    fields: ["campaignId"],
   },
   {
     id: "personal",
@@ -98,7 +98,16 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "المعلومات الشخصية",
     description: "Student's personal information",
     descriptionAr: "المعلومات الشخصية للطالب",
-    fields: ["firstName", "middleName", "lastName", "dateOfBirth", "gender", "nationality", "religion", "category"]
+    fields: [
+      "firstName",
+      "middleName",
+      "lastName",
+      "dateOfBirth",
+      "gender",
+      "nationality",
+      "religion",
+      "category",
+    ],
   },
   {
     id: "contact",
@@ -106,7 +115,16 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "معلومات الاتصال",
     description: "Contact and address details",
     descriptionAr: "تفاصيل الاتصال والعنوان",
-    fields: ["email", "phone", "alternatePhone", "address", "city", "state", "postalCode", "country"]
+    fields: [
+      "email",
+      "phone",
+      "alternatePhone",
+      "address",
+      "city",
+      "state",
+      "postalCode",
+      "country",
+    ],
   },
   {
     id: "guardian",
@@ -114,7 +132,20 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "ولي الأمر",
     description: "Parent or guardian information",
     descriptionAr: "معلومات الوالدين أو ولي الأمر",
-    fields: ["fatherName", "fatherOccupation", "fatherPhone", "fatherEmail", "motherName", "motherOccupation", "motherPhone", "motherEmail", "guardianName", "guardianRelation", "guardianPhone", "guardianEmail"]
+    fields: [
+      "fatherName",
+      "fatherOccupation",
+      "fatherPhone",
+      "fatherEmail",
+      "motherName",
+      "motherOccupation",
+      "motherPhone",
+      "motherEmail",
+      "guardianName",
+      "guardianRelation",
+      "guardianPhone",
+      "guardianEmail",
+    ],
   },
   {
     id: "academic",
@@ -122,7 +153,16 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "التعليم",
     description: "Previous education and applying class",
     descriptionAr: "التعليم السابق والصف المتقدم إليه",
-    fields: ["previousSchool", "previousClass", "previousMarks", "achievements", "applyingForClass", "preferredStream", "secondLanguage", "thirdLanguage"]
+    fields: [
+      "previousSchool",
+      "previousClass",
+      "previousMarks",
+      "achievements",
+      "applyingForClass",
+      "preferredStream",
+      "secondLanguage",
+      "thirdLanguage",
+    ],
   },
   {
     id: "documents",
@@ -130,7 +170,7 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "المستندات",
     description: "Upload required documents",
     descriptionAr: "رفع المستندات المطلوبة",
-    fields: ["photoUrl", "signatureUrl", "documents"]
+    fields: ["photoUrl", "signatureUrl", "documents"],
   },
   {
     id: "review",
@@ -138,22 +178,22 @@ export const FORM_STEPS: FormStep[] = [
     labelAr: "المراجعة",
     description: "Review and submit your application",
     descriptionAr: "مراجعة وتقديم طلبك",
-    fields: []
-  }
-];
+    fields: [],
+  },
+]
 
 // ============================================
 // Session Types
 // ============================================
 
 export interface ApplicationSession {
-  id: string;
-  sessionToken: string;
-  formData: Partial<ApplicationFormData>;
-  currentStep: number;
-  email: string;
-  expiresAt: Date;
-  campaignId?: string;
+  id: string
+  sessionToken: string
+  formData: Partial<ApplicationFormData>
+  currentStep: number
+  email: string
+  expiresAt: Date
+  campaignId?: string
 }
 
 // ============================================
@@ -161,33 +201,33 @@ export interface ApplicationSession {
 // ============================================
 
 export interface PublicCampaign {
-  id: string;
-  name: string;
-  academicYear: string;
-  startDate: Date;
-  endDate: Date;
-  description?: string;
-  applicationFee?: number;
-  totalSeats: number;
-  availableSeats: number;
-  requiredDocuments?: RequiredDocument[];
-  eligibilityCriteria?: EligibilityCriteria;
+  id: string
+  name: string
+  academicYear: string
+  startDate: Date
+  endDate: Date
+  description?: string
+  applicationFee?: number
+  totalSeats: number
+  availableSeats: number
+  requiredDocuments?: RequiredDocument[]
+  eligibilityCriteria?: EligibilityCriteria
 }
 
 export interface RequiredDocument {
-  type: string;
-  name: string;
-  nameAr: string;
-  required: boolean;
-  description?: string;
-  descriptionAr?: string;
+  type: string
+  name: string
+  nameAr: string
+  required: boolean
+  description?: string
+  descriptionAr?: string
 }
 
 export interface EligibilityCriteria {
-  minAge?: number;
-  maxAge?: number;
-  grades?: string[];
-  description?: string;
+  minAge?: number
+  maxAge?: number
+  grades?: string[]
+  description?: string
 }
 
 // ============================================
@@ -195,37 +235,37 @@ export interface EligibilityCriteria {
 // ============================================
 
 export interface ApplicationStatus {
-  applicationNumber: string;
-  status: AdmissionApplicationStatus;
-  submittedAt?: Date;
-  currentStep: StatusStep;
-  timeline: StatusTimelineEntry[];
-  checklist: ChecklistItem[];
-  nextSteps?: string[];
+  applicationNumber: string
+  status: AdmissionApplicationStatus
+  submittedAt?: Date
+  currentStep: StatusStep
+  timeline: StatusTimelineEntry[]
+  checklist: ChecklistItem[]
+  nextSteps?: string[]
 }
 
 export interface StatusStep {
-  current: number;
-  total: number;
-  label: string;
+  current: number
+  total: number
+  label: string
 }
 
 export interface StatusTimelineEntry {
-  status: AdmissionApplicationStatus;
-  label: string;
-  labelAr: string;
-  date?: Date;
-  completed: boolean;
-  current: boolean;
+  status: AdmissionApplicationStatus
+  label: string
+  labelAr: string
+  date?: Date
+  completed: boolean
+  current: boolean
 }
 
 export interface ChecklistItem {
-  id: string;
-  label: string;
-  labelAr: string;
-  completed: boolean;
-  required: boolean;
-  type: "document" | "payment" | "interview" | "tour" | "other";
+  id: string
+  label: string
+  labelAr: string
+  completed: boolean
+  required: boolean
+  type: "document" | "payment" | "interview" | "tour" | "other"
 }
 
 // ============================================
@@ -233,35 +273,35 @@ export interface ChecklistItem {
 // ============================================
 
 export interface TourSlot {
-  id: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  slotType: SlotType;
-  location?: string;
-  availableSpots: number;
-  maxCapacity: number;
+  id: string
+  date: Date
+  startTime: string
+  endTime: string
+  slotType: SlotType
+  location?: string
+  availableSpots: number
+  maxCapacity: number
 }
 
 export interface TourBookingData {
-  slotId: string;
-  parentName: string;
-  email: string;
-  phone?: string;
-  studentName?: string;
-  interestedGrade?: string;
-  specialRequests?: string;
-  numberOfAttendees: number;
+  slotId: string
+  parentName: string
+  email: string
+  phone?: string
+  studentName?: string
+  interestedGrade?: string
+  specialRequests?: string
+  numberOfAttendees: number
 }
 
 export interface TourBookingConfirmation {
-  bookingNumber: string;
-  status: BookingStatus;
-  slot: TourSlot;
-  parentName: string;
-  email: string;
-  studentName?: string;
-  numberOfAttendees: number;
+  bookingNumber: string
+  status: BookingStatus
+  slot: TourSlot
+  parentName: string
+  email: string
+  studentName?: string
+  numberOfAttendees: number
 }
 
 // ============================================
@@ -269,39 +309,43 @@ export interface TourBookingConfirmation {
 // ============================================
 
 export interface InquiryFormData {
-  parentName: string;
-  email: string;
-  phone?: string;
-  studentName?: string;
-  studentDOB?: string;
-  interestedGrade?: string;
-  source?: string;
-  message?: string;
-  subscribeNewsletter: boolean;
+  parentName: string
+  email: string
+  phone?: string
+  studentName?: string
+  studentDOB?: string
+  interestedGrade?: string
+  source?: string
+  message?: string
+  subscribeNewsletter: boolean
 }
 
 export const INQUIRY_SOURCES = [
   { value: "website", label: "Website", labelAr: "الموقع الإلكتروني" },
-  { value: "social", label: "Social Media", labelAr: "وسائل التواصل الاجتماعي" },
+  {
+    value: "social",
+    label: "Social Media",
+    labelAr: "وسائل التواصل الاجتماعي",
+  },
   { value: "referral", label: "Friend/Family", labelAr: "صديق/عائلة" },
   { value: "advertisement", label: "Advertisement", labelAr: "إعلان" },
   { value: "event", label: "School Event", labelAr: "فعالية مدرسية" },
-  { value: "other", label: "Other", labelAr: "أخرى" }
-] as const;
+  { value: "other", label: "Other", labelAr: "أخرى" },
+] as const
 
 // ============================================
 // OTP Types
 // ============================================
 
 export interface OTPVerificationData {
-  applicationNumber: string;
-  email: string;
+  applicationNumber: string
+  email: string
 }
 
 export interface OTPVerifyResult {
-  success: boolean;
-  accessToken?: string;
-  error?: string;
+  success: boolean
+  accessToken?: string
+  error?: string
 }
 
 // ============================================
@@ -309,18 +353,18 @@ export interface OTPVerifyResult {
 // ============================================
 
 export interface ActionResult<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
 }
 
 export interface SubmitApplicationResult {
-  applicationNumber: string;
-  status: AdmissionApplicationStatus;
-  accessToken: string;
-  requiresPayment: boolean;
-  paymentUrl?: string;
+  applicationNumber: string
+  status: AdmissionApplicationStatus
+  accessToken: string
+  requiresPayment: boolean
+  paymentUrl?: string
 }
 
 // ============================================
@@ -328,11 +372,11 @@ export interface SubmitApplicationResult {
 // ============================================
 
 export interface GradeMapping {
-  grade: string;
-  gradeAr: string;
-  minAge: number;
-  maxAge: number;
-  description?: string;
+  grade: string
+  gradeAr: string
+  minAge: number
+  maxAge: number
+  description?: string
 }
 
 export const DEFAULT_GRADES: GradeMapping[] = [
@@ -349,8 +393,8 @@ export const DEFAULT_GRADES: GradeMapping[] = [
   { grade: "Grade 9", gradeAr: "الصف التاسع", minAge: 13, maxAge: 14 },
   { grade: "Grade 10", gradeAr: "الصف العاشر", minAge: 14, maxAge: 15 },
   { grade: "Grade 11", gradeAr: "الصف الحادي عشر", minAge: 15, maxAge: 16 },
-  { grade: "Grade 12", gradeAr: "الصف الثاني عشر", minAge: 16, maxAge: 17 }
-];
+  { grade: "Grade 12", gradeAr: "الصف الثاني عشر", minAge: 16, maxAge: 17 },
+]
 
 // Utility function to suggest grade based on date of birth
 export function suggestGradeFromDOB(
@@ -360,12 +404,12 @@ export function suggestGradeFromDOB(
 ): GradeMapping | null {
   const age = Math.floor(
     (referenceDate.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-  );
+  )
 
   for (const mapping of gradeMapping) {
     if (age >= mapping.minAge && age <= mapping.maxAge) {
-      return mapping;
+      return mapping
     }
   }
-  return null;
+  return null
 }

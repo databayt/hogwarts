@@ -9,40 +9,41 @@
  * - Pagination and sorting utilities
  */
 
-import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export type ResultListFilters = {
-  studentId?: string;
-  classId?: string;
-  assignmentId?: string;
-  examId?: string;
-  subjectId?: string;
-  grade?: string;
-  search?: string; // Search by student name or assignment title
-};
+  studentId?: string
+  classId?: string
+  assignmentId?: string
+  examId?: string
+  subjectId?: string
+  grade?: string
+  search?: string // Search by student name or assignment title
+}
 
 export type PaginationParams = {
-  page: number;
-  perPage: number;
-};
+  page: number
+  perPage: number
+}
 
 export type SortParam = {
-  id: string;
-  desc?: boolean;
-};
+  id: string
+  desc?: boolean
+}
 
 export type ResultSortParams = {
-  sort?: SortParam[];
-};
+  sort?: SortParam[]
+}
 
 export type ResultQueryParams = ResultListFilters &
   PaginationParams &
-  ResultSortParams;
+  ResultSortParams
 
 // Select types for different query contexts
 export const resultListSelect = {
@@ -93,7 +94,7 @@ export const resultListSelect = {
       subjectName: true,
     },
   },
-} as const;
+} as const
 
 export const resultDetailSelect = {
   id: true,
@@ -154,7 +155,7 @@ export const resultDetailSelect = {
       subjectName: true,
     },
   },
-} as const;
+} as const
 
 // ============================================================================
 // Query Builders
@@ -172,32 +173,32 @@ export function buildResultWhere(
 ): Prisma.ResultWhereInput {
   const where: Prisma.ResultWhereInput = {
     schoolId,
-  };
+  }
 
   // ID filters
   if (filters.studentId) {
-    where.studentId = filters.studentId;
+    where.studentId = filters.studentId
   }
 
   if (filters.classId) {
-    where.classId = filters.classId;
+    where.classId = filters.classId
   }
 
   if (filters.assignmentId) {
-    where.assignmentId = filters.assignmentId;
+    where.assignmentId = filters.assignmentId
   }
 
   if (filters.examId) {
-    where.examId = filters.examId;
+    where.examId = filters.examId
   }
 
   if (filters.subjectId) {
-    where.subjectId = filters.subjectId;
+    where.subjectId = filters.subjectId
   }
 
   // Grade filter
   if (filters.grade) {
-    where.grade = filters.grade;
+    where.grade = filters.grade
   }
 
   // Text search - search by student name or assignment title
@@ -235,10 +236,10 @@ export function buildResultWhere(
           },
         },
       },
-    ];
+    ]
   }
 
-  return where;
+  return where
 }
 
 /**
@@ -252,11 +253,11 @@ export function buildResultOrderBy(
   if (sortParams && Array.isArray(sortParams) && sortParams.length > 0) {
     return sortParams.map((s) => ({
       [s.id]: s.desc === true ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
-    }));
+    }))
   }
 
   // Default: most recent first
-  return [{ gradedAt: Prisma.SortOrder.desc }];
+  return [{ gradedAt: Prisma.SortOrder.desc }]
 }
 
 /**
@@ -269,7 +270,7 @@ export function buildPagination(page: number, perPage: number) {
   return {
     skip: (page - 1) * perPage,
     take: perPage,
-  };
+  }
 }
 
 // ============================================================================
@@ -286,12 +287,9 @@ export async function getResultsList(
   schoolId: string,
   params: Partial<ResultQueryParams> = {}
 ) {
-  const where = buildResultWhere(schoolId, params);
-  const orderBy = buildResultOrderBy(params.sort);
-  const { skip, take } = buildPagination(
-    params.page ?? 1,
-    params.perPage ?? 10
-  );
+  const where = buildResultWhere(schoolId, params)
+  const orderBy = buildResultOrderBy(params.sort)
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 10)
 
   // Execute queries in parallel for better performance
   const [rows, count] = await Promise.all([
@@ -303,9 +301,9 @@ export async function getResultsList(
       select: resultListSelect,
     }),
     db.result.count({ where }),
-  ]);
+  ])
 
-  return { rows, count };
+  return { rows, count }
 }
 
 /**
@@ -321,7 +319,7 @@ export async function getResultDetail(schoolId: string, resultId: string) {
       schoolId,
     },
     select: resultDetailSelect,
-  });
+  })
 }
 
 /**
@@ -338,7 +336,7 @@ export async function getStudentResults(schoolId: string, studentId: string) {
     },
     orderBy: buildResultOrderBy(),
     select: resultListSelect,
-  });
+  })
 }
 
 /**
@@ -355,7 +353,7 @@ export async function getClassResults(schoolId: string, classId: string) {
     },
     orderBy: buildResultOrderBy(),
     select: resultListSelect,
-  });
+  })
 }
 
 /**
@@ -375,7 +373,7 @@ export async function getAssignmentResults(
     },
     orderBy: [{ percentage: Prisma.SortOrder.desc }],
     select: resultListSelect,
-  });
+  })
 }
 
 /**
@@ -392,7 +390,7 @@ export async function getExamResults(schoolId: string, examId: string) {
     },
     orderBy: [{ percentage: Prisma.SortOrder.desc }],
     select: resultListSelect,
-  });
+  })
 }
 
 /**
@@ -409,7 +407,7 @@ export async function getSubjectResults(schoolId: string, subjectId: string) {
     },
     orderBy: buildResultOrderBy(),
     select: resultListSelect,
-  });
+  })
 }
 
 /**
@@ -418,41 +416,40 @@ export async function getSubjectResults(schoolId: string, subjectId: string) {
  * @returns Promise with statistics
  */
 export async function getResultStats(schoolId: string) {
-  const [
-    total,
-    gradeDistribution,
-    avgPercentage,
-    recentCount,
-  ] = await Promise.all([
-    db.result.count({ where: { schoolId } }),
-    db.result.groupBy({
-      by: ["grade"],
-      where: { schoolId },
-      _count: { grade: true },
-    }),
-    db.result.aggregate({
-      where: { schoolId },
-      _avg: { percentage: true },
-    }),
-    db.result.count({
-      where: {
-        schoolId,
-        gradedAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+  const [total, gradeDistribution, avgPercentage, recentCount] =
+    await Promise.all([
+      db.result.count({ where: { schoolId } }),
+      db.result.groupBy({
+        by: ["grade"],
+        where: { schoolId },
+        _count: { grade: true },
+      }),
+      db.result.aggregate({
+        where: { schoolId },
+        _avg: { percentage: true },
+      }),
+      db.result.count({
+        where: {
+          schoolId,
+          gradedAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          },
         },
-      },
-    }),
-  ]);
+      }),
+    ])
 
   return {
     total,
-    gradeDistribution: gradeDistribution.reduce((acc, item) => {
-      acc[item.grade] = item._count.grade;
-      return acc;
-    }, {} as Record<string, number>),
+    gradeDistribution: gradeDistribution.reduce(
+      (acc, item) => {
+        acc[item.grade] = item._count.grade
+        return acc
+      },
+      {} as Record<string, number>
+    ),
     averagePercentage: avgPercentage._avg.percentage ?? 0,
     recentCount,
-  };
+  }
 }
 
 /**
@@ -472,32 +469,32 @@ export async function getStudentPerformanceSummary(
       grade: true,
       subject: { select: { subjectName: true } },
     },
-  });
+  })
 
   const avgPercentage =
     results.length > 0
       ? results.reduce((sum, r) => sum + r.percentage, 0) / results.length
-      : 0;
+      : 0
 
-  const bySubject: Record<string, { count: number; avgPercentage: number }> = {};
+  const bySubject: Record<string, { count: number; avgPercentage: number }> = {}
   results.forEach((r) => {
-    const subject = r.subject?.subjectName || "Unknown";
+    const subject = r.subject?.subjectName || "Unknown"
     if (!bySubject[subject]) {
-      bySubject[subject] = { count: 0, avgPercentage: 0 };
+      bySubject[subject] = { count: 0, avgPercentage: 0 }
     }
-    bySubject[subject].count++;
-    bySubject[subject].avgPercentage += r.percentage;
-  });
+    bySubject[subject].count++
+    bySubject[subject].avgPercentage += r.percentage
+  })
 
   Object.keys(bySubject).forEach((subject) => {
-    bySubject[subject].avgPercentage /= bySubject[subject].count;
-  });
+    bySubject[subject].avgPercentage /= bySubject[subject].count
+  })
 
   return {
     totalResults: results.length,
     averagePercentage: avgPercentage,
     bySubject,
-  };
+  }
 }
 
 // ============================================================================
@@ -522,9 +519,9 @@ export async function verifyResultOwnership(
     select: {
       id: true,
     },
-  });
+  })
 
-  return results.map((r) => r.id);
+  return results.map((r) => r.id)
 }
 
 /**
@@ -540,7 +537,7 @@ export async function getResultsByIds(schoolId: string, resultIds: string[]) {
       schoolId,
     },
     select: resultDetailSelect,
-  });
+  })
 }
 
 // ============================================================================
@@ -575,29 +572,36 @@ export async function getStudentGradeHistory(
       exam: { select: { title: true } },
       subject: { select: { subjectName: true } },
     },
-  });
+  })
 
   // Calculate trend
   if (results.length < 2) {
-    return { results: results.reverse(), trend: "stable" as const, average: results[0]?.percentage || 0 };
+    return {
+      results: results.reverse(),
+      trend: "stable" as const,
+      average: results[0]?.percentage || 0,
+    }
   }
 
-  const reversed = [...results].reverse(); // Oldest to newest
-  const avgPercentage = reversed.reduce((sum, r) => sum + r.percentage, 0) / reversed.length;
+  const reversed = [...results].reverse() // Oldest to newest
+  const avgPercentage =
+    reversed.reduce((sum, r) => sum + r.percentage, 0) / reversed.length
 
   // Compare first half to second half for trend
-  const midpoint = Math.floor(reversed.length / 2);
-  const firstHalf = reversed.slice(0, midpoint);
-  const secondHalf = reversed.slice(midpoint);
+  const midpoint = Math.floor(reversed.length / 2)
+  const firstHalf = reversed.slice(0, midpoint)
+  const secondHalf = reversed.slice(midpoint)
 
-  const firstAvg = firstHalf.reduce((sum, r) => sum + r.percentage, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((sum, r) => sum + r.percentage, 0) / secondHalf.length;
+  const firstAvg =
+    firstHalf.reduce((sum, r) => sum + r.percentage, 0) / firstHalf.length
+  const secondAvg =
+    secondHalf.reduce((sum, r) => sum + r.percentage, 0) / secondHalf.length
 
-  let trend: "improving" | "declining" | "stable" = "stable";
-  if (secondAvg - firstAvg > 5) trend = "improving";
-  else if (firstAvg - secondAvg > 5) trend = "declining";
+  let trend: "improving" | "declining" | "stable" = "stable"
+  if (secondAvg - firstAvg > 5) trend = "improving"
+  else if (firstAvg - secondAvg > 5) trend = "declining"
 
-  return { results: reversed, trend, average: avgPercentage };
+  return { results: reversed, trend, average: avgPercentage }
 }
 
 /**
@@ -617,13 +621,13 @@ export async function getClassGradeStats(
   const where: Prisma.ResultWhereInput = {
     schoolId,
     classId,
-  };
+  }
 
   // Filter by specific assignment or exam if provided
   if (assignmentId) {
-    where.assignmentId = assignmentId;
+    where.assignmentId = assignmentId
   } else if (examId) {
-    where.examId = examId;
+    where.examId = examId
   }
 
   const [results, gradeDistribution] = await Promise.all([
@@ -642,7 +646,7 @@ export async function getClassGradeStats(
       where,
       _count: { grade: true },
     }),
-  ]);
+  ])
 
   if (results.length === 0) {
     return {
@@ -651,27 +655,32 @@ export async function getClassGradeStats(
       lowestScore: 0,
       totalStudents: 0,
       gradeDistribution: {} as Record<string, number>,
-      rankings: [] as Array<{ studentId: string; percentage: number; rank: number }>,
-    };
+      rankings: [] as Array<{
+        studentId: string
+        percentage: number
+        rank: number
+      }>,
+    }
   }
 
-  const percentages = results.map((r) => r.percentage);
-  const classAverage = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
-  const highestScore = Math.max(...percentages);
-  const lowestScore = Math.min(...percentages);
+  const percentages = results.map((r) => r.percentage)
+  const classAverage =
+    percentages.reduce((sum, p) => sum + p, 0) / percentages.length
+  const highestScore = Math.max(...percentages)
+  const lowestScore = Math.min(...percentages)
 
   // Build grade distribution
-  const distribution: Record<string, number> = {};
+  const distribution: Record<string, number> = {}
   gradeDistribution.forEach((item) => {
-    distribution[item.grade] = item._count.grade;
-  });
+    distribution[item.grade] = item._count.grade
+  })
 
   // Build rankings (already sorted by percentage desc)
   const rankings = results.map((r, index) => ({
     studentId: r.studentId,
     percentage: r.percentage,
     rank: index + 1,
-  }));
+  }))
 
   return {
     classAverage,
@@ -680,7 +689,7 @@ export async function getClassGradeStats(
     totalStudents: results.length,
     gradeDistribution: distribution,
     rankings,
-  };
+  }
 }
 
 /**
@@ -694,20 +703,24 @@ export function getStudentRank(
   studentId: string,
   classStats: Awaited<ReturnType<typeof getClassGradeStats>>
 ) {
-  const studentRanking = classStats.rankings.find((r) => r.studentId === studentId);
+  const studentRanking = classStats.rankings.find(
+    (r) => r.studentId === studentId
+  )
   if (!studentRanking) {
-    return { rank: 0, percentile: 0, totalStudents: classStats.totalStudents };
+    return { rank: 0, percentile: 0, totalStudents: classStats.totalStudents }
   }
 
   const percentile = Math.round(
-    ((classStats.totalStudents - studentRanking.rank + 1) / classStats.totalStudents) * 100
-  );
+    ((classStats.totalStudents - studentRanking.rank + 1) /
+      classStats.totalStudents) *
+      100
+  )
 
   return {
     rank: studentRanking.rank,
     percentile,
     totalStudents: classStats.totalStudents,
-  };
+  }
 }
 
 // ============================================================================
@@ -720,10 +733,10 @@ export function getStudentRank(
  * @returns Formatted student name
  */
 export function formatStudentName(result: {
-  student: { givenName: string; surname: string } | null;
+  student: { givenName: string; surname: string } | null
 }): string {
-  if (!result.student) return "Unknown";
-  return `${result.student.givenName} ${result.student.surname}`;
+  if (!result.student) return "Unknown"
+  return `${result.student.givenName} ${result.student.surname}`
 }
 
 /**
@@ -732,15 +745,15 @@ export function formatStudentName(result: {
  * @returns Letter grade
  */
 export function calculateGrade(percentage: number): string {
-  if (percentage >= 90) return "A+";
-  if (percentage >= 85) return "A";
-  if (percentage >= 80) return "B+";
-  if (percentage >= 75) return "B";
-  if (percentage >= 70) return "C+";
-  if (percentage >= 65) return "C";
-  if (percentage >= 60) return "D+";
-  if (percentage >= 50) return "D";
-  return "F";
+  if (percentage >= 90) return "A+"
+  if (percentage >= 85) return "A"
+  if (percentage >= 80) return "B+"
+  if (percentage >= 75) return "B"
+  if (percentage >= 70) return "C+"
+  if (percentage >= 65) return "C"
+  if (percentage >= 60) return "D+"
+  if (percentage >= 50) return "D"
+  return "F"
 }
 
 /**
@@ -748,16 +761,19 @@ export function calculateGrade(percentage: number): string {
  * @param result - Result from query
  * @returns Formatted result row
  */
-export function formatResultRow(result: Awaited<ReturnType<typeof getResultsList>>["rows"][number]) {
+export function formatResultRow(
+  result: Awaited<ReturnType<typeof getResultsList>>["rows"][number]
+) {
   return {
     id: result.id,
     studentName: formatStudentName(result),
-    assignmentTitle: result.assignment?.title || result.exam?.title || "Unknown",
+    assignmentTitle:
+      result.assignment?.title || result.exam?.title || "Unknown",
     className: result.class?.name || "Unknown",
     score: Number(result.score),
     maxScore: Number(result.maxScore),
     percentage: result.percentage,
     grade: result.grade,
     createdAt: result.createdAt.toISOString(),
-  };
+  }
 }

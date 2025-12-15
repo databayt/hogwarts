@@ -1,4 +1,4 @@
-import type { IDCardTemplate } from "./types";
+import type { IDCardTemplate } from "./types"
 
 export const idCardTemplates: IDCardTemplate[] = [
   {
@@ -65,6 +65,6 @@ export const idCardTemplates: IDCardTemplate[] = [
     secondaryColor: "#a855f7",
     fontFamily: "Comic Sans MS",
   },
-];
+]
 
-export const defaultTemplate = idCardTemplates[0];
+export const defaultTemplate = idCardTemplates[0]

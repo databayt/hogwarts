@@ -64,5 +64,3 @@ Goal: Make the Stripe pricing block fit smoothly with our auth and multi-tenant 
 - [ ] Webhooks reliably persist subscription state to DB.
 - [ ] UI reflects correct button state (Upgrade vs Manage Subscription) based on plan.
 - [ ] All env vars configured and documented in README.
-
-

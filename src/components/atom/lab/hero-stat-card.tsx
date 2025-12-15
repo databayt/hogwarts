@@ -1,12 +1,14 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { IconWrapper } from "./icon-wrapper"
-import { StatValue } from "./stat-value"
 import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import { TrendBadge } from "./trend-badge"
 import type { BaseVariant, TrendData } from "./types"
 
@@ -92,7 +94,7 @@ export function HeroStatCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -107,15 +109,11 @@ export function HeroStatCard({
           </div>
         ) : (
           <div className="space-y-4">
-            {icon && (
-              <IconWrapper icon={icon} variant={variant} size="lg" />
-            )}
+            {icon && <IconWrapper icon={icon} variant={variant} size="lg" />}
             <div className="space-y-2">
               <StatValue value={value} size="xl" variant={variant} />
               <StatLabel label={label} variant="default" />
-              {subtitle && (
-                <p className="muted">{subtitle}</p>
-              )}
+              {subtitle && <p className="muted">{subtitle}</p>}
             </div>
             {trend && (
               <TrendBadge

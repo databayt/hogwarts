@@ -5,7 +5,7 @@
  * Pattern follows announcements module for consistency
  */
 
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client"
 
 export type ResultAction =
   | "create"
@@ -13,20 +13,20 @@ export type ResultAction =
   | "update"
   | "delete"
   | "export"
-  | "bulk_action";
+  | "bulk_action"
 
 export interface AuthContext {
-  userId: string;
-  role: UserRole;
-  schoolId: string | null;
+  userId: string
+  role: UserRole
+  schoolId: string | null
 }
 
 export interface ResultContext {
-  id?: string;
-  gradedBy?: string | null;
-  schoolId?: string;
-  classId?: string;
-  studentId?: string;
+  id?: string
+  gradedBy?: string | null
+  schoolId?: string
+  classId?: string
+  studentId?: string
 }
 
 /**
@@ -41,71 +41,71 @@ export function checkResultPermission(
   action: ResultAction,
   result?: ResultContext
 ): boolean {
-  const { role, userId, schoolId } = auth;
+  const { role, userId, schoolId } = auth
 
   // DEVELOPER role has full access
   if (role === "DEVELOPER") {
-    return true;
+    return true
   }
 
   // Must have school context for all operations
   if (!schoolId) {
-    return false;
+    return false
   }
 
   // ADMIN has full access within their school
   if (role === "ADMIN") {
-    if (!result?.schoolId) return true; // For create
-    return schoolId === result.schoolId;
+    if (!result?.schoolId) return true // For create
+    return schoolId === result.schoolId
   }
 
   // TEACHER can manage grades within their school
   if (role === "TEACHER") {
     // Teachers can create results
     if (action === "create") {
-      return true;
+      return true
     }
 
     // Teachers can read all results in their school
     if (action === "read") {
-      if (!result?.schoolId) return false;
-      return schoolId === result.schoolId;
+      if (!result?.schoolId) return false
+      return schoolId === result.schoolId
     }
 
     // Teachers can update/delete results they created
     if (action === "update" || action === "delete") {
-      if (!result?.schoolId || !result?.gradedBy) return false;
-      return schoolId === result.schoolId && result.gradedBy === userId;
+      if (!result?.schoolId || !result?.gradedBy) return false
+      return schoolId === result.schoolId && result.gradedBy === userId
     }
 
     // Teachers can export results in their school
     if (action === "export") {
-      if (!result?.schoolId) return true;
-      return schoolId === result.schoolId;
+      if (!result?.schoolId) return true
+      return schoolId === result.schoolId
     }
 
     // Teachers cannot perform bulk actions
     if (action === "bulk_action") {
-      return false;
+      return false
     }
   }
 
   // ACCOUNTANT can read and export results (for financial reporting)
   if (role === "ACCOUNTANT") {
     if (action === "read" || action === "export") {
-      if (!result?.schoolId) return false;
-      return schoolId === result.schoolId;
+      if (!result?.schoolId) return false
+      return schoolId === result.schoolId
     }
-    return false;
+    return false
   }
 
   // STAFF can read results
   if (role === "STAFF") {
     if (action === "read") {
-      if (!result?.schoolId) return false;
-      return schoolId === result.schoolId;
+      if (!result?.schoolId) return false
+      return schoolId === result.schoolId
     }
-    return false;
+    return false
   }
 
   // STUDENT can only read their own results
@@ -113,9 +113,9 @@ export function checkResultPermission(
     if (action === "read") {
       // Would need student ID mapping to implement properly
       // For now, deny access - proper implementation requires linking user to student record
-      return false;
+      return false
     }
-    return false;
+    return false
   }
 
   // GUARDIAN can read their children's results
@@ -123,18 +123,18 @@ export function checkResultPermission(
     if (action === "read") {
       // Would need guardian-student relationship to implement properly
       // For now, deny access - proper implementation requires checking guardian-student link
-      return false;
+      return false
     }
-    return false;
+    return false
   }
 
   // USER role has no access
   if (role === "USER") {
-    return false;
+    return false
   }
 
   // Default: deny access
-  return false;
+  return false
 }
 
 /**
@@ -154,7 +154,7 @@ export function assertResultPermission(
       `Unauthorized: ${auth.role} cannot perform ${action} on result${
         result?.id ? ` ${result.id}` : ""
       }`
-    );
+    )
   }
 }
 
@@ -164,13 +164,13 @@ export function assertResultPermission(
  * @returns AuthContext or null if not authenticated
  */
 export function getAuthContext(session: any): AuthContext | null {
-  if (!session?.user) return null;
+  if (!session?.user) return null
 
   return {
     userId: session.user.id,
     role: session.user.role as UserRole,
     schoolId: session.user.schoolId || null,
-  };
+  }
 }
 
 /**
@@ -179,11 +179,7 @@ export function getAuthContext(session: any): AuthContext | null {
  * @returns true if user can create results
  */
 export function canCreateResult(role: UserRole): boolean {
-  return (
-    role === "DEVELOPER" ||
-    role === "ADMIN" ||
-    role === "TEACHER"
-  );
+  return role === "DEVELOPER" || role === "ADMIN" || role === "TEACHER"
 }
 
 /**
@@ -197,7 +193,7 @@ export function canExportResults(role: UserRole): boolean {
     role === "ADMIN" ||
     role === "TEACHER" ||
     role === "ACCOUNTANT"
-  );
+  )
 }
 
 /**
@@ -206,7 +202,7 @@ export function canExportResults(role: UserRole): boolean {
  * @returns true if user can perform bulk actions
  */
 export function canBulkActionResults(role: UserRole): boolean {
-  return role === "DEVELOPER" || role === "ADMIN";
+  return role === "DEVELOPER" || role === "ADMIN"
 }
 
 /**
@@ -217,20 +213,20 @@ export function canBulkActionResults(role: UserRole): boolean {
 export function getAllowedActions(role: UserRole): ResultAction[] {
   switch (role) {
     case "DEVELOPER":
-      return ["create", "read", "update", "delete", "export", "bulk_action"];
+      return ["create", "read", "update", "delete", "export", "bulk_action"]
     case "ADMIN":
-      return ["create", "read", "update", "delete", "export", "bulk_action"];
+      return ["create", "read", "update", "delete", "export", "bulk_action"]
     case "TEACHER":
-      return ["create", "read", "update", "delete", "export"];
+      return ["create", "read", "update", "delete", "export"]
     case "ACCOUNTANT":
-      return ["read", "export"];
+      return ["read", "export"]
     case "STAFF":
-      return ["read"];
+      return ["read"]
     case "STUDENT":
-      return ["read"]; // Limited to own results
+      return ["read"] // Limited to own results
     case "GUARDIAN":
-      return ["read"]; // Limited to children's results
+      return ["read"] // Limited to children's results
     default:
-      return [];
+      return []
   }
 }

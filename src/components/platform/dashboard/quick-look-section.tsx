@@ -1,11 +1,13 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { ChevronRight } from "lucide-react"
-import { AnthropicIcons } from "@/components/icons/anthropic"
 import Link from "next/link"
+import { ChevronRight } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
+import { AnthropicIcons } from "@/components/icons/anthropic"
+
 import type { QuickLookData } from "./actions"
 
 export interface QuickLookSectionProps {
@@ -46,7 +48,11 @@ const quickLookConfig = {
   },
 } as const
 
-export function QuickLookSection({ locale, subdomain, data }: QuickLookSectionProps) {
+export function QuickLookSection({
+  locale,
+  subdomain,
+  data,
+}: QuickLookSectionProps) {
   // Default/fallback data when no real data is provided
   const defaultData: QuickLookData = {
     announcements: { type: "announcements", count: 0, newCount: 0, recent: "" },
@@ -73,21 +79,29 @@ export function QuickLookSection({ locale, subdomain, data }: QuickLookSectionPr
 
           return (
             <Card key={item.label} className="p-4">
-              <CardContent className="p-0 space-y-3">
+              <CardContent className="space-y-3 p-0">
                 <div className="flex items-center gap-3">
-                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 items-center justify-center rounded-lg",
+                      item.bgColor
+                    )}
+                  >
                     <Icon className={cn("h-5 w-5", item.color)} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-muted-foreground text-xs">
+                      {item.label}
+                    </p>
                     <div className="flex items-center gap-2">
                       <p className="text-lg font-semibold">{item.data.count}</p>
                       {hasNew && (
                         <Badge
                           variant="secondary"
                           className={cn(
-                            "text-[10px] px-1.5 py-0",
-                            item.data.newCount > 0 && "bg-primary/10 text-primary"
+                            "px-1.5 py-0 text-[10px]",
+                            item.data.newCount > 0 &&
+                              "bg-primary/10 text-primary"
                           )}
                         >
                           +{item.data.newCount} new
@@ -97,18 +111,21 @@ export function QuickLookSection({ locale, subdomain, data }: QuickLookSectionPr
                   </div>
                 </div>
                 {item.data.recent && (
-                  <p className="text-xs text-muted-foreground truncate" title={item.data.recent}>
+                  <p
+                    className="text-muted-foreground truncate text-xs"
+                    title={item.data.recent}
+                  >
                     {item.data.recent}
                   </p>
                 )}
                 {!item.data.recent && item.data.count === 0 && (
-                  <p className="text-xs text-muted-foreground italic">
+                  <p className="text-muted-foreground text-xs italic">
                     No recent {item.label.toLowerCase()}
                   </p>
                 )}
                 <Link
                   href={`/${locale}/s/${subdomain}${item.href}`}
-                  className="inline-flex items-center text-xs text-primary hover:underline"
+                  className="text-primary inline-flex items-center text-xs hover:underline"
                 >
                   View All <ChevronRight className="ml-1 h-3 w-3" />
                 </Link>

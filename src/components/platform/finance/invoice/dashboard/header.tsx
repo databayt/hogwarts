@@ -1,12 +1,9 @@
-import Link from "next/link";
+import Link from "next/link"
 
 export function DashboardHeader() {
-    return (
-    <div className="flex items-center gap-4 mb-6">
-      <Link
-        href="/invoice/list"
-        className="muted text-primary hover:underline"
-      >
+  return (
+    <div className="mb-6 flex items-center gap-4">
+      <Link href="/invoice/list" className="muted text-primary hover:underline">
         List
       </Link>
       <Link
@@ -16,5 +13,5 @@ export function DashboardHeader() {
         Settings
       </Link>
     </div>
-  );
+  )
 }

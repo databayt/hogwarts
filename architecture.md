@@ -13,6 +13,7 @@
 Hogwarts is an **enterprise-grade, multi-tenant school management platform** built on modern web technologies serving **50+ schools, 12,000+ students, and 800+ teachers** in production. This architecture document captures all critical architectural decisions, implementation patterns, and design rationale to ensure consistent development across all AI agents and human developers.
 
 **Key Architectural Characteristics:**
+
 - **Multi-Tenant**: Subdomain-based tenant isolation (`school.databayt.org`)
 - **Type-Safe**: End-to-end TypeScript with Zod validation at boundaries
 - **Serverless**: Deployed on Vercel with automatic scaling
@@ -21,6 +22,7 @@ Hogwarts is an **enterprise-grade, multi-tenant school management platform** bui
 - **Scalable**: Designed to scale from 50 to 5,000+ schools
 
 **Current Scale:**
+
 - **50+** schools (tenants)
 - **12,000+** students
 - **800+** teachers
@@ -28,6 +30,7 @@ Hogwarts is an **enterprise-grade, multi-tenant school management platform** bui
 - **10,000** requests/day
 
 **Projected Scale (3 Years):**
+
 - **5,000** schools
 - **1,000,000** students
 - **50,000** teachers
@@ -51,6 +54,7 @@ npx create-next-app@latest hogwarts \
 ```
 
 **Starter Decisions Provided:**
+
 - ✅ Next.js 15 framework (App Router)
 - ✅ TypeScript (strict mode)
 - ✅ Tailwind CSS 4 for styling
@@ -59,6 +63,7 @@ npx create-next-app@latest hogwarts \
 - ✅ Turbopack for bundling
 
 **Additional Setup:**
+
 ```bash
 # Install dependencies
 pnpm install
@@ -87,51 +92,51 @@ pnpm add @sentry/nextjs
 
 ## Decision Summary
 
-| Category | Decision | Version | Affects Epics | Rationale |
-|----------|----------|---------|---------------|-----------|
-| **Framework** | Next.js App Router | 15.4.4 | All | Best-in-class React framework, server components, built-in optimizations |
-| **Language** | TypeScript (strict mode) | 5.x | All | Type safety eliminates runtime errors, excellent DX |
-| **Database** | PostgreSQL (Neon serverless) | Latest | All | ACID compliance, relational model perfect for school data, serverless scaling |
-| **ORM** | Prisma | 6.14.0 | All | Best TypeScript ORM, type-safe queries, excellent migration system |
-| **Authentication** | NextAuth v5 (Auth.js) | 5.0.0-beta.29 | Epic 2 | Industry standard, OAuth support, JWT strategy, multi-tenant aware |
-| **UI Components** | shadcn/ui (Radix UI) | Latest | All | High-quality accessible components, no dependency lock-in |
-| **Styling** | Tailwind CSS | 4.0 | All | Utility-first CSS, faster development, consistent design system |
-| **Validation** | Zod | 4.0.14 | All | TypeScript-first schema validation, runtime type safety |
-| **Forms** | react-hook-form | 7.61.1 | All | Best React form library, excellent performance |
-| **Data Tables** | @tanstack/react-table | 8.21.3 | Epics 4-11 | Powerful data table with server-side features |
-| **Email** | Resend + React Email | 4.7.0 | Epic 2,10 | Modern email API, React templates, excellent deliverability |
-| **Payments** | Stripe | 18.4.0 | Epic 9 | Industry leader, PCI compliance handled, excellent DX |
-| **File Storage** | Vercel Blob | Latest | Epics 3-5 | Serverless storage, integrated with Vercel |
-| **Deployment** | Vercel | Latest | All | Best Next.js hosting, automatic deployments, edge network |
-| **Error Tracking** | Sentry | 10.12.0 | All | Industry standard, excellent error reporting |
-| **Testing** | Vitest + Playwright | 2.0.6 + 1.55.0 | All | Fast unit tests, reliable E2E tests |
-| **Package Manager** | pnpm | 9.x | All | Faster than npm/yarn, disk space efficient |
-| **Bundler** | Turbopack | Built-in | All | Next.js native, faster than Webpack |
-| **API Pattern** | Server Actions | Built-in | All | Type-safe mutations, no REST boilerplate |
-| **State Management** | Server state (React) | Built-in | All | Minimal client state, leverage server components |
-| **Internationalization** | Custom i18n | Custom | All | Arabic RTL + English LTR support |
-| **Charts** | Recharts | 2.15.4 | Epic 11 | React-native charts, good documentation |
-| **Drag & Drop** | @dnd-kit | 6.3.1 | Epic 3,6 | Modern DnD library, accessible |
-| **Date Handling** | date-fns | 4.1.0 | All | Lightweight, tree-shakeable, i18n support |
+| Category                 | Decision                     | Version        | Affects Epics | Rationale                                                                     |
+| ------------------------ | ---------------------------- | -------------- | ------------- | ----------------------------------------------------------------------------- |
+| **Framework**            | Next.js App Router           | 15.4.4         | All           | Best-in-class React framework, server components, built-in optimizations      |
+| **Language**             | TypeScript (strict mode)     | 5.x            | All           | Type safety eliminates runtime errors, excellent DX                           |
+| **Database**             | PostgreSQL (Neon serverless) | Latest         | All           | ACID compliance, relational model perfect for school data, serverless scaling |
+| **ORM**                  | Prisma                       | 6.14.0         | All           | Best TypeScript ORM, type-safe queries, excellent migration system            |
+| **Authentication**       | NextAuth v5 (Auth.js)        | 5.0.0-beta.29  | Epic 2        | Industry standard, OAuth support, JWT strategy, multi-tenant aware            |
+| **UI Components**        | shadcn/ui (Radix UI)         | Latest         | All           | High-quality accessible components, no dependency lock-in                     |
+| **Styling**              | Tailwind CSS                 | 4.0            | All           | Utility-first CSS, faster development, consistent design system               |
+| **Validation**           | Zod                          | 4.0.14         | All           | TypeScript-first schema validation, runtime type safety                       |
+| **Forms**                | react-hook-form              | 7.61.1         | All           | Best React form library, excellent performance                                |
+| **Data Tables**          | @tanstack/react-table        | 8.21.3         | Epics 4-11    | Powerful data table with server-side features                                 |
+| **Email**                | Resend + React Email         | 4.7.0          | Epic 2,10     | Modern email API, React templates, excellent deliverability                   |
+| **Payments**             | Stripe                       | 18.4.0         | Epic 9        | Industry leader, PCI compliance handled, excellent DX                         |
+| **File Storage**         | Vercel Blob                  | Latest         | Epics 3-5     | Serverless storage, integrated with Vercel                                    |
+| **Deployment**           | Vercel                       | Latest         | All           | Best Next.js hosting, automatic deployments, edge network                     |
+| **Error Tracking**       | Sentry                       | 10.12.0        | All           | Industry standard, excellent error reporting                                  |
+| **Testing**              | Vitest + Playwright          | 2.0.6 + 1.55.0 | All           | Fast unit tests, reliable E2E tests                                           |
+| **Package Manager**      | pnpm                         | 9.x            | All           | Faster than npm/yarn, disk space efficient                                    |
+| **Bundler**              | Turbopack                    | Built-in       | All           | Next.js native, faster than Webpack                                           |
+| **API Pattern**          | Server Actions               | Built-in       | All           | Type-safe mutations, no REST boilerplate                                      |
+| **State Management**     | Server state (React)         | Built-in       | All           | Minimal client state, leverage server components                              |
+| **Internationalization** | Custom i18n                  | Custom         | All           | Arabic RTL + English LTR support                                              |
+| **Charts**               | Recharts                     | 2.15.4         | Epic 11       | React-native charts, good documentation                                       |
+| **Drag & Drop**          | @dnd-kit                     | 6.3.1          | Epic 3,6      | Modern DnD library, accessible                                                |
+| **Date Handling**        | date-fns                     | 4.1.0          | All           | Lightweight, tree-shakeable, i18n support                                     |
 
 ---
 
 ## Epic to Architecture Mapping
 
-| Epic | Primary Components | Database Models | API Actions | UI Pages | Dependencies |
-|------|-------------------|-----------------|-------------|----------|--------------|
-| **Epic 1: Foundation** | Middleware, tenant-context, db.ts | School, Domain | - | Landing page | None |
-| **Epic 2: Authentication** | auth.ts, auth.config.ts | User, Account, Session | register, login, logout | /auth/* | Epic 1 |
-| **Epic 3: School Config** | School settings components | SchoolYear, Term, Period, Department | updateSchool, createTerm | /settings/* | Epic 1,2 |
-| **Epic 4: Students** | Student components | Student, Guardian, StudentGuardian | enrollStudent, addGuardian | /students/* | Epic 2,3 |
-| **Epic 5: Teachers** | Teacher components | Teacher, TeacherDepartment | createTeacher, assignDepartment | /teachers/* | Epic 2,3 |
-| **Epic 6: Classes** | Class components | Class, Subject, StudentClass, Timetable | createClass, enrollStudents | /classes/* | Epic 3,4,5 |
-| **Epic 7: Attendance** | Attendance components | Attendance, AttendanceEnhanced | markAttendance, generateQR | /attendance/* | Epic 4,6 |
-| **Epic 8: Assessment** | Assignment components | Assignment, AssignmentSubmission | createAssignment, gradeSubmission | /assignments/* | Epic 6 |
-| **Epic 9: Fees** | Fee components | FeeStructure, FeePayment, Invoice | createFee, recordPayment, stripe | /fees/* | Epic 4 |
-| **Epic 10: Communication** | Announcement components | Announcement, Message | createAnnouncement, sendMessage | /announcements/* | Epic 4,5 |
-| **Epic 11: Reporting** | Dashboard components | - (aggregated data) | generateReport, exportPDF | /reports/* | All previous |
-| **Epic 12: Polish** | Performance, security | - | - | All pages optimized | All previous |
+| Epic                       | Primary Components                | Database Models                         | API Actions                       | UI Pages            | Dependencies |
+| -------------------------- | --------------------------------- | --------------------------------------- | --------------------------------- | ------------------- | ------------ |
+| **Epic 1: Foundation**     | Middleware, tenant-context, db.ts | School, Domain                          | -                                 | Landing page        | None         |
+| **Epic 2: Authentication** | auth.ts, auth.config.ts           | User, Account, Session                  | register, login, logout           | /auth/\*            | Epic 1       |
+| **Epic 3: School Config**  | School settings components        | SchoolYear, Term, Period, Department    | updateSchool, createTerm          | /settings/\*        | Epic 1,2     |
+| **Epic 4: Students**       | Student components                | Student, Guardian, StudentGuardian      | enrollStudent, addGuardian        | /students/\*        | Epic 2,3     |
+| **Epic 5: Teachers**       | Teacher components                | Teacher, TeacherDepartment              | createTeacher, assignDepartment   | /teachers/\*        | Epic 2,3     |
+| **Epic 6: Classes**        | Class components                  | Class, Subject, StudentClass, Timetable | createClass, enrollStudents       | /classes/\*         | Epic 3,4,5   |
+| **Epic 7: Attendance**     | Attendance components             | Attendance, AttendanceEnhanced          | markAttendance, generateQR        | /attendance/\*      | Epic 4,6     |
+| **Epic 8: Assessment**     | Assignment components             | Assignment, AssignmentSubmission        | createAssignment, gradeSubmission | /assignments/\*     | Epic 6       |
+| **Epic 9: Fees**           | Fee components                    | FeeStructure, FeePayment, Invoice       | createFee, recordPayment, stripe  | /fees/\*            | Epic 4       |
+| **Epic 10: Communication** | Announcement components           | Announcement, Message                   | createAnnouncement, sendMessage   | /announcements/\*   | Epic 4,5     |
+| **Epic 11: Reporting**     | Dashboard components              | - (aggregated data)                     | generateReport, exportPDF         | /reports/\*         | All previous |
+| **Epic 12: Polish**        | Performance, security             | -                                       | -                                 | All pages optimized | All previous |
 
 ---
 
@@ -237,15 +242,15 @@ These patterns ensure consistent implementation across all AI agents and develop
 **CRITICAL:** Every database operation MUST include `schoolId` filter.
 
 ```typescript
-// ❌ WRONG - No tenant scoping
-const students = await prisma.student.findMany()
-
 // ✅ CORRECT - Scoped by schoolId
 import { getTenantContext } from "@/lib/tenant-context"
 
+// ❌ WRONG - No tenant scoping
+const students = await prisma.student.findMany()
+
 const { schoolId } = await getTenantContext()
 const students = await prisma.student.findMany({
-  where: { schoolId }
+  where: { schoolId },
 })
 ```
 
@@ -253,8 +258,9 @@ const students = await prisma.student.findMany({
 
 ```typescript
 // src/lib/tenant-context.ts
-import { auth } from "@/auth"
 import { headers } from "next/headers"
+import { auth } from "@/auth"
+
 import { db } from "@/lib/db"
 
 export async function getTenantContext() {
@@ -263,7 +269,7 @@ export async function getTenantContext() {
   if (session?.user?.schoolId) {
     return {
       schoolId: session.user.schoolId,
-      source: "session"
+      source: "session",
     }
   }
 
@@ -274,13 +280,13 @@ export async function getTenantContext() {
   if (subdomain) {
     const school = await db.school.findUnique({
       where: { domain: subdomain },
-      select: { id: true }
+      select: { id: true },
     })
 
     if (school) {
       return {
         schoolId: school.id,
-        source: "subdomain"
+        source: "subdomain",
       }
     }
   }
@@ -289,7 +295,7 @@ export async function getTenantContext() {
   if (session?.user?.role === "DEVELOPER") {
     return {
       schoolId: null,
-      source: "platform_admin"
+      source: "platform_admin",
     }
   }
 
@@ -305,12 +311,14 @@ export async function getTenantContext() {
 // src/components/platform/students/actions.ts
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
 import { studentSchema } from "./validation"
 
 export async function createStudent(formData: FormData) {
@@ -333,7 +341,7 @@ export async function createStudent(formData: FormData) {
   if (!parsed.success) {
     return {
       error: "Validation failed",
-      details: parsed.error.flatten()
+      details: parsed.error.flatten(),
     }
   }
 
@@ -342,8 +350,8 @@ export async function createStudent(formData: FormData) {
     const student = await db.student.create({
       data: {
         ...parsed.data,
-        schoolId  // CRITICAL: Include schoolId
-      }
+        schoolId, // CRITICAL: Include schoolId
+      },
     })
 
     // 6. Revalidate cache
@@ -519,6 +527,7 @@ src/app/[lang]/students/new/page.tsx  → imports StudentForm
 ### Naming Conventions
 
 **Files:**
+
 - Components: `PascalCase.tsx` (e.g., `StudentForm.tsx`)
 - Utils: `kebab-case.ts` (e.g., `tenant-context.ts`)
 - Server Actions: `actions.ts`
@@ -527,12 +536,14 @@ src/app/[lang]/students/new/page.tsx  → imports StudentForm
 - Hooks: `use-*.ts` (e.g., `use-students.ts`)
 
 **Variables:**
+
 - Constants: `SCREAMING_SNAKE_CASE` (e.g., `MAX_FILE_SIZE`)
 - Functions: `camelCase` (e.g., `getTenantContext`)
 - Components: `PascalCase` (e.g., `StudentForm`)
 - Types/Interfaces: `PascalCase` (e.g., `StudentFormData`)
 
 **Database:**
+
 - Tables: `PascalCase` (e.g., `Student`, `SchoolYear`)
 - Fields: `camelCase` (e.g., `firstName`, `createdAt`)
 - Enums: `SCREAMING_SNAKE_CASE` (e.g., `ADMIN`, `TEACHER`)
@@ -577,7 +588,7 @@ export function handleApiError(error: unknown) {
     return {
       error: error.message,
       code: error.code,
-      statusCode: error.statusCode
+      statusCode: error.statusCode,
     }
   }
 
@@ -585,7 +596,7 @@ export function handleApiError(error: unknown) {
     return {
       error: "Validation failed",
       details: error.flatten(),
-      statusCode: 400
+      statusCode: 400,
     }
   }
 
@@ -594,7 +605,7 @@ export function handleApiError(error: unknown) {
       return {
         error: "Duplicate entry",
         field: error.meta?.target,
-        statusCode: 409
+        statusCode: 409,
       }
     }
   }
@@ -602,7 +613,7 @@ export function handleApiError(error: unknown) {
   console.error("Unhandled error:", error)
   return {
     error: "Internal server error",
-    statusCode: 500
+    statusCode: 500,
   }
 }
 ```
@@ -651,36 +662,36 @@ logger.error({ error, context }, "Failed to process payment")
 
 **28 Prisma Model Files:**
 
-| File | Models | Description |
-|------|--------|-------------|
-| **auth.prisma** | User, Account, Session, VerificationToken, TwoFactorToken | NextAuth v5 authentication tables |
-| **school.prisma** | School, SchoolYear, Period, Term, YearLevel, Domain | School structure and academic calendar |
-| **students.prisma** | Student, Guardian, StudentGuardian, StudentYearLevel | Student management |
-| **staff.prisma** | Teacher, Department, TeacherDepartment | Teacher and department management |
-| **subjects.prisma** | Subject, Class, StudentClass, ScoreRange | Academic organization |
-| **classrooms.prisma** | Classroom, ClassroomType | Physical classroom management |
-| **attendance.prisma** | Attendance | Basic attendance tracking |
-| **attendance-enhanced.prisma** | AttendanceEnhanced | Period-wise attendance |
-| **geo-attendance.prisma** | GeoAttendance | Location-based attendance |
-| **assessments.prisma** | Assignment, AssignmentSubmission | Assignments and grading |
-| **exam.prisma** | Exam, ExamSchedule, ExamResult | Exam management |
-| **qbank.prisma** | QuestionBank, Question | Question bank for exams |
-| **qbank-automation.prisma** | QuestionBankAutomation | Automated question generation |
-| **finance.prisma** | 50+ models (40,028 lines) | Double-entry bookkeeping, fees, payments, invoices, accounting |
-| **admission.prisma** | AdmissionCampaign, AdmissionApplication, MeritList | Student admission process |
-| **library.prisma** | Book, BookInventory, BookIssue | Library management |
-| **stream.prisma** | Stream, StreamContent | Learning Management System (LMS) |
-| **lessons.prisma** | Lesson, LessonPlan | Lesson planning and curriculum |
-| **timetable.prisma** | Timetable, SchoolWeekConfig | Class schedule and timetable |
-| **announcement.prisma** | Announcement | Announcements and notifications |
-| **domain.prisma** | Domain | Domain configuration for subdomains |
-| **branding.prisma** | SchoolBranding | School branding and theming |
-| **theme.prisma** | Theme | Custom theme settings |
-| **subscription.prisma** | SubscriptionTier, Subscription, Discount | SaaS billing and subscriptions |
-| **legal.prisma** | LegalDocument, LegalConsent | Legal compliance (FERPA, GDPR) |
-| **audit.prisma** | AuditLog | Audit trail for sensitive operations |
-| **task.prisma** | Task | Task management |
-| **quiz-game.prisma** | QuizGame, QuizQuestion | Gamification features |
+| File                           | Models                                                    | Description                                                    |
+| ------------------------------ | --------------------------------------------------------- | -------------------------------------------------------------- |
+| **auth.prisma**                | User, Account, Session, VerificationToken, TwoFactorToken | NextAuth v5 authentication tables                              |
+| **school.prisma**              | School, SchoolYear, Period, Term, YearLevel, Domain       | School structure and academic calendar                         |
+| **students.prisma**            | Student, Guardian, StudentGuardian, StudentYearLevel      | Student management                                             |
+| **staff.prisma**               | Teacher, Department, TeacherDepartment                    | Teacher and department management                              |
+| **subjects.prisma**            | Subject, Class, StudentClass, ScoreRange                  | Academic organization                                          |
+| **classrooms.prisma**          | Classroom, ClassroomType                                  | Physical classroom management                                  |
+| **attendance.prisma**          | Attendance                                                | Basic attendance tracking                                      |
+| **attendance-enhanced.prisma** | AttendanceEnhanced                                        | Period-wise attendance                                         |
+| **geo-attendance.prisma**      | GeoAttendance                                             | Location-based attendance                                      |
+| **assessments.prisma**         | Assignment, AssignmentSubmission                          | Assignments and grading                                        |
+| **exam.prisma**                | Exam, ExamSchedule, ExamResult                            | Exam management                                                |
+| **qbank.prisma**               | QuestionBank, Question                                    | Question bank for exams                                        |
+| **qbank-automation.prisma**    | QuestionBankAutomation                                    | Automated question generation                                  |
+| **finance.prisma**             | 50+ models (40,028 lines)                                 | Double-entry bookkeeping, fees, payments, invoices, accounting |
+| **admission.prisma**           | AdmissionCampaign, AdmissionApplication, MeritList        | Student admission process                                      |
+| **library.prisma**             | Book, BookInventory, BookIssue                            | Library management                                             |
+| **stream.prisma**              | Stream, StreamContent                                     | Learning Management System (LMS)                               |
+| **lessons.prisma**             | Lesson, LessonPlan                                        | Lesson planning and curriculum                                 |
+| **timetable.prisma**           | Timetable, SchoolWeekConfig                               | Class schedule and timetable                                   |
+| **announcement.prisma**        | Announcement                                              | Announcements and notifications                                |
+| **domain.prisma**              | Domain                                                    | Domain configuration for subdomains                            |
+| **branding.prisma**            | SchoolBranding                                            | School branding and theming                                    |
+| **theme.prisma**               | Theme                                                     | Custom theme settings                                          |
+| **subscription.prisma**        | SubscriptionTier, Subscription, Discount                  | SaaS billing and subscriptions                                 |
+| **legal.prisma**               | LegalDocument, LegalConsent                               | Legal compliance (FERPA, GDPR)                                 |
+| **audit.prisma**               | AuditLog                                                  | Audit trail for sensitive operations                           |
+| **task.prisma**                | Task                                                      | Task management                                                |
+| **quiz-game.prisma**           | QuizGame, QuizQuestion                                    | Gamification features                                          |
 
 ### Core Schema Relationships
 
@@ -776,7 +787,9 @@ type ServerActionResult<T> =
   | { error: string; details?: unknown }
 
 // Examples:
-async function createStudent(data: FormData): Promise<ServerActionResult<Student>>
+async function createStudent(
+  data: FormData
+): Promise<ServerActionResult<Student>>
 async function updateSchool(data: FormData): Promise<ServerActionResult<School>>
 async function deleteClass(classId: string): Promise<ServerActionResult<void>>
 ```
@@ -804,6 +817,7 @@ Response:
 ### Authentication & Authorization
 
 **NextAuth v5 Configuration:**
+
 - JWT strategy with 24-hour sessions
 - httpOnly cookies (prevents XSS theft)
 - Cross-subdomain cookies (`.databayt.org`)
@@ -812,63 +826,73 @@ Response:
 
 **8-Role RBAC System:**
 
-| Role | Description | schoolId | Access Level |
-|------|-------------|----------|--------------|
-| **DEVELOPER** | Platform admin | null | All schools |
-| **ADMIN** | School administrator | required | Full school access |
-| **TEACHER** | Teaching staff | required | Class-specific |
-| **STUDENT** | Enrolled students | required | Own data only |
-| **GUARDIAN** | Parents/guardians | required | Children's data only |
-| **ACCOUNTANT** | Finance staff | required | Finance features |
-| **STAFF** | General school staff | required | Limited access |
-| **USER** | Default role | required | Minimal access |
+| Role           | Description          | schoolId | Access Level         |
+| -------------- | -------------------- | -------- | -------------------- |
+| **DEVELOPER**  | Platform admin       | null     | All schools          |
+| **ADMIN**      | School administrator | required | Full school access   |
+| **TEACHER**    | Teaching staff       | required | Class-specific       |
+| **STUDENT**    | Enrolled students    | required | Own data only        |
+| **GUARDIAN**   | Parents/guardians    | required | Children's data only |
+| **ACCOUNTANT** | Finance staff        | required | Finance features     |
+| **STAFF**      | General school staff | required | Limited access       |
+| **USER**       | Default role         | required | Minimal access       |
 
 ### OWASP Top 10 Mitigation
 
 **1. Injection:**
+
 - ✅ Parameterized queries via Prisma (SQL injection prevention)
 - ✅ React auto-escaping (XSS prevention)
 - ✅ Zod validation at all boundaries
 
 **2. Broken Authentication:**
+
 - ✅ NextAuth v5 with secure defaults
 - ✅ httpOnly cookies
 - ✅ CSRF protection built-in
 
 **3. Sensitive Data Exposure:**
+
 - ✅ Never send sensitive data to client
 - ✅ Encryption at rest for sensitive fields
 - ✅ HTTPS only (enforced)
 
 **4. Access Control:**
+
 - ✅ Role-based authorization
 - ✅ Tenant isolation (schoolId verification)
 - ✅ Row-level security checks
 
 **5. Security Misconfiguration:**
+
 - ✅ Security headers (CSP, HSTS, X-Frame-Options)
 - ✅ Environment variable validation
 - ✅ Dependency scanning (Dependabot)
 
 **6. XSS:**
+
 - ✅ React auto-escaping
 - ✅ DOMPurify for rich text
 - ✅ Content Security Policy
 
 **7. Insecure Deserialization:**
+
 - ✅ Zod validation on all inputs
 - ✅ No eval() or Function() usage
 
 **8. Known Vulnerabilities:**
+
 - ✅ Automated dependency scanning
 - ✅ Regular updates via Renovate Bot
 
 **9. Logging & Monitoring:**
+
 - ✅ Comprehensive audit logging
 - ✅ Sentry error tracking
 - ✅ Vercel Analytics performance monitoring
 
 **10. Insufficient Logging:**
+
 - ✅ Audit logs for all sensitive operations
 - ✅ Request ID tracking
 - ✅ Error context capture
@@ -879,19 +903,20 @@ Response:
 
 ### Performance Targets
 
-| Metric | Target | Current (Prod) | Status |
-|--------|--------|----------------|--------|
-| **Lighthouse Score** | > 90 | 94 | ✅ |
-| **First Contentful Paint (FCP)** | < 1.5s | 1.2s | ✅ |
-| **Largest Contentful Paint (LCP)** | < 2.5s | 2.1s | ✅ |
-| **Time to Interactive (TTI)** | < 3.5s | 3.0s | ✅ |
-| **Cumulative Layout Shift (CLS)** | < 0.1 | 0.05 | ✅ |
-| **First Input Delay (FID)** | < 100ms | 80ms | ✅ |
-| **Server Response Time (TTFB)** | < 600ms | 450ms | ✅ |
+| Metric                             | Target  | Current (Prod) | Status |
+| ---------------------------------- | ------- | -------------- | ------ |
+| **Lighthouse Score**               | > 90    | 94             | ✅     |
+| **First Contentful Paint (FCP)**   | < 1.5s  | 1.2s           | ✅     |
+| **Largest Contentful Paint (LCP)** | < 2.5s  | 2.1s           | ✅     |
+| **Time to Interactive (TTI)**      | < 3.5s  | 3.0s           | ✅     |
+| **Cumulative Layout Shift (CLS)**  | < 0.1   | 0.05           | ✅     |
+| **First Input Delay (FID)**        | < 100ms | 80ms           | ✅     |
+| **Server Response Time (TTFB)**    | < 600ms | 450ms          | ✅     |
 
 ### Optimization Strategies
 
 **1. Image Optimization:**
+
 ```typescript
 import Image from "next/image"
 
@@ -906,6 +931,7 @@ import Image from "next/image"
 ```
 
 **2. Code Splitting:**
+
 ```typescript
 import dynamic from "next/dynamic"
 
@@ -917,12 +943,13 @@ const RichTextEditor = dynamic(() => import("./editor"), {
 ```
 
 **3. Database Query Optimization:**
+
 ```typescript
 // ❌ N+1 Query Problem
 const students = await db.student.findMany({ where: { schoolId } })
 for (const student of students) {
   const attendance = await db.attendance.count({
-    where: { studentId: student.id }
+    where: { studentId: student.id },
   })
 }
 
@@ -931,26 +958,28 @@ const students = await db.student.findMany({
   where: { schoolId },
   include: {
     _count: {
-      select: { attendance: { where: { status: "PRESENT" } } }
-    }
-  }
+      select: { attendance: { where: { status: "PRESENT" } } },
+    },
+  },
 })
 ```
 
 **4. Caching Strategy:**
+
 ```typescript
 // ✅ ISR for semi-static pages
-export const revalidate = 3600  // Revalidate every hour
+export const revalidate = 3600 // Revalidate every hour
 
 // ✅ SWR for client-side caching
 const { data } = useSWR("/api/stats", fetcher, {
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
-  dedupingInterval: 60000  // 1 minute
+  dedupingInterval: 60000, // 1 minute
 })
 ```
 
 **5. Database Indexes:**
+
 ```prisma
 model Student {
   @@index([schoolId])                    // Tenant isolation queries
@@ -1030,7 +1059,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -1060,7 +1089,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          vercel-args: "--prod"
 ```
 
 ### Environment Configuration
@@ -1160,11 +1189,13 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use subdomain-based routing (`school.databayt.org`) with shared database
 
 **Alternatives Considered:**
+
 1. **Path-based routing** (`databayt.org/schools/hogwarts`) - Rejected: Less professional, harder to brand
 2. **Separate databases per tenant** - Rejected: Cost prohibitive, complex backups, difficult migrations
 3. **Database schemas per tenant** - Rejected: PostgreSQL schema limitations, migration complexity
 
 **Rationale:**
+
 - ✅ Professional appearance (own subdomain)
 - ✅ School-specific branding per subdomain
 - ✅ OAuth redirect URLs work correctly
@@ -1173,6 +1204,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ Cross-tenant analytics for platform team
 
 **Consequences:**
+
 - **Positive:** Clean URL structure, easy branding, cost savings
 - **Negative:** Requires strict `schoolId` scoping in all queries (mitigated with patterns)
 
@@ -1189,11 +1221,13 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use Next.js Server Actions as primary API pattern
 
 **Alternatives Considered:**
+
 1. **REST API** (`/api/students POST`) - Rejected: Boilerplate heavy, serialization overhead
 2. **GraphQL** - Rejected: Overkill for CRUD operations, team unfamiliar
 3. **tRPC** - Rejected: Server Actions more native to Next.js
 
 **Rationale:**
+
 - ✅ Type-safe end-to-end (no serialization)
 - ✅ No API route boilerplate
 - ✅ Automatic form validation
@@ -1201,6 +1235,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ Progressive enhancement (works without JS)
 
 **Consequences:**
+
 - **Positive:** Faster development, fewer bugs, better DX
 - **Negative:** Tied to Next.js ecosystem (acceptable trade-off)
 
@@ -1217,11 +1252,13 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use Prisma ORM for all database operations
 
 **Alternatives Considered:**
+
 1. **Raw SQL** - Rejected: No type safety, prone to SQL injection
 2. **TypeORM** - Rejected: Less TypeScript-first, weaker migrations
 3. **Drizzle** - Rejected: Less mature ecosystem, fewer resources
 
 **Rationale:**
+
 - ✅ Excellent TypeScript support
 - ✅ Type-safe queries
 - ✅ Migration system built-in
@@ -1229,6 +1266,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ Active community
 
 **Consequences:**
+
 - **Positive:** Faster development, fewer SQL injection risks, better DX
 - **Negative:** Abstraction layer (mitigated by generated types)
 
@@ -1245,12 +1283,14 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use NextAuth v5 (Auth.js) with JWT strategy
 
 **Alternatives Considered:**
+
 1. **Clerk** - Rejected: Cost prohibitive for 5,000 schools
 2. **Auth0** - Rejected: Complex pricing, vendor lock-in
 3. **Supabase Auth** - Rejected: Tied to Supabase ecosystem
 4. **Custom JWT** - Rejected: Security risks, reinventing wheel
 
 **Rationale:**
+
 - ✅ Industry standard
 - ✅ OAuth providers built-in
 - ✅ JWT strategy (no database sessions)
@@ -1258,6 +1298,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ Multi-tenant compatible
 
 **Consequences:**
+
 - **Positive:** Robust authentication, OAuth support, cost savings
 - **Negative:** Beta version (v5) - mitigated by community support
 
@@ -1274,11 +1315,13 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use shadcn/ui (Radix UI primitives) with Tailwind CSS
 
 **Alternatives Considered:**
+
 1. **Material-UI** - Rejected: Opinionated design, bundle size
 2. **Ant Design** - Rejected: Chinese-centric, harder customization
 3. **Chakra UI** - Rejected: Runtime CSS-in-JS performance
 
 **Rationale:**
+
 - ✅ No dependency lock-in (copy components to codebase)
 - ✅ Highly customizable
 - ✅ Excellent accessibility (Radix UI)
@@ -1286,6 +1329,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ Modern design patterns
 
 **Consequences:**
+
 - **Positive:** Full control over components, no vendor lock-in, fast
 - **Negative:** Manual updates per component (acceptable)
 
@@ -1302,17 +1346,20 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use pnpm as package manager
 
 **Alternatives Considered:**
+
 1. **npm** - Rejected: Slower, uses more disk space
 2. **yarn** - Rejected: Less efficient than pnpm
 3. **yarn workspaces** - Rejected: Not needed (not a monorepo)
 
 **Rationale:**
+
 - ✅ Faster installations
 - ✅ Disk space efficient (content-addressable storage)
 - ✅ Strict dependencies (no phantom dependencies)
 - ✅ Required for Vercel deployment
 
 **Consequences:**
+
 - **Positive:** Faster CI/CD, disk savings, stricter dependency management
 - **Negative:** Requires pnpm installation (documented)
 
@@ -1329,17 +1376,20 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Use Vitest for unit tests
 
 **Alternatives Considered:**
+
 1. **Jest** - Rejected: Slower, less Vite-friendly
 2. **AVA** - Rejected: Less community support
 3. **Mocha** - Rejected: Requires too much configuration
 
 **Rationale:**
+
 - ✅ Vite-native (faster)
 - ✅ Jest-compatible API (easy migration)
 - ✅ ESM support out-of-the-box
 - ✅ Better TypeScript support
 
 **Consequences:**
+
 - **Positive:** Faster tests, better DX, Vite integration
 - **Negative:** Smaller ecosystem than Jest (acceptable)
 
@@ -1356,11 +1406,13 @@ pnpm test:e2e:debug     # Debug E2E tests
 **Decision:** Build custom i18n system with dictionary files
 
 **Alternatives Considered:**
+
 1. **next-intl** - Rejected: Overkill for 2 languages
 2. **react-i18next** - Rejected: Not Next.js optimized
 3. **next-translate** - Rejected: Less flexible
 
 **Rationale:**
+
 - ✅ Full control over implementation
 - ✅ Optimized for exactly 2 languages
 - ✅ RTL/LTR support built-in
@@ -1368,6 +1420,7 @@ pnpm test:e2e:debug     # Debug E2E tests
 - ✅ No external dependencies
 
 **Consequences:**
+
 - **Positive:** Lightweight, tailored solution, no dependencies
 - **Negative:** Manual implementation (documented patterns)
 
@@ -1389,18 +1442,18 @@ export function middleware(req: NextRequest) {
   const subdomain = extractSubdomain(req.headers.get("host"))
 
   const response = NextResponse.next()
-  response.headers.set("x-subdomain", subdomain)  // Cache subdomain
+  response.headers.set("x-subdomain", subdomain) // Cache subdomain
 
   return response
 }
 
 // src/lib/tenant-context.ts
 export async function getTenantContext() {
-  const subdomain = headers().get("x-subdomain")  // Read from header
+  const subdomain = headers().get("x-subdomain") // Read from header
 
   // Cache school lookup
   const school = await db.school.findUnique({
-    where: { domain: subdomain }
+    where: { domain: subdomain },
   })
 
   return { schoolId: school.id }
@@ -1408,6 +1461,7 @@ export async function getTenantContext() {
 ```
 
 **Benefits:**
+
 - Single database query per request (cached in headers)
 - Type-safe tenant context
 - Works in Server Components and Server Actions
@@ -1427,6 +1481,7 @@ src/components/platform/students/form.tsx
 ```
 
 **Benefits:**
+
 - Predictable file locations
 - Easy navigation
 - Clear mental model
@@ -1454,10 +1509,11 @@ type Dictionary = {
 
 // Type-checked dictionary access
 const dict = await getDictionary<Dictionary>(locale)
-const title = dict.students.title  // Type-safe access
+const title = dict.students.title // Type-safe access
 ```
 
 **Benefits:**
+
 - Compile-time checks for missing translations
 - Autocomplete for translation keys
 - Prevents runtime errors
@@ -1467,6 +1523,7 @@ const title = dict.students.title  // Type-safe access
 ## Appendix: Key File Locations
 
 **Core Configuration:**
+
 - `/next.config.ts` - Next.js configuration
 - `/prisma/schema.prisma` - Database schema
 - `/src/auth.ts` - Authentication configuration (867 lines)
@@ -1474,12 +1531,14 @@ const title = dict.students.title  // Type-safe access
 - `/src/env.mjs` - Environment variable validation
 
 **Key Utilities:**
+
 - `/src/lib/db.ts` - Prisma client singleton
 - `/src/lib/tenant-context.ts` - Multi-tenant context helper
 - `/src/lib/utils.ts` - Utility functions
 - `/src/routes.ts` - Route protection definitions
 
 **Documentation:**
+
 - `/PRD.md` - Product Requirements Document (25,000+ words)
 - `/epics.md` - Epic and story breakdown (12,000+ words, 190+ stories)
 - `/validation-report.md` - BMAD validation results (8,000+ words)

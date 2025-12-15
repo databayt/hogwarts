@@ -1,7 +1,7 @@
-import { type Locale } from '@/components/internationalization/config'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,17 +15,15 @@ export default async function ParentsLayout({ children, params }: Props) {
 
   // Parents page navigation (4 links)
   const parentsPages: PageNavItem[] = [
-    { name: d?.allParents || 'All', href: `/${lang}/parents` },
-    { name: 'Link', href: `/${lang}/parents/link` },
-    { name: 'Communication', href: `/${lang}/parents/communication` },
-    { name: 'Settings', href: `/${lang}/parents/settings` },
+    { name: d?.allParents || "All", href: `/${lang}/parents` },
+    { name: "Link", href: `/${lang}/parents/link` },
+    { name: "Communication", href: `/${lang}/parents/communication` },
+    { name: "Settings", href: `/${lang}/parents/settings` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Parents'}
-      />
+      <PageHeadingSetter title={d?.title || "Parents"} />
       <PageNav pages={parentsPages} />
       {children}
     </div>

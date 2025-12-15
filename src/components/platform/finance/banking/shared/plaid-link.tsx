@@ -1,23 +1,24 @@
-'use client'
+"use client"
 
-import { useCallback, useEffect, useState, useTransition } from 'react'
-import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { CircleAlert, LoaderCircle } from "lucide-react"
 import {
-  PlaidLinkOnSuccess,
   PlaidLinkOnExit,
+  PlaidLinkOnSuccess,
   PlaidLinkOptions,
   usePlaidLink,
-} from 'react-plaid-link'
-import { createBankAccount } from '@/components/platform/finance/banking/actions/bank.actions'
-import { LoaderCircle, CircleAlert } from "lucide-react"
-import { Alert, AlertDescription } from '@/components/ui/alert'
+} from "react-plaid-link"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { createBankAccount } from "@/components/platform/finance/banking/actions/bank.actions"
 
 interface PlaidLinkProps {
   user: {
     id: string
   }
-  variant?: 'default' | 'ghost'
+  variant?: "default" | "ghost"
   dictionary?: any
 }
 
@@ -34,9 +35,13 @@ interface LinkTokenError {
  * - Loading states with useTransition
  * - Memoized callbacks to prevent recreations
  */
-export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkProps) {
+export function PlaidLink({
+  user,
+  variant = "default",
+  dictionary,
+}: PlaidLinkProps) {
   const router = useRouter()
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -50,10 +55,10 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
         setIsLoading(true)
         setError(null)
 
-        const response = await fetch('/api/banking/create-link-token', {
-          method: 'POST',
+        const response = await fetch("/api/banking/create-link-token", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             userId: user.id,
@@ -62,7 +67,7 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
         })
 
         if (!response.ok) {
-          throw new Error('Failed to create link token')
+          throw new Error("Failed to create link token")
         }
 
         const data = await response.json()
@@ -74,15 +79,15 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
         setToken(data.link_token)
       } catch (err) {
         // Ignore abort errors
-        if (err instanceof Error && err.name === 'AbortError') {
+        if (err instanceof Error && err.name === "AbortError") {
           return
         }
 
-        console.error('Error fetching link token:', err)
+        console.error("Error fetching link token:", err)
         setError(
           err instanceof Error
             ? err.message
-            : 'Failed to initialize bank connection'
+            : "Failed to initialize bank connection"
         )
       } finally {
         setIsLoading(false)
@@ -105,10 +110,10 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
           setError(null)
 
           // Exchange public token for access token
-          const response = await fetch('/api/banking/exchange-token', {
-            method: 'POST',
+          const response = await fetch("/api/banking/exchange-token", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               publicToken: public_token,
@@ -117,7 +122,7 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
           })
 
           if (!response.ok) {
-            throw new Error('Failed to exchange token')
+            throw new Error("Failed to exchange token")
           }
 
           const { access_token, item_id } = await response.json()
@@ -128,22 +133,22 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
             bankId: item_id,
             accountId: metadata.accounts[0].id,
             accessToken: access_token,
-            fundingSourceUrl: '',
-            shareableId: '',
+            fundingSourceUrl: "",
+            shareableId: "",
           })
 
           if (bankAccount) {
-            router.push('/banking/my-banks')
+            router.push("/banking/my-banks")
             router.refresh()
           } else {
-            throw new Error('Failed to create bank account')
+            throw new Error("Failed to create bank account")
           }
         } catch (err) {
-          console.error('Error in onSuccess:', err)
+          console.error("Error in onSuccess:", err)
           setError(
             err instanceof Error
               ? err.message
-              : 'Failed to connect bank account'
+              : "Failed to connect bank account"
           )
         }
       })
@@ -152,15 +157,12 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
   )
 
   // Handle Plaid link exit
-  const onExit = useCallback<PlaidLinkOnExit>(
-    (err, metadata) => {
-      if (err) {
-        console.error('Plaid Link exited with error:', err)
-        setError(err.error_message || 'Connection cancelled')
-      }
-    },
-    []
-  )
+  const onExit = useCallback<PlaidLinkOnExit>((err, metadata) => {
+    if (err) {
+      console.error("Plaid Link exited with error:", err)
+      setError(err.error_message || "Connection cancelled")
+    }
+  }, [])
 
   // Configure Plaid Link
   const config: PlaidLinkOptions = {
@@ -200,11 +202,11 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {isPending
-              ? (dictionary?.connecting || 'Connecting...')
-              : (dictionary?.loading || 'Loading...')}
+              ? dictionary?.connecting || "Connecting..."
+              : dictionary?.loading || "Loading..."}
           </>
         ) : (
-          dictionary?.connectBank || 'Connect Bank Account'
+          dictionary?.connectBank || "Connect Bank Account"
         )}
       </Button>
     </div>

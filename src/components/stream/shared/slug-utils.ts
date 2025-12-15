@@ -1,5 +1,6 @@
-import slugify from "slugify";
-import { db } from "@/lib/db";
+import slugify from "slugify"
+
+import { db } from "@/lib/db"
 
 /**
  * Generate a URL-friendly slug from a string
@@ -16,7 +17,7 @@ export function generateSlug(text: string): string {
     lower: true,
     strict: true,
     trim: true,
-  });
+  })
 }
 
 /**
@@ -37,11 +38,10 @@ export async function generateUniqueCourseSlug(
   schoolId: string,
   excludeId?: string
 ): Promise<string> {
-  const baseSlug = generateSlug(title);
-  let slug = baseSlug;
-  let counter = 1;
+  const baseSlug = generateSlug(title)
+  let slug = baseSlug
+  let counter = 1
 
-   
   while (true) {
     const existing = await db.streamCourse.findFirst({
       where: {
@@ -49,14 +49,14 @@ export async function generateUniqueCourseSlug(
         schoolId,
         ...(excludeId ? { NOT: { id: excludeId } } : {}),
       },
-    });
+    })
 
     if (!existing) {
-      return slug;
+      return slug
     }
 
-    counter++;
-    slug = `${baseSlug}-${counter}`;
+    counter++
+    slug = `${baseSlug}-${counter}`
   }
 }
 
@@ -69,8 +69,8 @@ export async function generateUniqueCourseSlug(
 export function isValidSlug(slug: string): boolean {
   // Must be lowercase alphanumeric with hyphens only
   // Must start and end with alphanumeric
-  const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-  return slugRegex.test(slug);
+  const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  return slugRegex.test(slug)
 }
 
 /**
@@ -81,5 +81,5 @@ export function isValidSlug(slug: string): boolean {
  * @returns Slug preview
  */
 export function generateSlugPreview(title: string): string {
-  return generateSlug(title);
+  return generateSlug(title)
 }

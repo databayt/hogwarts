@@ -1,26 +1,27 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
-import type { UserRole } from "./role-management";
+import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+import { auth } from "@/auth"
 
-const PREVIEW_ROLE_COOKIE = "preview-role";
-const PREVIEW_MODE_COOKIE = "preview-mode";
+import type { UserRole } from "./role-management"
+
+const PREVIEW_ROLE_COOKIE = "preview-role"
+const PREVIEW_MODE_COOKIE = "preview-mode"
 
 /**
  * Set a preview role for testing purposes
  * This allows users to temporarily switch roles to see different views
  */
 export async function setPreviewRole(role: UserRole) {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   // Get the current user's actual role
-  const userRole = session.user.role;
+  const userRole = session.user.role
 
   // Check if user has permission to preview roles
   // Allow DEVELOPER and ADMIN to preview any role
@@ -31,7 +32,7 @@ export async function setPreviewRole(role: UserRole) {
   }
 
   // Set cookies for preview mode
-  const cookieStore = await cookies();
+  const cookieStore = await cookies()
 
   // Set preview role cookie with same domain config as auth cookies
   cookieStore.set(PREVIEW_ROLE_COOKIE, role, {
@@ -40,8 +41,8 @@ export async function setPreviewRole(role: UserRole) {
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 days (longer persistence)
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
-  });
+    domain: process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
+  })
 
   // Set preview mode flag with same domain config as auth cookies
   cookieStore.set(PREVIEW_MODE_COOKIE, "true", {
@@ -50,57 +51,57 @@ export async function setPreviewRole(role: UserRole) {
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 days (longer persistence)
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
-  });
+    domain: process.env.NODE_ENV === "production" ? ".databayt.org" : undefined,
+  })
 
   // Revalidate all paths to reflect the new role
-  revalidatePath("/", "layout");
+  revalidatePath("/", "layout")
 
-  return { success: true, role };
+  return { success: true, role }
 }
 
 /**
  * Clear preview role and return to actual role
  */
 export async function clearPreviewRole() {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  const cookieStore = await cookies();
+  const cookieStore = await cookies()
 
   // Delete preview cookies
-  cookieStore.delete(PREVIEW_ROLE_COOKIE);
-  cookieStore.delete(PREVIEW_MODE_COOKIE);
+  cookieStore.delete(PREVIEW_ROLE_COOKIE)
+  cookieStore.delete(PREVIEW_MODE_COOKIE)
 
   // Revalidate all paths
-  revalidatePath("/", "layout");
+  revalidatePath("/", "layout")
 
-  return { success: true };
+  return { success: true }
 }
 
 /**
  * Get current preview role if active
  */
 export async function getPreviewRole(): Promise<UserRole | null> {
-  const cookieStore = await cookies();
-  const previewRole = cookieStore.get(PREVIEW_ROLE_COOKIE);
-  const previewMode = cookieStore.get(PREVIEW_MODE_COOKIE);
+  const cookieStore = await cookies()
+  const previewRole = cookieStore.get(PREVIEW_ROLE_COOKIE)
+  const previewMode = cookieStore.get(PREVIEW_MODE_COOKIE)
 
   if (previewMode?.value === "true" && previewRole?.value) {
-    return previewRole.value as UserRole;
+    return previewRole.value as UserRole
   }
 
-  return null;
+  return null
 }
 
 /**
  * Check if preview mode is active
  */
 export async function isPreviewModeActive(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const previewMode = cookieStore.get(PREVIEW_MODE_COOKIE);
-  return previewMode?.value === "true";
+  const cookieStore = await cookies()
+  const previewMode = cookieStore.get(PREVIEW_MODE_COOKIE)
+  return previewMode?.value === "true"
 }

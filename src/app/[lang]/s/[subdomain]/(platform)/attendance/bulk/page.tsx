@@ -1,14 +1,21 @@
-import { type Locale } from '@/components/internationalization/config'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Pencil, QrCode, Barcode, Upload, MapPin, Clock } from 'lucide-react'
-import Link from 'next/link'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
+import Link from "next/link"
+import { Barcode, Clock, MapPin, Pencil, QrCode, Upload } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { type Locale } from "@/components/internationalization/config"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Bulk Attendance',
-    description: 'Take attendance using various methods',
+    title: "Bulk Attendance",
+    description: "Take attendance using various methods",
   }
 }
 
@@ -18,45 +25,45 @@ interface Props {
 
 const methods = [
   {
-    id: 'manual',
+    id: "manual",
     icon: Pencil,
-    href: 'manual',
-    color: 'bg-emerald-100 text-emerald-600',
+    href: "manual",
+    color: "bg-emerald-100 text-emerald-600",
     recommended: true,
   },
   {
-    id: 'qr',
+    id: "qr",
     icon: QrCode,
-    href: 'qr-code',
-    color: 'bg-purple-100 text-purple-600',
+    href: "qr-code",
+    color: "bg-purple-100 text-purple-600",
     recommended: false,
   },
   {
-    id: 'barcode',
+    id: "barcode",
     icon: Barcode,
-    href: 'barcode',
-    color: 'bg-blue-100 text-blue-600',
+    href: "barcode",
+    color: "bg-blue-100 text-blue-600",
     recommended: false,
   },
   {
-    id: 'upload',
+    id: "upload",
     icon: Upload,
-    href: 'bulk-upload',
-    color: 'bg-orange-100 text-orange-600',
+    href: "bulk-upload",
+    color: "bg-orange-100 text-orange-600",
     recommended: false,
   },
   {
-    id: 'geo',
+    id: "geo",
     icon: MapPin,
-    href: 'geo',
-    color: 'bg-pink-100 text-pink-600',
+    href: "geo",
+    color: "bg-pink-100 text-pink-600",
     recommended: false,
   },
   {
-    id: 'realtime',
+    id: "realtime",
     icon: Clock,
-    href: 'realtime',
-    color: 'bg-cyan-100 text-cyan-600',
+    href: "realtime",
+    color: "bg-cyan-100 text-cyan-600",
     recommended: false,
   },
 ]
@@ -68,28 +75,30 @@ export default async function Page({ params }: Props) {
   // Define method metadata
   const methodMeta = {
     manual: {
-      title: 'Manual Entry',
-      description: 'Mark attendance manually for a class by selecting students and their status',
+      title: "Manual Entry",
+      description:
+        "Mark attendance manually for a class by selecting students and their status",
     },
     qr: {
-      title: 'QR Code',
-      description: 'Generate QR codes for students to scan and check-in automatically',
+      title: "QR Code",
+      description:
+        "Generate QR codes for students to scan and check-in automatically",
     },
     barcode: {
-      title: 'Barcode Scanner',
-      description: 'Scan student ID barcodes for quick check-in',
+      title: "Barcode Scanner",
+      description: "Scan student ID barcodes for quick check-in",
     },
     upload: {
-      title: 'Bulk Upload',
-      description: 'Import attendance records from CSV or Excel files',
+      title: "Bulk Upload",
+      description: "Import attendance records from CSV or Excel files",
     },
     geo: {
-      title: 'Geofence',
-      description: 'Automatic check-in when students enter school premises',
+      title: "Geofence",
+      description: "Automatic check-in when students enter school premises",
     },
     realtime: {
-      title: 'Live Tracking',
-      description: 'Real-time attendance monitoring and live updates',
+      title: "Live Tracking",
+      description: "Real-time attendance monitoring and live updates",
     },
   }
 
@@ -110,16 +119,21 @@ export default async function Page({ params }: Props) {
           const Icon = method.icon
 
           return (
-            <Card key={method.id} className="relative overflow-hidden hover:shadow-md transition-shadow">
+            <Card
+              key={method.id}
+              className="relative overflow-hidden transition-shadow hover:shadow-md"
+            >
               {method.recommended && (
                 <div className="absolute top-3 right-3">
-                  <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                  <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
                     Recommended
                   </span>
                 </div>
               )}
               <CardHeader className="pb-3">
-                <div className={`w-12 h-12 rounded-lg ${method.color} flex items-center justify-center mb-3`}>
+                <div
+                  className={`h-12 w-12 rounded-lg ${method.color} mb-3 flex items-center justify-center`}
+                >
                   <Icon className="h-6 w-6" />
                 </div>
                 <CardTitle className="text-lg">{meta.title}</CardTitle>
@@ -129,9 +143,7 @@ export default async function Page({ params }: Props) {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full">
-                  <Link href={`${basePath}/${method.href}`}>
-                    Start
-                  </Link>
+                  <Link href={`${basePath}/${method.href}`}>Start</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -145,10 +157,11 @@ export default async function Page({ params }: Props) {
           <CardTitle className="text-base">Quick Tips</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="text-muted-foreground space-y-2 text-sm">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              Use Manual Entry for small classes or when taking attendance for the first time
+              Use Manual Entry for small classes or when taking attendance for
+              the first time
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
@@ -160,7 +173,8 @@ export default async function Page({ params }: Props) {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              Bulk Upload is ideal for importing historical data or external records
+              Bulk Upload is ideal for importing historical data or external
+              records
             </li>
           </ul>
         </CardContent>

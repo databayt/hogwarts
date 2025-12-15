@@ -39,7 +39,7 @@ export const docsConfig: DocsConfig = {
   ],
   sidebarNav: [
     {
-      title: "",  // No section title for flat structure
+      title: "", // No section title for flat structure
       items: [
         { title: "Introduction", href: "/docs", items: [] },
         { title: "Pitch", href: "/docs/pitch", items: [] },

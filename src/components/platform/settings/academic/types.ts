@@ -78,7 +78,7 @@ export interface Period {
   yearId: string
   name: string
   startTime: string // HH:MM format
-  endTime: string   // HH:MM format
+  endTime: string // HH:MM format
   createdAt: Date
   updatedAt: Date
   // Related data

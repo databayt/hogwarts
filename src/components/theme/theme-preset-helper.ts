@@ -5,9 +5,11 @@
  * Based on tweakcn's theme-preset-helper.ts pattern.
  */
 
-import type { ThemeStyles } from '@/types/theme-editor'
-import { useThemePresetStore } from '@/store/theme-preset-store'
-import { defaultThemeState } from './config'
+import { useThemePresetStore } from "@/store/theme-preset-store"
+
+import type { ThemeStyles } from "@/types/theme-editor"
+
+import { defaultThemeState } from "./config"
 
 /**
  * Get theme styles for a preset by name
@@ -22,7 +24,7 @@ export function getPresetThemeStyles(name: string): ThemeStyles {
   const defaultTheme = defaultThemeState.styles
 
   // Return default theme for 'default' preset
-  if (name === 'default') {
+  if (name === "default") {
     return defaultTheme
   }
 

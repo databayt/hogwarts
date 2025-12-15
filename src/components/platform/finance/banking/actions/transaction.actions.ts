@@ -1,13 +1,15 @@
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { parseStringify } from '../lib/utils'
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { parseStringify } from "../lib/utils"
 
 export async function getTransactionsByBankId({
   bankAccountId,
   page = 1,
-  limit = 10
+  limit = 10,
 }: {
   bankAccountId: string
   page?: number
@@ -27,28 +29,28 @@ export async function getTransactionsByBankId({
     const transactions = await db.transaction.findMany({
       where: {
         bankAccountId,
-        schoolId // Multi-tenant isolation
+        schoolId, // Multi-tenant isolation
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
       take: limit,
-      skip
+      skip,
     })
 
     const total = await db.transaction.count({
       where: {
         bankAccountId,
-        schoolId // Multi-tenant isolation
-      }
+        schoolId, // Multi-tenant isolation
+      },
     })
 
     return parseStringify({
       data: transactions,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error('Error getting transactions:', error)
+    console.error("Error getting transactions:", error)
     return null
   }
 }
@@ -56,7 +58,7 @@ export async function getTransactionsByBankId({
 export async function getTransactionsByUserId({
   userId,
   page = 1,
-  limit = 20
+  limit = 20,
 }: {
   userId: string
   page?: number
@@ -77,51 +79,51 @@ export async function getTransactionsByUserId({
     const bankAccounts = await db.bankAccount.findMany({
       where: {
         userId,
-        schoolId // Multi-tenant isolation
+        schoolId, // Multi-tenant isolation
       },
-      select: { id: true }
+      select: { id: true },
     })
 
-    const bankAccountIds = bankAccounts.map(account => account.id)
+    const bankAccountIds = bankAccounts.map((account) => account.id)
 
     // Get all transactions for these bank accounts
     const transactions = await db.transaction.findMany({
       where: {
         bankAccountId: {
-          in: bankAccountIds
+          in: bankAccountIds,
         },
-        schoolId // Multi-tenant isolation
+        schoolId, // Multi-tenant isolation
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
       take: limit,
       skip,
       include: {
         bankAccount: {
           select: {
             name: true,
-            officialName: true
-          }
-        }
-      }
+            officialName: true,
+          },
+        },
+      },
     })
 
     const total = await db.transaction.count({
       where: {
         bankAccountId: {
-          in: bankAccountIds
+          in: bankAccountIds,
         },
-        schoolId // Multi-tenant isolation
-      }
+        schoolId, // Multi-tenant isolation
+      },
     })
 
     return parseStringify({
       data: transactions,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     })
   } catch (error) {
-    console.error('Error getting user transactions:', error)
+    console.error("Error getting user transactions:", error)
     return null
   }
 }

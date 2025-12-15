@@ -5,34 +5,45 @@
  * Real-time student location tracking with Leaflet.js
  * Features: WebSocket updates, polling fallback, geofence visualization
  */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import {
+  CircleAlert,
+  LoaderCircle,
+  MapPin,
+  RefreshCw,
+  Users,
+} from "lucide-react"
+import { toast } from "sonner"
 
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { MapPin, RefreshCw, Users, LoaderCircle, CircleAlert } from "lucide-react";
-import dynamic from 'next/dynamic'
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 // Dynamically import Leaflet components (SSR compatibility)
 const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false }
 )
 const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  () => import("react-leaflet").then((mod) => mod.TileLayer),
   { ssr: false }
 )
 const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
+  () => import("react-leaflet").then((mod) => mod.Marker),
   { ssr: false }
 )
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-)
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+})
 const Circle = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Circle),
+  () => import("react-leaflet").then((mod) => mod.Circle),
   { ssr: false }
 )
 
@@ -86,13 +97,16 @@ export function GeoLiveMap({
   useWebSocket = true,
 }: GeoLiveMapProps) {
   // State
-  const [locations, setLocations] = useState<StudentLocation[]>(initialLocations)
+  const [locations, setLocations] =
+    useState<StudentLocation[]>(initialLocations)
   const [geofences, setGeofences] = useState<Geofence[]>(initialGeofences)
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
-  const [connectionType, setConnectionType] = useState<'websocket' | 'polling' | null>(null)
+  const [connectionType, setConnectionType] = useState<
+    "websocket" | "polling" | null
+  >(null)
 
   // Refs
   const wsRef = useRef<WebSocket | null>(null)
@@ -109,7 +123,9 @@ export function GeoLiveMap({
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/geo/live?schoolId=${schoolId}&maxAgeMinutes=5`)
+      const response = await fetch(
+        `/api/geo/live?schoolId=${schoolId}&maxAgeMinutes=5`
+      )
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
@@ -127,8 +143,8 @@ export function GeoLiveMap({
         setLastUpdate(new Date())
       }
     } catch (error) {
-      console.error('Error fetching locations:', error)
-      setError('Failed to fetch locations')
+      console.error("Error fetching locations:", error)
+      setError("Failed to fetch locations")
     } finally {
       setIsLoading(false)
     }
@@ -148,23 +164,23 @@ export function GeoLiveMap({
       }
 
       // Determine WebSocket URL
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
       const host = window.location.host
       const wsUrl = `${protocol}//${host}/api/geo/ws`
 
       const ws = new WebSocket(wsUrl)
 
       ws.onopen = () => {
-        console.log('WebSocket connected')
+        console.log("WebSocket connected")
         setIsConnected(true)
-        setConnectionType('websocket')
+        setConnectionType("websocket")
         setError(null)
         reconnectAttemptsRef.current = 0
 
         // Subscribe to school's geofence channel
         ws.send(
           JSON.stringify({
-            type: 'subscribe',
+            type: "subscribe",
             schoolId,
           })
         )
@@ -174,10 +190,10 @@ export function GeoLiveMap({
         try {
           const message = JSON.parse(event.data)
 
-          if (message.type === 'welcome' || message.type === 'subscribed') {
-            console.log('WebSocket:', message)
-            toast.success('Connected to live location updates')
-          } else if (message.channel?.startsWith('geo_location_')) {
+          if (message.type === "welcome" || message.type === "subscribed") {
+            console.log("WebSocket:", message)
+            toast.success("Connected to live location updates")
+          } else if (message.channel?.startsWith("geo_location_")) {
             // Real-time location update
             const locationData = message.data
 
@@ -204,7 +220,7 @@ export function GeoLiveMap({
                   ...prev,
                   {
                     studentId: locationData.studentId,
-                    studentName: 'Student', // Will be populated on next full fetch
+                    studentName: "Student", // Will be populated on next full fetch
                     lat: locationData.lat,
                     lon: locationData.lon,
                     accuracy: locationData.accuracy,
@@ -217,31 +233,38 @@ export function GeoLiveMap({
             })
 
             setLastUpdate(new Date())
-          } else if (message.channel?.startsWith('geo_event_')) {
+          } else if (message.channel?.startsWith("geo_event_")) {
             // Geofence event (ENTER/EXIT)
             const eventData = message.data
-            toast.info(`${eventData.studentName || 'Student'} ${eventData.eventType.toLowerCase()}ed ${eventData.geofenceName || 'geofence'}`)
+            toast.info(
+              `${eventData.studentName || "Student"} ${eventData.eventType.toLowerCase()}ed ${eventData.geofenceName || "geofence"}`
+            )
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error)
+          console.error("Error parsing WebSocket message:", error)
         }
       }
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-        setError('WebSocket connection error')
+        console.error("WebSocket error:", error)
+        setError("WebSocket connection error")
       }
 
       ws.onclose = () => {
-        console.log('WebSocket closed')
+        console.log("WebSocket closed")
         setIsConnected(false)
 
         // Attempt reconnection with exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000)
+        const delay = Math.min(
+          1000 * Math.pow(2, reconnectAttemptsRef.current),
+          30000
+        )
         reconnectAttemptsRef.current++
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log(`Reconnecting WebSocket (attempt ${reconnectAttemptsRef.current})...`)
+          console.log(
+            `Reconnecting WebSocket (attempt ${reconnectAttemptsRef.current})...`
+          )
           connectWebSocket()
         }, delay)
 
@@ -253,8 +276,8 @@ export function GeoLiveMap({
 
       wsRef.current = ws
     } catch (error) {
-      console.error('Error connecting WebSocket:', error)
-      setError('Failed to connect WebSocket')
+      console.error("Error connecting WebSocket:", error)
+      setError("Failed to connect WebSocket")
       startPolling() // Fallback to polling
     }
   }, [useWebSocket, schoolId])
@@ -266,8 +289,8 @@ export function GeoLiveMap({
   const startPolling = useCallback(() => {
     if (pollingIntervalRef.current) return // Already polling
 
-    console.log('Starting polling fallback')
-    setConnectionType('polling')
+    console.log("Starting polling fallback")
+    setConnectionType("polling")
 
     // Initial fetch
     fetchLocations()
@@ -350,14 +373,12 @@ export function GeoLiveMap({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={isConnected ? 'default' : 'secondary'}>
-              {connectionType === 'websocket' && (
-                <>
-                  {isConnected ? '🟢' : '🔴'} WebSocket
-                </>
+            <Badge variant={isConnected ? "default" : "secondary"}>
+              {connectionType === "websocket" && (
+                <>{isConnected ? "🟢" : "🔴"} WebSocket</>
               )}
-              {connectionType === 'polling' && '🟡 Polling'}
-              {!connectionType && 'Connecting...'}
+              {connectionType === "polling" && "🟡 Polling"}
+              {!connectionType && "Connecting..."}
             </Badge>
             <Badge variant="outline">
               <Users className="mr-1 h-3 w-3" />
@@ -369,7 +390,7 @@ export function GeoLiveMap({
       <CardContent className="space-y-4">
         {/* Controls */}
         <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-muted-foreground text-sm">
             {lastUpdate && (
               <span>Last update: {lastUpdate.toLocaleTimeString()}</span>
             )}
@@ -391,18 +412,18 @@ export function GeoLiveMap({
 
         {/* Error Message */}
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-            <CircleAlert className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="border-destructive/50 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <p>{error}</p>
           </div>
         )}
 
         {/* Map */}
-        <div className="h-[600px] rounded-lg overflow-hidden border">
+        <div className="h-[600px] overflow-hidden rounded-lg border">
           <MapContainer
             center={center}
             zoom={zoom}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: "100%", width: "100%" }}
             bounds={mapBounds ?? undefined}
           >
             <TileLayer
@@ -412,23 +433,30 @@ export function GeoLiveMap({
 
             {/* Geofences */}
             {geofences
-              .filter((g) => g.isActive && g.centerLat && g.centerLon && g.radiusMeters)
+              .filter(
+                (g) =>
+                  g.isActive && g.centerLat && g.centerLon && g.radiusMeters
+              )
               .map((geofence) => (
                 <Circle
                   key={geofence.id}
                   center={[geofence.centerLat!, geofence.centerLon!]}
                   radius={geofence.radiusMeters!}
                   pathOptions={{
-                    color: geofence.color || '#3b82f6',
-                    fillColor: geofence.color || '#3b82f6',
+                    color: geofence.color || "#3b82f6",
+                    fillColor: geofence.color || "#3b82f6",
                     fillOpacity: 0.2,
                   }}
                 >
                   <Popup>
                     <div className="text-sm">
                       <p className="font-medium">{geofence.name}</p>
-                      <p className="text-xs text-muted-foreground">{geofence.type}</p>
-                      <p className="text-xs">Radius: {geofence.radiusMeters}m</p>
+                      <p className="text-muted-foreground text-xs">
+                        {geofence.type}
+                      </p>
+                      <p className="text-xs">
+                        Radius: {geofence.radiusMeters}m
+                      </p>
                     </div>
                   </Popup>
                 </Circle>
@@ -441,13 +469,15 @@ export function GeoLiveMap({
                 position={[location.lat, location.lon]}
               >
                 <Popup>
-                  <div className="text-sm space-y-1">
+                  <div className="space-y-1 text-sm">
                     <p className="font-medium">{location.studentName}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {location.timestamp.toLocaleTimeString()}
                     </p>
                     {location.accuracy && (
-                      <p className="text-xs">Accuracy: ±{Math.round(location.accuracy)}m</p>
+                      <p className="text-xs">
+                        Accuracy: ±{Math.round(location.accuracy)}m
+                      </p>
                     )}
                     {location.battery !== null && (
                       <p className="text-xs">Battery: {location.battery}%</p>
@@ -466,10 +496,12 @@ export function GeoLiveMap({
 
         {/* Student List */}
         {locations.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            <MapPin className="mx-auto h-12 w-12 mb-2 opacity-20" />
+          <div className="text-muted-foreground py-8 text-center">
+            <MapPin className="mx-auto mb-2 h-12 w-12 opacity-20" />
             <p>No students currently tracked</p>
-            <p className="text-sm">Student locations will appear when they enable tracking</p>
+            <p className="text-sm">
+              Student locations will appear when they enable tracking
+            </p>
           </div>
         )}
       </CardContent>

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Assignments validation schema tests
@@ -12,7 +12,17 @@ describe("Assignment Validation Schemas", () => {
     dueDate: z.string().min(1, "Due date is required"),
     maxScore: z.number().positive().default(100),
     weight: z.number().min(0).max(100).optional(), // Percentage weight
-    type: z.enum(["HOMEWORK", "PROJECT", "QUIZ", "TEST", "LAB", "PRESENTATION", "OTHER"]).default("HOMEWORK"),
+    type: z
+      .enum([
+        "HOMEWORK",
+        "PROJECT",
+        "QUIZ",
+        "TEST",
+        "LAB",
+        "PRESENTATION",
+        "OTHER",
+      ])
+      .default("HOMEWORK"),
     status: z.enum(["DRAFT", "PUBLISHED", "CLOSED", "GRADED"]).default("DRAFT"),
     instructions: z.string().optional(),
     attachments: z.array(z.string()).optional(),
@@ -26,15 +36,21 @@ describe("Assignment Validation Schemas", () => {
     id: z.string().min(1, "ID is required"),
   })
 
-  const submissionSchema = z.object({
-    assignmentId: z.string().min(1, "Assignment is required"),
-    studentId: z.string().min(1, "Student is required"),
-    content: z.string().optional(),
-    attachments: z.array(z.string()).optional(),
-    submittedAt: z.string().optional(),
-  }).refine((data) => data.content || (data.attachments && data.attachments.length > 0), {
-    message: "Either content or attachments are required",
-  })
+  const submissionSchema = z
+    .object({
+      assignmentId: z.string().min(1, "Assignment is required"),
+      studentId: z.string().min(1, "Student is required"),
+      content: z.string().optional(),
+      attachments: z.array(z.string()).optional(),
+      submittedAt: z.string().optional(),
+    })
+    .refine(
+      (data) =>
+        data.content || (data.attachments && data.attachments.length > 0),
+      {
+        message: "Either content or attachments are required",
+      }
+    )
 
   const gradeSubmissionSchema = z.object({
     submissionId: z.string().min(1, "Submission is required"),
@@ -79,11 +95,21 @@ describe("Assignment Validation Schemas", () => {
       }
 
       expect(assignmentCreateSchema.safeParse(missingTitle).success).toBe(false)
-      expect(assignmentCreateSchema.safeParse(missingDueDate).success).toBe(false)
+      expect(assignmentCreateSchema.safeParse(missingDueDate).success).toBe(
+        false
+      )
     })
 
     it("validates assignment type enum", () => {
-      const validTypes = ["HOMEWORK", "PROJECT", "QUIZ", "TEST", "LAB", "PRESENTATION", "OTHER"]
+      const validTypes = [
+        "HOMEWORK",
+        "PROJECT",
+        "QUIZ",
+        "TEST",
+        "LAB",
+        "PRESENTATION",
+        "OTHER",
+      ]
 
       validTypes.forEach((type) => {
         const data = {
@@ -130,7 +156,9 @@ describe("Assignment Validation Schemas", () => {
       }
 
       expect(assignmentCreateSchema.safeParse(validWeight).success).toBe(true)
-      expect(assignmentCreateSchema.safeParse(invalidWeight).success).toBe(false)
+      expect(assignmentCreateSchema.safeParse(invalidWeight).success).toBe(
+        false
+      )
     })
 
     it("applies defaults", () => {
@@ -244,7 +272,9 @@ describe("Assignment Validation Schemas", () => {
         score: -10,
       }
 
-      expect(gradeSubmissionSchema.safeParse(missingSubmission).success).toBe(false)
+      expect(gradeSubmissionSchema.safeParse(missingSubmission).success).toBe(
+        false
+      )
       expect(gradeSubmissionSchema.safeParse(negativeScore).success).toBe(false)
     })
 

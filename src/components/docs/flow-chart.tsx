@@ -1,9 +1,29 @@
 "use client"
 
-import { ArrowRight, Building2, Layers, LayoutPanelLeft, Users, CreditCard, Globe, Settings, School, Calendar, BookOpenCheck, ClipboardList, Presentation, BarChart3, Megaphone } from "lucide-react"
 import type { ComponentType, SVGProps } from "react"
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpenCheck,
+  Building2,
+  Calendar,
+  ClipboardList,
+  CreditCard,
+  Globe,
+  Layers,
+  LayoutPanelLeft,
+  Megaphone,
+  Presentation,
+  School,
+  Settings,
+  Users,
+} from "lucide-react"
 
-type Node = { id: string; label: string; icon?: ComponentType<SVGProps<SVGSVGElement>> }
+type Node = {
+  id: string
+  label: string
+  icon?: ComponentType<SVGProps<SVGSVGElement>>
+}
 type Edge = { from: string; to: string; note?: string }
 
 export function FlowChart({
@@ -28,15 +48,34 @@ export function FlowChart({
           const FromIcon = nodeById[e.from]?.icon ?? LayoutPanelLeft
           const ToIcon = nodeById[e.to]?.icon ?? Layers
           return (
-            <div key={`${e.from}-${e.to}-${i}`} className="flex items-center gap-3">
-              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}>
-                {showIcons ? <FromIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} /> : null}
+            <div
+              key={`${e.from}-${e.to}-${i}`}
+              className="flex items-center gap-3"
+            >
+              <div
+                className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}
+              >
+                {showIcons ? (
+                  <FromIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} />
+                ) : null}
                 <span>{nodeById[e.from]?.label ?? e.from}</span>
               </div>
-              <ArrowRight className={`${large ? "h-6 w-6" : "h-4 w-4"} text-muted-foreground`} />
-              {e.note && <span className={`${large ? "text-xs" : "text-[10px]"} text-muted-foreground`}>{e.note}</span>}
-              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}>
-                {showIcons ? <ToIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} /> : null}
+              <ArrowRight
+                className={`${large ? "h-6 w-6" : "h-4 w-4"} text-muted-foreground`}
+              />
+              {e.note && (
+                <span
+                  className={`${large ? "text-xs" : "text-[10px]"} text-muted-foreground`}
+                >
+                  {e.note}
+                </span>
+              )}
+              <div
+                className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}
+              >
+                {showIcons ? (
+                  <ToIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} />
+                ) : null}
                 <span>{nodeById[e.to]?.label ?? e.to}</span>
               </div>
             </div>
@@ -107,7 +146,9 @@ export function FullProcessFlow() {
     { from: "assignments", to: "reports" },
     { from: "reports", to: "announce" },
   ]
-  return <FlowChart nodes={nodes} edges={edges} title="Full Process Flow" large />
+  return (
+    <FlowChart nodes={nodes} edges={edges} title="Full Process Flow" large />
+  )
 }
 
 export function CompactOneFlow() {
@@ -136,7 +177,13 @@ export function CompactOneFlow() {
     { from: "setup", to: "classes" },
     { from: "classes", to: "ops" },
   ]
-  return <FlowChart nodes={nodes} edges={edges} title="End-to-end User Flow" large={false} showIcons={false} />
+  return (
+    <FlowChart
+      nodes={nodes}
+      edges={edges}
+      title="End-to-end User Flow"
+      large={false}
+      showIcons={false}
+    />
+  )
 }
-
-

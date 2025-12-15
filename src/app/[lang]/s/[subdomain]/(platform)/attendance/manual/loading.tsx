@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ManualAttendanceLoading() {
   return (
@@ -16,7 +16,7 @@ export default function ManualAttendanceLoading() {
       {/* Controls */}
       <Card className="p-4">
         <CardContent className="p-0">
-          <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <Skeleton className="h-8 w-56" />
             <Skeleton className="h-8 w-44" />
             <div className="ml-auto flex gap-2">

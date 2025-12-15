@@ -1,26 +1,23 @@
-import { currentUser } from "@/components/auth/auth"
-import UserProfileDropDown from "./user-profile-dropdown"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { currentUser } from "@/components/auth/auth"
 
-export default async function DashboardHeader(){
-    const user = await currentUser()
-    return(
-       <header className="sticky top-0 h-14  w-full border-b backdrop-blur-3xl flex items-center px-4">
-            <SidebarTrigger/>
-            <div>
-                Welcome <span className="font-semibold">
-                    <span>{user?.name ?? "-"}</span>
-                </span>
-            </div>
+import UserProfileDropDown from "./user-profile-dropdown"
 
-            <div className="ml-auto w-fit">
-                <UserProfileDropDown
-                    isArrowUp={false}
-                    isFullName={false}
-                />
-            </div>
-       </header>
-    )
+export default async function DashboardHeader() {
+  const user = await currentUser()
+  return (
+    <header className="sticky top-0 flex h-14 w-full items-center border-b px-4 backdrop-blur-3xl">
+      <SidebarTrigger />
+      <div>
+        Welcome{" "}
+        <span className="font-semibold">
+          <span>{user?.name ?? "-"}</span>
+        </span>
+      </div>
+
+      <div className="ml-auto w-fit">
+        <UserProfileDropDown isArrowUp={false} isFullName={false} />
+      </div>
+    </header>
+  )
 }
-
-

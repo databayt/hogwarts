@@ -21,10 +21,10 @@
  * TODO: Implement with Prisma or remove if unused
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 // import { NextRequest, NextResponse } from "next/server";
 // import { connectDB } from "@/lib/connectDB";
@@ -82,7 +82,7 @@ export async function GET() {
 //         recentInvoice,
 //         chartData,
 //     })
- 
+
 //   } catch (error: any) {
 //     console.log(error)
 //     return NextResponse.json({

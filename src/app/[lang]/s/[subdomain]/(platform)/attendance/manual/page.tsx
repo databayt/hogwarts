@@ -1,17 +1,22 @@
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import { AttendanceContent } from '@/components/platform/attendance/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
+import { auth } from "@/auth"
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceContent } from "@/components/platform/attendance/content"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary?.school?.attendance?.manual || 'Manual Attendance',
-    description: 'Mark attendance manually for your class',
+    title: dictionary?.school?.attendance?.manual || "Manual Attendance",
+    description: "Mark attendance manually for your class",
   }
 }
 
@@ -28,9 +33,9 @@ export default async function Page({ params }: Props) {
   ])
 
   // Check permissions
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER') {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "TEACHER") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2>Access Denied</h2>
         <p className="text-muted-foreground">
           You do not have permission to access manual attendance marking.
@@ -42,8 +47,8 @@ export default async function Page({ params }: Props) {
   return (
     <AttendanceProvider initialMethod="MANUAL">
       <div className="space-y-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-blue-100 rounded-lg">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-lg bg-blue-100 p-3">
             <svg
               className="h-6 w-6 text-blue-600"
               fill="none"

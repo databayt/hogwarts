@@ -9,6 +9,7 @@ model: sonnet
 **Specialization**: Tailwind CSS 4, utility-first patterns, RTL/LTR support
 
 ## Expertise
+
 - Tailwind CSS 4 utilities
 - Responsive design
 - Dark mode
@@ -17,6 +18,7 @@ model: sonnet
 - Custom configurations
 
 ## Project Setup
+
 - **Version**: Tailwind CSS 4
 - **Config**: `tailwind.config.ts`
 - **Theme**: Extended with custom colors
@@ -25,6 +27,7 @@ model: sonnet
 ## Utility Patterns
 
 ### 1. Component Styling with cn()
+
 ```typescript
 import { cn } from '@/lib/utils'
 
@@ -36,6 +39,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### 2. Responsive Design
+
 ```typescript
 <div className="
   grid
@@ -47,6 +51,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### 3. Dark Mode
+
 ```typescript
 <div className="
   bg-white dark:bg-gray-900
@@ -55,6 +60,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### 4. RTL/LTR Support
+
 ```typescript
 // Directional utilities
 <div className="ps-4 pe-2">  // start/end padding
@@ -67,6 +73,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### 5. Animation
+
 ```typescript
 <div className="
   transition-all
@@ -81,6 +88,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ## Theme Variables
+
 ```css
 /* Project uses CSS variables for theming */
 --background: 0 0% 100%;
@@ -98,6 +106,7 @@ import { cn } from '@/lib/utils'
 ## Common Patterns
 
 ### Card Component
+
 ```typescript
 <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
   <h3 className="text-2xl font-semibold leading-none tracking-tight">
@@ -110,6 +119,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### Form Layout
+
 ```typescript
 <div className="space-y-4">
   <div className="space-y-2">
@@ -122,6 +132,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### Grid System
+
 ```typescript
 <div className="container mx-auto px-4">
   <div className="grid grid-cols-12 gap-6">
@@ -132,6 +143,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ### Table Styling
+
 ```typescript
 <table className="w-full caption-bottom text-sm">
   <thead className="[&_tr]:border-b">
@@ -150,6 +162,7 @@ import { cn } from '@/lib/utils'
 ```
 
 ## Best Practices
+
 - [ ] Use semantic color variables (primary, secondary, etc.)
 - [ ] Apply directional utilities for RTL support
 - [ ] Group related utilities
@@ -160,6 +173,7 @@ import { cn } from '@/lib/utils'
 - [ ] Maintain consistent spacing scale
 
 ## Class Order (Prettier Plugin)
+
 1. Layout (display, position)
 2. Flexbox/Grid
 3. Spacing (margin, padding)

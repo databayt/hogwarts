@@ -3,53 +3,66 @@
  * Main composition component for file uploads
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { FileCategory, FileType, StorageProvider, StorageTier } from "../types";
-import { Uploader } from "./uploader";
-import { BatchUploadProgress } from "./upload-progress";
-import type { UploadResult } from "./use-upload";
-import type { UploadProgress } from "../types";
+import * as React from "react"
+import { useState } from "react"
+
+import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import type {
+  FileCategory,
+  FileType,
+  StorageProvider,
+  StorageTier,
+  UploadProgress,
+} from "../types"
+import { BatchUploadProgress } from "./upload-progress"
+import { Uploader } from "./uploader"
+import type { UploadResult } from "./use-upload"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface UploadContentProps {
-  title?: string;
-  description?: string;
-  category?: FileCategory;
-  type?: FileType;
-  folder?: string;
-  provider?: StorageProvider;
-  tier?: StorageTier;
-  maxSize?: number;
-  maxFiles?: number;
-  showTabs?: boolean;
+  title?: string
+  description?: string
+  category?: FileCategory
+  type?: FileType
+  folder?: string
+  provider?: StorageProvider
+  tier?: StorageTier
+  maxSize?: number
+  maxFiles?: number
+  showTabs?: boolean
   tabs?: Array<{
-    id: string;
-    label: string;
-    category: FileCategory;
-    type?: FileType;
-    maxSize?: number;
-    accept?: Record<string, string[]>;
-  }>;
-  onUploadComplete?: (results: UploadResult[]) => void;
-  onUploadError?: (error: string) => void;
-  className?: string;
+    id: string
+    label: string
+    category: FileCategory
+    type?: FileType
+    maxSize?: number
+    accept?: Record<string, string[]>
+  }>
+  onUploadComplete?: (results: UploadResult[]) => void
+  onUploadError?: (error: string) => void
+  className?: string
   dictionary?: {
-    title?: string;
-    description?: string;
-    images?: string;
-    documents?: string;
-    videos?: string;
-    other?: string;
-  };
+    title?: string
+    description?: string
+    images?: string
+    documents?: string
+    videos?: string
+    other?: string
+  }
 }
 
 // ============================================================================
@@ -81,7 +94,7 @@ const defaultTabs = [
     category: "other" as FileCategory,
     maxSize: 100 * 1024 * 1024, // 100MB
   },
-];
+]
 
 // ============================================================================
 // Component
@@ -104,14 +117,14 @@ export function UploadContent({
   className,
   dictionary,
 }: UploadContentProps) {
-  const [activeTab, setActiveTab] = useState(tabs[0]?.id || "images");
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([]);
+  const [activeTab, setActiveTab] = useState(tabs[0]?.id || "images")
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([])
 
   const handleUploadComplete = (results: UploadResult[]) => {
-    setUploadedFiles((prev) => [...prev, ...results]);
-    onUploadComplete?.(results);
-  };
+    setUploadedFiles((prev) => [...prev, ...results])
+    onUploadComplete?.(results)
+  }
 
   const handleFilesChange = (files: UploadResult[]) => {
     // Update progress tracking
@@ -120,9 +133,9 @@ export function UploadContent({
       fileName: f.originalName || `file-${idx}`,
       progress: 100,
       status: "success" as const,
-    }));
-    setUploadProgress(progressItems);
-  };
+    }))
+    setUploadProgress(progressItems)
+  }
 
   // ============================================================================
   // Tabbed Interface
@@ -133,7 +146,9 @@ export function UploadContent({
       <Card className={cn("w-full", className)}>
         <CardHeader>
           <CardTitle>{dictionary?.title || title}</CardTitle>
-          <CardDescription>{dictionary?.description || description}</CardDescription>
+          <CardDescription>
+            {dictionary?.description || description}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -172,7 +187,7 @@ export function UploadContent({
           )}
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // ============================================================================
@@ -183,7 +198,9 @@ export function UploadContent({
     <Card className={cn("w-full", className)}>
       <CardHeader>
         <CardTitle>{dictionary?.title || title}</CardTitle>
-        <CardDescription>{dictionary?.description || description}</CardDescription>
+        <CardDescription>
+          {dictionary?.description || description}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Uploader
@@ -207,7 +224,7 @@ export function UploadContent({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // ============================================================================
@@ -223,10 +240,10 @@ export function AvatarUpload({
   currentImage,
   className,
 }: {
-  onUploadComplete?: (result: UploadResult) => void;
-  onUploadError?: (error: string) => void;
-  currentImage?: string;
-  className?: string;
+  onUploadComplete?: (result: UploadResult) => void
+  onUploadError?: (error: string) => void
+  currentImage?: string
+  className?: string
 }) {
   return (
     <Uploader
@@ -237,10 +254,12 @@ export function AvatarUpload({
       maxSize={2 * 1024 * 1024} // 2MB
       maxFiles={1}
       className={className}
-      onUploadComplete={(results) => results[0] && onUploadComplete?.(results[0])}
+      onUploadComplete={(results) =>
+        results[0] && onUploadComplete?.(results[0])
+      }
       onUploadError={onUploadError}
     />
-  );
+  )
 }
 
 /**
@@ -251,9 +270,9 @@ export function LogoUpload({
   onUploadError,
   className,
 }: {
-  onUploadComplete?: (result: UploadResult) => void;
-  onUploadError?: (error: string) => void;
-  className?: string;
+  onUploadComplete?: (result: UploadResult) => void
+  onUploadError?: (error: string) => void
+  className?: string
 }) {
   return (
     <Uploader
@@ -263,10 +282,12 @@ export function LogoUpload({
       maxSize={5 * 1024 * 1024} // 5MB
       maxFiles={1}
       className={className}
-      onUploadComplete={(results) => results[0] && onUploadComplete?.(results[0])}
+      onUploadComplete={(results) =>
+        results[0] && onUploadComplete?.(results[0])
+      }
       onUploadError={onUploadError}
     />
-  );
+  )
 }
 
 /**
@@ -278,10 +299,10 @@ export function DocumentUpload({
   maxFiles = 10,
   className,
 }: {
-  onUploadComplete?: (results: UploadResult[]) => void;
-  onUploadError?: (error: string) => void;
-  maxFiles?: number;
-  className?: string;
+  onUploadComplete?: (results: UploadResult[]) => void
+  onUploadError?: (error: string) => void
+  maxFiles?: number
+  className?: string
 }) {
   return (
     <Uploader
@@ -293,7 +314,7 @@ export function DocumentUpload({
       onUploadComplete={onUploadComplete}
       onUploadError={onUploadError}
     />
-  );
+  )
 }
 
 /**
@@ -305,10 +326,10 @@ export function AssignmentUpload({
   maxFiles = 5,
   className,
 }: {
-  onUploadComplete?: (results: UploadResult[]) => void;
-  onUploadError?: (error: string) => void;
-  maxFiles?: number;
-  className?: string;
+  onUploadComplete?: (results: UploadResult[]) => void
+  onUploadError?: (error: string) => void
+  maxFiles?: number
+  className?: string
 }) {
   return (
     <Uploader
@@ -321,7 +342,7 @@ export function AssignmentUpload({
       onUploadComplete={onUploadComplete}
       onUploadError={onUploadError}
     />
-  );
+  )
 }
 
-export type { UploadContentProps };
+export type { UploadContentProps }

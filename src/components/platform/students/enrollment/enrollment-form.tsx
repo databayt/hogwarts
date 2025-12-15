@@ -1,37 +1,72 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, CircleCheck, Info, TriangleAlert, Users, BookOpen, CreditCard, FileText } from "lucide-react";
-import { enrollmentSchema, type EnrollmentFormInput } from "./validation";
-import type { Student, Batch } from "../registration/types";
-import type { Course, Subject, Section } from "./types";
-import { toast } from "sonner";
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import {
+  BookOpen,
+  Calendar as CalendarIcon,
+  CircleCheck,
+  CreditCard,
+  FileText,
+  Info,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+
+import type { Batch, Student } from "../registration/types"
+import type { Course, Section, Subject } from "./types"
+import { enrollmentSchema, type EnrollmentFormInput } from "./validation"
 
 interface EnrollmentFormProps {
-  student?: Student;
-  batches: Batch[];
-  courses: Course[];
-  subjects: Subject[];
-  sections: Section[];
-  onSubmit: (data: EnrollmentFormInput) => Promise<void>;
-  onCancel: () => void;
+  student?: Student
+  batches: Batch[]
+  courses: Course[]
+  subjects: Subject[]
+  sections: Section[]
+  onSubmit: (data: EnrollmentFormInput) => Promise<void>
+  onCancel: () => void
 }
 
 export function EnrollmentForm({
@@ -43,9 +78,9 @@ export function EnrollmentForm({
   onSubmit,
   onCancel,
 }: EnrollmentFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   const form = useForm<EnrollmentFormInput>({
     resolver: zodResolver(enrollmentSchema) as any,
@@ -60,56 +95,58 @@ export function EnrollmentForm({
       libraryAccess: true,
       labAccess: true,
     },
-  });
+  })
 
-  const enrollmentType = form.watch("enrollmentType");
-  const selectedBatchId = form.watch("batchId");
-  const selectedCourseId = form.watch("courseId");
+  const enrollmentType = form.watch("enrollmentType")
+  const selectedBatchId = form.watch("batchId")
+  const selectedCourseId = form.watch("courseId")
 
   // ListFilter subjects based on selected course
   const courseSubjects = selectedCourse
-    ? subjects.filter(s => selectedCourse.subjects?.some(cs => cs.id === s.id))
-    : subjects;
+    ? subjects.filter((s) =>
+        selectedCourse.subjects?.some((cs) => cs.id === s.id)
+      )
+    : subjects
 
-  const mandatorySubjects = courseSubjects.filter(s => s.type === "MANDATORY");
-  const electiveSubjects = courseSubjects.filter(s => s.type === "ELECTIVE");
-  const languageSubjects = courseSubjects.filter(s => s.type === "LANGUAGE");
+  const mandatorySubjects = courseSubjects.filter((s) => s.type === "MANDATORY")
+  const electiveSubjects = courseSubjects.filter((s) => s.type === "ELECTIVE")
+  const languageSubjects = courseSubjects.filter((s) => s.type === "LANGUAGE")
 
   // ListFilter sections based on selected batch
-  const batchSections = sections.filter(s => s.batchId === selectedBatchId);
+  const batchSections = sections.filter((s) => s.batchId === selectedBatchId)
 
   const handleSubmit = async (data: EnrollmentFormInput) => {
     try {
-      setIsSubmitting(true);
-      await onSubmit(data);
-      toast.success("Student enrolled successfully");
+      setIsSubmitting(true)
+      await onSubmit(data)
+      toast.success("Student enrolled successfully")
     } catch (error) {
-      toast.error("Failed to enroll student");
-      console.error(error);
+      toast.error("Failed to enroll student")
+      console.error(error)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <Tabs defaultValue="student" className="space-y-4">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="student">
-              <Users className="h-4 w-4 mr-2" />
+              <Users className="mr-2 h-4 w-4" />
               Student
             </TabsTrigger>
             <TabsTrigger value="academic">
-              <BookOpen className="h-4 w-4 mr-2" />
+              <BookOpen className="mr-2 h-4 w-4" />
               Academic
             </TabsTrigger>
             <TabsTrigger value="fees">
-              <CreditCard className="h-4 w-4 mr-2" />
+              <CreditCard className="mr-2 h-4 w-4" />
               Fees & Services
             </TabsTrigger>
             <TabsTrigger value="documents">
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="mr-2 h-4 w-4" />
               Documents
             </TabsTrigger>
           </TabsList>
@@ -128,7 +165,10 @@ export function EnrollmentForm({
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
-                      Enrolling: <strong>{student.givenName} {student.surname}</strong>
+                      Enrolling:{" "}
+                      <strong>
+                        {student.givenName} {student.surname}
+                      </strong>
                       {student.grNumber && ` (${student.grNumber})`}
                     </AlertDescription>
                   </Alert>
@@ -141,7 +181,10 @@ export function EnrollmentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Enrollment Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select enrollment type" />
@@ -150,7 +193,9 @@ export function EnrollmentForm({
                           <SelectContent>
                             <SelectItem value="NEW">New Admission</SelectItem>
                             <SelectItem value="TRANSFER">Transfer</SelectItem>
-                            <SelectItem value="READMISSION">Readmission</SelectItem>
+                            <SelectItem value="READMISSION">
+                              Readmission
+                            </SelectItem>
                             <SelectItem value="PROMOTION">Promotion</SelectItem>
                           </SelectContent>
                         </Select>
@@ -176,7 +221,9 @@ export function EnrollmentForm({
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                {field.value
+                                  ? format(field.value, "PPP")
+                                  : "Pick a date"}
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -185,7 +232,10 @@ export function EnrollmentForm({
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                              disabled={(date) =>
+                                date > new Date() ||
+                                date < new Date("1900-01-01")
+                              }
                               initialFocus
                             />
                           </PopoverContent>
@@ -196,9 +246,12 @@ export function EnrollmentForm({
                   />
                 </div>
 
-                {(enrollmentType === "TRANSFER" || enrollmentType === "READMISSION") && (
-                  <div className="space-y-4 pt-4 border-t">
-                    <h4 className="text-sm font-medium">Previous Institution Details</h4>
+                {(enrollmentType === "TRANSFER" ||
+                  enrollmentType === "READMISSION") && (
+                  <div className="space-y-4 border-t pt-4">
+                    <h4 className="text-sm font-medium">
+                      Previous Institution Details
+                    </h4>
 
                     <FormField
                       control={form.control}
@@ -207,7 +260,10 @@ export function EnrollmentForm({
                         <FormItem>
                           <FormLabel>Previous School</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter previous school name" {...field} />
+                            <Input
+                              placeholder="Enter previous school name"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -219,7 +275,12 @@ export function EnrollmentForm({
                       name="transferReason"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Reason for {enrollmentType === "TRANSFER" ? "Transfer" : "Readmission"}</FormLabel>
+                          <FormLabel>
+                            Reason for{" "}
+                            {enrollmentType === "TRANSFER"
+                              ? "Transfer"
+                              : "Readmission"}
+                          </FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Provide detailed reason..."
@@ -254,7 +315,10 @@ export function EnrollmentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Academic Year</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select academic year" />
@@ -278,9 +342,9 @@ export function EnrollmentForm({
                         <FormLabel>Batch</FormLabel>
                         <Select
                           onValueChange={(value) => {
-                            field.onChange(value);
-                            const batch = batches.find(b => b.id === value);
-                            setSelectedBatch(batch || null);
+                            field.onChange(value)
+                            const batch = batches.find((b) => b.id === value)
+                            setSelectedBatch(batch || null)
                           }}
                           defaultValue={field.value}
                         >
@@ -292,7 +356,8 @@ export function EnrollmentForm({
                           <SelectContent>
                             {batches.map((batch) => (
                               <SelectItem key={batch.id} value={batch.id}>
-                                {batch.name} ({batch.currentStrength}/{batch.maxCapacity})
+                                {batch.name} ({batch.currentStrength}/
+                                {batch.maxCapacity})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -310,9 +375,9 @@ export function EnrollmentForm({
                         <FormLabel>Course (Optional)</FormLabel>
                         <Select
                           onValueChange={(value) => {
-                            field.onChange(value);
-                            const course = courses.find(c => c.id === value);
-                            setSelectedCourse(course || null);
+                            field.onChange(value)
+                            const course = courses.find((c) => c.id === value)
+                            setSelectedCourse(course || null)
                           }}
                           defaultValue={field.value}
                         >
@@ -343,7 +408,10 @@ export function EnrollmentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Section (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select section" />
@@ -352,7 +420,8 @@ export function EnrollmentForm({
                           <SelectContent>
                             {batchSections.map((section) => (
                               <SelectItem key={section.id} value={section.id}>
-                                Section {section.name} ({section.currentStrength}/{section.capacity})
+                                Section {section.name} (
+                                {section.currentStrength}/{section.capacity})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -364,7 +433,7 @@ export function EnrollmentForm({
                 </div>
 
                 {/* Subject Selection */}
-                <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-4 border-t pt-4">
                   <h4 className="text-sm font-medium">Subject Selection</h4>
 
                   {/* Mandatory Subjects */}
@@ -377,22 +446,30 @@ export function EnrollmentForm({
                         <FormDescription>
                           These subjects are required for the selected course
                         </FormDescription>
-                        <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div className="mt-2 grid grid-cols-2 gap-3">
                           {mandatorySubjects.map((subject) => (
-                            <div key={subject.id} className="flex items-center space-x-2">
+                            <div
+                              key={subject.id}
+                              className="flex items-center space-x-2"
+                            >
                               <Checkbox
                                 checked={field.value?.includes(subject.id)}
                                 onCheckedChange={(checked) => {
                                   const updated = checked
                                     ? [...(field.value || []), subject.id]
-                                    : field.value?.filter(id => id !== subject.id) || [];
-                                  field.onChange(updated);
+                                    : field.value?.filter(
+                                        (id) => id !== subject.id
+                                      ) || []
+                                  field.onChange(updated)
                                 }}
                               />
-                              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                 {subject.name} ({subject.code})
                                 {subject.credits && (
-                                  <Badge variant="outline" className="ml-2 text-xs">
+                                  <Badge
+                                    variant="outline"
+                                    className="ml-2 text-xs"
+                                  >
                                     {subject.credits} credits
                                   </Badge>
                                 )}
@@ -416,22 +493,30 @@ export function EnrollmentForm({
                           <FormDescription>
                             Choose optional subjects based on student preference
                           </FormDescription>
-                          <div className="grid grid-cols-2 gap-3 mt-2">
+                          <div className="mt-2 grid grid-cols-2 gap-3">
                             {electiveSubjects.map((subject) => (
-                              <div key={subject.id} className="flex items-center space-x-2">
+                              <div
+                                key={subject.id}
+                                className="flex items-center space-x-2"
+                              >
                                 <Checkbox
                                   checked={field.value?.includes(subject.id)}
                                   onCheckedChange={(checked) => {
                                     const updated = checked
                                       ? [...(field.value || []), subject.id]
-                                      : field.value?.filter(id => id !== subject.id) || [];
-                                    field.onChange(updated);
+                                      : field.value?.filter(
+                                          (id) => id !== subject.id
+                                        ) || []
+                                    field.onChange(updated)
                                   }}
                                 />
-                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                   {subject.name} ({subject.code})
                                   {subject.credits && (
-                                    <Badge variant="outline" className="ml-2 text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="ml-2 text-xs"
+                                    >
                                       {subject.credits} credits
                                     </Badge>
                                   )}
@@ -453,7 +538,10 @@ export function EnrollmentForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Language Preference</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select language" />
@@ -491,7 +579,9 @@ export function EnrollmentForm({
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "PPP") : "Pick a date"}
+                              {field.value
+                                ? format(field.value, "PPP")
+                                : "Pick a date"}
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -530,15 +620,22 @@ export function EnrollmentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fee Structure (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select fee structure" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="standard">Standard Fee</SelectItem>
-                            <SelectItem value="subsidized">Subsidized Fee</SelectItem>
+                            <SelectItem value="standard">
+                              Standard Fee
+                            </SelectItem>
+                            <SelectItem value="subsidized">
+                              Subsidized Fee
+                            </SelectItem>
                             <SelectItem value="premium">Premium Fee</SelectItem>
                           </SelectContent>
                         </Select>
@@ -553,16 +650,25 @@ export function EnrollmentForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Scholarship (Optional)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select scholarship" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="merit">Merit Scholarship</SelectItem>
-                            <SelectItem value="sports">Sports Scholarship</SelectItem>
-                            <SelectItem value="need">Need-Based Scholarship</SelectItem>
+                            <SelectItem value="merit">
+                              Merit Scholarship
+                            </SelectItem>
+                            <SelectItem value="sports">
+                              Sports Scholarship
+                            </SelectItem>
+                            <SelectItem value="need">
+                              Need-Based Scholarship
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -581,7 +687,9 @@ export function EnrollmentForm({
                             type="number"
                             placeholder="0-100"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                            onChange={(e) =>
+                              field.onChange(e.target.valueAsNumber)
+                            }
                           />
                         </FormControl>
                         <FormDescription>
@@ -593,7 +701,7 @@ export function EnrollmentForm({
                   />
                 </div>
 
-                <div className="space-y-4 pt-4 border-t">
+                <div className="space-y-4 border-t pt-4">
                   <h4 className="text-sm font-medium">Additional Services</h4>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -601,7 +709,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="transportRequired"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -622,7 +730,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="hostelRequired"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -643,7 +751,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="libraryAccess"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -664,7 +772,7 @@ export function EnrollmentForm({
                       control={form.control}
                       name="labAccess"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -710,7 +818,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="transferCertificate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -731,7 +839,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="previousMarksheets"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -752,7 +860,7 @@ export function EnrollmentForm({
                     control={form.control}
                     name="migrationCertificate"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-y-0 space-x-3">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -798,11 +906,13 @@ export function EnrollmentForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <CircleCheck className="mr-2 h-4 w-4 animate-spin" />}
+            {isSubmitting && (
+              <CircleCheck className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {isSubmitting ? "Enrolling..." : "Enroll Student"}
           </Button>
         </div>
       </form>
     </Form>
-  );
+  )
 }

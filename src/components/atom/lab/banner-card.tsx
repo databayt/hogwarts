@@ -1,12 +1,13 @@
-'use client'
-
+"use client"
 "use client"
 
 import * as React from "react"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Info, AlertTriangle, CheckCircle, AlertCircle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+
 import type { CardSize } from "./types"
 
 interface BannerCardProps {
@@ -140,12 +141,12 @@ export function BannerCard({
       <CardContent className={cn(sizeClasses[size])}>
         <div className="flex items-start gap-4">
           {/* Icon */}
-          <div className={cn("shrink-0 mt-0.5", iconColors[variant])}>
+          <div className={cn("mt-0.5 shrink-0", iconColors[variant])}>
             {icon || <Icon className="h-5 w-5" />}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0 space-y-2">
+          <div className="min-w-0 flex-1 space-y-2">
             <h5 className="leading-tight">{title}</h5>
             {description && <p className="muted">{description}</p>}
             {action && <div className="pt-1">{action}</div>}
@@ -156,7 +157,7 @@ export function BannerCard({
             <Button
               variant="ghost"
               size="sm"
-              className="shrink-0 -mt-1 -mr-2 h-8 w-8 p-0"
+              className="-mt-1 -mr-2 h-8 w-8 shrink-0 p-0"
               onClick={handleDismiss}
               aria-label="Dismiss"
             >

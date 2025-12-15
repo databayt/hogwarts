@@ -1,8 +1,8 @@
-import CreateEventContent from '@/components/platform/events/create/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import CreateEventContent from "@/components/platform/events/create/content"
 
-export const metadata = { title: 'Dashboard: Create Event' }
+export const metadata = { title: "Dashboard: Create Event" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

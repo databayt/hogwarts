@@ -1,14 +1,14 @@
 // Auto-Marking System Validation Schemas
 
-import { z } from "zod"
 import {
-  QuestionType,
-  DifficultyLevel,
   BloomLevel,
+  DifficultyLevel,
   GradingMethod,
-  SubmissionType,
   MarkingStatus,
+  QuestionType,
+  SubmissionType,
 } from "@prisma/client"
+import { z } from "zod"
 
 // ========== Question Bank Schemas ==========
 
@@ -18,21 +18,22 @@ export const questionOptionSchema = z.object({
   explanation: z.string().optional(),
 })
 
-export const createQuestionSchema = z.object({
-  subjectId: z.string().min(1, "Subject is required"),
-  questionText: z.string().min(10, "Question must be at least 10 characters"),
-  questionType: z.nativeEnum(QuestionType),
-  difficulty: z.nativeEnum(DifficultyLevel),
-  bloomLevel: z.nativeEnum(BloomLevel),
-  points: z.number().min(1).max(100),
-  timeEstimate: z.number().min(1).optional(),
-  options: z.array(questionOptionSchema).optional(),
-  acceptedAnswers: z.array(z.string()).optional(),
-  sampleAnswer: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  explanation: z.string().optional(),
-  imageUrl: z.string().url().optional(),
-})
+export const createQuestionSchema = z
+  .object({
+    subjectId: z.string().min(1, "Subject is required"),
+    questionText: z.string().min(10, "Question must be at least 10 characters"),
+    questionType: z.nativeEnum(QuestionType),
+    difficulty: z.nativeEnum(DifficultyLevel),
+    bloomLevel: z.nativeEnum(BloomLevel),
+    points: z.number().min(1).max(100),
+    timeEstimate: z.number().min(1).optional(),
+    options: z.array(questionOptionSchema).optional(),
+    acceptedAnswers: z.array(z.string()).optional(),
+    sampleAnswer: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    explanation: z.string().optional(),
+    imageUrl: z.string().url().optional(),
+  })
   .refine(
     (data) => {
       // MCQ must have at least 2 options
@@ -55,7 +56,8 @@ export const createQuestionSchema = z.object({
       return true
     },
     {
-      message: "Multiple choice questions must have at least one correct answer",
+      message:
+        "Multiple choice questions must have at least one correct answer",
       path: ["options"],
     }
   )
@@ -98,14 +100,15 @@ export const updateRubricSchema = createRubricSchema.partial()
 
 // ========== Student Answer Schemas ==========
 
-export const submitAnswerSchema = z.object({
-  examId: z.string().min(1, "Exam ID is required"),
-  questionId: z.string().min(1, "Question ID is required"),
-  submissionType: z.nativeEnum(SubmissionType),
-  answerText: z.string().optional(),
-  selectedOptionIds: z.array(z.string()).optional(),
-  uploadUrl: z.string().url().optional(),
-})
+export const submitAnswerSchema = z
+  .object({
+    examId: z.string().min(1, "Exam ID is required"),
+    questionId: z.string().min(1, "Question ID is required"),
+    submissionType: z.nativeEnum(SubmissionType),
+    answerText: z.string().optional(),
+    selectedOptionIds: z.array(z.string()).optional(),
+    uploadUrl: z.string().url().optional(),
+  })
   .refine(
     (data) => {
       // At least one answer field must be provided

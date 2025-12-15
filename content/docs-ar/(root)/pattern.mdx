@@ -10,6 +10,7 @@ description: "الأنماط تتخلل كل طبقة من تطوير البرم
 ## اصطلاحات التسمية
 
 ### الملفات والمجلدات
+
 - **المكونات**: kebab-case للملفات (`button.tsx`، `user-profile.tsx`)
 - **الصفحات**: kebab-case لشرائح المسار (`user-profile`، `sign-in`)
 - **الخطافات**: اصطلاح البادئة use (`use-leads.ts`، `use-upwork.ts`)
@@ -17,12 +18,14 @@ description: "الأنماط تتخلل كل طبقة من تطوير البرم
 - **الثوابت**: UPPER_SNAKE_CASE أو camelCase للكائنات
 
 ### المتغيرات والدوال
+
 - **المكونات**: PascalCase (`export function UserCard()`)
 - **الدوال**: camelCase (`export function formatCurrency()`)
 - **المتغيرات**: camelCase (`const userData = await fetchUser()`)
 - **الثوابت**: SCREAMING_SNAKE_CASE (`const API_BASE_URL = 'https://api.example.com'`)
 
 ### قاعدة البيانات وAPI
+
 - **جداول قاعدة البيانات**: snake_case (`user_profiles`، `order_items`)
 - **مسارات API**: kebab-case (`/api/user-profile`، `/api/order-history`)
 - **متغيرات البيئة**: SCREAMING_SNAKE_CASE (`DATABASE_URL`، `NEXT_PUBLIC_API_KEY`)
@@ -53,41 +56,45 @@ description: "الأنماط تتخلل كل طبقة من تطوير البرم
 {`export function UserProfile({ userId }: Props) {
   const { user, loading } = useUser(userId)
 
-  if (loading) return <Skeleton />
-  return <div>{user.name}</div>
+if (loading) return <Skeleton />
+return <div>{user.name}</div>
 }`}
-    </pre>
+
+</pre>
+
   </div>
 </div>
 
 ## إجراءات الخادم وجلب البيانات
 
 ### نمط إجراءات الخادم
+
 نستخدم إجراءات خادم Next.js لإرسال النماذج وتغييرات البيانات:
 
 ```typescript
-'use server'
+"use server"
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 export async function createUser(formData: FormData) {
   const userData = {
-    name: formData.get('name') as string,
-    email: formData.get('email') as string,
+    name: formData.get("name") as string,
+    email: formData.get("email") as string,
   }
 
   try {
     await db.user.create({ data: userData })
-    revalidatePath('/users')
-    redirect('/users')
+    revalidatePath("/users")
+    redirect("/users")
   } catch (error) {
-    throw new Error('Failed to create user')
+    throw new Error("Failed to create user")
   }
 }
 ```
 
 ### تسلسل جلب البيانات
+
 - **مكونات الخادم**: استعلامات قاعدة بيانات مباشرة للبيانات الأولية
 - **مكونات العميل**: React Query/SWR للبيانات التفاعلية
 - **إجراءات الخادم**: إرسال النماذج والتغييرات
@@ -96,6 +103,7 @@ export async function createUser(formData: FormData) {
 ## بنية المكونات
 
 ### هيكل التصميم الذري
+
 ```
 components/
 ├── atom/           # عناصر أساسية (Button، Input، Icon)
@@ -110,6 +118,7 @@ components/
 نمط المرآة يضمن أن كل ميزة تتبع هيكلاً متسقاً ومتوقعاً. كل دليل ميزة يحتوي نفس أنواع الملفات.
 
 ### هيكل الميزة
+
 ```
 components/<feature>/
 ├── content.tsx      # تركيب UI الرئيسي (مكون عميل)
@@ -125,6 +134,7 @@ components/<feature>/
 ```
 
 ### لماذا يعمل نمط المرآة
+
 - **قابلية التنبؤ**: كل ميزة تتبع نفس الهيكل
 - **قابلية الاكتشاف**: تعرف بالضبط أين تجد التحقق والإجراءات والأنواع
 - **قابلية التوسع**: الميزات الجديدة تتبع القالب المحدد
@@ -163,19 +173,23 @@ export default async function Branding({ params }: PageProps) {
 إجراءات الخادم مع سياق المستأجر والتحقق وإعادة التحقق:
 
 ```typescript
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { studentCreateSchema } from "./validation";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
-export async function createStudent(input: z.infer<typeof studentCreateSchema>) {
-  const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
-  const parsed = studentCreateSchema.parse(input);
+import { studentCreateSchema } from "./validation"
+
+export async function createStudent(
+  input: z.infer<typeof studentCreateSchema>
+) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const parsed = studentCreateSchema.parse(input)
 
   const row = await db.student.create({
     data: {
@@ -184,10 +198,10 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
       surname: parsed.surname,
       gender: parsed.gender,
     },
-  });
+  })
 
-  revalidatePath("/students");
-  return { success: true as const, id: row.id };
+  revalidatePath("/students")
+  return { success: true as const, id: row.id }
 }
 ```
 
@@ -196,21 +210,23 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
 للتطبيقات التي تخدم مؤسسات متعددة، عزل المستأجر ليس اختيارياً - إنه قانون مقدس.
 
 ### القاعدة الذهبية
+
 ```typescript
 // كل استعلام قاعدة بيانات يجب أن يتضمن نطاق المستأجر
 await db.student.findMany({
-  where: { schoolId, yearLevel: "10" }  // schoolId = عزل المستأجر
+  where: { schoolId, yearLevel: "10" }, // schoolId = عزل المستأجر
 })
 
 // لا تستعلم أبداً بدون نطاق المستأجر
 await db.student.findMany({
-  where: { yearLevel: "10" }  // خطير: يكسر العزل
+  where: { yearLevel: "10" }, // خطير: يكسر العزل
 })
 ```
 
 ## أنماط TypeScript
 
 ### استراتيجية تعريف الأنواع
+
 - **Props**: مضمنة للمكونات البسيطة، واجهات منفصلة للمعقدة
 - **أنواع API**: مُولَّدة من المخطط أو مواصفات OpenAPI
 - **أنواع الأداة**: استفد من أنواع الأداة المدمجة في TypeScript
@@ -219,6 +235,7 @@ await db.student.findMany({
 ## أنماط التنسيق
 
 ### تنظيم Tailwind CSS
+
 - **أنماط المكونات**: ركّب الأدوات مع مساعد `cn()`
 - **مسافات متسقة**: استخدم مقياس مسافات Tailwind
 - **تصميم متجاوب**: أنماط متجاوبة للهاتف أولاً

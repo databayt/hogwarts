@@ -1,15 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
-  getSchoolYears,
-  createSchoolYear,
-  updateSchoolYear,
-  deleteSchoolYear,
-  getTermsForYear,
-  createTerm,
-  setActiveTerm,
-  getPeriodsForYear,
-  createPeriod,
   bulkCreatePeriods,
+  createPeriod,
+  createSchoolYear,
+  createTerm,
+  deleteSchoolYear,
+  getPeriodsForYear,
+  getSchoolYears,
+  getTermsForYear,
+  setActiveTerm,
+  updateSchoolYear,
 } from "../actions"
 
 vi.mock("@/lib/db", () => ({
@@ -48,9 +52,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Academic Settings Actions", () => {
   const mockSchoolId = "school-123"
@@ -198,8 +199,18 @@ describe("Academic Settings Actions", () => {
   describe("getTermsForYear", () => {
     it("fetches terms scoped to schoolId and yearId", async () => {
       const mockTerms = [
-        { id: "term-1", termNumber: 1, schoolId: mockSchoolId, yearId: "year-1" },
-        { id: "term-2", termNumber: 2, schoolId: mockSchoolId, yearId: "year-1" },
+        {
+          id: "term-1",
+          termNumber: 1,
+          schoolId: mockSchoolId,
+          yearId: "year-1",
+        },
+        {
+          id: "term-2",
+          termNumber: 2,
+          schoolId: mockSchoolId,
+          yearId: "year-1",
+        },
       ]
 
       vi.mocked(db.term.findMany).mockResolvedValue(mockTerms as any)

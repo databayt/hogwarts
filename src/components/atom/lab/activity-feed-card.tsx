@@ -1,8 +1,16 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface ActivityItem {
@@ -161,7 +169,9 @@ export function ActivityFeedCard({
             ) : (
               <>
                 <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
+                {description && (
+                  <CardDescription>{description}</CardDescription>
+                )}
               </>
             )}
           </div>
@@ -173,7 +183,9 @@ export function ActivityFeedCard({
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-start gap-3">
-                {showAvatars && <Skeleton className="h-10 w-10 rounded-full shrink-0" />}
+                {showAvatars && (
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                )}
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-3 w-full" />
@@ -192,7 +204,7 @@ export function ActivityFeedCard({
               <div
                 key={index}
                 className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg transition-colors",
+                  "flex items-start gap-3 rounded-lg p-3 transition-colors",
                   typeColors[activity.type || "default"]
                 )}
               >
@@ -206,11 +218,9 @@ export function ActivityFeedCard({
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <div className="flex-1 min-w-0 space-y-1">
+                <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="leading-none">
-                      {activity.title}
-                    </p>
+                    <p className="leading-none">{activity.title}</p>
                     <small className="muted shrink-0 whitespace-nowrap">
                       {activity.timestamp}
                     </small>

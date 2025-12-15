@@ -8,7 +8,8 @@
     font-size: 12px; /* Reduce base font size for printing */
   }
 
-  html, body {
+  html,
+  body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -24,7 +25,9 @@
   }
 
   /* Container adjustments */
-  .max-w-4xl, .max-w-6xl, .max-w-7xl {
+  .max-w-4xl,
+  .max-w-6xl,
+  .max-w-7xl {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -36,7 +39,11 @@
   }
 
   /* Cell height adjustments */
-  .min-h-14, .min-h-20, .h-14, .h-18, .h-23 {
+  .min-h-14,
+  .min-h-20,
+  .h-14,
+  .h-18,
+  .h-23 {
     height: auto !important;
     min-height: 3rem !important;
   }
@@ -73,7 +80,9 @@
   }
 
   /* Border and visual adjustments */
-  .border, .border-neutral-200, .border-neutral-700 {
+  .border,
+  .border-neutral-200,
+  .border-neutral-700 {
     border-width: 1px !important;
     border-color: #e5e5e5 !important;
   }

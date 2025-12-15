@@ -3,19 +3,20 @@
  * Following the 'Props' naming pattern with strict typing
  */
 
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react"
+
 import type {
   BankAccount,
   BankAccountWithTransactions,
-  Transaction,
-  Transfer,
-  TransferWithBanks,
   BankInstitution,
-  TransactionType,
-  TransferStatus,
   PaymentChannel,
+  Transaction,
   TransactionFilters,
-} from './bank.types'
+  TransactionType,
+  Transfer,
+  TransferStatus,
+  TransferWithBanks,
+} from "./bank.types"
 
 // ============================================================================
 // Common Types
@@ -175,7 +176,7 @@ export interface BankDropdownProps {
 export interface DoughnutChartProps {
   accounts: BankAccount[]
   showLegend?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   className?: string
 }
 
@@ -193,7 +194,7 @@ export interface PlaidLinkProps {
   onSuccess?: (publicToken: string, metadata: any) => void
   onExit?: (error?: any) => void
   buttonText?: string
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive'
+  variant?: "default" | "outline" | "ghost" | "destructive"
   className?: string
 }
 
@@ -245,7 +246,7 @@ export interface TransactionDetailsProps {
 
 export interface TransactionCategoryIconProps {
   category: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   className?: string
 }
 
@@ -289,7 +290,7 @@ export interface TransferDetailsProps {
 
 export interface TransferStatusBadgeProps {
   status: TransferStatus
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   dictionary?: BankingDictionary
 }
 
@@ -323,7 +324,7 @@ export interface AddBankButtonProps {
 
 export interface SpendingChartProps {
   data: Array<{ date: string; amount: number; category?: string }>
-  period: 'week' | 'month' | 'quarter' | 'year'
+  period: "week" | "month" | "quarter" | "year"
   height?: number
   showCategories?: boolean
   dictionary?: BankingDictionary
@@ -352,7 +353,7 @@ export interface BalanceHistoryChartProps {
 // ============================================================================
 
 export interface BankingSkeletonProps {
-  type: 'dashboard' | 'transactions' | 'transfer' | 'banks' | 'card'
+  type: "dashboard" | "transactions" | "transfer" | "banks" | "card"
   count?: number
   className?: string
 }
@@ -364,7 +365,7 @@ export interface BankingErrorProps {
 }
 
 export interface EmptyStateProps {
-  type: 'no-accounts' | 'no-transactions' | 'no-transfers' | 'no-results'
+  type: "no-accounts" | "no-transactions" | "no-transfers" | "no-results"
   title?: string
   description?: string
   action?: {
@@ -408,7 +409,7 @@ export interface ConfirmDialogProps {
   confirmLabel?: string
   cancelLabel?: string
   onConfirm: () => void | Promise<void>
-  variant?: 'default' | 'destructive'
+  variant?: "default" | "destructive"
   loading?: boolean
   dictionary?: BankingDictionary
 }
@@ -455,7 +456,7 @@ export interface EmailInputProps {
 export interface BankingToastProps {
   title: string
   description?: string
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: "success" | "error" | "warning" | "info"
   duration?: number
   action?: {
     label: string
@@ -482,6 +483,6 @@ export interface WithPaginationProps {
 
 export interface WithSortingProps<T> {
   sortBy: keyof T
-  sortOrder: 'asc' | 'desc'
+  sortOrder: "asc" | "desc"
   onSort: (field: keyof T) => void
 }

@@ -1,21 +1,22 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import React from "react"
+import { ArrowRight } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 interface AboutSchoolFormProps {
-  onContinue?: () => void;
-  isLoading?: boolean;
+  onContinue?: () => void
+  isLoading?: boolean
 }
 
-export function AboutSchoolForm({ 
+export function AboutSchoolForm({
   onContinue,
-  isLoading = false
+  isLoading = false,
 }: AboutSchoolFormProps) {
   return (
     <div className="flex justify-center pt-4">
-      <Button 
+      <Button
         onClick={onContinue}
         disabled={isLoading}
         size="lg"
@@ -23,7 +24,7 @@ export function AboutSchoolForm({
       >
         {isLoading ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
+            <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
             Starting...
           </>
         ) : (
@@ -34,7 +35,7 @@ export function AboutSchoolForm({
         )}
       </Button>
     </div>
-  );
+  )
 }
 
-export default AboutSchoolForm;
+export default AboutSchoolForm

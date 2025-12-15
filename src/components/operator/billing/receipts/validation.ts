@@ -1,4 +1,8 @@
-import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
 
 export const receiptsSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -6,26 +10,8 @@ export const receiptsSearchParams = createSearchParamsCache({
   tenantName: parseAsString.withDefault(""),
   invoiceNumber: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
-});
+})
 
-export type GetReceiptsSearch = Awaited<ReturnType<typeof receiptsSearchParams.parse>>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export type GetReceiptsSearch = Awaited<
+  ReturnType<typeof receiptsSearchParams.parse>
+>

@@ -48,15 +48,15 @@
 //       status: "open",
 //       ...issue
 //     };
-    
+
 //     setIssues([newIssue, ...issues]);
 //     setActiveTab("issues");
 //   };
 
 //   const toggleIssueStatus = (id) => {
-//     setIssues(issues.map(issue => 
-//       issue.id === id 
-//         ? { ...issue, status: issue.status === "open" ? "closed" : "open" } 
+//     setIssues(issues.map(issue =>
+//       issue.id === id
+//         ? { ...issue, status: issue.status === "open" ? "closed" : "open" }
 //         : issue
 //     ));
 //   };
@@ -83,11 +83,11 @@
 //           </TabsTrigger>
 //           {activeTab === "new" && <TabsTrigger value="new">New Issue</TabsTrigger>}
 //         </TabsList>
-        
+
 //         <TabsContent value="issues" className="mt-0">
 //           <IssueList issues={issues} toggleStatus={toggleIssueStatus} />
 //         </TabsContent>
-        
+
 //         <TabsContent value="new" className="mt-0">
 //           <NewIssueForm onSubmit={addNewIssue} onCancel={() => setActiveTab("issues")} />
 //         </TabsContent>

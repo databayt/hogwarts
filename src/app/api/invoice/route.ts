@@ -22,18 +22,18 @@
  * @see /components/platform/finance/invoice for current implementation
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 
 export async function POST() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 
 export async function PUT() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 // import { NextRequest, NextResponse } from "next/server";
 // import InvoiceModel from "@/models/invoice.model";
@@ -53,7 +53,7 @@ export async function PUT() {
 //             })
 //         }
 
-//         const { 
+//         const {
 //             invoice_no,
 //             invoice_date,
 //             due_date,
@@ -65,9 +65,8 @@ export async function PUT() {
 //             discount,
 //             tax_percentage,
 //             total,
-//             notes 
+//             notes
 //         }  = await request.json()
-
 
 //         const payload  = {
 //             invoice_no,
@@ -88,7 +87,6 @@ export async function PUT() {
 
 //         await connectDB()
 
-        
 //         const data = await InvoiceModel.create(payload)
 
 //         return NextResponse.json({
@@ -131,7 +129,7 @@ export async function PUT() {
 
 //         const query = {
 //             ...(invoiceId && { _id : invoiceId }),
-//             userId : session.user.id 
+//             userId : session.user.id
 //         }
 
 //         const [allInvoice,totalCount] = await Promise.all([
@@ -170,7 +168,7 @@ export async function PUT() {
 //             })
 //         }
 
-//         const { 
+//         const {
 //             invoice_no,
 //             invoice_date,
 //             due_date,
@@ -184,7 +182,7 @@ export async function PUT() {
 //             total,
 //             notes,
 //             status,
-//             invoiceId, 
+//             invoiceId,
 //         }  = await request.json()
 
 //         const payload = {
@@ -206,7 +204,6 @@ export async function PUT() {
 //         await connectDB()
 
 //         const updateInvoice = await InvoiceModel.findByIdAndUpdate(invoiceId,payload)
-
 
 //         return NextResponse.json({
 //             message : "Invoice updated successfully"

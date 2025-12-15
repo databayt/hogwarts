@@ -1,9 +1,15 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Attendance validation schema tests
 describe("Attendance Validation Schemas", () => {
-  const attendanceStatusEnum = z.enum(["PRESENT", "ABSENT", "LATE", "EXCUSED", "HALF_DAY"])
+  const attendanceStatusEnum = z.enum([
+    "PRESENT",
+    "ABSENT",
+    "LATE",
+    "EXCUSED",
+    "HALF_DAY",
+  ])
 
   const attendanceRecordSchema = z.object({
     studentId: z.string().min(1, "Student is required"),
@@ -19,11 +25,15 @@ describe("Attendance Validation Schemas", () => {
   const bulkAttendanceSchema = z.object({
     classId: z.string().min(1, "Class is required"),
     date: z.string().min(1, "Date is required"),
-    records: z.array(z.object({
-      studentId: z.string().min(1),
-      status: attendanceStatusEnum,
-      remarks: z.string().optional(),
-    })).min(1, "At least one record is required"),
+    records: z
+      .array(
+        z.object({
+          studentId: z.string().min(1),
+          status: attendanceStatusEnum,
+          remarks: z.string().optional(),
+        })
+      )
+      .min(1, "At least one record is required"),
   })
 
   const getAttendanceSchema = z.object({
@@ -86,10 +96,14 @@ describe("Attendance Validation Schemas", () => {
         date: "2024-09-15",
       }
 
-      expect(attendanceRecordSchema.safeParse(missingStudent).success).toBe(false)
+      expect(attendanceRecordSchema.safeParse(missingStudent).success).toBe(
+        false
+      )
       expect(attendanceRecordSchema.safeParse(missingClass).success).toBe(false)
       expect(attendanceRecordSchema.safeParse(missingDate).success).toBe(false)
-      expect(attendanceRecordSchema.safeParse(missingStatus).success).toBe(false)
+      expect(attendanceRecordSchema.safeParse(missingStatus).success).toBe(
+        false
+      )
     })
 
     it("validates status enum", () => {
@@ -111,7 +125,9 @@ describe("Attendance Validation Schemas", () => {
         date: "2024-09-15",
         status: "INVALID",
       }
-      expect(attendanceRecordSchema.safeParse(invalidStatus).success).toBe(false)
+      expect(attendanceRecordSchema.safeParse(invalidStatus).success).toBe(
+        false
+      )
     })
   })
 

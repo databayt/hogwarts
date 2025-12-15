@@ -5,11 +5,11 @@ export interface FinancialKPI {
   title: string
   value: string | number
   change?: number
-  changeType?: 'increase' | 'decrease' | 'neutral'
+  changeType?: "increase" | "decrease" | "neutral"
   icon?: string
   description?: string
   trend?: number[]
-  color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange'
+  color?: "blue" | "green" | "red" | "yellow" | "purple" | "orange"
 }
 
 export interface ChartData {
@@ -105,18 +105,18 @@ export interface QuickAction {
 
 export interface RecentTransaction {
   id: string
-  type: 'income' | 'expense' | 'transfer'
+  type: "income" | "expense" | "transfer"
   description: string
   amount: number
   date: Date
-  status: 'completed' | 'pending' | 'failed'
+  status: "completed" | "pending" | "failed"
   category?: string
   reference?: string
 }
 
 export interface FinancialAlert {
   id: string
-  type: 'warning' | 'error' | 'info' | 'success'
+  type: "warning" | "error" | "info" | "success"
   title: string
   description: string
   action?: {
@@ -127,7 +127,7 @@ export interface FinancialAlert {
 }
 
 export interface DashboardFilters {
-  dateRange: 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom'
+  dateRange: "today" | "week" | "month" | "quarter" | "year" | "custom"
   startDate?: Date
   endDate?: Date
   schoolYear?: string
@@ -136,7 +136,7 @@ export interface DashboardFilters {
 }
 
 export interface RoleBasedDashboard {
-  role: 'ADMIN' | 'ACCOUNTANT' | 'TEACHER' | 'STUDENT' | 'GUARDIAN' | 'STAFF'
+  role: "ADMIN" | "ACCOUNTANT" | "TEACHER" | "STUDENT" | "GUARDIAN" | "STAFF"
   kpis: FinancialKPI[]
   charts: {
     revenue?: boolean

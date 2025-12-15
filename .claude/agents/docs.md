@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Documentation Engineering
+
 - **API Documentation**: Server actions, REST endpoints, GraphQL schemas
 - **Developer Guides**: Architecture, patterns, best practices
 - **Component Documentation**: React component APIs, props, usage
@@ -22,6 +23,7 @@ model: sonnet
 - **MDX Content**: Interactive documentation with live examples
 
 ### Documentation Tools
+
 - **TypeDoc**: Auto-generate API docs from TypeScript
 - **Storybook**: Component documentation and visual testing (optional)
 - **Docusaurus**: Documentation site (if needed)
@@ -29,6 +31,7 @@ model: sonnet
 - **Mermaid**: Diagrams and flowcharts
 
 ### Quality Standards
+
 - **Accuracy**: Code examples are tested and runnable
 - **Completeness**: All public APIs documented
 - **Clarity**: Written for developers unfamiliar with codebase
@@ -43,7 +46,7 @@ model: sonnet
 
 **Location**: `src/components/<feature>/actions.ts`
 
-```typescript
+````typescript
 /**
  * Create a new student record
  *
@@ -82,58 +85,62 @@ export async function createStudent(data: FormData) {
 
   // Create
   const student = await db.student.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   // Revalidate
-  revalidatePath('/students')
+  revalidatePath("/students")
 
   return { success: true, data: student }
 }
-```
+````
 
 ### 2. Component Documentation
 
 **Location**: `src/components/<feature>/README.md`
 
-```markdown
+````markdown
 # StudentForm Component
 
 ## Overview
+
 Form component for creating and editing student records with full validation, error handling, and multi-step support.
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `mode` | `'create' \| 'edit'` | `'create'` | Form mode |
-| `initialData` | `Student \| undefined` | `undefined` | Initial form values |
-| `onSuccess` | `(student: Student) => void` | - | Success callback |
-| `schoolId` | `string` | - | School ID (required) |
+| Prop          | Type                         | Default     | Description          |
+| ------------- | ---------------------------- | ----------- | -------------------- |
+| `mode`        | `'create' \| 'edit'`         | `'create'`  | Form mode            |
+| `initialData` | `Student \| undefined`       | `undefined` | Initial form values  |
+| `onSuccess`   | `(student: Student) => void` | -           | Success callback     |
+| `schoolId`    | `string`                     | -           | School ID (required) |
 
 ## Usage
 
 ### Create Mode
-```tsx
-import { StudentForm } from '@/components/students/form'
 
-<StudentForm
+```tsx
+import { StudentForm } from "@/components/students/form"
+
+;<StudentForm
   mode="create"
   schoolId="abc123"
   onSuccess={(student) => {
-    console.log('Student created:', student)
+    console.log("Student created:", student)
   }}
 />
 ```
+````
 
 ### Edit Mode
+
 ```tsx
 <StudentForm
   mode="edit"
   initialData={existingStudent}
   schoolId="abc123"
   onSuccess={(student) => {
-    console.log('Student updated:', student)
+    console.log("Student updated:", student)
   }}
 />
 ```
@@ -141,6 +148,7 @@ import { StudentForm } from '@/components/students/form'
 ## Validation
 
 Uses `studentSchema` from `validation.ts`:
+
 - First name: Required, 1-50 characters
 - Last name: Required, 1-50 characters
 - Email: Valid email format, unique per school
@@ -162,10 +170,12 @@ Uses `studentSchema` from `validation.ts`:
 ## Internationalization
 
 Supports Arabic (RTL) and English (LTR):
+
 - Form labels from dictionary (`dictionary.students.form`)
 - Error messages localized
 - RTL layout automatically applied
-```
+
+````
 
 ### 3. Database Schema Documentation
 
@@ -191,14 +201,16 @@ Supports Arabic (RTL) and English (LTR):
 
 ### Relations
 
-```
+````
+
 Student
 ├── school (School) - Many-to-one
 ├── guardians (StudentGuardian[]) - One-to-many
 ├── classes (StudentClass[]) - One-to-many
 ├── attendance (Attendance[]) - One-to-many
 └── submissions (AssignmentSubmission[]) - One-to-many
-```
+
+````
 
 ### Indexes
 
@@ -210,29 +222,31 @@ Student
 
 ```prisma
 @@unique([email, schoolId])  // Same email allowed across schools
-```
+````
 
 ### Example Queries
 
 #### Create Student
+
 ```typescript
 const student = await db.student.create({
   data: {
-    firstName: 'Harry',
-    lastName: 'Potter',
-    email: 'harry@hogwarts.edu',
-    dateOfBirth: new Date('1980-07-31'),
-    schoolId: 'hogwarts123',
+    firstName: "Harry",
+    lastName: "Potter",
+    email: "harry@hogwarts.edu",
+    dateOfBirth: new Date("1980-07-31"),
+    schoolId: "hogwarts123",
   },
 })
 ```
 
 #### Query with Relations
+
 ```typescript
 const student = await db.student.findUnique({
   where: {
-    id: 'student123',
-    schoolId: 'hogwarts123', // CRITICAL: Always include schoolId
+    id: "student123",
+    schoolId: "hogwarts123", // CRITICAL: Always include schoolId
   },
   include: {
     guardians: {
@@ -248,7 +262,8 @@ const student = await db.student.findUnique({
   },
 })
 ```
-```
+
+````
 
 ### 4. Architecture Documentation
 
@@ -277,7 +292,7 @@ graph TD
     J -->|Match| K[Query Database]
     J -->|Mismatch| L[403 Forbidden]
     K --> M[Return Response]
-```
+````
 
 ## Database Scoping
 
@@ -288,14 +303,14 @@ graph TD
 const students = await db.student.findMany({
   where: {
     schoolId: session.user.schoolId,
-    yearLevel: 'GRADE_10',
+    yearLevel: "GRADE_10",
   },
 })
 
 // ❌ Wrong: Missing schoolId (security vulnerability!)
 const students = await db.student.findMany({
   where: {
-    yearLevel: 'GRADE_10',
+    yearLevel: "GRADE_10",
   },
 })
 ```
@@ -311,7 +326,7 @@ interface Session {
     email: string
     name: string
     role: UserRole
-    schoolId: string        // CRITICAL for multi-tenancy
+    schoolId: string // CRITICAL for multi-tenancy
     isPlatformAdmin: boolean
   }
 }
@@ -320,17 +335,21 @@ interface Session {
 ## Subdomain Resolution
 
 ### Production
+
 - `school.databayt.org` → `/s/school/*`
 - Middleware rewrites URL transparently
 
 ### Vercel Preview
+
 - `school---branch.vercel.app` → `/s/school/*`
 - Triple dash (`---`) separates subdomain from branch
 
 ### Local Development
+
 - `school.localhost:3000` → `/s/school/*`
 - Requires hosts file or DNS configuration
-```
+
+````
 
 ---
 
@@ -347,11 +366,12 @@ const areas = [
   'Database models without relationship docs',
   'API endpoints without OpenAPI specs',
 ]
-```
+````
 
 ### Step 2: Generate Documentation
 
 **For TypeScript/JSX**:
+
 ```bash
 # Generate API docs with TypeDoc
 pnpm exec typedoc --out docs/api src/
@@ -366,11 +386,13 @@ pnpm exec typedoc --out docs/api src/
 ```
 
 **For Components**:
+
 - Create README.md in component directory
 - Include props table, usage examples, notes
 - Add live examples if using Storybook/MDX
 
 **For Database**:
+
 - Document schema in `prisma/models/README.md`
 - Include ER diagrams (Mermaid)
 - List all relationships and indexes
@@ -380,14 +402,14 @@ pnpm exec typedoc --out docs/api src/
 ```typescript
 // Documentation quality checklist
 const checks = [
-  '✅ Code examples are tested and runnable',
-  '✅ All public APIs have JSDoc comments',
-  '✅ Props/parameters documented with types',
-  '✅ Return types documented',
-  '✅ Error cases documented',
-  '✅ Security considerations noted',
-  '✅ Multi-tenant safety documented',
-  '✅ Examples include schoolId scoping',
+  "✅ Code examples are tested and runnable",
+  "✅ All public APIs have JSDoc comments",
+  "✅ Props/parameters documented with types",
+  "✅ Return types documented",
+  "✅ Error cases documented",
+  "✅ Security considerations noted",
+  "✅ Multi-tenant safety documented",
+  "✅ Examples include schoolId scoping",
 ]
 ```
 
@@ -397,10 +419,10 @@ const checks = [
 
 ### Interactive Code Example
 
-```mdx
+````mdx
 # Server Actions Guide
 
-import { Tabs, TabItem } from '@/components/ui/tabs'
+import { TabItem, Tabs } from "@/components/ui/tabs"
 
 ## Creating a Server Action
 
@@ -424,6 +446,7 @@ Server actions must follow this pattern:
       return { success: true, data: item }
     }
     ```
+
   </TabItem>
 
   <TabItem label="Usage">
@@ -445,7 +468,7 @@ Server actions must follow this pattern:
 <Callout type="tip">
   Use `revalidatePath()` after mutations to update cached data.
 </Callout>
-```
+````
 
 ---
 
@@ -456,24 +479,14 @@ Server actions must follow this pattern:
 {
   "entryPoints": ["src"],
   "out": "docs/api",
-  "exclude": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/node_modules/**"
-  ],
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/node_modules/**"],
   "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,
   "categorizeByGroup": true,
-  "categoryOrder": [
-    "Server Actions",
-    "Components",
-    "Utilities",
-    "Types",
-    "*"
-  ]
+  "categoryOrder": ["Server Actions", "Components", "Utilities", "Types", "*"]
 }
 ```
 
@@ -482,6 +495,7 @@ Server actions must follow this pattern:
 ## Documentation vs docs-manager
 
 **This agent (docs)**: General documentation engineering
+
 - API documentation (TypeDoc, JSDoc)
 - Developer guides and architecture docs
 - Component documentation (Storybook, MDX)
@@ -489,6 +503,7 @@ Server actions must follow this pattern:
 - Interactive documentation sites
 
 **docs-manager agent**: Feature workflow automation
+
 - Automated README generation after feature development
 - GitHub issue creation/updates
 - Changelog generation
@@ -496,6 +511,7 @@ Server actions must follow this pattern:
 - Feature-specific documentation templates
 
 **When to use which**:
+
 - Use **docs** for: Broad documentation tasks, API docs, architecture guides
 - Use **docs-manager** for: Feature completion workflow, automated README/issue creation
 
@@ -504,6 +520,7 @@ Server actions must follow this pattern:
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/docs-manager` - Feature workflow documentation
 - `/agents/api` - Server action documentation
 - `/agents/typescript` - Type documentation
@@ -541,6 +558,7 @@ Server actions must follow this pattern:
 ## Success Metrics
 
 **Target Achievements**:
+
 - 100% of public APIs have JSDoc documentation
 - All components have prop documentation
 - Code examples are tested and verified

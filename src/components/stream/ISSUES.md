@@ -27,16 +27,19 @@
 ## 🔴 CRITICAL ISSUES (P0)
 
 ### 1. Video Upload Not Implemented
+
 **Status:** ❌ Not Implemented
 **Impact:** Critical - Cannot add course content
 **Blocks:** Course creation, lesson publishing
 
 **Current State:**
+
 - Schema has `videoUrl` fields
 - No upload UI exists
 - No S3 integration
 
 **Required Implementation:**
+
 ```typescript
 // 1. API Route: /api/s3/upload
 POST /api/s3/upload
@@ -60,6 +63,7 @@ Response: { presignedUrl, key }
 ```
 
 **Dependencies:**
+
 - AWS S3 or Tigris storage setup
 - S3 bucket with proper permissions
 - CORS configuration
@@ -70,6 +74,7 @@ Response: { presignedUrl, key }
   - `NEXT_PUBLIC_S3_BUCKET_NAME_VIDEOS`
 
 **Files to Create:**
+
 - `app/api/s3/upload/route.ts`
 - `app/api/s3/delete/route.ts`
 - `components/stream/file-uploader/video-uploader.tsx`
@@ -82,16 +87,19 @@ Response: { presignedUrl, key }
 ---
 
 ### 2. Rich Text Editor Missing
+
 **Status:** ❌ Not Implemented
 **Impact:** Critical - Course descriptions are plain text only
 **Blocks:** Professional course content creation
 
 **Current State:**
+
 - Using `<textarea>` for descriptions
 - No formatting options
 - No embedded images/videos
 
 **Required Implementation:**
+
 ```tsx
 // Install Tiptap
 pnpm install @tiptap/react @tiptap/starter-kit @tiptap/extension-text-align
@@ -121,6 +129,7 @@ export function RichTextEditor({ value, onChange }) {
 ```
 
 **Features Needed:**
+
 - Bold, italic, strikethrough
 - Headings (H1-H6)
 - Lists (ordered, unordered)
@@ -131,11 +140,13 @@ export function RichTextEditor({ value, onChange }) {
 - Image embeds (future)
 
 **Files to Create:**
+
 - `components/stream/rich-text-editor/editor.tsx`
 - `components/stream/rich-text-editor/toolbar.tsx`
 - `components/stream/rich-text-editor/render-description.tsx`
 
 **Dependencies:**
+
 - `@tiptap/react`
 - `@tiptap/starter-kit`
 - `@tiptap/extension-text-align`
@@ -146,11 +157,13 @@ export function RichTextEditor({ value, onChange }) {
 ---
 
 ### 3. Video Player Has No Controls
+
 **Status:** ⚠️ Basic Implementation
 **Impact:** High - Poor user experience
 **Affects:** Lesson viewing, student satisfaction
 
 **Current State:**
+
 ```tsx
 // Current implementation
 <video src={lesson.videoUrl} />
@@ -158,9 +171,10 @@ export function RichTextEditor({ value, onChange }) {
 ```
 
 **Required Implementation:**
+
 ```tsx
 <video
-  className="w-full aspect-video bg-black rounded-lg"
+  className="aspect-video w-full rounded-lg bg-black"
   controls
   controlsList="nodownload" // Optional: prevent downloads
   poster={lesson.thumbnailUrl}
@@ -169,7 +183,7 @@ export function RichTextEditor({ value, onChange }) {
   onEnded={() => markComplete()}
 >
   <source src={lesson.videoUrl} type="video/mp4" />
-  <source src={lesson.videoUrl.replace('.mp4', '.webm')} type="video/webm" />
+  <source src={lesson.videoUrl.replace(".mp4", ".webm")} type="video/webm" />
   <track
     kind="subtitles"
     src={lesson.subtitleUrl}
@@ -181,6 +195,7 @@ export function RichTextEditor({ value, onChange }) {
 ```
 
 **Features Needed:**
+
 - ✅ Play/pause
 - ✅ Volume control
 - ✅ Fullscreen
@@ -193,9 +208,11 @@ export function RichTextEditor({ value, onChange }) {
 - ❌ Progress saving (resume from last position)
 
 **Files to Update:**
+
 - `components/stream/dashboard/lesson/content.tsx`
 
 **Optional Enhancement (Custom Player):**
+
 - Use `react-player` or build custom controls
 - Better mobile experience
 - Analytics integration
@@ -208,16 +225,19 @@ export function RichTextEditor({ value, onChange }) {
 ## 🟠 HIGH PRIORITY (P1)
 
 ### 4. No Drag-and-Drop Reordering
+
 **Status:** ❌ Not Implemented
 **Impact:** High - Poor admin UX
 **Reference:** Marshal-LMS uses `@dnd-kit/core`
 
 **Current State:**
+
 - Chapters/lessons have `position` field
 - Manual position entry required
 - No visual reordering
 
 **Required Implementation:**
+
 ```tsx
 // Install dnd-kit
 pnpm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
@@ -250,6 +270,7 @@ export function ChapterList({ chapters, onReorder }) {
 ```
 
 **Server Action:**
+
 ```typescript
 export async function reorderChapters(courseId: string, chapterIds: string[]) {
   await db.$transaction(
@@ -259,17 +280,19 @@ export async function reorderChapters(courseId: string, chapterIds: string[]) {
         data: { position: index },
       })
     )
-  );
-  revalidatePath(`/stream/admin/courses/${courseId}/edit`);
+  )
+  revalidatePath(`/stream/admin/courses/${courseId}/edit`)
 }
 ```
 
 **Files to Create:**
+
 - `components/stream/admin/courses/edit/chapter-reorder.tsx`
 - `components/stream/admin/courses/edit/lesson-reorder.tsx`
 - `components/stream/admin/courses/edit/actions.ts` (reorder actions)
 
 **Dependencies:**
+
 - `@dnd-kit/core`
 - `@dnd-kit/sortable`
 - `@dnd-kit/utilities`
@@ -280,62 +303,64 @@ export async function reorderChapters(courseId: string, chapterIds: string[]) {
 ---
 
 ### 5. Missing Auto-Slug Generation
+
 **Status:** ⚠️ Manual Entry Only
 **Impact:** Medium-High - Extra work for admins
 **Reference:** Marshal-LMS auto-generates from title
 
 **Current State:**
+
 - Slug field is required input
 - No auto-generation button
 - Risk of duplicate slugs
 
 **Required Implementation:**
+
 ```tsx
-import slugify from 'slugify';
+import slugify from "slugify"
 
 export function CourseForm() {
   const generateSlug = () => {
-    const title = form.getValues('title');
+    const title = form.getValues("title")
     const slug = slugify(title, {
       lower: true,
       strict: true,
       trim: true,
-    });
-    form.setValue('slug', slug);
-  };
+    })
+    form.setValue("slug", slug)
+  }
 
   return (
     <div className="flex gap-2">
-      <Input {...form.register('slug')} />
-      <Button
-        type="button"
-        variant="outline"
-        onClick={generateSlug}
-      >
+      <Input {...form.register("slug")} />
+      <Button type="button" variant="outline" onClick={generateSlug}>
         Generate from Title
       </Button>
     </div>
-  );
+  )
 }
 ```
 
 **Validation:**
+
 ```typescript
 // Check uniqueness within school
 const existingCourse = await db.streamCourse.findFirst({
   where: { slug, schoolId, id: { not: courseId } },
-});
+})
 
 if (existingCourse) {
   // Append number: 'course-title-2'
-  slug = `${slug}-${Date.now().toString().slice(-4)}`;
+  slug = `${slug}-${Date.now().toString().slice(-4)}`
 }
 ```
 
 **Dependencies:**
+
 - `slugify` package
 
 **Files to Update:**
+
 - `components/stream/admin/courses/create/form.tsx`
 - `components/stream/admin/courses/edit/form.tsx`
 - `components/stream/admin/courses/create/actions.ts`
@@ -346,11 +371,13 @@ if (existingCourse) {
 ---
 
 ### 6. No Course Level (Beginner/Intermediate/Advanced)
+
 **Status:** ❌ Not Implemented
 **Impact:** Medium - Missing filtering/sorting capability
 **Reference:** Marshal-LMS has `level` enum
 
 **Database Change Needed:**
+
 ```prisma
 enum StreamCourseLevel {
   BEGINNER
@@ -365,11 +392,13 @@ model StreamCourse {
 ```
 
 **Migration:**
+
 ```bash
 pnpm prisma migrate dev --name add_course_level
 ```
 
 **UI Changes:**
+
 ```tsx
 // Course Form
 <Select name="level">
@@ -389,6 +418,7 @@ pnpm prisma migrate dev --name add_course_level
 ```
 
 **Files to Update:**
+
 - `prisma/models/stream.prisma`
 - `components/stream/admin/courses/create/form.tsx`
 - `components/stream/admin/courses/create/validation.ts`
@@ -401,17 +431,20 @@ pnpm prisma migrate dev --name add_course_level
 ---
 
 ### 7. No Course Status Workflow
+
 **Status:** ⚠️ Simplified (isPublished boolean)
 **Impact:** Medium - Limited course lifecycle management
 **Reference:** Marshal-LMS has Draft → Published → Archived
 
 **Current State:**
+
 ```prisma
 isPublished Boolean @default(false)
 // Only two states: draft or published
 ```
 
 **Proposed Enhancement:**
+
 ```prisma
 enum StreamCourseStatus {
   DRAFT       // Not visible to students
@@ -425,11 +458,13 @@ model StreamCourse {
 ```
 
 **Benefits:**
+
 - Archive old courses without deletion
 - Prevent new enrollments while keeping content accessible
 - Better course lifecycle management
 
 **UI Changes:**
+
 ```tsx
 // Admin Course List - Filter by Status
 <Tabs defaultValue="all">
@@ -452,6 +487,7 @@ model StreamCourse {
 ```
 
 **Migration Strategy:**
+
 ```sql
 -- Migrate existing data
 UPDATE stream_course
@@ -465,6 +501,7 @@ ALTER TABLE stream_course DROP COLUMN isPublished;
 ```
 
 **Files to Update:**
+
 - `prisma/models/stream.prisma`
 - All course queries (filter by status instead of isPublished)
 - Admin UI components
@@ -475,16 +512,19 @@ ALTER TABLE stream_course DROP COLUMN isPublished;
 ---
 
 ### 8. Missing Enrollment Status Workflow
+
 **Status:** ⚠️ Simplified (isActive boolean)
 **Impact:** Medium - Limited payment tracking
 **Reference:** Marshal-LMS has Pending → Active → Cancelled
 
 **Current State:**
+
 ```prisma
 isActive Boolean @default(true)
 ```
 
 **Proposed Enhancement:**
+
 ```prisma
 enum StreamEnrollmentStatus {
   PENDING    // Checkout session created, payment not complete
@@ -499,17 +539,20 @@ model StreamEnrollment {
 ```
 
 **Workflow:**
+
 1. User clicks "Enroll" → `PENDING` enrollment created
 2. Stripe checkout completed → Webhook updates to `ACTIVE`
 3. Checkout session expires → Webhook updates to `EXPIRED`
 4. Admin/student cancels → Manual update to `CANCELLED`
 
 **Benefits:**
+
 - Track abandoned checkouts
 - Handle refunds properly
 - Analytics on conversion rates
 
 **Webhook Update:**
+
 ```typescript
 // api/webhook/stripe/route.ts
 case 'checkout.session.completed':
@@ -526,6 +569,7 @@ case 'checkout.session.expired':
 ```
 
 **Files to Update:**
+
 - `prisma/models/stream.prisma`
 - `components/stream/courses/enrollment/actions.ts`
 - `app/api/webhook/stripe/route.ts` (if exists)
@@ -537,16 +581,19 @@ case 'checkout.session.expired':
 ---
 
 ### 9. No Rate Limiting
+
 **Status:** ❌ Not Implemented
 **Impact:** Medium - Vulnerable to abuse
 **Reference:** Marshal-LMS uses Arcjet (5 req/min)
 
 **Current State:**
+
 - No rate limiting on enrollments
 - No protection against bot attacks
 - Potential Stripe abuse
 
 **Required Implementation:**
+
 ```typescript
 // Install Arcjet
 pnpm install @arcjet/next
@@ -580,16 +627,19 @@ export async function enrollInCourseAction(courseId: string) {
 ```
 
 **Rate Limits to Add:**
+
 - Enrollment: 5/min per user
 - Course creation: 10/hour per user
 - File upload: 20/hour per user
 - API endpoints: 60/min per IP
 
 **Dependencies:**
+
 - `@arcjet/next`
 - `ARCJET_KEY` environment variable
 
 **Files to Create/Update:**
+
 - `lib/arcjet.ts`
 - `middleware.ts` (add Arcjet middleware)
 - All server actions (wrap with rate limiting)
@@ -600,16 +650,19 @@ export async function enrollInCourseAction(courseId: string) {
 ---
 
 ### 10. No Admin Analytics Dashboard
+
 **Status:** ❌ Not Implemented (basic stats only)
 **Impact:** Medium - Limited business insights
 **Reference:** Marshal-LMS has enrollment trends chart
 
 **Current State:**
+
 - Basic count statistics
 - No charts or visualizations
 - No historical data
 
 **Required Implementation:**
+
 ```tsx
 // Install recharts
 pnpm install recharts
@@ -638,6 +691,7 @@ export function EnrollmentTrendChart({ data }) {
 ```
 
 **Metrics to Add:**
+
 - Total revenue (by day/week/month)
 - Enrollment count over time
 - Popular courses (by enrollment)
@@ -646,31 +700,34 @@ export function EnrollmentTrendChart({ data }) {
 - Student engagement
 
 **Data Query:**
+
 ```typescript
 export async function getEnrollmentTrends(schoolId: string, days = 30) {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+  const startDate = new Date()
+  startDate.setDate(startDate.getDate() - days)
 
   const enrollments = await db.streamEnrollment.groupBy({
-    by: ['createdAt'],
+    by: ["createdAt"],
     where: {
       schoolId,
       createdAt: { gte: startDate },
     },
     _count: true,
-  });
+  })
 
-  return enrollments.map(e => ({
+  return enrollments.map((e) => ({
     date: e.createdAt.toLocaleDateString(),
     count: e._count,
-  }));
+  }))
 }
 ```
 
 **Dependencies:**
+
 - `recharts`
 
 **Files to Create:**
+
 - `components/stream/admin/charts/enrollment-trends.tsx`
 - `components/stream/admin/charts/revenue-chart.tsx`
 - `components/stream/admin/charts/popular-courses.tsx`
@@ -682,11 +739,13 @@ export async function getEnrollmentTrends(schoolId: string, days = 30) {
 ---
 
 ### 11. Certificate Generation Not Implemented
+
 **Status:** ⚠️ Schema Exists, No Generation
 **Impact:** Medium - Missing completion incentive
 **Reference:** Marshal-LMS has placeholder (not implemented)
 
 **Current State:**
+
 ```prisma
 model StreamCertificate {
   // Schema exists but no generation logic
@@ -696,6 +755,7 @@ model StreamCertificate {
 **Required Implementation:**
 
 **Step 1: Detect Completion**
+
 ```typescript
 export async function checkCourseCompletion(userId: string, courseId: string) {
   const course = await db.streamCourse.findUnique({
@@ -707,55 +767,65 @@ export async function checkCourseCompletion(userId: string, courseId: string) {
         },
       },
     },
-  });
+  })
 
-  const totalLessons = course.chapters.flatMap(c => c.lessons).length;
+  const totalLessons = course.chapters.flatMap((c) => c.lessons).length
 
   const completedLessons = await db.streamLessonProgress.count({
     where: {
       userId,
-      lessonId: { in: course.chapters.flatMap(c => c.lessons.map(l => l.id)) },
+      lessonId: {
+        in: course.chapters.flatMap((c) => c.lessons.map((l) => l.id)),
+      },
       isCompleted: true,
     },
-  });
+  })
 
-  return completedLessons === totalLessons;
+  return completedLessons === totalLessons
 }
 ```
 
 **Step 2: Generate Certificate**
-```typescript
-import { createCanvas } from 'canvas';
 
-export async function generateCertificate(userId: string, courseId: string, schoolId: string) {
-  const user = await db.user.findUnique({ where: { id: userId } });
-  const course = await db.streamCourse.findUnique({ where: { id: courseId } });
+```typescript
+import { createCanvas } from "canvas"
+
+export async function generateCertificate(
+  userId: string,
+  courseId: string,
+  schoolId: string
+) {
+  const user = await db.user.findUnique({ where: { id: userId } })
+  const course = await db.streamCourse.findUnique({ where: { id: courseId } })
 
   // Generate unique certificate number
-  const certificateNumber = `CERT-${Date.now()}-${userId.slice(0, 8).toUpperCase()}`;
+  const certificateNumber = `CERT-${Date.now()}-${userId.slice(0, 8).toUpperCase()}`
 
   // Create certificate (PDF or image)
-  const canvas = createCanvas(1200, 800);
-  const ctx = canvas.getContext('2d');
+  const canvas = createCanvas(1200, 800)
+  const ctx = canvas.getContext("2d")
 
   // Draw certificate
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, 1200, 800);
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 48px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('Certificate of Completion', 600, 200);
-  ctx.font = '32px Arial';
-  ctx.fillText(user.name, 600, 300);
-  ctx.font = '24px Arial';
-  ctx.fillText(`Successfully completed: ${course.title}`, 600, 400);
-  ctx.font = '18px Arial';
-  ctx.fillText(`Certificate Number: ${certificateNumber}`, 600, 500);
-  ctx.fillText(`Issued: ${new Date().toLocaleDateString()}`, 600, 550);
+  ctx.fillStyle = "#fff"
+  ctx.fillRect(0, 0, 1200, 800)
+  ctx.fillStyle = "#000"
+  ctx.font = "bold 48px Arial"
+  ctx.textAlign = "center"
+  ctx.fillText("Certificate of Completion", 600, 200)
+  ctx.font = "32px Arial"
+  ctx.fillText(user.name, 600, 300)
+  ctx.font = "24px Arial"
+  ctx.fillText(`Successfully completed: ${course.title}`, 600, 400)
+  ctx.font = "18px Arial"
+  ctx.fillText(`Certificate Number: ${certificateNumber}`, 600, 500)
+  ctx.fillText(`Issued: ${new Date().toLocaleDateString()}`, 600, 550)
 
   // Save to S3
-  const buffer = canvas.toBuffer('image/png');
-  const certificateUrl = await uploadToS3(buffer, `certificates/${certificateNumber}.png`);
+  const buffer = canvas.toBuffer("image/png")
+  const certificateUrl = await uploadToS3(
+    buffer,
+    `certificates/${certificateNumber}.png`
+  )
 
   // Create database record
   await db.streamCertificate.create({
@@ -767,30 +837,35 @@ export async function generateCertificate(userId: string, courseId: string, scho
       certificateNumber,
       completedAt: new Date(),
     },
-  });
+  })
 
-  return { certificateNumber, certificateUrl };
+  return { certificateNumber, certificateUrl }
 }
 ```
 
 **Step 3: Download UI**
+
 ```tsx
 // Student Dashboard
-{certificate && (
-  <Button asChild>
-    <a href={certificate.url} download>
-      <Download className="mr-2" />
-      Download Certificate
-    </a>
-  </Button>
-)}
+{
+  certificate && (
+    <Button asChild>
+      <a href={certificate.url} download>
+        <Download className="mr-2" />
+        Download Certificate
+      </a>
+    </Button>
+  )
+}
 ```
 
 **Dependencies:**
+
 - `canvas` (for PDF generation) OR
 - `@react-pdf/renderer` (alternative)
 
 **Files to Create:**
+
 - `lib/stream/certificate-generator.ts`
 - `components/stream/dashboard/certificate-download.tsx`
 - `app/api/stream/certificate/[id]/route.ts` (serve PDF)
@@ -803,6 +878,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ## 🟡 MEDIUM PRIORITY (P2)
 
 ### 12. No Upload Progress Tracking
+
 **Status:** ❌ Not Implemented
 **Impact:** Low-Medium - Poor UX for large files
 
@@ -814,6 +890,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 13. No Optimistic UI Updates
+
 **Status:** ❌ Not Implemented
 **Impact:** Low-Medium - Slower perceived performance
 
@@ -825,6 +902,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 14. Missing Course Duration Aggregation
+
 **Status:** ⚠️ Stored on lessons only
 **Impact:** Low - Cannot show total course length
 
@@ -836,10 +914,12 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 15. No Email Notifications
+
 **Status:** ❌ Not Implemented
 **Impact:** Low-Medium - Students miss enrollment confirmations
 
 **Required:**
+
 - Enrollment confirmation
 - Course completion
 - New course published (for enrolled students)
@@ -852,6 +932,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 16. No Subtitle Support
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Accessibility issue
 
@@ -863,6 +944,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 17. No Quality Selection (360p, 720p, 1080p)
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Bandwidth optimization
 
@@ -874,6 +956,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 18. No Progress Saving (Resume Playback)
+
 **Status:** ❌ Not Implemented
 **Impact:** Medium - Students restart videos
 
@@ -885,6 +968,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 19. No Confetti Celebrations
+
 **Status:** ❌ Not Implemented
 **Impact:** Very Low - UX polish
 
@@ -898,6 +982,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 20. No File Type Validation
+
 **Status:** ⚠️ Any URL accepted
 **Impact:** Low-Medium - Potential errors
 
@@ -911,6 +996,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ## 🟢 LOW PRIORITY (P3)
 
 ### 21. Course Reviews & Ratings
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Social proof missing
 
@@ -922,6 +1008,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 22. Discussion Forums
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Community engagement
 
@@ -933,6 +1020,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 23. Quizzes & Assessments
+
 **Status:** ❌ Not Implemented
 **Impact:** Medium - Learning validation
 
@@ -944,6 +1032,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 24. Refund Management
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Manual process required
 
@@ -955,6 +1044,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 25. Bulk Course Import
+
 **Status:** ❌ Not Implemented
 **Impact:** Very Low - One-time use case
 
@@ -964,6 +1054,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 26. Live Streaming
+
 **Status:** ❌ Not Implemented
 **Impact:** Low - Different use case
 
@@ -975,6 +1066,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### 27. Mobile App Support
+
 **Status:** ❌ Not Web-only
 **Impact:** Low - Responsive web works
 
@@ -986,10 +1078,12 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ## 🐛 Known Bugs
 
 ### Bug #1: Enrollment Redirect URL Includes /s/subdomain/
+
 **Status:** ✅ **FIXED** (January 2025)
 **Impact:** Critical - 404 errors on enrollment
 
 **Fix Applied:**
+
 - Changed enrollment redirect from `/${locale}/s/${subdomain}/stream/dashboard/${slug}`
 - To: `/${locale}/stream/dashboard/${slug}`
 - Middleware handles subdomain mapping
@@ -999,10 +1093,12 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Bug #2: Navigation Links Include /s/subdomain/
+
 **Status:** ✅ **FIXED** (January 2025)
 **Impact:** Critical - 404 errors on navigation
 
 **Fix Applied:**
+
 - Updated `home/content.tsx` "Explore Courses" link
 - Updated `dashboard/content.tsx` "Browse Courses" link
 - Removed hardcoded `/s/${subdomain}/` from all navigation
@@ -1012,10 +1108,12 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Bug #3: Admin Functions Missing schoolId Filtering
+
 **Status:** ✅ **FIXED** (January 2025)
 **Impact:** Critical - Security vulnerability
 
 **Fix Applied:**
+
 - `adminGetCourse` now uses `findFirst` with `schoolId` filter
 - `adminGetLesson` includes `schoolId` through course relationship
 - `deleteCourse` verifies ownership before deletion
@@ -1025,10 +1123,12 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Bug #4: Seed Script Duplicate Errors
+
 **Status:** ✅ **FIXED** (January 2025)
 **Impact:** Medium - Seed fails on re-run
 
 **Fix Applied:**
+
 - Payment creation uses `upsert` with `paymentNumber` unique key
 - ExamResult creation uses `upsert` with composite key `examId_studentId`
 - Stream course creation includes `userId` (not `teacher.id`)
@@ -1040,25 +1140,31 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ## 📈 Technical Debt
 
 ### Debt #1: No TypeScript Strict Mode for Stream
+
 **Impact:** Medium - Type safety could be better
 **Recommendation:** Enable strict mode, fix type errors
 
 ### Debt #2: No Unit Tests
+
 **Impact:** High - Risk of regressions
 **Recommendation:** Add Vitest tests for:
+
 - Data fetchers
 - Server actions
 - Components
 
 ### Debt #3: No Error Boundaries
+
 **Impact:** Medium - Poor error UX
 **Recommendation:** Add React error boundaries for graceful failure
 
 ### Debt #4: Inconsistent Error Handling
+
 **Impact:** Low-Medium - Some actions throw, others return error objects
 **Recommendation:** Standardize on `{ success: boolean, error?: string }` pattern
 
 ### Debt #5: No Logging/Monitoring
+
 **Impact:** High - Hard to debug production issues
 **Recommendation:** Add Sentry or similar for error tracking
 
@@ -1067,6 +1173,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ## 🗺️ Development Roadmap
 
 ### Phase 1: Critical Features (Q1 2025)
+
 **Goal:** Make Stream production-ready
 
 - [ ] S3 file upload implementation (P0, 16-24h)
@@ -1080,6 +1187,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Phase 2: Enhanced UX (Q2 2025)
+
 **Goal:** Improve admin and student experience
 
 - [ ] Drag-and-drop reordering (P1, 16-20h)
@@ -1093,6 +1201,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Phase 3: Advanced Features (Q3 2025)
+
 **Goal:** Add premium features
 
 - [ ] Certificate generation (P2, 16-24h)
@@ -1106,6 +1215,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ---
 
 ### Phase 4: Future Enhancements (Q4 2025+)
+
 **Goal:** Major feature additions
 
 - [ ] Course reviews & ratings (P3, 20-30h)
@@ -1123,6 +1233,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 ### Testing Strategy
 
 **Manual Testing Checklist:**
+
 - [ ] Create course in School A
 - [ ] Verify invisible in School B
 - [ ] Enroll as student
@@ -1133,6 +1244,7 @@ export async function generateCertificate(userId: string, courseId: string, scho
 - [ ] Verify cascade deletes
 
 **Automated Testing (Planned):**
+
 - [ ] Unit tests for data fetchers
 - [ ] Integration tests for enrollment flow
 - [ ] E2E tests with Playwright

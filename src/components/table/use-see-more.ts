@@ -19,103 +19,102 @@
  * - Search is debounced 300ms before updating URL (prevents excessive refetches)
  */
 
-"use client";
+"use client"
 
+import * as React from "react"
 import {
-  type ColumnFiltersState,
   getCoreRowModel,
   getFacetedMinMaxValues,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFilteredRowModel,
   getSortedRowModel,
+  useReactTable,
+  type ColumnFiltersState,
   type PaginationState,
   type RowSelectionState,
   type SortingState,
   type TableOptions,
   type TableState,
   type Updater,
-  useReactTable,
   type VisibilityState,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
 import {
-  type Parser,
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,
-  type UseQueryStateOptions,
   useQueryState,
   useQueryStates,
-} from "nuqs";
-import * as React from "react";
+  type Parser,
+  type UseQueryStateOptions,
+} from "nuqs"
 
-import { useDebouncedCallback } from "./use-debounced-callback";
-import { getSortingStateParser } from "./utils";
-import type { ExtendedColumnSort, SeeMorePaginationState } from "./types";
-import { paginationConfig } from "./config";
+import { paginationConfig } from "./config"
+import type { ExtendedColumnSort, SeeMorePaginationState } from "./types"
+import { useDebouncedCallback } from "./use-debounced-callback"
+import { getSortingStateParser } from "./utils"
 
-const LOADED_COUNT_KEY = "loadedCount";
-const BATCH_SIZE_KEY = "batchSize";
-const SORT_KEY = "sort";
-const ARRAY_SEPARATOR = ",";
-const DEBOUNCE_MS = 300;
-const THROTTLE_MS = 50;
+const LOADED_COUNT_KEY = "loadedCount"
+const BATCH_SIZE_KEY = "batchSize"
+const SORT_KEY = "sort"
+const ARRAY_SEPARATOR = ","
+const DEBOUNCE_MS = 300
+const THROTTLE_MS = 50
 
-interface UseSeeMoreProps<TData>
-  extends Omit<
-      TableOptions<TData>,
-      | "state"
-      | "getCoreRowModel"
-      | "manualFiltering"
-      | "manualPagination"
-      | "manualSorting"
-    > {
+interface UseSeeMoreProps<TData> extends Omit<
+  TableOptions<TData>,
+  | "state"
+  | "getCoreRowModel"
+  | "manualFiltering"
+  | "manualPagination"
+  | "manualSorting"
+> {
   /**
    * Total number of records available on the server
    */
-  totalCount: number;
+  totalCount: number
   /**
    * Initial state for the table
    */
   initialState?: Omit<Partial<TableState>, "sorting"> & {
-    sorting?: ExtendedColumnSort<TData>[];
-  };
+    sorting?: ExtendedColumnSort<TData>[]
+  }
   /**
    * History mode for URL updates
    */
-  history?: "push" | "replace";
+  history?: "push" | "replace"
   /**
    * Debounce time in milliseconds for filter updates
    */
-  debounceMs?: number;
+  debounceMs?: number
   /**
    * Throttle time in milliseconds
    */
-  throttleMs?: number;
+  throttleMs?: number
   /**
    * Clear URL params when they match default values
    */
-  clearOnDefault?: boolean;
+  clearOnDefault?: boolean
   /**
    * Enable advanced filter UI
    */
-  enableAdvancedFilter?: boolean;
+  enableAdvancedFilter?: boolean
   /**
    * Scroll to top on state change
    */
-  scroll?: boolean;
+  scroll?: boolean
   /**
    * Use shallow routing
    */
-  shallow?: boolean;
+  shallow?: boolean
   /**
    * React transition function
    */
-  startTransition?: React.TransitionStartFunction;
+  startTransition?: React.TransitionStartFunction
   /**
    * Callback when "see more" is triggered
    */
-  onSeeMore?: (newLoadedCount: number, batchSize: number) => Promise<void>;
+  onSeeMore?: (newLoadedCount: number, batchSize: number) => Promise<void>
 }
 
 export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
@@ -134,7 +133,7 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     startTransition,
     onSeeMore,
     ...tableProps
-  } = props;
+  } = props
 
   const queryStateOptions = React.useMemo<
     Omit<UseQueryStateOptions<string>, "parse">
@@ -157,7 +156,7 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
       clearOnDefault,
       startTransition,
     ]
-  );
+  )
 
   // ============================================================================
   // State Management
@@ -165,15 +164,17 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
 
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
     initialState?.rowSelection ?? {}
-  );
+  )
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(initialState?.columnVisibility ?? {});
+    React.useState<VisibilityState>(initialState?.columnVisibility ?? {})
 
   // Track loaded count in URL for bookmarking/sharing (can resume from last loaded position)
   const [loadedCount, setLoadedCount] = useQueryState(
     LOADED_COUNT_KEY,
-    parseAsInteger.withOptions(queryStateOptions).withDefault(initialData.length)
-  );
+    parseAsInteger
+      .withOptions(queryStateOptions)
+      .withDefault(initialData.length)
+  )
 
   // Track batch size in URL (allows user to customize items per "see more" click)
   const [batchSize, setBatchSize] = useQueryState(
@@ -181,14 +182,15 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     parseAsInteger
       .withOptions(queryStateOptions)
       .withDefault(paginationConfig.defaultBatchSize)
-  );
+  )
 
   // Accumulated data state - holds ALL rows loaded so far (not paginated)
   // When "See More" is clicked, onSeeMore callback fetches next batch and setAccumulatedData appends
-  const [accumulatedData, setAccumulatedData] = React.useState<TData[]>(initialData);
+  const [accumulatedData, setAccumulatedData] =
+    React.useState<TData[]>(initialData)
 
   // Loading state for "see more" action - prevents duplicate clicks during fetch
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false)
 
   // Pagination state for TanStack Table - shows all accumulated rows at once
   // pageSize = accumulatedData.length means no actual pagination (all rows visible)
@@ -197,16 +199,19 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     return {
       pageIndex: 0,
       pageSize: accumulatedData.length,
-    };
-  }, [accumulatedData.length]);
+    }
+  }, [accumulatedData.length])
 
   // See more pagination state
-  const seeMoreState: SeeMorePaginationState = React.useMemo(() => ({
-    loadedCount,
-    batchSize,
-    hasMore: loadedCount < totalCount,
-    total: totalCount,
-  }), [loadedCount, batchSize, totalCount]);
+  const seeMoreState: SeeMorePaginationState = React.useMemo(
+    () => ({
+      loadedCount,
+      batchSize,
+      hasMore: loadedCount < totalCount,
+      total: totalCount,
+    }),
+    [loadedCount, batchSize, totalCount]
+  )
 
   // ============================================================================
   // Sorting
@@ -215,44 +220,44 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
   const columnIds = React.useMemo(() => {
     return new Set(
       columns.map((column) => column.id).filter(Boolean) as string[]
-    );
-  }, [columns]);
+    )
+  }, [columns])
 
   const [sorting, setSorting] = useQueryState(
     SORT_KEY,
     getSortingStateParser<TData>(columnIds)
       .withOptions(queryStateOptions)
       .withDefault(initialState?.sorting ?? [])
-  );
+  )
 
   const onSortingChange = React.useCallback(
     (updaterOrValue: Updater<SortingState>) => {
       if (typeof updaterOrValue === "function") {
-        const newSorting = updaterOrValue(sorting);
-        setSorting(newSorting as ExtendedColumnSort<TData>[]);
+        const newSorting = updaterOrValue(sorting)
+        setSorting(newSorting as ExtendedColumnSort<TData>[])
       } else {
-        setSorting(updaterOrValue as ExtendedColumnSort<TData>[]);
+        setSorting(updaterOrValue as ExtendedColumnSort<TData>[])
       }
       // Reset loaded data when sorting changes because new sort order means fresh data from server
       // Don't keep accumulated rows - they'd be in old sort order once parent refetches with new sort
-      setLoadedCount(batchSize);
-      setAccumulatedData(initialData.slice(0, batchSize));
+      setLoadedCount(batchSize)
+      setAccumulatedData(initialData.slice(0, batchSize))
     },
     [sorting, setSorting, batchSize, initialData, setLoadedCount]
-  );
+  )
 
   // ============================================================================
   // Filtering
   // ============================================================================
 
   const filterableColumns = React.useMemo(() => {
-    if (enableAdvancedFilter) return [];
+    if (enableAdvancedFilter) return []
 
-    return columns.filter((column) => column.enableColumnFilter);
-  }, [columns, enableAdvancedFilter]);
+    return columns.filter((column) => column.enableColumnFilter)
+  }, [columns, enableAdvancedFilter])
 
   const filterParsers = React.useMemo(() => {
-    if (enableAdvancedFilter) return {};
+    if (enableAdvancedFilter) return {}
 
     return filterableColumns.reduce<
       Record<string, Parser<string> | Parser<string[]>>
@@ -261,29 +266,29 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
         acc[column.id ?? ""] = parseAsArrayOf(
           parseAsString,
           ARRAY_SEPARATOR
-        ).withOptions(queryStateOptions);
+        ).withOptions(queryStateOptions)
       } else {
-        acc[column.id ?? ""] = parseAsString.withOptions(queryStateOptions);
+        acc[column.id ?? ""] = parseAsString.withOptions(queryStateOptions)
       }
-      return acc;
-    }, {});
-  }, [filterableColumns, queryStateOptions, enableAdvancedFilter]);
+      return acc
+    }, {})
+  }, [filterableColumns, queryStateOptions, enableAdvancedFilter])
 
-  const [filterValues, setFilterValues] = useQueryStates(filterParsers);
+  const [filterValues, setFilterValues] = useQueryStates(filterParsers)
 
   const debouncedSetFilterValues = useDebouncedCallback(
     (values: typeof filterValues) => {
-      void setFilterValues(values);
+      void setFilterValues(values)
       // Reset loaded data when filters change - debouncing waits for user to finish typing before refetch
       // Parent component will refetch data based on new filter values from URL
-      void setLoadedCount(batchSize);
-      setAccumulatedData(initialData.slice(0, batchSize));
+      void setLoadedCount(batchSize)
+      setAccumulatedData(initialData.slice(0, batchSize))
     },
     debounceMs
-  );
+  )
 
   const initialColumnFilters: ColumnFiltersState = React.useMemo(() => {
-    if (enableAdvancedFilter) return [];
+    if (enableAdvancedFilter) return []
 
     return Object.entries(filterValues).reduce<ColumnFiltersState>(
       (filters, [key, value]) => {
@@ -291,54 +296,54 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
           const processedValue = Array.isArray(value)
             ? value
             : typeof value === "string" && /[^a-zA-Z0-9]/.test(value)
-            ? value.split(/[^a-zA-Z0-9]+/).filter(Boolean)
-            : [value];
+              ? value.split(/[^a-zA-Z0-9]+/).filter(Boolean)
+              : [value]
 
           filters.push({
             id: key,
             value: processedValue,
-          });
+          })
         }
-        return filters;
+        return filters
       },
       []
-    );
-  }, [filterValues, enableAdvancedFilter]);
+    )
+  }, [filterValues, enableAdvancedFilter])
 
   const [columnFilters, setColumnFilters] =
-    React.useState<ColumnFiltersState>(initialColumnFilters);
+    React.useState<ColumnFiltersState>(initialColumnFilters)
 
   const onColumnFiltersChange = React.useCallback(
     (updaterOrValue: Updater<ColumnFiltersState>) => {
-      if (enableAdvancedFilter) return;
+      if (enableAdvancedFilter) return
 
       setColumnFilters((prev) => {
         const next =
           typeof updaterOrValue === "function"
             ? updaterOrValue(prev)
-            : updaterOrValue;
+            : updaterOrValue
 
         const filterUpdates = next.reduce<
           Record<string, string | string[] | null>
         >((acc, filter) => {
           if (filterableColumns.find((column) => column.id === filter.id)) {
-            acc[filter.id] = filter.value as string | string[];
+            acc[filter.id] = filter.value as string | string[]
           }
-          return acc;
-        }, {});
+          return acc
+        }, {})
 
         for (const prevFilter of prev) {
           if (!next.some((filter) => filter.id === prevFilter.id)) {
-            filterUpdates[prevFilter.id] = null;
+            filterUpdates[prevFilter.id] = null
           }
         }
 
-        debouncedSetFilterValues(filterUpdates);
-        return next;
-      });
+        debouncedSetFilterValues(filterUpdates)
+        return next
+      })
     },
     [debouncedSetFilterValues, filterableColumns, enableAdvancedFilter]
-  );
+  )
 
   // ============================================================================
   // See More Handler
@@ -346,32 +351,39 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
 
   const handleSeeMore = React.useCallback(async () => {
     // Guard: prevent duplicate clicks or refetch if all data loaded
-    if (!seeMoreState.hasMore || isLoadingMore) return;
+    if (!seeMoreState.hasMore || isLoadingMore) return
 
-    setIsLoadingMore(true);
+    setIsLoadingMore(true)
 
     try {
-      const newLoadedCount = loadedCount + batchSize;
+      const newLoadedCount = loadedCount + batchSize
 
       // Parent component's onSeeMore callback fetches new data based on newLoadedCount and batchSize
       // It's responsible for updating accumulatedData via setAccumulatedData
       if (onSeeMore) {
-        await onSeeMore(newLoadedCount, batchSize);
+        await onSeeMore(newLoadedCount, batchSize)
       }
 
       // Update URL state immediately (parent will fetch fresh data based on new URL)
-      void setLoadedCount(newLoadedCount);
+      void setLoadedCount(newLoadedCount)
     } catch (error) {
-      console.error("Error loading more data:", error);
+      console.error("Error loading more data:", error)
     } finally {
-      setIsLoadingMore(false);
+      setIsLoadingMore(false)
     }
-  }, [seeMoreState.hasMore, isLoadingMore, loadedCount, batchSize, onSeeMore, setLoadedCount]);
+  }, [
+    seeMoreState.hasMore,
+    isLoadingMore,
+    loadedCount,
+    batchSize,
+    onSeeMore,
+    setLoadedCount,
+  ])
 
   // Update accumulated data when initial data changes
   React.useEffect(() => {
-    setAccumulatedData(initialData);
-  }, [initialData]);
+    setAccumulatedData(initialData)
+  }, [initialData])
 
   // ============================================================================
   // Table Instance
@@ -408,7 +420,7 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     manualPagination: false, // Client-side pagination for accumulated data
     manualSorting: true, // Server-side sorting
     manualFiltering: true, // Server-side filtering
-  });
+  })
 
   return {
     table,
@@ -418,5 +430,5 @@ export function useSeeMore<TData>(props: UseSeeMoreProps<TData>) {
     shallow,
     debounceMs,
     throttleMs,
-  };
+  }
 }

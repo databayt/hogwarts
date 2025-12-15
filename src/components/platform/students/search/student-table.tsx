@@ -1,18 +1,21 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
+import { format } from "date-fns"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+  Calendar,
+  CreditCard,
+  Ellipsis,
+  Eye,
+  FileText,
+  Pencil,
+  Trash2,
+} from "lucide-react"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,17 +23,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Ellipsis, Eye, Pencil, Trash2, FileText, CreditCard, Calendar } from "lucide-react";
-import { format } from "date-fns";
-import type { Student } from "../registration/types";
+} from "@/components/ui/dropdown-menu"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+import type { Student } from "../registration/types"
 
 interface StudentTableProps {
-  students: Student[];
-  onStudentSelect?: (student: Student) => void;
-  onEdit?: (student: Student) => void;
-  onDelete?: (student: Student) => void;
-  enableSelection?: boolean;
+  students: Student[]
+  onStudentSelect?: (student: Student) => void
+  onEdit?: (student: Student) => void
+  onDelete?: (student: Student) => void
+  enableSelection?: boolean
 }
 
 const statusColors = {
@@ -40,7 +50,7 @@ const statusColors = {
   GRADUATED: "bg-blue-100 text-blue-800",
   TRANSFERRED: "bg-yellow-100 text-yellow-800",
   DROPPED_OUT: "bg-red-700 text-white",
-};
+}
 
 export function StudentTable({
   students,
@@ -49,47 +59,52 @@ export function StudentTable({
   onDelete,
   enableSelection = false,
 }: StudentTableProps) {
-  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(
+    new Set()
+  )
 
   const toggleSelectAll = () => {
     if (selectedStudents.size === students.length) {
-      setSelectedStudents(new Set());
+      setSelectedStudents(new Set())
     } else {
-      setSelectedStudents(new Set(students.map(s => s.id)));
+      setSelectedStudents(new Set(students.map((s) => s.id)))
     }
-  };
+  }
 
   const toggleSelectStudent = (studentId: string) => {
-    const newSelected = new Set(selectedStudents);
+    const newSelected = new Set(selectedStudents)
     if (newSelected.has(studentId)) {
-      newSelected.delete(studentId);
+      newSelected.delete(studentId)
     } else {
-      newSelected.add(studentId);
+      newSelected.add(studentId)
     }
-    setSelectedStudents(newSelected);
-  };
+    setSelectedStudents(newSelected)
+  }
 
   const getInitials = (student: Student) => {
-    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase();
-  };
+    return `${student.givenName?.[0] || ""}${student.surname?.[0] || ""}`.toUpperCase()
+  }
 
   const getFullName = (student: Student) => {
     return [student.givenName, student.middleName, student.surname]
       .filter(Boolean)
-      .join(" ");
-  };
+      .join(" ")
+  }
 
   const getAge = (dateOfBirth?: Date) => {
-    if (!dateOfBirth) return null;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (!dateOfBirth) return null
+    const today = new Date()
+    const birthDate = new Date(dateOfBirth)
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--
     }
-    return age;
-  };
+    return age
+  }
 
   return (
     <div className="rounded-md border">
@@ -99,7 +114,10 @@ export function StudentTable({
             {enableSelection && (
               <TableHead className="w-12">
                 <Checkbox
-                  checked={selectedStudents.size === students.length && students.length > 0}
+                  checked={
+                    selectedStudents.size === students.length &&
+                    students.length > 0
+                  }
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
@@ -118,7 +136,7 @@ export function StudentTable({
           {students.map((student) => (
             <TableRow
               key={student.id}
-              className="cursor-pointer hover:bg-muted/50"
+              className="hover:bg-muted/50 cursor-pointer"
               onClick={() => onStudentSelect?.(student)}
             >
               {enableSelection && (
@@ -132,23 +150,33 @@ export function StudentTable({
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={student.profilePhotoUrl} alt={getFullName(student)} />
-                    <AvatarFallback className="text-xs">{getInitials(student)}</AvatarFallback>
+                    <AvatarImage
+                      src={student.profilePhotoUrl}
+                      alt={getFullName(student)}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(student)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="font-medium">{getFullName(student)}</div>
-                    {student.studentType && student.studentType !== "REGULAR" && (
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {student.studentType}
-                      </Badge>
-                    )}
+                    {student.studentType &&
+                      student.studentType !== "REGULAR" && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {student.studentType}
+                        </Badge>
+                      )}
                   </div>
                 </div>
               </TableCell>
               <TableCell>
-                <div className="font-mono text-sm">{student.grNumber || student.studentId || "-"}</div>
+                <div className="font-mono text-sm">
+                  {student.grNumber || student.studentId || "-"}
+                </div>
                 {student.admissionNumber && (
-                  <div className="text-xs text-muted-foreground">Adm: {student.admissionNumber}</div>
+                  <div className="text-muted-foreground text-xs">
+                    Adm: {student.admissionNumber}
+                  </div>
                 )}
               </TableCell>
               <TableCell>
@@ -157,38 +185,49 @@ export function StudentTable({
                     <span>{getAge(student.dateOfBirth)} years</span>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">{student.gender}</div>
+                <div className="text-muted-foreground text-xs">
+                  {student.gender}
+                </div>
               </TableCell>
               <TableCell>
                 <div className="space-y-1">
                   {student.email && (
-                    <div className="text-xs text-muted-foreground truncate max-w-[150px]">
+                    <div className="text-muted-foreground max-w-[150px] truncate text-xs">
                       {student.email}
                     </div>
                   )}
                   {student.mobileNumber && (
-                    <div className="text-xs text-muted-foreground">{student.mobileNumber}</div>
+                    <div className="text-muted-foreground text-xs">
+                      {student.mobileNumber}
+                    </div>
                   )}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="text-sm">Grade 10-A</div>
-                <div className="text-xs text-muted-foreground">Science</div>
+                <div className="text-muted-foreground text-xs">Science</div>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className={statusColors[student.status]}>
+                <Badge
+                  variant="secondary"
+                  className={statusColors[student.status]}
+                >
                   {student.status}
                 </Badge>
               </TableCell>
               <TableCell>
                 <div className="text-sm">
-                  {student.enrollmentDate && format(new Date(student.enrollmentDate), "MMM dd, yyyy")}
+                  {student.enrollmentDate &&
+                    format(new Date(student.enrollmentDate), "MMM dd, yyyy")}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-muted-foreground text-xs">
                   {student.category || "General"}
                 </div>
               </TableCell>
-              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+              <TableCell
+                className="text-right"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -198,7 +237,9 @@ export function StudentTable({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => onStudentSelect?.(student)}>
+                    <DropdownMenuItem
+                      onClick={() => onStudentSelect?.(student)}
+                    >
                       <Eye className="mr-2 h-4 w-4" />
                       View Profile
                     </DropdownMenuItem>
@@ -235,5 +276,5 @@ export function StudentTable({
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

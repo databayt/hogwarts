@@ -4,7 +4,15 @@
  * Feature-based sub-block for student fee management
  */
 
-import type { FeeStructure, FeeAssignment, Payment, Refund, Scholarship, ScholarshipApplication, Fine } from '@prisma/client'
+import type {
+  FeeAssignment,
+  FeeStructure,
+  Fine,
+  Payment,
+  Refund,
+  Scholarship,
+  ScholarshipApplication,
+} from "@prisma/client"
 
 // Extended types with relations
 export type FeeStructureWithRelations = FeeStructure & {

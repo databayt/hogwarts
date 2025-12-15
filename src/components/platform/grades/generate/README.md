@@ -18,6 +18,7 @@ Intelligent exam generation system combining manual question authoring, AI assis
 ### ✅ Implemented (100%)
 
 **Question Bank Management**
+
 - 5 question types: MCQ, True/False, Fill-in-Blank, Short Answer, Essay
 - Difficulty levels with auto-point calculation
 - Bloom's Taxonomy (6 levels: Remember → Create)
@@ -25,18 +26,21 @@ Intelligent exam generation system combining manual question authoring, AI assis
 - Usage tracking and success rate analytics
 
 **Exam Templates**
+
 - Visual distribution matrix (Type × Difficulty)
 - Reusable blueprints with total marks/duration
 - Active/Inactive status and usage tracking
 - Automatic question count calculation
 
 **Smart Generation Algorithm**
+
 - Fisher-Yates shuffle with seeded RNG
 - Fair question rotation (prioritizes less-used questions)
 - Distribution validation
 - Bloom's taxonomy alignment
 
 **Data Management**
+
 - Sortable, filterable data tables
 - Load-more pagination
 - CRUD operations with modal forms
@@ -45,6 +49,7 @@ Intelligent exam generation system combining manual question authoring, AI assis
 ### ⏳ In Progress (60%)
 
 **Internationalization (i18n)**
+
 - ✅ English/Arabic dictionaries (200+ keys)
 - ✅ Landing page, question bank form/table/content
 - ⏳ Remaining: columns, templates components
@@ -71,6 +76,7 @@ pnpm prisma generate
 Navigate to: `https://yourschool.databayt.org/[lang]/generate`
 
 Examples:
+
 - English: `/en/generate`
 - Arabic (RTL): `/ar/generate`
 
@@ -81,12 +87,14 @@ Examples:
 **Navigate:** Question Bank → Add Question
 
 **Required Fields:**
+
 - Subject, Question Type, Question Text
 - Difficulty (Easy/Medium/Hard)
 - Bloom Level (Remember → Create)
 - Points (auto-calculated)
 
 **Type-Specific Fields:**
+
 - **MCQ/True-False:** Options with correct answer(s)
 - **Fill-in-Blank:** Accepted answers (multiple variations)
 - **Short Answer/Essay:** Sample answer + grading rubric
@@ -98,6 +106,7 @@ Examples:
 **Navigate:** Exam Templates → Create Template
 
 **Define:**
+
 - Name, subject, duration, total marks
 - Distribution matrix (question counts per type/difficulty)
 - Example: 10 Easy MCQs, 5 Medium MCQs, 2 Hard Essays
@@ -105,10 +114,11 @@ Examples:
 ### 3. Generate Exams
 
 **Programmatically:**
-```typescript
-import { generateExam } from '@/components/platform/grades/generate/actions';
 
-const result = await generateExam(formData);
+```typescript
+import { generateExam } from "@/components/platform/grades/generate/actions"
+
+const result = await generateExam(formData)
 // Returns: { success, data: { questions, totalPoints, metadata } }
 ```
 
@@ -171,21 +181,21 @@ generateExam(formData: FormData): Promise<GenerateExamResult>
 
 ```typescript
 interface QuestionBankDTO {
-  id: string;
-  questionText: string;
-  questionType: QuestionType;
-  difficulty: DifficultyLevel;
-  bloomLevel: BloomLevel;
-  points: number;
+  id: string
+  questionText: string
+  questionType: QuestionType
+  difficulty: DifficultyLevel
+  bloomLevel: BloomLevel
+  points: number
   // ... + type-specific fields
 }
 
 interface ExamTemplateDTO {
-  id: string;
-  name: string;
-  distribution: TemplateDistribution;
-  duration: number;
-  totalMarks: number;
+  id: string
+  name: string
+  distribution: TemplateDistribution
+  duration: number
+  totalMarks: number
   // ...
 }
 ```
@@ -204,12 +214,14 @@ interface ExamTemplateDTO {
 ### Usage
 
 **Server Component:**
+
 ```typescript
 const dictionary = await getDictionary(lang);
 return <Component dictionary={dictionary} />;
 ```
 
 **Client Component:**
+
 ```typescript
 const dict = dictionary?.generate || {};
 <FormLabel>{dict.questionBank?.form?.questionTextLabel || "Question Text"}</FormLabel>
@@ -225,9 +237,10 @@ const dict = dictionary?.generate || {};
 ### Multi-Tenant Isolation
 
 **ALL queries scoped by schoolId:**
+
 ```typescript
-const { schoolId } = await getTenantContext();
-await db.questionBank.findMany({ where: { schoolId } });
+const { schoolId } = await getTenantContext()
+await db.questionBank.findMany({ where: { schoolId } })
 ```
 
 ### Authorization
@@ -245,42 +258,46 @@ await db.questionBank.findMany({ where: { schoolId } });
 
 ### Default Points
 
-| Type | Points |
-|------|--------|
-| MCQ | 1 |
-| True/False | 1 |
-| Fill-in-Blank | 2 |
-| Short Answer | 3 |
-| Essay | 5 |
+| Type          | Points |
+| ------------- | ------ |
+| MCQ           | 1      |
+| True/False    | 1      |
+| Fill-in-Blank | 2      |
+| Short Answer  | 3      |
+| Essay         | 5      |
 
 ### Time Estimates
 
-| Type | Minutes |
-|------|---------|
-| MCQ | 1.5 |
-| True/False | 0.5 |
-| Fill-in-Blank | 2 |
-| Short Answer | 5 |
-| Essay | 15 |
+| Type          | Minutes |
+| ------------- | ------- |
+| MCQ           | 1.5     |
+| True/False    | 0.5     |
+| Fill-in-Blank | 2       |
+| Short Answer  | 5       |
+| Essay         | 15      |
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
 **1. Subject not found**
+
 - **Cause:** Hardcoded subjects in dropdown
 - **Workaround:** Use IDs: "subject-1", "subject-2", "subject-3"
 - **Fix:** TODO - Fetch from database
 
 **2. Dictionary not loading**
+
 - **Check:** dictionary prop passed through component tree
 - **Verify:** dictionaries registered in `dictionaries.ts`
 
 **3. Questions not generating**
+
 - **Cause:** Insufficient questions matching distribution
 - **Solution:** Create more questions or adjust template
 
 **4. TypeScript errors in util.ts**
+
 - **Note:** Pre-existing issue with enum imports
 - **Impact:** None (runtime works fine)
 

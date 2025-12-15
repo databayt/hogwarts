@@ -1,16 +1,19 @@
 # Feature: {{featureName}}
 
 ## 📋 Overview
+
 {{description}}
 
 ## 🚀 Quick Start
 
 ### Import
+
 ```typescript
 import { {{mainComponent}} } from '@/components/platform/{{feature}}/content'
 ```
 
 ### Basic Usage
+
 ```tsx
 <{{mainComponent}} />
 ```
@@ -34,15 +37,19 @@ src/components/platform/{{feature}}/
 ## 🔧 Components
 
 ### Main Components
+
 | Component | Purpose | Props |
-|-----------|---------|-------|
+| --------- | ------- | ----- |
+
 {{#components}}
 | `{{name}}` | {{purpose}} | {{props}} |
 {{/components}}
 
 ### Hooks
+
 | Hook | Purpose | Returns |
-|------|---------|---------|
+| ---- | ------- | ------- |
+
 {{#hooks}}
 | `{{name}}` | {{purpose}} | {{returns}} |
 {{/hooks}}
@@ -50,25 +57,34 @@ src/components/platform/{{feature}}/
 ## 🔌 API
 
 ### Server Actions
+
 | Action | Purpose | Parameters | Returns |
-|--------|---------|------------|---------|
+| ------ | ------- | ---------- | ------- |
+
 {{#actions}}
 | `{{name}}` | {{purpose}} | {{params}} | {{returns}} |
 {{/actions}}
 
 ### Validation Schemas
+
 ```typescript
-{{validationSchemas}}
+{
+  {
+    validationSchemas
+  }
+}
 ```
 
 ## 💾 Database
 
 ### Models
+
 ```prisma
 {{prismaModels}}
 ```
 
 ### Relationships
+
 ```mermaid
 graph LR
 {{#relationships}}
@@ -84,6 +100,7 @@ graph LR
 - ✅ Session validation required
 
 ### Example Query
+
 ```typescript
 const data = await db.{{model}}.findMany({
   where: { schoolId: session.user.schoolId }
@@ -93,17 +110,24 @@ const data = await db.{{model}}.findMany({
 ## 🌐 Internationalization
 
 ### Supported Languages
+
 - 🇸🇦 Arabic (RTL)
 - 🇬🇧 English (LTR)
 
 ### Translation Keys
+
 ```typescript
-{{translationKeys}}
+{
+  {
+    translationKeys
+  }
+}
 ```
 
 ## 🧪 Testing
 
 ### Coverage
+
 ```
 Component       | Statements | Branches | Functions | Lines |
 ----------------|------------|----------|-----------|-------|
@@ -111,6 +135,7 @@ Component       | Statements | Branches | Functions | Lines |
 ```
 
 ### Running Tests
+
 ```bash
 # Run all tests
 pnpm test {{feature}}
@@ -123,28 +148,32 @@ pnpm test {{feature}} --coverage
 ```
 
 ### Test Structure
+
 ```typescript
-describe('{{featureName}}', () => {
-  it('should handle CRUD operations', () => {})
-  it('should validate input', () => {})
-  it('should respect multi-tenant scope', () => {})
-  it('should handle errors gracefully', () => {})
+describe("{{featureName}}", () => {
+  it("should handle CRUD operations", () => {})
+  it("should validate input", () => {})
+  it("should respect multi-tenant scope", () => {})
+  it("should handle errors gracefully", () => {})
 })
 ```
 
 ## 🔒 Security
 
 ### Authentication
+
 - ✅ Session required
 - ✅ Role-based access
 - ✅ JWT validation
 
 ### Authorization
+
 ```typescript
-const allowedRoles = ['ADMIN', 'TEACHER']
+const allowedRoles = ["ADMIN", "TEACHER"]
 ```
 
 ### Data Validation
+
 - ✅ Input sanitization
 - ✅ Zod schema validation
 - ✅ SQL injection prevention
@@ -153,11 +182,14 @@ const allowedRoles = ['ADMIN', 'TEACHER']
 ## ⚡ Performance
 
 ### Optimizations
+
 {{#optimizations}}
+
 - {{optimization}}
-{{/optimizations}}
+  {{/optimizations}}
 
 ### Metrics
+
 - **Load Time**: {{loadTime}}ms
 - **API Response**: {{apiResponse}}ms
 - **Bundle Size**: {{bundleSize}}KB
@@ -165,32 +197,53 @@ const allowedRoles = ['ADMIN', 'TEACHER']
 ## 📊 Usage Examples
 
 ### Create {{entity}}
+
 ```typescript
-{{createExample}}
+{
+  {
+    createExample
+  }
+}
 ```
 
 ### Read {{entity}}
+
 ```typescript
-{{readExample}}
+{
+  {
+    readExample
+  }
+}
 ```
 
 ### Update {{entity}}
+
 ```typescript
-{{updateExample}}
+{
+  {
+    updateExample
+  }
+}
 ```
 
 ### Delete {{entity}}
+
 ```typescript
-{{deleteExample}}
+{
+  {
+    deleteExample
+  }
+}
 ```
 
 ## 🐛 Known Issues
 
 {{#issues}}
+
 - **Issue #{{number}}**: {{description}}
   - **Status**: {{status}}
   - **Workaround**: {{workaround}}
-{{/issues}}
+    {{/issues}}
 
 ## 📚 Related Documentation
 
@@ -202,13 +255,16 @@ const allowedRoles = ['ADMIN', 'TEACHER']
 ## 🔄 Changelog
 
 ### {{version}} - {{date}}
+
 {{#changes}}
+
 - {{change}}
-{{/changes}}
+  {{/changes}}
 
 ## 👥 Contributing
 
 ### Development Workflow
+
 1. Create feature branch: `git checkout -b feature/{{feature}}-enhancement`
 2. Write tests first (TDD)
 3. Implement feature
@@ -216,6 +272,7 @@ const allowedRoles = ['ADMIN', 'TEACHER']
 5. Submit PR with description
 
 ### Code Standards
+
 - ✅ TypeScript strict mode
 - ✅ ESLint rules pass
 - ✅ Prettier formatted
@@ -229,5 +286,6 @@ const allowedRoles = ['ADMIN', 'TEACHER']
 - **Discord**: [Community Server](https://discord.gg/...)
 
 ---
-*Last Updated: {{timestamp}}*
-*Auto-Generated: Do not edit manually*
+
+_Last Updated: {{timestamp}}_
+_Auto-Generated: Do not edit manually_

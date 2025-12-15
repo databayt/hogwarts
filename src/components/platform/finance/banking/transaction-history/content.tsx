@@ -1,5 +1,6 @@
-import { getAccounts } from '@/components/platform/finance/banking/actions/bank.actions'
-import { TransactionsTableImproved as TransactionsTable } from './table'
+import { getAccounts } from "@/components/platform/finance/banking/actions/bank.actions"
+
+import { TransactionsTableImproved as TransactionsTable } from "./table"
 
 interface TransactionHistoryContentProps {
   user: any
@@ -12,19 +13,24 @@ export async function TransactionHistoryContent({
   user,
   searchParams,
   dictionary,
-  lang
+  lang,
 }: TransactionHistoryContentProps) {
   const page = Number(searchParams?.page) || 1
   const accountsResult = await getAccounts({ userId: user.id })
 
-  if (!accountsResult.success || !accountsResult.data?.data || accountsResult.data.data.length === 0) {
+  if (
+    !accountsResult.success ||
+    !accountsResult.data?.data ||
+    accountsResult.data.data.length === 0
+  ) {
     return (
-      <div className="border rounded-lg p-12 text-center">
-        <h3 className="text-lg font-semibold mb-2">
-          {dictionary?.noTransactionHistory || 'No transaction history'}
+      <div className="rounded-lg border p-12 text-center">
+        <h3 className="mb-2 text-lg font-semibold">
+          {dictionary?.noTransactionHistory || "No transaction history"}
         </h3>
         <p className="text-muted-foreground">
-          {dictionary?.connectBankForHistory || 'Connect a bank account to see your transaction history'}
+          {dictionary?.connectBankForHistory ||
+            "Connect a bank account to see your transaction history"}
         </p>
       </div>
     )
@@ -33,11 +39,12 @@ export async function TransactionHistoryContent({
   const accounts = accountsResult.data.data
 
   // Get all transactions from all accounts
-  const allTransactions = accounts.flatMap((account: any) =>
-    account.transactions || []
-  ).sort((a: any, b: any) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
+  const allTransactions = accounts
+    .flatMap((account: any) => account.transactions || [])
+    .sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
 
   return (
     <div className="space-y-6">

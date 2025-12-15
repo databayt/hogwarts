@@ -1,40 +1,47 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import { getLeadColumns, type LeadRow } from "./columns";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { LeadForm } from "@/components/sales/form";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { getLeads, deleteLead } from "./actions";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Building2, Star, Users } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { Badge } from "@/components/ui/badge"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
 import {
-  PlatformToolbar,
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { Badge } from "@/components/ui/badge";
-import { Users, Building2, Star } from "lucide-react";
-import { useRouter } from "next/navigation";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { LeadForm } from "@/components/sales/form"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteLead, getLeads } from "./actions"
+import { getLeadColumns, type LeadRow } from "./columns"
 import {
-  DeleteToast,
-  ErrorToast,
-  confirmDeleteDialog,
-} from "@/components/atom/toast";
-import { STATUS_COLORS, PRIORITY_COLORS, type LeadStatusKey, type LeadPriorityKey } from "./constants";
-import { cn } from "@/lib/utils";
+  PRIORITY_COLORS,
+  STATUS_COLORS,
+  type LeadPriorityKey,
+  type LeadStatusKey,
+} from "./constants"
 
 interface LeadsTableProps {
-  initialData: LeadRow[];
-  total: number;
-  dictionary?: Dictionary["sales"];
-  lang: Locale;
-  perPage?: number;
+  initialData: LeadRow[]
+  total: number
+  dictionary?: Dictionary["sales"]
+  lang: Locale
+  perPage?: number
 }
 
 export function LeadsTable({
@@ -44,18 +51,16 @@ export function LeadsTable({
   lang,
   perPage = 20,
 }: LeadsTableProps) {
-  const router = useRouter();
-  const { openModal } = useModal();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const { openModal } = useModal()
+  const [isPending, startTransition] = useTransition()
 
-  const isRTL = lang === "ar";
+  const isRTL = lang === "ar"
 
   // Translations with fallbacks
   const t = {
     leads: isRTL ? "العملاء المحتملين" : "Leads",
-    addNewLead: isRTL
-      ? "أضف عميلاً محتملاً جديداً"
-      : "Add a new lead to track",
+    addNewLead: isRTL ? "أضف عميلاً محتملاً جديداً" : "Add a new lead to track",
     search: isRTL ? "بحث في العملاء المحتملين..." : "Search leads...",
     create: isRTL ? "إنشاء" : "Create",
     export: isRTL ? "تصدير" : "Export",
@@ -83,13 +88,13 @@ export function LeadsTable({
     MEDIUM: isRTL ? "متوسط" : "Medium",
     HIGH: isRTL ? "عالي" : "High",
     URGENT: isRTL ? "عاجل" : "Urgent",
-  };
+  }
 
   // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
   // Search state
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
   const {
@@ -109,9 +114,9 @@ export function LeadsTable({
         { search: params.search },
         params.page,
         params.perPage
-      );
+      )
       if (!result.success || !result.data) {
-        return { rows: [], total: 0 };
+        return { rows: [], total: 0 }
       }
       return {
         rows: result.data.leads.map((lead) => ({
@@ -132,18 +137,18 @@ export function LeadsTable({
               : String(lead.createdAt),
         })) as LeadRow[],
         total: result.data.pagination.total,
-      };
+      }
     },
     filters: searchValue ? { search: searchValue } : undefined,
-  });
+  })
 
   // Callback for column delete success
   const handleColumnDeleteSuccess = useCallback(
     (id: string) => {
-      optimisticRemove(id);
+      optimisticRemove(id)
     },
     [optimisticRemove]
-  );
+  )
 
   // Generate columns on the client side
   const columns = useMemo(
@@ -152,7 +157,7 @@ export function LeadsTable({
         onDeleteSuccess: handleColumnDeleteSuccess,
       }),
     [dictionary, lang, handleColumnDeleteSuccess]
-  );
+  )
 
   // Table instance
   const { table } = useDataTable<LeadRow>({
@@ -169,73 +174,71 @@ export function LeadsTable({
         createdAt: false,
       },
     },
-  });
+  })
 
   // Handle search
   const handleSearchChange = useCallback(
     (value: string) => {
-      setSearchValue(value);
+      setSearchValue(value)
       startTransition(() => {
-        router.refresh();
-      });
+        router.refresh()
+      })
     },
     [router]
-  );
+  )
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(
     async (lead: LeadRow) => {
       try {
-        const deleteMsg = isRTL ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`;
-        const ok = await confirmDeleteDialog(deleteMsg);
-        if (!ok) return;
+        const deleteMsg = isRTL ? `حذف ${lead.name}؟` : `Delete ${lead.name}?`
+        const ok = await confirmDeleteDialog(deleteMsg)
+        if (!ok) return
 
-        optimisticRemove(lead.id);
+        optimisticRemove(lead.id)
 
-        const result = await deleteLead(lead.id);
+        const result = await deleteLead(lead.id)
         if (result.success) {
-          DeleteToast();
+          DeleteToast()
         } else {
-          refresh();
-          ErrorToast(
-            isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead"
-          );
+          refresh()
+          ErrorToast(isRTL ? "فشل حذف العميل المحتمل" : "Failed to delete lead")
         }
       } catch (e) {
-        refresh();
+        refresh()
         ErrorToast(
           e instanceof Error
             ? e.message
             : isRTL
-            ? "فشل الحذف"
-            : "Failed to delete"
-        );
+              ? "فشل الحذف"
+              : "Failed to delete"
+        )
       }
     },
     [optimisticRemove, refresh, isRTL]
-  );
+  )
 
   // Handle edit
   const handleEdit = useCallback(
     (id: string) => {
-      openModal(id);
+      openModal(id)
     },
     [openModal]
-  );
+  )
 
   // Handle view
   const handleView = useCallback(
     (lead: LeadRow) => {
-      router.push(`/sales/${lead.id}`);
+      router.push(`/sales/${lead.id}`)
     },
     [router]
-  );
+  )
 
   // Export CSV wrapper (placeholder)
   const handleExportCSV = useCallback(async () => {
     // TODO: Implement CSV export
-    return "";
-  }, []);
+    return ""
+  }, [])
 
   // Toolbar translations
   const toolbarTranslations = {
@@ -245,18 +248,18 @@ export function LeadsTable({
     export: t.export,
     exportCSV: isRTL ? "تصدير CSV" : "Export CSV",
     exporting: isRTL ? "جاري التصدير..." : "Exporting...",
-  };
+  }
 
   // Get score color
   const getScoreColor = (score: number): string => {
     if (score >= 80)
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
     if (score >= 60)
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
     if (score >= 40)
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
-    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-  };
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300"
+    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+  }
 
   return (
     <>
@@ -297,7 +300,7 @@ export function LeadsTable({
                   .map((n) => n[0])
                   .join("")
                   .substring(0, 2)
-                  .toUpperCase();
+                  .toUpperCase()
 
                 return (
                   <GridCard
@@ -311,7 +314,12 @@ export function LeadsTable({
                     }}
                     metadata={[
                       ...(lead.company
-                        ? [{ label: isRTL ? "الشركة" : "Company", value: lead.company }]
+                        ? [
+                            {
+                              label: isRTL ? "الشركة" : "Company",
+                              value: lead.company,
+                            },
+                          ]
                         : []),
                       { label: t.score, value: String(lead.score) },
                     ]}
@@ -327,7 +335,7 @@ export function LeadsTable({
                     actionsLabel={t.actions}
                     onClick={() => handleView(lead)}
                   >
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="mt-2 flex items-center gap-2">
                       <Badge
                         className={cn("text-xs", STATUS_COLORS[lead.status])}
                       >
@@ -335,25 +343,28 @@ export function LeadsTable({
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={cn("text-xs gap-1", getScoreColor(lead.score))}
+                        className={cn(
+                          "gap-1 text-xs",
+                          getScoreColor(lead.score)
+                        )}
                       >
                         <Star className="h-3 w-3" />
                         {lead.score}
                       </Badge>
                     </div>
                   </GridCard>
-                );
+                )
               })}
             </GridContainer>
           )}
 
           {/* Load more for grid view */}
           {hasMore && (
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={loadMore}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading ? t.loading : t.loadMore}
               </button>
@@ -362,7 +373,9 @@ export function LeadsTable({
         </>
       )}
 
-      <Modal content={<LeadForm dictionary={dictionary} onSuccess={refresh} />} />
+      <Modal
+        content={<LeadForm dictionary={dictionary} onSuccess={refresh} />}
+      />
     </>
-  );
+  )
 }

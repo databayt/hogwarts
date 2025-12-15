@@ -1,11 +1,17 @@
 "use client"
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import Link from "next/link"
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface FAQsProps {
-    dictionary?: Dictionary
+  dictionary?: Dictionary
 }
 
 export default function FAQs({ dictionary }: FAQsProps) {
@@ -14,50 +20,55 @@ export default function FAQs({ dictionary }: FAQsProps) {
     titleBreak: "FAQ",
     subtitle: "Everything you need to know.",
     openSourceTitle: "Is this really open source?",
-    openSourceDesc: "Yes! All components are open source. We charge for complete solutions and ongoing support.",
+    openSourceDesc:
+      "Yes! All components are open source. We charge for complete solutions and ongoing support.",
     openSourceItems: [
       "Free components and templates",
       "Contributors earn revenue share",
-      "Transparent development process"
+      "Transparent development process",
     ],
-    items: []
+    items: [],
   }
 
   const defaultItems = [
     {
       question: "What do you offer?",
-      answer: "School automation: attendance, grades, scheduling, communication, and custom integrations."
+      answer:
+        "School automation: attendance, grades, scheduling, communication, and custom integrations.",
     },
     {
       question: "How much does it cost?",
-      answer: "Transparent pricing based on scope. Free tier available, paid plans for advanced features."
+      answer:
+        "Transparent pricing based on scope. Free tier available, paid plans for advanced features.",
     },
     {
       question: "How long to get started?",
-      answer: "Basic setup in days. Full implementation in 2-4 weeks depending on customization needs."
+      answer:
+        "Basic setup in days. Full implementation in 2-4 weeks depending on customization needs.",
     },
     {
       question: "Do you provide support?",
-      answer: "Yes. Documentation, community Discord, and premium support packages available."
+      answer:
+        "Yes. Documentation, community Discord, and premium support packages available.",
     },
     {
       question: "Can I contribute?",
-      answer: "Absolutely! Contribute code, earn revenue share. No minimum commitment required."
+      answer:
+        "Absolutely! Contribute code, earn revenue share. No minimum commitment required.",
     },
     {
       question: "Still have questions?",
       answer: "",
-      list: [
-        "GitHub Discussions",
-        "Discord Community",
-        "Documentation"
-      ],
+      list: ["GitHub Discussions", "Discord Community", "Documentation"],
       links: [
-        { text: "GitHub Discussions", href: "https://github.com/databayt/hogwarts/discussions" },
+        {
+          text: "GitHub Discussions",
+          href: "https://github.com/databayt/hogwarts/discussions",
+        },
         { text: "Discord Community", href: "https://discord.gg/uPa4gGG62c" },
-        { text: "Documentation", href: "/docs" }
-      ]
-    }
+        { text: "Documentation", href: "/docs" },
+      ],
+    },
   ]
 
   const items = faqsDict.items?.length > 0 ? faqsDict.items : defaultItems
@@ -66,7 +77,7 @@ export default function FAQs({ dictionary }: FAQsProps) {
     <section className="py-16 md:py-32">
       <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
         <div className="text-center lg:text-start">
-          <h1 className="mb-4 whitespace-pre-line text-4xl md:text-5xl font-heading font-extrabold">
+          <h1 className="font-heading mb-4 text-4xl font-extrabold whitespace-pre-line md:text-5xl">
             {faqsDict.titleBreak || faqsDict.title}
           </h1>
           <p className="muted">{faqsDict.subtitle}</p>
@@ -77,7 +88,9 @@ export default function FAQs({ dictionary }: FAQsProps) {
             <p className="muted my-4 text-start">{faqsDict.openSourceDesc}</p>
             <ul className="list-outside list-disc space-y-2 ps-4">
               {faqsDict.openSourceItems?.map((item, index) => (
-                <li key={index} className="muted">{item}</li>
+                <li key={index} className="muted">
+                  {item}
+                </li>
               ))}
             </ul>
           </div>
@@ -89,29 +102,35 @@ export default function FAQs({ dictionary }: FAQsProps) {
                     {item.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-start">
-                    {item.answer && (
-                      <p className="muted mb-4">{item.answer}</p>
-                    )}
+                    {item.answer && <p className="muted mb-4">{item.answer}</p>}
                     {item.list && (
                       <ul className="list-outside list-disc space-y-2 ps-4">
-                        {item.links ? (
-                          item.links.map((link, linkIndex) => (
-                            <li key={linkIndex} className="muted">
-                              <Link
-                                href={link.href}
-                                target={link.href.startsWith('http') ? "_blank" : undefined}
-                                rel={link.href.startsWith('http') ? "noopener noreferrer" : undefined}
-                                className="hover:underline"
-                              >
-                                {link.text}
-                              </Link>
-                            </li>
-                          ))
-                        ) : (
-                          item.list.map((listItem, listIndex) => (
-                            <li key={listIndex} className="muted">{listItem}</li>
-                          ))
-                        )}
+                        {item.links
+                          ? item.links.map((link, linkIndex) => (
+                              <li key={linkIndex} className="muted">
+                                <Link
+                                  href={link.href}
+                                  target={
+                                    link.href.startsWith("http")
+                                      ? "_blank"
+                                      : undefined
+                                  }
+                                  rel={
+                                    link.href.startsWith("http")
+                                      ? "noopener noreferrer"
+                                      : undefined
+                                  }
+                                  className="hover:underline"
+                                >
+                                  {link.text}
+                                </Link>
+                              </li>
+                            ))
+                          : item.list.map((listItem, listIndex) => (
+                              <li key={listIndex} className="muted">
+                                {listItem}
+                              </li>
+                            ))}
                       </ul>
                     )}
                   </AccordionContent>

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Search } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import {
   CommandDialog,
@@ -11,7 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface CommandMenuProps {
   dictionary?: Dictionary

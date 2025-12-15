@@ -5,6 +5,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Critical Architecture Issues (Priority 1) 🔴
 
 ### Code Organization Cleanup
+
 - [ ] **CRITICAL**: Remove `_component/` legacy folder
 - [ ] **CRITICAL**: Clean up `actions/` legacy folder
 - [ ] Consolidate duplicate invoice creation logic
@@ -12,6 +13,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Move to proper mirror pattern structure
 
 ### TypeScript Type Safety
+
 - [ ] Fix all `any` type usage in actions
 - [ ] Add proper error type definitions
 - [ ] Complete type definitions for complex objects
@@ -21,6 +23,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Standardization Issues (Priority 2) ⚠️
 
 ### Missing Required Files
+
 - [ ] Create `config.ts` for invoice statuses and enums
 - [ ] Create `hooks.ts` for custom React hooks
 - [ ] Create `utils.ts` for calculation utilities
@@ -30,6 +33,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Create `detail.tsx` for invoice detail view
 
 ### File Structure Standardization
+
 - [ ] Rename files to follow kebab-case convention
 - [ ] Organize components by feature
 - [ ] Separate client and server components
@@ -38,6 +42,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Performance Issues (Priority 3) 🚀
 
 ### Server-Side Optimization
+
 - [ ] Move all filtering to server-side
 - [ ] Implement proper pagination
 - [ ] Add data caching strategy
@@ -45,6 +50,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Add indexes for frequently queried fields
 
 ### Client-Side Optimization
+
 - [ ] Implement optimistic UI updates
 - [ ] Add React.memo for expensive components
 - [ ] Lazy load heavy components
@@ -54,6 +60,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Testing Requirements (Priority 4) 🧪
 
 ### Unit Tests
+
 - [ ] Test invoice calculations
 - [ ] Test tax calculations
 - [ ] Test discount logic
@@ -61,6 +68,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Test validation schemas
 
 ### Integration Tests
+
 - [ ] Test invoice creation flow
 - [ ] Test invoice update flow
 - [ ] Test invoice deletion
@@ -68,6 +76,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Test PDF generation
 
 ### E2E Tests
+
 - [ ] Test complete invoice workflow
 - [ ] Test multi-step form
 - [ ] Test search and filtering
@@ -77,6 +86,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Feature Implementation (Priority 5) 🛠️
 
 ### Invoice Management
+
 - [ ] Implement recurring invoices
 - [ ] Add invoice templates
 - [ ] Create invoice duplication
@@ -84,6 +94,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Implement invoice scheduling
 
 ### Payment Integration
+
 - [ ] Add payment gateway integration
 - [ ] Implement payment reminders
 - [ ] Create payment history
@@ -91,6 +102,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Implement refunds
 
 ### Reporting & Analytics
+
 - [ ] Create invoice dashboard
 - [ ] Add revenue reports
 - [ ] Implement aging reports
@@ -98,6 +110,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Add export functionality
 
 ### Multi-Currency Support
+
 - [ ] Add currency selection
 - [ ] Implement exchange rates
 - [ ] Create currency conversion
@@ -106,6 +119,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## UI/UX Improvements (Priority 6) 🎨
 
 ### Form Improvements
+
 - [ ] Enhance multi-step form UX
 - [ ] Add form validation feedback
 - [ ] Implement auto-save
@@ -113,6 +127,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Improve mobile experience
 
 ### Table Enhancements
+
 - [ ] Add column customization
 - [ ] Implement bulk selection
 - [ ] Add advanced filters
@@ -120,6 +135,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Add export options
 
 ### Visual Enhancements
+
 - [ ] Create invoice preview
 - [ ] Add status timeline
 - [ ] Implement activity feed
@@ -129,6 +145,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Accessibility (Priority 7) ♿
 
 ### ARIA Support
+
 - [ ] Add proper ARIA labels
 - [ ] Implement focus management
 - [ ] Add keyboard navigation
@@ -136,6 +153,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Add screen reader support
 
 ### Keyboard Navigation
+
 - [ ] Enable tab navigation
 - [ ] Add keyboard shortcuts
 - [ ] Implement focus trapping
@@ -144,6 +162,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Email & Notifications (Priority 8) 📧
 
 ### Email Templates
+
 - [ ] Create HTML email templates
 - [ ] Add plain text fallback
 - [ ] Implement email customization
@@ -151,6 +170,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Create email tracking
 
 ### Notifications
+
 - [ ] Add in-app notifications
 - [ ] Implement push notifications
 - [ ] Create notification preferences
@@ -159,6 +179,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## PDF Generation (Priority 9) 📄
 
 ### PDF Features
+
 - [ ] Implement PDF generation
 - [ ] Add custom PDF templates
 - [ ] Create PDF preview
@@ -168,6 +189,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Security Enhancements (Priority 10) 🔒
 
 ### Data Security
+
 - [ ] Implement field-level encryption
 - [ ] Add audit logging
 - [ ] Create access controls
@@ -175,6 +197,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Add activity monitoring
 
 ### Multi-Tenant Safety
+
 - [ ] Verify schoolId scoping in all queries
 - [ ] Add cross-tenant protection
 - [ ] Implement data isolation tests
@@ -183,6 +206,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Documentation (Priority 11) 📚
 
 ### Code Documentation
+
 - [ ] Add JSDoc comments
 - [ ] Create API documentation
 - [ ] Write usage examples
@@ -190,6 +214,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Create troubleshooting guide
 
 ### User Documentation
+
 - [ ] Create user guide
 - [ ] Add video tutorials
 - [ ] Write FAQ section
@@ -198,6 +223,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Migration & Cleanup (Priority 12) 🧹
 
 ### Legacy Code Removal
+
 - [ ] Remove unused components
 - [ ] Clean up dead code
 - [ ] Update deprecated APIs
@@ -205,6 +231,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [ ] Clean up comments
 
 ### Data Migration
+
 - [ ] Create migration scripts
 - [ ] Add data validation
 - [ ] Implement rollback strategy
@@ -213,6 +240,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Acceptance Criteria
 
 All implementations must:
+
 1. Follow the mirror pattern architecture
 2. Use Server Components by default
 3. Include proper TypeScript types
@@ -227,24 +255,28 @@ All implementations must:
 ## Technical Debt
 
 ### High Priority
+
 1. Remove `_component/` folder
 2. Clean up `actions/` folder
 3. Fix TypeScript `any` usage
 4. Standardize file naming
 
 ### Medium Priority
+
 1. Consolidate duplicate logic
 2. Optimize database queries
 3. Add missing tests
 4. Improve error handling
 
 ### Low Priority
+
 1. Add code comments
 2. Update documentation
 3. Optimize bundle size
 4. Add telemetry
 
 ## Dependencies
+
 - Next.js 15.4.4
 - React 19.1.0
 - ShadCN UI
@@ -254,6 +286,7 @@ All implementations must:
 - @tanstack/react-table
 
 ## References
+
 - [CLAUDE.md](../../../CLAUDE.md) - Architecture guidelines
 - [Server Actions](https://nextjs.org/docs/app/api-reference/functions/server-actions)
 - [Prisma Best Practices](https://www.prisma.io/docs/guides/performance-and-optimization)

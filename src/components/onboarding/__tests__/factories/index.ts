@@ -19,7 +19,7 @@ export {
   createLegalStepData,
   createInvalidSchoolData,
   createEdgeCaseSchoolData,
-} from './school'
+} from "./school"
 
 // User/Auth factories
 export {
@@ -41,13 +41,13 @@ export {
   setupUnauthenticatedMock,
   createTestUsers,
   createTestSessions,
-} from './user'
+} from "./user"
 export type {
   UserRole,
   MockAuthContext,
   MockSessionUser,
   MockSession,
-} from './user'
+} from "./user"
 
 // Dictionary factories
 export {
@@ -58,4 +58,4 @@ export {
   mockValidationMessages,
   mockToastMessages,
   mockErrorMessages,
-} from './dictionary'
+} from "./dictionary"

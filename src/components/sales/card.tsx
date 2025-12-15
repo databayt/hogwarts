@@ -3,129 +3,140 @@
  * Individual card view for a lead
  */
 
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState } from "react"
+import {
+  Building,
+  Calendar,
+  Copy,
+  Edit,
+  ExternalLink,
+  Eye,
+  Mail,
+  MoreVertical,
+  Phone,
+  Tag,
+  Trash2,
+  TrendingUp,
+  User,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Progress } from '@/components/ui/progress';
-import {
-  Mail,
-  Phone,
-  Building,
-  User,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Eye,
-  Copy,
-  ExternalLink,
-  Calendar,
-  Tag,
-  TrendingUp,
-} from 'lucide-react';
-import type { Lead as LeadType } from './types';
-import { LEAD_STATUS, LEAD_SOURCE, LEAD_SCORE_RANGES } from './constants';
-import { Form } from './form';
-import { deleteLead } from './actions';
+} from "@/components/ui/dropdown-menu"
+import { Progress } from "@/components/ui/progress"
+
+import { deleteLead } from "./actions"
+import { LEAD_SCORE_RANGES, LEAD_SOURCE, LEAD_STATUS } from "./constants"
+import { Form } from "./form"
+import type { Lead as LeadType } from "./types"
 
 interface LeadCardProps {
-  lead: LeadType;
-  onUpdate?: () => void;
-  onDelete?: () => void;
-  variant?: 'default' | 'compact';
-  showActions?: boolean;
+  lead: LeadType
+  onUpdate?: () => void
+  onDelete?: () => void
+  variant?: "default" | "compact"
+  showActions?: boolean
 }
 
 // Simple time formatter
 function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return 'today';
-  if (diffDays === 1) return 'yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return `${Math.floor(diffDays / 30)} months ago`;
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "yesterday"
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  return `${Math.floor(diffDays / 30)} months ago`
 }
 
 export function LeadCard({
   lead,
   onUpdate,
   onDelete,
-  variant = 'default',
+  variant = "default",
   showActions = true,
 }: LeadCardProps) {
-  const [showEdit, setShowEdit] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showEdit, setShowEdit] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Get score color
   const getScoreColor = (score: number) => {
-    if (score >= LEAD_SCORE_RANGES.HOT.min) return 'bg-red-500';
-    if (score >= LEAD_SCORE_RANGES.WARM.min) return 'bg-orange-500';
-    if (score >= LEAD_SCORE_RANGES.COOL.min) return 'bg-yellow-500';
-    return 'bg-blue-500';
-  };
+    if (score >= LEAD_SCORE_RANGES.HOT.min) return "bg-red-500"
+    if (score >= LEAD_SCORE_RANGES.WARM.min) return "bg-orange-500"
+    if (score >= LEAD_SCORE_RANGES.COOL.min) return "bg-yellow-500"
+    return "bg-blue-500"
+  }
 
   // Get score label
   const getScoreLabel = (score: number) => {
-    if (score >= LEAD_SCORE_RANGES.HOT.min) return LEAD_SCORE_RANGES.HOT.label;
-    if (score >= LEAD_SCORE_RANGES.WARM.min) return LEAD_SCORE_RANGES.WARM.label;
-    if (score >= LEAD_SCORE_RANGES.COOL.min) return LEAD_SCORE_RANGES.COOL.label;
-    return LEAD_SCORE_RANGES.COLD.label;
-  };
+    if (score >= LEAD_SCORE_RANGES.HOT.min) return LEAD_SCORE_RANGES.HOT.label
+    if (score >= LEAD_SCORE_RANGES.WARM.min) return LEAD_SCORE_RANGES.WARM.label
+    if (score >= LEAD_SCORE_RANGES.COOL.min) return LEAD_SCORE_RANGES.COOL.label
+    return LEAD_SCORE_RANGES.COLD.label
+  }
 
   // Handle delete
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this lead?')) return;
+    if (!confirm("Are you sure you want to delete this lead?")) return
 
-    setIsDeleting(true);
+    setIsDeleting(true)
     try {
-      const result = await deleteLead(lead.id);
+      const result = await deleteLead(lead.id)
       if (result.success) {
-        onDelete?.();
+        onDelete?.()
       }
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   // Copy email to clipboard
   const copyEmail = () => {
     if (lead.email) {
-      navigator.clipboard.writeText(lead.email);
+      navigator.clipboard.writeText(lead.email)
     }
-  };
+  }
 
   // Copy phone to clipboard
   const copyPhone = () => {
     if (lead.phone) {
-      navigator.clipboard.writeText(lead.phone);
+      navigator.clipboard.writeText(lead.phone)
     }
-  };
+  }
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
-              <CardTitle className="text-base line-clamp-1">{lead.name}</CardTitle>
+              <CardTitle className="line-clamp-1 text-base">
+                {lead.name}
+              </CardTitle>
               <Badge className={`${getScoreColor(lead.score)} text-white`}>
                 {lead.score}
               </Badge>
             </div>
-            <CardDescription className="text-xs line-clamp-1">
-              {lead.company || 'No company'} • {lead.email || 'No email'}
+            <CardDescription className="line-clamp-1 text-xs">
+              {lead.company || "No company"} • {lead.email || "No email"}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -136,22 +147,22 @@ export function LeadCard({
             open={showEdit}
             onClose={() => setShowEdit(false)}
             onSuccess={() => {
-              setShowEdit(false);
-              onUpdate?.();
+              setShowEdit(false)
+              onUpdate?.()
             }}
           />
         )}
       </>
-    );
+    )
   }
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow">
+      <Card className="transition-shadow hover:shadow-lg">
         <CardHeader>
           <div className="flex items-start justify-between">
-            <div className="space-y-1 flex-1">
-              <CardTitle className="text-lg flex items-center gap-2">
+            <div className="flex-1 space-y-1">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 {lead.name}
                 <Badge variant="outline" className="text-xs">
                   {getScoreLabel(lead.score)}
@@ -165,7 +176,7 @@ export function LeadCard({
                   </span>
                 )}
                 {lead.company && (
-                  <span className="flex items-center gap-1 mt-1">
+                  <span className="mt-1 flex items-center gap-1">
                     <Building className="h-3 w-3" />
                     {lead.company}
                   </span>
@@ -181,25 +192,29 @@ export function LeadCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setShowEdit(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   {lead.email && (
                     <DropdownMenuItem onClick={copyEmail}>
-                      <Copy className="h-4 w-4 mr-2" />
+                      <Copy className="mr-2 h-4 w-4" />
                       Copy Email
                     </DropdownMenuItem>
                   )}
                   {lead.phone && (
                     <DropdownMenuItem onClick={copyPhone}>
-                      <Copy className="h-4 w-4 mr-2" />
+                      <Copy className="mr-2 h-4 w-4" />
                       Copy Phone
                     </DropdownMenuItem>
                   )}
                   {lead.linkedinUrl && (
-                    <DropdownMenuItem onClick={() => window.open(lead.linkedinUrl ?? '', '_blank')}>
-                      <ExternalLink className="h-4 w-4 mr-2" />
+                    <DropdownMenuItem
+                      onClick={() =>
+                        window.open(lead.linkedinUrl ?? "", "_blank")
+                      }
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
                       Open LinkedIn
                     </DropdownMenuItem>
                   )}
@@ -209,7 +224,7 @@ export function LeadCard({
                     className="text-destructive"
                     disabled={isDeleting}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -232,10 +247,10 @@ export function LeadCard({
           <div className="space-y-2">
             {lead.email && (
               <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-muted-foreground" />
+                <Mail className="text-muted-foreground h-4 w-4" />
                 <a
                   href={`mailto:${lead.email}`}
-                  className="hover:underline truncate"
+                  className="truncate hover:underline"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {lead.email}
@@ -244,7 +259,7 @@ export function LeadCard({
             )}
             {lead.phone && (
               <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted-foreground" />
+                <Phone className="text-muted-foreground h-4 w-4" />
                 <a
                   href={`tel:${lead.phone}`}
                   className="hover:underline"
@@ -258,12 +273,8 @@ export function LeadCard({
 
           {/* Status and Source */}
           <div className="flex items-center gap-2">
-            <Badge variant="outline">
-              {LEAD_STATUS[lead.status]}
-            </Badge>
-            <Badge variant="secondary">
-              {LEAD_SOURCE[lead.source]}
-            </Badge>
+            <Badge variant="outline">{LEAD_STATUS[lead.status]}</Badge>
+            <Badge variant="secondary">{LEAD_SOURCE[lead.source]}</Badge>
           </div>
 
           {/* Tags */}
@@ -271,7 +282,7 @@ export function LeadCard({
             <div className="flex flex-wrap gap-1">
               {lead.tags.map((tag) => (
                 <Badge key={tag} variant="outline" className="text-xs">
-                  <Tag className="h-3 w-3 mr-1" />
+                  <Tag className="mr-1 h-3 w-3" />
                   {tag}
                 </Badge>
               ))}
@@ -280,14 +291,14 @@ export function LeadCard({
 
           {/* Notes Preview */}
           {lead.notes && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-muted-foreground line-clamp-2 text-sm">
               {lead.notes}
             </p>
           )}
         </CardContent>
 
         <CardFooter className="pt-4">
-          <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex w-full items-center justify-between text-sm">
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {formatTimeAgo(new Date(lead.createdAt))}
@@ -310,11 +321,11 @@ export function LeadCard({
           open={showEdit}
           onClose={() => setShowEdit(false)}
           onSuccess={() => {
-            setShowEdit(false);
-            onUpdate?.();
+            setShowEdit(false)
+            onUpdate?.()
           }}
         />
       )}
     </>
-  );
+  )
 }

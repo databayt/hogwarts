@@ -1,16 +1,18 @@
-'use client'
+"use client"
 
-import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
-import { TeacherCreateForm } from '../form'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { TeacherCreateForm } from "../form"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
@@ -18,9 +20,12 @@ export default function AddTeacherContent({ dictionary, lang }: Props) {
   const router = useRouter()
 
   const t = {
-    title: lang === 'ar' ? 'إضافة معلم جديد' : 'Add New Teacher',
-    description: lang === 'ar' ? 'أدخل معلومات المعلم الجديد' : 'Enter the new teacher\'s information',
-    back: lang === 'ar' ? 'العودة' : 'Back',
+    title: lang === "ar" ? "إضافة معلم جديد" : "Add New Teacher",
+    description:
+      lang === "ar"
+        ? "أدخل معلومات المعلم الجديد"
+        : "Enter the new teacher's information",
+    back: lang === "ar" ? "العودة" : "Back",
   }
 
   const handleSuccess = () => {

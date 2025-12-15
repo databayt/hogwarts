@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface MediaCardProps {
@@ -82,7 +84,7 @@ export function MediaCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -90,7 +92,7 @@ export function MediaCard({
       <CardContent className={cn(sizeClasses[size])}>
         {loading ? (
           <div className="flex items-center gap-3">
-            <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+            <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
             <div className="flex-1 space-y-1">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-24" />
@@ -102,11 +104,9 @@ export function MediaCard({
             <div className="shrink-0">{media}</div>
 
             {/* Content */}
-            <div className="flex-1 min-w-0 space-y-0.5">
-              <h5 className="font-medium text-foreground truncate">{title}</h5>
-              {subtitle && (
-                <p className="muted truncate">{subtitle}</p>
-              )}
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <h5 className="text-foreground truncate font-medium">{title}</h5>
+              {subtitle && <p className="muted truncate">{subtitle}</p>}
             </div>
 
             {/* Trailing */}

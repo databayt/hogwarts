@@ -5,6 +5,7 @@ A complete Learning Management System (LMS) built with Next.js 15, designed as a
 ## 📚 Overview
 
 Stream is a full-featured LMS that provides:
+
 - **Course Management**: Create, edit, and organize courses with chapters and lessons
 - **Student Dashboard**: Track progress, watch lessons, and manage enrollments
 - **Admin Panel**: Analytics, course management, and student oversight
@@ -15,6 +16,7 @@ Stream is a full-featured LMS that provides:
 ## 🏗️ Architecture
 
 ### Mirror-Pattern Design
+
 The Stream module follows a mirror-pattern architecture where routes are mirrored by components:
 
 ```
@@ -23,12 +25,14 @@ app/stream/dashboard/page.tsx  →  components/stream/dashboard/content.tsx
 ```
 
 ### Server-First Approach
+
 - **Server Components by default** for optimal performance
 - **Client Components** only when needed (forms, interactivity)
 - **Server Actions** for mutations and data operations
 - **Suspense** boundaries for progressive loading
 
 ### Modular Structure
+
 ```
 stream/
 ├── app/stream/              # Routes (prefixed with /stream)
@@ -44,6 +48,7 @@ stream/
 See [`STREAM_INTEGRATION.md`](./STREAM_INTEGRATION.md) for complete integration instructions.
 
 **TL;DR:**
+
 1. Copy `app/stream` and `components/stream` directories
 2. Merge `prisma/models/stream.prisma` into your schema
 3. Install dependencies from `STREAM_PACKAGES.md`
@@ -54,28 +59,33 @@ See [`STREAM_INTEGRATION.md`](./STREAM_INTEGRATION.md) for complete integration 
 ### For Standalone Development
 
 1. **Install Dependencies**
+
 ```bash
 pnpm install
 ```
 
 2. **Configure Environment**
+
 ```bash
 cp .env.example .env
 # Fill in your environment variables
 ```
 
 3. **Setup Database**
+
 ```bash
 pnpm prisma generate
 pnpm prisma migrate dev
 ```
 
 4. **Run Development Server**
+
 ```bash
 pnpm dev
 ```
 
 5. **Access Stream**
+
 - Public: http://localhost:3000/stream
 - Dashboard: http://localhost:3000/stream/dashboard
 - Admin: http://localhost:3000/stream/admin
@@ -83,6 +93,7 @@ pnpm dev
 ## 📋 Features
 
 ### 🎓 Student Features
+
 - Browse and search courses
 - View course details and curriculum
 - Enroll in courses via Stripe checkout
@@ -92,6 +103,7 @@ pnpm dev
 - Resume where you left off
 
 ### 👨‍🏫 Instructor Features
+
 - Create and publish courses
 - Organize content with chapters and lessons
 - Upload course thumbnails and videos
@@ -102,6 +114,7 @@ pnpm dev
 - Draft and published states
 
 ### 🛠️ Admin Features
+
 - Dashboard with key metrics
 - Enrollment trends and revenue charts
 - Manage all courses
@@ -213,6 +226,7 @@ stream/
 ## 🗄️ Database Schema
 
 ### Tables (with `stream_` prefix)
+
 - **stream_course**: Course metadata and settings
 - **stream_chapter**: Course chapters (sections)
 - **stream_lesson**: Individual lessons with content
@@ -220,6 +234,7 @@ stream/
 - **stream_lesson_progress**: Lesson completion tracking
 
 ### Relations
+
 - Course → User (instructor)
 - Course → Chapters → Lessons
 - Course → Enrollments
@@ -281,33 +296,40 @@ Add Stream path aliases to `tsconfig.json`:
 ## 🎨 Customization
 
 ### Branding
+
 Update these files to match your brand:
+
 - `components/stream/home/content.tsx` - Landing page
 - `lib/stream/constants.ts` - Course categories
 - `components/stream/shared/*` - Reusable components
 
 ### Course Categories
+
 Modify in `lib/stream/constants.ts`:
+
 ```typescript
 export const COURSE_CATEGORIES = [
   "Your Category 1",
   "Your Category 2",
   // ... add your categories
-];
+]
 ```
 
 ### Pricing Currency
+
 Update in `lib/stream/constants.ts`:
+
 ```typescript
 export const STRIPE_CONFIG = {
   currency: "eur", // Change from "usd"
   // ...
-};
+}
 ```
 
 ## 🧪 Testing
 
 ### Manual Testing Checklist
+
 - [ ] Browse courses as guest
 - [ ] Sign up and enroll in course
 - [ ] Complete Stripe checkout
@@ -319,6 +341,7 @@ export const STRIPE_CONFIG = {
 - [ ] Delete course
 
 ### Unit Tests (Coming Soon)
+
 ```bash
 pnpm test
 ```
@@ -326,6 +349,7 @@ pnpm test
 ## 📊 Performance
 
 ### Optimization Features
+
 - **Server Components**: Render on server for faster initial load
 - **Streaming**: Progressive rendering with Suspense
 - **Image Optimization**: Next.js Image component
@@ -333,6 +357,7 @@ pnpm test
 - **CDN Caching**: Static assets cached at edge
 
 ### Bundle Size
+
 - Public pages: ~200 KB (gzipped)
 - Dashboard: ~250 KB (gzipped)
 - Admin panel: ~400 KB (gzipped)
@@ -340,17 +365,20 @@ pnpm test
 ## 🔒 Security
 
 ### Authentication
+
 - AuthJS v5 (NextAuth) for session management
 - Role-based access control (ADMIN, TEACHER, STUDENT)
 - Protected routes with middleware
 
 ### Rate Limiting
+
 - Arcjet integration for API protection
 - 5 requests/minute for course creation
 - 10 requests/minute for enrollments
 - 20 requests/minute for file uploads
 
 ### Payment Security
+
 - Stripe-hosted checkout (PCI compliant)
 - Webhook signature verification
 - Idempotent enrollment creation
@@ -360,20 +388,24 @@ pnpm test
 ### Common Issues
 
 **Q: Routes return 404**
+
 - Ensure `app/stream` directory copied correctly
 - Clear Next.js cache: `rm -rf .next`
 - Restart dev server
 
 **Q: Type errors with Prisma**
+
 - Run `pnpm prisma generate`
 - Restart TypeScript server in IDE
 
 **Q: File uploads fail**
+
 - Check S3 credentials in `.env`
 - Verify bucket permissions
 - Check CORS configuration
 
 **Q: Stripe webhook not working**
+
 - Verify webhook secret matches
 - Check webhook URL in Stripe dashboard
 - Use Stripe CLI for local testing
@@ -402,6 +434,7 @@ MIT License - Use freely in commercial and personal projects.
 ## 🆘 Support
 
 For integration support or questions:
+
 1. Check documentation files
 2. Review troubleshooting section
 3. Check Next.js and Prisma docs

@@ -43,34 +43,36 @@
 
 "use server"
 
-import { db } from "@/lib/db"
 import { auth } from "@/auth"
-import { getTenantContext } from "@/lib/tenant-context"
 import {
-  subDays,
-  startOfMonth,
-  endOfMonth,
-  startOfYear,
-  endOfYear,
-  subMonths,
-  subHours,
   addDays,
   addMonths,
   differenceInDays,
+  endOfMonth,
+  endOfYear,
   isWithinInterval,
+  startOfMonth,
+  startOfYear,
+  subDays,
+  subHours,
+  subMonths,
 } from "date-fns"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import type {
+  AcademicPerformanceMetrics,
+  ActivityItem,
+  AnnouncementsMetrics,
+  AttendanceMetrics,
+  ClassesMetrics,
   DashboardSummary,
   EnrollmentMetrics,
-  AttendanceMetrics,
-  StaffMetrics,
-  AcademicPerformanceMetrics,
-  AnnouncementsMetrics,
-  ClassesMetrics,
-  ActivityItem,
-  TeacherDashboardData,
-  StudentDashboardData,
   ParentDashboardData,
+  StaffMetrics,
+  StudentDashboardData,
+  TeacherDashboardData,
 } from "./types"
 
 // ============================================================================
@@ -375,7 +377,8 @@ export async function getClassesMetrics(): Promise<ClassesMetrics> {
     db.teacher.count({ where: { schoolId } }),
   ])
 
-  const studentTeacherRatio = teachers > 0 ? (students / teachers).toFixed(1) : "0"
+  const studentTeacherRatio =
+    teachers > 0 ? (students / teachers).toFixed(1) : "0"
 
   return {
     total: totalClasses,
@@ -603,7 +606,8 @@ export async function getTeacherDashboardData(): Promise<TeacherDashboardData> {
     const allResults = cls.exams.flatMap((exam) => exam.results)
     const average =
       allResults.length > 0
-        ? allResults.reduce((sum, r) => sum + r.percentage, 0) / allResults.length
+        ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
+          allResults.length
         : 0
     return {
       className: cls.name,
@@ -775,7 +779,8 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
   const presentDays = await db.attendance.count({
     where: { studentId: student.id, schoolId, status: "PRESENT" },
   })
-  const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0
+  const attendancePercentage =
+    totalDays > 0 ? (presentDays / totalDays) * 100 : 0
 
   return {
     todaysTimetable: todaysTimetable.map((entry) => ({
@@ -787,7 +792,8 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
           "Unknown Teacher"
         : "Unknown Teacher",
       room: entry.classroom?.roomName || "TBA",
-      startTime: entry.period?.startTime?.toISOString() || new Date().toISOString(),
+      startTime:
+        entry.period?.startTime?.toISOString() || new Date().toISOString(),
       endTime: entry.period?.endTime?.toISOString() || new Date().toISOString(),
     })),
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
@@ -797,7 +803,9 @@ export async function getStudentDashboardData(): Promise<StudentDashboardData> {
       className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
-      totalPoints: assignment.totalPoints ? Number(assignment.totalPoints) : null,
+      totalPoints: assignment.totalPoints
+        ? Number(assignment.totalPoints)
+        : null,
     })),
     recentGrades: recentGrades.map((result) => ({
       id: result.id,
@@ -926,7 +934,8 @@ export async function getParentDashboardData(): Promise<ParentDashboardData> {
   const presentDays = await db.attendance.count({
     where: { studentId: firstChild.id, schoolId, status: "PRESENT" },
   })
-  const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0
+  const attendancePercentage =
+    totalDays > 0 ? (presentDays / totalDays) * 100 : 0
 
   const announcements = await db.announcement.findMany({
     where: {
@@ -1118,7 +1127,10 @@ async function calculateParentSatisfactionScore(): Promise<number> {
 async function calculateFinancialHealthScore(): Promise<number> {
   const financial = await getFinancialSummary()
   const collectionScore = financial.revenue.collectionRate
-  const budgetScore = Math.max(0, 100 - Math.abs(financial.budget.utilizationRate - 75))
+  const budgetScore = Math.max(
+    0,
+    100 - Math.abs(financial.budget.utilizationRate - 75)
+  )
   return (collectionScore + budgetScore) / 2
 }
 
@@ -1126,11 +1138,12 @@ export async function getCriticalAlerts() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const [emergencyAlerts, complianceStatus, financialSummary] = await Promise.all([
-    getActiveAlerts(),
-    getComplianceStatus(),
-    getFinancialSummary(),
-  ])
+  const [emergencyAlerts, complianceStatus, financialSummary] =
+    await Promise.all([
+      getActiveAlerts(),
+      getComplianceStatus(),
+      getFinancialSummary(),
+    ])
 
   const alerts: Array<{
     type: string
@@ -1141,7 +1154,9 @@ export async function getCriticalAlerts() {
   }> = []
 
   emergencyAlerts
-    .filter((alert) => alert.severity === "high" || alert.severity === "critical")
+    .filter(
+      (alert) => alert.severity === "high" || alert.severity === "critical"
+    )
     .forEach((alert) => {
       alerts.push({
         type: alert.type,
@@ -1209,7 +1224,9 @@ export async function getTodaysPriorities() {
   }
 
   const compliance = await getComplianceStatus()
-  const urgentCompliance = compliance.alerts.filter((a) => a.severity === "high")
+  const urgentCompliance = compliance.alerts.filter(
+    (a) => a.severity === "high"
+  )
 
   if (urgentCompliance.length > 0) {
     priorities.push({
@@ -1241,7 +1258,8 @@ export async function getAcademicPerformanceTrends() {
     const allResults = subject.exams.flatMap((exam) => exam.results)
     const currentAvg =
       allResults.length > 0
-        ? allResults.reduce((sum, r) => sum + r.percentage, 0) / allResults.length
+        ? allResults.reduce((sum, r) => sum + r.percentage, 0) /
+          allResults.length
         : 0
     const previousAvg = currentAvg - (Math.random() * 10 - 5)
     const improvement = currentAvg - previousAvg
@@ -1327,7 +1345,11 @@ export async function getBudgetStatus() {
     remaining,
     utilization,
     projections:
-      utilization > 90 ? "Over budget" : utilization > 75 ? "On track" : "Under budget",
+      utilization > 90
+        ? "Over budget"
+        : utilization > 75
+          ? "On track"
+          : "Under budget",
     yearToDate: {
       allocated: (allocated * (new Date().getMonth() + 1)) / 12,
       spent: spent * (new Date().getMonth() + 1),
@@ -1557,7 +1579,8 @@ export async function getFeeCollectionMetrics() {
     const yearToDate = Number(yearToDatePayments._sum.amount || 0)
 
     // Calculate collection rate (avoid division by zero)
-    const collectionRate = totalExpected > 0 ? (collected / totalExpected) * 100 : 0
+    const collectionRate =
+      totalExpected > 0 ? (collected / totalExpected) * 100 : 0
     const defaulterCount = overdueAssignments._count || 0
 
     return {
@@ -1600,43 +1623,45 @@ export async function getExpenseMetrics() {
 
   try {
     // Query real expense data grouped by category
-    const [totalExpenses, monthToDateExpenses, expensesByCategory] = await Promise.all([
-      // Total approved/paid expenses
-      db.expense.aggregate({
-        where: {
-          schoolId,
-          status: { in: ["APPROVED", "PAID"] },
-        },
-        _sum: { amount: true },
-      }),
-      // Month-to-date expenses
-      db.expense.aggregate({
-        where: {
-          schoolId,
-          status: { in: ["APPROVED", "PAID"] },
-          expenseDate: { gte: monthStart },
-        },
-        _sum: { amount: true },
-      }),
-      // Expenses by category
-      db.expense.groupBy({
-        by: ["categoryId"],
-        where: {
-          schoolId,
-          status: { in: ["APPROVED", "PAID"] },
-        },
-        _sum: { amount: true },
-      }),
-    ])
+    const [totalExpenses, monthToDateExpenses, expensesByCategory] =
+      await Promise.all([
+        // Total approved/paid expenses
+        db.expense.aggregate({
+          where: {
+            schoolId,
+            status: { in: ["APPROVED", "PAID"] },
+          },
+          _sum: { amount: true },
+        }),
+        // Month-to-date expenses
+        db.expense.aggregate({
+          where: {
+            schoolId,
+            status: { in: ["APPROVED", "PAID"] },
+            expenseDate: { gte: monthStart },
+          },
+          _sum: { amount: true },
+        }),
+        // Expenses by category
+        db.expense.groupBy({
+          by: ["categoryId"],
+          where: {
+            schoolId,
+            status: { in: ["APPROVED", "PAID"] },
+          },
+          _sum: { amount: true },
+        }),
+      ])
 
     // Get category names for the grouped expenses
     const categoryIds = expensesByCategory.map((e) => e.categoryId)
-    const categories = categoryIds.length > 0
-      ? await db.expenseCategory.findMany({
-          where: { schoolId, id: { in: categoryIds } },
-          select: { id: true, name: true },
-        })
-      : []
+    const categories =
+      categoryIds.length > 0
+        ? await db.expenseCategory.findMany({
+            where: { schoolId, id: { in: categoryIds } },
+            select: { id: true, name: true },
+          })
+        : []
 
     // Build category map
     const categoryMap: Record<string, number> = {}
@@ -1659,7 +1684,8 @@ export async function getExpenseMetrics() {
     const monthToDate = Number(monthToDateExpenses._sum.amount || 0)
 
     // Estimate budget utilization (assuming 100K monthly budget if no budget defined)
-    const budgetUtilization = total > 0 ? Math.min((monthToDate / 100000) * 100, 100) : 0
+    const budgetUtilization =
+      total > 0 ? Math.min((monthToDate / 100000) * 100, 100) : 0
 
     return {
       total,
@@ -1770,9 +1796,16 @@ export async function getRecentTransactions(limit: number = 10) {
       type: "fee_payment" as const,
       studentName: `${payment.student.givenName} ${payment.student.surname}`,
       amount: Number(payment.amount),
-      status: payment.status === "SUCCESS" ? ("completed" as const) : ("pending" as const),
+      status:
+        payment.status === "SUCCESS"
+          ? ("completed" as const)
+          : ("pending" as const),
       date: payment.paymentDate,
-      method: payment.paymentMethod.toLowerCase() as "cash" | "online" | "bank_transfer" | "cheque",
+      method: payment.paymentMethod.toLowerCase() as
+        | "cash"
+        | "online"
+        | "bank_transfer"
+        | "cheque",
       reference: payment.paymentNumber,
     }))
 
@@ -1781,7 +1814,10 @@ export async function getRecentTransactions(limit: number = 10) {
       type: "expense" as const,
       description: expense.description,
       amount: -Number(expense.amount), // Negative for expenses
-      status: expense.status === "PAID" ? ("completed" as const) : ("pending" as const),
+      status:
+        expense.status === "PAID"
+          ? ("completed" as const)
+          : ("pending" as const),
       date: expense.expenseDate,
       category: expense.category?.name || "uncategorized",
       vendor: expense.vendor || undefined,
@@ -1893,15 +1929,20 @@ export async function getFeeDefaulters(limit: number = 10) {
         const createdDate = new Date(assignment.createdAt)
         const monthsOverdue = Math.max(
           1,
-          Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 30))
+          Math.floor(
+            (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+          )
         )
 
         return {
           id: assignment.student.id,
           studentId: assignment.student.studentId,
           name: `${assignment.student.givenName} ${assignment.student.surname}`,
-          class: assignment.student.studentYearLevels?.[0]?.yearLevel?.levelName || "N/A",
-          outstandingAmount: outstanding > 0 ? outstanding : Number(assignment.finalAmount),
+          class:
+            assignment.student.studentYearLevels?.[0]?.yearLevel?.levelName ||
+            "N/A",
+          outstandingAmount:
+            outstanding > 0 ? outstanding : Number(assignment.finalAmount),
           monthsOverdue,
           lastPaymentDate: assignment.payments[0]?.paymentDate || null,
         }
@@ -1949,14 +1990,19 @@ export async function getFinancialSummary() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const [feeMetrics, expenseMetrics, budgetAnalysis, recentTransactions, defaulters] =
-    await Promise.all([
-      getFeeCollectionMetrics(),
-      getExpenseMetrics(),
-      getBudgetAnalysis(),
-      getRecentTransactions(5),
-      getFeeDefaulters(5),
-    ])
+  const [
+    feeMetrics,
+    expenseMetrics,
+    budgetAnalysis,
+    recentTransactions,
+    defaulters,
+  ] = await Promise.all([
+    getFeeCollectionMetrics(),
+    getExpenseMetrics(),
+    getBudgetAnalysis(),
+    getRecentTransactions(5),
+    getFeeDefaulters(5),
+  ])
 
   return {
     revenue: {
@@ -2111,7 +2157,11 @@ export async function getComplianceStatus(): Promise<{
   overall: ComplianceStatus
   items: ComplianceItem[]
   summary: Record<ComplianceCategory, ComplianceStatus>
-  alerts: Array<{ item: string; message: string; severity: "low" | "medium" | "high" }>
+  alerts: Array<{
+    item: string
+    message: string
+    severity: "low" | "medium" | "high"
+  }>
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
@@ -2144,9 +2194,14 @@ export async function getComplianceStatus(): Promise<{
         message: `${item.name} has expired and needs immediate attention`,
         severity: "high",
       })
-    } else if (item.status === "warning" && summary[item.category] !== "expired") {
+    } else if (
+      item.status === "warning" &&
+      summary[item.category] !== "expired"
+    ) {
       summary[item.category] = "warning"
-      const daysRemaining = item.dueDate ? differenceInDays(item.dueDate, now) : 0
+      const daysRemaining = item.dueDate
+        ? differenceInDays(item.dueDate, now)
+        : 0
       alerts.push({
         item: item.name,
         message: `${item.name} expires in ${daysRemaining} days`,
@@ -2323,7 +2378,8 @@ export async function getComplianceCalendar(
 
   return items
     .filter(
-      (item) => item.dueDate && item.dueDate >= startDate && item.dueDate <= endDate
+      (item) =>
+        item.dueDate && item.dueDate >= startDate && item.dueDate <= endDate
     )
     .map((item) => ({
       id: item.id,
@@ -2336,7 +2392,9 @@ export async function getComplianceCalendar(
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 }
 
-export async function generateComplianceReport(format: "summary" | "detailed" = "summary") {
+export async function generateComplianceReport(
+  format: "summary" | "detailed" = "summary"
+) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
@@ -2402,7 +2460,8 @@ export async function getActiveAlerts(): Promise<EmergencyAlert[]> {
       createdAt: now,
       acknowledged: false,
       affectedCount: Math.floor(studentCount * (1 - attendanceRate / 100)),
-      actionRequired: "Review attendance records and contact absent students' parents",
+      actionRequired:
+        "Review attendance records and contact absent students' parents",
     })
   }
 
@@ -2411,7 +2470,8 @@ export async function getActiveAlerts(): Promise<EmergencyAlert[]> {
     type: "financial",
     severity: "medium",
     title: "Fee Collection Below Target",
-    message: "Current month fee collection at 65% of target with 5 days remaining.",
+    message:
+      "Current month fee collection at 65% of target with 5 days remaining.",
     createdAt: subDays(now, 1),
     acknowledged: false,
     actionRequired: "Send payment reminders to defaulters",
@@ -2441,7 +2501,10 @@ async function getAttendanceAlertStatus(): Promise<number> {
   return totalStudents > 0 ? (presentStudents / totalStudents) * 100 : 100
 }
 
-export async function acknowledgeAlert(alertId: string, acknowledgedBy: string) {
+export async function acknowledgeAlert(
+  alertId: string,
+  acknowledgedBy: string
+) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
@@ -2819,7 +2882,10 @@ async function getTeacherUpcomingData(userId: string, schoolId: string) {
   return {
     nextClass: nextClass
       ? {
-          subject: nextClass.class?.subject?.subjectName || nextClass.class?.name || "Unknown",
+          subject:
+            nextClass.class?.subject?.subjectName ||
+            nextClass.class?.name ||
+            "Unknown",
           time: nextClass.period?.startTime
             ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
                 hour: "2-digit",
@@ -2871,7 +2937,10 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
             status: "PUBLISHED",
             dueDate: { gte: today },
             submissions: {
-              none: { studentId: sg.student.id, status: { in: ["SUBMITTED", "GRADED"] } },
+              none: {
+                studentId: sg.student.id,
+                status: { in: ["SUBMITTED", "GRADED"] },
+              },
             },
           },
         }),
@@ -2882,7 +2951,10 @@ async function getParentUpcomingData(userId: string, schoolId: string) {
             status: "PUBLISHED",
             dueDate: { lt: today },
             submissions: {
-              none: { studentId: sg.student.id, status: { in: ["SUBMITTED", "GRADED"] } },
+              none: {
+                studentId: sg.student.id,
+                status: { in: ["SUBMITTED", "GRADED"] },
+              },
             },
           },
         }),
@@ -3014,15 +3086,20 @@ export async function getQuickLookCounts(userId?: string) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [announcementCount, recentAnnouncements, upcomingEvents] = await Promise.all([
-    db.announcement.count({ where: { schoolId, published: true } }),
-    db.announcement.count({
-      where: { schoolId, published: true, createdAt: { gte: subDays(today, 7) } },
-    }),
-    db.announcement.count({
-      where: { schoolId, published: true, createdAt: { gte: today } },
-    }),
-  ])
+  const [announcementCount, recentAnnouncements, upcomingEvents] =
+    await Promise.all([
+      db.announcement.count({ where: { schoolId, published: true } }),
+      db.announcement.count({
+        where: {
+          schoolId,
+          published: true,
+          createdAt: { gte: subDays(today, 7) },
+        },
+      }),
+      db.announcement.count({
+        where: { schoolId, published: true, createdAt: { gte: today } },
+      }),
+    ])
 
   return {
     announcements: { count: announcementCount, unread: recentAnnouncements },
@@ -3063,7 +3140,10 @@ export async function getResourceUsageByRole(role: string) {
   }
 }
 
-async function getStudentResourceUsage(userId: string | undefined, schoolId: string) {
+async function getStudentResourceUsage(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return []
 
   const student = await db.student.findFirst({
@@ -3083,9 +3163,15 @@ async function getStudentResourceUsage(userId: string | undefined, schoolId: str
     nextExam,
   ] = await Promise.all([
     db.attendance.count({ where: { studentId: student.id, schoolId } }),
-    db.attendance.count({ where: { studentId: student.id, schoolId, status: "PRESENT" } }),
+    db.attendance.count({
+      where: { studentId: student.id, schoolId, status: "PRESENT" },
+    }),
     db.assignmentSubmission.count({
-      where: { studentId: student.id, schoolId, status: { in: ["SUBMITTED", "GRADED"] } },
+      where: {
+        studentId: student.id,
+        schoolId,
+        status: { in: ["SUBMITTED", "GRADED"] },
+      },
     }),
     db.assignment.count({
       where: { schoolId, status: { in: ["PUBLISHED", "IN_PROGRESS"] } },
@@ -3102,30 +3188,59 @@ async function getStudentResourceUsage(userId: string | undefined, schoolId: str
     }),
   ])
 
-  const attendanceRate = totalAttendance > 0 ? (presentDays / totalAttendance) * 100 : 0
+  const attendanceRate =
+    totalAttendance > 0 ? (presentDays / totalAttendance) * 100 : 0
 
   // Calculate GPA from exam results (simple average converted to 4.0 scale)
   let gpa = 0
   if (examResults.length > 0) {
     const avgPercentage =
-      examResults.reduce((sum: number, r: { percentage: number }) => sum + r.percentage, 0) / examResults.length
+      examResults.reduce(
+        (sum: number, r: { percentage: number }) => sum + r.percentage,
+        0
+      ) / examResults.length
     gpa = (avgPercentage / 100) * 4 // Convert to 4.0 scale
   }
 
   // Calculate days until next exam
   const daysUntilExam = nextExam
-    ? Math.ceil((nextExam.examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil(
+        (nextExam.examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      )
     : 60
 
   return [
-    { name: "Assignment Progress", used: completedAssignments, limit: totalAssignments || 20, unit: "completed" },
-    { name: "Attendance Rate", used: Math.round(attendanceRate), limit: 100, unit: "%" },
-    { name: "Current GPA", used: Math.round(gpa * 10) / 10, limit: 4, unit: "" },
-    { name: "Days Until Exams", used: Math.max(0, daysUntilExam), limit: 60, unit: "days" },
+    {
+      name: "Assignment Progress",
+      used: completedAssignments,
+      limit: totalAssignments || 20,
+      unit: "completed",
+    },
+    {
+      name: "Attendance Rate",
+      used: Math.round(attendanceRate),
+      limit: 100,
+      unit: "%",
+    },
+    {
+      name: "Current GPA",
+      used: Math.round(gpa * 10) / 10,
+      limit: 4,
+      unit: "",
+    },
+    {
+      name: "Days Until Exams",
+      used: Math.max(0, daysUntilExam),
+      limit: 60,
+      unit: "days",
+    },
   ]
 }
 
-async function getTeacherResourceUsage(userId: string | undefined, schoolId: string) {
+async function getTeacherResourceUsage(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return []
 
   const teacher = await db.teacher.findFirst({
@@ -3150,48 +3265,77 @@ async function getTeacherResourceUsage(userId: string | undefined, schoolId: str
   })
   const classIds = teacherClasses.map((c) => c.id)
 
-  const [lessonsThisWeek, ungradedWork, studentCount, attendanceMarked] = await Promise.all([
-    // Lessons this week for teacher's classes
-    db.lesson.count({
-      where: {
-        schoolId,
-        classId: { in: classIds },
-        lessonDate: { gte: weekStart, lt: weekEnd },
-      },
-    }),
-    // Ungraded submissions
-    db.assignmentSubmission.count({
-      where: { schoolId, status: "SUBMITTED", assignment: { class: { teacherId: teacher.id } } },
-    }),
-    // Total students in teacher's classes
-    db.studentClass.count({
-      where: { class: { teacherId: teacher.id, schoolId } },
-    }),
-    // Attendance records marked this week for teacher's classes
-    db.attendance.count({
-      where: {
-        schoolId,
-        classId: { in: classIds },
-        date: { gte: weekStart, lt: weekEnd },
-      },
-    }),
-  ])
+  const [lessonsThisWeek, ungradedWork, studentCount, attendanceMarked] =
+    await Promise.all([
+      // Lessons this week for teacher's classes
+      db.lesson.count({
+        where: {
+          schoolId,
+          classId: { in: classIds },
+          lessonDate: { gte: weekStart, lt: weekEnd },
+        },
+      }),
+      // Ungraded submissions
+      db.assignmentSubmission.count({
+        where: {
+          schoolId,
+          status: "SUBMITTED",
+          assignment: { class: { teacherId: teacher.id } },
+        },
+      }),
+      // Total students in teacher's classes
+      db.studentClass.count({
+        where: { class: { teacherId: teacher.id, schoolId } },
+      }),
+      // Attendance records marked this week for teacher's classes
+      db.attendance.count({
+        where: {
+          schoolId,
+          classId: { in: classIds },
+          date: { gte: weekStart, lt: weekEnd },
+        },
+      }),
+    ])
 
   // Estimate attendance completion (marked / expected)
   const expectedAttendance = lessonsThisWeek * studentCount
-  const attendancePercentage = expectedAttendance > 0
-    ? Math.round((attendanceMarked / expectedAttendance) * 100)
-    : 100
+  const attendancePercentage =
+    expectedAttendance > 0
+      ? Math.round((attendanceMarked / expectedAttendance) * 100)
+      : 100
 
   return [
-    { name: "Lessons This Week", used: lessonsThisWeek, limit: 24, unit: "lessons" },
-    { name: "Ungraded Work", used: ungradedWork, limit: 50, unit: "submissions" },
-    { name: "Class Coverage", used: studentCount, limit: 180, unit: "students" },
-    { name: "Attendance Marked", used: Math.min(attendancePercentage, 100), limit: 100, unit: "%" },
+    {
+      name: "Lessons This Week",
+      used: lessonsThisWeek,
+      limit: 24,
+      unit: "lessons",
+    },
+    {
+      name: "Ungraded Work",
+      used: ungradedWork,
+      limit: 50,
+      unit: "submissions",
+    },
+    {
+      name: "Class Coverage",
+      used: studentCount,
+      limit: 180,
+      unit: "students",
+    },
+    {
+      name: "Attendance Marked",
+      used: Math.min(attendancePercentage, 100),
+      limit: 100,
+      unit: "%",
+    },
   ]
 }
 
-async function getParentResourceUsage(userId: string | undefined, schoolId: string) {
+async function getParentResourceUsage(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return []
 
   // Get all children's IDs
@@ -3213,47 +3357,57 @@ async function getParentResourceUsage(userId: string | undefined, schoolId: stri
   }
 
   // Fetch real data in parallel
-  const [
-    totalAttendance,
-    presentDays,
-    pendingAssignments,
-    upcomingEvents,
-  ] = await Promise.all([
-    // Total attendance records for all children
-    db.attendance.count({
-      where: { studentId: { in: childIds }, schoolId },
-    }),
-    // Present days for all children
-    db.attendance.count({
-      where: { studentId: { in: childIds }, schoolId, status: "PRESENT" },
-    }),
-    // Pending assignments for all children (not yet submitted)
-    db.assignment.count({
-      where: {
-        schoolId,
-        status: { in: ["PUBLISHED", "IN_PROGRESS"] },
-        dueDate: { gte: new Date() },
-        submissions: { none: { studentId: { in: childIds } } },
-      },
-    }),
-    // Upcoming school events
-    db.event.count({
-      where: {
-        schoolId,
-        eventDate: { gte: new Date(), lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // Next 30 days
-      },
-    }),
-  ])
+  const [totalAttendance, presentDays, pendingAssignments, upcomingEvents] =
+    await Promise.all([
+      // Total attendance records for all children
+      db.attendance.count({
+        where: { studentId: { in: childIds }, schoolId },
+      }),
+      // Present days for all children
+      db.attendance.count({
+        where: { studentId: { in: childIds }, schoolId, status: "PRESENT" },
+      }),
+      // Pending assignments for all children (not yet submitted)
+      db.assignment.count({
+        where: {
+          schoolId,
+          status: { in: ["PUBLISHED", "IN_PROGRESS"] },
+          dueDate: { gte: new Date() },
+          submissions: { none: { studentId: { in: childIds } } },
+        },
+      }),
+      // Upcoming school events
+      db.event.count({
+        where: {
+          schoolId,
+          eventDate: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          }, // Next 30 days
+        },
+      }),
+    ])
 
-  const avgAttendance = totalAttendance > 0
-    ? Math.round((presentDays / totalAttendance) * 100)
-    : 100
+  const avgAttendance =
+    totalAttendance > 0
+      ? Math.round((presentDays / totalAttendance) * 100)
+      : 100
 
   return [
     { name: "Children Enrolled", used: childCount, limit: 5, unit: "children" },
     { name: "Avg Attendance", used: avgAttendance, limit: 100, unit: "%" },
-    { name: "Assignments Due", used: pendingAssignments, limit: 15, unit: "tasks" },
-    { name: "Upcoming Events", used: upcomingEvents, limit: 10, unit: "events" },
+    {
+      name: "Assignments Due",
+      used: pendingAssignments,
+      limit: 15,
+      unit: "tasks",
+    },
+    {
+      name: "Upcoming Events",
+      used: upcomingEvents,
+      limit: 10,
+      unit: "events",
+    },
   ]
 }
 
@@ -3268,7 +3422,12 @@ async function getStaffResourceUsage(schoolId: string) {
   return [
     { name: "Tasks Assigned", used: 12, limit: 20, unit: "tasks" },
     { name: "Requests Pending", used: 5, limit: 15, unit: "requests" },
-    { name: "Days This Month", used: workDaysSoFar, limit: workDaysInMonth, unit: "days" },
+    {
+      name: "Days This Month",
+      used: workDaysSoFar,
+      limit: workDaysInMonth,
+      unit: "days",
+    },
     { name: "Efficiency Score", used: 88, limit: 100, unit: "%" },
   ]
 }
@@ -3305,40 +3464,61 @@ async function getAccountantResourceUsage(schoolId: string) {
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
-  const [feeMetrics, pendingInvoices, monthlyRevenue, overdueAmount] = await Promise.all([
-    getFeeCollectionMetrics(),
-    // Count of pending invoices
-    db.userInvoice.count({
-      where: { schoolId, status: { not: "PAID" } },
-    }),
-    // This month's revenue (paid invoices)
-    db.userInvoice.aggregate({
-      where: {
-        schoolId,
-        status: "PAID",
-        invoice_date: { gte: monthStart, lte: monthEnd },
-      },
-      _sum: { total: true },
-    }),
-    // Overdue amount (unpaid and past due date)
-    db.userInvoice.aggregate({
-      where: {
-        schoolId,
-        status: { not: "PAID" },
-        due_date: { lt: today },
-      },
-      _sum: { total: true },
-    }),
-  ])
+  const [feeMetrics, pendingInvoices, monthlyRevenue, overdueAmount] =
+    await Promise.all([
+      getFeeCollectionMetrics(),
+      // Count of pending invoices
+      db.userInvoice.count({
+        where: { schoolId, status: { not: "PAID" } },
+      }),
+      // This month's revenue (paid invoices)
+      db.userInvoice.aggregate({
+        where: {
+          schoolId,
+          status: "PAID",
+          invoice_date: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { total: true },
+      }),
+      // Overdue amount (unpaid and past due date)
+      db.userInvoice.aggregate({
+        where: {
+          schoolId,
+          status: { not: "PAID" },
+          due_date: { lt: today },
+        },
+        _sum: { total: true },
+      }),
+    ])
 
   const revenue = monthlyRevenue._sum.total || 0
   const overdue = overdueAmount._sum.total || 0
 
   return [
-    { name: "Collection Rate", used: Math.round(feeMetrics.collectionRate), limit: 100, unit: "%" },
-    { name: "Pending Invoices", used: pendingInvoices, limit: 200, unit: "invoices" },
-    { name: "Monthly Revenue", used: Math.round(revenue), limit: 120000, unit: "SAR" },
-    { name: "Overdue Amount", used: Math.round(overdue), limit: 50000, unit: "SAR" },
+    {
+      name: "Collection Rate",
+      used: Math.round(feeMetrics.collectionRate),
+      limit: 100,
+      unit: "%",
+    },
+    {
+      name: "Pending Invoices",
+      used: pendingInvoices,
+      limit: 200,
+      unit: "invoices",
+    },
+    {
+      name: "Monthly Revenue",
+      used: Math.round(revenue),
+      limit: 120000,
+      unit: "SAR",
+    },
+    {
+      name: "Overdue Amount",
+      used: Math.round(overdue),
+      limit: 50000,
+      unit: "SAR",
+    },
   ]
 }
 
@@ -3349,30 +3529,32 @@ async function getPrincipalResourceUsage(schoolId: string) {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const [studentCount, teacherCount, todayAttendance, totalStudentsToday] = await Promise.all([
-    db.student.count({ where: { schoolId } }),
-    // Count teachers (Staff model doesn't exist)
-    db.teacher.count({ where: { schoolId } }),
-    // Today's attendance (present students)
-    db.attendance.count({
-      where: {
-        schoolId,
-        date: { gte: today, lt: tomorrow },
-        status: "PRESENT",
-      },
-    }),
-    // Total students expected today
-    db.attendance.count({
-      where: {
-        schoolId,
-        date: { gte: today, lt: tomorrow },
-      },
-    }),
-  ])
+  const [studentCount, teacherCount, todayAttendance, totalStudentsToday] =
+    await Promise.all([
+      db.student.count({ where: { schoolId } }),
+      // Count teachers (Staff model doesn't exist)
+      db.teacher.count({ where: { schoolId } }),
+      // Today's attendance (present students)
+      db.attendance.count({
+        where: {
+          schoolId,
+          date: { gte: today, lt: tomorrow },
+          status: "PRESENT",
+        },
+      }),
+      // Total students expected today
+      db.attendance.count({
+        where: {
+          schoolId,
+          date: { gte: today, lt: tomorrow },
+        },
+      }),
+    ])
 
-  const attendanceToday = totalStudentsToday > 0
-    ? Math.round((todayAttendance / totalStudentsToday) * 100)
-    : 0
+  const attendanceToday =
+    totalStudentsToday > 0
+      ? Math.round((todayAttendance / totalStudentsToday) * 100)
+      : 0
 
   return [
     { name: "Enrollment", used: studentCount, limit: 1000, unit: "students" },
@@ -3400,7 +3582,12 @@ async function getAdminResourceUsage(schoolId: string) {
   return [
     { name: "Active Users", used: userCount, limit: 2000, unit: "users" },
     { name: "Storage Used", used: 45, limit: 100, unit: "GB" }, // Mocked
-    { name: "Active Sessions", used: activeSessions, limit: 500, unit: "sessions" },
+    {
+      name: "Active Sessions",
+      used: activeSessions,
+      limit: 500,
+      unit: "sessions",
+    },
     { name: "System Health", used: 98, limit: 100, unit: "%" }, // Mocked
   ]
 }
@@ -3448,7 +3635,10 @@ export async function getInvoicesByRole(role: string) {
   }
 }
 
-async function getStudentInvoices(userId: string | undefined, schoolId: string) {
+async function getStudentInvoices(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return []
 
   const invoices = await db.userInvoice.findMany({
@@ -3473,7 +3663,10 @@ async function getStudentInvoices(userId: string | undefined, schoolId: string) 
   }))
 }
 
-async function getTeacherInvoices(userId: string | undefined, schoolId: string) {
+async function getTeacherInvoices(
+  userId: string | undefined,
+  schoolId: string
+) {
   // Teachers see expense claims/reimbursements
   if (!userId) return []
 
@@ -3495,7 +3688,12 @@ async function getTeacherInvoices(userId: string | undefined, schoolId: string) 
     id: exp.id,
     date: exp.expenseDate.toLocaleDateString(),
     amount: `$${Number(exp.amount).toFixed(2)}`,
-    status: exp.status === "PAID" ? "paid" : exp.status === "APPROVED" ? "open" : "void",
+    status:
+      exp.status === "PAID"
+        ? "paid"
+        : exp.status === "APPROVED"
+          ? "open"
+          : "void",
     description: exp.description.slice(0, 50),
   }))
 }
@@ -3559,7 +3757,12 @@ async function getStaffInvoices(userId: string | undefined, schoolId: string) {
     id: exp.id,
     date: exp.expenseDate.toLocaleDateString(),
     amount: `$${Number(exp.amount).toFixed(2)}`,
-    status: exp.status === "PAID" ? "paid" : exp.status === "APPROVED" ? "open" : "void",
+    status:
+      exp.status === "PAID"
+        ? "paid"
+        : exp.status === "APPROVED"
+          ? "open"
+          : "void",
     description: exp.description.slice(0, 50),
   }))
 }
@@ -3617,7 +3820,10 @@ export async function getFinancialOverviewByRole(role: string) {
   }
 }
 
-async function getStudentFinancialOverview(userId: string | undefined, schoolId: string) {
+async function getStudentFinancialOverview(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return null
 
   const invoices = await db.userInvoice.findMany({
@@ -3645,7 +3851,10 @@ async function getStudentFinancialOverview(userId: string | undefined, schoolId:
   }
 }
 
-async function getParentFinancialOverview(userId: string | undefined, schoolId: string) {
+async function getParentFinancialOverview(
+  userId: string | undefined,
+  schoolId: string
+) {
   if (!userId) return null
 
   const children = await db.studentGuardian.findMany({
@@ -3721,7 +3930,7 @@ async function getAccountantFinancialOverview(schoolId: string) {
     expenses: expenseMetrics,
     budget: {
       allocated: 1200000 / 12,
-      remaining: (1200000 / 12) - expenseMetrics.total,
+      remaining: 1200000 / 12 - expenseMetrics.total,
       utilizationRate: expenseMetrics.budgetUtilization,
     },
   }
@@ -3800,21 +4009,17 @@ export async function getQuickLookData(): Promise<QuickLookData> {
 
   try {
     // Fetch all data in parallel for performance
-    const [
-      announcementsData,
-      eventsData,
-      notificationsData,
-      messagesData,
-    ] = await Promise.all([
-      // 1. ANNOUNCEMENTS - published, not expired, scoped to user
-      getAnnouncementsQuickLook(schoolId, userId, userRole, last24Hours, now),
-      // 2. EVENTS - upcoming events in the next 30 days
-      getEventsQuickLook(schoolId, last7Days, now),
-      // 3. NOTIFICATIONS - unread notifications for user
-      getNotificationsQuickLook(schoolId, userId, last24Hours),
-      // 4. MESSAGES - unread messages in conversations
-      getMessagesQuickLook(schoolId, userId, last24Hours),
-    ])
+    const [announcementsData, eventsData, notificationsData, messagesData] =
+      await Promise.all([
+        // 1. ANNOUNCEMENTS - published, not expired, scoped to user
+        getAnnouncementsQuickLook(schoolId, userId, userRole, last24Hours, now),
+        // 2. EVENTS - upcoming events in the next 30 days
+        getEventsQuickLook(schoolId, last7Days, now),
+        // 3. NOTIFICATIONS - unread notifications for user
+        getNotificationsQuickLook(schoolId, userId, last24Hours),
+        // 4. MESSAGES - unread messages in conversations
+        getMessagesQuickLook(schoolId, userId, last24Hours),
+      ])
 
     return {
       announcements: announcementsData,
@@ -3840,10 +4045,7 @@ async function getAnnouncementsQuickLook(
     where: {
       schoolId,
       published: true,
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gte: now } },
-      ],
+      OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
       // Scope by role if applicable
       ...(userRole && userRole !== "ADMIN" && userRole !== "DEVELOPER"
         ? {
@@ -3869,8 +4071,12 @@ async function getAnnouncementsQuickLook(
   })
 
   const totalCount = announcements.length
-  const unreadCount = announcements.filter((a) => a.readReceipts.length === 0).length
-  const newCount = announcements.filter((a) => a.createdAt >= last24Hours).length
+  const unreadCount = announcements.filter(
+    (a) => a.readReceipts.length === 0
+  ).length
+  const newCount = announcements.filter(
+    (a) => a.createdAt >= last24Hours
+  ).length
   const mostRecent = announcements[0]
 
   return {
@@ -4010,7 +4216,8 @@ async function getMessagesQuickLook(
 
   if (mostRecentParticipation?.conversation.messages[0]) {
     const content = mostRecentParticipation.conversation.messages[0].content
-    recentPreview = content.length > 50 ? content.substring(0, 47) + "..." : content
+    recentPreview =
+      content.length > 50 ? content.substring(0, 47) + "..." : content
   }
 
   return {
@@ -4107,9 +4314,8 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
   const presentCount = attendanceData.filter(
     (a) => a.status === "PRESENT" || a.status === "LATE"
   ).length
-  const attendanceRate = totalAttendance > 0
-    ? Math.round((presentCount / totalAttendance) * 100)
-    : 0
+  const attendanceRate =
+    totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0
 
   // Calculate fee collection rate
   const totalFees = feeData.reduce(
@@ -4120,9 +4326,8 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
     (sum, inv) => sum + (Number(inv.amountPaid) || 0),
     0
   )
-  const feeCollectionRate = totalFees > 0
-    ? Math.round((collectedFees / totalFees) * 100)
-    : 0
+  const feeCollectionRate =
+    totalFees > 0 ? Math.round((collectedFees / totalFees) * 100) : 0
 
   return {
     totalStudents,
@@ -4176,7 +4381,9 @@ interface RoleChartData {
  * Get chart data based on user role
  * Returns role-specific metrics for dashboard visualizations
  */
-export async function getChartDataByRole(role: string): Promise<RoleChartData | null> {
+export async function getChartDataByRole(
+  role: string
+): Promise<RoleChartData | null> {
   const session = await auth()
   const userId = session?.user?.id
   const schoolId = session?.user?.schoolId
@@ -4206,7 +4413,10 @@ export async function getChartDataByRole(role: string): Promise<RoleChartData | 
 }
 
 // Student: Grade trends, attendance, subject performance
-async function getStudentChartData(userId: string | undefined, schoolId: string): Promise<RoleChartData> {
+async function getStudentChartData(
+  userId: string | undefined,
+  schoolId: string
+): Promise<RoleChartData> {
   if (!userId) {
     return getDefaultStudentChartData()
   }
@@ -4250,17 +4460,21 @@ async function getStudentChartData(userId: string | undefined, schoolId: string)
   const presentDays = attendance.filter(
     (a) => a.status === "PRESENT" || a.status === "LATE"
   ).length
-  const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
+  const attendanceRate =
+    totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0
 
   // Group results by month for trend (using marksObtained and totalMarks)
-  const monthlyGrades = results.reduce((acc, r) => {
-    const month = r.createdAt.toLocaleDateString("en-US", { month: "short" })
-    if (!acc[month]) acc[month] = []
-    const score = r.marksObtained || 0
-    const maxScore = r.totalMarks || 100
-    acc[month].push((score / maxScore) * 100)
-    return acc
-  }, {} as Record<string, number[]>)
+  const monthlyGrades = results.reduce(
+    (acc, r) => {
+      const month = r.createdAt.toLocaleDateString("en-US", { month: "short" })
+      if (!acc[month]) acc[month] = []
+      const score = r.marksObtained || 0
+      const maxScore = r.totalMarks || 100
+      acc[month].push((score / maxScore) * 100)
+      return acc
+    },
+    {} as Record<string, number[]>
+  )
 
   const months = Object.keys(monthlyGrades)
   const avgGrades = months.map((m) => {
@@ -4269,7 +4483,14 @@ async function getStudentChartData(userId: string | undefined, schoolId: string)
   })
 
   // Use percentage for grade distribution (already computed in ExamResult)
-  const gradeCategories: Record<string, number> = { "A+": 0, A: 0, "B+": 0, B: 0, "C+": 0, C: 0 }
+  const gradeCategories: Record<string, number> = {
+    "A+": 0,
+    A: 0,
+    "B+": 0,
+    B: 0,
+    "C+": 0,
+    C: 0,
+  }
   results.forEach((r) => {
     const pct = r.percentage || 0
     if (pct >= 95) gradeCategories["A+"]++
@@ -4286,28 +4507,30 @@ async function getStudentChartData(userId: string | undefined, schoolId: string)
 
   return {
     sectionTitle: "Academic Performance",
-    trendChart: months.length > 0
-      ? {
-          title: "Grade Trend",
-          type: "line",
-          data: {
-            labels: months,
-            current: avgGrades,
-          },
-        }
-      : getDefaultStudentChartData().trendChart,
+    trendChart:
+      months.length > 0
+        ? {
+            title: "Grade Trend",
+            type: "line",
+            data: {
+              labels: months,
+              current: avgGrades,
+            },
+          }
+        : getDefaultStudentChartData().trendChart,
     gaugeChart: {
       value: attendanceRate || 86,
       label: "Attendance",
       trend: 0,
     },
-    distributionChart: gradeDistribution.length > 0
-      ? {
-          title: "Grade Distribution",
-          type: "bar",
-          data: gradeDistribution,
-        }
-      : getDefaultStudentChartData().distributionChart,
+    distributionChart:
+      gradeDistribution.length > 0
+        ? {
+            title: "Grade Distribution",
+            type: "bar",
+            data: gradeDistribution,
+          }
+        : getDefaultStudentChartData().distributionChart,
   }
 }
 
@@ -4343,7 +4566,10 @@ function getDefaultStudentChartData(): RoleChartData {
 }
 
 // Teacher: Class performance, grading progress, lessons
-async function getTeacherChartData(userId: string | undefined, schoolId: string): Promise<RoleChartData> {
+async function getTeacherChartData(
+  userId: string | undefined,
+  schoolId: string
+): Promise<RoleChartData> {
   if (!userId) {
     return getDefaultTeacherChartData()
   }
@@ -4366,17 +4592,18 @@ async function getTeacherChartData(userId: string | undefined, schoolId: string)
 
   const classIds = teacherClasses.map((c) => c.id)
 
-  const lessons = classIds.length > 0
-    ? await db.lesson.findMany({
-        where: {
-          classId: { in: classIds },
-          schoolId,
-          lessonDate: { gte: fourWeeksAgo },
-        },
-        select: { lessonDate: true },
-        orderBy: { lessonDate: "asc" },
-      })
-    : []
+  const lessons =
+    classIds.length > 0
+      ? await db.lesson.findMany({
+          where: {
+            classId: { in: classIds },
+            schoolId,
+            lessonDate: { gte: fourWeeksAgo },
+          },
+          select: { lessonDate: true },
+          orderBy: { lessonDate: "asc" },
+        })
+      : []
 
   // Group lessons by week
   const weeklyLessons: number[] = [0, 0, 0, 0]
@@ -4395,18 +4622,22 @@ async function getTeacherChartData(userId: string | undefined, schoolId: string)
   })
 
   const assignmentIds = assignments.map((a) => a.id)
-  const submissions = assignmentIds.length > 0
-    ? await db.assignmentSubmission.findMany({
-        where: { assignmentId: { in: assignmentIds } },
-        select: { gradedAt: true },
-      })
-    : []
+  const submissions =
+    assignmentIds.length > 0
+      ? await db.assignmentSubmission.findMany({
+          where: { assignmentId: { in: assignmentIds } },
+          select: { gradedAt: true },
+        })
+      : []
 
   const totalSubmissions = submissions.length
-  const gradedSubmissions = submissions.filter((s) => s.gradedAt !== null).length
-  const gradingProgress = totalSubmissions > 0
-    ? Math.round((gradedSubmissions / totalSubmissions) * 100)
-    : 100
+  const gradedSubmissions = submissions.filter(
+    (s) => s.gradedAt !== null
+  ).length
+  const gradingProgress =
+    totalSubmissions > 0
+      ? Math.round((gradedSubmissions / totalSubmissions) * 100)
+      : 100
 
   // Class names for distribution (simplified - just show class list)
   const classPerformance = teacherClasses.slice(0, 5).map((c, i) => ({
@@ -4421,7 +4652,9 @@ async function getTeacherChartData(userId: string | undefined, schoolId: string)
       type: "area",
       data: {
         labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-        current: weeklyLessons.some((w) => w > 0) ? weeklyLessons : [18, 22, 20, 24],
+        current: weeklyLessons.some((w) => w > 0)
+          ? weeklyLessons
+          : [18, 22, 20, 24],
       },
     },
     gaugeChart: {
@@ -4429,13 +4662,14 @@ async function getTeacherChartData(userId: string | undefined, schoolId: string)
       label: "Grading Progress",
       trend: 0,
     },
-    distributionChart: classPerformance.length > 0
-      ? {
-          title: "Class Performance",
-          type: "bar",
-          data: classPerformance,
-        }
-      : getDefaultTeacherChartData().distributionChart,
+    distributionChart:
+      classPerformance.length > 0
+        ? {
+            title: "Class Performance",
+            type: "bar",
+            data: classPerformance,
+          }
+        : getDefaultTeacherChartData().distributionChart,
   }
 }
 
@@ -4469,7 +4703,10 @@ function getDefaultTeacherChartData(): RoleChartData {
 }
 
 // Guardian: Children comparison, attendance, grades
-async function getGuardianChartData(userId: string | undefined, schoolId: string): Promise<RoleChartData> {
+async function getGuardianChartData(
+  userId: string | undefined,
+  schoolId: string
+): Promise<RoleChartData> {
   if (!userId) {
     return getDefaultGuardianChartData()
   }
@@ -4480,7 +4717,12 @@ async function getGuardianChartData(userId: string | undefined, schoolId: string
       student: {
         include: {
           examResults: {
-            select: { marksObtained: true, totalMarks: true, percentage: true, createdAt: true },
+            select: {
+              marksObtained: true,
+              totalMarks: true,
+              percentage: true,
+              createdAt: true,
+            },
             orderBy: { createdAt: "desc" },
             take: 20,
           },
@@ -4503,7 +4745,7 @@ async function getGuardianChartData(userId: string | undefined, schoolId: string
   children.forEach((c) => {
     c.student.examResults.forEach((r) => {
       // Use percentage directly if available, otherwise calculate
-      const pct = r.percentage ?? ((r.marksObtained / r.totalMarks) * 100)
+      const pct = r.percentage ?? (r.marksObtained / r.totalMarks) * 100
       totalGrade += pct
       gradeCount++
     })
@@ -4531,10 +4773,17 @@ async function getGuardianChartData(userId: string | undefined, schoolId: string
   )
 
   // Grade distribution
-  const gradeDistribution: Record<string, number> = { "A+": 0, A: 0, "B+": 0, B: 0, "C+": 0, C: 0 }
+  const gradeDistribution: Record<string, number> = {
+    "A+": 0,
+    A: 0,
+    "B+": 0,
+    B: 0,
+    "C+": 0,
+    C: 0,
+  }
   children.forEach((c) => {
     c.student.examResults.forEach((r) => {
-      const pct = r.percentage ?? ((r.marksObtained / r.totalMarks) * 100)
+      const pct = r.percentage ?? (r.marksObtained / r.totalMarks) * 100
       if (pct >= 95) gradeDistribution["A+"]++
       else if (pct >= 90) gradeDistribution["A"]++
       else if (pct >= 85) gradeDistribution["B+"]++
@@ -4601,7 +4850,9 @@ function getDefaultGuardianChartData(): RoleChartData {
 }
 
 // Accountant: Revenue, expenses, cash flow
-async function getAccountantChartData(schoolId: string): Promise<RoleChartData> {
+async function getAccountantChartData(
+  schoolId: string
+): Promise<RoleChartData> {
   const sixMonthsAgo = subMonths(new Date(), 6)
 
   const [invoices, expenses] = await Promise.all([
@@ -4611,7 +4862,11 @@ async function getAccountantChartData(schoolId: string): Promise<RoleChartData> 
     }),
     db.expense.findMany({
       where: { schoolId, createdAt: { gte: sixMonthsAgo } },
-      select: { amount: true, createdAt: true, category: { select: { name: true } } },
+      select: {
+        amount: true,
+        createdAt: true,
+        category: { select: { name: true } },
+      },
     }),
   ])
 
@@ -4640,16 +4895,18 @@ async function getAccountantChartData(schoolId: string): Promise<RoleChartData> 
   const totalCollected = invoices
     .filter((inv) => inv.status === "PAID")
     .reduce((sum, inv) => sum + inv.total, 0)
-  const collectionRate = totalInvoiced > 0
-    ? Math.round((totalCollected / totalInvoiced) * 100)
-    : 100
+  const collectionRate =
+    totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 100
 
   // Expense categories
-  const categoryTotals = expenses.reduce((acc, exp) => {
-    const cat = exp.category?.name || "Other"
-    acc[cat] = (acc[cat] || 0) + Number(exp.amount)
-    return acc
-  }, {} as Record<string, number>)
+  const categoryTotals = expenses.reduce(
+    (acc, exp) => {
+      const cat = exp.category?.name || "Other"
+      acc[cat] = (acc[cat] || 0) + Number(exp.amount)
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
   const expenseDistribution = Object.entries(categoryTotals)
     .map(([name, value]) => ({ name, value: Math.round(value) }))
@@ -4672,23 +4929,24 @@ async function getAccountantChartData(schoolId: string): Promise<RoleChartData> 
       label: "Collection Rate",
       trend: 0,
     },
-    distributionChart: expenseDistribution.length > 0
-      ? {
-          title: "Expense Categories",
-          type: "pie",
-          data: expenseDistribution,
-        }
-      : {
-          title: "Expense Categories",
-          type: "pie",
-          data: [
-            { name: "Salaries", value: 45 },
-            { name: "Operations", value: 25 },
-            { name: "Utilities", value: 15 },
-            { name: "Supplies", value: 10 },
-            { name: "Other", value: 5 },
-          ],
-        },
+    distributionChart:
+      expenseDistribution.length > 0
+        ? {
+            title: "Expense Categories",
+            type: "pie",
+            data: expenseDistribution,
+          }
+        : {
+            title: "Expense Categories",
+            type: "pie",
+            data: [
+              { name: "Salaries", value: 45 },
+              { name: "Operations", value: 25 },
+              { name: "Utilities", value: 15 },
+              { name: "Supplies", value: 10 },
+              { name: "Other", value: 5 },
+            ],
+          },
   }
 }
 
@@ -4702,7 +4960,12 @@ async function getPrincipalChartData(schoolId: string): Promise<RoleChartData> {
     }),
     db.examResult.findMany({
       where: { schoolId, createdAt: { gte: subMonths(new Date(), 4) } },
-      select: { marksObtained: true, totalMarks: true, percentage: true, createdAt: true },
+      select: {
+        marksObtained: true,
+        totalMarks: true,
+        percentage: true,
+        createdAt: true,
+      },
     }),
   ])
 
@@ -4711,9 +4974,8 @@ async function getPrincipalChartData(schoolId: string): Promise<RoleChartData> {
   const presentCount = attendance.filter(
     (a) => a.status === "PRESENT" || a.status === "LATE"
   ).length
-  const attendanceRate = totalAttendance > 0
-    ? Math.round((presentCount / totalAttendance) * 100)
-    : 0
+  const attendanceRate =
+    totalAttendance > 0 ? Math.round((presentCount / totalAttendance) * 100) : 0
 
   // Academic performance by term
   const termPerformance: Record<string, number[]> = {
@@ -4729,7 +4991,7 @@ async function getPrincipalChartData(schoolId: string): Promise<RoleChartData> {
     const termKey = `Term ${Math.min(4, 4 - termIndex)}`
     if (termPerformance[termKey]) {
       // Use percentage directly if available, otherwise calculate
-      const pct = r.percentage ?? ((r.marksObtained / r.totalMarks) * 100)
+      const pct = r.percentage ?? (r.marksObtained / r.totalMarks) * 100
       termPerformance[termKey].push(pct)
     }
   })
@@ -4787,8 +5049,14 @@ async function getAdminChartData(schoolId: string): Promise<RoleChartData> {
 
   // Module usage distribution (estimated based on user counts)
   const moduleUsage = [
-    { name: "Students", value: Math.round((students / totalUsers) * 100) || 35 },
-    { name: "Teachers", value: Math.round((teachers / totalUsers) * 100) || 25 },
+    {
+      name: "Students",
+      value: Math.round((students / totalUsers) * 100) || 35,
+    },
+    {
+      name: "Teachers",
+      value: Math.round((teachers / totalUsers) * 100) || 25,
+    },
     { name: "Finance", value: 20 },
     { name: "Exams", value: 15 },
     { name: "Reports", value: 5 },
@@ -4818,7 +5086,10 @@ async function getAdminChartData(schoolId: string): Promise<RoleChartData> {
 }
 
 // Staff: Task completion, request processing, workload
-async function getStaffChartData(userId: string | undefined, schoolId: string): Promise<RoleChartData> {
+async function getStaffChartData(
+  userId: string | undefined,
+  schoolId: string
+): Promise<RoleChartData> {
   // Staff charts use mock data since no Task model exists
   return {
     sectionTitle: "Work Analytics",
@@ -4879,7 +5150,7 @@ async function getDeveloperChartData(): Promise<RoleChartData> {
       data: [
         { name: "Enterprise", value: Math.round(totalSchools * 0.35) || 35 },
         { name: "Pro", value: Math.round(totalSchools * 0.45) || 45 },
-        { name: "Starter", value: Math.round(totalSchools * 0.20) || 20 },
+        { name: "Starter", value: Math.round(totalSchools * 0.2) || 20 },
       ],
     },
   }
@@ -4961,44 +5232,168 @@ export async function getStaffDashboardData() {
   // For now, return structured mock data
 
   const tasks: StaffTask[] = [
-    { id: "1", task: "Process student registrations", priority: "high", status: "in-progress", dueTime: "10:00 AM" },
-    { id: "2", task: "Update attendance records", priority: "medium", status: "pending", dueTime: "12:00 PM" },
-    { id: "3", task: "Prepare monthly reports", priority: "low", status: "completed", dueTime: "3:00 PM" },
-    { id: "4", task: "Schedule parent meetings", priority: "medium", status: "pending", dueTime: "5:00 PM" },
+    {
+      id: "1",
+      task: "Process student registrations",
+      priority: "high",
+      status: "in-progress",
+      dueTime: "10:00 AM",
+    },
+    {
+      id: "2",
+      task: "Update attendance records",
+      priority: "medium",
+      status: "pending",
+      dueTime: "12:00 PM",
+    },
+    {
+      id: "3",
+      task: "Prepare monthly reports",
+      priority: "low",
+      status: "completed",
+      dueTime: "3:00 PM",
+    },
+    {
+      id: "4",
+      task: "Schedule parent meetings",
+      priority: "medium",
+      status: "pending",
+      dueTime: "5:00 PM",
+    },
   ]
 
   const requests: StaffRequest[] = [
-    { id: "1", type: "Student Transfer", requester: "John Smith", urgency: "high", daysOpen: 2, department: "Registrar" },
-    { id: "2", type: "Document Request", requester: "Sarah Johnson", urgency: "medium", daysOpen: 5, department: "Admin" },
-    { id: "3", type: "Schedule Change", requester: "Mike Brown", urgency: "low", daysOpen: 1, department: "Academic" },
-    { id: "4", type: "Certificate Issue", requester: "Emma Wilson", urgency: "high", daysOpen: 3, department: "Registrar" },
+    {
+      id: "1",
+      type: "Student Transfer",
+      requester: "John Smith",
+      urgency: "high",
+      daysOpen: 2,
+      department: "Registrar",
+    },
+    {
+      id: "2",
+      type: "Document Request",
+      requester: "Sarah Johnson",
+      urgency: "medium",
+      daysOpen: 5,
+      department: "Admin",
+    },
+    {
+      id: "3",
+      type: "Schedule Change",
+      requester: "Mike Brown",
+      urgency: "low",
+      daysOpen: 1,
+      department: "Academic",
+    },
+    {
+      id: "4",
+      type: "Certificate Issue",
+      requester: "Emma Wilson",
+      urgency: "high",
+      daysOpen: 3,
+      department: "Registrar",
+    },
   ]
 
   const approvals: StaffApproval[] = [
-    { id: "1", item: "Field Trip Request", requester: "Science Dept", status: "pending", daysLeft: 3 },
-    { id: "2", item: "Budget Approval", requester: "Math Dept", status: "pending", daysLeft: 7 },
-    { id: "3", item: "Equipment Purchase", requester: "IT Dept", status: "pending", daysLeft: 1 },
+    {
+      id: "1",
+      item: "Field Trip Request",
+      requester: "Science Dept",
+      status: "pending",
+      daysLeft: 3,
+    },
+    {
+      id: "2",
+      item: "Budget Approval",
+      requester: "Math Dept",
+      status: "pending",
+      daysLeft: 7,
+    },
+    {
+      id: "3",
+      item: "Equipment Purchase",
+      requester: "IT Dept",
+      status: "pending",
+      daysLeft: 1,
+    },
   ]
 
   const maintenance: MaintenanceRequest[] = [
-    { id: "1", issue: "Broken projector in Room 101", priority: "high", assignedTo: "IT Team", status: "in-progress" },
-    { id: "2", issue: "HVAC maintenance Block B", priority: "medium", assignedTo: "Facilities", status: "scheduled" },
-    { id: "3", issue: "Plumbing repair - Staff room", priority: "high", assignedTo: "Maintenance", status: "pending" },
+    {
+      id: "1",
+      issue: "Broken projector in Room 101",
+      priority: "high",
+      assignedTo: "IT Team",
+      status: "in-progress",
+    },
+    {
+      id: "2",
+      issue: "HVAC maintenance Block B",
+      priority: "medium",
+      assignedTo: "Facilities",
+      status: "scheduled",
+    },
+    {
+      id: "3",
+      issue: "Plumbing repair - Staff room",
+      priority: "high",
+      assignedTo: "Maintenance",
+      status: "pending",
+    },
   ]
 
   const inventory: InventoryAlert[] = [
-    { id: "1", item: "Textbooks - Grade 10", status: "Low stock", quantity: 15, threshold: 20 },
-    { id: "2", item: "Lab Equipment", status: "Out of stock", quantity: 0, threshold: 5 },
-    { id: "3", item: "Office Supplies", status: "Low stock", quantity: 8, threshold: 15 },
+    {
+      id: "1",
+      item: "Textbooks - Grade 10",
+      status: "Low stock",
+      quantity: 15,
+      threshold: 20,
+    },
+    {
+      id: "2",
+      item: "Lab Equipment",
+      status: "Out of stock",
+      quantity: 0,
+      threshold: 5,
+    },
+    {
+      id: "3",
+      item: "Office Supplies",
+      status: "Low stock",
+      quantity: 8,
+      threshold: 15,
+    },
   ]
 
   const visitors: VisitorEntry[] = [
-    { id: "1", visitor: "Mrs. Johnson (Parent)", purpose: "Parent meeting", time: "9:00 AM", status: "checked-in" },
-    { id: "2", visitor: "Office Supplies Inc.", purpose: "Delivery", time: "10:30 AM", status: "checked-out" },
-    { id: "3", visitor: "Mr. Davis (Parent)", purpose: "Document pickup", time: "11:45 AM", status: "checked-in" },
+    {
+      id: "1",
+      visitor: "Mrs. Johnson (Parent)",
+      purpose: "Parent meeting",
+      time: "9:00 AM",
+      status: "checked-in",
+    },
+    {
+      id: "2",
+      visitor: "Office Supplies Inc.",
+      purpose: "Delivery",
+      time: "10:30 AM",
+      status: "checked-out",
+    },
+    {
+      id: "3",
+      visitor: "Mr. Davis (Parent)",
+      purpose: "Document pickup",
+      time: "11:45 AM",
+      status: "checked-in",
+    },
   ]
 
-  const completedTasks = tasks.filter(t => t.status === "completed").length
+  const completedTasks = tasks.filter((t) => t.status === "completed").length
   const totalTasks = tasks.length + 19 // Adding buffer for realistic numbers
 
   const workflow: WorkflowStatus = {

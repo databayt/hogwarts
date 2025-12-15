@@ -1,14 +1,16 @@
 "use client"
 
 import * as React from "react"
+import { Calendar, Pencil, Trash2 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Pencil, Trash2, Calendar } from "lucide-react"
-import { useAcademicDictionary } from "@/hooks/use-academic-dictionary"
-import type { SchoolYear } from "./types"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { SchoolYear } from "./types"
 
 interface YearListProps {
   years: SchoolYear[]
@@ -42,14 +44,18 @@ export function YearList({
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className="space-y-2" role="status" aria-label="Loading academic years">
+      <div
+        className="space-y-2"
+        role="status"
+        aria-label="Loading academic years"
+      >
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="rounded-lg border border-border p-4">
+          <div key={i} className="border-border rounded-lg border p-4">
             <div className="flex items-start justify-between gap-2">
-              <div className="space-y-2 flex-1">
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-3 w-48" />
-                <div className="flex gap-3 mt-2">
+                <div className="mt-2 flex gap-3">
                   <Skeleton className="h-3 w-16" />
                   <Skeleton className="h-3 w-16" />
                 </div>
@@ -65,13 +71,16 @@ export function YearList({
   if (years.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="rounded-full bg-muted p-3 mb-4">
-          <Calendar className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <div className="bg-muted mb-4 rounded-full p-3">
+          <Calendar
+            className="text-muted-foreground h-6 w-6"
+            aria-hidden="true"
+          />
         </div>
         <p className="text-muted-foreground text-sm">
           {dict.noYears || "No academic years configured"}
         </p>
-        <p className="text-muted-foreground text-xs mt-1">
+        <p className="text-muted-foreground mt-1 text-xs">
           {dict.addYearHint || "Add a year to get started"}
         </p>
       </div>
@@ -85,7 +94,7 @@ export function YearList({
           key={year.id}
           onClick={() => onSelectYear(year.id)}
           className={cn(
-            "group relative rounded-lg border p-4 cursor-pointer transition-all",
+            "group relative cursor-pointer rounded-lg border p-4 transition-all",
             "hover:border-primary/50 hover:bg-accent/50",
             selectedYearId === year.id
               ? "border-primary bg-accent"
@@ -93,20 +102,20 @@ export function YearList({
           )}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="space-y-1 min-w-0 flex-1">
+            <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2">
-                <h4 className="font-medium truncate">{year.yearName}</h4>
+                <h4 className="truncate font-medium">{year.yearName}</h4>
                 {selectedYearId === year.id && (
-                  <Badge variant="outline" className="text-xs shrink-0">
+                  <Badge variant="outline" className="shrink-0 text-xs">
                     {dict.selected || "Selected"}
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {formatDate(year.startDate)} - {formatDate(year.endDate)}
               </p>
               {year._count && (
-                <div className="flex gap-3 text-xs text-muted-foreground mt-2">
+                <div className="text-muted-foreground mt-2 flex gap-3 text-xs">
                   <span>
                     {year._count.terms} {dict.terms || "terms"}
                   </span>
@@ -118,7 +127,7 @@ export function YearList({
             </div>
 
             {/* Actions - visible on hover */}
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"
@@ -135,7 +144,7 @@ export function YearList({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive h-7 w-7"
                 onClick={(e) => {
                   e.stopPropagation()
                   onDeleteYear(year.id)

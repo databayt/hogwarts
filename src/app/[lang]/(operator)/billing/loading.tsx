@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function BillingLoading() {
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Header skeleton */}
       <div>
-        <Skeleton className="h-8 w-32 mb-2" />
+        <Skeleton className="mb-2 h-8 w-32" />
         <Skeleton className="h-4 w-64" />
       </div>
 
@@ -18,7 +18,7 @@ export default function BillingLoading() {
               <Skeleton className="h-4 w-28" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-24 mb-1" />
+              <Skeleton className="mb-1 h-8 w-24" />
               <Skeleton className="h-3 w-36" />
             </CardContent>
           </Card>
@@ -45,10 +45,10 @@ export default function BillingLoading() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center justify-between p-4">
                   <div className="flex-1">
-                    <Skeleton className="h-4 w-32 mb-1" />
+                    <Skeleton className="mb-1 h-4 w-32" />
                     <Skeleton className="h-3 w-48" />
                   </div>
-                  <Skeleton className="h-4 w-20 mx-4" />
+                  <Skeleton className="mx-4 h-4 w-20" />
                   <Skeleton className="h-8 w-16" />
                 </div>
               ))}
@@ -57,5 +57,5 @@ export default function BillingLoading() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

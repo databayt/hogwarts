@@ -1,7 +1,7 @@
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonList } from "@/components/ui/skeleton-list"
 import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonList } from "@/components/ui/skeleton-list"
-import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Loading() {
   return (

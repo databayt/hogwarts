@@ -1,23 +1,18 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useTransition } from "react"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Briefcase,
+  Loader2,
+  Mail,
+  Pencil,
+  Phone,
+  Plus,
+  Trash2,
+  User,
+} from "lucide-react"
+import { toast } from "sonner"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,18 +22,40 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Phone, Mail, User, Briefcase, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import type { Student } from "../../registration/types";
+} from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import {
   createGuardianAndLink,
-  updateGuardianLink,
   unlinkGuardian,
-} from "@/components/platform/parents/actions";
+  updateGuardianLink,
+} from "@/components/platform/parents/actions"
+
+import type { Student } from "../../registration/types"
 
 interface GuardianTabProps {
-  student: Student;
+  student: Student
 }
 
 const GUARDIAN_TYPES = [
@@ -46,14 +63,14 @@ const GUARDIAN_TYPES = [
   { value: "mother", label: "Mother", labelAr: "الأم" },
   { value: "guardian", label: "Guardian", labelAr: "ولي الأمر" },
   { value: "other", label: "Other", labelAr: "آخر" },
-];
+]
 
 export function GuardianTab({ student }: GuardianTabProps) {
-  const [isPending, startTransition] = useTransition();
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedGuardian, setSelectedGuardian] = useState<any>(null);
+  const [isPending, startTransition] = useTransition()
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [selectedGuardian, setSelectedGuardian] = useState<any>(null)
 
   // Form state for adding guardian
   const [formData, setFormData] = useState({
@@ -66,23 +83,28 @@ export function GuardianTab({ student }: GuardianTabProps) {
     occupation: "",
     workplace: "",
     notes: "",
-  });
+  })
 
-  const guardians = student.studentGuardians || [];
+  const guardians = student.studentGuardians || []
 
   const getInitials = (givenName: string, surname: string) => {
-    return `${givenName?.[0] || ""}${surname?.[0] || ""}`.toUpperCase();
-  };
+    return `${givenName?.[0] || ""}${surname?.[0] || ""}`.toUpperCase()
+  }
 
   const getPhoneIcon = (type: string) => {
     switch (type) {
-      case "mobile": return "📱";
-      case "home": return "🏠";
-      case "work": return "💼";
-      case "emergency": return "🚨";
-      default: return "📞";
+      case "mobile":
+        return "📱"
+      case "home":
+        return "🏠"
+      case "work":
+        return "💼"
+      case "emergency":
+        return "🚨"
+      default:
+        return "📞"
     }
-  };
+  }
 
   const resetForm = () => {
     setFormData({
@@ -95,8 +117,8 @@ export function GuardianTab({ student }: GuardianTabProps) {
       occupation: "",
       workplace: "",
       notes: "",
-    });
-  };
+    })
+  }
 
   const handleAddGuardian = () => {
     startTransition(async () => {
@@ -111,20 +133,20 @@ export function GuardianTab({ student }: GuardianTabProps) {
         occupation: formData.occupation || undefined,
         workplace: formData.workplace || undefined,
         notes: formData.notes || undefined,
-      });
+      })
 
       if (result.success) {
-        toast.success("Guardian added successfully");
-        setIsAddOpen(false);
-        resetForm();
+        toast.success("Guardian added successfully")
+        setIsAddOpen(false)
+        resetForm()
       } else {
-        toast.error(result.error);
+        toast.error(result.error)
       }
-    });
-  };
+    })
+  }
 
   const handleEditGuardian = () => {
-    if (!selectedGuardian) return;
+    if (!selectedGuardian) return
 
     startTransition(async () => {
       const result = await updateGuardianLink({
@@ -133,39 +155,39 @@ export function GuardianTab({ student }: GuardianTabProps) {
         occupation: formData.occupation || undefined,
         workplace: formData.workplace || undefined,
         notes: formData.notes || undefined,
-      });
+      })
 
       if (result.success) {
-        toast.success("Guardian updated successfully");
-        setIsEditOpen(false);
-        setSelectedGuardian(null);
-        resetForm();
+        toast.success("Guardian updated successfully")
+        setIsEditOpen(false)
+        setSelectedGuardian(null)
+        resetForm()
       } else {
-        toast.error(result.error);
+        toast.error(result.error)
       }
-    });
-  };
+    })
+  }
 
   const handleDeleteGuardian = () => {
-    if (!selectedGuardian) return;
+    if (!selectedGuardian) return
 
     startTransition(async () => {
       const result = await unlinkGuardian({
         studentGuardianId: selectedGuardian.id,
-      });
+      })
 
       if (result.success) {
-        toast.success("Guardian removed successfully");
-        setIsDeleteOpen(false);
-        setSelectedGuardian(null);
+        toast.success("Guardian removed successfully")
+        setIsDeleteOpen(false)
+        setSelectedGuardian(null)
       } else {
-        toast.error(result.error);
+        toast.error(result.error)
       }
-    });
-  };
+    })
+  }
 
   const openEditDialog = (guardianRel: any) => {
-    setSelectedGuardian(guardianRel);
+    setSelectedGuardian(guardianRel)
     setFormData({
       givenName: guardianRel.guardian.givenName || "",
       surname: guardianRel.guardian.surname || "",
@@ -176,47 +198,55 @@ export function GuardianTab({ student }: GuardianTabProps) {
       occupation: guardianRel.occupation || "",
       workplace: guardianRel.workplace || "",
       notes: guardianRel.notes || "",
-    });
-    setIsEditOpen(true);
-  };
+    })
+    setIsEditOpen(true)
+  }
 
   const openDeleteDialog = (guardianRel: any) => {
-    setSelectedGuardian(guardianRel);
-    setIsDeleteOpen(true);
-  };
+    setSelectedGuardian(guardianRel)
+    setIsDeleteOpen(true)
+  }
 
   return (
     <div className="space-y-6">
       {/* Add Guardian Button */}
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={() => setIsAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Add Guardian
         </Button>
       </div>
 
       {guardians.map((guardianRel: any, index: number) => {
-        const guardian = guardianRel.guardian;
-        const guardianType = guardianRel.guardianType?.name || guardianRel.relation;
-        const fullName = `${guardian.givenName} ${guardian.surname}`;
+        const guardian = guardianRel.guardian
+        const guardianType =
+          guardianRel.guardianType?.name || guardianRel.relation
+        const fullName = `${guardian.givenName} ${guardian.surname}`
 
         return (
-          <Card key={guardianRel.id || index} className={guardianRel.isPrimary ? "border-primary" : ""}>
+          <Card
+            key={guardianRel.id || index}
+            className={guardianRel.isPrimary ? "border-primary" : ""}
+          >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={guardian.profileUrl} alt={fullName} />
-                    <AvatarFallback>{getInitials(guardian.givenName, guardian.surname)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getInitials(guardian.givenName, guardian.surname)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       {fullName}
                       {guardianRel.isPrimary && (
-                        <Badge variant="default" className="text-xs">Primary</Badge>
+                        <Badge variant="default" className="text-xs">
+                          Primary
+                        </Badge>
                       )}
                     </CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                    <div className="text-muted-foreground mt-1 flex items-center gap-4 text-sm">
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         {guardianType}
@@ -231,7 +261,11 @@ export function GuardianTab({ student }: GuardianTabProps) {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(guardianRel)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEditDialog(guardianRel)}
+                  >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
@@ -260,23 +294,30 @@ export function GuardianTab({ student }: GuardianTabProps) {
                       {guardian.emailAddress}
                     </a>
                   )}
-                  {guardian.phoneNumbers?.map((phone: any, phoneIndex: number) => (
-                    <div key={phoneIndex} className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`tel:${phone.phoneNumber}`}
-                        className="text-blue-600 hover:underline"
+                  {guardian.phoneNumbers?.map(
+                    (phone: any, phoneIndex: number) => (
+                      <div
+                        key={phoneIndex}
+                        className="flex items-center gap-2 text-sm"
                       >
-                        {phone.phoneNumber}
-                      </a>
-                      <span className="text-muted-foreground">
-                        {getPhoneIcon(phone.phoneType)} {phone.phoneType}
-                      </span>
-                      {phone.isPrimary && (
-                        <Badge variant="secondary" className="text-xs">Primary</Badge>
-                      )}
-                    </div>
-                  ))}
+                        <Phone className="text-muted-foreground h-4 w-4" />
+                        <a
+                          href={`tel:${phone.phoneNumber}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {phone.phoneNumber}
+                        </a>
+                        <span className="text-muted-foreground">
+                          {getPhoneIcon(phone.phoneType)} {phone.phoneType}
+                        </span>
+                        {phone.isPrimary && (
+                          <Badge variant="secondary" className="text-xs">
+                            Primary
+                          </Badge>
+                        )}
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
 
@@ -284,7 +325,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {guardianRel.workplace && (
                 <div className="space-y-2">
                   <h4 className="font-medium">Work Information</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {guardianRel.occupation} at {guardianRel.workplace}
                   </p>
                 </div>
@@ -294,7 +335,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {guardian.address && (
                 <div className="space-y-2">
                   <h4 className="font-medium">Address</h4>
-                  <p className="text-sm text-muted-foreground">{guardian.address}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {guardian.address}
+                  </p>
                 </div>
               )}
 
@@ -302,10 +345,18 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <div className="space-y-2">
                 <h4 className="font-medium">Permissions</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs">Can Pick Up</Badge>
-                  <Badge variant="outline" className="text-xs">Receives Reports</Badge>
-                  <Badge variant="outline" className="text-xs">Emergency Contact</Badge>
-                  <Badge variant="outline" className="text-xs">Fee Payment</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Can Pick Up
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Receives Reports
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Emergency Contact
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Fee Payment
+                  </Badge>
                 </div>
               </div>
 
@@ -313,21 +364,27 @@ export function GuardianTab({ student }: GuardianTabProps) {
               {guardianRel.notes && (
                 <div className="space-y-2">
                   <h4 className="font-medium">Notes</h4>
-                  <p className="text-sm text-muted-foreground">{guardianRel.notes}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {guardianRel.notes}
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
-        );
+        )
       })}
 
       {guardians.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
-            <User className="h-12 w-12 text-muted-foreground mb-4" />
+            <User className="text-muted-foreground mb-4 h-12 w-12" />
             <p className="text-muted-foreground">No guardians registered</p>
-            <Button variant="outline" className="mt-4" onClick={() => setIsAddOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setIsAddOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Add Guardian
             </Button>
           </CardContent>
@@ -351,7 +408,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="givenName"
                   value={formData.givenName}
-                  onChange={(e) => setFormData({ ...formData, givenName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, givenName: e.target.value })
+                  }
                   placeholder="Enter first name"
                 />
               </div>
@@ -360,7 +419,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="surname"
                   value={formData.surname}
-                  onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, surname: e.target.value })
+                  }
                   placeholder="Enter last name"
                 />
               </div>
@@ -370,7 +431,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <Label htmlFor="guardianType">Relationship *</Label>
               <Select
                 value={formData.guardianType}
-                onValueChange={(value) => setFormData({ ...formData, guardianType: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, guardianType: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select relationship" />
@@ -391,7 +454,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 id="emailAddress"
                 type="email"
                 value={formData.emailAddress}
-                onChange={(e) => setFormData({ ...formData, emailAddress: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, emailAddress: e.target.value })
+                }
                 placeholder="guardian@email.com"
               />
             </div>
@@ -402,7 +467,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 id="phoneNumber"
                 type="tel"
                 value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phoneNumber: e.target.value })
+                }
                 placeholder="+1 234 567 8900"
               />
             </div>
@@ -413,7 +480,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="occupation"
                   value={formData.occupation}
-                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, occupation: e.target.value })
+                  }
                   placeholder="e.g., Engineer"
                 />
               </div>
@@ -422,7 +491,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="workplace"
                   value={formData.workplace}
-                  onChange={(e) => setFormData({ ...formData, workplace: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, workplace: e.target.value })
+                  }
                   placeholder="e.g., Tech Corp"
                 />
               </div>
@@ -432,7 +503,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <Checkbox
                 id="isPrimary"
                 checked={formData.isPrimary}
-                onCheckedChange={(checked) => setFormData({ ...formData, isPrimary: !!checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isPrimary: !!checked })
+                }
               />
               <Label htmlFor="isPrimary" className="text-sm font-normal">
                 Set as primary guardian
@@ -444,7 +517,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 placeholder="Additional notes..."
                 rows={2}
               />
@@ -452,14 +527,25 @@ export function GuardianTab({ student }: GuardianTabProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsAddOpen(false); resetForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddOpen(false)
+                resetForm()
+              }}
+            >
               Cancel
             </Button>
             <Button
               onClick={handleAddGuardian}
-              disabled={isPending || !formData.givenName || !formData.surname || !formData.guardianType}
+              disabled={
+                isPending ||
+                !formData.givenName ||
+                !formData.surname ||
+                !formData.guardianType
+              }
             >
-              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Guardian
             </Button>
           </DialogFooter>
@@ -477,9 +563,13 @@ export function GuardianTab({ student }: GuardianTabProps) {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="font-medium">{formData.givenName} {formData.surname}</p>
-              <p className="text-sm text-muted-foreground">{formData.emailAddress || "No email"}</p>
+            <div className="bg-muted rounded-lg p-3">
+              <p className="font-medium">
+                {formData.givenName} {formData.surname}
+              </p>
+              <p className="text-muted-foreground text-sm">
+                {formData.emailAddress || "No email"}
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -488,7 +578,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="editOccupation"
                   value={formData.occupation}
-                  onChange={(e) => setFormData({ ...formData, occupation: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, occupation: e.target.value })
+                  }
                   placeholder="e.g., Engineer"
                 />
               </div>
@@ -497,7 +589,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
                 <Input
                   id="editWorkplace"
                   value={formData.workplace}
-                  onChange={(e) => setFormData({ ...formData, workplace: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, workplace: e.target.value })
+                  }
                   placeholder="e.g., Tech Corp"
                 />
               </div>
@@ -507,7 +601,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <Checkbox
                 id="editIsPrimary"
                 checked={formData.isPrimary}
-                onCheckedChange={(checked) => setFormData({ ...formData, isPrimary: !!checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isPrimary: !!checked })
+                }
               />
               <Label htmlFor="editIsPrimary" className="text-sm font-normal">
                 Set as primary guardian
@@ -519,7 +615,9 @@ export function GuardianTab({ student }: GuardianTabProps) {
               <Textarea
                 id="editNotes"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 placeholder="Additional notes..."
                 rows={2}
               />
@@ -527,11 +625,18 @@ export function GuardianTab({ student }: GuardianTabProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsEditOpen(false); setSelectedGuardian(null); resetForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditOpen(false)
+                setSelectedGuardian(null)
+                resetForm()
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleEditGuardian} disabled={isPending}>
-              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
           </DialogFooter>
@@ -545,23 +650,28 @@ export function GuardianTab({ student }: GuardianTabProps) {
             <AlertDialogTitle>Remove Guardian</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove{" "}
-              <strong>{selectedGuardian?.guardian?.givenName} {selectedGuardian?.guardian?.surname}</strong>{" "}
+              <strong>
+                {selectedGuardian?.guardian?.givenName}{" "}
+                {selectedGuardian?.guardian?.surname}
+              </strong>{" "}
               as a guardian for this student? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedGuardian(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setSelectedGuardian(null)}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteGuardian}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isPending}
             >
-              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

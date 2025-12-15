@@ -1,6 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle, type ReactNode } from "react"
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 
 export interface AutoScrollerProps {
   children: ReactNode
@@ -49,14 +56,17 @@ export interface AutoScrollerProps {
  * ```
  */
 export const AutoScroller = forwardRef<HTMLDivElement, AutoScrollerProps>(
-  function AutoScrollerComponent({
-    children,
-    enabled = true,
-    behavior = "smooth",
-    className,
-    onScrollToBottom,
-    onScrollToTop,
-  }, ref) {
+  function AutoScrollerComponent(
+    {
+      children,
+      enabled = true,
+      behavior = "smooth",
+      className,
+      onScrollToBottom,
+      onScrollToTop,
+    },
+    ref
+  ) {
     const containerRef = useRef<HTMLDivElement>(null)
     const isUserScrolling = useRef(false)
     const scrollTimeout = useRef<NodeJS.Timeout | undefined>(undefined)
@@ -64,83 +74,85 @@ export const AutoScroller = forwardRef<HTMLDivElement, AutoScrollerProps>(
     // Expose the container ref to parent
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement, [])
 
-  // Auto-scroll to bottom on new content
-  useEffect(() => {
-    if (!enabled) return
+    // Auto-scroll to bottom on new content
+    useEffect(() => {
+      if (!enabled) return
 
-    const element = containerRef.current
-    if (!element) return
+      const element = containerRef.current
+      if (!element) return
 
-    // Create MutationObserver to watch for DOM changes
-    const observer = new MutationObserver(() => {
-      // Only auto-scroll if user is not manually scrolling
-      if (!isUserScrolling.current) {
-        element.scroll({
-          top: element.scrollHeight,
-          behavior,
-        })
+      // Create MutationObserver to watch for DOM changes
+      const observer = new MutationObserver(() => {
+        // Only auto-scroll if user is not manually scrolling
+        if (!isUserScrolling.current) {
+          element.scroll({
+            top: element.scrollHeight,
+            behavior,
+          })
+        }
+      })
+
+      // Observe changes to child list (new messages added)
+      observer.observe(element, {
+        childList: true,
+        subtree: true,
+      })
+
+      // Initial scroll to bottom
+      element.scroll({
+        top: element.scrollHeight,
+        behavior: "instant",
+      })
+
+      return () => observer.disconnect()
+    }, [enabled, behavior])
+
+    // Detect user scrolling
+    useEffect(() => {
+      const element = containerRef.current
+      if (!element) return
+
+      const handleScroll = () => {
+        // Set user scrolling flag
+        isUserScrolling.current = true
+
+        // Clear existing timeout
+        if (scrollTimeout.current) {
+          clearTimeout(scrollTimeout.current)
+        }
+
+        // Reset flag after user stops scrolling
+        scrollTimeout.current = setTimeout(() => {
+          isUserScrolling.current = false
+        }, 150)
+
+        // Check if at bottom
+        const isAtBottom =
+          Math.abs(
+            element.scrollHeight - element.scrollTop - element.clientHeight
+          ) < 10
+
+        if (isAtBottom) {
+          onScrollToBottom?.()
+        }
+
+        // Check if at top
+        const isAtTop = element.scrollTop < 10
+
+        if (isAtTop) {
+          onScrollToTop?.()
+        }
       }
-    })
 
-    // Observe changes to child list (new messages added)
-    observer.observe(element, {
-      childList: true,
-      subtree: true,
-    })
+      element.addEventListener("scroll", handleScroll, { passive: true })
 
-    // Initial scroll to bottom
-    element.scroll({
-      top: element.scrollHeight,
-      behavior: "instant",
-    })
-
-    return () => observer.disconnect()
-  }, [enabled, behavior])
-
-  // Detect user scrolling
-  useEffect(() => {
-    const element = containerRef.current
-    if (!element) return
-
-    const handleScroll = () => {
-      // Set user scrolling flag
-      isUserScrolling.current = true
-
-      // Clear existing timeout
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current)
+      return () => {
+        element.removeEventListener("scroll", handleScroll)
+        if (scrollTimeout.current) {
+          clearTimeout(scrollTimeout.current)
+        }
       }
-
-      // Reset flag after user stops scrolling
-      scrollTimeout.current = setTimeout(() => {
-        isUserScrolling.current = false
-      }, 150)
-
-      // Check if at bottom
-      const isAtBottom =
-        Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight) < 10
-
-      if (isAtBottom) {
-        onScrollToBottom?.()
-      }
-
-      // Check if at top
-      const isAtTop = element.scrollTop < 10
-
-      if (isAtTop) {
-        onScrollToTop?.()
-      }
-    }
-
-    element.addEventListener("scroll", handleScroll, { passive: true })
-
-    return () => {
-      element.removeEventListener("scroll", handleScroll)
-      if (scrollTimeout.current) {
-        clearTimeout(scrollTimeout.current)
-      }
-    }
-  }, [onScrollToBottom, onScrollToTop])
+    }, [onScrollToBottom, onScrollToTop])
 
     return (
       <div
@@ -216,7 +228,8 @@ export function useIsAtBottom(
     if (!element) return
 
     const handleScroll = () => {
-      const scrolledFromBottom = element.scrollHeight - element.scrollTop - element.clientHeight
+      const scrolledFromBottom =
+        element.scrollHeight - element.scrollTop - element.clientHeight
       setIsAtBottom(scrolledFromBottom < threshold)
     }
 

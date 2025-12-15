@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -14,12 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { createPeriodSchema, type CreatePeriodInput } from "./validation"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { createPeriod, updatePeriod } from "./actions"
 import type { Period } from "./types"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { createPeriodSchema, type CreatePeriodInput } from "./validation"
 
 interface PeriodFormProps {
   open: boolean
@@ -41,7 +43,10 @@ export function PeriodForm({
   dictionary,
 }: PeriodFormProps) {
   // Academic dictionary - fallback to empty for now
-  const dict = (dictionary?.school as Record<string, unknown>)?.academic as Record<string, string> | undefined ?? {}
+  const dict =
+    ((dictionary?.school as Record<string, unknown>)?.academic as
+      | Record<string, string>
+      | undefined) ?? {}
   const [isPending, setIsPending] = React.useState(false)
 
   // Format time from Date to HH:MM string
@@ -117,7 +122,10 @@ export function PeriodForm({
       }
 
       if (result.success) {
-        toast.success(result.message || (editingPeriod ? "Period updated" : "Period created"))
+        toast.success(
+          result.message ||
+            (editingPeriod ? "Period updated" : "Period created")
+        )
         onOpenChange(false)
         onSuccess()
       } else {
@@ -136,8 +144,8 @@ export function PeriodForm({
         <DialogHeader>
           <DialogTitle>
             {editingPeriod
-              ? (dict.editPeriod || "Edit Period")
-              : (dict.addPeriod || "Add Period")}
+              ? dict.editPeriod || "Edit Period"
+              : dict.addPeriod || "Add Period"}
           </DialogTitle>
           <DialogDescription>
             {dict.periodFormDescription ||
@@ -149,9 +157,7 @@ export function PeriodForm({
           <input type="hidden" {...register("yearId")} />
 
           <div className="space-y-2">
-            <Label htmlFor="name">
-              {dict.periodName || "Period Name"}
-            </Label>
+            <Label htmlFor="name">{dict.periodName || "Period Name"}</Label>
             <Input
               id="name"
               placeholder="Period 1"
@@ -159,7 +165,7 @@ export function PeriodForm({
               className={errors.name ? "border-destructive" : ""}
             />
             {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
+              <p className="text-destructive text-xs">{errors.name.message}</p>
             )}
           </div>
 
@@ -175,14 +181,14 @@ export function PeriodForm({
                 className={errors.startTime ? "border-destructive" : ""}
               />
               {errors.startTime && (
-                <p className="text-xs text-destructive">{errors.startTime.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.startTime.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endTime">
-                {dict.endTime || "End Time"}
-              </Label>
+              <Label htmlFor="endTime">{dict.endTime || "End Time"}</Label>
               <Input
                 id="endTime"
                 type="time"
@@ -190,7 +196,9 @@ export function PeriodForm({
                 className={errors.endTime ? "border-destructive" : ""}
               />
               {errors.endTime && (
-                <p className="text-xs text-destructive">{errors.endTime.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.endTime.message}
+                </p>
               )}
             </div>
           </div>
@@ -207,8 +215,8 @@ export function PeriodForm({
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingPeriod
-                ? (dict.saveChanges || "Save Changes")
-                : (dict.addPeriod || "Add Period")}
+                ? dict.saveChanges || "Save Changes"
+                : dict.addPeriod || "Add Period"}
             </Button>
           </DialogFooter>
         </form>

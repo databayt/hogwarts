@@ -1,19 +1,27 @@
-import { Suspense } from 'react';
-import type { Locale } from '@/components/internationalization/config';
-import type { getDictionary } from '@/components/internationalization/dictionaries';
-import { getAccounts } from './actions';
-import PaymentTransferForm from './form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CreditCard, CircleAlert } from "lucide-react";
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import type { User } from 'next-auth';
+import { Suspense } from "react"
+import Link from "next/link"
+import { CircleAlert, CreditCard } from "lucide-react"
+import type { User } from "next-auth"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import { getAccounts } from "./actions"
+import PaymentTransferForm from "./form"
 
 interface Props {
-  user: User;
-  dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
-  lang: Locale;
+  user: User
+  dictionary: Awaited<ReturnType<typeof getDictionary>>["banking"]
+  lang: Locale
 }
 
 export default async function PaymentTransferContent(props: Props) {
@@ -23,38 +31,36 @@ export default async function PaymentTransferContent(props: Props) {
       <div>
         <p className="text-muted-foreground">User ID not found</p>
       </div>
-    );
+    )
   }
 
-  const accounts = await getAccounts({ userId: props.user.id });
+  const accounts = await getAccounts({ userId: props.user.id })
 
   // Check if user has enough accounts for transfer
   if (!accounts || accounts.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-16">
-          <CreditCard className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">
+          <CreditCard className="text-muted-foreground mb-4 h-16 w-16" />
+          <h2 className="mb-2 text-xl font-semibold">
             {props.dictionary.noBanks}
           </h2>
-          <p className="text-muted-foreground text-center max-w-sm mb-6">
+          <p className="text-muted-foreground mb-6 max-w-sm text-center">
             {props.dictionary.connectYourBank}
           </p>
           <Link href={`/${props.lang}/banking/my-banks`}>
-            <Button>
-              {props.dictionary.connectBank}
-            </Button>
+            <Button>{props.dictionary.connectBank}</Button>
           </Link>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   // Calculate total available balance
   const totalAvailable = accounts.reduce(
     (sum, acc) => sum + (acc.availableBalance || acc.currentBalance),
     0
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -96,9 +102,7 @@ export default async function PaymentTransferContent(props: Props) {
       <Card>
         <CardHeader>
           <CardTitle>{props.dictionary.transfer}</CardTitle>
-          <CardDescription>
-            {props.dictionary.sendMoney}
-          </CardDescription>
+          <CardDescription>{props.dictionary.sendMoney}</CardDescription>
         </CardHeader>
         <CardContent>
           <Suspense fallback={<FormSkeleton />}>
@@ -111,7 +115,7 @@ export default async function PaymentTransferContent(props: Props) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 function FormSkeleton() {
@@ -119,21 +123,21 @@ function FormSkeleton() {
     <div className="space-y-4">
       {[1, 2, 3, 4].map((i) => (
         <div key={i}>
-          <div className="h-4 w-24 bg-muted animate-pulse rounded mb-2" />
-          <div className="h-10 w-full bg-muted animate-pulse rounded" />
+          <div className="bg-muted mb-2 h-4 w-24 animate-pulse rounded" />
+          <div className="bg-muted h-10 w-full animate-pulse rounded" />
         </div>
       ))}
-      <div className="h-10 w-32 bg-muted animate-pulse rounded" />
+      <div className="bg-muted h-10 w-32 animate-pulse rounded" />
     </div>
-  );
+  )
 }
 
 // Utility function
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
 }

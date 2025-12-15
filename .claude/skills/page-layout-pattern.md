@@ -12,7 +12,9 @@
 ## Pattern: Fixed Block Title (Option A)
 
 ### Overview
+
 Each platform block follows a standardized layout pattern where:
+
 - The **layout.tsx** contains both PageHeader (with block name) and PageNav
 - **Content pages** focus purely on their specific content
 - No duplicate headers or navigation components
@@ -169,6 +171,7 @@ export default async function FinanceLayout({ children, params }: Props) {
 ## 🔧 Quick Fix Guide
 
 ### Step 1: Find Violations
+
 ```bash
 # Find content files with PageHeader imports
 grep -r "import.*PageHeader" src/components/platform/*/
@@ -183,6 +186,7 @@ grep -r "PageNavItem\[\]" src/components/platform/*/
 ### Step 2: Fix Content Files
 
 **Before (WRONG):**
+
 ```typescript
 // content.tsx with violations
 import PageHeader from '@/components/atom/page-header'
@@ -207,6 +211,7 @@ export default function Content({ dictionary, lang }: Props) {
 ```
 
 **After (CORRECT):**
+
 ```typescript
 // content.tsx fixed
 // No PageHeader or PageNav imports
@@ -225,6 +230,7 @@ export default function Content({ dictionary, lang }: Props) {
 ### Step 3: Ensure Layout Has Navigation
 
 **layout.tsx should contain:**
+
 ```typescript
 import PageHeader from '@/components/atom/page-header'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
@@ -249,12 +255,12 @@ export default async function Layout({ children, params }: Props) {
 
 ### Common Wrapper Div Patterns
 
-| ❌ WRONG | ✅ CORRECT |
-|----------|------------|
+| ❌ WRONG                                     | ✅ CORRECT                    |
+| -------------------------------------------- | ----------------------------- |
 | `<div><div className="flex flex-col gap-6">` | `<div className="space-y-6">` |
-| `<div><div className="space-y-6">` | `<div className="space-y-6">` |
-| `<div className="flex flex-col gap-6">` | `<div className="space-y-6">` |
-| Multiple nested wrapper divs | Single wrapper div |
+| `<div><div className="space-y-6">`           | `<div className="space-y-6">` |
+| `<div className="flex flex-col gap-6">`      | `<div className="space-y-6">` |
+| Multiple nested wrapper divs                 | Single wrapper div            |
 
 ### ⚠️ Overflow Prevention Pattern
 
@@ -265,6 +271,7 @@ export default async function Layout({ children, params }: Props) {
 **Solution**: Remove all container wrappers from content files. Let the layout handle spacing, and use the simple `space-y-6` pattern.
 
 #### Before (❌ WRONG - Causes horizontal overflow)
+
 ```typescript
 // content.tsx with container wrapper
 import { Shell as PageContainer } from '@/components/table/shell'
@@ -281,6 +288,7 @@ export default function Content() {
 ```
 
 #### After (✅ CORRECT - No overflow)
+
 ```typescript
 // content.tsx without container wrapper
 export default function Content() {
@@ -293,12 +301,14 @@ export default function Content() {
 ```
 
 #### Key Rules for Overflow Prevention:
+
 1. **Never use `Shell` or `container` classes in content files**
 2. **Use single `<div className="space-y-6">` wrapper** - it properly contains content
 3. **Wrap wide tables with horizontal scroll** - Use `<div className="w-full overflow-x-auto">` around tables with many columns
 4. **Test with wide content** - verify no horizontal scrollbar on page, only on table area
 
 #### Wide Table Pattern (✅ CORRECT)
+
 ```typescript
 // table.tsx - for tables with many columns
 export function WideTable({ data }: Props) {
@@ -313,6 +323,7 @@ export function WideTable({ data }: Props) {
 ```
 
 **Why this works:**
+
 - `w-full` ensures the wrapper takes full available width
 - `overflow-x-auto` creates horizontal scrollbar only for the table area
 - Page body remains scrollbar-free
@@ -329,6 +340,7 @@ export function WideTable({ data }: Props) {
 ## Common Mistakes to Avoid
 
 ### ❌ Mistake 1: PageHeader/PageNav in Content Files
+
 ```typescript
 // WRONG - content.tsx
 import PageHeader from '@/components/atom/page-header'
@@ -345,12 +357,14 @@ export default function Content() {
 ```
 
 ### ❌ Mistake 2: Duplicate Navigation Definitions
+
 ```typescript
 // WRONG - navigation defined in content.tsx
 const pages: PageNavItem[] = [...] // Should be in layout.tsx only
 ```
 
 ### ❌ Mistake 3: Nested Wrapper Divs
+
 ```typescript
 // WRONG - unnecessary nesting
 return (
@@ -363,6 +377,7 @@ return (
 ```
 
 ### ❌ Mistake 4: Inconsistent Spacing Classes
+
 ```typescript
 // WRONG - using gap-6 instead of space-y-6
 return (
@@ -373,6 +388,7 @@ return (
 ```
 
 ### ✅ Correct Implementation
+
 ```typescript
 // CORRECT - layout.tsx has navigation
 export default async function Layout({ children }) {
@@ -401,11 +417,13 @@ export default function Content() {
 When migrating an existing block to this pattern:
 
 ### Pre-Migration Audit
+
 - [ ] Run grep commands to find all violations
 - [ ] List all content files that need fixing
 - [ ] Check if layout.tsx exists and has navigation
 
 ### Migration Steps
+
 - [ ] **Step 1**: Update/create layout.tsx with PageHeader and PageNav
 - [ ] **Step 2**: Remove PageHeader imports from all content.tsx files
 - [ ] **Step 3**: Remove PageNav imports from all content.tsx files
@@ -415,6 +433,7 @@ When migrating an existing block to this pattern:
 - [ ] **Step 7**: Ensure navigation items are defined only in layout.tsx
 
 ### Post-Migration Testing
+
 - [ ] Navigation appears on all pages
 - [ ] No duplicate headers visible
 - [ ] Correct spacing between elements
@@ -426,15 +445,19 @@ When migrating an existing block to this pattern:
 ## 🐛 Troubleshooting
 
 ### Issue: "Cannot find PageHeader/PageNav"
+
 **Solution**: These should only be imported in layout.tsx, not content files
 
 ### Issue: "Navigation not showing"
+
 **Solution**: Check that layout.tsx properly defines and renders PageNav
 
 ### Issue: "Extra spacing between elements"
+
 **Solution**: Remove nested wrapper divs, use single `<div className="space-y-6">`
 
 ### Issue: "Build errors after refactoring"
+
 **Solution**: Ensure all imports are removed from content files and navigation arrays are only in layout.tsx
 
 ## Related Components
@@ -445,6 +468,7 @@ When migrating an existing block to this pattern:
 ## When to Use This Pattern
 
 Use this pattern for:
+
 - All platform blocks (finance, exams, attendance, admin, etc.)
 - Any multi-page feature area with shared navigation
 - Sections requiring consistent header and navigation
@@ -452,6 +476,7 @@ Use this pattern for:
 ## When NOT to Use This Pattern
 
 Don't use this pattern for:
+
 - Single-page features without sub-navigation
 - Modal or overlay content
 - Standalone tools or utilities
@@ -460,6 +485,7 @@ Don't use this pattern for:
 ## Testing
 
 After implementing this pattern, verify:
+
 1. Navigation appears on all pages within the block
 2. The block title is consistent across all pages
 3. No duplicate headers or navigation elements

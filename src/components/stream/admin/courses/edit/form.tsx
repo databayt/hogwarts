@@ -1,8 +1,12 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RichTextEditor } from "@/components/stream/shared/rich-text-editor";
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2, SaveIcon } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -10,27 +14,28 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { updateCourseSchema, type UpdateCourseInput } from "../create/validation";
-import { Loader2, SaveIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { RichTextEditor } from "@/components/stream/shared/rich-text-editor"
+
+import {
+  updateCourseSchema,
+  type UpdateCourseInput,
+} from "../create/validation"
 
 interface EditCourseFormProps {
   data: {
-    id: string;
-    title: string;
-    description: string | null;
-    price: number | null;
-    imageUrl: string | null;
-    isPublished: boolean;
-  };
+    id: string
+    title: string
+    description: string | null
+    price: number | null
+    imageUrl: string | null
+    isPublished: boolean
+  }
 }
 
 export function EditCourseForm({ data }: EditCourseFormProps) {
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, setIsPending] = useState(false)
 
   const form = useForm<UpdateCourseInput>({
     resolver: zodResolver(updateCourseSchema),
@@ -41,18 +46,18 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
       imageUrl: data.imageUrl || undefined,
       isPublished: data.isPublished,
     },
-  });
+  })
 
   async function onSubmit(values: UpdateCourseInput) {
-    setIsPending(true);
+    setIsPending(true)
     try {
       // TODO: Implement update course action
-      console.log("Update course:", values);
-      toast.success("Course updated successfully!");
+      console.log("Update course:", values)
+      toast.success("Course updated successfully!")
     } catch (error) {
-      toast.error("Failed to update course");
+      toast.error("Failed to update course")
     } finally {
-      setIsPending(false);
+      setIsPending(false)
     }
   }
 
@@ -105,8 +110,8 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
                   {...field}
                   value={field.value ?? ""}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    field.onChange(val === "" ? undefined : parseFloat(val));
+                    const val = e.target.value
+                    field.onChange(val === "" ? undefined : parseFloat(val))
                   }}
                 />
               </FormControl>
@@ -130,5 +135,5 @@ export function EditCourseForm({ data }: EditCourseFormProps) {
         </Button>
       </form>
     </Form>
-  );
+  )
 }

@@ -1,15 +1,16 @@
 import {
-  LayoutDashboard,
-  CheckSquare,
-  Package,
-  Globe,
-  CreditCard,
   BarChart3,
+  CheckSquare,
+  CreditCard,
+  Globe,
+  LayoutDashboard,
   Mail,
-  User,
+  Package,
   Plus,
-} from "lucide-react";
-import type { SearchConfig } from "./types";
+  User,
+} from "lucide-react"
+
+import type { SearchConfig } from "./types"
 
 export const saasSearchConfig: SearchConfig = {
   navigation: [
@@ -109,4 +110,4 @@ export const saasSearchConfig: SearchConfig = {
   settings: [],
   showRecent: true,
   maxRecent: 5,
-};
+}

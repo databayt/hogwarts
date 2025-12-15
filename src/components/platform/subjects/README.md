@@ -6,12 +6,12 @@ The Subjects feature manages the school's subject catalog, assigns teachers to s
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/subjects` | Subject List | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/subjects/new` | Create Subject | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/subjects/[id]` | Subject Detail | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/subjects/[id]/edit` | Edit Subject | ✅ Ready |
+| URL                                                   | Page           | Status   |
+| ----------------------------------------------------- | -------------- | -------- |
+| `/[lang]/s/[subdomain]/(platform)/subjects`           | Subject List   | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/new`       | Create Subject | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/[id]`      | Subject Detail | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/subjects/[id]/edit` | Edit Subject   | ✅ Ready |
 
 **Status:** ✅ Production-Ready MVP (85%)
 **Last Updated:** 2025-12-14
@@ -19,6 +19,7 @@ The Subjects feature manages the school's subject catalog, assigns teachers to s
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📚 Create and manage subjects
 - 👨‍🏫 Assign teachers to subjects
 - 📊 Track subject offerings
@@ -26,9 +27,11 @@ The Subjects feature manages the school's subject catalog, assigns teachers to s
 - 📁 Export subject catalog
 
 ### Current Implementation Status
+
 **✅ Production-Ready MVP**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Subject catalog management
 - ✅ Search and filtering
@@ -36,6 +39,7 @@ The Subjects feature manages the school's subject catalog, assigns teachers to s
 - ✅ Multi-tenant isolation
 
 **Planned:**
+
 - ⏸️ Prerequisites tracking
 - ⏸️ Curriculum standards
 - ⏸️ Learning outcomes
@@ -62,9 +66,11 @@ The component follows the standardized file pattern:
 ## Features
 
 ### Single-step Form
+
 - **Step 1**: Basic Information (subject name, department)
 
 ### Data Management
+
 - Create new subjects
 - Edit existing subjects
 - Delete subjects
@@ -72,11 +78,13 @@ The component follows the standardized file pattern:
 - Search and filter by subject name and department
 
 ### Validation
+
 - Client-side validation with Zod schemas
 - Server-side validation for all mutations
 - Multi-tenant safety with `schoolId` scoping
 
 ### Table Features
+
 - Sortable columns
 - Filterable data
 - Pagination
@@ -85,6 +93,7 @@ The component follows the standardized file pattern:
 ## Database Schema
 
 Subjects are stored with the following fields:
+
 - `id` - Unique identifier
 - `schoolId` - Multi-tenant identifier
 - `departmentId` - Associated department
@@ -117,37 +126,44 @@ The component is used in the platform dashboard at `/dashboard/subjects` and aut
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

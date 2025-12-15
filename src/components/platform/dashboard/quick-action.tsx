@@ -2,11 +2,17 @@
 
 import React from "react"
 import Link from "next/link"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
-import { getIcon } from "./config"
-import type { QuickActionItem, QuickActionVariant, QuickActionsGridProps } from "./types"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getIcon } from "./config"
+import type {
+  QuickActionItem,
+  QuickActionsGridProps,
+  QuickActionVariant,
+} from "./types"
 
 // ============================================================================
 // QUICK ACTION ITEM COMPONENT
@@ -19,14 +25,23 @@ interface QuickActionProps {
   className?: string
 }
 
-function QuickActionGrid({ action, locale = "en", className }: Omit<QuickActionProps, "variant">) {
+function QuickActionGrid({
+  action,
+  locale = "en",
+  className,
+}: Omit<QuickActionProps, "variant">) {
   const Icon = action.icon || getIcon(action.iconName)
 
   const content = (
-    <Card className={cn("aspect-square transition-colors hover:bg-muted/50", className)}>
-      <CardContent className="flex flex-col items-center justify-center gap-2 p-4 h-full">
+    <Card
+      className={cn(
+        "hover:bg-muted/50 aspect-square transition-colors",
+        className
+      )}
+    >
+      <CardContent className="flex h-full flex-col items-center justify-center gap-2 p-4">
         {Icon && <Icon className="h-6 w-6" aria-hidden />}
-        <span className="text-sm font-medium text-center">{action.label}</span>
+        <span className="text-center text-sm font-medium">{action.label}</span>
       </CardContent>
     </Card>
   )
@@ -38,57 +53,71 @@ function QuickActionGrid({ action, locale = "en", className }: Omit<QuickActionP
   )
 }
 
-function QuickActionList({ action, locale = "en", className }: Omit<QuickActionProps, "variant">) {
+function QuickActionList({
+  action,
+  locale = "en",
+  className,
+}: Omit<QuickActionProps, "variant">) {
   const Icon = action.icon || getIcon(action.iconName)
 
   return (
     <Link
       href={`/${locale}${action.href}`}
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg border transition-colors hover:bg-muted/50",
+        "hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-3 transition-colors",
         className
       )}
     >
       {Icon && (
-        <div className="flex-shrink-0 rounded-md bg-muted p-2">
-          <Icon className="h-5 w-5 text-muted-foreground" aria-hidden />
+        <div className="bg-muted flex-shrink-0 rounded-md p-2">
+          <Icon className="text-muted-foreground h-5 w-5" aria-hidden />
         </div>
       )}
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{action.label}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-foreground truncate font-medium">{action.label}</p>
         {action.description && (
-          <p className="text-sm text-muted-foreground truncate">{action.description}</p>
+          <p className="text-muted-foreground truncate text-sm">
+            {action.description}
+          </p>
         )}
       </div>
     </Link>
   )
 }
 
-function QuickActionCompact({ action, locale = "en", className }: Omit<QuickActionProps, "variant">) {
+function QuickActionCompact({
+  action,
+  locale = "en",
+  className,
+}: Omit<QuickActionProps, "variant">) {
   const Icon = action.icon || getIcon(action.iconName)
 
   return (
     <Link
       href={`/${locale}${action.href}`}
       className={cn(
-        "flex items-center gap-2 px-3 py-2 rounded-md transition-colors hover:bg-muted/50",
+        "hover:bg-muted/50 flex items-center gap-2 rounded-md px-3 py-2 transition-colors",
         className
       )}
     >
-      {Icon && <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />}
+      {Icon && <Icon className="text-muted-foreground h-4 w-4" aria-hidden />}
       <span className="text-sm font-medium">{action.label}</span>
     </Link>
   )
 }
 
-function QuickActionIconOnly({ action, locale = "en", className }: Omit<QuickActionProps, "variant">) {
+function QuickActionIconOnly({
+  action,
+  locale = "en",
+  className,
+}: Omit<QuickActionProps, "variant">) {
   const Icon = action.icon || getIcon(action.iconName)
 
   return (
     <Link
       href={`/${locale}${action.href}`}
       className={cn(
-        "flex items-center justify-center p-2 rounded-md transition-colors hover:bg-muted/50",
+        "hover:bg-muted/50 flex items-center justify-center rounded-md p-2 transition-colors",
         className
       )}
       title={action.label}
@@ -99,16 +128,45 @@ function QuickActionIconOnly({ action, locale = "en", className }: Omit<QuickAct
   )
 }
 
-export function QuickAction({ action, locale, variant = "grid", className }: QuickActionProps) {
+export function QuickAction({
+  action,
+  locale,
+  variant = "grid",
+  className,
+}: QuickActionProps) {
   switch (variant) {
     case "list":
-      return <QuickActionList action={action} locale={locale} className={className} />
+      return (
+        <QuickActionList
+          action={action}
+          locale={locale}
+          className={className}
+        />
+      )
     case "compact":
-      return <QuickActionCompact action={action} locale={locale} className={className} />
+      return (
+        <QuickActionCompact
+          action={action}
+          locale={locale}
+          className={className}
+        />
+      )
     case "icon-only":
-      return <QuickActionIconOnly action={action} locale={locale} className={className} />
+      return (
+        <QuickActionIconOnly
+          action={action}
+          locale={locale}
+          className={className}
+        />
+      )
     default:
-      return <QuickActionGrid action={action} locale={locale} className={className} />
+      return (
+        <QuickActionGrid
+          action={action}
+          locale={locale}
+          className={className}
+        />
+      )
   }
 }
 
@@ -142,7 +200,7 @@ export function QuickActionsGrid({
 
   return (
     <div className={cn("w-full", className)}>
-      {title && <h3 className="font-medium text-foreground mb-4">{title}</h3>}
+      {title && <h3 className="text-foreground mb-4 font-medium">{title}</h3>}
       <div
         className={cn(
           variant === "grid" && `grid gap-4 ${gridCols[columns]}`,

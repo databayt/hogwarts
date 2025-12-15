@@ -1,8 +1,9 @@
-import { auth } from "@/auth";
-import RouteModal from "@/components/atom/modal/route-modal";
-import CreateEditInvoiceModalContent from "@/components/platform/finance/invoice/invoice/create-edit-content";
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { auth } from "@/auth"
+
+import RouteModal from "@/components/atom/modal/route-modal"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import CreateEditInvoiceModalContent from "@/components/platform/finance/invoice/invoice/create-edit-content"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -11,9 +12,9 @@ interface Props {
 export default async function InvoiceCreate({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const session = await auth();
-  const fullName = session?.user.name ?? "";
-  const [derivedFirstName, derivedLastName] = fullName.split(" ", 2);
+  const session = await auth()
+  const fullName = session?.user.name ?? ""
+  const [derivedFirstName, derivedLastName] = fullName.split(" ", 2)
 
   return (
     <RouteModal
@@ -31,5 +32,5 @@ export default async function InvoiceCreate({ params }: Props) {
         />
       }
     />
-  );
+  )
 }

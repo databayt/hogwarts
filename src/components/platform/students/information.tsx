@@ -1,24 +1,41 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { studentCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon } from "lucide-react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { StudentFormStepProps } from "./types";
-import { GENDER_OPTIONS } from "./config";
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { GENDER_OPTIONS } from "./config"
+import { StudentFormStepProps } from "./types"
+import { studentCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: StudentFormStepProps) {
   return (
-    <div className="grid grid-cols-3 gap-8 w-full">
+    <div className="grid w-full grid-cols-3 gap-8">
       {/* Left Column - Names (2/3 width) */}
       <div className="col-span-2 space-y-4">
         <FormField
@@ -88,11 +105,17 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+                <PopoverContent
+                  className="w-auto p-0"
+                  align="start"
+                  sideOffset={4}
+                >
                   <Calendar
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
+                    onSelect={(date) =>
+                      field.onChange(date?.toISOString().split("T")[0])
+                    }
                     disabled={isView}
                     initialFocus
                   />
@@ -108,7 +131,11 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select gender" />
@@ -125,5 +152,5 @@ export function InformationStep({ form, isView }: StudentFormStepProps) {
         />
       </div>
     </div>
-  );
+  )
 }

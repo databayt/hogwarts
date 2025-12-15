@@ -1,12 +1,38 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { format } from 'date-fns';
-import { Download, Printer, Send, Eye, FileText, Award, TrendingUp, TrendingDown, Star, CircleAlert, CircleCheck, CircleX, Share2, ListFilter, Search, Calendar, Users, BookOpen, Target, Mail, MessageSquare } from "lucide-react"
-import { BarChart3 } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
+import { format } from "date-fns"
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Download,
+  Eye,
+  FileText,
+  ListFilter,
+  Mail,
+  MessageSquare,
+  Printer,
+  Search,
+  Send,
+  Share2,
+  Star,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,28 +40,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -43,127 +48,151 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Student {
-  id: string;
-  givenName: string;
-  surname: string;
-  studentId: string;
-  profileImageUrl?: string;
+  id: string
+  givenName: string
+  surname: string
+  studentId: string
+  profileImageUrl?: string
   class: {
-    name: string;
-    section: string;
-  };
-  yearLevel: string;
-  dateOfBirth: Date;
+    name: string
+    section: string
+  }
+  yearLevel: string
+  dateOfBirth: Date
   guardian: {
-    name: string;
-    email: string;
-    phone: string;
-  };
+    name: string
+    email: string
+    phone: string
+  }
 }
 
 interface SubjectGrade {
-  subjectId: string;
-  subjectName: string;
-  teacher: string;
+  subjectId: string
+  subjectName: string
+  teacher: string
   marks: {
-    obtained: number;
-    total: number;
-    percentage: number;
-  };
-  grade: string;
-  gpa: number;
+    obtained: number
+    total: number
+    percentage: number
+  }
+  grade: string
+  gpa: number
   assessments: {
-    type: string;
-    score: number;
-    maxScore: number;
-    weight: number;
-  }[];
+    type: string
+    score: number
+    maxScore: number
+    weight: number
+  }[]
   attendance: {
-    present: number;
-    total: number;
-    percentage: number;
-  };
-  remarks?: string;
+    present: number
+    total: number
+    percentage: number
+  }
+  remarks?: string
 }
 
 interface ReportCard {
-  id: string;
-  studentId: string;
-  student: Student;
-  term: string;
-  academicYear: string;
-  issueDate: Date;
-  subjects: SubjectGrade[];
+  id: string
+  studentId: string
+  student: Student
+  term: string
+  academicYear: string
+  issueDate: Date
+  subjects: SubjectGrade[]
   overall: {
-    totalMarks: number;
-    marksObtained: number;
-    percentage: number;
-    grade: string;
-    gpa: number;
-    rank: number;
-    totalStudents: number;
-  };
+    totalMarks: number
+    marksObtained: number
+    percentage: number
+    grade: string
+    gpa: number
+    rank: number
+    totalStudents: number
+  }
   attendance: {
-    present: number;
-    absent: number;
-    late: number;
-    total: number;
-    percentage: number;
-  };
+    present: number
+    absent: number
+    late: number
+    total: number
+    percentage: number
+  }
   conduct: {
-    behavior: 'excellent' | 'good' | 'satisfactory' | 'needs-improvement';
-    participation: 'excellent' | 'good' | 'satisfactory' | 'needs-improvement';
-    punctuality: 'excellent' | 'good' | 'satisfactory' | 'needs-improvement';
-  };
+    behavior: "excellent" | "good" | "satisfactory" | "needs-improvement"
+    participation: "excellent" | "good" | "satisfactory" | "needs-improvement"
+    punctuality: "excellent" | "good" | "satisfactory" | "needs-improvement"
+  }
   cocurricular: {
-    activity: string;
-    performance: string;
-    achievements?: string[];
-  }[];
-  teacherRemarks?: string;
-  principalRemarks?: string;
-  promotionStatus: 'promoted' | 'detained' | 'pending';
+    activity: string
+    performance: string
+    achievements?: string[]
+  }[]
+  teacherRemarks?: string
+  principalRemarks?: string
+  promotionStatus: "promoted" | "detained" | "pending"
   nextTerm?: {
-    startDate: Date;
-    fees: number;
-  };
+    startDate: Date
+    fees: number
+  }
 }
 
 interface ReportCardGeneratorProps {
-  reportCards: ReportCard[];
-  students: Student[];
-  terms: { id: string; name: string; year: string }[];
-  onGeneratePDF: (reportCardId: string) => Promise<Blob>;
-  onGenerateBulkPDF: (reportCardIds: string[]) => Promise<Blob>;
-  onSendToParent: (reportCardId: string, method: 'email' | 'sms') => Promise<void>;
-  onUpdateRemarks: (reportCardId: string, remarks: { teacher?: string; principal?: string }) => Promise<void>;
-  currentUserRole: 'admin' | 'teacher' | 'parent' | 'student';
+  reportCards: ReportCard[]
+  students: Student[]
+  terms: { id: string; name: string; year: string }[]
+  onGeneratePDF: (reportCardId: string) => Promise<Blob>
+  onGenerateBulkPDF: (reportCardIds: string[]) => Promise<Blob>
+  onSendToParent: (
+    reportCardId: string,
+    method: "email" | "sms"
+  ) => Promise<void>
+  onUpdateRemarks: (
+    reportCardId: string,
+    remarks: { teacher?: string; principal?: string }
+  ) => Promise<void>
+  currentUserRole: "admin" | "teacher" | "parent" | "student"
 }
 
 const gradeColors: Record<string, string> = {
-  'A+': 'text-green-600',
-  'A': 'text-green-600',
-  'B+': 'text-blue-600',
-  'B': 'text-blue-600',
-  'C+': 'text-yellow-600',
-  'C': 'text-yellow-600',
-  'D': 'text-orange-600',
-  'F': 'text-red-600',
-};
+  "A+": "text-green-600",
+  A: "text-green-600",
+  "B+": "text-blue-600",
+  B: "text-blue-600",
+  "C+": "text-yellow-600",
+  C: "text-yellow-600",
+  D: "text-orange-600",
+  F: "text-red-600",
+}
 
 const conductColors = {
-  'excellent': 'bg-green-100 text-green-800',
-  'good': 'bg-blue-100 text-blue-800',
-  'satisfactory': 'bg-yellow-100 text-yellow-800',
-  'needs-improvement': 'bg-red-100 text-red-800',
-};
+  excellent: "bg-green-100 text-green-800",
+  good: "bg-blue-100 text-blue-800",
+  satisfactory: "bg-yellow-100 text-yellow-800",
+  "needs-improvement": "bg-red-100 text-red-800",
+}
 
 export function ReportCardGenerator({
   reportCards,
@@ -175,151 +204,172 @@ export function ReportCardGenerator({
   onUpdateRemarks,
   currentUserRole,
 }: ReportCardGeneratorProps) {
-  const [selectedTerm, setSelectedTerm] = useState<string>(terms[0]?.id || '');
-  const [selectedClass, setSelectedClass] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedReportCard, setSelectedReportCard] = useState<ReportCard | null>(null);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [remarksDialogOpen, setRemarksDialogOpen] = useState(false);
-  const [teacherRemarks, setTeacherRemarks] = useState('');
-  const [principalRemarks, setPrincipalRemarks] = useState('');
-  const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [bulkActionMode, setBulkActionMode] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [selectedTerm, setSelectedTerm] = useState<string>(terms[0]?.id || "")
+  const [selectedClass, setSelectedClass] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedReportCard, setSelectedReportCard] =
+    useState<ReportCard | null>(null)
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
+  const [remarksDialogOpen, setRemarksDialogOpen] = useState(false)
+  const [teacherRemarks, setTeacherRemarks] = useState("")
+  const [principalRemarks, setPrincipalRemarks] = useState("")
+  const [selectedCards, setSelectedCards] = useState<string[]>([])
+  const [bulkActionMode, setBulkActionMode] = useState(false)
+  const previewRef = useRef<HTMLDivElement>(null)
 
   // Filter report cards
   const filteredReportCards = useMemo(() => {
-    let filtered = reportCards;
+    let filtered = reportCards
 
-    if (selectedTerm !== 'all') {
-      filtered = filtered.filter(rc => rc.term === selectedTerm);
+    if (selectedTerm !== "all") {
+      filtered = filtered.filter((rc) => rc.term === selectedTerm)
     }
 
-    if (selectedClass !== 'all') {
-      filtered = filtered.filter(rc => rc.student.class.name === selectedClass);
+    if (selectedClass !== "all") {
+      filtered = filtered.filter(
+        (rc) => rc.student.class.name === selectedClass
+      )
     }
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(rc =>
-        `${rc.student.givenName} ${rc.student.surname}`.toLowerCase().includes(query) ||
-        rc.student.studentId.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (rc) =>
+          `${rc.student.givenName} ${rc.student.surname}`
+            .toLowerCase()
+            .includes(query) ||
+          rc.student.studentId.toLowerCase().includes(query)
+      )
     }
 
-    return filtered.sort((a, b) => a.overall.rank - b.overall.rank);
-  }, [reportCards, selectedTerm, selectedClass, searchQuery]);
+    return filtered.sort((a, b) => a.overall.rank - b.overall.rank)
+  }, [reportCards, selectedTerm, selectedClass, searchQuery])
 
   // Get unique classes
   const classes = useMemo(() => {
-    const classSet = new Set(students.map(s => s.class.name));
-    return Array.from(classSet).sort();
-  }, [students]);
+    const classSet = new Set(students.map((s) => s.class.name))
+    return Array.from(classSet).sort()
+  }, [students])
 
   // Statistics
   const stats = useMemo(() => {
-    const generated = filteredReportCards.length;
-    const pending = students.length - generated;
-    const averageGPA = filteredReportCards.length > 0
-      ? filteredReportCards.reduce((sum, rc) => sum + rc.overall.gpa, 0) / filteredReportCards.length
-      : 0;
-    const passRate = filteredReportCards.length > 0
-      ? (filteredReportCards.filter(rc => rc.promotionStatus === 'promoted').length / filteredReportCards.length) * 100
-      : 0;
+    const generated = filteredReportCards.length
+    const pending = students.length - generated
+    const averageGPA =
+      filteredReportCards.length > 0
+        ? filteredReportCards.reduce((sum, rc) => sum + rc.overall.gpa, 0) /
+          filteredReportCards.length
+        : 0
+    const passRate =
+      filteredReportCards.length > 0
+        ? (filteredReportCards.filter((rc) => rc.promotionStatus === "promoted")
+            .length /
+            filteredReportCards.length) *
+          100
+        : 0
 
-    return { generated, pending, averageGPA, passRate };
-  }, [filteredReportCards, students.length]);
+    return { generated, pending, averageGPA, passRate }
+  }, [filteredReportCards, students.length])
 
   const handleGeneratePDF = async (reportCard: ReportCard) => {
     try {
-      toast.info('Generating PDF...');
-      const blob = await onGeneratePDF(reportCard.id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `report-card-${reportCard.student.studentId}-${reportCard.term}.pdf`;
-      a.click();
-      toast.success('PDF generated successfully');
+      toast.info("Generating PDF...")
+      const blob = await onGeneratePDF(reportCard.id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `report-card-${reportCard.student.studentId}-${reportCard.term}.pdf`
+      a.click()
+      toast.success("PDF generated successfully")
     } catch (error) {
-      toast.error('Failed to generate PDF');
+      toast.error("Failed to generate PDF")
     }
-  };
+  }
 
   const handleBulkPDF = async () => {
     if (selectedCards.length === 0) {
-      toast.error('No report cards selected');
-      return;
+      toast.error("No report cards selected")
+      return
     }
 
     try {
-      toast.info(`Generating ${selectedCards.length} PDFs...`);
-      const blob = await onGenerateBulkPDF(selectedCards);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `report-cards-bulk-${format(new Date(), 'yyyy-MM-dd')}.zip`;
-      a.click();
-      toast.success('Bulk PDFs generated successfully');
-      setSelectedCards([]);
-      setBulkActionMode(false);
+      toast.info(`Generating ${selectedCards.length} PDFs...`)
+      const blob = await onGenerateBulkPDF(selectedCards)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `report-cards-bulk-${format(new Date(), "yyyy-MM-dd")}.zip`
+      a.click()
+      toast.success("Bulk PDFs generated successfully")
+      setSelectedCards([])
+      setBulkActionMode(false)
     } catch (error) {
-      toast.error('Failed to generate bulk PDFs');
+      toast.error("Failed to generate bulk PDFs")
     }
-  };
+  }
 
-  const handleSendToParent = async (reportCard: ReportCard, method: 'email' | 'sms') => {
+  const handleSendToParent = async (
+    reportCard: ReportCard,
+    method: "email" | "sms"
+  ) => {
     try {
-      await onSendToParent(reportCard.id, method);
-      toast.success(`Report card sent via ${method}`);
+      await onSendToParent(reportCard.id, method)
+      toast.success(`Report card sent via ${method}`)
     } catch (error) {
-      toast.error(`Failed to send report card via ${method}`);
+      toast.error(`Failed to send report card via ${method}`)
     }
-  };
+  }
 
   const handleSaveRemarks = async () => {
-    if (!selectedReportCard) return;
+    if (!selectedReportCard) return
 
     try {
       await onUpdateRemarks(selectedReportCard.id, {
         teacher: teacherRemarks,
         principal: principalRemarks,
-      });
-      toast.success('Remarks saved successfully');
-      setRemarksDialogOpen(false);
+      })
+      toast.success("Remarks saved successfully")
+      setRemarksDialogOpen(false)
     } catch (error) {
-      toast.error('Failed to save remarks');
+      toast.error("Failed to save remarks")
     }
-  };
+  }
 
   const getPerformanceTrend = (grade: string, previousGrade?: string) => {
-    if (!previousGrade) return null;
+    if (!previousGrade) return null
 
-    const gradeOrder = ['F', 'D', 'C', 'C+', 'B', 'B+', 'A', 'A+'];
-    const currentIndex = gradeOrder.indexOf(grade);
-    const previousIndex = gradeOrder.indexOf(previousGrade);
+    const gradeOrder = ["F", "D", "C", "C+", "B", "B+", "A", "A+"]
+    const currentIndex = gradeOrder.indexOf(grade)
+    const previousIndex = gradeOrder.indexOf(previousGrade)
 
-    if (currentIndex > previousIndex) return 'up';
-    if (currentIndex < previousIndex) return 'down';
-    return 'stable';
-  };
+    if (currentIndex > previousIndex) return "up"
+    if (currentIndex < previousIndex) return "down"
+    return "stable"
+  }
 
   const ReportCardPreview = ({ reportCard }: { reportCard: ReportCard }) => (
-    <div ref={previewRef} className="bg-white p-8 space-y-6 text-black">
+    <div ref={previewRef} className="space-y-6 bg-white p-8 text-black">
       {/* Header */}
-      <div className="text-center border-b-4 border-primary pb-4">
+      <div className="border-primary border-b-4 pb-4 text-center">
         <h1 className="text-3xl font-bold">School Name</h1>
         <p className="text-sm text-gray-600">Address Line 1, City, Country</p>
-        <p className="text-sm text-gray-600">Phone: (123) 456-7890 | Email: info@school.edu</p>
-        <h2 className="text-2xl font-semibold mt-4">STUDENT REPORT CARD</h2>
-        <p className="text-sm">Academic Year: {reportCard.academicYear} | Term: {reportCard.term}</p>
+        <p className="text-sm text-gray-600">
+          Phone: (123) 456-7890 | Email: info@school.edu
+        </p>
+        <h2 className="mt-4 text-2xl font-semibold">STUDENT REPORT CARD</h2>
+        <p className="text-sm">
+          Academic Year: {reportCard.academicYear} | Term: {reportCard.term}
+        </p>
       </div>
 
       {/* Student Information */}
-      <div className="grid grid-cols-2 gap-4 border p-4 rounded">
+      <div className="grid grid-cols-2 gap-4 rounded border p-4">
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="font-medium">Student Name:</span>
-            <span>{reportCard.student.givenName} {reportCard.student.surname}</span>
+            <span>
+              {reportCard.student.givenName} {reportCard.student.surname}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Student ID:</span>
@@ -327,7 +377,10 @@ export function ReportCardGenerator({
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Class:</span>
-            <span>{reportCard.student.class.name} - {reportCard.student.class.section}</span>
+            <span>
+              {reportCard.student.class.name} -{" "}
+              {reportCard.student.class.section}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Year Level:</span>
@@ -337,7 +390,9 @@ export function ReportCardGenerator({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="font-medium">Date of Birth:</span>
-            <span>{format(reportCard.student.dateOfBirth, 'MMM dd, yyyy')}</span>
+            <span>
+              {format(reportCard.student.dateOfBirth, "MMM dd, yyyy")}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Guardian:</span>
@@ -345,18 +400,22 @@ export function ReportCardGenerator({
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Rank:</span>
-            <span>{reportCard.overall.rank} / {reportCard.overall.totalStudents}</span>
+            <span>
+              {reportCard.overall.rank} / {reportCard.overall.totalStudents}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Issue Date:</span>
-            <span>{format(reportCard.issueDate, 'MMM dd, yyyy')}</span>
+            <span>{format(reportCard.issueDate, "MMM dd, yyyy")}</span>
           </div>
         </div>
       </div>
 
       {/* Academic Performance */}
       <div>
-        <h3 className="text-xl font-semibold mb-3 border-b pb-2">Academic Performance</h3>
+        <h3 className="mb-3 border-b pb-2 text-xl font-semibold">
+          Academic Performance
+        </h3>
         <table className="w-full border-collapse border">
           <thead>
             <tr className="bg-gray-100">
@@ -369,7 +428,7 @@ export function ReportCardGenerator({
             </tr>
           </thead>
           <tbody>
-            {reportCard.subjects.map(subject => (
+            {reportCard.subjects.map((subject) => (
               <tr key={subject.subjectId}>
                 <td className="border p-2">{subject.subjectName}</td>
                 <td className="border p-2 text-center">
@@ -378,7 +437,9 @@ export function ReportCardGenerator({
                 <td className="border p-2 text-center font-bold">
                   {subject.grade}
                 </td>
-                <td className="border p-2 text-center">{subject.gpa.toFixed(2)}</td>
+                <td className="border p-2 text-center">
+                  {subject.gpa.toFixed(2)}
+                </td>
                 <td className="border p-2 text-center">
                   {subject.attendance.percentage.toFixed(1)}%
                 </td>
@@ -390,12 +451,15 @@ export function ReportCardGenerator({
             <tr className="bg-gray-50 font-bold">
               <td className="border p-2">Overall</td>
               <td className="border p-2 text-center">
-                {reportCard.overall.marksObtained} / {reportCard.overall.totalMarks}
+                {reportCard.overall.marksObtained} /{" "}
+                {reportCard.overall.totalMarks}
               </td>
               <td className="border p-2 text-center text-lg">
                 {reportCard.overall.grade}
               </td>
-              <td className="border p-2 text-center">{reportCard.overall.gpa.toFixed(2)}</td>
+              <td className="border p-2 text-center">
+                {reportCard.overall.gpa.toFixed(2)}
+              </td>
               <td className="border p-2 text-center">
                 {reportCard.attendance.percentage.toFixed(1)}%
               </td>
@@ -407,20 +471,26 @@ export function ReportCardGenerator({
 
       {/* Attendance Summary */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="border p-4 rounded">
-          <h4 className="font-semibold mb-2">Attendance Summary</h4>
+        <div className="rounded border p-4">
+          <h4 className="mb-2 font-semibold">Attendance Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Present:</span>
-              <span className="text-green-600 font-medium">{reportCard.attendance.present} days</span>
+              <span className="font-medium text-green-600">
+                {reportCard.attendance.present} days
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Absent:</span>
-              <span className="text-red-600 font-medium">{reportCard.attendance.absent} days</span>
+              <span className="font-medium text-red-600">
+                {reportCard.attendance.absent} days
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Late:</span>
-              <span className="text-yellow-600 font-medium">{reportCard.attendance.late} days</span>
+              <span className="font-medium text-yellow-600">
+                {reportCard.attendance.late} days
+              </span>
             </div>
             <div className="flex justify-between font-bold">
               <span>Percentage:</span>
@@ -429,20 +499,26 @@ export function ReportCardGenerator({
           </div>
         </div>
 
-        <div className="border p-4 rounded">
-          <h4 className="font-semibold mb-2">Conduct & Behavior</h4>
+        <div className="rounded border p-4">
+          <h4 className="mb-2 font-semibold">Conduct & Behavior</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Behavior:</span>
-              <span className="font-medium capitalize">{reportCard.conduct.behavior.replace('-', ' ')}</span>
+              <span className="font-medium capitalize">
+                {reportCard.conduct.behavior.replace("-", " ")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Participation:</span>
-              <span className="font-medium capitalize">{reportCard.conduct.participation.replace('-', ' ')}</span>
+              <span className="font-medium capitalize">
+                {reportCard.conduct.participation.replace("-", " ")}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Punctuality:</span>
-              <span className="font-medium capitalize">{reportCard.conduct.punctuality.replace('-', ' ')}</span>
+              <span className="font-medium capitalize">
+                {reportCard.conduct.punctuality.replace("-", " ")}
+              </span>
             </div>
           </div>
         </div>
@@ -450,15 +526,16 @@ export function ReportCardGenerator({
 
       {/* Co-curricular Activities */}
       {reportCard.cocurricular.length > 0 && (
-        <div className="border p-4 rounded">
-          <h4 className="font-semibold mb-2">Co-curricular Activities</h4>
+        <div className="rounded border p-4">
+          <h4 className="mb-2 font-semibold">Co-curricular Activities</h4>
           <div className="space-y-2">
             {reportCard.cocurricular.map((activity, index) => (
               <div key={index} className="text-sm">
-                <span className="font-medium">{activity.activity}:</span> {activity.performance}
+                <span className="font-medium">{activity.activity}:</span>{" "}
+                {activity.performance}
                 {activity.achievements && activity.achievements.length > 0 && (
                   <div className="ms-4 mt-1 text-xs text-gray-600">
-                    Achievements: {activity.achievements.join(', ')}
+                    Achievements: {activity.achievements.join(", ")}
                   </div>
                 )}
               </div>
@@ -470,15 +547,15 @@ export function ReportCardGenerator({
       {/* Remarks */}
       <div className="space-y-3">
         {reportCard.teacherRemarks && (
-          <div className="border p-4 rounded">
-            <h4 className="font-semibold mb-2">Class Teacher's Remarks</h4>
+          <div className="rounded border p-4">
+            <h4 className="mb-2 font-semibold">Class Teacher's Remarks</h4>
             <p className="text-sm">{reportCard.teacherRemarks}</p>
           </div>
         )}
 
         {reportCard.principalRemarks && (
-          <div className="border p-4 rounded">
-            <h4 className="font-semibold mb-2">Principal's Remarks</h4>
+          <div className="rounded border p-4">
+            <h4 className="mb-2 font-semibold">Principal's Remarks</h4>
             <p className="text-sm">{reportCard.principalRemarks}</p>
           </div>
         )}
@@ -487,25 +564,28 @@ export function ReportCardGenerator({
       {/* Promotion Status */}
       <div className="border-2 border-dashed p-4 text-center">
         <p className="text-lg font-semibold">
-          Promotion Status:{' '}
-          <span className={cn(
-            "uppercase",
-            reportCard.promotionStatus === 'promoted' && "text-green-600",
-            reportCard.promotionStatus === 'detained' && "text-red-600",
-            reportCard.promotionStatus === 'pending' && "text-yellow-600"
-          )}>
+          Promotion Status:{" "}
+          <span
+            className={cn(
+              "uppercase",
+              reportCard.promotionStatus === "promoted" && "text-green-600",
+              reportCard.promotionStatus === "detained" && "text-red-600",
+              reportCard.promotionStatus === "pending" && "text-yellow-600"
+            )}
+          >
             {reportCard.promotionStatus}
           </span>
         </p>
         {reportCard.nextTerm && (
-          <p className="text-sm mt-2">
-            Next term begins on {format(reportCard.nextTerm.startDate, 'MMMM dd, yyyy')}
+          <p className="mt-2 text-sm">
+            Next term begins on{" "}
+            {format(reportCard.nextTerm.startDate, "MMMM dd, yyyy")}
           </p>
         )}
       </div>
 
       {/* Signatures */}
-      <div className="grid grid-cols-3 gap-8 mt-8">
+      <div className="mt-8 grid grid-cols-3 gap-8">
         <div className="text-center">
           <div className="border-t-2 border-black pt-2">
             <p className="text-sm font-medium">Class Teacher</p>
@@ -524,12 +604,12 @@ export function ReportCardGenerator({
       </div>
 
       {/* Footer */}
-      <div className="text-center text-xs text-gray-500 mt-8">
+      <div className="mt-8 text-center text-xs text-gray-500">
         <p>This is a computer-generated report card. No signature required.</p>
-        <p>Generated on {format(new Date(), 'MMM dd, yyyy HH:mm')}</p>
+        <p>Generated on {format(new Date(), "MMM dd, yyyy HH:mm")}</p>
       </div>
     </div>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -539,12 +619,14 @@ export function ReportCardGenerator({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Report Card Generator</CardTitle>
-              <CardDescription>Generate and manage student report cards</CardDescription>
+              <CardDescription>
+                Generate and manage student report cards
+              </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               {bulkActionMode && selectedCards.length > 0 && (
                 <Button onClick={handleBulkPDF}>
-                  <Download className="h-4 w-4 me-2" />
+                  <Download className="me-2 h-4 w-4" />
                   Download {selectedCards.length} PDFs
                 </Button>
               )}
@@ -552,7 +634,7 @@ export function ReportCardGenerator({
                 variant="outline"
                 onClick={() => setBulkActionMode(!bulkActionMode)}
               >
-                {bulkActionMode ? 'Cancel' : 'Bulk Actions'}
+                {bulkActionMode ? "Cancel" : "Bulk Actions"}
               </Button>
             </div>
           </div>
@@ -560,7 +642,7 @@ export function ReportCardGenerator({
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Generated</CardDescription>
@@ -575,7 +657,9 @@ export function ReportCardGenerator({
             <CardDescription>Pending</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {stats.pending}
+            </div>
           </CardContent>
         </Card>
 
@@ -584,7 +668,9 @@ export function ReportCardGenerator({
             <CardDescription>Average GPA</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.averageGPA.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {stats.averageGPA.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
 
@@ -608,7 +694,7 @@ export function ReportCardGenerator({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Terms</SelectItem>
-            {terms.map(term => (
+            {terms.map((term) => (
               <SelectItem key={term.id} value={term.id}>
                 {term.name} - {term.year}
               </SelectItem>
@@ -622,7 +708,7 @@ export function ReportCardGenerator({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Classes</SelectItem>
-            {classes.map(className => (
+            {classes.map((className) => (
               <SelectItem key={className} value={className}>
                 {className}
               </SelectItem>
@@ -656,7 +742,7 @@ export function ReportCardGenerator({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReportCards.map(reportCard => (
+              {filteredReportCards.map((reportCard) => (
                 <TableRow key={reportCard.id}>
                   {bulkActionMode && (
                     <TableCell>
@@ -665,9 +751,11 @@ export function ReportCardGenerator({
                         checked={selectedCards.includes(reportCard.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedCards(prev => [...prev, reportCard.id]);
+                            setSelectedCards((prev) => [...prev, reportCard.id])
                           } else {
-                            setSelectedCards(prev => prev.filter(id => id !== reportCard.id));
+                            setSelectedCards((prev) =>
+                              prev.filter((id) => id !== reportCard.id)
+                            )
                           }
                         }}
                       />
@@ -678,14 +766,16 @@ export function ReportCardGenerator({
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={reportCard.student.profileImageUrl} />
                         <AvatarFallback>
-                          {reportCard.student.givenName[0]}{reportCard.student.surname[0]}
+                          {reportCard.student.givenName[0]}
+                          {reportCard.student.surname[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {reportCard.student.givenName} {reportCard.student.surname}
+                          {reportCard.student.givenName}{" "}
+                          {reportCard.student.surname}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {reportCard.student.studentId}
                         </p>
                       </div>
@@ -693,25 +783,39 @@ export function ReportCardGenerator({
                   </TableCell>
                   <TableCell>{reportCard.student.class.name}</TableCell>
                   <TableCell>
-                    <span className={cn("text-lg font-bold", gradeColors[reportCard.overall.grade])}>
+                    <span
+                      className={cn(
+                        "text-lg font-bold",
+                        gradeColors[reportCard.overall.grade]
+                      )}
+                    >
                       {reportCard.overall.grade}
                     </span>
                   </TableCell>
                   <TableCell>{reportCard.overall.gpa.toFixed(2)}</TableCell>
                   <TableCell>
-                    {reportCard.overall.rank} / {reportCard.overall.totalStudents}
+                    {reportCard.overall.rank} /{" "}
+                    {reportCard.overall.totalStudents}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={reportCard.attendance.percentage >= 90 ? "default" : "secondary"}>
+                    <Badge
+                      variant={
+                        reportCard.attendance.percentage >= 90
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
                       {reportCard.attendance.percentage.toFixed(1)}%
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        reportCard.promotionStatus === 'promoted' ? 'default' :
-                        reportCard.promotionStatus === 'detained' ? 'destructive' :
-                        'secondary'
+                        reportCard.promotionStatus === "promoted"
+                          ? "default"
+                          : reportCard.promotionStatus === "detained"
+                            ? "destructive"
+                            : "secondary"
                       }
                     >
                       {reportCard.promotionStatus}
@@ -723,8 +827,8 @@ export function ReportCardGenerator({
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setSelectedReportCard(reportCard);
-                          setPreviewDialogOpen(true);
+                          setSelectedReportCard(reportCard)
+                          setPreviewDialogOpen(true)
                         }}
                       >
                         <Eye className="h-4 w-4" />
@@ -736,24 +840,31 @@ export function ReportCardGenerator({
                       >
                         <Download className="h-4 w-4" />
                       </Button>
-                      {currentUserRole !== 'student' && (
+                      {currentUserRole !== "student" && (
                         <>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleSendToParent(reportCard, 'email')}
+                            onClick={() =>
+                              handleSendToParent(reportCard, "email")
+                            }
                           >
                             <Mail className="h-4 w-4" />
                           </Button>
-                          {(currentUserRole === 'admin' || currentUserRole === 'teacher') && (
+                          {(currentUserRole === "admin" ||
+                            currentUserRole === "teacher") && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                setSelectedReportCard(reportCard);
-                                setTeacherRemarks(reportCard.teacherRemarks || '');
-                                setPrincipalRemarks(reportCard.principalRemarks || '');
-                                setRemarksDialogOpen(true);
+                                setSelectedReportCard(reportCard)
+                                setTeacherRemarks(
+                                  reportCard.teacherRemarks || ""
+                                )
+                                setPrincipalRemarks(
+                                  reportCard.principalRemarks || ""
+                                )
+                                setRemarksDialogOpen(true)
                               }}
                             >
                               <MessageSquare className="h-4 w-4" />
@@ -772,7 +883,7 @@ export function ReportCardGenerator({
 
       {/* Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-h-[90vh] max-w-4xl">
           <DialogHeader>
             <DialogTitle>Report Card Preview</DialogTitle>
             <DialogDescription>
@@ -780,19 +891,24 @@ export function ReportCardGenerator({
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[600px]">
-            {selectedReportCard && <ReportCardPreview reportCard={selectedReportCard} />}
+            {selectedReportCard && (
+              <ReportCardPreview reportCard={selectedReportCard} />
+            )}
           </ScrollArea>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setPreviewDialogOpen(false)}
+            >
               Close
             </Button>
             <Button onClick={() => window.print()}>
-              <Printer className="h-4 w-4 me-2" />
+              <Printer className="me-2 h-4 w-4" />
               Print
             </Button>
             {selectedReportCard && (
               <Button onClick={() => handleGeneratePDF(selectedReportCard)}>
-                <Download className="h-4 w-4 me-2" />
+                <Download className="me-2 h-4 w-4" />
                 Download PDF
               </Button>
             )}
@@ -820,7 +936,7 @@ export function ReportCardGenerator({
                 rows={4}
               />
             </div>
-            {currentUserRole === 'admin' && (
+            {currentUserRole === "admin" && (
               <div>
                 <Label>Principal's Remarks</Label>
                 <Textarea
@@ -834,15 +950,16 @@ export function ReportCardGenerator({
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRemarksDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setRemarksDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveRemarks}>
-              Save Remarks
-            </Button>
+            <Button onClick={handleSaveRemarks}>Save Remarks</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

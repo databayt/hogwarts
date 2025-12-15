@@ -1,14 +1,15 @@
-"use client";
+"use client"
 
-import type { Table } from "@tanstack/react-table";
-import type * as React from "react";
+import type * as React from "react"
+import type { Table } from "@tanstack/react-table"
 
-import { DataTableViewOptions } from "@/components/table/data-table-view-options";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { DataTableViewOptions } from "@/components/table/data-table-view-options"
 
-interface DataTableAdvancedToolbarProps<TData>
-  extends React.ComponentProps<"div"> {
-  table: Table<TData>;
+interface DataTableAdvancedToolbarProps<
+  TData,
+> extends React.ComponentProps<"div"> {
+  table: Table<TData>
 }
 
 export function DataTableAdvancedToolbar<TData>({
@@ -23,7 +24,7 @@ export function DataTableAdvancedToolbar<TData>({
       aria-orientation="horizontal"
       className={cn(
         "flex w-full items-start justify-between gap-2 p-1",
-        className,
+        className
       )}
       {...props}
     >
@@ -32,5 +33,5 @@ export function DataTableAdvancedToolbar<TData>({
         <DataTableViewOptions table={table} />
       </div>
     </div>
-  );
+  )
 }

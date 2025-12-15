@@ -13,6 +13,7 @@ model: sonnet
 ## Git Workflow
 
 ### Conventional Commit Format
+
 ```
 type(scope): subject
 
@@ -22,6 +23,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Commit Types
+
 - **feat**: New feature
 - **fix**: Bug fix
 - **docs**: Documentation changes
@@ -34,6 +36,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - **chore**: Maintenance tasks
 
 ### Commit Examples
+
 ```bash
 # Feature
 git commit -m "feat(auth): add multi-factor authentication
@@ -64,6 +67,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## GitHub Integration
 
 ### Creating Pull Requests
+
 ```bash
 # Create feature branch
 git checkout -b feature/student-reports
@@ -103,26 +107,32 @@ EOF
 ```
 
 ### PR Template
+
 ```markdown
 ## Summary
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Changes Made
+
 - Bullet point list
 - Of specific changes
 
 ## Testing
+
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows project style
 - [ ] Self-review completed
 - [ ] Comments added for complex code
@@ -132,10 +142,12 @@ Brief description of changes
 - [ ] i18n keys added
 
 ## Related Issues
+
 Closes #123
 ```
 
 ### Working with Issues
+
 ```bash
 # List issues
 gh issue list
@@ -153,6 +165,7 @@ gh pr create --body "Fixes #123"
 ## Branching Strategy
 
 ### Branch Types
+
 ```
 main                    # Production code
 ├── develop            # Integration branch
@@ -163,6 +176,7 @@ main                    # Production code
 ```
 
 ### Branch Naming
+
 ```
 feature/add-payment-gateway
 fix/student-enrollment-validation
@@ -171,6 +185,7 @@ release/v2.1.0
 ```
 
 ### Branch Commands
+
 ```bash
 # Create and switch to new branch
 git checkout -b feature/new-feature
@@ -192,6 +207,7 @@ git merge feature/new-feature
 ## Conflict Resolution
 
 ### Merge Conflicts
+
 ```bash
 # Pull latest changes
 git pull origin main
@@ -210,6 +226,7 @@ git merge --abort
 ```
 
 ### Rebase Workflow
+
 ```bash
 # Rebase feature branch on main
 git checkout feature/my-feature
@@ -230,6 +247,7 @@ git rebase --abort
 ## Git Commands Reference
 
 ### Status & History
+
 ```bash
 git status                      # Working directory status
 git log --oneline -10          # Recent commits
@@ -239,6 +257,7 @@ git diff --staged              # Staged changes
 ```
 
 ### Stashing
+
 ```bash
 git stash                      # Stash changes
 git stash list                # List stashes
@@ -247,6 +266,7 @@ git stash apply               # Apply but keep stash
 ```
 
 ### Undoing Changes
+
 ```bash
 git reset HEAD~1              # Undo last commit (keep changes)
 git reset --hard HEAD~1       # Undo last commit (discard changes)
@@ -255,6 +275,7 @@ git revert <commit>          # Create inverse commit
 ```
 
 ### Tags
+
 ```bash
 git tag v1.0.0               # Create lightweight tag
 git tag -a v1.0.0 -m "msg"   # Create annotated tag
@@ -265,6 +286,7 @@ git push origin --tags       # Push all tags
 ## GitHub Actions Integration
 
 ### Workflow Triggers
+
 ```yaml
 name: CI
 
@@ -285,6 +307,7 @@ jobs:
 ```
 
 ### Status Checks
+
 ```bash
 # Check workflow status
 gh run list
@@ -299,6 +322,7 @@ gh run rerun <run-id>
 ## Best Practices
 
 ### Commit Guidelines
+
 - [ ] One logical change per commit
 - [ ] Write clear, descriptive messages
 - [ ] Reference issues when applicable
@@ -306,6 +330,7 @@ gh run rerun <run-id>
 - [ ] Keep commits atomic and focused
 
 ### PR Guidelines
+
 - [ ] Keep PRs small and focused
 - [ ] Write comprehensive descriptions
 - [ ] Add tests for new features
@@ -314,6 +339,7 @@ gh run rerun <run-id>
 - [ ] Ensure CI passes before merging
 
 ### Security
+
 - [ ] Never commit secrets
 - [ ] Use .gitignore properly
 - [ ] Review changes before committing

@@ -1,33 +1,35 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { useFormContext } from "react-hook-form";
+import { useEffect } from "react"
+import { useFormContext } from "react-hook-form"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { ApplicationFormData, PublicCampaign } from "../types";
-import { DEFAULT_GRADES, suggestGradeFromDOB } from "../types";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ApplicationFormData, PublicCampaign } from "../types"
+import { DEFAULT_GRADES, suggestGradeFromDOB } from "../types"
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
-  campaign: PublicCampaign;
+  dictionary: Dictionary
+  lang: Locale
+  campaign: PublicCampaign
 }
 
 const STREAMS = [
@@ -35,34 +37,34 @@ const STREAMS = [
   { value: "Arts", labelEn: "Arts", labelAr: "الآداب" },
   { value: "Commerce", labelEn: "Commerce", labelAr: "التجارة" },
   { value: "General", labelEn: "General", labelAr: "عام" },
-];
+]
 
 const LANGUAGES = [
   { value: "Arabic", labelEn: "Arabic", labelAr: "العربية" },
   { value: "English", labelEn: "English", labelAr: "الإنجليزية" },
   { value: "French", labelEn: "French", labelAr: "الفرنسية" },
   { value: "None", labelEn: "None", labelAr: "لا شيء" },
-];
+]
 
 export default function StepAcademic({ dictionary, lang, campaign }: Props) {
-  const { control, watch, setValue } = useFormContext<ApplicationFormData>();
-  const isRTL = lang === "ar";
-  const dateOfBirth = watch("dateOfBirth");
+  const { control, watch, setValue } = useFormContext<ApplicationFormData>()
+  const isRTL = lang === "ar"
+  const dateOfBirth = watch("dateOfBirth")
 
   // Auto-suggest grade based on DOB
   useEffect(() => {
     if (dateOfBirth) {
-      const dob = new Date(dateOfBirth);
-      const suggestedGrade = suggestGradeFromDOB(dob);
+      const dob = new Date(dateOfBirth)
+      const suggestedGrade = suggestGradeFromDOB(dob)
       if (suggestedGrade) {
         // Only set if not already set
-        const currentGrade = watch("applyingForClass");
+        const currentGrade = watch("applyingForClass")
         if (!currentGrade) {
-          setValue("applyingForClass", suggestedGrade.grade);
+          setValue("applyingForClass", suggestedGrade.grade)
         }
       }
     }
-  }, [dateOfBirth, setValue, watch]);
+  }, [dateOfBirth, setValue, watch])
 
   return (
     <div className="space-y-6">
@@ -74,15 +76,22 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               control={control}
               name="previousSchool"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "المدرسة السابقة" : "Previous School"}</FormLabel>
+                  <FormLabel>
+                    {isRTL ? "المدرسة السابقة" : "Previous School"}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={isRTL ? "أدخل اسم المدرسة" : "Enter school name"} />
+                    <Input
+                      {...field}
+                      placeholder={
+                        isRTL ? "أدخل اسم المدرسة" : "Enter school name"
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -93,24 +102,34 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               name="previousClass"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "الصف السابق" : "Previous Class/Grade"}</FormLabel>
+                  <FormLabel>
+                    {isRTL ? "الصف السابق" : "Previous Class/Grade"}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={isRTL ? "مثل: الصف الرابع" : "e.g., Grade 4"} />
+                    <Input
+                      {...field}
+                      placeholder={isRTL ? "مثل: الصف الرابع" : "e.g., Grade 4"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <FormField
               control={control}
               name="previousMarks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "الدرجات / النسبة المئوية" : "Marks / Percentage"}</FormLabel>
+                  <FormLabel>
+                    {isRTL ? "الدرجات / النسبة المئوية" : "Marks / Percentage"}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={isRTL ? "مثل: 85%" : "e.g., 85%"} />
+                    <Input
+                      {...field}
+                      placeholder={isRTL ? "مثل: 85%" : "e.g., 85%"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,9 +140,14 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               name="previousPercentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "المعدل التراكمي" : "GPA (if applicable)"}</FormLabel>
+                  <FormLabel>
+                    {isRTL ? "المعدل التراكمي" : "GPA (if applicable)"}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder={isRTL ? "مثل: 3.5" : "e.g., 3.5"} />
+                    <Input
+                      {...field}
+                      placeholder={isRTL ? "مثل: 3.5" : "e.g., 3.5"}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -135,11 +159,17 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
             name="achievements"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{isRTL ? "الإنجازات والجوائز" : "Achievements & Awards"}</FormLabel>
+                <FormLabel>
+                  {isRTL ? "الإنجازات والجوائز" : "Achievements & Awards"}
+                </FormLabel>
                 <FormControl>
                   <Textarea
                     {...field}
-                    placeholder={isRTL ? "أدخل أي إنجازات أو جوائز" : "Enter any achievements or awards"}
+                    placeholder={
+                      isRTL
+                        ? "أدخل أي إنجازات أو جوائز"
+                        : "Enter any achievements or awards"
+                    }
                     rows={2}
                   />
                 </FormControl>
@@ -164,12 +194,15 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  {isRTL ? "الصف المتقدم إليه" : "Grade Applying For"} <span className="text-destructive">*</span>
+                  {isRTL ? "الصف المتقدم إليه" : "Grade Applying For"}{" "}
+                  <span className="text-destructive">*</span>
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={isRTL ? "اختر الصف" : "Select grade"} />
+                      <SelectValue
+                        placeholder={isRTL ? "اختر الصف" : "Select grade"}
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -185,17 +218,24 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <FormField
               control={control}
               name="preferredStream"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "التخصص المفضل" : "Preferred Stream"}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormLabel>
+                    {isRTL ? "التخصص المفضل" : "Preferred Stream"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={isRTL ? "اختر التخصص" : "Select stream"} />
+                        <SelectValue
+                          placeholder={isRTL ? "اختر التخصص" : "Select stream"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -215,11 +255,18 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               name="secondLanguage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "اللغة الثانية" : "Second Language"}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormLabel>
+                    {isRTL ? "اللغة الثانية" : "Second Language"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={isRTL ? "اختر اللغة" : "Select language"} />
+                        <SelectValue
+                          placeholder={isRTL ? "اختر اللغة" : "Select language"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -239,11 +286,18 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
               name="thirdLanguage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{isRTL ? "اللغة الثالثة" : "Third Language"}</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormLabel>
+                    {isRTL ? "اللغة الثالثة" : "Third Language"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={isRTL ? "اختر اللغة" : "Select language"} />
+                        <SelectValue
+                          placeholder={isRTL ? "اختر اللغة" : "Select language"}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -262,5 +316,5 @@ export default function StepAcademic({ dictionary, lang, campaign }: Props) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

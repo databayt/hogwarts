@@ -7,9 +7,9 @@
 // Export Format Types
 // ============================================================================
 
-export type ExportFormat = "csv" | "excel" | "pdf" | "json";
+export type ExportFormat = "csv" | "excel" | "pdf" | "json"
 
-export type ColumnAlignment = "left" | "center" | "right";
+export type ColumnAlignment = "left" | "center" | "right"
 
 // ============================================================================
 // Column Definition
@@ -17,49 +17,49 @@ export type ColumnAlignment = "left" | "center" | "right";
 
 export interface ExportColumn<T = unknown> {
   /** Unique key for the column */
-  key: string;
+  key: string
 
   /** Column header text */
-  header: string;
+  header: string
 
   /** Arabic header (for bilingual exports) */
-  headerAr?: string;
+  headerAr?: string
 
   /** Width in pixels (for Excel/PDF) */
-  width?: number;
+  width?: number
 
   /** Minimum width */
-  minWidth?: number;
+  minWidth?: number
 
   /** Text alignment */
-  align?: ColumnAlignment;
+  align?: ColumnAlignment
 
   /** Data type for formatting */
-  type?: "string" | "number" | "currency" | "date" | "boolean" | "percentage";
+  type?: "string" | "number" | "currency" | "date" | "boolean" | "percentage"
 
   /** Custom value accessor */
-  accessor?: (row: T) => string | number | boolean | Date | null | undefined;
+  accessor?: (row: T) => string | number | boolean | Date | null | undefined
 
   /** Custom formatter for display */
-  format?: (value: unknown, row: T, locale: string) => string;
+  format?: (value: unknown, row: T, locale: string) => string
 
   /** Currency code for currency type */
-  currency?: string;
+  currency?: string
 
   /** Date format string */
-  dateFormat?: string;
+  dateFormat?: string
 
   /** Whether to include in CSV export */
-  includeInCsv?: boolean;
+  includeInCsv?: boolean
 
   /** Whether to include in Excel export */
-  includeInExcel?: boolean;
+  includeInExcel?: boolean
 
   /** Whether to include in PDF export */
-  includeInPdf?: boolean;
+  includeInPdf?: boolean
 
   /** Whether column is hidden by default */
-  hidden?: boolean;
+  hidden?: boolean
 }
 
 // ============================================================================
@@ -68,69 +68,69 @@ export interface ExportColumn<T = unknown> {
 
 export interface ExportConfig<T = unknown> {
   /** File name without extension */
-  filename: string;
+  filename: string
 
   /** Sheet name (for Excel) */
-  sheetName?: string;
+  sheetName?: string
 
   /** Export columns */
-  columns: ExportColumn<T>[];
+  columns: ExportColumn<T>[]
 
   /** Data to export */
-  data: T[];
+  data: T[]
 
   /** Formats to enable */
-  formats?: ExportFormat[];
+  formats?: ExportFormat[]
 
   /** Current locale */
-  locale?: "en" | "ar";
+  locale?: "en" | "ar"
 
   /** Include header row */
-  includeHeader?: boolean;
+  includeHeader?: boolean
 
   /** Include summary row at bottom */
-  includeSummary?: boolean;
+  includeSummary?: boolean
 
   /** Title for PDF header */
-  title?: string;
+  title?: string
 
   /** Subtitle for PDF header */
-  subtitle?: string;
+  subtitle?: string
 
   /** Logo URL for PDF header */
-  logoUrl?: string;
+  logoUrl?: string
 
   /** School name for header */
-  schoolName?: string;
+  schoolName?: string
 
   /** Generated date format */
-  dateFormat?: string;
+  dateFormat?: string
 
   /** PDF page orientation */
-  orientation?: "portrait" | "landscape";
+  orientation?: "portrait" | "landscape"
 
   /** PDF page size */
-  pageSize?: "A4" | "Letter" | "Legal" | "A3";
+  pageSize?: "A4" | "Letter" | "Legal" | "A3"
 
   /** PDF margins */
   margins?: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
 
   /** Custom styles for PDF */
   styles?: {
-    headerBg?: string;
-    headerText?: string;
-    evenRowBg?: string;
-    oddRowBg?: string;
-    borderColor?: string;
-  };
+    headerBg?: string
+    headerText?: string
+    evenRowBg?: string
+    oddRowBg?: string
+    borderColor?: string
+  }
 
   /** Metadata to include in file */
-  metadata?: Record<string, string>;
+  metadata?: Record<string, string>
 }
 
 // ============================================================================
@@ -139,35 +139,35 @@ export interface ExportConfig<T = unknown> {
 
 export interface ExportOptions {
   /** Selected format */
-  format: ExportFormat;
+  format: ExportFormat
 
   /** Include all columns or selected */
-  selectedColumns?: string[];
+  selectedColumns?: string[]
 
   /** Filter to apply before export */
-  filter?: Record<string, unknown>;
+  filter?: Record<string, unknown>
 
   /** Sort configuration */
   sort?: {
-    key: string;
-    direction: "asc" | "desc";
-  };
+    key: string
+    direction: "asc" | "desc"
+  }
 
   /** Maximum rows to export */
-  maxRows?: number;
+  maxRows?: number
 
   /** Skip first N rows */
-  offset?: number;
+  offset?: number
 
   /** Include row numbers */
-  includeRowNumbers?: boolean;
+  includeRowNumbers?: boolean
 
   /** Date range filter */
   dateRange?: {
-    start: Date;
-    end: Date;
-    column: string;
-  };
+    start: Date
+    end: Date
+    column: string
+  }
 }
 
 // ============================================================================
@@ -175,13 +175,13 @@ export interface ExportOptions {
 // ============================================================================
 
 export interface ExportResult {
-  success: boolean;
-  filename?: string;
-  format?: ExportFormat;
-  rowCount?: number;
-  fileSize?: number;
-  downloadUrl?: string;
-  error?: string;
+  success: boolean
+  filename?: string
+  format?: ExportFormat
+  rowCount?: number
+  fileSize?: number
+  downloadUrl?: string
+  error?: string
 }
 
 // ============================================================================
@@ -189,10 +189,16 @@ export interface ExportResult {
 // ============================================================================
 
 export interface ExportProgress {
-  status: "idle" | "preparing" | "generating" | "downloading" | "completed" | "error";
-  progress: number;
-  message?: string;
-  error?: string;
+  status:
+    | "idle"
+    | "preparing"
+    | "generating"
+    | "downloading"
+    | "completed"
+    | "error"
+  progress: number
+  message?: string
+  error?: string
 }
 
 // ============================================================================
@@ -201,22 +207,38 @@ export interface ExportProgress {
 
 export interface UseExportReturn<T> {
   /** Export state */
-  isExporting: boolean;
-  progress: ExportProgress;
-  error: string | null;
+  isExporting: boolean
+  progress: ExportProgress
+  error: string | null
 
   /** Export actions */
-  exportToCsv: (data?: T[], options?: Partial<ExportOptions>) => Promise<ExportResult>;
-  exportToExcel: (data?: T[], options?: Partial<ExportOptions>) => Promise<ExportResult>;
-  exportToPdf: (data?: T[], options?: Partial<ExportOptions>) => Promise<ExportResult>;
-  exportToJson: (data?: T[], options?: Partial<ExportOptions>) => Promise<ExportResult>;
-  exportTo: (format: ExportFormat, data?: T[], options?: Partial<ExportOptions>) => Promise<ExportResult>;
+  exportToCsv: (
+    data?: T[],
+    options?: Partial<ExportOptions>
+  ) => Promise<ExportResult>
+  exportToExcel: (
+    data?: T[],
+    options?: Partial<ExportOptions>
+  ) => Promise<ExportResult>
+  exportToPdf: (
+    data?: T[],
+    options?: Partial<ExportOptions>
+  ) => Promise<ExportResult>
+  exportToJson: (
+    data?: T[],
+    options?: Partial<ExportOptions>
+  ) => Promise<ExportResult>
+  exportTo: (
+    format: ExportFormat,
+    data?: T[],
+    options?: Partial<ExportOptions>
+  ) => Promise<ExportResult>
 
   /** Cancel export */
-  cancel: () => void;
+  cancel: () => void
 
   /** Reset state */
-  reset: () => void;
+  reset: () => void
 }
 
 // ============================================================================
@@ -224,11 +246,42 @@ export interface UseExportReturn<T> {
 // ============================================================================
 
 export interface ColumnHelpers {
-  text: <T>(key: keyof T & string, header: string, headerAr?: string) => ExportColumn<T>;
-  number: <T>(key: keyof T & string, header: string, headerAr?: string) => ExportColumn<T>;
-  currency: <T>(key: keyof T & string, header: string, currency?: string, headerAr?: string) => ExportColumn<T>;
-  date: <T>(key: keyof T & string, header: string, format?: string, headerAr?: string) => ExportColumn<T>;
-  boolean: <T>(key: keyof T & string, header: string, headerAr?: string) => ExportColumn<T>;
-  percentage: <T>(key: keyof T & string, header: string, headerAr?: string) => ExportColumn<T>;
-  custom: <T>(key: string, header: string, accessor: (row: T) => unknown, headerAr?: string) => ExportColumn<T>;
+  text: <T>(
+    key: keyof T & string,
+    header: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  number: <T>(
+    key: keyof T & string,
+    header: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  currency: <T>(
+    key: keyof T & string,
+    header: string,
+    currency?: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  date: <T>(
+    key: keyof T & string,
+    header: string,
+    format?: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  boolean: <T>(
+    key: keyof T & string,
+    header: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  percentage: <T>(
+    key: keyof T & string,
+    header: string,
+    headerAr?: string
+  ) => ExportColumn<T>
+  custom: <T>(
+    key: string,
+    header: string,
+    accessor: (row: T) => unknown,
+    headerAr?: string
+  ) => ExportColumn<T>
 }

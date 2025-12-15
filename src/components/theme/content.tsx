@@ -4,14 +4,22 @@
  * Main composition for the theme customization settings page.
  */
 
-'use client'
+"use client"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { PresetGallery } from './preset-gallery'
-import { ThemeImportExport } from './import-export'
-import { Palette, Settings, Download } from 'lucide-react'
-import type { Locale } from '@/components/internationalization/config'
+import { Download, Palette, Settings } from "lucide-react"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Locale } from "@/components/internationalization/config"
+
+import { ThemeImportExport } from "./import-export"
+import { PresetGallery } from "./preset-gallery"
 
 interface ThemeContentProps {
   dictionary: any
@@ -23,9 +31,12 @@ export function ThemeContent({ dictionary, lang }: ThemeContentProps) {
     <div className="container mx-auto space-y-8 py-8">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Appearance Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Appearance Settings
+        </h1>
         <p className="text-muted-foreground">
-          Customize your platform appearance with beautiful preset themes or create your own.
+          Customize your platform appearance with beautiful preset themes or
+          create your own.
         </p>
       </div>
 
@@ -52,8 +63,8 @@ export function ThemeContent({ dictionary, lang }: ThemeContentProps) {
             <div className="space-y-2">
               <h3>Preset Themes</h3>
               <p className="muted">
-                Choose from our curated collection of beautiful themes. Click on any theme to apply
-                it instantly.
+                Choose from our curated collection of beautiful themes. Click on
+                any theme to apply it instantly.
               </p>
             </div>
             <PresetGallery />
@@ -66,16 +77,17 @@ export function ThemeContent({ dictionary, lang }: ThemeContentProps) {
             <CardHeader>
               <CardTitle>Custom Theme Builder</CardTitle>
               <CardDescription>
-                Create your own custom theme by adjusting colors, typography, and spacing.
+                Create your own custom theme by adjusting colors, typography,
+                and spacing.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border border-dashed p-12 text-center">
-                <Palette className="mx-auto h-12 w-12 text-muted-foreground" />
+                <Palette className="text-muted-foreground mx-auto h-12 w-12" />
                 <h3 className="mt-4 font-semibold">Custom Theme Builder</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Advanced theme customization coming soon. For now, you can import/export themes or
-                  use our preset collection.
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Advanced theme customization coming soon. For now, you can
+                  import/export themes or use our preset collection.
                 </p>
               </div>
             </CardContent>
@@ -90,20 +102,26 @@ export function ThemeContent({ dictionary, lang }: ThemeContentProps) {
             <CardHeader>
               <CardTitle>Theme Format</CardTitle>
               <CardDescription>
-                Themes are exported as JSON files containing all color, spacing, and typography
-                configurations.
+                Themes are exported as JSON files containing all color, spacing,
+                and typography configurations.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg bg-muted p-4 font-mono text-sm">
+              <div className="bg-muted rounded-lg p-4 font-mono text-sm">
                 <pre className="overflow-x-auto">
                   {JSON.stringify(
                     {
-                      version: '1.0',
-                      name: 'My Theme',
+                      version: "1.0",
+                      name: "My Theme",
                       config: {
-                        light: { background: 'oklch(...)', primary: 'oklch(...)' },
-                        dark: { background: 'oklch(...)', primary: 'oklch(...)' },
+                        light: {
+                          background: "oklch(...)",
+                          primary: "oklch(...)",
+                        },
+                        dark: {
+                          background: "oklch(...)",
+                          primary: "oklch(...)",
+                        },
                       },
                     },
                     null,

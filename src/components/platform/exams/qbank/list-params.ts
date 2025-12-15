@@ -1,9 +1,9 @@
 import {
   createSearchParamsCache,
+  parseAsArrayOf,
   parseAsInteger,
   parseAsString,
-  parseAsArrayOf,
-} from "nuqs/server";
+} from "nuqs/server"
 
 export const questionBankSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -16,4 +16,4 @@ export const questionBankSearchParams = createSearchParamsCache({
   bloomLevel: parseAsString.withDefault(""),
   source: parseAsString.withDefault(""),
   search: parseAsString.withDefault(""),
-});
+})

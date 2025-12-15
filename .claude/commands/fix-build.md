@@ -10,6 +10,7 @@
 Automatically detects and fixes common build errors that cause TypeScript compilation failures. Applies safe, tested fixes with backup and rollback capabilities. Verifies all fixes with TypeScript compilation before finalizing.
 
 **Fixes**:
+
 - Dictionary property errors (173+ patterns) - 100% auto-fixable
 - Prisma field type errors (13+ patterns) - 100% auto-fixable
 - Enum completeness issues (2+ patterns) - 100% auto-fixable
@@ -17,6 +18,7 @@ Automatically detects and fixes common build errors that cause TypeScript compil
 - Invalid includes - 100% auto-fixable
 
 **Does NOT Fix**:
+
 - Logic errors
 - Runtime errors
 - Complex refactoring
@@ -60,6 +62,7 @@ Automatically detects and fixes common build errors that cause TypeScript compil
 ### 1. Dictionary Property Fixes
 
 **Pattern**: Invalid property access on dictionary
+
 ```typescript
 // Before
 <h3>{d?.stats?.totalBudget || 'Total Budget'}</h3>
@@ -69,6 +72,7 @@ Automatically detects and fixes common build errors that cause TypeScript compil
 ```
 
 **Strategy**:
+
 1. Detect pattern: `d?.<invalid_property>.*`
 2. Extract fallback value
 3. Replace entire expression with fallback
@@ -79,15 +83,21 @@ Automatically detects and fixes common build errors that cause TypeScript compil
 ### 2. Prisma Field Type Fixes
 
 **Pattern 1**: Connect on ID field
+
 ```typescript
 // Before
-submittedBy: { connect: { id: userId } }
+submittedBy: {
+  connect: {
+    id: userId
+  }
+}
 
 // After (auto-fixed)
 submittedById: userId
 ```
 
 **Pattern 2**: Invalid include
+
 ```typescript
 // Before
 include: {
@@ -103,14 +113,15 @@ include: {
 ```
 
 **Pattern 3**: Missing required fields
+
 ```typescript
 // Before
 const expense = await db.expense.create({
   data: {
     amount: 1000,
     schoolId: session.user.schoolId,
-    submittedById: userId
-  }
+    submittedById: userId,
+  },
 })
 
 // After (auto-fixed)
@@ -122,8 +133,8 @@ const expense = await db.expense.create({
     schoolId: session.user.schoolId,
     submittedById: userId,
     expenseNumber,
-    submittedAt: new Date()
-  }
+    submittedAt: new Date(),
+  },
 })
 ```
 
@@ -132,26 +143,28 @@ const expense = await db.expense.create({
 ### 3. Enum Completeness Fixes
 
 **Pattern**: Missing enum values in Record
+
 ```typescript
 // Before
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending Approval',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid'
+  PENDING: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
 }
 
 // After (auto-fixed)
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending Approval',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid',
-  CANCELLED: 'Cancelled'  // ✅ Added
+  PENDING: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
+  CANCELLED: "Cancelled", // ✅ Added
 }
 ```
 
 **Strategy**:
+
 1. Detect incomplete Record<Enum, T>
 2. Find missing enum values
 3. Generate sensible defaults (humanized enum name)
@@ -384,33 +397,41 @@ Rollback command: /fix-build --rollback 2025-10-29
 After applying fixes, the command runs:
 
 1. **TypeScript Compilation**
+
    ```bash
    pnpm tsc --noEmit
    ```
+
    - Ensures no type errors remain
    - Fast incremental check
    - Fails if any errors found
 
 2. **Prisma Validation**
+
    ```bash
    pnpm prisma validate
    ```
+
    - Validates schema syntax
    - Checks relation integrity
    - Ensures migrations are valid
 
 3. **Build Verification** (optional)
+
    ```bash
    pnpm build --turbo
    ```
+
    - Full production build
    - Only if --verify-build flag set
    - Ensures runtime code is valid
 
 4. **Test Suite** (optional)
+
    ```bash
    pnpm test
    ```
+
    - Run affected tests
    - Only if --run-tests flag set
    - Ensures fixes don't break functionality
@@ -422,6 +443,7 @@ After applying fixes, the command runs:
 ### Automatic Rollback
 
 If verification fails, automatically rollback:
+
 ```bash
 $ /fix-build
 
@@ -457,22 +479,26 @@ Check logs for details.
 ## Safety Features
 
 ### 1. Backup Before Modify
+
 - Every file backed up before changes
 - Timestamped backup directories
 - Automatic cleanup after 30 days
 - Manual rollback available
 
 ### 2. Atomic Operations
+
 - All fixes applied transactionally
 - If one fix fails, rollback all
 - Maintains codebase consistency
 
 ### 3. Verification Required
+
 - TypeScript compilation must pass
 - Prisma validation must pass
 - No partial fixes committed
 
 ### 4. User Confirmation (Interactive Mode)
+
 ```bash
 $ /fix-build --confirm
 
@@ -491,6 +517,7 @@ Proceed with fix? [Y/n]: Y
 ## Integration
 
 ### Pre-Commit Hook
+
 ```bash
 # .husky/pre-commit
 #!/usr/bin/env sh
@@ -522,6 +549,7 @@ fi
 ```
 
 ### CI/CD Pipeline
+
 ```yaml
 # .github/workflows/ci.yml
 - name: Attempt auto-fix
@@ -549,6 +577,7 @@ fi
 ```
 
 ### VSCode Task
+
 ```json
 // .vscode/tasks.json
 {
@@ -573,6 +602,7 @@ fi
 ## Advanced Options
 
 ### Dry Run
+
 ```bash
 # Show what would be fixed without applying
 /fix-build --dry-run
@@ -587,6 +617,7 @@ Output:
 ```
 
 ### Fix and Commit
+
 ```bash
 # Apply fixes and create commit
 /fix-build --commit
@@ -596,6 +627,7 @@ Output:
 ```
 
 ### Selective Fixing
+
 ```bash
 # Fix only specific error types
 /fix-build --only=dictionary,enum
@@ -608,6 +640,7 @@ Output:
 ```
 
 ### Verbose Mode
+
 ```bash
 # Show detailed fix operations
 /fix-build --verbose
@@ -688,6 +721,7 @@ Output:
 - **Total**: ~7s for 204 issues
 
 **Optimization**:
+
 - Parallel file processing
 - AST-based parsing (fast)
 - Incremental TypeScript check
@@ -698,6 +732,7 @@ Output:
 ## Error Prevention Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **Original**: 3 hours debugging + 30 commits
 - **With /fix-build**: ~7 seconds + 0 commits
 - **Time saved**: 99.9%
@@ -708,6 +743,7 @@ Output:
 ## Best Practices
 
 1. **Always Review Changes**
+
    ```bash
    # Use dry run first
    /fix-build --dry-run
@@ -720,12 +756,14 @@ Output:
    ```
 
 2. **Test After Fixing**
+
    ```bash
    # Fix then test
    /fix-build && pnpm test
    ```
 
 3. **Keep Backups**
+
    ```bash
    # Don't skip backups in production
    /fix-build  # ✅ Creates backup
@@ -733,6 +771,7 @@ Output:
    ```
 
 4. **Understand Fixes**
+
    ```bash
    # Use verbose mode to learn
    /fix-build --verbose
@@ -753,6 +792,7 @@ Output:
 **Cause**: Fix is correct but other unrelated errors exist
 
 **Solution**:
+
 ```bash
 # Check what errors remain
 pnpm tsc --noEmit
@@ -764,6 +804,7 @@ pnpm tsc --noEmit
 ### Issue: Backup Directory Full
 
 **Solution**:
+
 ```bash
 # Clean old backups (older than 30 days)
 find .backup -type f -mtime +30 -delete
@@ -775,6 +816,7 @@ rm -rf .backup/2024-*
 ### Issue: Fix Breaks Tests
 
 **Solution**:
+
 ```bash
 # Rollback
 /fix-build --rollback <timestamp>
@@ -799,6 +841,7 @@ git diff .backup/<timestamp>/file.ts file.ts
 ## Examples
 
 ### Example 1: First-Time Setup
+
 ```bash
 # 1. Scan for errors
 /scan-errors
@@ -819,6 +862,7 @@ git commit -m "fix: auto-fix build errors"
 ```
 
 ### Example 2: Pre-Commit Workflow
+
 ```bash
 # Attempt commit
 git commit -m "feat: add feature"
@@ -835,6 +879,7 @@ git commit -m "feat: add feature"
 ```
 
 ### Example 3: CI/CD Integration
+
 ```yaml
 # On build failure, attempt auto-fix
 - name: Build

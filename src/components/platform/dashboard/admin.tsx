@@ -1,9 +1,21 @@
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { Card, CardContent } from "@/components/ui/card"
 import { formatDistanceToNow, isValid } from "date-fns"
 
+import { getTenantContext } from "@/lib/tenant-context"
+import { Card, CardContent } from "@/components/ui/card"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  getDashboardSummary,
+  getQuickLookData,
+  type QuickLookData,
+} from "./actions"
+import { AdminDashboardClient } from "./admin-client"
+import { getWeatherData, type WeatherData } from "./weather-actions"
+
 // Safe date formatting helper
-function safeFormatDistanceToNow(date: Date | string | null | undefined): string {
+function safeFormatDistanceToNow(
+  date: Date | string | null | undefined
+): string {
   if (!date) return "recently"
   try {
     const dateObj = typeof date === "string" ? new Date(date) : date
@@ -13,11 +25,6 @@ function safeFormatDistanceToNow(date: Date | string | null | undefined): string
     return "recently"
   }
 }
-
-import { getDashboardSummary, getQuickLookData, type QuickLookData } from "./actions"
-import { getWeatherData, type WeatherData } from "./weather-actions"
-import { getTenantContext } from "@/lib/tenant-context"
-import { AdminDashboardClient } from "./admin-client"
 
 interface Props {
   user: {
@@ -31,7 +38,11 @@ interface Props {
   locale?: string
 }
 
-export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
+export async function AdminDashboard({
+  user,
+  dictionary,
+  locale = "en",
+}: Props) {
   // Wrap entire component in try-catch for comprehensive error handling
   try {
     // Fetch real data from server actions with error handling
@@ -56,7 +67,8 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
             <CardContent className="p-6">
               <h3 className="mb-4">Unable to Load Dashboard</h3>
               <p className="text-muted-foreground">
-                There was an error loading the dashboard data. Please try refreshing the page.
+                There was an error loading the dashboard data. Please try
+                refreshing the page.
               </p>
             </CardContent>
           </Card>
@@ -92,7 +104,12 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     const {
       enrollment = { total: 0, newThisMonth: 0, active: 0 },
       staff = { total: 0, departments: 0, presenceRate: 0 },
-      announcements = { total: 0, published: 0, unpublished: 0, recentCount: 0 },
+      announcements = {
+        total: 0,
+        published: 0,
+        unpublished: 0,
+        recentCount: 0,
+      },
       classes = { total: 0, active: 0, studentTeacherRatio: 0 },
       activities = [],
     } = dashboardData || {}
@@ -117,7 +134,10 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       weatherData,
       // Section 2: Financial data
       financeStats: [
-        { label: "Revenue", value: `$${(financialData.totalRevenue / 1000).toFixed(0)}K` },
+        {
+          label: "Revenue",
+          value: `$${(financialData.totalRevenue / 1000).toFixed(0)}K`,
+        },
         {
           label: "Collected",
           value: `$${((financialData.totalRevenue * financialData.collectionRate) / 100000).toFixed(0)}K`,
@@ -158,8 +178,10 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
   } catch (renderError) {
     // Catch any rendering errors and log them
     console.error("[AdminDashboard] Rendering error:", renderError)
-    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
-    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    const errorMessage =
+      renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack =
+      renderError instanceof Error ? renderError.stack : undefined
     console.error("[AdminDashboard] Error message:", errorMessage)
     console.error("[AdminDashboard] Error stack:", errorStack)
     return (
@@ -167,8 +189,12 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4">Dashboard Rendering Error</h3>
-            <p className="text-muted-foreground mb-2">An error occurred while rendering the dashboard.</p>
-            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">{errorMessage}</pre>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
+              {errorMessage}
+            </pre>
           </CardContent>
         </Card>
       </div>

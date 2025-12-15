@@ -3,41 +3,48 @@
  * Hot storage for files up to 500MB with fast CDN access
  */
 
-import { put, del, list as blobList } from "@vercel/blob";
-import type { StorageProvider } from "../types";
-import { BaseStorageProvider, type UploadProviderOptions } from "./base";
+import { list as blobList, del, put } from "@vercel/blob"
+
+import type { StorageProvider } from "../types"
+import { BaseStorageProvider, type UploadProviderOptions } from "./base"
 
 export class VercelBlobProvider extends BaseStorageProvider {
-  protected providerName: StorageProvider = "vercel_blob";
+  protected providerName: StorageProvider = "vercel_blob"
 
-  supports(feature: "streaming" | "signed_urls" | "direct_upload" | "transformations"): boolean {
-    return feature === "direct_upload" || feature === "streaming";
+  supports(
+    feature: "streaming" | "signed_urls" | "direct_upload" | "transformations"
+  ): boolean {
+    return feature === "direct_upload" || feature === "streaming"
   }
 
-  async upload(file: File | Blob, path: string, options?: UploadProviderOptions): Promise<string> {
+  async upload(
+    file: File | Blob,
+    path: string,
+    options?: UploadProviderOptions
+  ): Promise<string> {
     try {
       const blob = await put(path, file, {
         access: "public", // Vercel Blob only supports public access in current API
         contentType: options?.contentType,
         addRandomSuffix: false,
-      });
+      })
 
-      return blob.url;
+      return blob.url
     } catch (error) {
-      console.error("[VercelBlobProvider] Upload error:", error);
+      console.error("[VercelBlobProvider] Upload error:", error)
       throw new Error(
         `Failed to upload to Vercel Blob: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
+      )
     }
   }
 
   async delete(url: string): Promise<boolean> {
     try {
-      await del(url);
-      return true;
+      await del(url)
+      return true
     } catch (error) {
-      console.error("[VercelBlobProvider] Delete error:", error);
-      return false;
+      console.error("[VercelBlobProvider] Delete error:", error)
+      return false
     }
   }
 
@@ -46,12 +53,12 @@ export class VercelBlobProvider extends BaseStorageProvider {
       const result = await blobList({
         prefix,
         limit,
-      });
+      })
 
-      return result.blobs.map((blob) => blob.url);
+      return result.blobs.map((blob) => blob.url)
     } catch (error) {
-      console.error("[VercelBlobProvider] List error:", error);
-      return [];
+      console.error("[VercelBlobProvider] List error:", error)
+      return []
     }
   }
 
@@ -59,19 +66,21 @@ export class VercelBlobProvider extends BaseStorageProvider {
     url: string
   ): Promise<{ size: number; contentType: string; lastModified: Date } | null> {
     try {
-      const result = await blobList({ prefix: url, limit: 1 });
-      const blob = result.blobs[0];
+      const result = await blobList({ prefix: url, limit: 1 })
+      const blob = result.blobs[0]
 
-      if (!blob) return null;
+      if (!blob) return null
 
       return {
         size: blob.size,
-        contentType: (blob as { contentType?: string }).contentType || "application/octet-stream",
+        contentType:
+          (blob as { contentType?: string }).contentType ||
+          "application/octet-stream",
         lastModified: new Date(blob.uploadedAt),
-      };
+      }
     } catch (error) {
-      console.error("[VercelBlobProvider] GetMetadata error:", error);
-      return null;
+      console.error("[VercelBlobProvider] GetMetadata error:", error)
+      return null
     }
   }
 }

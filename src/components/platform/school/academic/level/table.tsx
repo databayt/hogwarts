@@ -1,18 +1,24 @@
 "use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react"
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-import { getYearLevelColumns, type YearLevelColumnCallbacks } from "./columns"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
-import { YearLevelForm } from "./form"
-import { getYearLevels, deleteYearLevel } from "./actions"
-import { usePlatformData } from "@/hooks/use-platform-data"
-import { PlatformToolbar } from "@/components/platform/shared"
-import { useRouter } from "next/navigation"
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteYearLevel, getYearLevels } from "./actions"
+import { getYearLevelColumns, type YearLevelColumnCallbacks } from "./columns"
+import { YearLevelForm } from "./form"
 import type { YearLevelRow } from "./types"
 
 interface YearLevelTableProps {
@@ -34,7 +40,8 @@ export function YearLevelTable({
 
   // Translations
   const t = {
-    search: lang === "ar" ? "بحث في المراحل الدراسية..." : "Search year levels...",
+    search:
+      lang === "ar" ? "بحث في المراحل الدراسية..." : "Search year levels...",
     create: lang === "ar" ? "إضافة مرحلة" : "Add Level",
     deleteLevel: lang === "ar" ? "حذف المرحلة الدراسية" : "Delete year level",
     reset: lang === "ar" ? "إعادة تعيين" : "Reset",
@@ -44,33 +51,28 @@ export function YearLevelTable({
   const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
-  const {
-    data,
-    isLoading,
-    hasMore,
-    loadMore,
-    refresh,
-    optimisticRemove,
-  } = usePlatformData<YearLevelRow, { levelName?: string }>({
-    initialData,
-    total,
-    perPage,
-    fetcher: async (params) => {
-      const result = await getYearLevels(params)
-      if (!result.success || !result.data) {
-        return { rows: [], total: 0 }
-      }
-      return { rows: result.data.rows, total: result.data.total }
-    },
-    filters: searchValue ? { levelName: searchValue } : undefined,
-  })
+  const { data, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+    usePlatformData<YearLevelRow, { levelName?: string }>({
+      initialData,
+      total,
+      perPage,
+      fetcher: async (params) => {
+        const result = await getYearLevels(params)
+        if (!result.success || !result.data) {
+          return { rows: [], total: 0 }
+        }
+        return { rows: result.data.rows, total: result.data.total }
+      },
+      filters: searchValue ? { levelName: searchValue } : undefined,
+    })
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(
     async (levelItem: YearLevelRow) => {
-      const displayName = lang === "ar" && levelItem.levelNameAr
-        ? levelItem.levelNameAr
-        : levelItem.levelName
+      const displayName =
+        lang === "ar" && levelItem.levelNameAr
+          ? levelItem.levelNameAr
+          : levelItem.levelName
       try {
         const ok = await confirmDeleteDialog(
           `${t.deleteLevel} "${displayName}"?`

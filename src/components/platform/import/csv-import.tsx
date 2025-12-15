@@ -1,108 +1,130 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Upload, Download, CircleAlert, CircleCheck, CircleX, FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { type Locale } from "@/components/internationalization/config";
-import { type Dictionary } from "@/components/internationalization/dictionaries";
+import { useState } from "react"
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleX,
+  Download,
+  FileSpreadsheet,
+  Upload,
+} from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface ImportResult {
-  success: boolean;
-  imported: number;
-  failed: number;
+  success: boolean
+  imported: number
+  failed: number
   errors: Array<{
-    row: number;
-    error: string;
-    data?: any;
-    details?: string; // Enhanced error details with suggestions
-  }>;
+    row: number
+    error: string
+    data?: any
+    details?: string // Enhanced error details with suggestions
+  }>
   warnings?: Array<{
-    row: number;
-    warning: string;
-  }>;
+    row: number
+    warning: string
+  }>
 }
 
 interface CsvImportComponentProps {
-  dictionary: Dictionary;
-  lang: Locale;
+  dictionary: Dictionary
+  lang: Locale
 }
 
-export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [studentResult, setStudentResult] = useState<ImportResult | null>(null);
-  const [teacherResult, setTeacherResult] = useState<ImportResult | null>(null);
+export function CsvImportComponent({
+  dictionary,
+  lang,
+}: CsvImportComponentProps) {
+  const [isUploading, setIsUploading] = useState(false)
+  const [studentResult, setStudentResult] = useState<ImportResult | null>(null)
+  const [teacherResult, setTeacherResult] = useState<ImportResult | null>(null)
 
-  const handleFileUpload = async (type: 'students' | 'teachers', file: File) => {
-    setIsUploading(true);
-    
+  const handleFileUpload = async (
+    type: "students" | "teachers",
+    file: File
+  ) => {
+    setIsUploading(true)
+
     // Reset previous results
-    if (type === 'students') {
-      setStudentResult(null);
+    if (type === "students") {
+      setStudentResult(null)
     } else {
-      setTeacherResult(null);
+      setTeacherResult(null)
     }
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', type);
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", type)
 
-      const response = await fetch('/api/import', {
-        method: 'POST',
+      const response = await fetch("/api/import", {
+        method: "POST",
         body: formData,
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Import failed');
+        throw new Error(data.error || "Import failed")
       }
 
-      if (type === 'students') {
-        setStudentResult(data);
+      if (type === "students") {
+        setStudentResult(data)
       } else {
-        setTeacherResult(data);
+        setTeacherResult(data)
       }
     } catch (error) {
       const errorResult: ImportResult = {
         success: false,
         imported: 0,
         failed: 1,
-        errors: [{
-          row: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }],
-      };
-      
-      if (type === 'students') {
-        setStudentResult(errorResult);
+        errors: [
+          {
+            row: 0,
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+        ],
+      }
+
+      if (type === "students") {
+        setStudentResult(errorResult)
       } else {
-        setTeacherResult(errorResult);
+        setTeacherResult(errorResult)
       }
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
     }
-  };
+  }
 
-  const downloadTemplate = (type: 'students' | 'teachers') => {
-    window.open(`/api/import?type=${type}`, '_blank');
-  };
+  const downloadTemplate = (type: "students" | "teachers") => {
+    window.open(`/api/import?type=${type}`, "_blank")
+  }
 
-  const ImportTab = ({ 
-    type, 
-    title, 
+  const ImportTab = ({
+    type,
+    title,
     description,
-    result 
-  }: { 
-    type: 'students' | 'teachers';
-    title: string;
-    description: string;
-    result: ImportResult | null;
+    result,
+  }: {
+    type: "students" | "teachers"
+    title: string
+    description: string
+    result: ImportResult | null
   }) => (
     <div className="space-y-6">
       {/* Instructions */}
@@ -110,7 +132,9 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
         <CircleAlert className="h-4 w-4" />
         <AlertTitle>Instructions</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>1. Download the CSV template and fill in the required information</p>
+          <p>
+            1. Download the CSV template and fill in the required information
+          </p>
           <p>2. Ensure all required fields are filled correctly</p>
           <p>3. Save the file as CSV (comma-separated values)</p>
           <p>4. Upload the completed file using the upload button below</p>
@@ -126,10 +150,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={() => downloadTemplate(type)}
-            variant="outline"
-          >
+          <Button onClick={() => downloadTemplate(type)} variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Download {title} Template
           </Button>
@@ -146,14 +167,20 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-center w-full">
-              <label htmlFor={`${type}-upload`} className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted">
+            <div className="flex w-full items-center justify-center">
+              <label
+                htmlFor={`${type}-upload`}
+                className="bg-muted/50 hover:bg-muted flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed"
+              >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <FileSpreadsheet className="w-10 h-10 mb-3 text-muted-foreground" />
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
+                  <FileSpreadsheet className="text-muted-foreground mb-3 h-10 w-10" />
+                  <p className="text-muted-foreground mb-2 text-sm">
+                    <span className="font-semibold">Click to upload</span> or
+                    drag and drop
                   </p>
-                  <p className="text-xs text-muted-foreground">CSV files only</p>
+                  <p className="text-muted-foreground text-xs">
+                    CSV files only
+                  </p>
                 </div>
                 <input
                   id={`${type}-upload`}
@@ -161,9 +188,9 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
                   className="hidden"
                   accept=".csv,text/csv"
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
+                    const file = e.target.files?.[0]
                     if (file) {
-                      handleFileUpload(type, file);
+                      handleFileUpload(type, file)
                     }
                   }}
                   disabled={isUploading}
@@ -174,7 +201,9 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
             {isUploading && (
               <div className="space-y-2">
                 <Progress className="w-full" />
-                <p className="text-sm text-center text-muted-foreground">Importing {title.toLowerCase()}...</p>
+                <p className="text-muted-foreground text-center text-sm">
+                  Importing {title.toLowerCase()}...
+                </p>
               </div>
             )}
           </div>
@@ -187,9 +216,14 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {result.success ? (
-                <><CircleCheck className="w-5 h-5 text-green-500" /> Import Results</>
+                <>
+                  <CircleCheck className="h-5 w-5 text-green-500" /> Import
+                  Results
+                </>
               ) : (
-                <><CircleX className="w-5 h-5 text-red-500" /> Import Failed</>
+                <>
+                  <CircleX className="h-5 w-5 text-red-500" /> Import Failed
+                </>
               )}
             </CardTitle>
           </CardHeader>
@@ -197,30 +231,41 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
             {/* Statistics */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Successfully Imported</p>
-                <p className="text-2xl font-bold text-green-600">{result.imported}</p>
+                <p className="text-muted-foreground text-sm">
+                  Successfully Imported
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  {result.imported}
+                </p>
               </div>
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Failed</p>
-                <p className="text-2xl font-bold text-red-600">{result.failed}</p>
+                <p className="text-muted-foreground text-sm">Failed</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {result.failed}
+                </p>
               </div>
             </div>
 
             {/* Errors */}
             {result.errors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-semibold">Errors ({result.errors.length}):</h4>
-                <div className="max-h-96 overflow-y-auto space-y-3">
+                <h4 className="font-semibold">
+                  Errors ({result.errors.length}):
+                </h4>
+                <div className="max-h-96 space-y-3 overflow-y-auto">
                   {result.errors.map((error, index) => (
                     <Alert key={index} variant="destructive">
                       <CircleAlert className="h-4 w-4" />
                       <AlertDescription>
                         <div className="space-y-1">
                           <p>
-                            <span className="font-medium">Row {error.row}:</span> {error.error}
+                            <span className="font-medium">
+                              Row {error.row}:
+                            </span>{" "}
+                            {error.error}
                           </p>
                           {error.details && (
-                            <pre className="mt-2 text-xs bg-destructive/10 p-2 rounded border border-destructive/20 whitespace-pre-wrap">
+                            <pre className="bg-destructive/10 border-destructive/20 mt-2 rounded border p-2 text-xs whitespace-pre-wrap">
                               {error.details}
                             </pre>
                           )}
@@ -235,13 +280,20 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
             {/* Warnings */}
             {result.warnings && result.warnings.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-semibold">Warnings ({result.warnings.length}):</h4>
-                <div className="max-h-60 overflow-y-auto space-y-2">
+                <h4 className="font-semibold">
+                  Warnings ({result.warnings.length}):
+                </h4>
+                <div className="max-h-60 space-y-2 overflow-y-auto">
                   {result.warnings.map((warning, index) => (
-                    <Alert key={index} variant="default" className="border-yellow-500 bg-yellow-50">
+                    <Alert
+                      key={index}
+                      variant="default"
+                      className="border-yellow-500 bg-yellow-50"
+                    >
                       <CircleAlert className="h-4 w-4 text-yellow-600" />
                       <AlertDescription className="text-yellow-800">
-                        <span className="font-medium">Row {warning.row}:</span> {warning.warning}
+                        <span className="font-medium">Row {warning.row}:</span>{" "}
+                        {warning.warning}
                       </AlertDescription>
                     </Alert>
                   ))}
@@ -253,7 +305,8 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
               <Alert className="border-green-500 bg-green-50">
                 <CircleCheck className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-600">
-                  Successfully imported {result.imported} {type}. Default passwords have been set and should be changed on first login.
+                  Successfully imported {result.imported} {type}. Default
+                  passwords have been set and should be changed on first login.
                 </AlertDescription>
               </Alert>
             )}
@@ -261,7 +314,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
         </Card>
       )}
     </div>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -279,7 +332,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
           <TabsTrigger value="students">Import Students</TabsTrigger>
           <TabsTrigger value="teachers">Import Teachers</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="students">
           <ImportTab
             type="students"
@@ -288,7 +341,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
             result={studentResult}
           />
         </TabsContent>
-        
+
         <TabsContent value="teachers">
           <ImportTab
             type="teachers"
@@ -299,5 +352,5 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

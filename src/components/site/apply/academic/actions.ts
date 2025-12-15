@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { academicSchema, type AcademicSchemaType } from './validation';
+import { academicSchema, type AcademicSchemaType } from "./validation"
 
 export interface SaveAcademicResult {
-  success: boolean;
-  data?: AcademicSchemaType;
-  error?: string;
+  success: boolean
+  data?: AcademicSchemaType
+  error?: string
 }
 
 export async function saveAcademicStep(
@@ -13,22 +13,22 @@ export async function saveAcademicStep(
 ): Promise<SaveAcademicResult> {
   try {
     // Validate data
-    const validatedData = academicSchema.parse(data);
+    const validatedData = academicSchema.parse(data)
 
     return {
       success: true,
-      data: validatedData
-    };
+      data: validatedData,
+    }
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        error: error.message
-      };
+        error: error.message,
+      }
     }
     return {
       success: false,
-      error: 'Validation failed'
-    };
+      error: "Validation failed",
+    }
   }
 }

@@ -77,12 +77,12 @@ Dynamic child count display:
 
 ## Key Metrics
 
-| Metric | Icon | Color Logic |
-|--------|------|-------------|
-| Children | Users | Blue |
-| Attendance | Calendar | Green if >=85%, else amber |
-| Pending Tasks | FileText | Red if >3, else purple |
-| Announcements | Bell | Orange |
+| Metric        | Icon     | Color Logic                |
+| ------------- | -------- | -------------------------- |
+| Children      | Users    | Blue                       |
+| Attendance    | Calendar | Green if >=85%, else amber |
+| Pending Tasks | FileText | Red if >3, else purple     |
+| Announcements | Bell     | Orange                     |
 
 ```tsx
 <MetricCard
@@ -98,11 +98,11 @@ Dynamic child count display:
 Aggregate attendance for all children:
 
 ```tsx
-<Card className="bg-gradient-to-r from-primary/5 via-transparent to-transparent">
+<Card className="from-primary/5 bg-gradient-to-r via-transparent to-transparent">
   <CardContent className="p-4">
-    <div className="flex items-center justify-between mb-3">
+    <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-primary" />
+        <Calendar className="text-primary h-4 w-4" />
         <span className="font-medium">Overall Attendance</span>
       </div>
       <Badge variant={percentage >= 90 ? "default" : "secondary"}>
@@ -110,7 +110,7 @@ Aggregate attendance for all children:
       </Badge>
     </div>
     <Progress value={percentage} className="h-3" />
-    <div className="flex justify-between mt-2">
+    <div className="mt-2 flex justify-between">
       <span>{presentDays} days present</span>
       <span>Target: 90%</span>
     </div>
@@ -123,36 +123,42 @@ Aggregate attendance for all children:
 Per-child summary cards:
 
 ```tsx
-{children.map((child) => (
-  <div className="p-4 rounded-lg border hover:bg-muted/50">
-    <div className="flex items-center justify-between mb-3">
-      <div>
-        <p className="font-semibold">{child.name}</p>
-        <p className="text-sm text-muted-foreground">{child.studentId}</p>
+{
+  children.map((child) => (
+    <div className="hover:bg-muted/50 rounded-lg border p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="font-semibold">{child.name}</p>
+          <p className="text-muted-foreground text-sm">{child.studentId}</p>
+        </div>
+        <Badge variant="outline">
+          {averageGrade >= 80
+            ? "Excellent"
+            : averageGrade >= 60
+              ? "Good"
+              : "Needs Attention"}
+        </Badge>
       </div>
-      <Badge variant="outline">
-        {averageGrade >= 80 ? "Excellent" : averageGrade >= 60 ? "Good" : "Needs Attention"}
-      </Badge>
-    </div>
-    <div className="grid grid-cols-3 gap-4">
-      <div>
-        <p className="text-xs text-muted-foreground uppercase">Attendance</p>
-        <div className="flex items-center gap-2 mt-1">
-          <Progress value={percentage} className="flex-1 h-2" />
-          <span className="text-sm font-medium">{percentage}%</span>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <p className="text-muted-foreground text-xs uppercase">Attendance</p>
+          <div className="mt-1 flex items-center gap-2">
+            <Progress value={percentage} className="h-2 flex-1" />
+            <span className="text-sm font-medium">{percentage}%</span>
+          </div>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs uppercase">Avg Grade</p>
+          <p className="mt-1 text-lg font-bold">{averageGrade}%</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-xs uppercase">Tasks Due</p>
+          <p className="mt-1 text-lg font-bold">{pendingTasks}</p>
         </div>
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground uppercase">Avg Grade</p>
-        <p className="text-lg font-bold mt-1">{averageGrade}%</p>
-      </div>
-      <div>
-        <p className="text-xs text-muted-foreground uppercase">Tasks Due</p>
-        <p className="text-lg font-bold mt-1">{pendingTasks}</p>
-      </div>
     </div>
-  </div>
-))}
+  ))
+}
 ```
 
 ## Activity Rings
@@ -172,20 +178,25 @@ const activityData = [
   {
     label: "Grades",
     value: averageGrade,
-    color: averageGrade >= 80 ? "#22c55e" : averageGrade >= 60 ? "#3b82f6" : "#ef4444",
+    color:
+      averageGrade >= 80
+        ? "#22c55e"
+        : averageGrade >= 60
+          ? "#3b82f6"
+          : "#ef4444",
     current: Math.round(averageGrade),
     target: 100,
     unit: "%",
   },
   {
     label: "Tasks",
-    value: 100 - (notSubmitted.length * 20),
+    value: 100 - notSubmitted.length * 20,
     color: "#8b5cf6",
     current: submitted.length,
     target: total.length,
     unit: "done",
   },
-];
+]
 ```
 
 ## Recent Grades
@@ -193,20 +204,28 @@ const activityData = [
 Grade cards for all children:
 
 ```tsx
-{recentGrades.map((grade) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{grade.examTitle}</p>
-      <p className="text-sm text-muted-foreground">{grade.subject}</p>
+{
+  recentGrades.map((grade) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{grade.examTitle}</p>
+        <p className="text-muted-foreground text-sm">{grade.subject}</p>
+      </div>
+      <div className="text-right">
+        <p className="font-bold">
+          {grade.marksObtained}/{grade.totalMarks}
+        </p>
+        <Badge
+          className={
+            grade.percentage >= 80 ? "bg-emerald-100 text-emerald-700" : ""
+          }
+        >
+          {grade.percentage.toFixed(0)}%{grade.grade ? ` • ${grade.grade}` : ""}
+        </Badge>
+      </div>
     </div>
-    <div className="text-right">
-      <p className="font-bold">{grade.marksObtained}/{grade.totalMarks}</p>
-      <Badge className={grade.percentage >= 80 ? "bg-emerald-100 text-emerald-700" : ""}>
-        {grade.percentage.toFixed(0)}%{grade.grade ? ` • ${grade.grade}` : ""}
-      </Badge>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 ## Upcoming Assignments
@@ -214,27 +233,40 @@ Grade cards for all children:
 Assignment list with submission status:
 
 ```tsx
-{upcomingAssignments.map((assignment) => (
-  <div className="flex items-center justify-between p-3 rounded-lg border">
-    <div>
-      <p className="font-medium">{assignment.title}</p>
-      <p className="text-sm text-muted-foreground">
-        {assignment.subject} • {assignment.className}
-      </p>
+{
+  upcomingAssignments.map((assignment) => (
+    <div className="flex items-center justify-between rounded-lg border p-3">
+      <div>
+        <p className="font-medium">{assignment.title}</p>
+        <p className="text-muted-foreground text-sm">
+          {assignment.subject} • {assignment.className}
+        </p>
+      </div>
+      <div className="text-right">
+        <Badge
+          variant={
+            assignment.status === "NOT_SUBMITTED" || isOverdue
+              ? "destructive"
+              : assignment.status === "SUBMITTED"
+                ? "default"
+                : "secondary"
+          }
+        >
+          {assignment.status === "NOT_SUBMITTED"
+            ? "Pending"
+            : assignment.status}
+        </Badge>
+        <p className="text-muted-foreground mt-1 text-xs">
+          {isOverdue
+            ? "Overdue"
+            : daysUntil === 0
+              ? "Due Today"
+              : `${daysUntil} days`}
+        </p>
+      </div>
     </div>
-    <div className="text-right">
-      <Badge variant={
-        assignment.status === "NOT_SUBMITTED" || isOverdue ? "destructive" :
-        assignment.status === "SUBMITTED" ? "default" : "secondary"
-      }>
-        {assignment.status === "NOT_SUBMITTED" ? "Pending" : assignment.status}
-      </Badge>
-      <p className="text-xs text-muted-foreground mt-1">
-        {isOverdue ? "Overdue" : daysUntil === 0 ? "Due Today" : `${daysUntil} days`}
-      </p>
-    </div>
-  </div>
-))}
+  ))
+}
 ```
 
 ## School Announcements
@@ -290,23 +322,23 @@ const data = await getParentDashboardData();
 
 6 actions for GUARDIAN role:
 
-| Action | Icon | Destination |
-|--------|------|-------------|
-| Children | Users | /children |
-| Grades | Award | /grades |
-| Attendance | Calendar | /attendance |
-| Messages | MessageSquare | /messages |
-| Fees | DollarSign | /finance/fees |
-| Announce | Bell | /announcements |
+| Action     | Icon          | Destination    |
+| ---------- | ------------- | -------------- |
+| Children   | Users         | /children      |
+| Grades     | Award         | /grades        |
+| Attendance | Calendar      | /attendance    |
+| Messages   | MessageSquare | /messages      |
+| Fees       | DollarSign    | /finance/fees  |
+| Announce   | Bell          | /announcements |
 
 ## Error Handling
 
 ```tsx
 try {
-  data = await getParentDashboardData();
+  data = await getParentDashboardData()
 } catch (error) {
-  console.error("[ParentDashboard] Error:", error);
-  return <ErrorCard message="Unable to load dashboard" />;
+  console.error("[ParentDashboard] Error:", error)
+  return <ErrorCard message="Unable to load dashboard" />
 }
 ```
 
@@ -324,12 +356,12 @@ const dashDict = dictionary?.parentDashboard || {
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `dashboards/parent-dashboard.tsx` | Dashboard component |
-| `dashboards/actions.ts` | `getParentDashboardData()` |
-| `widgets/index.tsx` | Widget components |
-| `widgets/dashboard-charts.tsx` | Chart components |
+| File                              | Purpose                    |
+| --------------------------------- | -------------------------- |
+| `dashboards/parent-dashboard.tsx` | Dashboard component        |
+| `dashboards/actions.ts`           | `getParentDashboardData()` |
+| `widgets/index.tsx`               | Widget components          |
+| `widgets/dashboard-charts.tsx`    | Chart components           |
 
 ## Related
 

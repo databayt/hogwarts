@@ -1,6 +1,8 @@
 "use client"
 
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -14,7 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+
 import type { ComparisonLineChartProps } from "./types"
 
 export function ComparisonLineChart({
@@ -40,7 +42,12 @@ export function ComparisonLineChart({
         <ChartContainer config={config} className="h-[200px] w-full">
           <LineChart data={data} margin={{ left: 12, right: 12 }}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Line
               type="monotone"

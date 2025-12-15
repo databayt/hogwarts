@@ -5,25 +5,54 @@
 
 "use client"
 
-import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { Info, Briefcase, GraduationCap, Award, Languages, Code, Users, Calendar, MapPin, Mail, Phone, Globe, Shield, ChevronRight, Star, BookOpen, Target, Zap, Trophy, Heart, Music, Palette, Gamepad2, Camera, Plane, Coffee } from "lucide-react"
-import { cn } from '@/lib/utils'
+import React from "react"
+import {
+  Award,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  Camera,
+  ChevronRight,
+  Code,
+  Coffee,
+  Gamepad2,
+  Globe,
+  GraduationCap,
+  Heart,
+  Info,
+  Languages,
+  Mail,
+  MapPin,
+  Music,
+  Palette,
+  Phone,
+  Plane,
+  Shield,
+  Star,
+  Target,
+  Trophy,
+  Users,
+  Zap,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import type {
+  Certification,
+  Language,
+  ParentProfile,
+  Skill,
+  StaffProfile,
   StudentProfile,
   TeacherProfile,
-  ParentProfile,
-  StaffProfile,
-  Skill,
-  Language,
-  Certification
-} from '../types'
-import { UserProfileType } from '../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+} from "../types"
+import { UserProfileType } from "../types"
 
 // ============================================================================
 // Types
@@ -32,7 +61,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface ProfileSidebarProps {
   profile: StudentProfile | TeacherProfile | ParentProfile | StaffProfile
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   className?: string
 }
 
@@ -51,41 +80,43 @@ interface SidebarSection {
 // Get icon for hobby/interest
 const getHobbyIcon = (hobby: string) => {
   const lowercased = hobby.toLowerCase()
-  if (lowercased.includes('music')) return <Music className="h-4 w-4" />
-  if (lowercased.includes('art') || lowercased.includes('draw')) return <Palette className="h-4 w-4" />
-  if (lowercased.includes('game') || lowercased.includes('gaming')) return <Gamepad2 className="h-4 w-4" />
-  if (lowercased.includes('photo')) return <Camera className="h-4 w-4" />
-  if (lowercased.includes('travel')) return <Plane className="h-4 w-4" />
-  if (lowercased.includes('read')) return <BookOpen className="h-4 w-4" />
+  if (lowercased.includes("music")) return <Music className="h-4 w-4" />
+  if (lowercased.includes("art") || lowercased.includes("draw"))
+    return <Palette className="h-4 w-4" />
+  if (lowercased.includes("game") || lowercased.includes("gaming"))
+    return <Gamepad2 className="h-4 w-4" />
+  if (lowercased.includes("photo")) return <Camera className="h-4 w-4" />
+  if (lowercased.includes("travel")) return <Plane className="h-4 w-4" />
+  if (lowercased.includes("read")) return <BookOpen className="h-4 w-4" />
   return <Heart className="h-4 w-4" />
 }
 
 // Get skill level color
 const getSkillLevelColor = (level: string) => {
   switch (level) {
-    case 'expert':
-      return 'bg-chart-5'
-    case 'advanced':
-      return 'bg-chart-4'
-    case 'intermediate':
-      return 'bg-chart-3'
-    case 'beginner':
-      return 'bg-chart-2'
+    case "expert":
+      return "bg-chart-5"
+    case "advanced":
+      return "bg-chart-4"
+    case "intermediate":
+      return "bg-chart-3"
+    case "beginner":
+      return "bg-chart-2"
     default:
-      return 'bg-chart-1'
+      return "bg-chart-1"
   }
 }
 
 // Get skill level percentage
 const getSkillLevelPercentage = (level: string) => {
   switch (level) {
-    case 'expert':
+    case "expert":
       return 100
-    case 'advanced':
+    case "advanced":
       return 75
-    case 'intermediate':
+    case "intermediate":
       return 50
-    case 'beginner':
+    case "beginner":
       return 25
     default:
       return 0
@@ -104,7 +135,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       {/* Academic Information */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <GraduationCap className="h-4 w-4" />
             Academic Information
           </CardTitle>
@@ -113,7 +144,9 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
           {academicInfo.currentYearLevel && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Grade</span>
-              <span className="font-medium">{academicInfo.currentYearLevel}</span>
+              <span className="font-medium">
+                {academicInfo.currentYearLevel}
+              </span>
             </div>
           )}
           {academicInfo.currentSection && (
@@ -152,25 +185,30 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       {/* Performance Overview */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Target className="h-4 w-4" />
             Performance
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="mb-1 flex justify-between text-sm">
               <span className="text-muted-foreground">Attendance</span>
               <span className="font-medium">{performance.attendanceRate}%</span>
             </div>
             <Progress value={performance.attendanceRate} className="h-2" />
           </div>
           <div>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="mb-1 flex justify-between text-sm">
               <span className="text-muted-foreground">Assignments</span>
-              <span className="font-medium">{performance.assignmentCompletionRate}%</span>
+              <span className="font-medium">
+                {performance.assignmentCompletionRate}%
+              </span>
             </div>
-            <Progress value={performance.assignmentCompletionRate} className="h-2" />
+            <Progress
+              value={performance.assignmentCompletionRate}
+              className="h-2"
+            />
           </div>
         </CardContent>
       </Card>
@@ -179,7 +217,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       {skillsAndInterests?.skills?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Zap className="h-4 w-4" />
               Skills
             </CardTitle>
@@ -187,12 +225,16 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
           <CardContent className="space-y-2">
             {skillsAndInterests?.skills?.slice(0, 5).map((skill, index) => (
               <div key={index}>
-                <div className="flex justify-between text-sm mb-1">
+                <div className="mb-1 flex justify-between text-sm">
                   <span className="flex items-center gap-1">
                     {skill.name}
-                    {skill.verified && <Shield className="h-3 w-3 text-blue-500" />}
+                    {skill.verified && (
+                      <Shield className="h-3 w-3 text-blue-500" />
+                    )}
                   </span>
-                  <span className="text-xs text-muted-foreground">{skill.endorsements} endorsements</span>
+                  <span className="text-muted-foreground text-xs">
+                    {skill.endorsements} endorsements
+                  </span>
                 </div>
                 <Progress
                   value={getSkillLevelPercentage(skill.level)}
@@ -203,7 +245,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             {(skillsAndInterests?.skills?.length ?? 0) > 5 && (
               <Button variant="ghost" size="sm" className="w-full">
                 View all {skillsAndInterests?.skills?.length ?? 0} skills
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>
@@ -214,7 +256,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       {skillsAndInterests?.languages?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Languages className="h-4 w-4" />
               Languages
             </CardTitle>
@@ -233,16 +275,20 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       )}
 
       {/* Interests & Hobbies */}
-      {((skillsAndInterests?.interests?.length ?? 0) > 0 || (skillsAndInterests?.hobbies?.length ?? 0) > 0) && (
+      {((skillsAndInterests?.interests?.length ?? 0) > 0 ||
+        (skillsAndInterests?.hobbies?.length ?? 0) > 0) && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Heart className="h-4 w-4" />
               Interests & Hobbies
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {[...(skillsAndInterests?.interests ?? []), ...(skillsAndInterests?.hobbies ?? [])].map((item, index) => (
+            {[
+              ...(skillsAndInterests?.interests ?? []),
+              ...(skillsAndInterests?.hobbies ?? []),
+            ].map((item, index) => (
               <Badge key={index} variant="secondary" className="gap-1">
                 {getHobbyIcon(item)}
                 {item}
@@ -256,25 +302,29 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       {(skillsAndInterests?.certifications?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Award className="h-4 w-4" />
               Certifications
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {skillsAndInterests?.certifications?.slice(0, 3).map((cert, index) => (
-              <div key={index} className="space-y-1">
-                <p className="text-sm font-medium">{cert.name}</p>
-                <p className="text-xs text-muted-foreground">{cert.issuer}</p>
-                {cert.credentialId && (
-                  <p className="text-xs text-muted-foreground">ID: {cert.credentialId}</p>
-                )}
-              </div>
-            ))}
+            {skillsAndInterests?.certifications
+              ?.slice(0, 3)
+              .map((cert, index) => (
+                <div key={index} className="space-y-1">
+                  <p className="text-sm font-medium">{cert.name}</p>
+                  <p className="text-muted-foreground text-xs">{cert.issuer}</p>
+                  {cert.credentialId && (
+                    <p className="text-muted-foreground text-xs">
+                      ID: {cert.credentialId}
+                    </p>
+                  )}
+                </div>
+              ))}
             {(skillsAndInterests?.certifications?.length ?? 0) > 3 && (
               <Button variant="ghost" size="sm" className="w-full">
                 View all certifications
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>
@@ -296,7 +346,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       {/* Professional Information */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Briefcase className="h-4 w-4" />
             Professional Info
           </CardTitle>
@@ -309,16 +359,22 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
           {professionalInfo.designation && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Designation</span>
-              <span className="font-medium">{professionalInfo.designation}</span>
+              <span className="font-medium">
+                {professionalInfo.designation}
+              </span>
             </div>
           )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Experience</span>
-            <span className="font-medium">{professionalInfo.totalExperience} years</span>
+            <span className="font-medium">
+              {professionalInfo.totalExperience} years
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Status</span>
-            <Badge variant="secondary">{professionalInfo.employmentStatus}</Badge>
+            <Badge variant="secondary">
+              {professionalInfo.employmentStatus}
+            </Badge>
           </div>
         </CardContent>
       </Card>
@@ -326,7 +382,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       {/* Teaching Metrics */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Trophy className="h-4 w-4" />
             Teaching Metrics
           </CardTitle>
@@ -334,24 +390,30 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
         <CardContent className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Students Taught</span>
-            <span className="font-medium">{teachingMetrics.totalStudentsTaught}</span>
+            <span className="font-medium">
+              {teachingMetrics.totalStudentsTaught}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Classes</span>
-            <span className="font-medium">{teachingMetrics.totalClassesAssigned}</span>
+            <span className="font-medium">
+              {teachingMetrics.totalClassesAssigned}
+            </span>
           </div>
           {teachingMetrics.averageStudentRating && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Rating</span>
               <span className="flex items-center gap-1">
                 <Star className="h-3 w-3 text-yellow-500" />
-                <span className="font-medium">{teachingMetrics.averageStudentRating.toFixed(1)}</span>
+                <span className="font-medium">
+                  {teachingMetrics.averageStudentRating.toFixed(1)}
+                </span>
               </span>
             </div>
           )}
           {teachingMetrics.passRate && (
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="mb-1 flex justify-between text-sm">
                 <span className="text-muted-foreground">Pass Rate</span>
                 <span className="font-medium">{teachingMetrics.passRate}%</span>
               </div>
@@ -365,7 +427,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       {(professionalInfo?.specializations?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Award className="h-4 w-4" />
               Specializations
             </CardTitle>
@@ -384,7 +446,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       {(professionalInfo?.researchInterests?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <BookOpen className="h-4 w-4" />
               Research Interests
             </CardTitle>
@@ -403,14 +465,14 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       {(schedule?.officeHours?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Calendar className="h-4 w-4" />
               Office Hours
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {schedule?.officeHours?.map((hour, index) => {
-              const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+              const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
               return (
                 <div key={index} className="text-sm">
                   <div className="font-medium">{days[hour.dayOfWeek]}</div>
@@ -440,7 +502,7 @@ function ParentSidebarContent({ profile }: { profile: ParentProfile }) {
       {/* Family Information */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Users className="h-4 w-4" />
             Family Information
           </CardTitle>
@@ -464,10 +526,14 @@ function ParentSidebarContent({ profile }: { profile: ParentProfile }) {
           )}
           <div className="flex gap-2">
             {familyInfo.emergencyContact && (
-              <Badge variant="destructive" className="text-xs">Emergency</Badge>
+              <Badge variant="destructive" className="text-xs">
+                Emergency
+              </Badge>
             )}
             {familyInfo.primaryContact && (
-              <Badge variant="secondary" className="text-xs">Primary</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Primary
+              </Badge>
             )}
           </div>
         </CardContent>
@@ -476,27 +542,35 @@ function ParentSidebarContent({ profile }: { profile: ParentProfile }) {
       {/* Children */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <GraduationCap className="h-4 w-4" />
             Children ({childrenOverview?.length ?? 0})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {childrenOverview?.map((child, index) => (
-            <div key={index} className="space-y-1 p-2 rounded-lg bg-muted/50">
-              <p className="font-medium text-sm">{child.name}</p>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{child.grade} - {child.section}</span>
+            <div key={index} className="bg-muted/50 space-y-1 rounded-lg p-2">
+              <p className="text-sm font-medium">{child.name}</p>
+              <div className="text-muted-foreground flex justify-between text-xs">
+                <span>
+                  {child.grade} - {child.section}
+                </span>
                 <Badge
-                  variant={child.academicPerformance === 'excellent' ? 'default' :
-                          child.academicPerformance === 'good' ? 'secondary' : 'outline'}
+                  variant={
+                    child.academicPerformance === "excellent"
+                      ? "default"
+                      : child.academicPerformance === "good"
+                        ? "secondary"
+                        : "outline"
+                  }
                   className="text-xs"
                 >
                   {child.academicPerformance}
                 </Badge>
               </div>
               <div className="text-xs">
-                <span className="text-muted-foreground">Attendance:</span> {child.attendanceRate}%
+                <span className="text-muted-foreground">Attendance:</span>{" "}
+                {child.attendanceRate}%
               </div>
             </div>
           ))}
@@ -506,7 +580,7 @@ function ParentSidebarContent({ profile }: { profile: ParentProfile }) {
       {/* Engagement */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Heart className="h-4 w-4" />
             School Engagement
           </CardTitle>
@@ -542,7 +616,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
       {/* Staff Information */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Briefcase className="h-4 w-4" />
             Staff Information
           </CardTitle>
@@ -570,7 +644,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
       {/* Work Metrics */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Target className="h-4 w-4" />
             Work Metrics
           </CardTitle>
@@ -590,7 +664,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
           </div>
           {workMetrics.efficiency && (
             <div>
-              <div className="flex justify-between text-sm mb-1">
+              <div className="mb-1 flex justify-between text-sm">
                 <span className="text-muted-foreground">Efficiency</span>
                 <span className="font-medium">{workMetrics.efficiency}%</span>
               </div>
@@ -604,7 +678,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
       {(staffInfo?.responsibilities?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Target className="h-4 w-4" />
               Responsibilities
             </CardTitle>
@@ -619,9 +693,9 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
               ))}
             </ul>
             {(staffInfo?.responsibilities?.length ?? 0) > 5 && (
-              <Button variant="ghost" size="sm" className="w-full mt-2">
+              <Button variant="ghost" size="sm" className="mt-2 w-full">
                 View all responsibilities
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             )}
           </CardContent>
@@ -631,7 +705,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
       {/* Schedule */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Calendar className="h-4 w-4" />
             Schedule
           </CardTitle>
@@ -650,7 +724,9 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Availability</span>
             <Badge
-              variant={schedule.availability === 'available' ? 'default' : 'secondary'}
+              variant={
+                schedule.availability === "available" ? "default" : "secondary"
+              }
               className="text-xs"
             >
               {schedule.availability}
@@ -669,10 +745,9 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
 export function ProfileSidebar({
   profile,
   dictionary,
-  lang = 'en',
-  className
+  lang = "en",
+  className,
 }: ProfileSidebarProps) {
-
   // Render appropriate sidebar content based on profile type
   const renderContent = () => {
     switch (profile.type) {
@@ -690,11 +765,11 @@ export function ProfileSidebar({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       {/* Profile Completion */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Info className="h-4 w-4" />
             Profile Completion
           </CardTitle>
@@ -703,11 +778,13 @@ export function ProfileSidebar({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Completed</span>
-              <span className="font-medium">{profile.completionPercentage}%</span>
+              <span className="font-medium">
+                {profile.completionPercentage}%
+              </span>
             </div>
             <Progress value={profile.completionPercentage} className="h-2" />
             {profile.completionPercentage < 100 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Complete your profile to unlock all features
               </p>
             )}

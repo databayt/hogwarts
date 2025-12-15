@@ -1,5 +1,7 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -8,9 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import type { AttendanceStatus, AttendanceMethod } from "../shared/types"
+
+import type { AttendanceMethod, AttendanceStatus } from "../shared/types"
 
 interface RecentAttendanceRecord {
   id: string
@@ -39,13 +40,31 @@ interface RecentTableProps {
   }
 }
 
-const statusVariants: Record<AttendanceStatus, { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
-  PRESENT: { variant: "default", className: "!bg-emerald-400 !text-white hover:!bg-emerald-500" },
-  ABSENT: { variant: "destructive", className: "!bg-rose-400 !text-white hover:!bg-rose-500" },
-  LATE: { variant: "secondary", className: "!bg-amber-300 !text-amber-900 hover:!bg-amber-400" },
+const statusVariants: Record<
+  AttendanceStatus,
+  {
+    variant: "default" | "secondary" | "destructive" | "outline"
+    className?: string
+  }
+> = {
+  PRESENT: {
+    variant: "default",
+    className: "!bg-emerald-400 !text-white hover:!bg-emerald-500",
+  },
+  ABSENT: {
+    variant: "destructive",
+    className: "!bg-rose-400 !text-white hover:!bg-rose-500",
+  },
+  LATE: {
+    variant: "secondary",
+    className: "!bg-amber-300 !text-amber-900 hover:!bg-amber-400",
+  },
   EXCUSED: { variant: "outline", className: "!border-sky-400 !text-sky-500" },
   SICK: { variant: "outline", className: "!border-rose-400 !text-rose-500" },
-  HOLIDAY: { variant: "secondary", className: "!bg-sky-400 !text-white hover:!bg-sky-500" },
+  HOLIDAY: {
+    variant: "secondary",
+    className: "!bg-sky-400 !text-white hover:!bg-sky-500",
+  },
 }
 
 const methodLabels: Record<AttendanceMethod, string> = {
@@ -89,12 +108,16 @@ function formatDate(date: Date | string | null | undefined): string {
   }
 }
 
-export function RecentTable({ data, limit = 10, dictionary }: RecentTableProps) {
+export function RecentTable({
+  data,
+  limit = 10,
+  dictionary,
+}: RecentTableProps) {
   const records = data.slice(0, limit)
 
   if (records.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-muted-foreground py-8 text-center">
         {dictionary?.noRecords || "No recent attendance records"}
       </div>
     )
@@ -118,7 +141,9 @@ export function RecentTable({ data, limit = 10, dictionary }: RecentTableProps) 
           const statusConfig = statusVariants[record.status]
           return (
             <TableRow key={record.id}>
-              <TableCell className="font-medium">{record.studentName}</TableCell>
+              <TableCell className="font-medium">
+                {record.studentName}
+              </TableCell>
               <TableCell className="text-muted-foreground">
                 {record.className || "-"}
               </TableCell>
@@ -131,15 +156,18 @@ export function RecentTable({ data, limit = 10, dictionary }: RecentTableProps) 
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground">
-                <span className="text-foreground">{formatDate(record.date)}</span>
+                <span className="text-foreground">
+                  {formatDate(record.date)}
+                </span>
                 {record.checkInTime && (
-                  <span className="text-xs ml-1">
+                  <span className="ml-1 text-xs">
                     {formatTime(record.checkInTime)}
                   </span>
                 )}
               </TableCell>
-              <TableCell className="hidden sm:table-cell text-muted-foreground">
-                {dictionary?.method?.[record.method] || methodLabels[record.method]}
+              <TableCell className="text-muted-foreground hidden sm:table-cell">
+                {dictionary?.method?.[record.method] ||
+                  methodLabels[record.method]}
               </TableCell>
             </TableRow>
           )

@@ -28,12 +28,12 @@ description: وثيقة متطلبات المنتج لهوجوورتس تغطي 
 
 ## معايير النجاح
 
-| المقياس | خط الأساس | الهدف |
-|--------|----------|--------|
-| توفير وقت المدير | 40 ساعة/شهر ضائعة | 8 ساعات/شهر (تقليل 80%) |
-| مشاركة أولياء الأمور | 65% عدم رضا | 85% رضا |
-| دقة البيانات | معدل خطأ 23% | معدل خطأ أقل من 1% |
-| التكلفة التشغيلية للمدرسة | 15-50 ألف دولار/سنة | تقليل 60% |
+| المقياس                   | خط الأساس           | الهدف                   |
+| ------------------------- | ------------------- | ----------------------- |
+| توفير وقت المدير          | 40 ساعة/شهر ضائعة   | 8 ساعات/شهر (تقليل 80%) |
+| مشاركة أولياء الأمور      | 65% عدم رضا         | 85% رضا                 |
+| دقة البيانات              | معدل خطأ 23%        | معدل خطأ أقل من 1%      |
+| التكلفة التشغيلية للمدرسة | 15-50 ألف دولار/سنة | تقليل 60%               |
 
 ### مقاييس الأعمال
 
@@ -57,16 +57,16 @@ description: وثيقة متطلبات المنتج لهوجوورتس تغطي 
 
 بنية متعددة المستأجرين قائمة على النطاقات الفرعية حيث تحصل كل مدرسة على بيانات معزولة عبر نطاق `schoolId`. وظائف سحابية عديمة الحالة على Vercel مع نظام RBAC من 8 أدوار.
 
-<div className="flex flex-wrap gap-2 mt-4 mb-6 not-prose">
-  <span className="px-2 py-1 text-xs bg-muted rounded">Next.js</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">React</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">TypeScript</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">Prisma</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">PostgreSQL</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">NextAuth</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">Tailwind CSS</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">shadcn/ui</span>
-  <span className="px-2 py-1 text-xs bg-muted rounded">Vercel</span>
+<div className="not-prose mt-4 mb-6 flex flex-wrap gap-2">
+  <span className="bg-muted rounded px-2 py-1 text-xs">Next.js</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">React</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">TypeScript</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">Prisma</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">PostgreSQL</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">NextAuth</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">Tailwind CSS</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">shadcn/ui</span>
+  <span className="bg-muted rounded px-2 py-1 text-xs">Vercel</span>
 </div>
 
 ---
@@ -81,7 +81,7 @@ await prisma.student.findMany()
 
 // دائماً حدد النطاق بـ schoolId
 await prisma.student.findMany({
-  where: { schoolId }
+  where: { schoolId },
 })
 ```
 
@@ -95,26 +95,26 @@ await prisma.student.findMany({
 
 ## التحكم في الوصول المستند إلى الأدوار
 
-| الدور | الصلاحيات الرئيسية |
-|------|-----------------|
-| DEVELOPER | الوصول لجميع المدارس، تكوين المنصة، المراقبة |
-| ADMIN | وصول كامل داخل المدرسة، إدارة المستخدمين، الإشراف المالي |
-| TEACHER | إدارة الفصول المعينة، تقييم الواجبات، تسجيل الحضور |
-| STUDENT | عرض الدرجات والحضور والواجبات الخاصة، تقديم العمل |
-| GUARDIAN | عرض بيانات الطلاب المرتبطين، دفع الرسوم، استلام الإشعارات |
-| ACCOUNTANT | إدارة المالية، إنشاء التقارير (بدون بيانات أكاديمية) |
-| STAFF | وصول محدود للوحدات التشغيلية |
-| USER | وصول أدنى، في انتظار تعيين الدور |
+| الدور      | الصلاحيات الرئيسية                                        |
+| ---------- | --------------------------------------------------------- |
+| DEVELOPER  | الوصول لجميع المدارس، تكوين المنصة، المراقبة              |
+| ADMIN      | وصول كامل داخل المدرسة، إدارة المستخدمين، الإشراف المالي  |
+| TEACHER    | إدارة الفصول المعينة، تقييم الواجبات، تسجيل الحضور        |
+| STUDENT    | عرض الدرجات والحضور والواجبات الخاصة، تقديم العمل         |
+| GUARDIAN   | عرض بيانات الطلاب المرتبطين، دفع الرسوم، استلام الإشعارات |
+| ACCOUNTANT | إدارة المالية، إنشاء التقارير (بدون بيانات أكاديمية)      |
+| STAFF      | وصول محدود للوحدات التشغيلية                              |
+| USER       | وصول أدنى، في انتظار تعيين الدور                          |
 
 ---
 
 ## مستويات الاشتراك
 
-| المستوى | السعر | الحدود |
-|------|-------|--------|
-| مجاني | $0 | 100 طالب، 1GB تخزين، دعم المجتمع |
-| احترافي | $1.50/طالب/شهر | 10GB، دعم أولوية، علامة تجارية مخصصة |
-| مؤسسي | $1.00/طالب/شهر | تخزين/API غير محدود، علامة بيضاء، SLA 99.9% |
+| المستوى | السعر          | الحدود                                      |
+| ------- | -------------- | ------------------------------------------- |
+| مجاني   | $0             | 100 طالب، 1GB تخزين، دعم المجتمع            |
+| احترافي | $1.50/طالب/شهر | 10GB، دعم أولوية، علامة تجارية مخصصة        |
+| مؤسسي   | $1.00/طالب/شهر | تخزين/API غير محدود، علامة بيضاء، SLA 99.9% |
 
 ---
 
@@ -155,4 +155,4 @@ await prisma.student.findMany({
 
 ---
 
-*وثيقة متطلبات منتج موجهة للمطورين لمنصة إدارة مدارس هوجوورتس.*
+_وثيقة متطلبات منتج موجهة للمطورين لمنصة إدارة مدارس هوجوورتس._

@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react"
 // import { useRouter } from "next/router";
-import { Drawer } from "vaul";
+import { Drawer } from "vaul"
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useMediaQuery } from "@/components/marketing/pricing/hooks/use-media-query";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { useMediaQuery } from "@/components/marketing/pricing/hooks/use-media-query"
 
 interface ModalProps {
-  children: React.ReactNode;
-  className?: string;
-  showModal?: boolean;
-  setShowModal?: Dispatch<SetStateAction<boolean>>;
-  onClose?: () => void;
-  desktopOnly?: boolean;
-  preventDefaultClose?: boolean;
+  children: React.ReactNode
+  className?: string
+  showModal?: boolean
+  setShowModal?: Dispatch<SetStateAction<boolean>>
+  onClose?: () => void
+  desktopOnly?: boolean
+  preventDefaultClose?: boolean
 }
 
 export function Modal({
@@ -31,21 +31,21 @@ export function Modal({
 
   const closeModal = ({ dragged }: { dragged?: boolean } = {}) => {
     if (preventDefaultClose && !dragged) {
-      return;
+      return
     }
     // fire onClose event if provided
-    onClose && onClose();
+    onClose && onClose()
 
     // if setShowModal is defined, use it to close modal
     if (setShowModal) {
-      setShowModal(false);
+      setShowModal(false)
     }
     // else, this is intercepting route @modal
     // else {
     // router.back();
     // }
-  };
-  const { isMobile } = useMediaQuery();
+  }
+  const { isMobile } = useMediaQuery()
 
   if (isMobile && !desktopOnly) {
     return (
@@ -53,34 +53,34 @@ export function Modal({
         open={setShowModal ? showModal : true}
         onOpenChange={(open) => {
           if (!open) {
-            closeModal({ dragged: true });
+            closeModal({ dragged: true })
           }
         }}
       >
-        <Drawer.Overlay className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" />
+        <Drawer.Overlay className="bg-background/80 fixed inset-0 z-40 backdrop-blur-sm" />
         <Drawer.Portal>
           <Drawer.Content
             className={cn(
-              "fixed inset-x-0 bottom-0 z-50 mt-24 overflow-hidden rounded-t-[10px] border bg-background",
-              className,
+              "bg-background fixed inset-x-0 bottom-0 z-50 mt-24 overflow-hidden rounded-t-[10px] border",
+              className
             )}
           >
             <div className="sticky top-0 z-20 flex w-full items-center justify-center bg-inherit">
-              <div className="my-3 h-1.5 w-16 rounded-full bg-muted-foreground/20" />
+              <div className="bg-muted-foreground/20 my-3 h-1.5 w-16 rounded-full" />
             </div>
             {children}
           </Drawer.Content>
           <Drawer.Overlay />
         </Drawer.Portal>
       </Drawer.Root>
-    );
+    )
   }
   return (
     <Dialog
       open={setShowModal ? showModal : true}
       onOpenChange={(open) => {
         if (!open) {
-          closeModal();
+          closeModal()
         }
       }}
     >
@@ -89,16 +89,16 @@ export function Modal({
         onCloseAutoFocus={(e) => e.preventDefault()}
         className={cn(
           "overflow-hidden p-0 md:max-w-md md:rounded-2xl md:border",
-          className,
+          className
         )}
         onInteractOutside={(e) => {
           if (preventDefaultClose) {
-            e.preventDefault();
+            e.preventDefault()
           }
         }}
       >
         {children}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -43,98 +43,101 @@
  * @see /components/file/index.ts for upload implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { logger } from '@/lib/logger';
-import { uploadFile } from '@/components/file';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
+import { uploadFile } from "@/components/file"
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await auth()
 
     if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const type = formData.get('type') as string;
+    const formData = await request.formData()
+    const file = formData.get("file") as File
+    const type = formData.get("type") as string
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
-    if (!type || !['logo', 'avatar'].includes(type)) {
+    if (!type || !["logo", "avatar"].includes(type)) {
       return NextResponse.json(
-        { error: 'Invalid upload type' },
+        { error: "Invalid upload type" },
         { status: 400 }
-      );
+      )
     }
 
     // Configure upload options based on type
-    const uploadFormData = new FormData();
-    uploadFormData.set('file', file);
+    const uploadFormData = new FormData()
+    uploadFormData.set("file", file)
 
-    const uploadOptions = type === 'logo'
-      ? { category: 'image' as const, type: 'logo' as const, folder: 'logos' }
-      : { category: 'image' as const, type: 'avatar' as const, folder: 'avatars' };
+    const uploadOptions =
+      type === "logo"
+        ? { category: "image" as const, type: "logo" as const, folder: "logos" }
+        : {
+            category: "image" as const,
+            type: "avatar" as const,
+            folder: "avatars",
+          }
 
-    if (type === 'logo') {
+    if (type === "logo") {
       // Only allow school admins to upload logos
-      if (session.user.role !== 'PRINCIPAL' && session.user.role !== 'DEVELOPER') {
+      if (
+        session.user.role !== "PRINCIPAL" &&
+        session.user.role !== "DEVELOPER"
+      ) {
         return NextResponse.json(
-          { error: 'Insufficient permissions to upload logo' },
+          { error: "Insufficient permissions to upload logo" },
           { status: 403 }
-        );
+        )
       }
 
       if (!session.user.schoolId) {
         return NextResponse.json(
-          { error: 'No school associated with user' },
+          { error: "No school associated with user" },
           { status: 400 }
-        );
+        )
       }
     }
 
     // Upload file using centralized file module
-    const result = await uploadFile(uploadFormData, uploadOptions);
+    const result = await uploadFile(uploadFormData, uploadOptions)
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error || 'Upload failed' },
+        { error: result.error || "Upload failed" },
         { status: 400 }
-      );
+      )
     }
 
     // Update database with new URL
-    if (type === 'logo' && session.user.schoolId) {
+    if (type === "logo" && session.user.schoolId) {
       await db.school.update({
         where: { id: session.user.schoolId },
         data: { logoUrl: result.url },
-      });
+      })
 
-      logger.info('School logo updated', {
-        action: 'school_logo_update',
+      logger.info("School logo updated", {
+        action: "school_logo_update",
         schoolId: session.user.schoolId,
         userId: session.user.id,
-      });
-    } else if (type === 'avatar') {
+      })
+    } else if (type === "avatar") {
       await db.user.update({
         where: { id: session.user.id },
         data: { image: result.url },
-      });
+      })
 
-      logger.info('User avatar updated', {
-        action: 'user_avatar_update',
+      logger.info("User avatar updated", {
+        action: "user_avatar_update",
         userId: session.user.id,
-      });
+      })
     }
 
     return NextResponse.json({
@@ -144,15 +147,19 @@ export async function POST(request: NextRequest) {
         size: result.size,
         type: result.mimeType,
       },
-    });
+    })
   } catch (error) {
-    logger.error('Upload API error', error instanceof Error ? error : new Error('Unknown error'), {
-      action: 'upload_api_error',
-    });
+    logger.error(
+      "Upload API error",
+      error instanceof Error ? error : new Error("Unknown error"),
+      {
+        action: "upload_api_error",
+      }
+    )
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -161,9 +168,9 @@ export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
-  });
+  })
 }

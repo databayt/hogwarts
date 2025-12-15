@@ -1,7 +1,9 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize, SkeletonLayout } from "./types"
 
 interface SkeletonCardProps {
@@ -81,7 +83,7 @@ export function SkeletonCard({
           <div className="space-y-3">
             {[...Array(rows)].map((_, i) => (
               <div key={i} className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
                 <div className="flex-1 space-y-1">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-3 w-24" />
@@ -119,7 +121,7 @@ export function SkeletonCard({
       case "media":
         return (
           <div className="flex items-center gap-3">
-            <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+            <Skeleton className="h-12 w-12 shrink-0 rounded-full" />
             <div className="flex-1 space-y-1">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-24" />

@@ -1,10 +1,21 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { auth } from "@/auth"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
   createConversation,
-  sendMessage,
   deleteMessage,
   markConversationAsRead,
+  sendMessage,
 } from "../actions"
+import { getAuthContext } from "../authorization"
+import {
+  getConversation,
+  getConversationParticipant,
+  getMessage,
+} from "../queries"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -29,16 +40,18 @@ vi.mock("@/lib/db", () => ({
     messageReadReceipt: {
       upsert: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      conversation: {
-        create: vi.fn(),
-        update: vi.fn(),
-      },
-      message: {
-        create: vi.fn(),
-        update: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        conversation: {
+          create: vi.fn(),
+          update: vi.fn(),
+        },
+        message: {
+          create: vi.fn(),
+          update: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -75,12 +88,6 @@ vi.mock("../queries", () => ({
   getMessage: vi.fn(),
 }))
 
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
-import { auth } from "@/auth"
-import { getAuthContext } from "../authorization"
-import { getConversation, getMessage, getConversationParticipant } from "../queries"
-
 describe("Messaging Actions", () => {
   const mockSchoolId = "school-123"
   const mockUserId = "user-123"
@@ -112,7 +119,9 @@ describe("Messaging Actions", () => {
         title: null,
       }
 
-      vi.mocked(db.conversation.create).mockResolvedValue(mockConversation as any)
+      vi.mocked(db.conversation.create).mockResolvedValue(
+        mockConversation as any
+      )
 
       const result = await createConversation({
         type: "direct",
@@ -141,7 +150,9 @@ describe("Messaging Actions", () => {
         type: "direct",
       }
 
-      vi.mocked(db.conversation.findFirst).mockResolvedValue(existingConv as any)
+      vi.mocked(db.conversation.findFirst).mockResolvedValue(
+        existingConv as any
+      )
 
       const result = await createConversation({
         type: "direct",
@@ -235,7 +246,9 @@ describe("Messaging Actions", () => {
 
   describe("markConversationAsRead", () => {
     it("updates last read timestamp", async () => {
-      vi.mocked(db.conversationParticipant.updateMany).mockResolvedValue({ count: 1 })
+      vi.mocked(db.conversationParticipant.updateMany).mockResolvedValue({
+        count: 1,
+      })
 
       const result = await markConversationAsRead({
         conversationId: "conv-1",

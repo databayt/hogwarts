@@ -1,10 +1,11 @@
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import BarcodeAttendanceContent from '@/components/platform/attendance/barcode/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
+import { auth } from "@/auth"
 
-export const metadata = { title: 'Dashboard: Barcode Attendance' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import BarcodeAttendanceContent from "@/components/platform/attendance/barcode/content"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+
+export const metadata = { title: "Dashboard: Barcode Attendance" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { Eye, Plus } from "lucide-react"
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+
 import { Button } from "@/components/ui/button"
-import { DashboardCardsShowcase } from "@/components/platform/lab/dashboard-cards-showcase"
 import { ShadcnShowcase } from "@/components/atom/lab/shadcn-showcase"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { DashboardCardsShowcase } from "@/components/platform/lab/dashboard-cards-showcase"
 
 type ViewMode = "browse" | "add"
 

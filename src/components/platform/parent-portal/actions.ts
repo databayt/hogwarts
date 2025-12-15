@@ -1,8 +1,9 @@
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { auth } from "@/auth";
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 
 // Helper to get guardian's children
 async function getGuardianChildren(guardianId: string, schoolId: string) {
@@ -19,34 +20,34 @@ async function getGuardianChildren(guardianId: string, schoolId: string) {
         },
       },
     },
-  });
+  })
 
   return studentGuardians.map((sg) => ({
     id: sg.student.id,
     studentId: sg.student.studentId,
     name: `${sg.student.givenName} ${sg.student.middleName || ""} ${sg.student.surname}`.trim(),
-  }));
+  }))
 }
 
 // Get child's grades/exam results
 export async function getChildGrades(input: { studentId: string }) {
-  const session = await auth();
-  const guardianId = session?.user?.id;
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const guardianId = session?.user?.id
+  const schoolId = session?.user?.schoolId
 
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    throw new Error("Missing guardian context")
   }
 
-  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input);
+  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
   // Verify this student belongs to this guardian
   const relationship = await db.studentGuardian.findFirst({
     where: { guardianId, studentId, schoolId },
-  });
+  })
 
   if (!relationship) {
-    throw new Error("Unauthorized access to student data");
+    throw new Error("Unauthorized access to student data")
   }
 
   // Get exam results for the student
@@ -68,7 +69,7 @@ export async function getChildGrades(input: { studentId: string }) {
       },
     },
     orderBy: { createdAt: "desc" },
-  });
+  })
 
   // Get class scores for the student
   const classScores = await db.studentClass.findMany({
@@ -85,7 +86,7 @@ export async function getChildGrades(input: { studentId: string }) {
         },
       },
     },
-  });
+  })
 
   const grades = {
     examResults: examResults.map((result) => ({
@@ -106,39 +107,39 @@ export async function getChildGrades(input: { studentId: string }) {
       subjectName: sc.class.subject.subjectName,
       score: sc.score ? Number(sc.score) : null,
     })),
-  };
+  }
 
-  return { grades };
+  return { grades }
 }
 
 // Get child's assignments
 export async function getChildAssignments(input: { studentId: string }) {
-  const session = await auth();
-  const guardianId = session?.user?.id;
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const guardianId = session?.user?.id
+  const schoolId = session?.user?.schoolId
 
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    throw new Error("Missing guardian context")
   }
 
-  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input);
+  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
   // Verify this student belongs to this guardian
   const relationship = await db.studentGuardian.findFirst({
     where: { guardianId, studentId, schoolId },
-  });
+  })
 
   if (!relationship) {
-    throw new Error("Unauthorized access to student data");
+    throw new Error("Unauthorized access to student data")
   }
 
   // Get student's classes
   const studentClasses = await db.studentClass.findMany({
     where: { studentId, schoolId },
     select: { classId: true },
-  });
+  })
 
-  const classIds = studentClasses.map((sc) => sc.classId);
+  const classIds = studentClasses.map((sc) => sc.classId)
 
   // Get assignments for student's classes
   const assignments = await db.assignment.findMany({
@@ -169,7 +170,7 @@ export async function getChildAssignments(input: { studentId: string }) {
     },
     orderBy: { dueDate: "desc" },
     take: 50,
-  });
+  })
 
   return {
     assignments: assignments.map((assignment) => ({
@@ -186,41 +187,43 @@ export async function getChildAssignments(input: { studentId: string }) {
             id: assignment.submissions[0].id,
             submittedAt: assignment.submissions[0].submittedAt?.toISOString(),
             status: assignment.submissions[0].status,
-            score: assignment.submissions[0].score ? Number(assignment.submissions[0].score) : null,
+            score: assignment.submissions[0].score
+              ? Number(assignment.submissions[0].score)
+              : null,
           }
         : null,
     })),
-  };
+  }
 }
 
 // Get child's timetable
 export async function getChildTimetable(input: { studentId: string }) {
-  const session = await auth();
-  const guardianId = session?.user?.id;
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const guardianId = session?.user?.id
+  const schoolId = session?.user?.schoolId
 
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    throw new Error("Missing guardian context")
   }
 
-  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input);
+  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
   // Verify this student belongs to this guardian
   const relationship = await db.studentGuardian.findFirst({
     where: { guardianId, studentId, schoolId },
-  });
+  })
 
   if (!relationship) {
-    throw new Error("Unauthorized access to student data");
+    throw new Error("Unauthorized access to student data")
   }
 
   // Get student's classes
   const studentClasses = await db.studentClass.findMany({
     where: { studentId, schoolId },
     select: { classId: true },
-  });
+  })
 
-  const classIds = studentClasses.map((sc) => sc.classId);
+  const classIds = studentClasses.map((sc) => sc.classId)
 
   // Get timetable entries for student's classes
   const timetableEntries = await db.timetable.findMany({
@@ -259,7 +262,7 @@ export async function getChildTimetable(input: { studentId: string }) {
       },
     },
     orderBy: [{ dayOfWeek: "asc" }, { period: { startTime: "asc" } }],
-  });
+  })
 
   return {
     timetable: timetableEntries.map((entry) => ({
@@ -273,43 +276,43 @@ export async function getChildTimetable(input: { studentId: string }) {
       teacherName: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
       roomName: entry.class.classroom?.roomName || "TBA",
     })),
-  };
+  }
 }
 
 // Get guardian's children
 export async function getMyChildren() {
-  const session = await auth();
-  const guardianId = session?.user?.id;
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const guardianId = session?.user?.id
+  const schoolId = session?.user?.schoolId
 
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    throw new Error("Missing guardian context")
   }
 
-  const children = await getGuardianChildren(guardianId, schoolId);
+  const children = await getGuardianChildren(guardianId, schoolId)
 
-  return { children };
+  return { children }
 }
 
 // Get child overview (grades summary + attendance)
 export async function getChildOverview(input: { studentId: string }) {
-  const session = await auth();
-  const guardianId = session?.user?.id;
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const guardianId = session?.user?.id
+  const schoolId = session?.user?.schoolId
 
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    throw new Error("Missing guardian context")
   }
 
-  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input);
+  const { studentId } = z.object({ studentId: z.string().min(1) }).parse(input)
 
   // Verify this student belongs to this guardian
   const relationship = await db.studentGuardian.findFirst({
     where: { guardianId, studentId, schoolId },
-  });
+  })
 
   if (!relationship) {
-    throw new Error("Unauthorized access to student data");
+    throw new Error("Unauthorized access to student data")
   }
 
   // Get student details
@@ -324,7 +327,7 @@ export async function getChildOverview(input: { studentId: string }) {
       gender: true,
       dateOfBirth: true,
     },
-  });
+  })
 
   // Get recent exam results
   const recentExams = await db.examResult.findMany({
@@ -343,29 +346,31 @@ export async function getChildOverview(input: { studentId: string }) {
     },
     orderBy: { createdAt: "desc" },
     take: 5,
-  });
+  })
 
   // Get attendance summary
   const totalDays = await db.attendance.count({
     where: { studentId, schoolId },
-  });
+  })
 
   const presentDays = await db.attendance.count({
     where: { studentId, schoolId, status: "PRESENT" },
-  });
+  })
 
-  const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+  const attendancePercentage =
+    totalDays > 0 ? (presentDays / totalDays) * 100 : 0
 
   // Calculate average score
   const examResults = await db.examResult.findMany({
     where: { studentId, schoolId, isAbsent: false },
     select: { percentage: true },
-  });
+  })
 
   const averageScore =
     examResults.length > 0
-      ? examResults.reduce((sum, r) => sum + r.percentage, 0) / examResults.length
-      : 0;
+      ? examResults.reduce((sum, r) => sum + r.percentage, 0) /
+        examResults.length
+      : 0
 
   return {
     student: student
@@ -389,5 +394,5 @@ export async function getChildOverview(input: { studentId: string }) {
       percentage: Math.round(attendancePercentage * 100) / 100,
     },
     averageScore: Math.round(averageScore * 100) / 100,
-  };
+  }
 }

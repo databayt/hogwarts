@@ -1,8 +1,9 @@
-import { ProfileDetailContent } from "@/components/platform/profile/detail/content"
-import { getProfileById } from "@/components/platform/profile/detail/actions"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import { type Locale } from "@/components/internationalization/config"
 import { redirect } from "next/navigation"
+
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getProfileById } from "@/components/platform/profile/detail/actions"
+import { ProfileDetailContent } from "@/components/platform/profile/detail/content"
 
 export const metadata = { title: "Dashboard: User Profile" }
 

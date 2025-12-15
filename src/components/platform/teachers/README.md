@@ -6,19 +6,20 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/teachers` | Teacher List | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/new` | Create Teacher | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]` | Teacher Detail | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/edit` | Edit Teacher | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/schedule` | Teaching Schedule | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/classes` | Assigned Classes | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/documents` | Documents | ⏸️ Planned |
+| URL                                                        | Page              | Status     |
+| ---------------------------------------------------------- | ----------------- | ---------- |
+| `/[lang]/s/[subdomain]/(platform)/teachers`                | Teacher List      | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/new`            | Create Teacher    | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]`           | Teacher Detail    | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/edit`      | Edit Teacher      | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/schedule`  | Teaching Schedule | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/classes`   | Assigned Classes  | ✅ Ready   |
+| `/[lang]/s/[subdomain]/(platform)/teachers/[id]/documents` | Documents         | ⏸️ Planned |
 
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 👨‍🏫 Add teachers individually or bulk import via CSV
 - 📋 View and manage complete faculty roster with advanced filters
 - 🔍 Search by name, email, department, subject specialization
@@ -31,6 +32,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 - 📈 View teaching load and schedule
 
 ### What Teachers Can View
+
 - ✅ View their own profile and contact information
 - ✅ See their assigned classes and subjects
 - ✅ Access their teaching schedule (timetable)
@@ -39,20 +41,24 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 - ❌ Cannot view other teachers' information (unless admin)
 
 ### What Students Can View
+
 - ✅ See their teachers' names and subjects
 - ✅ View teacher contact information (school email)
 - ❌ Cannot view teacher personal details
 
 ### What Parents Can View
+
 - ✅ See their child's teachers
 - ✅ View teacher names and subjects taught
 - ✅ Access teacher contact information for communication
 - ❌ Cannot view teacher employment details
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ CSV bulk import with error reporting
 - ✅ Department assignments (TeacherDepartment)
@@ -64,11 +70,13 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 - ✅ Multi-step form (information → contact)
 
 **In Progress:**
+
 - 🚧 Qualification tracking (degrees, certifications)
 - 🚧 Performance reviews management
 - 🚧 Teaching load analytics
 
 **Planned:**
+
 - ⏸️ Document attachments (resume, certificates)
 - ⏸️ Professional development tracking
 - ⏸️ Attendance and leave management
@@ -79,6 +87,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 ## Admin Workflows
 
 ### 1. Add a Single Teacher
+
 **Prerequisites:** Departments and subjects already configured
 
 1. Navigate to `/teachers`
@@ -95,6 +104,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 6. Success toast appears, table refreshes automatically
 
 ### 2. Bulk Import Teachers via CSV
+
 **Prerequisites:** CSV file with proper column format
 
 1. Navigate to `/import`
@@ -112,6 +122,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 9. Summary shows: X created, Y errors
 
 ### 3. Assign Teacher to Department
+
 **Prerequisites:** Departments created in settings
 
 1. Open teacher detail page or edit modal
@@ -123,6 +134,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 7. Teacher appears in department roster
 
 **Bulk Department Assignment:**
+
 1. Select multiple teachers via checkboxes
 2. Click "Bulk Actions" → "Assign to Department"
 3. Choose target department
@@ -130,7 +142,9 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 5. All selected teachers added to department
 
 ### 4. Assign Teacher to Classes and Subjects
+
 **Single Assignment:**
+
 1. Navigate to class detail page
 2. Click "Assign Teacher"
 3. Select subject to teach
@@ -139,6 +153,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 6. Teacher assigned as subject teacher for that class
 
 **From Teacher Profile:**
+
 1. Open teacher detail page
 2. Navigate to "Class Assignments" section
 3. Click "Add Assignment"
@@ -147,18 +162,22 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 6. Assignment appears in teacher's schedule
 
 **Teaching Load View:**
+
 - Displays number of classes and subjects per teacher
 - Shows total teaching periods per week
 - Highlights overloaded teachers
 - Helps balance workload distribution
 
 ### 5. Search and Filter Teachers
+
 **Quick Search:**
+
 1. Use search box in toolbar
 2. Type teacher name or email (partial match)
 3. Results update as you type
 
 **Advanced Filtering:**
+
 1. Click "Status" dropdown → Select active/on leave/terminated
 2. Click "Department" dropdown → Select specific department
 3. Click "Subject" dropdown → Filter by subject specialization
@@ -167,7 +186,9 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 6. URL updates with filter state (shareable link)
 
 ### 6. Update Teacher Information
+
 **Method A: Edit via Modal**
+
 1. Find teacher in table
 2. Click row actions (three dots)
 3. Select "Edit"
@@ -177,6 +198,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 7. System validates and updates record
 
 **Method B: Detail Page**
+
 1. Click "View" on teacher row
 2. Navigate to `/teachers/[id]`
 3. Click "Edit" button
@@ -184,6 +206,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 5. Click "Save"
 
 ### 7. View Teacher Schedule and Load
+
 1. Open teacher detail page
 2. View "Teaching Schedule" section:
    - Weekly timetable showing all assigned classes
@@ -196,6 +219,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
    - Contact hours calculation
 
 ### 8. Export Teacher Data
+
 1. Apply desired filters (department, status, subject)
 2. Click "Export" button
 3. Select export format (CSV)
@@ -204,7 +228,9 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 6. Use for HR reports, payroll, or external systems
 
 ### 9. Track Employment Status
+
 **Status Options:**
+
 - **Active**: Currently teaching
 - **On Leave**: Temporarily absent (sick leave, maternity, sabbatical)
 - **Terminated**: No longer employed
@@ -212,6 +238,7 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 - **Contract Ended**: Fixed-term contract expired
 
 **Change Status:**
+
 1. Edit teacher record
 2. Update "Status" field
 3. Add status change notes (reason, effective date)
@@ -224,18 +251,21 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 ## Integration with Other Features
 
 ### Links to Classes
+
 - Teacher assignments create Class-Teacher relationships
 - Each class can have multiple subject teachers
 - Homeroom teacher designation available
 - Class roster accessible to assigned teachers
 
 ### Links to Subjects
+
 - Teachers marked as subject specialists
 - Subject assignment during class allocation
 - Qualification matching for subject teaching
 - Subject-based performance tracking
 
 ### Links to Timetable
+
 - Teacher schedule generated from timetable slots
 - Conflict detection prevents double-booking
 - Free periods identified for meetings
@@ -243,30 +273,35 @@ The Teachers feature empowers school administrators to manage teaching staff fro
 - Teacher view shows weekly teaching schedule
 
 ### Links to Departments
+
 - TeacherDepartment many-to-many relationship
 - Department head designation
 - Department meetings and coordination
 - Resource sharing within departments
 
 ### Links to Attendance
+
 - Teacher attendance tracking (separate from student attendance)
 - Leave management integration
 - Substitute teacher assignment when absent
 - Attendance reports for HR
 
 ### Links to Lessons
+
 - Teachers create lesson plans for their classes
 - Lesson content linked to assigned subjects
 - Curriculum mapping per teacher
 - Teaching resources management
 
 ### Links to Exams
+
 - Teachers create exams for their subjects
 - Grade entry for assigned classes
 - Exam scheduling coordination
 - Marks moderation per department
 
 ### Links to Assignments
+
 - Teachers create assignments for their classes
 - Grading interface for submissions
 - Assignment analytics per teacher
@@ -296,10 +331,12 @@ The component follows the standardized file pattern:
 ## Features
 
 ### Multi-step Form
+
 - **Step 1**: Basic Information (names, gender)
 - **Step 2**: Contact Details (email address)
 
 ### Data Management
+
 - Create new teachers
 - Edit existing teachers
 - Delete teachers
@@ -307,11 +344,13 @@ The component follows the standardized file pattern:
 - Search and filter by name, email, and status
 
 ### Validation
+
 - Client-side validation with Zod schemas
 - Server-side validation for all mutations
 - Multi-tenant safety with `schoolId` scoping
 
 ### Table Features
+
 - Sortable columns
 - Filterable data
 - Pagination
@@ -320,6 +359,7 @@ The component follows the standardized file pattern:
 ## Database Schema
 
 Teachers are stored with the following fields:
+
 - `id` - Unique identifier
 - `schoolId` - Multi-tenant identifier
 - `givenName` - First name
@@ -355,37 +395,44 @@ The component is used in the platform dashboard at `/dashboard/teachers` and aut
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

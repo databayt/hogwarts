@@ -5,39 +5,39 @@
  */
 
 export const PAYROLL_RUN_STATUS = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED',
+  DRAFT: "DRAFT",
+  PENDING: "PENDING",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
 } as const
 
 export const SALARY_SLIP_STATUS = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  APPROVED: 'APPROVED',
-  PAID: 'PAID',
-  CANCELLED: 'CANCELLED',
+  DRAFT: "DRAFT",
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  PAID: "PAID",
+  CANCELLED: "CANCELLED",
 } as const
 
 export const PAYMENT_METHOD = {
-  BANK_TRANSFER: 'BANK_TRANSFER',
-  CASH: 'CASH',
-  CHECK: 'CHECK',
-  MOBILE_MONEY: 'MOBILE_MONEY',
+  BANK_TRANSFER: "BANK_TRANSFER",
+  CASH: "CASH",
+  CHECK: "CHECK",
+  MOBILE_MONEY: "MOBILE_MONEY",
 } as const
 
 // Status badge colors
 export const STATUS_COLORS = {
-  DRAFT: 'bg-gray-500/10 text-gray-500',
-  PENDING: 'bg-yellow-500/10 text-yellow-500',
-  PROCESSING: 'bg-blue-500/10 text-blue-500',
-  APPROVED: 'bg-green-500/10 text-green-500',
-  COMPLETED: 'bg-green-500/10 text-green-500',
-  PAID: 'bg-green-500/10 text-green-500',
-  FAILED: 'bg-red-500/10 text-red-500',
-  CANCELLED: 'bg-red-500/10 text-red-500',
+  DRAFT: "bg-gray-500/10 text-gray-500",
+  PENDING: "bg-yellow-500/10 text-yellow-500",
+  PROCESSING: "bg-blue-500/10 text-blue-500",
+  APPROVED: "bg-green-500/10 text-green-500",
+  COMPLETED: "bg-green-500/10 text-green-500",
+  PAID: "bg-green-500/10 text-green-500",
+  FAILED: "bg-red-500/10 text-red-500",
+  CANCELLED: "bg-red-500/10 text-red-500",
 } as const
 
 // Tax brackets (progressive tax system - can be customized per school)
@@ -65,22 +65,22 @@ export const OVERTIME_MULTIPLIERS = {
 
 // Payroll frequencies
 export const PAYROLL_FREQUENCIES = [
-  { value: 'MONTHLY', label: 'Monthly', daysPerPeriod: 30 },
-  { value: 'BI_WEEKLY', label: 'Bi-Weekly', daysPerPeriod: 14 },
-  { value: 'WEEKLY', label: 'Weekly', daysPerPeriod: 7 },
+  { value: "MONTHLY", label: "Monthly", daysPerPeriod: 30 },
+  { value: "BI_WEEKLY", label: "Bi-Weekly", daysPerPeriod: 14 },
+  { value: "WEEKLY", label: "Weekly", daysPerPeriod: 7 },
 ] as const
 
 // Slip number format
-export const SLIP_NUMBER_PREFIX = 'SLIP'
-export const RUN_NUMBER_PREFIX = 'PR'
+export const SLIP_NUMBER_PREFIX = "SLIP"
+export const RUN_NUMBER_PREFIX = "PR"
 
 // Default pagination
 export const DEFAULT_PAGE_SIZE = 20
 
 // Payroll period types
 export const PERIOD_TYPES = {
-  CURRENT_MONTH: 'CURRENT_MONTH',
-  LAST_MONTH: 'LAST_MONTH',
-  CUSTOM: 'CUSTOM',
-  YEAR_TO_DATE: 'YEAR_TO_DATE',
+  CURRENT_MONTH: "CURRENT_MONTH",
+  LAST_MONTH: "LAST_MONTH",
+  CUSTOM: "CUSTOM",
+  YEAR_TO_DATE: "YEAR_TO_DATE",
 } as const

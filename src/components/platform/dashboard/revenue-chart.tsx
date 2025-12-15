@@ -1,6 +1,8 @@
 "use client"
 
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -14,7 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+
 import type { RevenueChartProps } from "./types"
 
 const revenueChartConfig = {
@@ -42,7 +44,10 @@ export function RevenueChart({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1">
-        <ChartContainer config={revenueChartConfig} className="h-[200px] w-full">
+        <ChartContainer
+          config={revenueChartConfig}
+          className="h-[200px] w-full"
+        >
           <BarChart data={data}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis
@@ -54,10 +59,20 @@ export function RevenueChart({
             />
             <ChartTooltip
               content={<ChartTooltipContent />}
-              formatter={(value: number) => `${currency}${value.toLocaleString()}`}
+              formatter={(value: number) =>
+                `${currency}${value.toLocaleString()}`
+              }
             />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="revenue"
+              fill="var(--color-revenue)"
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar
+              dataKey="expenses"
+              fill="var(--color-expenses)"
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>

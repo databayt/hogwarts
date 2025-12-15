@@ -1,16 +1,27 @@
 "use client"
 
-import { useRef, useEffect, useActionState, useState } from "react"
-import { useFormStatus } from "react-dom"
+import { useActionState, useEffect, useRef, useState } from "react"
 import { Paperclip, Send, Smile, X } from "lucide-react"
-import type { MessageDTO } from "./types"
-import { sendMessageFromForm, type MessageFormState } from "./actions"
+import { useFormStatus } from "react-dom"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file"
+import {
+  ACCEPT_ALL,
+  FileUploader,
+  type UploadedFileResult,
+} from "@/components/file"
+
+import { sendMessageFromForm, type MessageFormState } from "./actions"
+import type { MessageDTO } from "./types"
 
 export interface MessageInputProps {
   conversationId: string
@@ -84,7 +95,8 @@ export function MessageInput({
     return formAction(formData)
   }
 
-  const defaultPlaceholder = locale === "ar" ? "اكتب رسالة..." : "Type a message..."
+  const defaultPlaceholder =
+    locale === "ar" ? "اكتب رسالة..." : "Type a message..."
 
   // Auto-reset form on successful send
   useEffect(() => {
@@ -162,7 +174,10 @@ export function MessageInput({
     setShowFileUpload(false)
     toast({
       title: locale === "ar" ? "نجح" : "Success",
-      description: locale === "ar" ? `تم رفع ${files.length} ملف` : `Uploaded ${files.length} file(s)`,
+      description:
+        locale === "ar"
+          ? `تم رفع ${files.length} ملف`
+          : `Uploaded ${files.length} file(s)`,
     })
   }
 
@@ -180,7 +195,8 @@ export function MessageInput({
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     const currentValue = textarea.value || ""
-    const newValue = currentValue.substring(0, start) + emoji + currentValue.substring(end)
+    const newValue =
+      currentValue.substring(0, start) + emoji + currentValue.substring(end)
 
     textarea.value = newValue
 
@@ -196,19 +212,61 @@ export function MessageInput({
   }
 
   const commonEmojis = [
-    "😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊",
-    "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘",
-    "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪",
-    "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏", "😒",
-    "👍", "👎", "👌", "✌️", "🤞", "🤝", "👏", "🙌",
-    "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍",
+    "😀",
+    "😃",
+    "😄",
+    "😁",
+    "😅",
+    "😂",
+    "🤣",
+    "😊",
+    "😇",
+    "🙂",
+    "🙃",
+    "😉",
+    "😌",
+    "😍",
+    "🥰",
+    "😘",
+    "😗",
+    "😙",
+    "😚",
+    "😋",
+    "😛",
+    "😝",
+    "😜",
+    "🤪",
+    "🤨",
+    "🧐",
+    "🤓",
+    "😎",
+    "🤩",
+    "🥳",
+    "😏",
+    "😒",
+    "👍",
+    "👎",
+    "👌",
+    "✌️",
+    "🤞",
+    "🤝",
+    "👏",
+    "🙌",
+    "❤️",
+    "🧡",
+    "💛",
+    "💚",
+    "💙",
+    "💜",
+    "🖤",
+    "🤍",
   ]
 
   return (
     <form
       ref={formRef}
       action={handleFormAction}
-      className={cn("border-t border-border bg-background", className)}
+      className={cn("border-border bg-background border-t", className)}
     >
       {/* Hidden inputs */}
       <input type="hidden" name="conversationId" value={conversationId} />
@@ -216,12 +274,13 @@ export function MessageInput({
 
       {/* Reply context */}
       {replyTo && (
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {locale === "ar" ? "الرد على" : "Replying to"} {replyTo.sender.username || replyTo.sender.email}
+        <div className="bg-muted/50 border-border flex items-center justify-between border-b px-4 py-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-foreground text-sm font-medium">
+              {locale === "ar" ? "الرد على" : "Replying to"}{" "}
+              {replyTo.sender.username || replyTo.sender.email}
             </p>
-            <p className="text-sm text-muted-foreground truncate">
+            <p className="text-muted-foreground truncate text-sm">
               {replyTo.isDeleted
                 ? locale === "ar"
                   ? "تم حذف الرسالة"
@@ -256,7 +315,7 @@ export function MessageInput({
         </Button>
 
         {/* Text input */}
-        <div className="flex-1 relative">
+        <div className="relative flex-1">
           <Textarea
             ref={textareaRef}
             name="content"
@@ -267,7 +326,7 @@ export function MessageInput({
             maxLength={maxLength}
             rows={1}
             className={cn(
-              "min-h-[40px] max-h-[200px] resize-none pr-10",
+              "max-h-[200px] min-h-[40px] resize-none pr-10",
               locale === "ar" && "text-right"
             )}
           />
@@ -312,7 +371,13 @@ export function MessageInput({
 /**
  * Submit button with useFormStatus for loading state
  */
-function SubmitButton({ locale, disabled }: { locale?: "ar" | "en"; disabled?: boolean }) {
+function SubmitButton({
+  locale,
+  disabled,
+}: {
+  locale?: "ar" | "en"
+  disabled?: boolean
+}) {
   const { pending } = useFormStatus()
 
   return (
@@ -323,7 +388,7 @@ function SubmitButton({ locale, disabled }: { locale?: "ar" | "en"; disabled?: b
       className="flex-shrink-0"
     >
       {pending ? (
-        <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+        <div className="border-primary-foreground/30 border-t-primary-foreground h-5 w-5 animate-spin rounded-full border-2" />
       ) : (
         <Send className="h-5 w-5" />
       )}
@@ -366,8 +431,8 @@ function EmojiPickerButton({
             onClick={() => setShowPicker(false)}
           />
           {/* Picker */}
-          <div className="absolute bottom-full right-0 mb-2 p-2 bg-background border border-border rounded-lg shadow-lg z-20 w-64">
-            <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+          <div className="bg-background border-border absolute right-0 bottom-full z-20 mb-2 w-64 rounded-lg border p-2 shadow-lg">
+            <div className="grid max-h-48 grid-cols-8 gap-1 overflow-y-auto">
               {emojis.map((emoji) => (
                 <button
                   key={emoji}
@@ -376,7 +441,7 @@ function EmojiPickerButton({
                     onEmojiClick(emoji)
                     setShowPicker(false)
                   }}
-                  className="p-2 hover:bg-muted rounded transition-colors text-xl"
+                  className="hover:bg-muted rounded p-2 text-xl transition-colors"
                 >
                   {emoji}
                 </button>

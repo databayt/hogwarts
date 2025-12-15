@@ -1,19 +1,32 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type UseFormReturn } from "react-hook-form"
 
-import { TeacherFormStepProps } from "./types";
-import { EMPLOYMENT_STATUS_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "./config";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { EMPLOYMENT_STATUS_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "./config"
+import { TeacherFormStepProps } from "./types"
 
 export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
-  const employmentType = form.watch("employmentType");
-  const showContractDates = employmentType === "CONTRACT";
+  const employmentType = form.watch("employmentType")
+  const showContractDates = employmentType === "CONTRACT"
 
   return (
-    <div className="grid grid-cols-2 gap-8 w-full">
+    <div className="grid w-full grid-cols-2 gap-8">
       {/* Left Column */}
       <div className="space-y-4">
         <FormField
@@ -27,7 +40,7 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
                   placeholder="Employee ID (optional)"
                   disabled={isView}
                   {...field}
-                  value={field.value || ''}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />
@@ -46,8 +59,16 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
                   type="date"
                   placeholder="Joining date"
                   disabled={isView}
-                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                  value={
+                    field.value instanceof Date
+                      ? field.value.toISOString().split("T")[0]
+                      : field.value || ""
+                  }
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value ? new Date(e.target.value) : undefined
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -61,7 +82,11 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Employment Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
@@ -89,7 +114,11 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Employment Type</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select type" />
@@ -121,8 +150,16 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
                       type="date"
                       placeholder="Contract start"
                       disabled={isView}
-                      value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                      value={
+                        field.value instanceof Date
+                          ? field.value.toISOString().split("T")[0]
+                          : field.value || ""
+                      }
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? new Date(e.target.value) : undefined
+                        )
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -141,8 +178,16 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
                       type="date"
                       placeholder="Contract end"
                       disabled={isView}
-                      value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                      value={
+                        field.value instanceof Date
+                          ? field.value.toISOString().split("T")[0]
+                          : field.value || ""
+                      }
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? new Date(e.target.value) : undefined
+                        )
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -153,5 +198,5 @@ export function EmploymentDetailsStep({ form, isView }: TeacherFormStepProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -1,14 +1,15 @@
-import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
-import { getTemporaryAccessToken } from '@/components/platform/finance/receipt/schematic/get-temporary-access-token'
-import SchematicEmbed from '@/components/platform/finance/receipt/schematic/schematic-embed'
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
+import { getTemporaryAccessToken } from "@/components/platform/finance/receipt/schematic/get-temporary-access-token"
+import SchematicEmbed from "@/components/platform/finance/receipt/schematic/schematic-embed"
 
 export default async function ManagePlanPage() {
   // 1. Authenticate
   const session = await auth()
 
   if (!session?.user) {
-    redirect('/auth/signin')
+    redirect("/auth/signin")
   }
 
   // 2. Get Schematic access token
@@ -17,21 +18,28 @@ export default async function ManagePlanPage() {
   if (!accessToken) {
     return (
       <div className="py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Unable to load subscription portal</h1>
-        <p className="text-muted-foreground">Please try again later or contact support.</p>
+        <h1 className="mb-4 text-2xl font-bold">
+          Unable to load subscription portal
+        </h1>
+        <p className="text-muted-foreground">
+          Please try again later or contact support.
+        </p>
       </div>
     )
   }
 
   // 3. Get component ID from environment
-  const componentId = process.env.NEXT_PUBLIC_SCHEMATIC_CUSTOMER_PORTAL_COMPONENT_ID
+  const componentId =
+    process.env.NEXT_PUBLIC_SCHEMATIC_CUSTOMER_PORTAL_COMPONENT_ID
 
   if (!componentId) {
-    console.error('NEXT_PUBLIC_SCHEMATIC_CUSTOMER_PORTAL_COMPONENT_ID not set')
+    console.error("NEXT_PUBLIC_SCHEMATIC_CUSTOMER_PORTAL_COMPONENT_ID not set")
     return (
       <div className="py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Configuration Error</h1>
-        <p className="text-muted-foreground">Subscription portal is not configured.</p>
+        <h1 className="mb-4 text-2xl font-bold">Configuration Error</h1>
+        <p className="text-muted-foreground">
+          Subscription portal is not configured.
+        </p>
       </div>
     )
   }
@@ -45,7 +53,7 @@ export default async function ManagePlanPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="bg-card rounded-lg border">
         <SchematicEmbed accessToken={accessToken} componentId={componentId} />
       </div>
     </div>

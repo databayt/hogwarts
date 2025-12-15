@@ -22,9 +22,11 @@ export default function AnalyticsError({ error, reset }: ErrorProps) {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Unable to load analytics</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading attendance analytics.</p>
+          <p>
+            An unexpected error occurred while loading attendance analytics.
+          </p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

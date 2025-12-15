@@ -8,40 +8,41 @@
  * - Fallback logic: if preferred locale is missing, use the other language
  */
 
-import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export type AnnouncementListFilters = {
-  title?: string; // Searches both titleEn and titleAr
-  scope?: string;
-  published?: string;
-  priority?: string;
-  createdBy?: string;
-  classId?: string;
-  role?: string;
-};
+  title?: string // Searches both titleEn and titleAr
+  scope?: string
+  published?: string
+  priority?: string
+  createdBy?: string
+  classId?: string
+  role?: string
+}
 
 export type PaginationParams = {
-  page: number;
-  perPage: number;
-};
+  page: number
+  perPage: number
+}
 
 export type SortParam = {
-  id: string;
-  desc: boolean;
-};
+  id: string
+  desc: boolean
+}
 
 export type AnnouncementSortParams = {
-  sort?: SortParam[];
-};
+  sort?: SortParam[]
+}
 
 export type AnnouncementQueryParams = AnnouncementListFilters &
   PaginationParams &
-  AnnouncementSortParams;
+  AnnouncementSortParams
 
 // Select types for different query contexts - bilingual fields
 export const announcementListSelect = {
@@ -58,7 +59,7 @@ export const announcementListSelect = {
   publishedAt: true,
   scheduledFor: true,
   expiresAt: true,
-} as const;
+} as const
 
 export const announcementDetailSelect = {
   id: true,
@@ -94,7 +95,7 @@ export const announcementDetailSelect = {
       image: true,
     },
   },
-} as const;
+} as const
 
 // ============================================================================
 // Query Builders
@@ -112,7 +113,7 @@ export function buildAnnouncementWhere(
 ): Prisma.AnnouncementWhereInput {
   const where: Prisma.AnnouncementWhereInput = {
     schoolId,
-  };
+  }
 
   // Text search - search in both English and Arabic titles
   if (filters.title) {
@@ -129,37 +130,37 @@ export function buildAnnouncementWhere(
           mode: Prisma.QueryMode.insensitive,
         },
       },
-    ];
+    ]
   }
 
   // Enum filters
   if (filters.scope) {
-    where.scope = filters.scope as any;
+    where.scope = filters.scope as any
   }
 
   if (filters.priority) {
-    where.priority = filters.priority as any;
+    where.priority = filters.priority as any
   }
 
   // Boolean filter
   if (filters.published) {
-    where.published = filters.published === "true";
+    where.published = filters.published === "true"
   }
 
   // Relation filters
   if (filters.createdBy) {
-    where.createdBy = filters.createdBy;
+    where.createdBy = filters.createdBy
   }
 
   if (filters.classId) {
-    where.classId = filters.classId;
+    where.classId = filters.classId
   }
 
   if (filters.role) {
-    where.role = filters.role as any;
+    where.role = filters.role as any
   }
 
-  return where;
+  return where
 }
 
 /**
@@ -173,14 +174,14 @@ export function buildAnnouncementOrderBy(
   if (sortParams && Array.isArray(sortParams) && sortParams.length > 0) {
     return sortParams.map((s) => ({
       [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
-    }));
+    }))
   }
 
   // Default: pinned first, then by created date descending
   return [
     { pinned: Prisma.SortOrder.desc },
     { createdAt: Prisma.SortOrder.desc },
-  ];
+  ]
 }
 
 /**
@@ -193,7 +194,7 @@ export function buildPagination(page: number, perPage: number) {
   return {
     skip: (page - 1) * perPage,
     take: perPage,
-  };
+  }
 }
 
 // ============================================================================
@@ -210,12 +211,9 @@ export async function getAnnouncementsList(
   schoolId: string,
   params: Partial<AnnouncementQueryParams> = {}
 ) {
-  const where = buildAnnouncementWhere(schoolId, params);
-  const orderBy = buildAnnouncementOrderBy(params.sort);
-  const { skip, take } = buildPagination(
-    params.page ?? 1,
-    params.perPage ?? 10
-  );
+  const where = buildAnnouncementWhere(schoolId, params)
+  const orderBy = buildAnnouncementOrderBy(params.sort)
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 10)
 
   // Execute queries in parallel for better performance
   const [rows, count] = await Promise.all([
@@ -227,9 +225,9 @@ export async function getAnnouncementsList(
       select: announcementListSelect,
     }),
     db.announcement.count({ where }),
-  ]);
+  ])
 
-  return { rows, count };
+  return { rows, count }
 }
 
 /**
@@ -248,7 +246,7 @@ export async function getAnnouncementDetail(
       schoolId,
     },
     select: announcementDetailSelect,
-  });
+  })
 }
 
 /**
@@ -270,13 +268,13 @@ export async function getClassAnnouncements(
       { scope: "class", classId },
       ...(includeSchoolWide ? [{ scope: "school" as const }] : []),
     ],
-  };
+  }
 
   return db.announcement.findMany({
     where,
     orderBy: buildAnnouncementOrderBy(),
     select: announcementListSelect,
-  });
+  })
 }
 
 /**
@@ -298,13 +296,13 @@ export async function getRoleAnnouncements(
       { scope: "role", role },
       ...(includeSchoolWide ? [{ scope: "school" as const }] : []),
     ],
-  };
+  }
 
   return db.announcement.findMany({
     where,
     orderBy: buildAnnouncementOrderBy(),
     select: announcementListSelect,
-  });
+  })
 }
 
 /**
@@ -319,7 +317,7 @@ export async function getScheduledAnnouncementsToPublish(schoolId?: string) {
     scheduledFor: {
       lte: new Date(),
     },
-  };
+  }
 
   return db.announcement.findMany({
     where,
@@ -330,7 +328,7 @@ export async function getScheduledAnnouncementsToPublish(schoolId?: string) {
       titleAr: true,
       scheduledFor: true,
     },
-  });
+  })
 }
 
 /**
@@ -345,7 +343,7 @@ export async function getExpiredAnnouncements(schoolId?: string) {
     expiresAt: {
       lte: new Date(),
     },
-  };
+  }
 
   return db.announcement.findMany({
     where,
@@ -356,7 +354,7 @@ export async function getExpiredAnnouncements(schoolId?: string) {
       titleAr: true,
       expiresAt: true,
     },
-  });
+  })
 }
 
 /**
@@ -377,7 +375,7 @@ export async function getPinnedAnnouncements(schoolId: string) {
     ],
     select: announcementListSelect,
     take: 5, // Limit to top 5 pinned announcements
-  });
+  })
 }
 
 /**
@@ -403,7 +401,7 @@ export async function getAnnouncementStats(schoolId: string) {
         expiresAt: { lte: new Date() },
       },
     }),
-  ]);
+  ])
 
   return {
     total,
@@ -411,7 +409,7 @@ export async function getAnnouncementStats(schoolId: string) {
     scheduled,
     expired,
     draft: total - published - scheduled,
-  };
+  }
 }
 
 // ============================================================================
@@ -436,9 +434,9 @@ export async function verifyAnnouncementOwnership(
     select: {
       id: true,
     },
-  });
+  })
 
-  return announcements.map((a) => a.id);
+  return announcements.map((a) => a.id)
 }
 
 /**
@@ -457,7 +455,7 @@ export async function getAnnouncementsByIds(
       schoolId,
     },
     select: announcementDetailSelect,
-  });
+  })
 }
 
 // ============================================================================
@@ -474,10 +472,10 @@ export function getLocalizedTitle(
   announcement: { titleEn: string | null; titleAr: string | null },
   locale: string
 ): string {
-  if (locale === 'ar') {
-    return announcement.titleAr || announcement.titleEn || '';
+  if (locale === "ar") {
+    return announcement.titleAr || announcement.titleEn || ""
   }
-  return announcement.titleEn || announcement.titleAr || '';
+  return announcement.titleEn || announcement.titleAr || ""
 }
 
 /**
@@ -490,8 +488,8 @@ export function getLocalizedBody(
   announcement: { bodyEn: string | null; bodyAr: string | null },
   locale: string
 ): string {
-  if (locale === 'ar') {
-    return announcement.bodyAr || announcement.bodyEn || '';
+  if (locale === "ar") {
+    return announcement.bodyAr || announcement.bodyEn || ""
   }
-  return announcement.bodyEn || announcement.bodyAr || '';
+  return announcement.bodyEn || announcement.bodyAr || ""
 }

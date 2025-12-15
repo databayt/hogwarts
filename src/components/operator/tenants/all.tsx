@@ -1,27 +1,40 @@
-"use client";
+"use client"
 
 /**
  * All tenants view component
  *
  * Displays a grid or list of all tenants with filtering and sorting options.
  */
+import { useState } from "react"
+import { Grid3x3, List, Search, SlidersHorizontal } from "lucide-react"
 
-import { useState } from "react";
-import { TenantCard, TenantCompactCard } from "./card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Grid3x3, List, SlidersHorizontal } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantFilters, PlanType, TenantStatus } from "./types";
-import { PLAN_TYPES, TENANT_STATUSES } from "./config";
-import { sortTenants, getTenantStatus } from "./util";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { TenantCard, TenantCompactCard } from "./card"
+import { PLAN_TYPES, TENANT_STATUSES } from "./config"
+import type {
+  PlanType,
+  Tenant,
+  TenantFilters,
+  TenantMetrics,
+  TenantStatus,
+} from "./types"
+import { getTenantStatus, sortTenants } from "./util"
 
 interface AllTenantsProps {
-  tenants: Tenant[];
-  metrics?: Record<string, TenantMetrics>;
-  defaultView?: "grid" | "list";
-  showFilters?: boolean;
-  onTenantClick?: (tenantId: string) => void;
+  tenants: Tenant[]
+  metrics?: Record<string, TenantMetrics>
+  defaultView?: "grid" | "list"
+  showFilters?: boolean
+  onTenantClick?: (tenantId: string) => void
 }
 
 /**
@@ -34,45 +47,47 @@ export function AllTenants({
   showFilters = true,
   onTenantClick,
 }: AllTenantsProps) {
-  const [view, setView] = useState<"grid" | "list">(defaultView);
+  const [view, setView] = useState<"grid" | "list">(defaultView)
   const [filters, setFilters] = useState<TenantFilters>({
     search: "",
     planType: "",
     status: "",
-  });
-  const [sortField, setSortField] = useState<"name" | "domain" | "createdAt">("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  })
+  const [sortField, setSortField] = useState<"name" | "domain" | "createdAt">(
+    "name"
+  )
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
   // Filter tenants
   const filteredTenants = tenants.filter((tenant) => {
     // Search filter
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
+      const searchLower = filters.search.toLowerCase()
       const matchesSearch =
         tenant.name.toLowerCase().includes(searchLower) ||
-        tenant.domain.toLowerCase().includes(searchLower);
-      if (!matchesSearch) return false;
+        tenant.domain.toLowerCase().includes(searchLower)
+      if (!matchesSearch) return false
     }
 
     // Plan type filter
     if (filters.planType && tenant.planType !== filters.planType) {
-      return false;
+      return false
     }
 
     // Status filter
     if (filters.status) {
       // Note: School model doesn't include trialEndsAt - would need to join with Subscription
-      const tenantStatus = getTenantStatus(tenant.isActive, null);
+      const tenantStatus = getTenantStatus(tenant.isActive, null)
       if (tenantStatus !== filters.status) {
-        return false;
+        return false
       }
     }
 
-    return true;
-  });
+    return true
+  })
 
   // Sort tenants
-  const sortedTenants = sortTenants(filteredTenants, sortField, sortDirection);
+  const sortedTenants = sortTenants(filteredTenants, sortField, sortDirection)
 
   return (
     <div className="space-y-4">
@@ -80,7 +95,7 @@ export function AllTenants({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3>All Tenants</h3>
-          <span className="rounded-full bg-muted px-2 py-1">
+          <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedTenants.length}</small>
           </span>
         </div>
@@ -106,18 +121,22 @@ export function AllTenants({
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search tenants..."
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
               className="pl-9"
             />
           </div>
 
           <Select
             value={filters.planType}
-            onValueChange={(value) => setFilters({ ...filters, planType: value as "" | PlanType })}
+            onValueChange={(value) =>
+              setFilters({ ...filters, planType: value as "" | PlanType })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All plans" />
@@ -134,7 +153,9 @@ export function AllTenants({
 
           <Select
             value={filters.status}
-            onValueChange={(value) => setFilters({ ...filters, status: value as "" | TenantStatus })}
+            onValueChange={(value) =>
+              setFilters({ ...filters, status: value as "" | TenantStatus })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
@@ -152,9 +173,12 @@ export function AllTenants({
           <Select
             value={`${sortField}-${sortDirection}`}
             onValueChange={(value) => {
-              const [field, direction] = value.split("-") as ["name" | "domain" | "createdAt", "asc" | "desc"];
-              setSortField(field);
-              setSortDirection(direction);
+              const [field, direction] = value.split("-") as [
+                "name" | "domain" | "createdAt",
+                "asc" | "desc",
+              ]
+              setSortField(field)
+              setSortDirection(direction)
             }}
           >
             <SelectTrigger>
@@ -176,11 +200,11 @@ export function AllTenants({
       {/* Empty state */}
       {sortedTenants.length === 0 && (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8">
-          <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-            <Search className="size-10 text-muted-foreground" />
+          <div className="bg-muted flex size-20 items-center justify-center rounded-full">
+            <Search className="text-muted-foreground size-10" />
           </div>
           <h4 className="mt-4">No tenants found</h4>
-          <p className="muted mt-2 text-center max-w-sm">
+          <p className="muted mt-2 max-w-sm text-center">
             {filters.search || filters.planType || filters.status
               ? "Try adjusting your filters to find what you're looking for."
               : "Get started by creating your first tenant."}
@@ -189,7 +213,9 @@ export function AllTenants({
             <Button
               variant="outline"
               className="mt-4"
-              onClick={() => setFilters({ search: "", planType: "", status: "" })}
+              onClick={() =>
+                setFilters({ search: "", planType: "", status: "" })
+              }
             >
               Clear filters
             </Button>
@@ -216,12 +242,16 @@ export function AllTenants({
       {view === "list" && sortedTenants.length > 0 && (
         <div className="space-y-2">
           {sortedTenants.map((tenant) => (
-            <div key={tenant.id} onClick={() => onTenantClick?.(tenant.id)} className="cursor-pointer">
+            <div
+              key={tenant.id}
+              onClick={() => onTenantClick?.(tenant.id)}
+              className="cursor-pointer"
+            >
               <TenantCompactCard tenant={tenant} />
             </div>
           ))}
         </div>
       )}
     </div>
-  );
+  )
 }

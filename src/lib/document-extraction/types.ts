@@ -4,19 +4,19 @@
  */
 
 export type OnboardingStep =
-  | 'title'
-  | 'description'
-  | 'location'
-  | 'capacity'
-  | 'branding'
-  | 'import'
-  | 'price'
-  | 'legal'
+  | "title"
+  | "description"
+  | "location"
+  | "capacity"
+  | "branding"
+  | "import"
+  | "price"
+  | "legal"
 
 export interface ExtractedField {
   key: string
   value: unknown
-  confidence: 'high' | 'medium' | 'low'
+  confidence: "high" | "medium" | "low"
   source?: string
   originalText?: string
 }

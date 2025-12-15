@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+
 import { IconWrapper } from "./icon-wrapper"
 import type { BaseVariant } from "./types"
 
@@ -85,10 +87,7 @@ export function ActionCard({
 
   return (
     <Card
-      className={cn(
-        "relative transition-colors hover:bg-accent/50",
-        className
-      )}
+      className={cn("hover:bg-accent/50 relative transition-colors", className)}
     >
       <CardContent className="p-6">
         <div className="flex items-center gap-4">
@@ -104,9 +103,7 @@ export function ActionCard({
           </div>
 
           {/* Action */}
-          <div className="shrink-0">
-            {action}
-          </div>
+          <div className="shrink-0">{action}</div>
 
           {/* Dismiss button */}
           {dismissible && (

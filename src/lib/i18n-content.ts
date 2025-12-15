@@ -1,4 +1,4 @@
-import type { Locale } from "@/components/internationalization/config";
+import type { Locale } from "@/components/internationalization/config"
 
 // ============================================================================
 // Bilingual Content Types
@@ -9,23 +9,23 @@ import type { Locale } from "@/components/internationalization/config";
  * Use for user-generated content like announcements, notifications, etc.
  */
 export type BilingualText = {
-  en: string;
-  ar: string;
-};
+  en: string
+  ar: string
+}
 
 /**
  * Partial bilingual text - at least one language is required
  */
 export type PartialBilingualText = {
-  en?: string;
-  ar?: string;
-};
+  en?: string
+  ar?: string
+}
 
 /**
  * Creates a bilingual text object from separate fields
  */
 export function createBilingualText(en: string, ar: string): BilingualText {
-  return { en, ar };
+  return { en, ar }
 }
 
 // ============================================================================
@@ -50,9 +50,9 @@ export function getLocalizedText(
   ar: string | null | undefined
 ): string {
   if (locale === "ar") {
-    return ar || en || "";
+    return ar || en || ""
   }
-  return en || ar || "";
+  return en || ar || ""
 }
 
 /**
@@ -65,8 +65,8 @@ export function getLocalizedFromObject(
   locale: Locale,
   text: BilingualText | PartialBilingualText | null | undefined
 ): string {
-  if (!text) return "";
-  return getLocalizedText(locale, text.en, text.ar);
+  if (!text) return ""
+  return getLocalizedText(locale, text.en, text.ar)
 }
 
 /**
@@ -81,15 +81,15 @@ export function getLocalizedFromJSON(
   locale: Locale,
   jsonField: string | BilingualText | null | undefined
 ): string {
-  if (!jsonField) return "";
+  if (!jsonField) return ""
 
   // If it's already a string (legacy format), return as-is
   if (typeof jsonField === "string") {
-    return jsonField;
+    return jsonField
   }
 
   // If it's a bilingual object
-  return getLocalizedFromObject(locale, jsonField);
+  return getLocalizedFromObject(locale, jsonField)
 }
 
 // ============================================================================
@@ -100,8 +100,8 @@ export function getLocalizedFromJSON(
  * Type for form data that includes bilingual fields
  */
 export type BilingualFormData<T extends string> = {
-  [K in `${T}En` | `${T}Ar`]: string;
-};
+  [K in `${T}En` | `${T}Ar`]: string
+}
 
 /**
  * Extract bilingual form data to a BilingualText object
@@ -114,12 +114,12 @@ export function extractBilingual<T extends Record<string, unknown>>(
   data: T,
   fieldName: string
 ): BilingualText {
-  const enKey = `${fieldName}En` as keyof T;
-  const arKey = `${fieldName}Ar` as keyof T;
+  const enKey = `${fieldName}En` as keyof T
+  const arKey = `${fieldName}Ar` as keyof T
   return {
     en: String(data[enKey] ?? ""),
     ar: String(data[arKey] ?? ""),
-  };
+  }
 }
 
 /**
@@ -137,7 +137,7 @@ export function spreadBilingual(
   return {
     [`${fieldName}En`]: text?.en ?? "",
     [`${fieldName}Ar`]: text?.ar ?? "",
-  };
+  }
 }
 
 // ============================================================================
@@ -147,34 +147,40 @@ export function spreadBilingual(
 /**
  * Check if bilingual content has at least one language filled
  */
-export function hasBilingualContent(text: PartialBilingualText | null | undefined): boolean {
-  if (!text) return false;
-  return Boolean(text.en?.trim() || text.ar?.trim());
+export function hasBilingualContent(
+  text: PartialBilingualText | null | undefined
+): boolean {
+  if (!text) return false
+  return Boolean(text.en?.trim() || text.ar?.trim())
 }
 
 /**
  * Check if bilingual content has both languages filled
  */
-export function isFullyBilingual(text: PartialBilingualText | null | undefined): boolean {
-  if (!text) return false;
-  return Boolean(text.en?.trim() && text.ar?.trim());
+export function isFullyBilingual(
+  text: PartialBilingualText | null | undefined
+): boolean {
+  if (!text) return false
+  return Boolean(text.en?.trim() && text.ar?.trim())
 }
 
 /**
  * Get completion status for bilingual content
  */
-export function getBilingualStatus(text: PartialBilingualText | null | undefined): {
-  complete: boolean;
-  missingEn: boolean;
-  missingAr: boolean;
+export function getBilingualStatus(
+  text: PartialBilingualText | null | undefined
+): {
+  complete: boolean
+  missingEn: boolean
+  missingAr: boolean
 } {
-  const hasEn = Boolean(text?.en?.trim());
-  const hasAr = Boolean(text?.ar?.trim());
+  const hasEn = Boolean(text?.en?.trim())
+  const hasAr = Boolean(text?.ar?.trim())
   return {
     complete: hasEn && hasAr,
     missingEn: !hasEn,
     missingAr: !hasAr,
-  };
+  }
 }
 
 // ============================================================================
@@ -193,19 +199,23 @@ export function getBilingualPreview(
   text: BilingualText | PartialBilingualText | null | undefined,
   maxLength = 100
 ): string {
-  if (!text) return "";
+  if (!text) return ""
 
-  const en = text.en?.trim() ?? "";
-  const ar = text.ar?.trim() ?? "";
+  const en = text.en?.trim() ?? ""
+  const ar = text.ar?.trim() ?? ""
 
   if (en && ar) {
-    const truncatedEn = en.length > maxLength / 2 ? en.slice(0, maxLength / 2 - 1) + "…" : en;
-    const truncatedAr = ar.length > maxLength / 2 ? ar.slice(0, maxLength / 2 - 1) + "…" : ar;
-    return `${truncatedEn} | ${truncatedAr}`;
+    const truncatedEn =
+      en.length > maxLength / 2 ? en.slice(0, maxLength / 2 - 1) + "…" : en
+    const truncatedAr =
+      ar.length > maxLength / 2 ? ar.slice(0, maxLength / 2 - 1) + "…" : ar
+    return `${truncatedEn} | ${truncatedAr}`
   }
 
-  const content = en || ar;
-  return content.length > maxLength ? content.slice(0, maxLength - 1) + "…" : content;
+  const content = en || ar
+  return content.length > maxLength
+    ? content.slice(0, maxLength - 1) + "…"
+    : content
 }
 
 // ============================================================================
@@ -225,32 +235,32 @@ export function convertToBilingual(
   legacyContent: string | null | undefined,
   defaultLocale: Locale = "ar"
 ): BilingualText {
-  if (!legacyContent) return { en: "", ar: "" };
+  if (!legacyContent) return { en: "", ar: "" }
 
   // Detect if content is primarily Arabic
-  const arabicPattern = /[\u0600-\u06FF]/;
-  const isArabic = arabicPattern.test(legacyContent);
+  const arabicPattern = /[\u0600-\u06FF]/
+  const isArabic = arabicPattern.test(legacyContent)
 
   if (isArabic) {
-    return { en: "", ar: legacyContent };
+    return { en: "", ar: legacyContent }
   }
 
   // If not Arabic, assign based on defaultLocale
   if (defaultLocale === "ar") {
-    return { en: "", ar: legacyContent };
+    return { en: "", ar: legacyContent }
   }
 
-  return { en: legacyContent, ar: "" };
+  return { en: legacyContent, ar: "" }
 }
 
 /**
  * Detect the primary language of text content
  */
 export function detectLanguage(text: string): Locale {
-  const arabicPattern = /[\u0600-\u06FF]/g;
-  const matches = text.match(arabicPattern);
-  const arabicRatio = (matches?.length ?? 0) / text.length;
+  const arabicPattern = /[\u0600-\u06FF]/g
+  const matches = text.match(arabicPattern)
+  const arabicRatio = (matches?.length ?? 0) / text.length
 
   // If more than 30% Arabic characters, consider it Arabic
-  return arabicRatio > 0.3 ? "ar" : "en";
+  return arabicRatio > 0.3 ? "ar" : "en"
 }

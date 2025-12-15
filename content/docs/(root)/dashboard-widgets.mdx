@@ -7,17 +7,17 @@ The dashboard system uses a comprehensive set of **reusable widget components** 
 
 ## Component Overview
 
-| Widget | Purpose | Props |
-|--------|---------|-------|
-| `ActivityRings` | Apple-style circular progress | activities, title |
-| `WelcomeBanner` | Personalized greeting | userName, role, subtitle |
-| `MetricCard` | Key stat with icon | title, value, icon, change |
-| `ScheduleItem` | Timetable entry | time, title, subtitle, badge |
-| `AnnouncementCard` | School announcements | title, content, date, priority |
-| `ProgressCard` | Goal tracking | title, current, total |
-| `QuickActionsGrid` | Shortcut buttons | actions, columns |
-| `ChartCard` | Chart wrapper | title, description, children |
-| `EmptyState` | No data placeholder | icon, title, description |
+| Widget             | Purpose                       | Props                          |
+| ------------------ | ----------------------------- | ------------------------------ |
+| `ActivityRings`    | Apple-style circular progress | activities, title              |
+| `WelcomeBanner`    | Personalized greeting         | userName, role, subtitle       |
+| `MetricCard`       | Key stat with icon            | title, value, icon, change     |
+| `ScheduleItem`     | Timetable entry               | time, title, subtitle, badge   |
+| `AnnouncementCard` | School announcements          | title, content, date, priority |
+| `ProgressCard`     | Goal tracking                 | title, current, total          |
+| `QuickActionsGrid` | Shortcut buttons              | actions, columns               |
+| `ChartCard`        | Chart wrapper                 | title, description, children   |
+| `EmptyState`       | No data placeholder           | icon, title, description       |
 
 ## ActivityRings
 
@@ -27,18 +27,18 @@ Apple-style circular progress indicators with animation.
 
 ```tsx
 interface ActivityRingData {
-  label: string;
-  value: number;    // 0-100 percentage
-  color: string;    // Hex color
-  current: number;  // Current value
-  target: number;   // Target value
-  unit: string;     // Display unit
+  label: string
+  value: number // 0-100 percentage
+  color: string // Hex color
+  current: number // Current value
+  target: number // Target value
+  unit: string // Display unit
 }
 
 interface ActivityRingsProps {
-  activities: ActivityRingData[];
-  title?: string;
-  className?: string;
+  activities: ActivityRingData[]
+  title?: string
+  className?: string
 }
 ```
 
@@ -70,9 +70,9 @@ const activityData = [
     target: 5,
     unit: "due",
   },
-];
+]
 
-<ActivityRings activities={activityData} title="My Progress" />
+;<ActivityRings activities={activityData} title="My Progress" />
 ```
 
 ### Features
@@ -90,11 +90,11 @@ Personalized greeting with current time and date.
 
 ```tsx
 interface WelcomeBannerProps {
-  userName?: string;
-  role?: string;
-  greeting?: string;    // Override auto-greeting
-  subtitle?: string;
-  className?: string;
+  userName?: string
+  role?: string
+  greeting?: string // Override auto-greeting
+  subtitle?: string
+  className?: string
 }
 ```
 
@@ -123,16 +123,16 @@ Key statistic display with optional trend indicator.
 
 ```tsx
 interface MetricCardProps {
-  title: string;
-  value: string | number;
-  change?: number;
-  changeType?: "positive" | "negative" | "neutral";
-  icon?: ElementType;      // Direct icon component
-  iconName?: string;       // String for server components
-  iconColor?: string;
-  description?: string;
-  href?: string;           // Makes card clickable
-  className?: string;
+  title: string
+  value: string | number
+  change?: number
+  changeType?: "positive" | "negative" | "neutral"
+  icon?: ElementType // Direct icon component
+  iconName?: string // String for server components
+  iconColor?: string
+  description?: string
+  href?: string // Makes card clickable
+  className?: string
 }
 ```
 
@@ -165,11 +165,28 @@ For server components, use `iconName` string:
 
 ```tsx
 const iconMap = {
-  Calendar, Clock, TrendingUp, TrendingDown, ChevronRight,
-  Bell, Users, BookOpen, GraduationCap, DollarSign,
-  Settings, ClipboardList, FileText, Award, CalendarDays,
-  MessageSquare, UserPlus, BarChart3, FolderOpen, CheckCircle, Trophy,
-};
+  Calendar,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  Bell,
+  Users,
+  BookOpen,
+  GraduationCap,
+  DollarSign,
+  Settings,
+  ClipboardList,
+  FileText,
+  Award,
+  CalendarDays,
+  MessageSquare,
+  UserPlus,
+  BarChart3,
+  FolderOpen,
+  CheckCircle,
+  Trophy,
+}
 ```
 
 ### Features
@@ -187,13 +204,13 @@ Timetable or calendar entry display.
 
 ```tsx
 interface ScheduleItemProps {
-  time: string;
-  title: string;
-  subtitle?: string;
-  badge?: string;
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
-  isActive?: boolean;
-  className?: string;
+  time: string
+  title: string
+  subtitle?: string
+  badge?: string
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline"
+  isActive?: boolean
+  className?: string
 }
 ```
 
@@ -225,13 +242,13 @@ School announcement display with priority indicator.
 
 ```tsx
 interface AnnouncementCardProps {
-  title: string;
-  content: string;
-  date: string | Date;
-  author?: string;
-  priority?: "high" | "normal" | "low";
-  href?: string;
-  className?: string;
+  title: string
+  content: string
+  date: string | Date
+  author?: string
+  priority?: "high" | "normal" | "low"
+  href?: string
+  className?: string
 }
 ```
 
@@ -262,15 +279,15 @@ Goal tracking with visual progress bar.
 
 ```tsx
 interface ProgressCardProps {
-  title: string;
-  current: number;
-  total: number;
-  unit?: string;
-  icon?: ElementType;
-  iconName?: string;
-  color?: string;
-  showPercentage?: boolean;
-  className?: string;
+  title: string
+  current: number
+  total: number
+  unit?: string
+  icon?: ElementType
+  iconName?: string
+  color?: string
+  showPercentage?: boolean
+  className?: string
 }
 ```
 
@@ -302,17 +319,17 @@ Grid of shortcut buttons for common actions.
 
 ```tsx
 interface QuickActionItem {
-  label: string;
-  icon: ElementType;
-  href: string;
-  color?: string;
+  label: string
+  icon: ElementType
+  href: string
+  color?: string
 }
 
 interface QuickActionsGridProps {
-  actions: QuickActionItem[];
-  title?: string;
-  columns?: 2 | 3 | 4;
-  className?: string;
+  actions: QuickActionItem[]
+  title?: string
+  columns?: 2 | 3 | 4
+  className?: string
 }
 ```
 
@@ -324,9 +341,9 @@ const actions = [
   { label: "Attendance", icon: Calendar, href: "/attendance" },
   { label: "Grades", icon: FileText, href: "/grades" },
   { label: "Reports", icon: BarChart3, href: "/reports" },
-];
+]
 
-<QuickActionsGrid actions={actions} title="Quick Actions" columns={4} />
+;<QuickActionsGrid actions={actions} title="Quick Actions" columns={4} />
 ```
 
 ### Features
@@ -344,11 +361,11 @@ Consistent wrapper for chart components.
 
 ```tsx
 interface ChartCardProps {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
-  className?: string;
+  title: string
+  description?: string
+  children: React.ReactNode
+  footer?: React.ReactNode
+  className?: string
 }
 ```
 
@@ -372,16 +389,16 @@ Placeholder for sections with no data.
 
 ```tsx
 interface EmptyStateProps {
-  icon?: ElementType;
-  iconName?: string;
-  title: string;
-  description?: string;
+  icon?: ElementType
+  iconName?: string
+  title: string
+  description?: string
   action?: {
-    label: string;
-    href?: string;
-    onClick?: () => void;
-  };
-  className?: string;
+    label: string
+    href?: string
+    onClick?: () => void
+  }
+  className?: string
 }
 ```
 
@@ -419,7 +436,7 @@ export {
   type QuickActionsGridProps,
   type ChartCardProps,
   type EmptyStateProps,
-};
+}
 ```
 
 ## File Location

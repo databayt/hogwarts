@@ -1,9 +1,10 @@
-import TimetableTemplatesContent from '@/components/platform/timetable/templates/content'
-import { SearchParams } from 'nuqs/server'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { SearchParams } from "nuqs/server"
 
-export const metadata = { title: 'Dashboard: Timetable Templates' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import TimetableTemplatesContent from "@/components/platform/timetable/templates/content"
+
+export const metadata = { title: "Dashboard: Timetable Templates" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -14,5 +15,10 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <TimetableTemplatesContent searchParams={searchParams} dictionary={dictionary.school} />
+  return (
+    <TimetableTemplatesContent
+      searchParams={searchParams}
+      dictionary={dictionary.school}
+    />
+  )
 }

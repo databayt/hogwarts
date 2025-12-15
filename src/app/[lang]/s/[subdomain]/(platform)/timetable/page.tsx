@@ -1,8 +1,8 @@
-import { TimetableContent } from '@/components/platform/timetable/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { TimetableContent } from "@/components/platform/timetable/content"
 
-export const metadata = { title: 'Dashboard: Timetable' }
+export const metadata = { title: "Dashboard: Timetable" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -14,10 +14,3 @@ export default async function Page({ params }: Props) {
 
   return <TimetableContent dictionary={dictionary.school} />
 }
-
-
-
-
-
-
-

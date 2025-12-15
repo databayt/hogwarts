@@ -1,8 +1,9 @@
 import * as React from "react"
+
 import { highlightCode } from "@/lib/highlight-code"
 import { cn } from "@/lib/utils"
-import { CopyButton } from "@/components/docs/copy-button"
 import { CodeCollapsibleWrapper } from "@/components/docs/code-collapsible-wrapper"
+import { CopyButton } from "@/components/docs/copy-button"
 
 interface ComponentSourceProps extends React.HTMLAttributes<HTMLDivElement> {
   name?: string

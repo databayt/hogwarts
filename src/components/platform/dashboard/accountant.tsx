@@ -1,28 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
+import Link from "next/link"
 import { format, isToday, isTomorrow } from "date-fns"
-import { getQuickLookData, getFinancialSummary } from "./actions"
-import { getWeatherData } from "./weather-actions"
+import { ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getFinancialSummary, getQuickLookData } from "./actions"
+import { ActivityRings } from "./activity-rings"
+import { ChartSection } from "./chart-section"
+import { EmptyState } from "./empty-state"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { MetricCard } from "./metric-card"
+import { PerformanceGauge } from "./performance-gauge"
+import { ProgressCard } from "./progress-card"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
-import { getTenantContext } from "@/lib/tenant-context"
-import { MetricCard } from "./metric-card"
-import { ActivityRings } from "./activity-rings"
-import { ProgressCard } from "./progress-card"
-import { EmptyState } from "./empty-state"
-import { RevenueChart } from "./revenue-chart"
-import { PerformanceGauge } from "./performance-gauge"
-import { WeeklyActivityChart } from "./weekly-chart"
-import { Upcoming } from "./upcoming"
-import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
-import { InvoiceHistorySection } from "./invoice-history-section"
-import { ChartSection } from "./chart-section"
+import { RevenueChart } from "./revenue-chart"
 import { SectionHeading } from "./section-heading"
-import Link from "next/link"
-import { ChevronRight, ArrowDownRight, ArrowUpRight } from "lucide-react"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
+import { getWeatherData } from "./weather-actions"
+import { WeeklyActivityChart } from "./weekly-chart"
 
 interface AccountantDashboardProps {
   user: {
@@ -63,7 +65,10 @@ export async function AccountantDashboard({
       const tenantContext = await getTenantContext()
       schoolId = tenantContext.schoolId
     } catch (error) {
-      console.error("[AccountantDashboard] Error getting tenant context:", error)
+      console.error(
+        "[AccountantDashboard] Error getting tenant context:",
+        error
+      )
     }
 
     // Get school subdomain for URL construction with error handling
@@ -78,7 +83,10 @@ export async function AccountantDashboard({
         })
       }
     } catch (error) {
-      console.error("[AccountantDashboard] Error fetching school domain:", error)
+      console.error(
+        "[AccountantDashboard] Error fetching school domain:",
+        error
+      )
     }
 
     // Fetch real invoice data from database with error handling
@@ -90,8 +98,12 @@ export async function AccountantDashboard({
         const { db } = await import("@/lib/db")
         const [total, paid, unpaid] = await Promise.all([
           db.userInvoice.count({ where: { schoolId: user.schoolId } }),
-          db.userInvoice.count({ where: { schoolId: user.schoolId, status: "PAID" } }),
-          db.userInvoice.count({ where: { schoolId: user.schoolId, status: "UNPAID" } }),
+          db.userInvoice.count({
+            where: { schoolId: user.schoolId, status: "PAID" },
+          }),
+          db.userInvoice.count({
+            where: { schoolId: user.schoolId, status: "UNPAID" },
+          }),
         ])
         totalInvoices = total
         paidInvoices = paid
@@ -106,14 +118,22 @@ export async function AccountantDashboard({
     try {
       financialData = await getFinancialSummary()
     } catch (error) {
-      console.error("[AccountantDashboard] Error fetching financial summary:", error)
+      console.error(
+        "[AccountantDashboard] Error fetching financial summary:",
+        error
+      )
     }
 
     // Destructure with defaults for error handling
     const {
       revenue = { total: 0, pending: 0, overdue: 0, collectionRate: 0 },
       expenses = { total: 0, categories: [], budgetUtilization: 0 },
-      budget = { allocated: 0, remaining: 0, utilizationRate: 0, status: "unknown" },
+      budget = {
+        allocated: 0,
+        remaining: 0,
+        utilizationRate: 0,
+        status: "unknown",
+      },
       recentTransactions = [],
       defaulters = [],
     } = financialData || {}
@@ -134,7 +154,11 @@ export async function AccountantDashboard({
       { month: "Nov", revenue: 48000, expenses: 36000 },
       { month: "Dec", revenue: 52000, expenses: 42000 },
       { month: "Jan", revenue: 55000, expenses: 40000 },
-      { month: "Feb", revenue: Math.round(revenue.total / 1000) * 1000 || 58000, expenses: Math.round(expenses.total / 1000) * 1000 || 44000 },
+      {
+        month: "Feb",
+        revenue: Math.round(revenue.total / 1000) * 1000 || 58000,
+        expenses: Math.round(expenses.total / 1000) * 1000 || 44000,
+      },
     ]
 
     const weeklyCollections = [
@@ -146,38 +170,113 @@ export async function AccountantDashboard({
     ]
 
     // Map recent transactions from real data
-    const mockTodaysTransactions = recentTransactions.length > 0
-      ? recentTransactions.slice(0, 4).map((t: { id: string; type: string; amount: number; date: Date; studentName?: string; description?: string; status?: string }) => ({
-          type: t.type === "fee_payment" ? "Payment" : "Expense",
-          amount: t.amount,
-          description: t.studentName ? `Fee payment - ${t.studentName}` : (t.description || "Transaction"),
-          status: t.status === "completed" ? "completed" : "pending",
-          time: format(t.date, "h:mm a"),
-        }))
-      : [
-          { type: "Payment", amount: 2500, description: "Student fee payment - Grade 10", status: "completed", time: "9:30 AM" },
-          { type: "Payment", amount: 1800, description: "Lab fee - Science Dept", status: "completed", time: "11:00 AM" },
-        ]
+    const mockTodaysTransactions =
+      recentTransactions.length > 0
+        ? recentTransactions
+            .slice(0, 4)
+            .map(
+              (t: {
+                id: string
+                type: string
+                amount: number
+                date: Date
+                studentName?: string
+                description?: string
+                status?: string
+              }) => ({
+                type: t.type === "fee_payment" ? "Payment" : "Expense",
+                amount: t.amount,
+                description: t.studentName
+                  ? `Fee payment - ${t.studentName}`
+                  : t.description || "Transaction",
+                status: t.status === "completed" ? "completed" : "pending",
+                time: format(t.date, "h:mm a"),
+              })
+            )
+        : [
+            {
+              type: "Payment",
+              amount: 2500,
+              description: "Student fee payment - Grade 10",
+              status: "completed",
+              time: "9:30 AM",
+            },
+            {
+              type: "Payment",
+              amount: 1800,
+              description: "Lab fee - Science Dept",
+              status: "completed",
+              time: "11:00 AM",
+            },
+          ]
 
     // Map defaulters to pending payments format
-    const mockPendingPayments = defaulters.length > 0
-      ? defaulters.slice(0, 4).map((d: { id: string; name: string; class: string; outstandingAmount: number; monthsOverdue: number; lastPaymentDate: Date | null }) => ({
-          student: d.name,
-          grade: d.class,
-          amount: d.outstandingAmount,
-          dueDate: d.lastPaymentDate || new Date(Date.now() - d.monthsOverdue * 30 * 24 * 60 * 60 * 1000),
-          status: d.monthsOverdue > 1 ? "overdue" : "due-soon",
-        }))
-      : [
-          { student: "Emma Johnson", grade: "Grade 10", amount: 2500, dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), status: "overdue" },
-          { student: "Michael Brown", grade: "Grade 8", amount: 1800, dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), status: "due-soon" },
-        ]
+    const mockPendingPayments =
+      defaulters.length > 0
+        ? defaulters
+            .slice(0, 4)
+            .map(
+              (d: {
+                id: string
+                name: string
+                class: string
+                outstandingAmount: number
+                monthsOverdue: number
+                lastPaymentDate: Date | null
+              }) => ({
+                student: d.name,
+                grade: d.class,
+                amount: d.outstandingAmount,
+                dueDate:
+                  d.lastPaymentDate ||
+                  new Date(
+                    Date.now() - d.monthsOverdue * 30 * 24 * 60 * 60 * 1000
+                  ),
+                status: d.monthsOverdue > 1 ? "overdue" : "due-soon",
+              })
+            )
+        : [
+            {
+              student: "Emma Johnson",
+              grade: "Grade 10",
+              amount: 2500,
+              dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+              status: "overdue",
+            },
+            {
+              student: "Michael Brown",
+              grade: "Grade 8",
+              amount: 1800,
+              dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+              status: "due-soon",
+            },
+          ]
 
     const mockFinancialCalendar = [
-      { event: "Monthly Report Due", date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), type: "reporting", priority: "high" },
-      { event: "Audit Preparation", date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), type: "audit", priority: "high" },
-      { event: "Tax Filing Deadline", date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000), type: "tax", priority: "critical" },
-      { event: "Budget Review", date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), type: "budget", priority: "medium" },
+      {
+        event: "Monthly Report Due",
+        date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        type: "reporting",
+        priority: "high",
+      },
+      {
+        event: "Audit Preparation",
+        date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        type: "audit",
+        priority: "high",
+      },
+      {
+        event: "Tax Filing Deadline",
+        date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+        type: "tax",
+        priority: "critical",
+      },
+      {
+        event: "Budget Review",
+        date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        type: "budget",
+        priority: "medium",
+      },
     ]
 
     // Activity rings for financial health
@@ -200,8 +299,15 @@ export async function AccountantDashboard({
       },
       {
         label: "Outstanding",
-        value: Math.max(0, 100 - (mockFeeCollectionStatus.outstanding / mockFeeCollectionStatus.totalFees) * 100),
-        color: mockFeeCollectionStatus.outstanding > 50000 ? "#ef4444" : "#f59e0b",
+        value: Math.max(
+          0,
+          100 -
+            (mockFeeCollectionStatus.outstanding /
+              mockFeeCollectionStatus.totalFees) *
+              100
+        ),
+        color:
+          mockFeeCollectionStatus.outstanding > 50000 ? "#ef4444" : "#f59e0b",
         current: mockFeeCollectionStatus.outstanding,
         target: 0,
         unit: "pending",
@@ -210,7 +316,7 @@ export async function AccountantDashboard({
 
     // Calculate totals for today
     const todayTotal = mockTodaysTransactions
-      .filter(t => t.status === "completed")
+      .filter((t) => t.status === "completed")
       .reduce((sum, t) => sum + t.amount, 0)
 
     return (
@@ -218,7 +324,11 @@ export async function AccountantDashboard({
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
-          <Upcoming role="ACCOUNTANT" locale={locale} subdomain={school?.domain || ""} />
+          <Upcoming
+            role="ACCOUNTANT"
+            locale={locale}
+            subdomain={school?.domain || ""}
+          />
           <Weather
             current={weatherData?.current}
             forecast={weatherData?.forecast}
@@ -227,13 +337,20 @@ export async function AccountantDashboard({
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
+        <QuickLookSection
+          locale={locale}
+          subdomain={school?.domain || ""}
+          data={quickLookData}
+        />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("ACCOUNTANT", school?.domain ?? undefined)}
+            actions={getQuickActionsByRole(
+              "ACCOUNTANT",
+              school?.domain ?? undefined
+            )}
             locale={locale}
           />
         </section>
@@ -249,7 +366,7 @@ export async function AccountantDashboard({
 
         {/* ============ ACCOUNTANT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <MetricCard
             title="Fees Collected"
             value={`$${(mockFeeCollectionStatus.collected / 1000).toFixed(0)}K`}
@@ -325,7 +442,9 @@ export async function AccountantDashboard({
           {/* Today's Transactions */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Today&apos;s Transactions</CardTitle>
+              <CardTitle className="text-base">
+                Today&apos;s Transactions
+              </CardTitle>
               <Badge variant="outline">{format(new Date(), "MMM d")}</Badge>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -333,19 +452,23 @@ export async function AccountantDashboard({
                 mockTodaysTransactions.map((transaction, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${transaction.amount > 0 ? "bg-emerald-100 dark:bg-emerald-950" : "bg-red-100 dark:bg-red-950"}`}>
+                      <div
+                        className={`rounded-full p-2 ${transaction.amount > 0 ? "bg-emerald-100 dark:bg-emerald-950" : "bg-red-100 dark:bg-red-950"}`}
+                      >
                         {transaction.amount > 0 ? (
                           <ArrowDownRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         ) : (
-                          <ArrowUpRight className="h-4 w-4 text-destructive" />
+                          <ArrowUpRight className="text-destructive h-4 w-4" />
                         )}
                       </div>
                       <div>
                         <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.time}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {transaction.time}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -356,11 +479,20 @@ export async function AccountantDashboard({
                             : "text-destructive"
                         }`}
                       >
-                        {transaction.amount > 0 ? "+" : ""}${Math.abs(transaction.amount).toLocaleString()}
+                        {transaction.amount > 0 ? "+" : ""}$
+                        {Math.abs(transaction.amount).toLocaleString()}
                       </p>
                       <Badge
-                        variant={transaction.status === "completed" ? "default" : "secondary"}
-                        className={transaction.status === "completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : ""}
+                        variant={
+                          transaction.status === "completed"
+                            ? "default"
+                            : "secondary"
+                        }
+                        className={
+                          transaction.status === "completed"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                            : ""
+                        }
                       >
                         {transaction.status}
                       </Badge>
@@ -383,7 +515,7 @@ export async function AccountantDashboard({
               <CardTitle className="text-base">Pending Payments</CardTitle>
               <Link
                 href={`/${locale}/s/${school?.domain}/finance`}
-                className="text-sm text-primary hover:underline flex items-center gap-1"
+                className="text-primary flex items-center gap-1 text-sm hover:underline"
               >
                 View all <ChevronRight className="h-4 w-4" />
               </Link>
@@ -399,16 +531,18 @@ export async function AccountantDashboard({
                   return (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                     >
                       <div>
                         <p className="font-medium">{payment.student}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {payment.grade} • Due: {format(dueDate, "MMM d")}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">${payment.amount.toLocaleString()}</p>
+                        <p className="font-bold">
+                          ${payment.amount.toLocaleString()}
+                        </p>
                         <Badge
                           variant={
                             isOverdue
@@ -418,7 +552,13 @@ export async function AccountantDashboard({
                                 : "outline"
                           }
                         >
-                          {isOverdue ? "Overdue" : isDueToday ? "Due Today" : isDueTomorrow ? "Tomorrow" : format(dueDate, "MMM d")}
+                          {isOverdue
+                            ? "Overdue"
+                            : isDueToday
+                              ? "Due Today"
+                              : isDueTomorrow
+                                ? "Tomorrow"
+                                : format(dueDate, "MMM d")}
                         </Badge>
                       </div>
                     </div>
@@ -439,22 +579,28 @@ export async function AccountantDashboard({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">Financial Calendar</CardTitle>
-            <Badge variant="outline">{mockFinancialCalendar.length} upcoming</Badge>
+            <Badge variant="outline">
+              {mockFinancialCalendar.length} upcoming
+            </Badge>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
               {mockFinancialCalendar.map((event, index) => {
                 const eventDate = new Date(event.date)
-                const daysUntil = Math.ceil((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                const daysUntil = Math.ceil(
+                  (eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                )
 
                 return (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                   >
                     <div>
                       <p className="font-medium">{event.event}</p>
-                      <p className="text-sm text-muted-foreground capitalize">{event.type}</p>
+                      <p className="text-muted-foreground text-sm capitalize">
+                        {event.type}
+                      </p>
                     </div>
                     <div className="text-right">
                       <Badge
@@ -466,9 +612,13 @@ export async function AccountantDashboard({
                               : "secondary"
                         }
                       >
-                        {daysUntil <= 0 ? "Today" : daysUntil === 1 ? "1 day" : `${daysUntil} days`}
+                        {daysUntil <= 0
+                          ? "Today"
+                          : daysUntil === 1
+                            ? "1 day"
+                            : `${daysUntil} days`}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1 text-xs">
                         {format(eventDate, "MMM d, yyyy")}
                       </p>
                     </div>
@@ -486,29 +636,35 @@ export async function AccountantDashboard({
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-4">
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
                   ${(mockFeeCollectionStatus.collected / 1000).toFixed(0)}K
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Total Collected</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Total Collected
+                </p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                   ${(mockFeeCollectionStatus.outstanding / 1000).toFixed(0)}K
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Outstanding</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Outstanding
+                </p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
                 <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {totalInvoices}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Invoices</p>
+                <p className="text-muted-foreground mt-1 text-sm">Invoices</p>
               </div>
-              <div className="text-center p-4 bg-muted/30 rounded-lg">
-                <p className="text-3xl font-bold text-primary">
+              <div className="bg-muted/30 rounded-lg p-4 text-center">
+                <p className="text-primary text-3xl font-bold">
                   {mockFeeCollectionStatus.collectionRate.toFixed(0)}%
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">Collection Rate</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Collection Rate
+                </p>
               </div>
             </div>
           </CardContent>
@@ -546,8 +702,10 @@ export async function AccountantDashboard({
   } catch (renderError) {
     // Catch any rendering errors and log them
     console.error("[AccountantDashboard] Rendering error:", renderError)
-    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
-    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    const errorMessage =
+      renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack =
+      renderError instanceof Error ? renderError.stack : undefined
     console.error("[AccountantDashboard] Error message:", errorMessage)
     console.error("[AccountantDashboard] Error stack:", errorStack)
     return (
@@ -555,8 +713,12 @@ export async function AccountantDashboard({
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4">Dashboard Rendering Error</h3>
-            <p className="text-muted-foreground mb-2">An error occurred while rendering the dashboard.</p>
-            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">{errorMessage}</pre>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="bg-muted max-h-40 overflow-auto rounded p-2 text-xs">
+              {errorMessage}
+            </pre>
           </CardContent>
         </Card>
       </div>

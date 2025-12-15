@@ -1,25 +1,26 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 
 type ApiResponse = {
-  status: "success" | "error";
-  message: string;
-};
+  status: "success" | "error"
+  message: string
+}
 
 export async function markLessonComplete(
   lessonId: string,
   slug: string
 ): Promise<ApiResponse> {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
     return {
       status: "error",
       message: "Authentication required",
-    };
+    }
   }
 
   try {
@@ -46,24 +47,26 @@ export async function markLessonComplete(
           },
         },
       },
-    });
+    })
 
     if (!lesson) {
       return {
         status: "error",
         message: "Lesson not found",
-      };
+      }
     }
 
     // Check if user is enrolled (or is admin/teacher)
-    const isEnrolled = lesson.chapter.course.enrollments.length > 0;
-    const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(session.user.role || "");
+    const isEnrolled = lesson.chapter.course.enrollments.length > 0
+    const isAdmin = ["ADMIN", "TEACHER", "DEVELOPER"].includes(
+      session.user.role || ""
+    )
 
     if (!isEnrolled && !isAdmin) {
       return {
         status: "error",
         message: "You must be enrolled in this course to track progress",
-      };
+      }
     }
 
     // Upsert lesson progress
@@ -83,11 +86,11 @@ export async function markLessonComplete(
         lessonId: lessonId,
         isCompleted: true,
       },
-    });
+    })
 
     // Check if all lessons in the course are completed
-    const courseId = lesson.chapter.course.id;
-    const schoolId = lesson.chapter.course.schoolId;
+    const courseId = lesson.chapter.course.id
+    const schoolId = lesson.chapter.course.schoolId
 
     const allLessons = await db.streamLesson.findMany({
       where: {
@@ -96,7 +99,7 @@ export async function markLessonComplete(
         },
       },
       select: { id: true },
-    });
+    })
 
     const completedLessons = await db.streamLessonProgress.count({
       where: {
@@ -104,7 +107,7 @@ export async function markLessonComplete(
         lessonId: { in: allLessons.map((l) => l.id) },
         isCompleted: true,
       },
-    });
+    })
 
     // If all lessons completed, update enrollment status and potentially issue certificate
     if (completedLessons === allLessons.length && allLessons.length > 0) {
@@ -119,7 +122,7 @@ export async function markLessonComplete(
         data: {
           status: "COMPLETED",
         },
-      });
+      })
 
       // Check if certificate already exists
       const existingCert = await db.streamCertificate.findFirst({
@@ -128,17 +131,17 @@ export async function markLessonComplete(
           courseId: courseId,
           schoolId: schoolId,
         },
-      });
+      })
 
       if (!existingCert) {
         // Get course title for certificate
         const course = await db.streamCourse.findUnique({
           where: { id: courseId },
           select: { title: true },
-        });
+        })
 
         // Generate certificate
-        const certNumber = `CERT-${schoolId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+        const certNumber = `CERT-${schoolId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`
 
         await db.streamCertificate.create({
           data: {
@@ -149,22 +152,22 @@ export async function markLessonComplete(
             certificateNumber: certNumber,
             completedAt: new Date(),
           },
-        });
+        })
       }
     }
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`);
+    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
 
     return {
       status: "success",
       message: "Progress updated",
-    };
+    }
   } catch (error) {
-    console.error("Failed to mark lesson complete:", error);
+    console.error("Failed to mark lesson complete:", error)
     return {
       status: "error",
       message: "Failed to update progress",
-    };
+    }
   }
 }
 
@@ -172,13 +175,13 @@ export async function markLessonIncomplete(
   lessonId: string,
   slug: string
 ): Promise<ApiResponse> {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
     return {
       status: "error",
       message: "Authentication required",
-    };
+    }
   }
 
   try {
@@ -191,30 +194,30 @@ export async function markLessonIncomplete(
         isCompleted: false,
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`);
+    revalidatePath(`/[lang]/s/[subdomain]/stream/dashboard/${slug}`)
 
     return {
       status: "success",
       message: "Progress updated",
-    };
+    }
   } catch (error) {
-    console.error("Failed to mark lesson incomplete:", error);
+    console.error("Failed to mark lesson incomplete:", error)
     return {
       status: "error",
       message: "Failed to update progress",
-    };
+    }
   }
 }
 
 export async function getLessonProgress(lessonId: string): Promise<{
-  isCompleted: boolean;
+  isCompleted: boolean
 }> {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user) {
-    return { isCompleted: false };
+    return { isCompleted: false }
   }
 
   const progress = await db.streamLessonProgress.findUnique({
@@ -225,7 +228,7 @@ export async function getLessonProgress(lessonId: string): Promise<{
       },
     },
     select: { isCompleted: true },
-  });
+  })
 
-  return { isCompleted: progress?.isCompleted ?? false };
+  return { isCompleted: progress?.isCompleted ?? false }
 }

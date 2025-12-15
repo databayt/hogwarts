@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import { Slider } from "@/components/ui/slider"
 
 /**
@@ -20,7 +21,7 @@ export function ShadcnFieldSlider() {
     <div className="w-full max-w-md space-y-4">
       <div>
         <div className="font-medium">Price Range</div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Set your budget range ($
           <span className="font-medium tabular-nums">{value[0]}</span> -{" "}
           <span className="font-medium tabular-nums">{value[1]}</span>).

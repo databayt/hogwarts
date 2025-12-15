@@ -9,6 +9,7 @@ Generates session summary, updates metrics, and tracks productivity when Claude 
 ## Execution Flow
 
 ### 1. Calculate Session Duration
+
 ```bash
 # Load session data
 SESSION_DATA=$(cat .bmad/sessions/current.json)
@@ -26,6 +27,7 @@ echo "⏱️  Session Duration: ${DURATION_HOURS} hours"
 ```
 
 ### 2. Git Activity Summary
+
 ```bash
 # Count commits made during session
 COMMITS=$(git log --since="$SESSION_START" --oneline | wc -l)
@@ -45,6 +47,7 @@ fi
 ```
 
 ### 3. Stories Progress
+
 ```bash
 # Track story completions
 echo ""
@@ -78,6 +81,7 @@ fi
 ```
 
 ### 4. Test & Coverage Changes
+
 ```bash
 # Compare test metrics
 echo ""
@@ -105,6 +109,7 @@ fi
 ```
 
 ### 5. Quality Metrics
+
 ```bash
 # Code quality changes
 echo ""
@@ -125,6 +130,7 @@ echo "  Quality score: $QUALITY_SCORE/100"
 ```
 
 ### 6. Commands Used
+
 ```bash
 # Track which commands were used
 echo ""
@@ -136,6 +142,7 @@ fi
 ```
 
 ### 7. Generate Summary
+
 ```bash
 # Create session summary
 SUMMARY="Worked on $(git branch --show-current) for ${DURATION_HOURS}h. Made $COMMITS commits, completed $COMPLETED stories, coverage at $COVERAGE_END%"
@@ -173,12 +180,14 @@ EOF
 ```
 
 ### 8. Update History
+
 ```bash
 # Append to history
 echo "{\"date\": \"$(date +%Y-%m-%d)\", \"summary\": \"$SUMMARY\"}" >> .bmad/sessions/history.json
 ```
 
 ### 9. Recommendations
+
 ```bash
 echo ""
 echo "💡 Recommendations:"
@@ -202,6 +211,7 @@ fi
 ```
 
 ### 10. Cleanup
+
 ```bash
 # Clean temporary files
 rm -f .bmad/sessions/current.json
@@ -280,6 +290,7 @@ Thank you for using Claude Code! 🚀
 ## Metrics Aggregation
 
 Weekly/monthly reports generated from session data:
+
 ```javascript
 {
   "week": {

@@ -1,7 +1,7 @@
-import { type Locale } from '@/components/internationalization/config'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,18 +15,28 @@ export default async function StudentsLayout({ children, params }: Props) {
 
   // Define students page navigation (5 links)
   const studentsPages: PageNavItem[] = [
-    { name: d?.navigation?.all || 'All', href: `/${lang}/students` },
-    { name: d?.navigation?.enroll || 'Enroll', href: `/${lang}/students/enroll` },
-    { name: d?.navigation?.performance || 'Performance', href: `/${lang}/students/performance` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/students/reports` },
-    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/students/settings` },
+    { name: d?.navigation?.all || "All", href: `/${lang}/students` },
+    {
+      name: d?.navigation?.enroll || "Enroll",
+      href: `/${lang}/students/enroll`,
+    },
+    {
+      name: d?.navigation?.performance || "Performance",
+      href: `/${lang}/students/performance`,
+    },
+    {
+      name: d?.navigation?.reports || "Reports",
+      href: `/${lang}/students/reports`,
+    },
+    {
+      name: d?.navigation?.settings || "Settings",
+      href: `/${lang}/students/settings`,
+    },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Students'}
-      />
+      <PageHeadingSetter title={d?.title || "Students"} />
       <PageNav pages={studentsPages} />
       {children}
     </div>

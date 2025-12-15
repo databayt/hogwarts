@@ -74,7 +74,7 @@ export type {
   UsePrintReturn,
   UseGenerateReturn as BaseUseGenerateReturn,
   UseBrowserReturn,
-} from "./types";
+} from "./types"
 
 // ============================================================================
 // Configuration
@@ -97,12 +97,12 @@ export {
   STORAGE_CONFIG,
   SIZE_LABELS,
   VIDEO_RECOMMENDATIONS,
-} from "./config";
+} from "./config"
 
 // ============================================================================
 // Providers
 // ============================================================================
-export * from "./providers";
+export * from "./providers"
 
 // ============================================================================
 // Shared Utilities (flattened from shared/)
@@ -122,7 +122,7 @@ export {
   truncateFilename,
   getCategoryDisplayName,
   getTypeDisplayName,
-} from "./formatters";
+} from "./formatters"
 
 export {
   // MIME Types
@@ -145,7 +145,7 @@ export {
   isVideo,
   isDocument,
   isPreviewable,
-} from "./mime-types";
+} from "./mime-types"
 
 export {
   // Icons
@@ -158,7 +158,7 @@ export {
   getIconForType,
   getIconForExtension,
   getFileIcon,
-} from "./icons";
+} from "./icons"
 
 // ============================================================================
 // Rate Limiting (flat)
@@ -176,8 +176,8 @@ export {
   formatRateLimitError,
   withRateLimit,
   createCustomRateLimiter,
-} from "./rate-limit";
-export type { RateLimitResult } from "./rate-limit";
+} from "./rate-limit"
+export type { RateLimitResult } from "./rate-limit"
 
 // ============================================================================
 // CDN (flat)
@@ -193,8 +193,8 @@ export {
   generatePrefetchLinks,
   getCacheControlHeaders,
   purgeCDNCache,
-} from "./cdn";
-export type { CDNConfig, ImageTransformOptions } from "./cdn";
+} from "./cdn"
+export type { CDNConfig, ImageTransformOptions } from "./cdn"
 
 // ============================================================================
 // Storage Tier Management (flat)
@@ -210,14 +210,14 @@ export {
   getStoragePath,
   batchEvaluateTierChanges,
   calculateTierStats,
-} from "./tier-manager";
+} from "./tier-manager"
 export type {
   StorageTier as TierStorageTier,
   StorageProvider as TierStorageProvider,
   TierConfig,
   FileMetrics,
   TierStats,
-} from "./tier-manager";
+} from "./tier-manager"
 
 // ============================================================================
 // File Deduplication (flat)
@@ -229,7 +229,7 @@ export {
   generateChunkHash,
   verifyFileHash,
   generateUploadId,
-} from "./deduplication";
+} from "./deduplication"
 
 // ============================================================================
 // Quota Management Module
@@ -249,7 +249,7 @@ export {
   getQuotaByTier,
   DEFAULT_QUOTA,
   QUOTA_TIERS,
-} from "./quota";
+} from "./quota"
 export type {
   QuotaTier,
   QuotaStatus,
@@ -258,7 +258,7 @@ export type {
   QuotaByCategory,
   QuotaByTier,
   QuotaLimits,
-} from "./quota";
+} from "./quota"
 
 // ============================================================================
 // Upload Module
@@ -295,7 +295,7 @@ export {
   uploadResponseSchema,
   validateFile,
   validateFiles,
-} from "./upload";
+} from "./upload"
 export type {
   UploaderProps,
   UploadButtonProps,
@@ -311,7 +311,7 @@ export type {
   BatchUploadRequest,
   UploadError,
   UploadResponse,
-} from "./upload";
+} from "./upload"
 
 // ============================================================================
 // Chunked Upload (for large files up to 5GB)
@@ -322,7 +322,7 @@ export {
   completeChunkedUpload,
   abortChunkedUpload,
   useChunkedUpload,
-} from "./upload";
+} from "./upload"
 export type {
   InitiateChunkedUploadInput,
   InitiateChunkedUploadResult,
@@ -334,7 +334,7 @@ export type {
   GetUploadStatusResult,
   ChunkedUploadOptions,
   ChunkedUploadProgress,
-} from "./upload";
+} from "./upload"
 
 // ============================================================================
 // Enhanced File Uploader (drag-drop with optimization)
@@ -349,25 +349,20 @@ export {
   detectImageFormat,
   supportsWebP,
   supportsAVIF,
-} from "./upload";
-export type {
-  FileUploaderProps,
-  UploadedFileResult,
-} from "./upload";
+} from "./upload"
+export type { FileUploaderProps, UploadedFileResult } from "./upload"
 
 // ============================================================================
 // ImageKit Upload Hook & Utilities
 // ============================================================================
-export {
-  useImageKitUpload,
-} from "./upload";
+export { useImageKitUpload } from "./upload"
 export type {
   ImageKitAuthParams,
   ImageKitUploadProgress,
   ImageKitUploadResult,
   UseImageKitUploadOptions,
   UseImageKitUploadReturn,
-} from "./upload";
+} from "./upload"
 
 // ImageKit utilities from providers
 export {
@@ -381,12 +376,12 @@ export {
   uploadToImageKit,
   deleteFromImageKit,
   getImageKitFileDetails,
-} from "./providers";
+} from "./providers"
 export type {
   TransformationOptions,
   ImageKitUploadOptions,
   ImageKitUploadResult as ImageKitDirectUploadResult,
-} from "./providers";
+} from "./providers"
 
 // ============================================================================
 // Export Module
@@ -429,7 +424,7 @@ export {
   arrayToCSV,
   generateCSVFilename,
   downloadCSV,
-} from "./export";
+} from "./export"
 export type {
   ExportFormat,
   ColumnAlignment,
@@ -442,7 +437,7 @@ export type {
   ColumnHelpers,
   ExportButtonProps,
   SimpleExportButtonProps,
-} from "./export";
+} from "./export"
 
 // ============================================================================
 // Import Module
@@ -483,7 +478,7 @@ export {
   createRowErrorMessage,
   validateCSVHeaders,
   suggestCorrection,
-} from "./import";
+} from "./import"
 export type {
   ImportFormat,
   ImportColumn,
@@ -496,19 +491,19 @@ export type {
   UseImportReturn,
   ImporterProps,
   CsvImportResult,
-} from "./import";
+} from "./import"
 
 // ============================================================================
 // Print Module
 // ============================================================================
-export * from "./print";
+export * from "./print"
 
 // ============================================================================
 // Generate Module
 // ============================================================================
-export * from "./generate";
+export * from "./generate"
 
 // ============================================================================
 // Browser Module
 // ============================================================================
-export * from "./browser";
+export * from "./browser"

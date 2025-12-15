@@ -1,7 +1,8 @@
-import { auth } from '@/auth'
-import PaymentTransferContent from '@/components/platform/finance/banking/payment-transfer/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
+import { auth } from "@/auth"
+
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import PaymentTransferContent from "@/components/platform/finance/banking/payment-transfer/content"
 
 export default async function PaymentTransferPage({
   params,

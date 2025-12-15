@@ -1,39 +1,42 @@
-"use client";
+"use client"
 
 /**
  * Featured invoices lab component
  *
  * Displays key invoice metrics and important invoices.
  */
+import { CircleAlert, Clock, DollarSign, FileText } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, DollarSign, Clock, CircleAlert } from "lucide-react";
-import { formatCurrency, isInvoiceOverdue, getDaysOverdue } from "./util";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { formatCurrency, getDaysOverdue, isInvoiceOverdue } from "./util"
 
 interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  clientName: string;
-  amount: number;
-  status: string;
-  dueDate: Date;
+  id: string
+  invoiceNumber: string
+  clientName: string
+  amount: number
+  status: string
+  dueDate: Date
 }
 
 interface FeaturedInvoicesProps {
-  invoices: Invoice[];
+  invoices: Invoice[]
 }
 
 export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
   const totalRevenue = invoices
     .filter((inv) => inv.status === "paid")
-    .reduce((sum, inv) => sum + inv.amount, 0);
+    .reduce((sum, inv) => sum + inv.amount, 0)
 
   const pendingAmount = invoices
     .filter((inv) => inv.status !== "paid" && inv.status !== "void")
-    .reduce((sum, inv) => sum + inv.amount, 0);
+    .reduce((sum, inv) => sum + inv.amount, 0)
 
-  const overdueInvoices = invoices.filter((inv) => isInvoiceOverdue(inv.dueDate, inv.status));
+  const overdueInvoices = invoices.filter((inv) =>
+    isInvoiceOverdue(inv.dueDate, inv.status)
+  )
 
   return (
     <div className="space-y-6">
@@ -44,7 +47,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             <CardTitle>
               <small>Total Revenue</small>
             </CardTitle>
-            <DollarSign className="size-4 text-muted-foreground" />
+            <DollarSign className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <h2 className="font-bold">{formatCurrency(totalRevenue)}</h2>
@@ -57,7 +60,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             <CardTitle>
               <small>Pending</small>
             </CardTitle>
-            <Clock className="size-4 text-muted-foreground" />
+            <Clock className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <h2 className="font-bold">{formatCurrency(pendingAmount)}</h2>
@@ -70,7 +73,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             <CardTitle>
               <small>Overdue</small>
             </CardTitle>
-            <CircleAlert className="size-4 text-muted-foreground" />
+            <CircleAlert className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <h2 className="font-bold">{overdueInvoices.length}</h2>
@@ -83,7 +86,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             <CardTitle>
               <small>Total Invoices</small>
             </CardTitle>
-            <FileText className="size-4 text-muted-foreground" />
+            <FileText className="text-muted-foreground size-4" />
           </CardHeader>
           <CardContent>
             <h2 className="font-bold">{invoices.length}</h2>
@@ -107,14 +110,16 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             {overdueInvoices.slice(0, 5).map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 dark:bg-red-950/10 p-4"
+                className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 p-4 dark:bg-red-950/10"
               >
                 <div>
                   <h6>{invoice.invoiceNumber}</h6>
                   <small className="muted">{invoice.clientName}</small>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium tabular-nums">{formatCurrency(invoice.amount)}</div>
+                  <div className="font-medium tabular-nums">
+                    {formatCurrency(invoice.amount)}
+                  </div>
                   <small className="text-red-600">
                     {getDaysOverdue(invoice.dueDate)} days overdue
                   </small>
@@ -130,14 +135,21 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
         <h4>Recent Invoices</h4>
         <div className="space-y-2">
           {invoices.slice(0, 5).map((invoice) => (
-            <div key={invoice.id} className="flex items-center justify-between rounded-lg border p-4">
+            <div
+              key={invoice.id}
+              className="flex items-center justify-between rounded-lg border p-4"
+            >
               <div>
                 <h6>{invoice.invoiceNumber}</h6>
                 <small className="muted">{invoice.clientName}</small>
               </div>
               <div className="flex items-center gap-3">
-                <div className="font-medium tabular-nums">{formatCurrency(invoice.amount)}</div>
-                <Badge variant={invoice.status === "paid" ? "default" : "outline"}>
+                <div className="font-medium tabular-nums">
+                  {formatCurrency(invoice.amount)}
+                </div>
+                <Badge
+                  variant={invoice.status === "paid" ? "default" : "outline"}
+                >
                   {invoice.status}
                 </Badge>
               </div>
@@ -146,5 +158,5 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

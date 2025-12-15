@@ -1,28 +1,30 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { BookCover } from "../book-cover";
-import type { Book } from "../types";
-import { useDictionary } from "@/components/internationalization/use-dictionary";
+import Link from "next/link"
+import { useParams } from "next/navigation"
+
+import { Button } from "@/components/ui/button"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+import { BookCover } from "../book-cover"
+import type { Book } from "../types"
 
 interface Props {
-  book: Book;
-  userId: string;
+  book: Book
+  userId: string
 }
 
 export default function BookOverview({ book, userId }: Props) {
-  const params = useParams();
-  const locale = (params?.lang as string) || "ar";
-  const { dictionary } = useDictionary();
-  const libraryDict = dictionary?.library?.book;
+  const params = useParams()
+  const locale = (params?.lang as string) || "ar"
+  const { dictionary } = useDictionary()
+  const libraryDict = dictionary?.library?.book
 
   return (
-    <section className="flex flex-col md:flex-row gap-8 items-center">
+    <section className="flex flex-col items-center gap-8 md:flex-row">
       {/* Book Cover */}
       <div
-        className="shrink-0 w-48 aspect-[2/3] rounded-lg overflow-hidden"
+        className="aspect-[2/3] w-48 shrink-0 overflow-hidden rounded-lg"
         style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
       >
         <BookCover
@@ -35,8 +37,8 @@ export default function BookOverview({ book, userId }: Props) {
       </div>
 
       {/* Book Info */}
-      <div className="flex-1 text-center md:text-start space-y-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground max-w-md leading-tight">
+      <div className="flex-1 space-y-4 text-center md:text-start">
+        <h1 className="text-foreground max-w-md text-2xl leading-tight font-bold md:text-3xl">
           {book.title}
         </h1>
 
@@ -45,23 +47,23 @@ export default function BookOverview({ book, userId }: Props) {
         </p>
 
         {/* Genre Badge */}
-        <div className="flex items-center gap-2 justify-center md:justify-start">
-          <span className="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+        <div className="flex items-center justify-center gap-2 md:justify-start">
+          <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
             {book.genre || "Fantasy"}
           </span>
         </div>
 
-        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3 max-w-xl">
+        <p className="text-muted-foreground line-clamp-3 max-w-xl text-sm leading-relaxed">
           {book.description}
         </p>
 
         {/* Review Stars */}
-        <div className="flex items-center gap-2 justify-center md:justify-start">
+        <div className="flex items-center justify-center gap-2 md:justify-start">
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
               <svg
                 key={star}
-                className={`w-4 h-4 ${star <= (book.rating || 5) ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground/30"}`}
+                className={`h-4 w-4 ${star <= (book.rating || 5) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
               >
@@ -69,12 +71,12 @@ export default function BookOverview({ book, userId }: Props) {
               </svg>
             ))}
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {book.rating || 5}/5
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
+        <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
           <Button asChild>
             <Link href={`/${locale}/library/books/${book.id}`}>
               {libraryDict?.viewDetails || "View Details"}
@@ -83,5 +85,5 @@ export default function BookOverview({ book, userId }: Props) {
         </div>
       </div>
     </section>
-  );
+  )
 }

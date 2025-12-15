@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Link from "next/link"
-import { ArrowRight, ArrowLeft } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
+
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface AnnouncementProps {
@@ -26,7 +27,7 @@ export function Announcement({ dictionary }: AnnouncementProps) {
         {dictionary?.announcement?.tailwindV4 || "Get Started with Tailwind v4"}
       </span>
       <ArrowRight className="ms-1 h-4 w-4 rtl:hidden" />
-      <ArrowLeft className="ms-1 h-4 w-4 hidden rtl:block" />
+      <ArrowLeft className="ms-1 hidden h-4 w-4 rtl:block" />
     </Link>
   )
 }

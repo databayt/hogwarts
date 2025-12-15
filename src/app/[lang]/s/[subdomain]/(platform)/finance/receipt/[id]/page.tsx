@@ -3,12 +3,13 @@
  * Follows Hogwarts page pattern - server component that fetches single receipt
  */
 
-import { notFound } from 'next/navigation'
-import { ReceiptDetail } from '@/components/platform/finance/receipt/receipt-detail'
-import { getReceiptById } from '@/components/platform/finance/receipt/actions'
+import { notFound } from "next/navigation"
+
+import { getReceiptById } from "@/components/platform/finance/receipt/actions"
+import { ReceiptDetail } from "@/components/platform/finance/receipt/receipt-detail"
 
 export const metadata = {
-  title: 'Receipt Details | Expense Tracker',
+  title: "Receipt Details | Expense Tracker",
 }
 
 interface Props {

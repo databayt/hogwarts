@@ -7,6 +7,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 ## Features
 
 ### ✅ Subscription Management
+
 - **Current Plan Overview** - View active subscription tier with status badges
 - **Upgrade/Downgrade** - Switch between plans with prorated billing
 - **Cancellation** - Cancel subscriptions immediately or at period end
@@ -14,6 +15,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 - **Plan Comparison** - Compare features across different tiers
 
 ### ✅ Payment Processing
+
 - **Multiple Payment Methods** - Support for cards, bank accounts, PayPal, digital wallets
 - **Stripe Integration** - Secure payment processing via Stripe
 - **Default Payment Method** - Set primary payment method for auto-billing
@@ -21,6 +23,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 - **Payment History** - Complete transaction log with status tracking
 
 ### ✅ Invoice Management
+
 - **Invoice List** - View all invoices with filtering and pagination
 - **Invoice Details** - Detailed breakdown of charges and discounts
 - **PDF Download** - Generate and download invoice PDFs
@@ -28,6 +31,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 - **Export** - Export invoice data to CSV/Excel
 
 ### ✅ Usage Tracking
+
 - **Resource Monitoring** - Track students, teachers, classes, storage usage
 - **Visual Indicators** - Progress bars with color-coded severity levels
 - **Usage Warnings** - Automatic alerts at 70%, 85%, 95% capacity
@@ -35,6 +39,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 - **Limit Management** - Compare current usage against plan limits
 
 ### ✅ Analytics & Reporting
+
 - **Spending Trends** - 12-month spending visualization with charts
 - **Payment Success Rate** - Track successful vs. failed payments
 - **Financial Metrics** - Average monthly spend, total spent, projections
@@ -42,6 +47,7 @@ The Billing module is a comprehensive, production-ready system for managing scho
 - **Custom Reports** - Export data for external analysis
 
 ### ✅ Advanced Features
+
 - **Credit Notes** - Issue refunds, promotional credits, adjustments
 - **Discount Codes** - Apply promo codes and track usage
 - **Auto-Billing** - Automatic payment retry with configurable intervals
@@ -81,9 +87,11 @@ prisma/models/subscription.prisma
 ### New Models
 
 #### PaymentMethod
+
 Stores payment methods (cards, bank accounts, wallets) for subscriptions.
 
 **Key Fields:**
+
 - `type` - Payment method type (CARD, BANK_ACCOUNT, PAYPAL, etc.)
 - `provider` - Payment provider (stripe, plaid, paypal, manual)
 - `stripePaymentMethodId` - Stripe payment method ID
@@ -92,9 +100,11 @@ Stores payment methods (cards, bank accounts, wallets) for subscriptions.
 - `isVerified` - Verification status
 
 #### BillingHistory
+
 Complete transaction log for all billing events.
 
 **Key Fields:**
+
 - `type` - Event type (PAYMENT_SUCCESS, SUBSCRIPTION_UPDATED, etc.)
 - `status` - Transaction status (SUCCESS, FAILED, PENDING, etc.)
 - `amount` - Amount in cents
@@ -103,18 +113,22 @@ Complete transaction log for all billing events.
 - `errorCode`, `errorMessage` - Error tracking
 
 #### UsageMetrics
+
 Track feature usage against subscription limits.
 
 **Key Fields:**
+
 - `currentStudents`, `currentTeachers`, `currentClasses` - Resource usage
 - `periodStart`, `periodEnd` - Billing period
 - `studentsWarningTriggered` - Warning trigger flags
 - `featuresUsed` - JSON tracking of feature usage
 
 #### CreditNote
+
 Account credits for refunds, promotions, adjustments.
 
 **Key Fields:**
+
 - `creditNumber` - Unique credit identifier
 - `amount`, `remainingAmount` - Credit amounts in cents
 - `type` - Credit type (REFUND, PROMOTIONAL, etc.)
@@ -122,9 +136,11 @@ Account credits for refunds, promotions, adjustments.
 - `status` - Credit status (ACTIVE, EXPIRED, etc.)
 
 #### BillingPreferences
+
 School-specific billing settings.
 
 **Key Fields:**
+
 - `autoPayEnabled` - Enable automatic payments
 - `paymentRetries` - Number of retry attempts
 - `sendPaymentSuccess`, `sendPaymentFailed` - Email notifications
@@ -142,19 +158,19 @@ All server actions are located in `actions.ts` and follow the `BillingActionResu
 
 ```typescript
 // Get current subscription details
-const result = await getSubscriptionDetails();
+const result = await getSubscriptionDetails()
 // Returns: BillingActionResult<SubscriptionWithTier | null>
 
 // Get available subscription tiers
-const result = await getSubscriptionTiers();
+const result = await getSubscriptionTiers()
 // Returns: BillingActionResult<SubscriptionTier[]>
 
 // Update subscription (upgrade/downgrade)
 const result = await updateSubscription({
   tierId: "clx...",
   billingInterval: "monthly" | "annual",
-  prorationBehavior: "create_prorations" | "none" | "always_invoice"
-});
+  prorationBehavior: "create_prorations" | "none" | "always_invoice",
+})
 // Returns: BillingActionResult<Subscription>
 
 // Cancel subscription
@@ -162,8 +178,8 @@ const result = await cancelSubscription({
   reason: "optional reason",
   feedback: "optional feedback",
   cancelAtPeriodEnd: true,
-  requestRefund: false
-});
+  requestRefund: false,
+})
 // Returns: BillingActionResult<Subscription>
 ```
 
@@ -171,7 +187,7 @@ const result = await cancelSubscription({
 
 ```typescript
 // Get all payment methods
-const result = await getPaymentMethods();
+const result = await getPaymentMethods()
 // Returns: BillingActionResult<PaymentMethodWithUser[]>
 
 // Add new payment method
@@ -181,16 +197,16 @@ const result = await addPaymentMethod({
   stripePaymentMethodId: "pm_...",
   billingName: "John Doe",
   billingEmail: "john@example.com",
-  isDefault: false
-});
+  isDefault: false,
+})
 // Returns: BillingActionResult<PaymentMethod>
 
 // Set default payment method
-const result = await setDefaultPaymentMethod(paymentMethodId);
+const result = await setDefaultPaymentMethod(paymentMethodId)
 // Returns: BillingActionResult<void>
 
 // Remove payment method
-const result = await removePaymentMethod(paymentMethodId);
+const result = await removePaymentMethod(paymentMethodId)
 // Returns: BillingActionResult<void>
 ```
 
@@ -203,8 +219,8 @@ const result = await getInvoices({
   dateFrom: new Date("2024-01-01"),
   dateTo: new Date("2024-12-31"),
   page: 1,
-  limit: 20
-});
+  limit: 20,
+})
 // Returns: BillingActionResult<{ invoices: Invoice[], total: number }>
 ```
 
@@ -217,8 +233,8 @@ const result = await getBillingHistory({
   status: ["SUCCESS"],
   dateFrom: new Date("2024-01-01"),
   page: 1,
-  limit: 20
-});
+  limit: 20,
+})
 // Returns: BillingActionResult<{ history: BillingHistory[], total: number }>
 ```
 
@@ -226,7 +242,7 @@ const result = await getBillingHistory({
 
 ```typescript
 // Get comprehensive billing statistics
-const result = await getBillingStats();
+const result = await getBillingStats()
 // Returns: BillingActionResult<BillingStats>
 ```
 
@@ -239,8 +255,8 @@ const result = await updateUsageMetrics({
   currentStudents: 150,
   currentTeachers: 20,
   currentClasses: 30,
-  currentStorage: 5000 // MB
-});
+  currentStorage: 5000, // MB
+})
 // Returns: BillingActionResult<UsageMetrics>
 ```
 
@@ -248,7 +264,7 @@ const result = await updateUsageMetrics({
 
 ```typescript
 // Get billing preferences
-const result = await getBillingPreferences();
+const result = await getBillingPreferences()
 // Returns: BillingActionResult<BillingPreferences>
 
 // Update billing preferences
@@ -257,8 +273,8 @@ const result = await updateBillingPreferences({
   paymentRetries: 3,
   sendPaymentSuccess: true,
   currency: "USD",
-  taxEnabled: false
-});
+  taxEnabled: false,
+})
 // Returns: BillingActionResult<BillingPreferences>
 ```
 
@@ -267,38 +283,41 @@ const result = await updateBillingPreferences({
 ### Basic Implementation
 
 ```tsx
-import BillingContent from "@/components/platform/billing/content";
+import BillingContent from "@/components/platform/billing/content"
 
 export default function BillingPage() {
-  return <BillingContent />;
+  return <BillingContent />
 }
 ```
 
 ### With Internationalization
 
 ```tsx
-import BillingContent from "@/components/platform/billing/content";
-import { getDictionary } from "@/components/internationalization/dictionaries";
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import BillingContent from "@/components/platform/billing/content"
 
 export default async function BillingPage({ params }) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
-  return <BillingContent dictionary={dictionary} />;
+  return <BillingContent dictionary={dictionary} />
 }
 ```
 
 ### Custom Integration
 
 ```tsx
-import { getBillingStats, getInvoices } from "@/components/platform/billing/actions";
+import {
+  getBillingStats,
+  getInvoices,
+} from "@/components/platform/billing/actions"
 
 export default async function CustomBillingView() {
-  const statsResult = await getBillingStats();
-  const invoicesResult = await getInvoices({ limit: 5 });
+  const statsResult = await getBillingStats()
+  const invoicesResult = await getInvoices({ limit: 5 })
 
   if (!statsResult.success || !invoicesResult.success) {
-    return <ErrorView />;
+    return <ErrorView />
   }
 
   return (
@@ -307,7 +326,7 @@ export default async function CustomBillingView() {
       <p>Next Payment: {formatCurrency(statsResult.data.nextPaymentAmount)}</p>
       {/* Custom UI */}
     </div>
-  );
+  )
 }
 ```
 
@@ -345,10 +364,10 @@ All billing actions are **automatically scoped by `schoolId`** to ensure data is
 
 ```typescript
 // ✅ Secure - automatically filters by schoolId
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 const invoices = await db.invoice.findMany({
   where: { schoolId }, // REQUIRED
-});
+})
 ```
 
 ## Error Handling
@@ -356,27 +375,30 @@ const invoices = await db.invoice.findMany({
 All actions return a consistent `BillingActionResult<T>` type:
 
 ```typescript
-const result = await updateSubscription(data);
+const result = await updateSubscription(data)
 
 if (!result.success) {
   // Handle error
-  console.error(result.error);
-  return;
+  console.error(result.error)
+  return
 }
 
 // Use data safely
-const subscription = result.data;
+const subscription = result.data
 ```
 
 ## Testing
 
 ### Unit Tests
+
 ```bash
 pnpm test src/components/platform/billing/**/*.test.tsx
 ```
 
 ### Integration Tests
+
 Test Stripe webhooks locally:
+
 ```bash
 stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
@@ -397,6 +419,7 @@ The system handles these Stripe webhook events:
 ### Customer Portal
 
 The `openCustomerPortal` action redirects to Stripe's hosted billing portal where users can:
+
 - Update payment methods
 - Download invoices
 - Update billing information
@@ -405,6 +428,7 @@ The `openCustomerPortal` action redirects to Stripe's hosted billing portal wher
 ## Roadmap
 
 ### Planned Features
+
 - [ ] Email notifications with Resend integration
 - [ ] PDF invoice generation
 - [ ] Advanced analytics charts
@@ -421,20 +445,25 @@ The `openCustomerPortal` action redirects to Stripe's hosted billing portal wher
 ### Common Issues
 
 **Issue:** "No active subscription" error
+
 - **Solution:** Ensure the school has a valid subscription record with `status: "active"`
 
 **Issue:** Payment methods not showing
+
 - **Solution:** Check that payment methods have `status: "active"` and match the school's `schoolId`
 
 **Issue:** Usage metrics not updating
+
 - **Solution:** Call `updateUsageMetrics()` regularly (e.g., via cron job)
 
 **Issue:** Stripe webhook failures
+
 - **Solution:** Verify `STRIPE_WEBHOOK_SECRET` is set and webhook endpoint is configured
 
 ## Support
 
 For questions or issues:
+
 1. Check this README
 2. Review code comments in `actions.ts`
 3. Check Stripe dashboard for payment issues

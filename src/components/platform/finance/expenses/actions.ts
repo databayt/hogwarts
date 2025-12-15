@@ -2,28 +2,36 @@
  * Expenses Module - Server Actions
  */
 
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
-import { expenseSchema, expenseCategorySchema, expenseApprovalSchema } from './validation'
-import type { ExpenseActionResult } from './types'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
-export async function createExpense(formData: FormData): Promise<ExpenseActionResult> {
+import { db } from "@/lib/db"
+
+import type { ExpenseActionResult } from "./types"
+import {
+  expenseApprovalSchema,
+  expenseCategorySchema,
+  expenseSchema,
+} from "./validation"
+
+export async function createExpense(
+  formData: FormData
+): Promise<ExpenseActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      amount: Number(formData.get('amount')),
-      description: formData.get('description'),
-      expenseDate: formData.get('expenseDate'),
-      categoryId: formData.get('categoryId'),
-      receiptUrl: formData.get('receiptUrl') || null,
-      notes: formData.get('notes') || undefined,
+      amount: Number(formData.get("amount")),
+      description: formData.get("description"),
+      expenseDate: formData.get("expenseDate"),
+      categoryId: formData.get("categoryId"),
+      receiptUrl: formData.get("receiptUrl") || null,
+      notes: formData.get("notes") || undefined,
     }
 
     const validated = expenseSchema.parse(data)
@@ -38,7 +46,7 @@ export async function createExpense(formData: FormData): Promise<ExpenseActionRe
         expenseNumber,
         submittedBy: session.user.id!,
         submittedAt: new Date(),
-        status: 'PENDING',
+        status: "PENDING",
       },
       include: {
         category: {
@@ -47,28 +55,35 @@ export async function createExpense(formData: FormData): Promise<ExpenseActionRe
       },
     })
 
-    revalidatePath('/finance/expenses')
+    revalidatePath("/finance/expenses")
     return { success: true, data: expense as any }
   } catch (error) {
-    console.error('Error creating expense:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to create expense' }
+    console.error("Error creating expense:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create expense",
+    }
   }
 }
 
-export async function updateExpense(expenseId: string, formData: FormData): Promise<ExpenseActionResult> {
+export async function updateExpense(
+  expenseId: string,
+  formData: FormData
+): Promise<ExpenseActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      amount: Number(formData.get('amount')),
-      description: formData.get('description'),
-      expenseDate: formData.get('expenseDate'),
-      categoryId: formData.get('categoryId'),
-      receiptUrl: formData.get('receiptUrl') || null,
-      notes: formData.get('notes') || undefined,
+      amount: Number(formData.get("amount")),
+      description: formData.get("description"),
+      expenseDate: formData.get("expenseDate"),
+      categoryId: formData.get("categoryId"),
+      receiptUrl: formData.get("receiptUrl") || null,
+      notes: formData.get("notes") || undefined,
     }
 
     const validated = expenseSchema.parse(data)
@@ -86,11 +101,15 @@ export async function updateExpense(expenseId: string, formData: FormData): Prom
       },
     })
 
-    revalidatePath('/finance/expenses')
+    revalidatePath("/finance/expenses")
     return { success: true, data: expense as any }
   } catch (error) {
-    console.error('Error updating expense:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to update expense' }
+    console.error("Error updating expense:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update expense",
+    }
   }
 }
 
@@ -98,13 +117,13 @@ export async function approveExpense(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId || !session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      expenseId: formData.get('expenseId'),
-      status: formData.get('status'),
-      notes: formData.get('notes') || undefined,
+      expenseId: formData.get("expenseId"),
+      status: formData.get("status"),
+      notes: formData.get("notes") || undefined,
     }
 
     const validated = expenseApprovalSchema.parse(data)
@@ -126,11 +145,15 @@ export async function approveExpense(formData: FormData) {
       },
     })
 
-    revalidatePath('/finance/expenses')
+    revalidatePath("/finance/expenses")
     return { success: true, data: expense }
   } catch (error) {
-    console.error('Error approving expense:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to approve expense' }
+    console.error("Error approving expense:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to approve expense",
+    }
   }
 }
 
@@ -138,13 +161,13 @@ export async function createExpenseCategory(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      name: formData.get('name'),
-      description: formData.get('description') || undefined,
-      isActive: formData.get('isActive') === 'true',
+      name: formData.get("name"),
+      description: formData.get("description") || undefined,
+      isActive: formData.get("isActive") === "true",
     }
 
     const validated = expenseCategorySchema.parse(data)
@@ -156,19 +179,26 @@ export async function createExpenseCategory(formData: FormData) {
       },
     })
 
-    revalidatePath('/finance/expenses')
+    revalidatePath("/finance/expenses")
     return { success: true, data: category }
   } catch (error) {
-    console.error('Error creating category:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to create category' }
+    console.error("Error creating category:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create category",
+    }
   }
 }
 
-export async function getExpenses(filters?: { status?: string; categoryId?: string }) {
+export async function getExpenses(filters?: {
+  status?: string
+  categoryId?: string
+}) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const expenses = await db.expense.findMany({
@@ -182,13 +212,13 @@ export async function getExpenses(filters?: { status?: string; categoryId?: stri
           select: { id: true, name: true },
         },
       },
-      orderBy: { expenseDate: 'desc' },
+      orderBy: { expenseDate: "desc" },
       take: 100,
     })
 
     return { success: true, data: expenses }
   } catch (error) {
-    console.error('Error fetching expenses:', error)
-    return { success: false, error: 'Failed to fetch expenses' }
+    console.error("Error fetching expenses:", error)
+    return { success: false, error: "Failed to fetch expenses" }
   }
 }

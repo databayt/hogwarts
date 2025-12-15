@@ -1,124 +1,166 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Card } from "@/components/ui/card";
+import * as React from "react"
+
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import {
+  tenantChangePlan,
+  tenantEndTrial,
   tenantStartImpersonation,
   tenantStopImpersonation,
   tenantToggleActive,
-  tenantEndTrial,
-  tenantChangePlan
-} from "@/components/operator/tenants/actions";
-import { SuccessToast, ErrorToast } from "@/components/atom/toast";
+} from "@/components/operator/tenants/actions"
 
 type TenantDetailProps = {
-  tenantId: string;
-  name: string;
-  domain: string;
-  planType: string;
-  isActive: boolean;
-};
+  tenantId: string
+  name: string
+  domain: string
+  planType: string
+  isActive: boolean
+}
 
-export function TenantDetail({ tenantId, name, domain, planType, isActive }: TenantDetailProps) {
-  const [open, setOpen] = React.useState(false);
-  const [owners, setOwners] = React.useState<Array<{ id: string; email: string }>>([]);
-  const [metrics, setMetrics] = React.useState<{ students: number; teachers: number; classes: number } | null>(null);
-  const [billing, setBilling] = React.useState<{ planType: string; outstandingCents: number; trialEndsAt: string | null; nextInvoiceDate: string | null } | null>(null);
-  const [invoices, setInvoices] = React.useState<Array<{ id: string; number: string; status: string; amount: number; createdAt: string }>>([]);
+export function TenantDetail({
+  tenantId,
+  name,
+  domain,
+  planType,
+  isActive,
+}: TenantDetailProps) {
+  const [open, setOpen] = React.useState(false)
+  const [owners, setOwners] = React.useState<
+    Array<{ id: string; email: string }>
+  >([])
+  const [metrics, setMetrics] = React.useState<{
+    students: number
+    teachers: number
+    classes: number
+  } | null>(null)
+  const [billing, setBilling] = React.useState<{
+    planType: string
+    outstandingCents: number
+    trialEndsAt: string | null
+    nextInvoiceDate: string | null
+  } | null>(null)
+  const [invoices, setInvoices] = React.useState<
+    Array<{
+      id: string
+      number: string
+      status: string
+      amount: number
+      createdAt: string
+    }>
+  >([])
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) return
     void fetch(`/operator/tenants/${tenantId}/summary`)
       .then((r) => r.json())
       .then((json) => {
-        setOwners(json.owners ?? []);
-        setMetrics(json.metrics ?? null);
+        setOwners(json.owners ?? [])
+        setMetrics(json.metrics ?? null)
       })
       .catch(() => {
-        setOwners([]);
-        setMetrics(null);
-      });
+        setOwners([])
+        setMetrics(null)
+      })
     void fetch(`/operator/tenants/${tenantId}/billing`)
       .then((r) => r.json())
       .then((json) => setBilling(json))
-      .catch(() => setBilling(null));
+      .catch(() => setBilling(null))
     void fetch(`/operator/tenants/${tenantId}/invoices`)
       .then((r) => r.json())
       .then((json) => setInvoices(json.invoices ?? []))
-      .catch(() => setInvoices([]));
-  }, [open, tenantId]);
+      .catch(() => setInvoices([]))
+  }, [open, tenantId])
   const onImpersonate = async () => {
-    const reason = prompt(`Reason to impersonate ${name}?`) || "";
+    const reason = prompt(`Reason to impersonate ${name}?`) || ""
     try {
-      const result = await tenantStartImpersonation({ tenantId, reason });
+      const result = await tenantStartImpersonation({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Impersonation started successfully");
+        SuccessToast("Impersonation started successfully")
       } else {
-        ErrorToast(result.error.message);
+        ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to impersonate");
+      ErrorToast(e instanceof Error ? e.message : "Failed to impersonate")
     }
-  };
+  }
   const onStopImpersonate = async () => {
-    const reason = prompt("Reason to stop impersonation?") || "";
+    const reason = prompt("Reason to stop impersonation?") || ""
     try {
-      const result = await tenantStopImpersonation({ reason });
+      const result = await tenantStopImpersonation({ reason })
       if (result.success) {
-        SuccessToast("Impersonation stopped successfully");
+        SuccessToast("Impersonation stopped successfully")
       } else {
-        ErrorToast(result.error.message);
+        ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to stop impersonation");
+      ErrorToast(
+        e instanceof Error ? e.message : "Failed to stop impersonation"
+      )
     }
-  };
+  }
   const onToggleActive = async () => {
-    const reason = prompt(`Reason to ${isActive ? "suspend" : "activate"} ${name}?`) || "";
+    const reason =
+      prompt(`Reason to ${isActive ? "suspend" : "activate"} ${name}?`) || ""
     try {
-      const result = await tenantToggleActive({ tenantId, reason });
+      const result = await tenantToggleActive({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Status toggled successfully");
+        SuccessToast("Status toggled successfully")
       } else {
-        ErrorToast(result.error.message);
+        ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to toggle status");
+      ErrorToast(e instanceof Error ? e.message : "Failed to toggle status")
     }
-  };
+  }
   const onChangePlan = async () => {
-    const next = prompt("New plan (TRIAL/BASIC/PREMIUM/ENTERPRISE)?", planType) || planType;
-    const reason = prompt("Reason to change plan?") || "";
+    const next =
+      prompt("New plan (TRIAL/BASIC/PREMIUM/ENTERPRISE)?", planType) || planType
+    const reason = prompt("Reason to change plan?") || ""
     try {
-      const result = await tenantChangePlan({ tenantId, planType: next as any, reason });
+      const result = await tenantChangePlan({
+        tenantId,
+        planType: next as any,
+        reason,
+      })
       if (result.success) {
-        SuccessToast("Plan changed successfully");
+        SuccessToast("Plan changed successfully")
       } else {
-        ErrorToast(result.error.message);
+        ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to change plan");
+      ErrorToast(e instanceof Error ? e.message : "Failed to change plan")
     }
-  };
+  }
   const onEndTrial = async () => {
-    const reason = prompt("Reason to end trial?") || "";
+    const reason = prompt("Reason to end trial?") || ""
     try {
-      const result = await tenantEndTrial({ tenantId, reason });
+      const result = await tenantEndTrial({ tenantId, reason })
       if (result.success) {
-        SuccessToast("Trial ended successfully");
+        SuccessToast("Trial ended successfully")
       } else {
-        ErrorToast(result.error.message);
+        ErrorToast(result.error.message)
       }
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : "Failed to end trial");
+      ErrorToast(e instanceof Error ? e.message : "Failed to end trial")
     }
-  };
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm">Details</Button>
+        <Button variant="outline" size="sm">
+          Details
+        </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-lg">
         <SheetHeader>
@@ -130,32 +172,48 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
             <div className="text-muted-foreground">{domain}</div>
             <div className="mt-2 flex gap-4">
               <span className="text-xs">Plan: {planType}</span>
-              <span className="text-xs">Status: {isActive ? "Active" : "Inactive"}</span>
+              <span className="text-xs">
+                Status: {isActive ? "Active" : "Inactive"}
+              </span>
             </div>
           </Card>
           <Card className="p-4 text-sm">
-            <div className="font-medium mb-2">Billing</div>
+            <div className="mb-2 font-medium">Billing</div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-xs text-muted-foreground">Plan</div>
-                <div className="font-medium">{billing?.planType ?? planType}</div>
+                <div className="text-muted-foreground text-xs">Plan</div>
+                <div className="font-medium">
+                  {billing?.planType ?? planType}
+                </div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Outstanding</div>
-                <div className="font-medium tabular-nums">${((billing?.outstandingCents ?? 0) / 100).toFixed(2)}</div>
+                <div className="text-muted-foreground text-xs">Outstanding</div>
+                <div className="font-medium tabular-nums">
+                  ${((billing?.outstandingCents ?? 0) / 100).toFixed(2)}
+                </div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Trial ends</div>
-                <div className="font-medium">{billing?.trialEndsAt ? new Date(billing.trialEndsAt).toLocaleDateString() : '-'}</div>
+                <div className="text-muted-foreground text-xs">Trial ends</div>
+                <div className="font-medium">
+                  {billing?.trialEndsAt
+                    ? new Date(billing.trialEndsAt).toLocaleDateString()
+                    : "-"}
+                </div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Next invoice</div>
-                <div className="font-medium">{billing?.nextInvoiceDate ? new Date(billing.nextInvoiceDate).toLocaleDateString() : '-'}</div>
+                <div className="text-muted-foreground text-xs">
+                  Next invoice
+                </div>
+                <div className="font-medium">
+                  {billing?.nextInvoiceDate
+                    ? new Date(billing.nextInvoiceDate).toLocaleDateString()
+                    : "-"}
+                </div>
               </div>
             </div>
           </Card>
           <Card className="p-4 text-sm">
-            <div className="font-medium mb-2">Recent Invoices</div>
+            <div className="mb-2 font-medium">Recent Invoices</div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -171,13 +229,22 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
                     <tr key={i.id} className="border-b last:border-0">
                       <td className="px-2 py-1">{i.number}</td>
                       <td className="px-2 py-1 capitalize">{i.status}</td>
-                      <td className="px-2 py-1 tabular-nums">${(i.amount / 100).toFixed(2)}</td>
-                      <td className="px-2 py-1">{new Date(i.createdAt).toLocaleDateString()}</td>
+                      <td className="px-2 py-1 tabular-nums">
+                        ${(i.amount / 100).toFixed(2)}
+                      </td>
+                      <td className="px-2 py-1">
+                        {new Date(i.createdAt).toLocaleDateString()}
+                      </td>
                     </tr>
                   ))}
                   {invoices.length === 0 && (
                     <tr>
-                      <td className="px-2 py-2 text-muted-foreground" colSpan={4}>No invoices found</td>
+                      <td
+                        className="text-muted-foreground px-2 py-2"
+                        colSpan={4}
+                      >
+                        No invoices found
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -186,7 +253,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
           </Card>
 
           <Card className="p-4 text-sm">
-            <div className="font-medium mb-2">Owners</div>
+            <div className="mb-2 font-medium">Owners</div>
             {owners.length === 0 ? (
               <div className="text-muted-foreground">No owners found</div>
             ) : (
@@ -199,25 +266,48 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
           </Card>
 
           <Card className="p-4 text-sm">
-            <div className="font-medium mb-2">Usage</div>
+            <div className="mb-2 font-medium">Usage</div>
             <div className="grid grid-cols-3 gap-4">
-              <div><div className="text-xs text-muted-foreground">Students</div><div className="text-lg font-semibold">{metrics?.students ?? 0}</div></div>
-              <div><div className="text-xs text-muted-foreground">Teachers</div><div className="text-lg font-semibold">{metrics?.teachers ?? 0}</div></div>
-              <div><div className="text-xs text-muted-foreground">Classes</div><div className="text-lg font-semibold">{metrics?.classes ?? 0}</div></div>
+              <div>
+                <div className="text-muted-foreground text-xs">Students</div>
+                <div className="text-lg font-semibold">
+                  {metrics?.students ?? 0}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Teachers</div>
+                <div className="text-lg font-semibold">
+                  {metrics?.teachers ?? 0}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground text-xs">Classes</div>
+                <div className="text-lg font-semibold">
+                  {metrics?.classes ?? 0}
+                </div>
+              </div>
             </div>
           </Card>
 
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={onImpersonate}>Start impersonation</Button>
-            <Button size="sm" variant="outline" onClick={onStopImpersonate}>Stop impersonation</Button>
-            <Button size="sm" variant="secondary" onClick={onToggleActive}>{isActive ? "Suspend" : "Activate"}</Button>
-            <Button size="sm" variant="outline" onClick={onChangePlan}>Change plan</Button>
-            <Button size="sm" variant="outline" onClick={onEndTrial}>End trial</Button>
+            <Button size="sm" onClick={onImpersonate}>
+              Start impersonation
+            </Button>
+            <Button size="sm" variant="outline" onClick={onStopImpersonate}>
+              Stop impersonation
+            </Button>
+            <Button size="sm" variant="secondary" onClick={onToggleActive}>
+              {isActive ? "Suspend" : "Activate"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={onChangePlan}>
+              Change plan
+            </Button>
+            <Button size="sm" variant="outline" onClick={onEndTrial}>
+              End trial
+            </Button>
           </div>
         </div>
       </SheetContent>
     </Sheet>
-  );
+  )
 }
-
-

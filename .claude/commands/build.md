@@ -15,6 +15,7 @@ pnpm tsc --noEmit
 ```
 
 **If errors found:**
+
 - Display error count and first 10 errors
 - Offer auto-fix with `/fix-build typescript`
 - Block build until resolved (or user overrides)
@@ -26,6 +27,7 @@ pnpm tsc --noEmit
 Compare `prisma/schema.prisma` last modified time vs `node_modules/.prisma/client` generation time.
 
 **If out of sync:**
+
 - Run `pnpm prisma generate` automatically
 - Display "Prisma client regenerated" message
 
@@ -39,12 +41,14 @@ Compare `prisma/schema.prisma` last modified time vs `node_modules/.prisma/clien
 ```
 
 **Detects 204+ error patterns:**
+
 - Dictionary property errors (173+ patterns)
 - Prisma field type errors (13+ patterns)
 - Enum completeness issues (2+ patterns)
 - Multi-tenant safety violations
 
 **If patterns found:**
+
 - Display pattern summary (type, count, files)
 - Offer auto-fix: "Run `/fix-build` to auto-fix? [Y/n]"
 - If user accepts, run `/fix-build` and re-validate
@@ -57,6 +61,7 @@ Compare `prisma/schema.prisma` last modified time vs `node_modules/.prisma/clien
 Check for multiple running Node.js processes (Windows: `tasklist`, Linux/Mac: `ps aux | grep node`).
 
 **If multiple processes found:**
+
 - Display warning: "Found X Node.js processes running"
 - Offer to kill all: "Kill all before build? [Y/n]"
 - If accepted, run `taskkill /F /IM node.exe` (Windows) or `killall node` (Linux/Mac)
@@ -83,6 +88,7 @@ Proceeding with build...
 ```
 
 **If any checks fail:**
+
 - Display summary with ❌ for failed checks
 - Offer options:
   - [1] Auto-fix and retry
@@ -123,6 +129,7 @@ Display build output in real-time with progress indicators:
 ### 2.3 Capture Build Metrics
 
 Extract and store:
+
 - Build time (total seconds)
 - Bundle size (total KB)
 - Route count (static + dynamic)
@@ -148,6 +155,7 @@ Analyze build results and provide insights:
 ```
 
 **Status Indicators:**
+
 - ✅ = Within target
 - ⚠️ = Close to target (90-100%)
 - ❌ = Exceeds target
@@ -180,6 +188,7 @@ Parse `.next/analyze` or build output to show top 5 routes by bundle size:
 ### 3.3 Build Warnings Detection
 
 Parse build output for warnings:
+
 - Large bundle sizes (>100KB)
 - Slow compilation times
 - Cache misses
@@ -209,7 +218,7 @@ Provide actionable recommendations based on analysis:
 
 ### 4.1 Optimization Recommendations
 
-```
+````
 💡 OPTIMIZATION RECOMMENDATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Code-Splitting Opportunity
@@ -222,9 +231,9 @@ Provide actionable recommendations based on analysis:
    const ExpenseChart = dynamic(() => import('./chart'), {
      loading: () => <Skeleton className="h-96" />
    })
-   ```
+````
 
-   Potential Savings: ~15KB
+Potential Savings: ~15KB
 
 2. Bundle Analysis Recommended
    Current total: 487KB
@@ -239,12 +248,14 @@ Provide actionable recommendations based on analysis:
 
    Suggestion: Enable persistent caching when Turbopack stabilizes
    Expected Improvement: 97%+ hit rate
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ```
 
 ### 4.2 Build Summary
 
 ```
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ BUILD SUCCESSFUL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,15 +263,18 @@ Build completed in 28.4s
 All performance targets met ✅
 
 Next Steps:
+
 - Test locally: pnpm start
 - Deploy to staging: vercel --prod --env staging
 - Deploy to production: vercel --prod
 
 Resources:
+
 - Documentation: /docs/build
 - Optimization Guide: /docs/build#build-optimization
 - Troubleshooting: /docs/build#common-build-issues
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ```
 
 ---
@@ -276,6 +290,7 @@ Parse error output to identify error type:
 #### TypeScript Errors (Build Hangs)
 
 ```
+
 ❌ BUILD FAILED
 
 Error Type: TypeScript Compilation Errors
@@ -284,6 +299,7 @@ Symptom: Build hung at "Environments: .env"
 Detected Pattern: TypeScript errors prevent Next.js compilation
 
 Recovery Steps:
+
 1. Run: pnpm tsc --noEmit
 2. Fix TypeScript errors (see error list below)
 3. Re-run: /build
@@ -293,11 +309,13 @@ Run /fix-build to attempt automatic fixes
 
 Documentation:
 See: /docs/build#typescript-errors
+
 ```
 
 #### MDX Syntax Errors
 
 ```
+
 ❌ BUILD FAILED
 
 Error: Unexpected character '7' (U+0037) before name
@@ -310,17 +328,19 @@ Fix:
 Change <75% to &lt;75%
 
 Would you like to:
-  [1] Auto-fix this error
-  [2] View MDX escaping rules
-  [3] Open file in editor
+[1] Auto-fix this error
+[2] View MDX escaping rules
+[3] Open file in editor
 
 Documentation:
 See: /docs/build#mdx-syntax-errors
+
 ```
 
 #### Prisma Client Errors
 
 ```
+
 ❌ BUILD FAILED
 
 Error: Module not found: Can't resolve '@prisma/client'
@@ -328,6 +348,7 @@ Error: Module not found: Can't resolve '@prisma/client'
 Detected Pattern: Prisma client not generated or out of sync
 
 Recovery Steps:
+
 1. Run: pnpm prisma generate
 2. Verify: Check node_modules/.prisma/client exists
 3. Re-run: /build
@@ -337,11 +358,13 @@ Running pnpm prisma generate...
 ✅ Client regenerated
 
 Re-attempting build...
+
 ```
 
 #### Memory Exhaustion
 
 ```
+
 ❌ BUILD FAILED
 
 Error: JavaScript heap out of memory
@@ -349,6 +372,7 @@ Error: JavaScript heap out of memory
 Detected Pattern: Insufficient Node.js memory allocation
 
 Recovery Steps:
+
 1. Increase memory limit:
 
    Windows PowerShell:
@@ -361,11 +385,13 @@ Recovery Steps:
 
 Documentation:
 See: /docs/build#memory-resource-exhaustion
+
 ```
 
 #### Unknown Errors
 
 ```
+
 ❌ BUILD FAILED
 
 Error: [Display actual error message]
@@ -373,16 +399,19 @@ Error: [Display actual error message]
 No pattern match found.
 
 Troubleshooting Steps:
+
 1. Check build output above for clues
 2. Review /docs/build for common issues
 3. Run /agents/build for in-depth analysis
 4. Check Vercel logs if deploying
 
 Need Help?
+
 - Documentation: /docs/build#common-build-issues
 - Run: /agents/build -p "Analyze build failure"
 - Search: Error message in docs
-```
+
+````
 
 ---
 
@@ -397,7 +426,7 @@ Support additional build modes:
 
 # Runs: ANALYZE=true pnpm build
 # Opens bundle analyzer in browser after build
-```
+````
 
 ### Profile Mode
 
@@ -435,6 +464,7 @@ The `/build` command leverages specialized agents for complex analysis:
 ### /agents/nextjs
 
 **Invoked for:**
+
 - Deep build configuration analysis
 - App Router optimization recommendations
 - Server Component vs Client Component analysis
@@ -450,6 +480,7 @@ The `/build` command leverages specialized agents for complex analysis:
 ### /agents/build
 
 **Invoked for:**
+
 - Bundle size optimization
 - Cache strategy improvements
 - Turbopack configuration
@@ -465,6 +496,7 @@ The `/build` command leverages specialized agents for complex analysis:
 ### /agents/typescript
 
 **Invoked for:**
+
 - Complex TypeScript error resolution
 - Type inference issues
 - Strict mode migration
@@ -487,13 +519,13 @@ The `/build` command behavior can be customized via `.claude/settings.json`:
   "commands": {
     "build": {
       "preValidation": true,
-      "autoFix": "prompt",  // "always" | "prompt" | "never"
+      "autoFix": "prompt", // "always" | "prompt" | "never"
       "postAnalysis": true,
       "recommendations": true,
       "performance": {
-        "coldBuildTarget": 30,      // seconds
-        "bundleSizeTarget": 500,    // KB
-        "cacheHitRateTarget": 90    // percentage
+        "coldBuildTarget": 30, // seconds
+        "bundleSizeTarget": 500, // KB
+        "cacheHitRateTarget": 90 // percentage
       }
     }
   }
@@ -507,21 +539,25 @@ The `/build` command behavior can be customized via `.claude/settings.json`:
 The enhanced `/build` command tracks and reports:
 
 **Build Success Rate:**
+
 - Builds attempted
 - Builds successful
 - Builds failed (with error categorization)
 
 **Error Prevention:**
+
 - Errors caught in pre-validation
 - Errors fixed automatically
 - Errors requiring manual intervention
 
 **Performance Trends:**
+
 - Build time over last 10 builds
 - Bundle size changes
 - Cache hit rate trends
 
 **Time Savings:**
+
 - Estimated time saved via pre-validation
 - Auto-fix success rate
 - Average error resolution time
@@ -542,12 +578,14 @@ The enhanced `/build` command provides:
 ✅ **Agent integration** - Leverages specialized agents for complex issues
 
 **Typical workflow time:**
+
 - Pre-validation: 15s
 - Build: 28s
 - Post-analysis: 2s
 - **Total:** ~45s (vs potential 3+ hours of debugging)
 
 **Expected impact:**
+
 - 99.9% reduction in build troubleshooting time
 - Zero build failures in CI/CD (with pre-validation)
 - Higher developer confidence and productivity

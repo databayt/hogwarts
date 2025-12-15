@@ -11,22 +11,30 @@ Every listing in the platform follows the same structure, making it predictable 
 
 ## Key Features
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 not-prose">
-  <div className="border rounded-lg p-6">
-    <h4 className="font-semibold mb-2">Optimistic Updates</h4>
-    <p className="text-sm text-muted-foreground">Add, update, and remove items instantly with automatic rollback on errors.</p>
+<div className="not-prose mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">Optimistic Updates</h4>
+    <p className="text-muted-foreground text-sm">
+      Add, update, and remove items instantly with automatic rollback on errors.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h4 className="font-semibold mb-2">URL-Persisted Views</h4>
-    <p className="text-sm text-muted-foreground">Table/Grid view toggle persists via URL query params using nuqs.</p>
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">URL-Persisted Views</h4>
+    <p className="text-muted-foreground text-sm">
+      Table/Grid view toggle persists via URL query params using nuqs.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h4 className="font-semibold mb-2">Infinite Scroll</h4>
-    <p className="text-sm text-muted-foreground">Load-more pagination for seamless data browsing without page reloads.</p>
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">Infinite Scroll</h4>
+    <p className="text-muted-foreground text-sm">
+      Load-more pagination for seamless data browsing without page reloads.
+    </p>
   </div>
-  <div className="border rounded-lg p-6">
-    <h4 className="font-semibold mb-2">Centralized Queries</h4>
-    <p className="text-sm text-muted-foreground">Type-safe query builders with role-based authorization per module.</p>
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">Centralized Queries</h4>
+    <p className="text-muted-foreground text-sm">
+      Type-safe query builders with role-based authorization per module.
+    </p>
   </div>
 </div>
 
@@ -66,61 +74,55 @@ The **Announcements** and **Grades** modules serve as reference implementations 
 The `usePlatformData` hook manages client-side data state with infinite scroll pagination and optimistic updates:
 
 ```typescript
-import { usePlatformData } from "@/hooks/use-platform-data";
+import { usePlatformData } from "@/hooks/use-platform-data"
 
 interface UsePlatformDataOptions<TData, TFilters> {
-  initialData: TData[];           // Initial data from server
-  total: number;                  // Total count from server
-  perPage?: number;               // Items per page (default: 20)
+  initialData: TData[] // Initial data from server
+  total: number // Total count from server
+  perPage?: number // Items per page (default: 20)
   fetcher: (params: TFilters & { page: number; perPage: number }) => Promise<{
-    rows: TData[];
-    total: number;
-  }>;
-  filters?: TFilters;             // Filter object - auto-triggers refresh on change
+    rows: TData[]
+    total: number
+  }>
+  filters?: TFilters // Filter object - auto-triggers refresh on change
 }
 
 // Returns
 interface UsePlatformDataReturn<TData> {
-  data: TData[];                  // Current data array
-  total: number;                  // Total count
-  currentPage: number;            // Current page number
-  isLoading: boolean;             // Loading state
-  hasMore: boolean;               // Whether more data is available
-  loadMore: () => Promise<void>;  // Load next page
-  refresh: () => Promise<void>;   // Refresh from page 1
-  optimisticAdd: (item: TData) => void;
-  optimisticUpdate: (id: string, updater: (item: TData) => TData) => void;
-  optimisticRemove: (id: string) => void;
-  setData: React.Dispatch<React.SetStateAction<TData[]>>;
+  data: TData[] // Current data array
+  total: number // Total count
+  currentPage: number // Current page number
+  isLoading: boolean // Loading state
+  hasMore: boolean // Whether more data is available
+  loadMore: () => Promise<void> // Load next page
+  refresh: () => Promise<void> // Refresh from page 1
+  optimisticAdd: (item: TData) => void
+  optimisticUpdate: (id: string, updater: (item: TData) => TData) => void
+  optimisticRemove: (id: string) => void
+  setData: React.Dispatch<React.SetStateAction<TData[]>>
 }
 ```
 
 **Usage:**
 
 ```typescript
-const {
-  data,
-  total,
-  isLoading,
-  hasMore,
-  loadMore,
-  refresh,
-  optimisticRemove,
-} = usePlatformData<StudentRow, StudentFilters>({
-  initialData,
-  total,
-  perPage: 20,
-  fetcher: async (params) => {
-    const result = await getStudents(params);
-    return result.success
-      ? { rows: result.data.rows, total: result.data.total }
-      : { rows: [], total: 0 };
-  },
-  filters: searchValue ? { name: searchValue } : undefined,
-});
+const { data, total, isLoading, hasMore, loadMore, refresh, optimisticRemove } =
+  usePlatformData<StudentRow, StudentFilters>({
+    initialData,
+    total,
+    perPage: 20,
+    fetcher: async (params) => {
+      const result = await getStudents(params)
+      return result.success
+        ? { rows: result.data.rows, total: result.data.total }
+        : { rows: [], total: 0 }
+    },
+    filters: searchValue ? { name: searchValue } : undefined,
+  })
 ```
 
 **Key Behaviors:**
+
 - Auto-refreshes when `filters` object changes (JSON comparison)
 - Skips first render to avoid double-fetching initialData
 - Optimistic operations update UI immediately
@@ -155,8 +157,8 @@ interface UsePlatformViewOptions {
 
 ```typescript
 const { view, toggleView, isTable, isGrid } = usePlatformView({
-  defaultView: "table"
-});
+  defaultView: "table",
+})
 
 // URL updates automatically: ?view=table or ?view=grid
 ```
@@ -178,28 +180,28 @@ The `PlatformToolbar` component provides a unified interface for all listings:
 
 ```typescript
 interface PlatformToolbarProps<TData> {
-  table?: Table<TData>;              // TanStack table (for table view)
-  view: ViewMode;                    // Current view mode
-  onToggleView: () => void;          // Toggle view callback
-  searchValue?: string;              // Search input value
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
-  onCreate?: () => void;             // Create button handler
-  getCSV?: (filters?: Record<string, unknown>) => Promise<string>;
-  entityName?: string;               // For export filename
-  exportFormats?: ExportFormat[];    // ["csv"] by default
-  filters?: Record<string, unknown>; // Current filters for export
-  showColumnToggle?: boolean;        // Show column visibility (default: true)
-  additionalActions?: React.ReactNode;
+  table?: Table<TData> // TanStack table (for table view)
+  view: ViewMode // Current view mode
+  onToggleView: () => void // Toggle view callback
+  searchValue?: string // Search input value
+  onSearchChange?: (value: string) => void
+  searchPlaceholder?: string
+  onCreate?: () => void // Create button handler
+  getCSV?: (filters?: Record<string, unknown>) => Promise<string>
+  entityName?: string // For export filename
+  exportFormats?: ExportFormat[] // ["csv"] by default
+  filters?: Record<string, unknown> // Current filters for export
+  showColumnToggle?: boolean // Show column visibility (default: true)
+  additionalActions?: React.ReactNode
   translations?: {
-    search?: string;
-    create?: string;
-    reset?: string;
-    tableView?: string;
-    gridView?: string;
-    export?: string;
-  };
-  className?: string;
+    search?: string
+    create?: string
+    reset?: string
+    tableView?: string
+    gridView?: string
+    export?: string
+  }
+  className?: string
 }
 ```
 
@@ -278,10 +280,10 @@ Use **column filters** (dropdown in table headers) for filterable fields:
 
 **Column Filters vs Toolbar Filters:**
 
-| Use Column Filters | Use Toolbar Filters |
-|-------------------|---------------------|
-| Simple select/checkbox filters | Complex multi-field filters |
-| Status, scope, type, category | Date range pickers |
+| Use Column Filters              | Use Toolbar Filters             |
+| ------------------------------- | ------------------------------- |
+| Simple select/checkbox filters  | Complex multi-field filters     |
+| Status, scope, type, category   | Date range pickers              |
 | Any filterable column displayed | Filters for data not in columns |
 
 ---
@@ -357,50 +359,60 @@ Empty state for grid view:
 
 ```typescript
 // 1. Define handler BEFORE columns useMemo
-const handleDelete = useCallback(async (item: RowType) => {
-  const ok = await confirmDeleteDialog(`Delete ${item.name}?`);
-  if (!ok) return;
+const handleDelete = useCallback(
+  async (item: RowType) => {
+    const ok = await confirmDeleteDialog(`Delete ${item.name}?`)
+    if (!ok) return
 
-  // Optimistic remove from UI immediately
-  optimisticRemove(item.id);
+    // Optimistic remove from UI immediately
+    optimisticRemove(item.id)
 
-  // Server request
-  const result = await deleteItem({ id: item.id });
+    // Server request
+    const result = await deleteItem({ id: item.id })
 
-  if (result.success) {
-    DeleteToast();
-  } else {
-    // Revert on error
-    refresh();
-    ErrorToast("Failed to delete");
-  }
-}, [optimisticRemove, refresh]);
+    if (result.success) {
+      DeleteToast()
+    } else {
+      // Revert on error
+      refresh()
+      ErrorToast("Failed to delete")
+    }
+  },
+  [optimisticRemove, refresh]
+)
 
 // 2. Pass callback to columns
-const columns = useMemo(() => getColumns(dictionary, lang, {
-  onDelete: handleDelete,
-}), [dictionary, lang, handleDelete]);
+const columns = useMemo(
+  () =>
+    getColumns(dictionary, lang, {
+      onDelete: handleDelete,
+    }),
+  [dictionary, lang, handleDelete]
+)
 ```
 
 ### Update with Optimistic Update
 
 ```typescript
-const handleTogglePublish = useCallback(async (item: RowType) => {
-  const newState = !item.published;
+const handleTogglePublish = useCallback(
+  async (item: RowType) => {
+    const newState = !item.published
 
-  // Optimistic update
-  optimisticUpdate(item.id, (prev) => ({ ...prev, published: newState }));
+    // Optimistic update
+    optimisticUpdate(item.id, (prev) => ({ ...prev, published: newState }))
 
-  const result = await togglePublish({ id: item.id, publish: newState });
+    const result = await togglePublish({ id: item.id, publish: newState })
 
-  if (result.success) {
-    toast.success(newState ? "Published" : "Unpublished");
-  } else {
-    // Revert on error
-    refresh();
-    toast.error("Failed to update");
-  }
-}, [optimisticUpdate, refresh]);
+    if (result.success) {
+      toast.success(newState ? "Published" : "Unpublished")
+    } else {
+      // Revert on error
+      refresh()
+      toast.error("Failed to update")
+    }
+  },
+  [optimisticUpdate, refresh]
+)
 ```
 
 ### Column Callbacks Interface
@@ -461,34 +473,35 @@ Centralize all query logic in `queries.ts`:
 
 ```typescript
 // queries.ts
-import { db } from "@/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client"
+
+import { db } from "@/lib/db"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export type StudentListFilters = {
-  name?: string;
-  yearLevel?: string;
-  status?: string;
-  classId?: string;
-};
+  name?: string
+  yearLevel?: string
+  status?: string
+  classId?: string
+}
 
 export type PaginationParams = {
-  page: number;
-  perPage: number;
-};
+  page: number
+  perPage: number
+}
 
 export type SortParam = {
-  id: string;
-  desc: boolean;
-};
+  id: string
+  desc: boolean
+}
 
 export type StudentQueryParams = StudentListFilters &
   PaginationParams & {
-    sort?: SortParam[];
-  };
+    sort?: SortParam[]
+  }
 
 // Select objects for different contexts
 export const studentListSelect = {
@@ -499,7 +512,7 @@ export const studentListSelect = {
   status: true,
   image: true,
   createdAt: true,
-} as const;
+} as const
 
 export const studentDetailSelect = {
   ...studentListSelect,
@@ -525,7 +538,7 @@ export const studentDetailSelect = {
       },
     },
   },
-} as const;
+} as const
 
 // ============================================================================
 // Query Builders
@@ -535,30 +548,30 @@ export function buildStudentWhere(
   schoolId: string,
   filters: StudentListFilters = {}
 ): Prisma.StudentWhereInput {
-  const where: Prisma.StudentWhereInput = { schoolId };
+  const where: Prisma.StudentWhereInput = { schoolId }
 
   if (filters.name) {
     where.name = {
       contains: filters.name,
       mode: Prisma.QueryMode.insensitive,
-    };
+    }
   }
 
   if (filters.yearLevel) {
-    where.yearLevel = filters.yearLevel;
+    where.yearLevel = filters.yearLevel
   }
 
   if (filters.status) {
-    where.status = filters.status as any;
+    where.status = filters.status as any
   }
 
   if (filters.classId) {
     where.studentClasses = {
       some: { classId: filters.classId },
-    };
+    }
   }
 
-  return where;
+  return where
 }
 
 export function buildStudentOrderBy(
@@ -567,16 +580,16 @@ export function buildStudentOrderBy(
   if (sortParams?.length) {
     return sortParams.map((s) => ({
       [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
-    }));
+    }))
   }
-  return [{ createdAt: Prisma.SortOrder.desc }];
+  return [{ createdAt: Prisma.SortOrder.desc }]
 }
 
 export function buildPagination(page: number, perPage: number) {
   return {
     skip: (page - 1) * perPage,
     take: perPage,
-  };
+  }
 }
 
 // ============================================================================
@@ -587,23 +600,29 @@ export async function getStudentsList(
   schoolId: string,
   params: Partial<StudentQueryParams> = {}
 ) {
-  const where = buildStudentWhere(schoolId, params);
-  const orderBy = buildStudentOrderBy(params.sort);
-  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20);
+  const where = buildStudentWhere(schoolId, params)
+  const orderBy = buildStudentOrderBy(params.sort)
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
 
   const [rows, count] = await Promise.all([
-    db.student.findMany({ where, orderBy, skip, take, select: studentListSelect }),
+    db.student.findMany({
+      where,
+      orderBy,
+      skip,
+      take,
+      select: studentListSelect,
+    }),
     db.student.count({ where }),
-  ]);
+  ])
 
-  return { rows, count };
+  return { rows, count }
 }
 
 export async function getStudentDetail(schoolId: string, studentId: string) {
   return db.student.findFirst({
     where: { id: studentId, schoolId },
     select: studentDetailSelect,
-  });
+  })
 }
 
 export async function getStudentStats(schoolId: string) {
@@ -611,8 +630,8 @@ export async function getStudentStats(schoolId: string) {
     db.student.count({ where: { schoolId } }),
     db.student.count({ where: { schoolId, status: "ACTIVE" } }),
     db.student.count({ where: { schoolId, status: "INACTIVE" } }),
-  ]);
-  return { total, active, inactive };
+  ])
+  return { total, active, inactive }
 }
 ```
 
@@ -624,20 +643,26 @@ Implement role-based access control per module:
 
 ```typescript
 // authorization.ts
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client"
 
-export type ModuleAction = 'create' | 'read' | 'update' | 'delete' | 'export' | 'bulk_action';
+export type ModuleAction =
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "export"
+  | "bulk_action"
 
 export interface AuthContext {
-  userId: string;
-  role: UserRole;
-  schoolId: string | null;
+  userId: string
+  role: UserRole
+  schoolId: string | null
 }
 
 export interface EntityContext {
-  id?: string;
-  createdBy?: string | null;
-  schoolId?: string;
+  id?: string
+  createdBy?: string | null
+  schoolId?: string
 }
 
 /**
@@ -648,34 +673,34 @@ export function checkPermission(
   action: ModuleAction,
   entity?: EntityContext
 ): boolean {
-  const { role, userId, schoolId } = auth;
+  const { role, userId, schoolId } = auth
 
   // DEVELOPER has full access
-  if (role === 'DEVELOPER') return true;
+  if (role === "DEVELOPER") return true
 
   // All authenticated users can read within their school
-  if (action === 'read') {
-    if (!schoolId || !entity?.schoolId) return false;
-    return schoolId === entity.schoolId;
+  if (action === "read") {
+    if (!schoolId || !entity?.schoolId) return false
+    return schoolId === entity.schoolId
   }
 
   // ADMIN has full access within their school
-  if (role === 'ADMIN') {
-    if (!schoolId || !entity?.schoolId) return true; // For create
-    return schoolId === entity.schoolId;
+  if (role === "ADMIN") {
+    if (!schoolId || !entity?.schoolId) return true // For create
+    return schoolId === entity.schoolId
   }
 
   // TEACHER can manage their own entities
-  if (role === 'TEACHER') {
-    if (action === 'create') return true;
-    if (['update', 'delete'].includes(action)) {
-      return entity?.createdBy === userId && schoolId === entity?.schoolId;
+  if (role === "TEACHER") {
+    if (action === "create") return true
+    if (["update", "delete"].includes(action)) {
+      return entity?.createdBy === userId && schoolId === entity?.schoolId
     }
-    return false;
+    return false
   }
 
   // Other roles are read-only
-  return false;
+  return false
 }
 
 /**
@@ -687,7 +712,7 @@ export function assertPermission(
   entity?: EntityContext
 ): void {
   if (!checkPermission(auth, action, entity)) {
-    throw new Error(`Unauthorized: ${auth.role} cannot ${action}`);
+    throw new Error(`Unauthorized: ${auth.role} cannot ${action}`)
   }
 }
 
@@ -695,12 +720,12 @@ export function assertPermission(
  * Get auth context from session
  */
 export function getAuthContext(session: any): AuthContext | null {
-  if (!session?.user) return null;
+  if (!session?.user) return null
   return {
     userId: session.user.id,
     role: session.user.role as UserRole,
     schoolId: session.user.schoolId || null,
-  };
+  }
 }
 ```
 
@@ -710,38 +735,40 @@ export function getAuthContext(session: any): AuthContext | null {
 
 ```typescript
 // actions.ts
-"use server";
+"use server"
 
-import { z } from "zod";
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { studentSchema, getStudentsSchema } from "./validation";
-import { getStudentsList, getStudentDetail } from "./queries";
-import { getAuthContext, assertPermission } from "./authorization";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+
+import { assertPermission, getAuthContext } from "./authorization"
+import { getStudentDetail, getStudentsList } from "./queries"
+import { getStudentsSchema, studentSchema } from "./validation"
 
 // Type-safe response
 type ActionResponse<T> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 export async function getStudents(
   input: Partial<z.infer<typeof getStudentsSchema>>
 ): Promise<ActionResponse<{ rows: any[]; total: number }>> {
   try {
-    const session = await auth();
-    const authCtx = getAuthContext(session);
+    const session = await auth()
+    const authCtx = getAuthContext(session)
     if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Unauthorized" }
     }
 
-    const params = getStudentsSchema.parse(input ?? {});
-    const { rows, count } = await getStudentsList(authCtx.schoolId, params);
+    const params = getStudentsSchema.parse(input ?? {})
+    const { rows, count } = await getStudentsList(authCtx.schoolId, params)
 
-    return { success: true, data: { rows, total: count } };
+    return { success: true, data: { rows, total: count } }
   } catch (error) {
-    console.error("getStudents error:", error);
-    return { success: false, error: "Failed to fetch students" };
+    console.error("getStudents error:", error)
+    return { success: false, error: "Failed to fetch students" }
   }
 }
 
@@ -749,51 +776,51 @@ export async function createStudent(
   input: z.infer<typeof studentSchema>
 ): Promise<ActionResponse<{ id: string }>> {
   try {
-    const session = await auth();
-    const authCtx = getAuthContext(session);
+    const session = await auth()
+    const authCtx = getAuthContext(session)
     if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Unauthorized" }
     }
 
-    assertPermission(authCtx, 'create');
+    assertPermission(authCtx, "create")
 
-    const validated = studentSchema.parse(input);
+    const validated = studentSchema.parse(input)
     const student = await db.student.create({
       data: { ...validated, schoolId: authCtx.schoolId },
-    });
+    })
 
-    revalidatePath("/students");
-    return { success: true, data: { id: student.id } };
+    revalidatePath("/students")
+    return { success: true, data: { id: student.id } }
   } catch (error) {
-    console.error("createStudent error:", error);
-    return { success: false, error: "Failed to create student" };
+    console.error("createStudent error:", error)
+    return { success: false, error: "Failed to create student" }
   }
 }
 
-export async function deleteStudent(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteStudent(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
-    const session = await auth();
-    const authCtx = getAuthContext(session);
+    const session = await auth()
+    const authCtx = getAuthContext(session)
     if (!authCtx?.schoolId) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Unauthorized" }
     }
 
-    const student = await getStudentDetail(authCtx.schoolId, input.id);
+    const student = await getStudentDetail(authCtx.schoolId, input.id)
     if (!student) {
-      return { success: false, error: "Student not found" };
+      return { success: false, error: "Student not found" }
     }
 
-    assertPermission(authCtx, 'delete', { schoolId: authCtx.schoolId });
+    assertPermission(authCtx, "delete", { schoolId: authCtx.schoolId })
 
-    await db.student.delete({ where: { id: input.id } });
+    await db.student.delete({ where: { id: input.id } })
 
-    revalidatePath("/students");
-    return { success: true, data: undefined };
+    revalidatePath("/students")
+    return { success: true, data: undefined }
   } catch (error) {
-    console.error("deleteStudent error:", error);
-    return { success: false, error: "Failed to delete student" };
+    console.error("deleteStudent error:", error)
+    return { success: false, error: "Failed to delete student" }
   }
 }
 
@@ -801,16 +828,16 @@ export async function getStudentsCSV(
   filters?: Record<string, unknown>
 ): Promise<string> {
   try {
-    const session = await auth();
-    const schoolId = session?.user?.schoolId;
-    if (!schoolId) return "";
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+    if (!schoolId) return ""
 
     const students = await db.student.findMany({
       where: { schoolId },
       orderBy: [{ createdAt: "desc" }],
-    });
+    })
 
-    const headers = ["ID", "Name", "Email", "Year Level", "Status", "Created"];
+    const headers = ["ID", "Name", "Email", "Year Level", "Status", "Created"]
     const csvRows = students.map((s) =>
       [
         s.id,
@@ -820,12 +847,12 @@ export async function getStudentsCSV(
         s.status,
         new Date(s.createdAt).toISOString().split("T")[0],
       ].join(",")
-    );
+    )
 
-    return [headers.join(","), ...csvRows].join("\n");
+    return [headers.join(","), ...csvRows].join("\n")
   } catch (error) {
-    console.error("getStudentsCSV error:", error);
-    return "";
+    console.error("getStudentsCSV error:", error)
+    return ""
   }
 }
 ```
@@ -902,20 +929,20 @@ import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `currentStep` | `number` | Current step (1-indexed) |
-| `totalSteps` | `number` | Total steps |
-| `stepLabel` | `string` | Label for current step |
-| `isView` | `boolean` | Read-only mode |
-| `isEdit` | `boolean` | Edit mode (shows Save button) |
-| `isDirty` | `boolean` | Form has unsaved changes |
-| `isSubmitting` | `boolean` | Form is submitting |
-| `progress` | `number` | Custom progress (0-100) |
-| `onBack` | `() => void` | Back/Cancel handler |
-| `onNext` | `() => void` | Next/Create handler |
-| `onSaveStep` | `() => void` | Save current step (edit mode) |
-| `labels` | `object` | i18n labels |
+| Prop           | Type         | Description                   |
+| -------------- | ------------ | ----------------------------- |
+| `currentStep`  | `number`     | Current step (1-indexed)      |
+| `totalSteps`   | `number`     | Total steps                   |
+| `stepLabel`    | `string`     | Label for current step        |
+| `isView`       | `boolean`    | Read-only mode                |
+| `isEdit`       | `boolean`    | Edit mode (shows Save button) |
+| `isDirty`      | `boolean`    | Form has unsaved changes      |
+| `isSubmitting` | `boolean`    | Form is submitting            |
+| `progress`     | `number`     | Custom progress (0-100)       |
+| `onBack`       | `() => void` | Back/Cancel handler           |
+| `onNext`       | `() => void` | Next/Create handler           |
+| `onSaveStep`   | `() => void` | Save current step (edit mode) |
+| `labels`       | `object`     | i18n labels                   |
 
 ---
 
@@ -1174,34 +1201,34 @@ Use concise labels for filters:
 ```typescript
 // ✅ CORRECT
 await db.student.findMany({
-  where: { schoolId, yearLevel: "10" }
-});
+  where: { schoolId, yearLevel: "10" },
+})
 
 await db.class.create({
-  data: { name: "Math 101", schoolId }
-});
+  data: { name: "Math 101", schoolId },
+})
 
 // ❌ WRONG - breaks tenant isolation
 await db.student.findMany({
-  where: { yearLevel: "10" }
-});
+  where: { yearLevel: "10" },
+})
 ```
 
 ---
 
 ## Modules Using This Pattern
 
-| Module | Table | Grid | Search | Export | queries.ts | authorization.ts |
-|--------|-------|------|--------|--------|------------|------------------|
-| **Announcements** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Grades** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Students** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Teachers** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Classes** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Subjects** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Events** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Lessons** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
-| **Parents** | ✅ | ✅ | ✅ | ✅ | 🔄 | 🔄 |
+| Module            | Table | Grid | Search | Export | queries.ts | authorization.ts |
+| ----------------- | ----- | ---- | ------ | ------ | ---------- | ---------------- |
+| **Announcements** | ✅    | ✅   | ✅     | ✅     | ✅         | ✅               |
+| **Grades**        | ✅    | ✅   | ✅     | ✅     | ✅         | ✅               |
+| **Students**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Teachers**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Classes**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Subjects**      | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Events**        | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Lessons**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
+| **Parents**       | ✅    | ✅   | ✅     | ✅     | 🔄         | 🔄               |
 
 ✅ = Complete | 🔄 = Using pattern, needs queries.ts/authorization.ts
 
@@ -1226,12 +1253,16 @@ All toolbar elements use `h-9` (36px):
 
 ```typescript
 // 1. Define handlers first
-const handleDelete = useCallback(/* ... */);
+const handleDelete = useCallback(/* ... */)
 
 // 2. Then create columns with handlers
-const columns = useMemo(() => getColumns(t, lang, {
-  onDelete: handleDelete,
-}), [t, lang, handleDelete]);
+const columns = useMemo(
+  () =>
+    getColumns(t, lang, {
+      onDelete: handleDelete,
+    }),
+  [t, lang, handleDelete]
+)
 ```
 
 ### 3. Always Use Callbacks in Forms
@@ -1251,7 +1282,10 @@ if (onSuccess) {
 ### 4. Memoize Columns
 
 ```typescript
-const columns = useMemo(() => getColumns(dictionary, lang, callbacks), [dictionary, lang, callbacks]);
+const columns = useMemo(
+  () => getColumns(dictionary, lang, callbacks),
+  [dictionary, lang, callbacks]
+)
 ```
 
 ### 5. Handle Loading States
@@ -1285,13 +1319,13 @@ All shared listing components are exported from:
 
 ```typescript
 import {
-  PlatformToolbar,
+  ExportButton,
   GridCard,
   GridContainer,
   GridEmptyState,
-  ExportButton,
+  PlatformToolbar,
   ViewToggle,
-} from "@/components/platform/shared";
+} from "@/components/platform/shared"
 ```
 
 ---
@@ -1314,13 +1348,13 @@ ISOLATED (Level 1)              CONNECTED (Level 3+)
 
 ### 5 Levels of Listing Maturity
 
-| Level | Feature | Status |
-|-------|---------|--------|
-| **1** | Basic CRUD (create, read, update, delete) | ✅ Complete |
-| **2** | Relationship context (counts, quick links) | 🔄 In Progress |
-| **3** | Rich detail pages with related data tabs | 🔄 In Progress |
-| **4** | Cross-listing actions (bulk operations) | 🔄 In Progress |
-| **5** | Automated workflows (triggers, notifications) | ⏳ Planned |
+| Level | Feature                                       | Status         |
+| ----- | --------------------------------------------- | -------------- |
+| **1** | Basic CRUD (create, read, update, delete)     | ✅ Complete    |
+| **2** | Relationship context (counts, quick links)    | 🔄 In Progress |
+| **3** | Rich detail pages with related data tabs      | 🔄 In Progress |
+| **4** | Cross-listing actions (bulk operations)       | 🔄 In Progress |
+| **5** | Automated workflows (triggers, notifications) | ⏳ Planned     |
 
 ---
 

@@ -1,23 +1,25 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import { db } from "@/lib/db";
-import { stripe } from "@/lib/stripe";
-import { revalidatePath } from "next/cache";
-import slugify from "slugify";
-import type { CreateCourseData } from "../../../types";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import slugify from "slugify"
+
+import { db } from "@/lib/db"
+import { stripe } from "@/lib/stripe"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import type { CreateCourseData } from "../../../types"
 
 export async function createCourseAction(
   subdomain: string,
   formData: FormData
 ) {
-  const session = await auth();
-  const { schoolId } = await getTenantContext();
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
 
   // Check authentication
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   // Check admin/teacher access
@@ -26,47 +28,51 @@ export async function createCourseAction(
     session.user.role !== "TEACHER" &&
     session.user.role !== "DEVELOPER"
   ) {
-    throw new Error("Insufficient permissions");
+    throw new Error("Insufficient permissions")
   }
 
   // Check school context
   if (!schoolId) {
-    throw new Error("School context required");
+    throw new Error("School context required")
   }
 
   try {
     // Parse form data
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string | null;
-    const categoryId = formData.get("categoryId") as string | null;
-    const price = formData.get("price") ? parseFloat(formData.get("price") as string) : null;
+    const title = formData.get("title") as string
+    const description = formData.get("description") as string | null
+    const categoryId = formData.get("categoryId") as string | null
+    const price = formData.get("price")
+      ? parseFloat(formData.get("price") as string)
+      : null
 
     // Validate required fields
     if (!title || title.trim().length === 0) {
-      throw new Error("Course title is required");
+      throw new Error("Course title is required")
     }
 
     // Generate slug
-    const baseSlug = slugify(title, { lower: true, strict: true });
+    const baseSlug = slugify(title, { lower: true, strict: true })
 
     // Check for existing slug in the same school
-    let slug = baseSlug;
-    let counter = 1;
-    while (await db.streamCourse.findFirst({
-      where: {
-        slug,
-        schoolId
-      }
-    })) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
+    let slug = baseSlug
+    let counter = 1
+    while (
+      await db.streamCourse.findFirst({
+        where: {
+          slug,
+          schoolId,
+        },
+      })
+    ) {
+      slug = `${baseSlug}-${counter}`
+      counter++
     }
 
     // Create Stripe product if price is set
-    let stripePriceId: string | null = null;
+    let stripePriceId: string | null = null
     if (price && price > 0) {
       if (!stripe) {
-        throw new Error("Stripe is not configured");
+        throw new Error("Stripe is not configured")
       }
       const stripeProduct = await stripe.products.create({
         name: title,
@@ -79,9 +85,9 @@ export async function createCourseAction(
           currency: "usd",
           unit_amount: Math.round(price * 100), // Convert to cents
         },
-      });
+      })
 
-      stripePriceId = stripeProduct.default_price as string;
+      stripePriceId = stripeProduct.default_price as string
     }
 
     // Create course in database
@@ -96,43 +102,37 @@ export async function createCourseAction(
         schoolId,
         isPublished: false, // Courses start as draft
       },
-    });
+    })
 
     // Revalidate paths
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses`);
+    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses`)
 
     // Redirect to edit page
     return {
       success: true,
       courseId: course.id,
       slug: course.slug,
-    };
+    }
   } catch (error) {
-    console.error("Failed to create course:", error);
-    throw error instanceof Error ? error : new Error("Failed to create course");
+    console.error("Failed to create course:", error)
+    throw error instanceof Error ? error : new Error("Failed to create course")
   }
 }
 
-export async function createCategoryAction(
-  subdomain: string,
-  name: string
-) {
-  const session = await auth();
-  const { schoolId } = await getTenantContext();
+export async function createCategoryAction(subdomain: string, name: string) {
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
-  if (
-    session.user.role !== "ADMIN" &&
-    session.user.role !== "DEVELOPER"
-  ) {
-    throw new Error("Only administrators can create categories");
+  if (session.user.role !== "ADMIN" && session.user.role !== "DEVELOPER") {
+    throw new Error("Only administrators can create categories")
   }
 
   if (!schoolId) {
-    throw new Error("School context required");
+    throw new Error("School context required")
   }
 
   try {
@@ -140,12 +140,12 @@ export async function createCategoryAction(
     const existing = await db.streamCategory.findFirst({
       where: {
         name,
-        schoolId
-      }
-    });
+        schoolId,
+      },
+    })
 
     if (existing) {
-      throw new Error("Category already exists");
+      throw new Error("Category already exists")
     }
 
     const category = await db.streamCategory.create({
@@ -153,16 +153,18 @@ export async function createCategoryAction(
         name,
         schoolId,
       },
-    });
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/create`);
+    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/create`)
 
     return {
       success: true,
       category,
-    };
+    }
   } catch (error) {
-    console.error("Failed to create category:", error);
-    throw error instanceof Error ? error : new Error("Failed to create category");
+    console.error("Failed to create category:", error)
+    throw error instanceof Error
+      ? error
+      : new Error("Failed to create category")
   }
 }

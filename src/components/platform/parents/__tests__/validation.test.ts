@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Parent/Guardian validation schema tests
@@ -119,7 +119,9 @@ describe("Parent Validation Schemas", () => {
         phone: "+123",
         relationship: "INVALID",
       }
-      expect(parentCreateSchema.safeParse(invalidRelationship).success).toBe(false)
+      expect(parentCreateSchema.safeParse(invalidRelationship).success).toBe(
+        false
+      )
     })
   })
 

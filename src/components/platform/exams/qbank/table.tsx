@@ -1,25 +1,31 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { DataTable } from "@/components/table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table-toolbar";
-import { useDataTable } from "@/components/table/use-data-table";
-import { getQuestionBankColumns, type QuestionBankRow } from "./columns";
-import { Button } from "@/components/ui/button";
-import { Plus, Sparkles } from "lucide-react";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { QuestionBankForm } from "./form";
-import { getQuestions, deleteQuestion } from "./actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { Plus, Sparkles } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { DataTable } from "@/components/table/data-table"
+import { DataTableToolbar } from "@/components/table/data-table-toolbar"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteQuestion, getQuestions } from "./actions"
+import { getQuestionBankColumns, type QuestionBankRow } from "./columns"
+import { QuestionBankForm } from "./form"
 
 interface QuestionBankTableProps {
-  initialData: QuestionBankRow[];
-  total: number;
-  perPage?: number;
-  dictionary?: Dictionary;
+  initialData: QuestionBankRow[]
+  total: number
+  perPage?: number
+  dictionary?: Dictionary
 }
 
 export function QuestionBankTable({
@@ -28,60 +34,67 @@ export function QuestionBankTable({
   perPage = 20,
   dictionary,
 }: QuestionBankTableProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   // State for incremental loading
-  const [data, setData] = useState<QuestionBankRow[]>(initialData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [data, setData] = useState<QuestionBankRow[]>(initialData)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   // Refresh function for Modal callback
   const refresh = useCallback(() => {
     startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+      router.refresh()
+    })
+  }, [router])
 
-  const hasMore = data.length < total;
+  const hasMore = data.length < total
 
   // Handle delete with optimistic update (must be before columns useMemo)
-  const handleDelete = useCallback(async (question: QuestionBankRow) => {
-    try {
-      const ok = await confirmDeleteDialog(
-        `Delete question "${question.questionText.substring(0, 50)}..."?`
-      );
-      if (!ok) return;
+  const handleDelete = useCallback(
+    async (question: QuestionBankRow) => {
+      try {
+        const ok = await confirmDeleteDialog(
+          `Delete question "${question.questionText.substring(0, 50)}..."?`
+        )
+        if (!ok) return
 
-      // Optimistic remove
-      setData(prev => prev.filter(q => q.id !== question.id));
+        // Optimistic remove
+        setData((prev) => prev.filter((q) => q.id !== question.id))
 
-      const result = await deleteQuestion(question.id);
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast(result.error || "Failed to delete");
+        const result = await deleteQuestion(question.id)
+        if (result.success) {
+          DeleteToast()
+        } else {
+          // Revert on error
+          refresh()
+          ErrorToast(result.error || "Failed to delete")
+        }
+      } catch (e) {
+        refresh()
+        ErrorToast(e instanceof Error ? e.message : "Failed to delete")
       }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-    }
-  }, [refresh]);
+    },
+    [refresh]
+  )
 
   // Generate columns with callbacks
-  const columns = useMemo(() => getQuestionBankColumns({
-    onDelete: handleDelete,
-  }), [handleDelete]);
+  const columns = useMemo(
+    () =>
+      getQuestionBankColumns({
+        onDelete: handleDelete,
+      }),
+    [handleDelete]
+  )
 
   const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+    if (isLoading || !hasMore) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const nextPage = currentPage + 1;
-      const questions = await getQuestions({});
+      const nextPage = currentPage + 1
+      const questions = await getQuestions({})
 
       if (questions.length > 0) {
         const newRows: QuestionBankRow[] = questions
@@ -98,17 +111,17 @@ export function QuestionBankTable({
             timesUsed: q.analytics?.timesUsed || 0,
             successRate: q.analytics?.successRate || null,
             createdAt: q.createdAt.toISOString(),
-          }));
+          }))
 
-        setData((prev) => [...prev, ...newRows]);
-        setCurrentPage(nextPage);
+        setData((prev) => [...prev, ...newRows])
+        setCurrentPage(nextPage)
       }
     } catch (error) {
-      console.error("Failed to load more questions:", error);
+      console.error("Failed to load more questions:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [currentPage, perPage, isLoading, hasMore]);
+  }, [currentPage, perPage, isLoading, hasMore])
 
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<QuestionBankRow>({
@@ -121,15 +134,14 @@ export function QuestionBankTable({
         pageSize: data.length, // Show all loaded data
       },
     },
-  });
+  })
 
-  const { openModal } = useModal();
+  const { openModal } = useModal()
 
   const handleAIGenerate = () => {
-    const qs =
-      typeof window !== "undefined" ? window.location.search || "" : "";
-    window.location.href = `/generate/questions/ai-generate${qs}`;
-  };
+    const qs = typeof window !== "undefined" ? window.location.search || "" : ""
+    window.location.href = `/generate/questions/ai-generate${qs}`
+  }
 
   return (
     <div className="w-full">
@@ -148,11 +160,17 @@ export function QuestionBankTable({
               size="sm"
               className="h-8 gap-2"
               onClick={() => openModal()}
-              aria-label={dictionary?.generate?.actions?.addQuestion || "Add Question"}
-              title={dictionary?.generate?.actions?.addQuestion || "Add Question"}
+              aria-label={
+                dictionary?.generate?.actions?.addQuestion || "Add Question"
+              }
+              title={
+                dictionary?.generate?.actions?.addQuestion || "Add Question"
+              }
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">{dictionary?.generate?.actions?.addQuestion || "Add Question"}</span>
+              <span className="hidden sm:inline">
+                {dictionary?.generate?.actions?.addQuestion || "Add Question"}
+              </span>
             </Button>
             <Button
               type="button"
@@ -160,16 +178,26 @@ export function QuestionBankTable({
               size="sm"
               className="h-8 gap-2"
               onClick={handleAIGenerate}
-              aria-label={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
-              title={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+              aria-label={
+                dictionary?.generate?.actions?.generateWithAI || "AI Generate"
+              }
+              title={
+                dictionary?.generate?.actions?.generateWithAI || "AI Generate"
+              }
             >
               <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">{dictionary?.generate?.actions?.generateWithAI || "AI Generate"}</span>
+              <span className="hidden sm:inline">
+                {dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+              </span>
             </Button>
           </div>
         </DataTableToolbar>
-        <Modal content={<QuestionBankForm dictionary={dictionary} onSuccess={refresh} />} />
+        <Modal
+          content={
+            <QuestionBankForm dictionary={dictionary} onSuccess={refresh} />
+          }
+        />
       </DataTable>
     </div>
-  );
+  )
 }

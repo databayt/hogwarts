@@ -1,15 +1,16 @@
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import { db } from "@/lib/db";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 type ApiResponse = {
-  status: "success" | "error";
-  message: string;
-};
+  status: "success" | "error"
+  message: string
+}
 
 // Validation schemas
 const courseUpdateSchema = z.object({
@@ -21,12 +22,12 @@ const courseUpdateSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
   isPublished: z.boolean().optional(),
   categoryId: z.string().optional().nullable(),
-});
+})
 
 const chapterSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   courseId: z.string().min(1, "Course ID is required"),
-});
+})
 
 const lessonSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -35,23 +36,23 @@ const lessonSchema = z.object({
   description: z.string().optional().nullable(),
   videoUrl: z.string().optional().nullable(),
   duration: z.number().optional().nullable(),
-});
+})
 
 // Helper to verify course ownership and school context
 async function verifyCourseAccess(courseId: string) {
-  const session = await auth();
-  const { schoolId } = await getTenantContext();
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
 
   if (!session?.user) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized")
   }
 
   if (!["ADMIN", "TEACHER", "DEVELOPER"].includes(session.user.role || "")) {
-    throw new Error("Insufficient permissions");
+    throw new Error("Insufficient permissions")
   }
 
   if (!schoolId && session.user.role !== "DEVELOPER") {
-    throw new Error("School context required");
+    throw new Error("School context required")
   }
 
   const course = await db.streamCourse.findFirst({
@@ -59,13 +60,13 @@ async function verifyCourseAccess(courseId: string) {
       id: courseId,
       schoolId: schoolId || undefined,
     },
-  });
+  })
 
   if (!course) {
-    throw new Error("Course not found or access denied");
+    throw new Error("Course not found or access denied")
   }
 
-  return { session, schoolId, course };
+  return { session, schoolId, course }
 }
 
 // ============================================
@@ -77,14 +78,14 @@ export async function editCourse(
   courseId: string
 ): Promise<ApiResponse> {
   try {
-    const { schoolId } = await verifyCourseAccess(courseId);
+    const { schoolId } = await verifyCourseAccess(courseId)
 
-    const result = courseUpdateSchema.safeParse(data);
+    const result = courseUpdateSchema.safeParse(data)
     if (!result.success) {
       return {
         status: "error",
         message: result.error.issues[0]?.message || "Invalid data",
-      };
+      }
     }
 
     await db.streamCourse.update({
@@ -94,20 +95,23 @@ export async function editCourse(
       data: {
         ...result.data,
       },
-    });
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Course updated successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to update course:", error);
+    console.error("Failed to update course:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to update course",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to update course",
+    }
   }
 }
 
@@ -119,14 +123,14 @@ export async function createChapter(
   values: z.infer<typeof chapterSchema>
 ): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(values.courseId);
+    await verifyCourseAccess(values.courseId)
 
-    const result = chapterSchema.safeParse(values);
+    const result = chapterSchema.safeParse(values)
     if (!result.success) {
       return {
         status: "error",
         message: result.error.issues[0]?.message || "Invalid data",
-      };
+      }
     }
 
     await db.$transaction(async (tx) => {
@@ -141,7 +145,7 @@ export async function createChapter(
         orderBy: {
           position: "desc",
         },
-      });
+      })
 
       // Create chapter with next position
       await tx.streamChapter.create({
@@ -150,58 +154,69 @@ export async function createChapter(
           courseId: result.data.courseId,
           position: (maxPos?.position ?? 0) + 1,
         },
-      });
-    });
+      })
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${values.courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${values.courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Chapter created successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to create chapter:", error);
+    console.error("Failed to create chapter:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to create chapter",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to create chapter",
+    }
   }
 }
 
 export async function updateChapter(
   chapterId: string,
-  data: { title?: string; description?: string; isPublished?: boolean; isFree?: boolean }
+  data: {
+    title?: string
+    description?: string
+    isPublished?: boolean
+    isFree?: boolean
+  }
 ): Promise<ApiResponse> {
   try {
     // Find chapter to get courseId for access verification
     const chapter = await db.streamChapter.findUnique({
       where: { id: chapterId },
       select: { courseId: true },
-    });
+    })
 
     if (!chapter) {
-      return { status: "error", message: "Chapter not found" };
+      return { status: "error", message: "Chapter not found" }
     }
 
-    await verifyCourseAccess(chapter.courseId);
+    await verifyCourseAccess(chapter.courseId)
 
     await db.streamChapter.update({
       where: { id: chapterId },
       data,
-    });
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${chapter.courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${chapter.courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Chapter updated successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to update chapter:", error);
+    console.error("Failed to update chapter:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to update chapter",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to update chapter",
+    }
   }
 }
 
@@ -209,11 +224,11 @@ export async function deleteChapter({
   chapterId,
   courseId,
 }: {
-  chapterId: string;
-  courseId: string;
+  chapterId: string
+  courseId: string
 }): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(courseId);
+    await verifyCourseAccess(courseId)
 
     const courseWithChapters = await db.streamCourse.findUnique({
       where: { id: courseId },
@@ -223,47 +238,50 @@ export async function deleteChapter({
           select: { id: true, position: true },
         },
       },
-    });
+    })
 
     if (!courseWithChapters) {
-      return { status: "error", message: "Course not found" };
+      return { status: "error", message: "Course not found" }
     }
 
-    const chapters = courseWithChapters.chapters;
-    const chapterToDelete = chapters.find((c) => c.id === chapterId);
+    const chapters = courseWithChapters.chapters
+    const chapterToDelete = chapters.find((c) => c.id === chapterId)
 
     if (!chapterToDelete) {
-      return { status: "error", message: "Chapter not found in this course" };
+      return { status: "error", message: "Chapter not found in this course" }
     }
 
     // Reorder remaining chapters and delete target
-    const remainingChapters = chapters.filter((c) => c.id !== chapterId);
+    const remainingChapters = chapters.filter((c) => c.id !== chapterId)
     const updates = remainingChapters.map((c, index) =>
       db.streamChapter.update({
         where: { id: c.id },
         data: { position: index + 1 },
       })
-    );
+    )
 
     await db.$transaction([
       ...updates,
       db.streamChapter.delete({
         where: { id: chapterId },
       }),
-    ]);
+    ])
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Chapter deleted successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to delete chapter:", error);
+    console.error("Failed to delete chapter:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to delete chapter",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to delete chapter",
+    }
   }
 }
 
@@ -272,10 +290,10 @@ export async function reorderChapters(
   chapters: { id: string; position: number }[]
 ): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(courseId);
+    await verifyCourseAccess(courseId)
 
     if (!chapters || chapters.length === 0) {
-      return { status: "error", message: "No chapters provided for reordering" };
+      return { status: "error", message: "No chapters provided for reordering" }
     }
 
     const updates = chapters.map((chapter) =>
@@ -283,22 +301,25 @@ export async function reorderChapters(
         where: { id: chapter.id, courseId },
         data: { position: chapter.position },
       })
-    );
+    )
 
-    await db.$transaction(updates);
+    await db.$transaction(updates)
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Chapters reordered successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to reorder chapters:", error);
+    console.error("Failed to reorder chapters:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to reorder chapters",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to reorder chapters",
+    }
   }
 }
 
@@ -310,14 +331,14 @@ export async function createLesson(
   values: z.infer<typeof lessonSchema>
 ): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(values.courseId);
+    await verifyCourseAccess(values.courseId)
 
-    const result = lessonSchema.safeParse(values);
+    const result = lessonSchema.safeParse(values)
     if (!result.success) {
       return {
         status: "error",
         message: result.error.issues[0]?.message || "Invalid data",
-      };
+      }
     }
 
     await db.$transaction(async (tx) => {
@@ -332,7 +353,7 @@ export async function createLesson(
         orderBy: {
           position: "desc",
         },
-      });
+      })
 
       // Create lesson with next position
       await tx.streamLesson.create({
@@ -344,33 +365,36 @@ export async function createLesson(
           chapterId: result.data.chapterId,
           position: (maxPos?.position ?? 0) + 1,
         },
-      });
-    });
+      })
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${values.courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${values.courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Lesson created successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to create lesson:", error);
+    console.error("Failed to create lesson:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to create lesson",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to create lesson",
+    }
   }
 }
 
 export async function updateLesson(
   lessonId: string,
   data: {
-    title?: string;
-    description?: string | null;
-    videoUrl?: string | null;
-    duration?: number | null;
-    isPublished?: boolean;
-    isFree?: boolean;
+    title?: string
+    description?: string | null
+    videoUrl?: string | null
+    duration?: number | null
+    isPublished?: boolean
+    isFree?: boolean
   }
 ): Promise<ApiResponse> {
   try {
@@ -382,31 +406,34 @@ export async function updateLesson(
           select: { courseId: true },
         },
       },
-    });
+    })
 
     if (!lesson) {
-      return { status: "error", message: "Lesson not found" };
+      return { status: "error", message: "Lesson not found" }
     }
 
-    await verifyCourseAccess(lesson.chapter.courseId);
+    await verifyCourseAccess(lesson.chapter.courseId)
 
     await db.streamLesson.update({
       where: { id: lessonId },
       data,
-    });
+    })
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${lesson.chapter.courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Lesson updated successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to update lesson:", error);
+    console.error("Failed to update lesson:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to update lesson",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to update lesson",
+    }
   }
 }
 
@@ -415,12 +442,12 @@ export async function deleteLesson({
   chapterId,
   courseId,
 }: {
-  lessonId: string;
-  chapterId: string;
-  courseId: string;
+  lessonId: string
+  chapterId: string
+  courseId: string
 }): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(courseId);
+    await verifyCourseAccess(courseId)
 
     const chapterWithLessons = await db.streamChapter.findUnique({
       where: { id: chapterId },
@@ -430,47 +457,50 @@ export async function deleteLesson({
           select: { id: true, position: true },
         },
       },
-    });
+    })
 
     if (!chapterWithLessons) {
-      return { status: "error", message: "Chapter not found" };
+      return { status: "error", message: "Chapter not found" }
     }
 
-    const lessons = chapterWithLessons.lessons;
-    const lessonToDelete = lessons.find((l) => l.id === lessonId);
+    const lessons = chapterWithLessons.lessons
+    const lessonToDelete = lessons.find((l) => l.id === lessonId)
 
     if (!lessonToDelete) {
-      return { status: "error", message: "Lesson not found in this chapter" };
+      return { status: "error", message: "Lesson not found in this chapter" }
     }
 
     // Reorder remaining lessons and delete target
-    const remainingLessons = lessons.filter((l) => l.id !== lessonId);
+    const remainingLessons = lessons.filter((l) => l.id !== lessonId)
     const updates = remainingLessons.map((l, index) =>
       db.streamLesson.update({
         where: { id: l.id },
         data: { position: index + 1 },
       })
-    );
+    )
 
     await db.$transaction([
       ...updates,
       db.streamLesson.delete({
         where: { id: lessonId },
       }),
-    ]);
+    ])
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Lesson deleted successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to delete lesson:", error);
+    console.error("Failed to delete lesson:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to delete lesson",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to delete lesson",
+    }
   }
 }
 
@@ -480,10 +510,10 @@ export async function reorderLessons(
   courseId: string
 ): Promise<ApiResponse> {
   try {
-    await verifyCourseAccess(courseId);
+    await verifyCourseAccess(courseId)
 
     if (!lessons || lessons.length === 0) {
-      return { status: "error", message: "No lessons provided for reordering" };
+      return { status: "error", message: "No lessons provided for reordering" }
     }
 
     const updates = lessons.map((lesson) =>
@@ -491,21 +521,24 @@ export async function reorderLessons(
         where: { id: lesson.id, chapterId },
         data: { position: lesson.position },
       })
-    );
+    )
 
-    await db.$transaction(updates);
+    await db.$transaction(updates)
 
-    revalidatePath(`/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`);
+    revalidatePath(
+      `/[lang]/s/[subdomain]/stream/admin/courses/${courseId}/edit`
+    )
 
     return {
       status: "success",
       message: "Lessons reordered successfully",
-    };
+    }
   } catch (error) {
-    console.error("Failed to reorder lessons:", error);
+    console.error("Failed to reorder lessons:", error)
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Failed to reorder lessons",
-    };
+      message:
+        error instanceof Error ? error.message : "Failed to reorder lessons",
+    }
   }
 }

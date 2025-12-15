@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import Lottie from "lottie-react";
+import { useEffect, useState } from "react"
+import Lottie from "lottie-react"
 
 interface LibraryAnimationProps {
-  className?: string;
+  className?: string
 }
 
 export function LibraryAnimation({ className }: LibraryAnimationProps) {
-  const [animationData, setAnimationData] = useState<object | null>(null);
+  const [animationData, setAnimationData] = useState<object | null>(null)
 
   useEffect(() => {
     fetch(
@@ -16,15 +16,15 @@ export function LibraryAnimation({ className }: LibraryAnimationProps) {
     )
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
-      .catch(console.error);
-  }, []);
+      .catch(console.error)
+  }, [])
 
   if (!animationData) {
     return (
       <div className={`${className} flex items-center justify-center`}>
-        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="border-primary/20 border-t-primary h-16 w-16 animate-spin rounded-full border-4" />
       </div>
-    );
+    )
   }
 
   return (
@@ -36,5 +36,5 @@ export function LibraryAnimation({ className }: LibraryAnimationProps) {
         style={{ width: "100%", height: "100%" }}
       />
     </div>
-  );
+  )
 }

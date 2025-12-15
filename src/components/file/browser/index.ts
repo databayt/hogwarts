@@ -16,10 +16,10 @@ export type {
   ContextMenuItem,
   PreviewState,
   PreviewActions,
-} from "./types";
+} from "./types"
 
 // Hook
-export { useBrowser } from "./use-browser";
+export { useBrowser } from "./use-browser"
 
 // Components
-export { FileBrowser, type FileBrowserProps } from "./file-browser";
+export { FileBrowser, type FileBrowserProps } from "./file-browser"

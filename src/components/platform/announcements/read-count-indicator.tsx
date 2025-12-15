@@ -1,20 +1,21 @@
-"use client";
+"use client"
 
-import { Eye, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Eye, Users } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
 
 interface ReadCountIndicatorProps {
-  totalReads: number;
-  uniqueReaders: number;
-  readPercentage?: number;
-  className?: string;
-  showIcon?: boolean;
+  totalReads: number
+  uniqueReaders: number
+  readPercentage?: number
+  className?: string
+  showIcon?: boolean
 }
 
 export function ReadCountIndicator({
@@ -30,7 +31,7 @@ export function ReadCountIndicator({
         <TooltipTrigger asChild>
           <div
             className={cn(
-              "flex items-center gap-1.5 text-sm text-muted-foreground",
+              "text-muted-foreground flex items-center gap-1.5 text-sm",
               className
             )}
           >
@@ -51,12 +52,12 @@ export function ReadCountIndicator({
             <span>{totalReads} total views</span>
           </div>
           {readPercentage !== undefined && readPercentage > 0 && (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               {readPercentage.toFixed(1)}% of target audience
             </div>
           )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
+  )
 }

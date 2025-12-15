@@ -1,42 +1,49 @@
-"use client";
+"use client"
 
-import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Save, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useCallback, useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Check, ChevronLeft, ChevronRight, Save } from "lucide-react"
+import { useForm } from "react-hook-form"
 
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Form } from "@/components/ui/form"
+import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/components/ui/use-toast"
+
+import { registerStudent } from "../actions"
+import { ContactInfoStep } from "./contact-info-step"
+import { DocumentUploadStep } from "./document-upload-step"
+import { EmergencyContactStep } from "./emergency-contact-step"
+import { GuardianInfoStep } from "./guardian-info-step"
+import { HealthInfoStep } from "./health-info-step"
 // Import step components
-import { PersonalInfoStep } from "./personal-info-step";
-import { ContactInfoStep } from "./contact-info-step";
-import { EmergencyContactStep } from "./emergency-contact-step";
-import { GuardianInfoStep } from "./guardian-info-step";
-import { PreviousEducationStep } from "./previous-education-step";
-import { HealthInfoStep } from "./health-info-step";
-import { DocumentUploadStep } from "./document-upload-step";
-
+import { PersonalInfoStep } from "./personal-info-step"
+import { PreviousEducationStep } from "./previous-education-step"
+import type { Student } from "./types"
 // Import validation and types
 import {
-  studentRegistrationSchema,
   registrationSteps,
+  studentRegistrationSchema,
   validateStep,
   type StudentRegistration,
-} from "./validation";
-import type { Student } from "./types";
-import { registerStudent } from "../actions";
-import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+} from "./validation"
 
 interface StudentRegistrationFormProps {
-  student?: Student;
-  isEdit?: boolean;
-  onSuccess?: (student: Student) => void;
-  onCancel?: () => void;
-  dictionary?: any; // TODO: Add proper dictionary type
+  student?: Student
+  isEdit?: boolean
+  onSuccess?: (student: Student) => void
+  onCancel?: () => void
+  dictionary?: any // TODO: Add proper dictionary type
 }
 
 const stepComponents = {
@@ -47,7 +54,7 @@ const stepComponents = {
   education: PreviousEducationStep,
   health: HealthInfoStep,
   documents: DocumentUploadStep,
-};
+}
 
 export function StudentRegistrationForm({
   student,
@@ -56,11 +63,11 @@ export function StudentRegistrationForm({
   onCancel,
   dictionary,
 }: StudentRegistrationFormProps) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
+  const router = useRouter()
 
   const form = useForm<StudentRegistration>({
     resolver: zodResolver(studentRegistrationSchema) as any,
@@ -81,95 +88,98 @@ export function StudentRegistrationForm({
       vaccinations: [],
     },
     mode: "onChange",
-  });
+  })
 
-  const currentStepConfig = registrationSteps[currentStep];
-  const CurrentStepComponent = stepComponents[currentStepConfig.id as keyof typeof stepComponents];
-  const totalSteps = registrationSteps.length;
-  const progress = ((currentStep + 1) / totalSteps) * 100;
+  const currentStepConfig = registrationSteps[currentStep]
+  const CurrentStepComponent =
+    stepComponents[currentStepConfig.id as keyof typeof stepComponents]
+  const totalSteps = registrationSteps.length
+  const progress = ((currentStep + 1) / totalSteps) * 100
 
   const validateCurrentStep = async () => {
-    const stepFields = Object.keys(currentStepConfig.schema.shape);
-    const result = await form.trigger(stepFields as any);
+    const stepFields = Object.keys(currentStepConfig.schema.shape)
+    const result = await form.trigger(stepFields as any)
 
     if (result) {
-      setCompletedSteps(prev => new Set(prev).add(currentStep));
+      setCompletedSteps((prev) => new Set(prev).add(currentStep))
     }
 
-    return result;
-  };
+    return result
+  }
 
   const handleNext = async () => {
-    const isValid = await validateCurrentStep();
+    const isValid = await validateCurrentStep()
     if (isValid && currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(currentStep + 1)
     }
-  };
+  }
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep(currentStep - 1)
     }
-  };
+  }
 
   const handleStepClick = async (stepIndex: number) => {
     // Only allow navigation to completed steps or the next step
     if (stepIndex <= currentStep || completedSteps.has(stepIndex - 1)) {
       if (currentStep < stepIndex) {
-        const isValid = await validateCurrentStep();
-        if (!isValid) return;
+        const isValid = await validateCurrentStep()
+        if (!isValid) return
       }
-      setCurrentStep(stepIndex);
+      setCurrentStep(stepIndex)
     }
-  };
+  }
 
   const handleSubmit = async (data: StudentRegistration) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const result = await registerStudent(data);
+      const result = await registerStudent(data)
 
       if (result.success) {
         toast({
           title: isEdit ? "Student Updated" : "Student Registered",
           description: `${data.givenName} ${data.surname} has been successfully ${isEdit ? "updated" : "registered"}.`,
-        });
+        })
 
         if (onSuccess && result.data) {
-          onSuccess(result.data as Student);
+          onSuccess(result.data as Student)
         } else {
-          router.push("/students");
+          router.push("/students")
         }
       } else {
         toast({
           title: "Error",
           description: result.error || "Failed to register student",
-        });
+        })
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleSaveProgress = async () => {
-    const data = form.getValues();
+    const data = form.getValues()
     // TODO: Implement save draft functionality
     toast({
       title: "Progress Saved",
       description: "Your progress has been saved. You can continue later.",
-    });
-  };
+    })
+  }
 
   return (
     <div className="space-y-6">
       {/* Progress Bar */}
       <div className="space-y-2">
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Step {currentStep + 1} of {totalSteps}</span>
+        <div className="text-muted-foreground flex justify-between text-sm">
+          <span>
+            Step {currentStep + 1} of {totalSteps}
+          </span>
           <span>{Math.round(progress)}% Complete</span>
         </div>
         <Progress value={progress} className="h-2" />
@@ -186,15 +196,21 @@ export function StudentRegistrationForm({
               "flex flex-col items-center gap-2 px-2 py-1 transition-colors",
               index === currentStep && "text-primary",
               completedSteps.has(index) && "text-green-600",
-              index > currentStep && !completedSteps.has(index) && "text-muted-foreground opacity-50"
+              index > currentStep &&
+                !completedSteps.has(index) &&
+                "text-muted-foreground opacity-50"
             )}
           >
             <div
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors",
-                index === currentStep && "border-primary bg-primary text-primary-foreground",
-                completedSteps.has(index) && "border-green-600 bg-green-600 text-white",
-                index > currentStep && !completedSteps.has(index) && "border-muted-foreground"
+                index === currentStep &&
+                  "border-primary bg-primary text-primary-foreground",
+                completedSteps.has(index) &&
+                  "border-green-600 bg-green-600 text-white",
+                index > currentStep &&
+                  !completedSteps.has(index) &&
+                  "border-muted-foreground"
               )}
             >
               {completedSteps.has(index) ? (
@@ -203,7 +219,7 @@ export function StudentRegistrationForm({
                 <span className="text-sm">{index + 1}</span>
               )}
             </div>
-            <span className="text-xs hidden sm:block">{step.title}</span>
+            <span className="hidden text-xs sm:block">{step.title}</span>
           </button>
         ))}
       </div>
@@ -215,15 +231,13 @@ export function StudentRegistrationForm({
             <CardHeader>
               <CardTitle>{currentStepConfig.title}</CardTitle>
               <CardDescription>
-                {isEdit ? "Update" : "Enter"} the student's {currentStepConfig.title.toLowerCase()}
+                {isEdit ? "Update" : "Enter"} the student's{" "}
+                {currentStepConfig.title.toLowerCase()}
               </CardDescription>
             </CardHeader>
 
             <CardContent>
-              <CurrentStepComponent
-                form={form}
-                dictionary={dictionary}
-              />
+              <CurrentStepComponent form={form} dictionary={dictionary} />
             </CardContent>
 
             <CardFooter className="flex justify-between gap-2">
@@ -234,16 +248,12 @@ export function StudentRegistrationForm({
                     variant="outline"
                     onClick={handlePrevious}
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <ChevronLeft className="mr-1 h-4 w-4" />
                     Previous
                   </Button>
                 )}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                >
+                <Button type="button" variant="outline" onClick={onCancel}>
                   Cancel
                 </Button>
               </div>
@@ -254,24 +264,22 @@ export function StudentRegistrationForm({
                   variant="outline"
                   onClick={handleSaveProgress}
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <Save className="mr-1 h-4 w-4" />
                   Save Progress
                 </Button>
 
                 {currentStep < totalSteps - 1 ? (
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                  >
+                  <Button type="button" onClick={handleNext}>
                     Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                    <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Submitting..." : isEdit ? "Update Student" : "Register Student"}
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting
+                      ? "Submitting..."
+                      : isEdit
+                        ? "Update Student"
+                        : "Register Student"}
                   </Button>
                 )}
               </div>
@@ -280,5 +288,5 @@ export function StudentRegistrationForm({
         </form>
       </Form>
     </div>
-  );
+  )
 }

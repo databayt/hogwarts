@@ -4,31 +4,46 @@
  * Allows users to export their themes as JSON and import themes from JSON files.
  */
 
-'use client'
+"use client"
 
-import { useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Download, Upload, Loader2 } from 'lucide-react'
-import { useThemeImportExport, useUserTheme, useThemeOperations } from './use-theme'
-import { toast } from 'sonner'
+import { useRef, useState } from "react"
+import { Download, Loader2, Upload } from "lucide-react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import {
+  useThemeImportExport,
+  useThemeOperations,
+  useUserTheme,
+} from "./use-theme"
 
 export function ThemeImportExport() {
   const { themeState } = useUserTheme()
-  const { exportTheme, importTheme, isExporting, isImporting } = useThemeImportExport()
+  const { exportTheme, importTheme, isExporting, isImporting } =
+    useThemeImportExport()
   const { saveTheme } = useThemeOperations()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importedTheme, setImportedTheme] = useState<any>(null)
 
   const handleExport = () => {
     if (!themeState) {
-      toast.error('No active theme to export')
+      toast.error("No active theme to export")
       return
     }
-    exportTheme('my-theme')
+    exportTheme("my-theme")
   }
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0]
     if (!file) return
 
@@ -39,14 +54,14 @@ export function ThemeImportExport() {
 
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = ""
     }
   }
 
   const handleSaveImportedTheme = async () => {
     if (!importedTheme) return
 
-    await saveTheme('Imported Theme')
+    await saveTheme("Imported Theme")
     setImportedTheme(null)
   }
 
@@ -56,10 +71,16 @@ export function ThemeImportExport() {
       <Card>
         <CardHeader>
           <CardTitle>Export Theme</CardTitle>
-          <CardDescription>Download your current theme as a JSON file</CardDescription>
+          <CardDescription>
+            Download your current theme as a JSON file
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleExport} disabled={isExporting || !themeState} className="w-full">
+          <Button
+            onClick={handleExport}
+            disabled={isExporting || !themeState}
+            className="w-full"
+          >
             {isExporting ? (
               <>
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
@@ -79,7 +100,9 @@ export function ThemeImportExport() {
       <Card>
         <CardHeader>
           <CardTitle>Import Theme</CardTitle>
-          <CardDescription>Upload a theme JSON file to add it to your collection</CardDescription>
+          <CardDescription>
+            Upload a theme JSON file to add it to your collection
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <input
@@ -111,12 +134,18 @@ export function ThemeImportExport() {
           </Button>
 
           {importedTheme && (
-            <div className="rounded-lg border bg-muted p-4">
+            <div className="bg-muted rounded-lg border p-4">
               <h4 className="mb-1 font-medium">{importedTheme.name}</h4>
               {importedTheme.description && (
-                <p className="mb-3 text-sm text-muted-foreground">{importedTheme.description}</p>
+                <p className="text-muted-foreground mb-3 text-sm">
+                  {importedTheme.description}
+                </p>
               )}
-              <Button onClick={handleSaveImportedTheme} size="sm" className="w-full">
+              <Button
+                onClick={handleSaveImportedTheme}
+                size="sm"
+                className="w-full"
+              >
                 Save Imported Theme
               </Button>
             </div>

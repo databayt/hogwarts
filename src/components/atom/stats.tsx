@@ -3,12 +3,7 @@
 
 import { Bar, BarChart, Line, LineChart } from "recharts"
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartConfig, ChartContainer } from "@/components/ui/chart"
 import { Icons } from "@/components/atom/icons"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
@@ -66,15 +61,20 @@ interface CardsStatsProps {
 export function CardsStats({ dictionary }: CardsStatsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2 rtl:space-x-reverse">
-      <Card className="shadow-none border">
+      <Card className="border shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-normal">{dictionary?.cards?.stats?.totalRevenue || "Total Revenue"}</CardTitle>
-          <Icons.dollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-normal">
+            {dictionary?.cards?.stats?.totalRevenue || "Total Revenue"}
+          </CardTitle>
+          <Icons.dollarSign className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent className="pb-0">
-          <div className="text-2xl font-bold">{dictionary?.cards?.stats?.revenueAmount || "$15,231.89"}</div>
-          <p className="text-xs text-muted-foreground">
-            {dictionary?.cards?.stats?.revenueGrowth || "+20.1% from last month"}
+          <div className="text-2xl font-bold">
+            {dictionary?.cards?.stats?.revenueAmount || "$15,231.89"}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            {dictionary?.cards?.stats?.revenueGrowth ||
+              "+20.1% from last month"}
           </p>
           <ChartContainer config={chartConfig} className="h-[80px] w-full">
             <LineChart
@@ -99,15 +99,20 @@ export function CardsStats({ dictionary }: CardsStatsProps) {
           </ChartContainer>
         </CardContent>
       </Card>
-      <Card className="shadow-none border">
+      <Card className="border shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-normal">{dictionary?.cards?.stats?.subscriptions || "Subscriptions"}</CardTitle>
-          <Icons.users className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-normal">
+            {dictionary?.cards?.stats?.subscriptions || "Subscriptions"}
+          </CardTitle>
+          <Icons.users className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{dictionary?.cards?.stats?.subscriptionCount || "+2350"}</div>
-          <p className="text-xs text-muted-foreground">
-            {dictionary?.cards?.stats?.subscriptionGrowth || "+180.1% from last month"}
+          <div className="text-2xl font-bold">
+            {dictionary?.cards?.stats?.subscriptionCount || "+2350"}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            {dictionary?.cards?.stats?.subscriptionGrowth ||
+              "+180.1% from last month"}
           </p>
           <ChartContainer config={chartConfig} className="mt-2 h-[80px] w-full">
             <BarChart data={data}>

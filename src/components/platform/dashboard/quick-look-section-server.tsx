@@ -10,7 +10,10 @@ export interface QuickLookSectionServerProps {
  * Server component wrapper for QuickLookSection
  * Fetches real data from database and passes to client component
  */
-export async function QuickLookSectionServer({ locale, subdomain }: QuickLookSectionServerProps) {
+export async function QuickLookSectionServer({
+  locale,
+  subdomain,
+}: QuickLookSectionServerProps) {
   let data
 
   try {

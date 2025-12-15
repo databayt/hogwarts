@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
+
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 
@@ -77,7 +78,10 @@ function CircleProgress({ data, index }: CircleProgressProps) {
 
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: data.color, stopOpacity: 1 }} />
+              <stop
+                offset="0%"
+                style={{ stopColor: data.color, stopOpacity: 1 }}
+              />
               <stop
                 offset="100%"
                 style={{
@@ -139,10 +143,17 @@ function DetailedActivityInfo() {
     >
       {activities.map((activity) => (
         <motion.div key={activity.label} className="flex flex-col">
-          <span className="text-sm font-medium text-muted-foreground">{activity.label}</span>
-          <span className="text-2xl font-semibold" style={{ color: activity.color }}>
+          <span className="text-muted-foreground text-sm font-medium">
+            {activity.label}
+          </span>
+          <span
+            className="text-2xl font-semibold"
+            style={{ color: activity.color }}
+          >
             {activity.current}/{activity.target}
-            <span className="ml-1 text-base text-muted-foreground">{activity.unit}</span>
+            <span className="text-muted-foreground ml-1 text-base">
+              {activity.unit}
+            </span>
           </span>
         </motion.div>
       ))}
@@ -155,7 +166,7 @@ export default function StatsAppleActivity() {
     <Card className={cn("relative mx-auto w-full max-w-xl p-8")}>
       <div className="flex flex-col items-center gap-8">
         <motion.h2
-          className="text-2xl font-medium text-foreground"
+          className="text-foreground text-2xl font-medium"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -166,7 +177,11 @@ export default function StatsAppleActivity() {
         <div className="flex items-center">
           <div className="relative h-[180px] w-[180px]">
             {activities.map((activity, index) => (
-              <CircleProgress key={activity.label} data={activity} index={index} />
+              <CircleProgress
+                key={activity.label}
+                data={activity}
+                index={index}
+              />
             ))}
           </div>
           <DetailedActivityInfo />

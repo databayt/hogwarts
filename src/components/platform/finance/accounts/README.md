@@ -9,12 +9,14 @@ The Accounts module provides the foundation for all financial transactions using
 ## Key Features
 
 ### 1. Chart of Accounts
+
 - Hierarchical account structure
 - Standard account types (Assets, Liabilities, Equity, Revenue, Expenses)
 - Custom account creation
 - Account categorization and grouping
 
 ### 2. Journal Entries
+
 - Double-entry bookkeeping
 - Manual and automatic entries
 - Recurring journal entries
@@ -22,6 +24,7 @@ The Accounts module provides the foundation for all financial transactions using
 - Adjusting entries
 
 ### 3. General Ledger
+
 - Complete transaction history by account
 - Running balances
 - Trial balance generation
@@ -29,12 +32,14 @@ The Accounts module provides the foundation for all financial transactions using
 - Audit trail
 
 ### 4. Financial Statements
+
 - Income Statement (P&L)
 - Balance Sheet
 - Statement of Cash Flows
 - Statement of Changes in Equity
 
 ### 5. Period Management
+
 - Monthly/quarterly/annual periods
 - Period closing workflow
 - Post-closing trial balance
@@ -42,17 +47,18 @@ The Accounts module provides the foundation for all financial transactions using
 
 ## Account Types
 
-| Type | Normal Balance | Examples |
-|------|----------------|----------|
-| **ASSET** | Debit | Cash, Bank, Accounts Receivable, Fixed Assets |
-| **LIABILITY** | Credit | Accounts Payable, Loans, Accrued Expenses |
-| **EQUITY** | Credit | Capital, Retained Earnings |
-| **REVENUE** | Credit | Tuition, Fees, Donations |
-| **EXPENSE** | Debit | Salaries, Utilities, Supplies |
+| Type          | Normal Balance | Examples                                      |
+| ------------- | -------------- | --------------------------------------------- |
+| **ASSET**     | Debit          | Cash, Bank, Accounts Receivable, Fixed Assets |
+| **LIABILITY** | Credit         | Accounts Payable, Loans, Accrued Expenses     |
+| **EQUITY**    | Credit         | Capital, Retained Earnings                    |
+| **REVENUE**   | Credit         | Tuition, Fees, Donations                      |
+| **EXPENSE**   | Debit          | Salaries, Utilities, Supplies                 |
 
 ## Standard Chart of Accounts
 
 ### Assets (1000-1999)
+
 - 1000: Cash & Bank
   - 1010: Petty Cash
   - 1020: Operating Account
@@ -67,17 +73,20 @@ The Accounts module provides the foundation for all financial transactions using
 - 1600: Accumulated Depreciation
 
 ### Liabilities (2000-2999)
+
 - 2000: Accounts Payable
 - 2100: Accrued Expenses
 - 2200: Unearned Revenue (Advance Fees)
 - 2500: Loans Payable
 
 ### Equity (3000-3999)
+
 - 3000: Capital
 - 3100: Retained Earnings
 - 3900: Current Year Earnings
 
 ### Revenue (4000-4999)
+
 - 4000: Tuition Revenue
 - 4100: Registration Fees
 - 4200: Cafeteria Revenue
@@ -85,6 +94,7 @@ The Accounts module provides the foundation for all financial transactions using
 - 4900: Other Revenue
 
 ### Expenses (5000-9999)
+
 - 5000: Salaries & Wages
 - 5100: Employee Benefits
 - 6000: Operating Expenses
@@ -97,25 +107,29 @@ The Accounts module provides the foundation for all financial transactions using
 ### Chart of Accounts Management
 
 #### `createAccountWithRBAC(data)`
+
 **Permissions Required:** `accounts:create`
 
 **Example:**
+
 ```typescript
 const result = await createAccountWithRBAC({
   accountCode: "1040",
   accountName: "Savings Account",
   accountType: "ASSET",
   parentAccountId: "1000",
-  description: "Reserve savings account"
+  description: "Reserve savings account",
 })
 ```
 
 ### Journal Entry Management
 
 #### `createJournalEntryWithRBAC(data)`
+
 **Permissions Required:** `accounts:create`
 
 **Example:**
+
 ```typescript
 const result = await createJournalEntryWithRBAC({
   entryDate: new Date("2024-11-15"),
@@ -126,19 +140,20 @@ const result = await createJournalEntryWithRBAC({
       accountId: "1020", // Operating Account
       debit: 50000,
       credit: 0,
-      description: "Tuition received"
+      description: "Tuition received",
     },
     {
       accountId: "4000", // Tuition Revenue
       debit: 0,
       credit: 50000,
-      description: "November tuition"
-    }
-  ]
+      description: "November tuition",
+    },
+  ],
 })
 ```
 
 **Validation:**
+
 - Total debits must equal total credits
 - At least 2 lines required
 - All accounts must exist and be active
@@ -150,36 +165,42 @@ Every transaction affects at least 2 accounts:
 ### Common Journal Entries
 
 **1. Record Tuition Revenue**
+
 ```
 Dr. Cash/Bank                 $10,000
   Cr. Tuition Revenue                   $10,000
 ```
 
 **2. Pay Salary**
+
 ```
 Dr. Salaries Expense         $5,000
   Cr. Cash/Bank                         $5,000
 ```
 
 **3. Purchase Equipment**
+
 ```
 Dr. Equipment                $15,000
   Cr. Cash/Bank                         $15,000
 ```
 
 **4. Record Depreciation**
+
 ```
 Dr. Depreciation Expense     $1,000
   Cr. Accumulated Depreciation          $1,000
 ```
 
 **5. Receive Advance Payment**
+
 ```
 Dr. Cash/Bank                $3,000
   Cr. Unearned Revenue                  $3,000
 ```
 
 **6. Recognize Revenue from Advance**
+
 ```
 Dr. Unearned Revenue         $3,000
   Cr. Tuition Revenue                   $3,000

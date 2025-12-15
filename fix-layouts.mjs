@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from "fs"
 
 const files = [
   "src/app/[lang]/s/[subdomain]/(platform)/admin/billing/layout.tsx",
@@ -29,30 +29,30 @@ const files = [
   "src/app/[lang]/s/[subdomain]/(platform)/students/layout.tsx",
   "src/app/[lang]/s/[subdomain]/(platform)/subjects/layout.tsx",
   "src/app/[lang]/s/[subdomain]/(platform)/teachers/layout.tsx",
-  "src/app/[lang]/s/[subdomain]/(platform)/timetable/layout.tsx"
-];
+  "src/app/[lang]/s/[subdomain]/(platform)/timetable/layout.tsx",
+]
 
 files.forEach((file) => {
   try {
-    let content = readFileSync(file, 'utf8');
+    let content = readFileSync(file, "utf8")
 
     // Replace the params type
     content = content.replace(
       /params: Promise<\{ lang: Locale; subdomain: string \}>/g,
-      'params: Promise<{ lang: string; subdomain: string }>'
-    );
+      "params: Promise<{ lang: string; subdomain: string }>"
+    )
 
     // Replace getDictionary calls
     content = content.replace(
       /getDictionary\(lang\)(?! as Locale)/g,
-      'getDictionary(lang as Locale)'
-    );
+      "getDictionary(lang as Locale)"
+    )
 
-    writeFileSync(file, content, 'utf8');
-    console.log(`Fixed: ${file}`);
+    writeFileSync(file, content, "utf8")
+    console.log(`Fixed: ${file}`)
   } catch (error) {
-    console.error(`Error fixing ${file}:`, error.message);
+    console.error(`Error fixing ${file}:`, error.message)
   }
-});
+})
 
-console.log('\nAll layout files have been fixed!');
+console.log("\nAll layout files have been fixed!")

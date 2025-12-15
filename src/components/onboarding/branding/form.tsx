@@ -1,25 +1,38 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Upload, Palette } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { brandingSchema, type BrandingFormData } from "./validation";
-import { updateSchoolBranding } from "./actions";
+import { useState, useTransition } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Palette, Upload } from "lucide-react"
+import { useForm } from "react-hook-form"
+
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
+import { updateSchoolBranding } from "./actions"
+import { brandingSchema, type BrandingFormData } from "./validation"
 
 interface BrandingFormProps {
-  schoolId: string;
-  initialData?: Partial<BrandingFormData>;
-  onSuccess?: () => void;
+  schoolId: string
+  initialData?: Partial<BrandingFormData>
+  onSuccess?: () => void
 }
 
-export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormProps) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string>("");
+export function BrandingForm({
+  schoolId,
+  initialData,
+  onSuccess,
+}: BrandingFormProps) {
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string>("")
 
   const form = useForm<BrandingFormData>({
     resolver: zodResolver(brandingSchema),
@@ -30,39 +43,39 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
       brandName: initialData?.brandName || "",
       tagline: initialData?.tagline || "",
     },
-  });
+  })
 
   const handleSubmit = (data: BrandingFormData) => {
     startTransition(async () => {
       try {
-        setError("");
-        const result = await updateSchoolBranding(schoolId, data);
-        
+        setError("")
+        const result = await updateSchoolBranding(schoolId, data)
+
         if (result.success) {
-          onSuccess?.();
+          onSuccess?.()
         } else {
-          setError(result.error || "Failed to update branding");
+          setError(result.error || "Failed to update branding")
           if (result.errors) {
             Object.entries(result.errors).forEach(([field, message]) => {
-              form.setError(field as keyof BrandingFormData, { message });
-            });
+              form.setError(field as keyof BrandingFormData, { message })
+            })
           }
         }
       } catch (err) {
-        setError("An unexpected error occurred");
+        setError("An unexpected error occurred")
       }
-    });
-  };
+    })
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {error && (
-          <div className="muted text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className="muted text-destructive bg-destructive/10 rounded-md p-3">
             {error}
           </div>
         )}
-        
+
         <FormField
           control={form.control}
           name="brandName"
@@ -121,36 +134,42 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
                         accept="image/jpeg,image/png,image/svg+xml,image/webp"
                         className="hidden"
                         onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+                          const file = e.target.files?.[0]
+                          if (!file) return
 
                           // Show uploading state
-                          setError("");
+                          setError("")
 
                           try {
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            formData.append('type', 'logo');
+                            const formData = new FormData()
+                            formData.append("file", file)
+                            formData.append("type", "logo")
 
-                            const response = await fetch('/api/upload', {
-                              method: 'POST',
+                            const response = await fetch("/api/upload", {
+                              method: "POST",
                               body: formData,
-                            });
+                            })
 
-                            const data = await response.json();
+                            const data = await response.json()
 
                             if (data.success) {
-                              form.setValue('logoUrl', data.url);
+                              form.setValue("logoUrl", data.url)
                             } else {
-                              setError(data.error || 'Failed to upload logo');
+                              setError(data.error || "Failed to upload logo")
                             }
                           } catch (err) {
-                            setError('Failed to upload logo');
+                            setError("Failed to upload logo")
                           }
                         }}
                         disabled={isPending}
                       />
-                      <Button type="button" variant="outline" size="sm" disabled={isPending} asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isPending}
+                        asChild
+                      >
                         <span>
                           <Upload className="h-4 w-4" />
                         </span>
@@ -158,13 +177,13 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
                     </label>
                   </div>
                   {field.value && (
-                    <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
+                    <div className="relative h-24 w-24 overflow-hidden rounded-lg border">
                       <img
                         src={field.value}
                         alt="School logo"
-                        className="w-full h-full object-contain"
+                        className="h-full w-full object-contain"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
+                          ;(e.target as HTMLImageElement).style.display = "none"
                         }}
                       />
                     </div>
@@ -188,7 +207,7 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
                     <Input
                       {...field}
                       type="color"
-                      className="w-12 h-10 p-1 border rounded"
+                      className="h-10 w-12 rounded border p-1"
                       disabled={isPending}
                     />
                     <Input
@@ -214,7 +233,7 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
                     <Input
                       {...field}
                       type="color"
-                      className="w-12 h-10 p-1 border rounded"
+                      className="h-10 w-12 rounded border p-1"
                       disabled={isPending}
                     />
                     <Input
@@ -230,14 +249,10 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
           />
         </div>
 
-        <Button 
-          type="submit" 
-          disabled={isPending}
-          className="w-full"
-        >
+        <Button type="submit" disabled={isPending} className="w-full">
           {isPending ? "Updating..." : "Update Branding"}
         </Button>
       </form>
     </Form>
-  );
+  )
 }

@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useModal } from "@/components/atom/modal/context"
+import { Calendar, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Form,
   FormControl,
@@ -14,18 +14,26 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Loader2, Calendar } from "lucide-react"
-import { SuccessToast, ErrorToast } from "@/components/atom/toast"
-import { schoolYearCreateSchema, type SchoolYearCreateInput } from "./validation"
-import { createSchoolYear, updateSchoolYear, getSchoolYear } from "./actions"
+import { Input } from "@/components/ui/input"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+
+import { createSchoolYear, getSchoolYear, updateSchoolYear } from "./actions"
+import {
+  schoolYearCreateSchema,
+  type SchoolYearCreateInput,
+} from "./validation"
 
 interface SchoolYearFormProps {
   onSuccess?: () => void
   lang?: Locale
 }
 
-export function SchoolYearForm({ onSuccess, lang = "en" }: SchoolYearFormProps) {
+export function SchoolYearForm({
+  onSuccess,
+  lang = "en",
+}: SchoolYearFormProps) {
   const { modal, closeModal } = useModal()
   const [isPending, startTransition] = useTransition()
   const itemId = modal.id
@@ -46,8 +54,14 @@ export function SchoolYearForm({ onSuccess, lang = "en" }: SchoolYearFormProps) 
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
     save: lang === "ar" ? "حفظ" : "Save",
     saving: lang === "ar" ? "جاري الحفظ..." : "Saving...",
-    createSuccess: lang === "ar" ? "تم إنشاء العام الدراسي بنجاح" : "Academic year created successfully",
-    updateSuccess: lang === "ar" ? "تم تحديث العام الدراسي بنجاح" : "Academic year updated successfully",
+    createSuccess:
+      lang === "ar"
+        ? "تم إنشاء العام الدراسي بنجاح"
+        : "Academic year created successfully",
+    updateSuccess:
+      lang === "ar"
+        ? "تم تحديث العام الدراسي بنجاح"
+        : "Academic year updated successfully",
   }
 
   const form = useForm<SchoolYearCreateInput>({
@@ -94,7 +108,7 @@ export function SchoolYearForm({ onSuccess, lang = "en" }: SchoolYearFormProps) 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-primary" />
+        <Calendar className="text-primary h-5 w-5" />
         <h2 className="font-semibold">{t.title}</h2>
       </div>
 

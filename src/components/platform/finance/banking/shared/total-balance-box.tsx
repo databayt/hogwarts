@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { AnimatedCounter } from './animated-counter'
-import { DoughnutChart } from './doughnut-chart'
+import { AnimatedCounter } from "./animated-counter"
+import { DoughnutChart } from "./doughnut-chart"
 
 interface TotalBalanceBoxProps {
   accounts: any[]
@@ -14,20 +14,20 @@ export function TotalBalanceBox({
   accounts = [],
   totalBanks,
   totalCurrentBalance,
-  dictionary
+  dictionary,
 }: TotalBalanceBoxProps) {
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="bg-card rounded-lg border p-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <p className="muted font-medium">
-            {dictionary?.totalBalance || 'Total Balance'}
+            {dictionary?.totalBalance || "Total Balance"}
           </p>
           <h2>
             <AnimatedCounter amount={totalCurrentBalance} />
           </h2>
           <p className="muted">
-            {totalBanks} {totalBanks === 1 ? 'Bank Account' : 'Bank Accounts'}
+            {totalBanks} {totalBanks === 1 ? "Bank Account" : "Bank Accounts"}
           </p>
         </div>
 

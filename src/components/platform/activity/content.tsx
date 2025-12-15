@@ -1,8 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Plus } from "lucide-react";
+import { Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 export default async function ActivityContent() {
   return (
@@ -35,14 +42,16 @@ export default async function ActivityContent() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {["Cricket", "Football", "Basketball", "Badminton"].map((sport) => (
-                  <div key={sport} className="p-4 border rounded-lg">
-                    <h3 className="font-semibold">{sport} Team</h3>
-                    <p className="text-sm text-muted-foreground">
-                      15 students enrolled • Practice: Mon, Wed, Fri
-                    </p>
-                  </div>
-                ))}
+                {["Cricket", "Football", "Basketball", "Badminton"].map(
+                  (sport) => (
+                    <div key={sport} className="rounded-lg border p-4">
+                      <h3 className="font-semibold">{sport} Team</h3>
+                      <p className="text-muted-foreground text-sm">
+                        15 students enrolled • Practice: Mon, Wed, Fri
+                      </p>
+                    </div>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -64,10 +73,15 @@ export default async function ActivityContent() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {["Science Club", "Drama Club", "Music Club", "Debate Club"].map((club) => (
-                  <div key={club} className="p-4 border rounded-lg">
+                {[
+                  "Science Club",
+                  "Drama Club",
+                  "Music Club",
+                  "Debate Club",
+                ].map((club) => (
+                  <div key={club} className="rounded-lg border p-4">
                     <h3 className="font-semibold">{club}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       20 members • Meets every Thursday
                     </p>
                   </div>
@@ -98,9 +112,11 @@ export default async function ActivityContent() {
                   { name: "Science Fair", date: "April 10, 2024" },
                   { name: "Cultural Festival", date: "May 5, 2024" },
                 ].map((event) => (
-                  <div key={event.name} className="p-4 border rounded-lg">
+                  <div key={event.name} className="rounded-lg border p-4">
                     <h3 className="font-semibold">{event.name}</h3>
-                    <p className="text-sm text-muted-foreground">{event.date}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {event.date}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -109,5 +125,5 @@ export default async function ActivityContent() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

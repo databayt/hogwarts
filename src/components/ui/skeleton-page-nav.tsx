@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonPageNav Component
@@ -28,10 +28,7 @@ interface SkeletonPageNavProps {
   className?: string
 }
 
-export function SkeletonPageNav({
-  tabs = 4,
-  className,
-}: SkeletonPageNavProps) {
+export function SkeletonPageNav({ tabs = 4, className }: SkeletonPageNavProps) {
   return (
     <div className={cn("border-b", className)}>
       <nav className="flex items-center gap-6">
@@ -62,7 +59,7 @@ export function SkeletonPageNavWide({
 }: SkeletonPageNavProps) {
   return (
     <div className={cn("border-b", className)}>
-      <div className="max-w-[600px] lg:max-w-none overflow-x-auto">
+      <div className="max-w-[600px] overflow-x-auto lg:max-w-none">
         <nav className="flex items-center gap-6">
           {Array.from({ length: tabs }).map((_, i) => (
             <div key={i} className="relative pb-3 whitespace-nowrap">

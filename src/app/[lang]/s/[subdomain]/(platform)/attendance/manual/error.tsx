@@ -24,7 +24,7 @@ export default function ManualAttendanceError({ error, reset }: ErrorProps) {
         <AlertDescription className="mt-2 space-y-2">
           <p>An unexpected error occurred while loading the attendance form.</p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

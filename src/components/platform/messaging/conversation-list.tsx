@@ -1,13 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Search, MessageSquarePlus, ListFilter, LoaderCircle } from "lucide-react"
-import type { ConversationDTO, ConversationType } from "./types"
-import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
-import { ConversationListEmpty } from "./empty-state"
+import { useEffect, useState } from "react"
+import {
+  ListFilter,
+  LoaderCircle,
+  MessageSquarePlus,
+  Search,
+} from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
@@ -17,6 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
+import { ConversationListEmpty } from "./empty-state"
+import type { ConversationDTO, ConversationType } from "./types"
 
 export interface ConversationListProps {
   conversations: ConversationDTO[]
@@ -57,14 +64,18 @@ export function ConversationList({
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       const matchesTitle = conversation.title?.toLowerCase().includes(query)
-      const matchesLastMessage = conversation.lastMessage?.content.toLowerCase().includes(query)
+      const matchesLastMessage = conversation.lastMessage?.content
+        .toLowerCase()
+        .includes(query)
 
       // For direct conversations, search in participant names
-      const matchesParticipant = conversation.type === "direct" &&
-        conversation.participants?.some(p =>
-          p.userId !== currentUserId &&
-          (p.user.username?.toLowerCase().includes(query) ||
-            p.user.email?.toLowerCase().includes(query))
+      const matchesParticipant =
+        conversation.type === "direct" &&
+        conversation.participants?.some(
+          (p) =>
+            p.userId !== currentUserId &&
+            (p.user.username?.toLowerCase().includes(query) ||
+              p.user.email?.toLowerCase().includes(query))
         )
 
       if (!matchesTitle && !matchesLastMessage && !matchesParticipant) {
@@ -79,7 +90,9 @@ export function ConversationList({
 
     // Pinned filter
     if (filter === "pinned") {
-      const currentParticipant = conversation.participants?.find(p => p.userId === currentUserId)
+      const currentParticipant = conversation.participants?.find(
+        (p) => p.userId === currentUserId
+      )
       if (!currentParticipant?.isPinned) {
         return false
       }
@@ -95,8 +108,8 @@ export function ConversationList({
 
   // Sort: pinned first, then by last message time
   const sortedConversations = [...filteredConversations].sort((a, b) => {
-    const aParticipant = a.participants?.find(p => p.userId === currentUserId)
-    const bParticipant = b.participants?.find(p => p.userId === currentUserId)
+    const aParticipant = a.participants?.find((p) => p.userId === currentUserId)
+    const bParticipant = b.participants?.find((p) => p.userId === currentUserId)
 
     // Pinned conversations first
     if (aParticipant?.isPinned && !bParticipant?.isPinned) return -1
@@ -108,17 +121,21 @@ export function ConversationList({
     return bTime - aTime
   })
 
-  const unreadCount = conversations.filter(c => (c.unreadCount ?? 0) > 0).length
-  const pinnedCount = conversations.filter(c =>
-    c.participants?.find(p => p.userId === currentUserId)?.isPinned
+  const unreadCount = conversations.filter(
+    (c) => (c.unreadCount ?? 0) > 0
+  ).length
+  const pinnedCount = conversations.filter(
+    (c) => c.participants?.find((p) => p.userId === currentUserId)?.isPinned
   ).length
 
   return (
-    <div className={cn("flex flex-col h-full border-r border-border", className)}>
+    <div
+      className={cn("border-border flex h-full flex-col border-r", className)}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-border space-y-3">
+      <div className="border-border space-y-3 border-b p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">
+          <h2 className="text-foreground text-lg font-semibold">
             {locale === "ar" ? "الرسائل" : "Messages"}
           </h2>
           <Button
@@ -133,7 +150,7 @@ export function ConversationList({
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -144,8 +161,12 @@ export function ConversationList({
 
         {/* Filters */}
         <div className="flex items-center gap-2">
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)} className="flex-1">
-            <TabsList className="w-full grid grid-cols-3">
+          <Tabs
+            value={filter}
+            onValueChange={(v) => setFilter(v as typeof filter)}
+            className="flex-1"
+          >
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all">
                 {locale === "ar" ? "الكل" : "All"}
               </TabsTrigger>
@@ -164,17 +185,32 @@ export function ConversationList({
             </TabsList>
           </Tabs>
 
-          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+          <Select
+            value={typeFilter}
+            onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}
+          >
             <SelectTrigger className="w-[100px]">
               <ListFilter className="h-4 w-4" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{locale === "ar" ? "كل الأنواع" : "All types"}</SelectItem>
-              <SelectItem value="direct">{locale === "ar" ? "مباشر" : "Direct"}</SelectItem>
-              <SelectItem value="group">{locale === "ar" ? "مجموعة" : "Group"}</SelectItem>
-              <SelectItem value="class">{locale === "ar" ? "صف" : "Class"}</SelectItem>
-              <SelectItem value="department">{locale === "ar" ? "قسم" : "Department"}</SelectItem>
-              <SelectItem value="announcement">{locale === "ar" ? "إعلان" : "Announcement"}</SelectItem>
+              <SelectItem value="all">
+                {locale === "ar" ? "كل الأنواع" : "All types"}
+              </SelectItem>
+              <SelectItem value="direct">
+                {locale === "ar" ? "مباشر" : "Direct"}
+              </SelectItem>
+              <SelectItem value="group">
+                {locale === "ar" ? "مجموعة" : "Group"}
+              </SelectItem>
+              <SelectItem value="class">
+                {locale === "ar" ? "صف" : "Class"}
+              </SelectItem>
+              <SelectItem value="department">
+                {locale === "ar" ? "قسم" : "Department"}
+              </SelectItem>
+              <SelectItem value="announcement">
+                {locale === "ar" ? "إعلان" : "Announcement"}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -183,20 +219,24 @@ export function ConversationList({
       {/* Conversation list */}
       <ScrollArea className="flex-1">
         {isLoading ? (
-          <div className="p-2 space-y-2">
+          <div className="space-y-2 p-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <ConversationCardSkeleton key={i} />
             ))}
           </div>
         ) : sortedConversations.length === 0 ? (
           searchQuery || filter !== "all" || typeFilter !== "all" ? (
-            <div className="flex flex-col items-center justify-center h-64 p-4 text-center">
-              <Search className="h-8 w-8 text-muted-foreground/50 mb-3" />
+            <div className="flex h-64 flex-col items-center justify-center p-4 text-center">
+              <Search className="text-muted-foreground/50 mb-3 h-8 w-8" />
               <p className="text-muted-foreground">
-                {locale === "ar" ? "لا توجد محادثات مطابقة" : "No matching conversations"}
+                {locale === "ar"
+                  ? "لا توجد محادثات مطابقة"
+                  : "No matching conversations"}
               </p>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                {locale === "ar" ? "جرب كلمات بحث مختلفة" : "Try different search terms"}
+              <p className="text-muted-foreground/70 mt-1 text-sm">
+                {locale === "ar"
+                  ? "جرب كلمات بحث مختلفة"
+                  : "Try different search terms"}
               </p>
             </div>
           ) : (
@@ -206,7 +246,7 @@ export function ConversationList({
             />
           )
         ) : (
-          <div className="p-2 space-y-1">
+          <div className="space-y-1 p-2">
             {sortedConversations.map((conversation) => (
               <ConversationCard
                 key={conversation.id}

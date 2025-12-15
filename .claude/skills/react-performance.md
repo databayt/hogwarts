@@ -5,6 +5,7 @@
 ## Core Capabilities
 
 ### 1. Re-Render Detection & Prevention
+
 - **useMemo Optimization**: Identify expensive computations that should be memoized
 - **useCallback Patterns**: Prevent function recreation in render cycles
 - **React.memo Usage**: Wrap components to prevent unnecessary re-renders
@@ -12,6 +13,7 @@
 - **Context Splitting**: Break large contexts into smaller, focused ones
 
 ### 2. Bundle Size Optimization
+
 - **Code Splitting**: Implement dynamic imports with React.lazy()
 - **Route-Based Splitting**: Split at route boundaries for optimal loading
 - **Component Lazy Loading**: Load heavy components only when needed
@@ -19,6 +21,7 @@
 - **Import Cost Analysis**: Monitor size impact of dependencies
 
 ### 3. State Management Performance
+
 - **useState vs useReducer**: Choose optimal state management approach
 - **State Colocation**: Keep state as close to usage as possible
 - **Derived State Elimination**: Use computed values instead of redundant state
@@ -26,6 +29,7 @@
 - **Suspense Integration**: Use React 19 Suspense for data fetching
 
 ### 4. React 19 Specific Optimizations
+
 - **Concurrent Features**: Leverage useTransition and useDeferredValue
 - **Server Components**: Identify components suitable for RSC
 - **Streaming SSR**: Implement progressive rendering
@@ -33,6 +37,7 @@
 - **Cache Optimization**: Use React Cache API effectively
 
 ### 5. Component Architecture Patterns
+
 - **Container/Presentational Split**: Separate logic from UI
 - **Compound Components**: Build flexible, performant component APIs
 - **Render Props Optimization**: Avoid inline function creation
@@ -42,6 +47,7 @@
 ## Detection Patterns
 
 ### Common Performance Issues
+
 ```typescript
 // ❌ Bad: Inline object creation causes re-renders
 <Component style={{ margin: 10 }} />
@@ -70,6 +76,7 @@ const filtered = useMemo(
 ## Performance Metrics
 
 ### Key Indicators
+
 - **First Contentful Paint (FCP)**: < 1.8s
 - **Largest Contentful Paint (LCP)**: < 2.5s
 - **Time to Interactive (TTI)**: < 3.8s
@@ -77,6 +84,7 @@ const filtered = useMemo(
 - **First Input Delay (FID)**: < 100ms
 
 ### Measurement Tools
+
 - React DevTools Profiler
 - Chrome Performance Tab
 - Lighthouse CI
@@ -86,6 +94,7 @@ const filtered = useMemo(
 ## Implementation Checklist
 
 ### Component Optimization
+
 - [ ] Implement React.memo for pure components
 - [ ] Add useMemo for expensive computations
 - [ ] Use useCallback for stable function references
@@ -93,6 +102,7 @@ const filtered = useMemo(
 - [ ] Implement virtualization for long lists
 
 ### Bundle Optimization
+
 - [ ] Enable code splitting at route level
 - [ ] Lazy load heavy components
 - [ ] Analyze and reduce bundle size
@@ -100,6 +110,7 @@ const filtered = useMemo(
 - [ ] Optimize image loading
 
 ### State Optimization
+
 - [ ] Colocate state with usage
 - [ ] Eliminate redundant state
 - [ ] Use proper state update patterns
@@ -109,6 +120,7 @@ const filtered = useMemo(
 ## Integration with Hogwarts Platform
 
 ### Specific Optimizations
+
 1. **Data Tables**: Virtualize long student/teacher lists
 2. **Forms**: Memoize validation schemas
 3. **Dashboard**: Lazy load chart components
@@ -116,6 +128,7 @@ const filtered = useMemo(
 5. **i18n**: Memoize translation lookups
 
 ### Performance Budget
+
 - **Initial Bundle**: < 200KB gzipped
 - **Route Chunks**: < 50KB each
 - **Image Sizes**: WebP/AVIF with responsive sizing
@@ -125,6 +138,7 @@ const filtered = useMemo(
 ## Usage Examples
 
 ### Invoke this skill when:
+
 - Components re-render unnecessarily
 - Bundle size exceeds limits
 - Performance metrics degrade
@@ -132,6 +146,7 @@ const filtered = useMemo(
 - Optimizing existing components
 
 ### Sample Commands
+
 ```bash
 "Apply react-performance skill to optimize the StudentTable component"
 "Use react-performance to reduce bundle size of dashboard"
@@ -139,6 +154,7 @@ const filtered = useMemo(
 ```
 
 ## References
+
 - [React Performance Documentation](https://react.dev/learn/render-and-commit)
 - [React 19 Performance Features](https://react.dev/blog/2024/04/25/react-19)
 - [Web Vitals](https://web.dev/vitals/)

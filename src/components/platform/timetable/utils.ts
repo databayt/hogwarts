@@ -1,15 +1,24 @@
-import { TimetableSlot, TimetableConflict, TeacherInfo, Period, SubjectInfo } from './types'
 import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
+import {
+  Period,
+  SubjectInfo,
+  TeacherInfo,
+  TimetableConflict,
+  TimetableSlot,
+} from "./types"
 
 export function getSubjectColor(subject: string): string {
-  return SUBJECT_COLORS[subject as keyof typeof SUBJECT_COLORS] || SUBJECT_COLORS.default
+  return (
+    SUBJECT_COLORS[subject as keyof typeof SUBJECT_COLORS] ||
+    SUBJECT_COLORS.default
+  )
 }
 
 export function formatTime(time: string): string {
-  if (!time) return ''
-  const [hours, minutes] = time.split(':')
+  if (!time) return ""
+  const [hours, minutes] = time.split(":")
   const hour = parseInt(hours)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const ampm = hour >= 12 ? "PM" : "AM"
   const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
   return `${displayHour}:${minutes} ${ampm}`
 }
@@ -19,8 +28,16 @@ export function formatPeriodTime(startTime: string, endTime: string): string {
 }
 
 export function getDayName(dayIndex: number, short = false): string {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const shortDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ]
+  const shortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
   return short ? shortDays[dayIndex] : days[dayIndex]
 }
 
@@ -33,7 +50,10 @@ export function detectConflicts(slots: TimetableSlot[]): TimetableConflict[] {
       const slot2 = slots[j]
 
       // Skip if different day or period
-      if (slot1.dayOfWeek !== slot2.dayOfWeek || slot1.periodId !== slot2.periodId) {
+      if (
+        slot1.dayOfWeek !== slot2.dayOfWeek ||
+        slot1.periodId !== slot2.periodId
+      ) {
         continue
       }
 
@@ -41,11 +61,11 @@ export function detectConflicts(slots: TimetableSlot[]): TimetableConflict[] {
       if (slot1.teacherId && slot1.teacherId === slot2.teacherId) {
         conflicts.push({
           id: `${slot1.id}-${slot2.id}-teacher`,
-          type: 'teacher',
+          type: "teacher",
           slot1,
           slot2,
-          severity: 'error',
-          message: `Teacher assigned to multiple classes at the same time`
+          severity: "error",
+          message: `Teacher assigned to multiple classes at the same time`,
         })
       }
 
@@ -53,11 +73,11 @@ export function detectConflicts(slots: TimetableSlot[]): TimetableConflict[] {
       if (slot1.classroomId && slot1.classroomId === slot2.classroomId) {
         conflicts.push({
           id: `${slot1.id}-${slot2.id}-room`,
-          type: 'classroom',
+          type: "classroom",
           slot1,
           slot2,
-          severity: 'error',
-          message: `Classroom double-booked at the same time`
+          severity: "error",
+          message: `Classroom double-booked at the same time`,
         })
       }
 
@@ -65,11 +85,11 @@ export function detectConflicts(slots: TimetableSlot[]): TimetableConflict[] {
       if (slot1.classId === slot2.classId) {
         conflicts.push({
           id: `${slot1.id}-${slot2.id}-class`,
-          type: 'class',
+          type: "class",
           slot1,
           slot2,
-          severity: 'error',
-          message: `Class scheduled multiple times in the same period`
+          severity: "error",
+          message: `Class scheduled multiple times in the same period`,
         })
       }
     }
@@ -82,15 +102,19 @@ export function calculateTeacherWorkload(
   teacherId: string,
   slots: TimetableSlot[],
   periods: Period[]
-): { hoursPerDay: Record<number, number>; hoursPerWeek: number; violations: string[] } {
+): {
+  hoursPerDay: Record<number, number>
+  hoursPerWeek: number
+  violations: string[]
+} {
   const hoursPerDay: Record<number, number> = {}
   let hoursPerWeek = 0
   const violations: string[] = []
 
-  const teacherSlots = slots.filter(s => s.teacherId === teacherId)
+  const teacherSlots = slots.filter((s) => s.teacherId === teacherId)
 
   for (const slot of teacherSlots) {
-    const period = periods.find(p => p.id === slot.periodId)
+    const period = periods.find((p) => p.id === slot.periodId)
     if (!period) continue
 
     const duration = calculatePeriodDuration(period.startTime, period.endTime)
@@ -106,15 +130,18 @@ export function calculateTeacherWorkload(
   })
 
   if (hoursPerWeek > WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK) {
-    violations.push('Exceeds max weekly hours')
+    violations.push("Exceeds max weekly hours")
   }
 
   return { hoursPerDay, hoursPerWeek, violations }
 }
 
-export function calculatePeriodDuration(startTime: string, endTime: string): number {
-  const [startHour, startMin] = startTime.split(':').map(Number)
-  const [endHour, endMin] = endTime.split(':').map(Number)
+export function calculatePeriodDuration(
+  startTime: string,
+  endTime: string
+): number {
+  const [startHour, startMin] = startTime.split(":").map(Number)
+  const [endHour, endMin] = endTime.split(":").map(Number)
   return (endHour * 60 + endMin - startHour * 60 - startMin) / 60
 }
 
@@ -125,12 +152,12 @@ export function findAvailableSlots(
   workingDays: number[]
 ): { day: number; periodId: string }[] {
   const availableSlots: { day: number; periodId: string }[] = []
-  const occupiedSlots = slots.filter(s => s.teacherId === teacherId)
+  const occupiedSlots = slots.filter((s) => s.teacherId === teacherId)
 
   for (const day of workingDays) {
     for (const period of periods) {
       const isOccupied = occupiedSlots.some(
-        s => s.dayOfWeek === day && s.periodId === period.id
+        (s) => s.dayOfWeek === day && s.periodId === period.id
       )
       if (!isOccupied && !period.isBreak) {
         availableSlots.push({ day, periodId: period.id })
@@ -145,19 +172,19 @@ export function generateTimetableGrid(
   slots: TimetableSlot[],
   periods: Period[],
   workingDays: number[],
-  viewType: 'class' | 'teacher' | 'room',
+  viewType: "class" | "teacher" | "room",
   viewId: string
 ): (TimetableSlot | null)[][] {
   const grid: (TimetableSlot | null)[][] = []
 
   // Filter slots based on view type
-  const filteredSlots = slots.filter(slot => {
+  const filteredSlots = slots.filter((slot) => {
     switch (viewType) {
-      case 'class':
+      case "class":
         return slot.classId === viewId
-      case 'teacher':
+      case "teacher":
         return slot.teacherId === viewId
-      case 'room':
+      case "room":
         return slot.classroomId === viewId
       default:
         return false
@@ -169,7 +196,7 @@ export function generateTimetableGrid(
     const row: (TimetableSlot | null)[] = []
     for (const day of workingDays) {
       const slot = filteredSlots.find(
-        s => s.periodId === period.id && s.dayOfWeek === day
+        (s) => s.periodId === period.id && s.dayOfWeek === day
       )
       row.push(slot || null)
     }
@@ -188,12 +215,12 @@ export function validateSlotPlacement(
   // Check for conflicts
   const conflicts = detectConflicts([...existingSlots, slot])
   if (conflicts.length > 0) {
-    conflicts.forEach(c => errors.push(c.message))
+    conflicts.forEach((c) => errors.push(c.message))
   }
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   }
 }
 
@@ -217,7 +244,7 @@ export function suggestAlternativeSlots(
       suggestions.push({
         ...originalSlot,
         dayOfWeek: available.day,
-        periodId: available.periodId
+        periodId: available.periodId,
       })
     }
   }
@@ -225,7 +252,9 @@ export function suggestAlternativeSlots(
   return suggestions
 }
 
-export function groupSlotsByDay(slots: TimetableSlot[]): Record<number, TimetableSlot[]> {
+export function groupSlotsByDay(
+  slots: TimetableSlot[]
+): Record<number, TimetableSlot[]> {
   const grouped: Record<number, TimetableSlot[]> = {}
 
   for (const slot of slots) {
@@ -238,7 +267,10 @@ export function groupSlotsByDay(slots: TimetableSlot[]): Record<number, Timetabl
   return grouped
 }
 
-export function sortSlotsByPeriod(slots: TimetableSlot[], periods: Period[]): TimetableSlot[] {
+export function sortSlotsByPeriod(
+  slots: TimetableSlot[],
+  periods: Period[]
+): TimetableSlot[] {
   const periodOrder = new Map(periods.map((p, i) => [p.id, i]))
 
   return slots.sort((a, b) => {
@@ -261,21 +293,23 @@ export function exportToCSV(
   periods: Period[],
   workingDays: number[]
 ): string {
-  const headers = ['Time', ...workingDays.map(d => getDayName(d))]
+  const headers = ["Time", ...workingDays.map((d) => getDayName(d))]
   const rows: string[][] = [headers]
 
   for (const period of periods) {
     const row = [formatPeriodTime(period.startTime, period.endTime)]
 
     for (const day of workingDays) {
-      const slot = slots.find(s => s.periodId === period.id && s.dayOfWeek === day)
-      row.push(slot?.subjectId || '')
+      const slot = slots.find(
+        (s) => s.periodId === period.id && s.dayOfWeek === day
+      )
+      row.push(slot?.subjectId || "")
     }
 
     rows.push(row)
   }
 
-  return rows.map(row => row.join(',')).join('\n')
+  return rows.map((row) => row.join(",")).join("\n")
 }
 
 // Type-safe CSV row interface
@@ -291,14 +325,14 @@ export interface CSVImportResult {
 
 export function parseCSVImport(csvContent: string): CSVImportResult {
   try {
-    const lines = csvContent.trim().split('\n')
+    const lines = csvContent.trim().split("\n")
     if (lines.length < 2) {
-      return { valid: false, errors: ['CSV file is empty or invalid'] }
+      return { valid: false, errors: ["CSV file is empty or invalid"] }
     }
 
-    const headers = lines[0].split(',').map(h => h.trim())
+    const headers = lines[0].split(",").map((h) => h.trim())
     const data: CSVRow[] = lines.slice(1).map((line, index) => {
-      const values = line.split(',').map(v => v.trim())
+      const values = line.split(",").map((v) => v.trim())
       if (values.length !== headers.length) {
         throw new Error(`Row ${index + 2} has incorrect number of columns`)
       }
@@ -314,29 +348,37 @@ export function parseCSVImport(csvContent: string): CSVImportResult {
   } catch (error) {
     return {
       valid: false,
-      errors: [error instanceof Error ? error.message : 'Failed to parse CSV']
+      errors: [error instanceof Error ? error.message : "Failed to parse CSV"],
     }
   }
 }
 
-export function generateICalEvent(slot: TimetableSlot, period: Period, date: Date): string {
+export function generateICalEvent(
+  slot: TimetableSlot,
+  period: Period,
+  date: Date
+): string {
   const startDateTime = new Date(date)
-  const [startHour, startMin] = period.startTime.split(':').map(Number)
+  const [startHour, startMin] = period.startTime.split(":").map(Number)
   startDateTime.setHours(startHour, startMin, 0, 0)
 
   const endDateTime = new Date(date)
-  const [endHour, endMin] = period.endTime.split(':').map(Number)
+  const [endHour, endMin] = period.endTime.split(":").map(Number)
   endDateTime.setHours(endHour, endMin, 0, 0)
 
-  const formatDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  const formatDate = (d: Date) =>
+    d
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "")
 
   return `BEGIN:VEVENT
 UID:${slot.id}@school.edu
 DTSTART:${formatDate(startDateTime)}
 DTEND:${formatDate(endDateTime)}
-SUMMARY:${slot.subjectId || 'Class'}
-LOCATION:${slot.classroomId || 'TBA'}
-DESCRIPTION:Teacher: ${slot.teacherId || 'TBA'}
+SUMMARY:${slot.subjectId || "Class"}
+LOCATION:${slot.classroomId || "TBA"}
+DESCRIPTION:Teacher: ${slot.teacherId || "TBA"}
 END:VEVENT`
 }
 
@@ -346,10 +388,10 @@ export function isSlotEditable(
   userId?: string
 ): boolean {
   switch (userRole) {
-    case 'admin':
-    case 'principal':
+    case "admin":
+    case "principal":
       return true
-    case 'teacher':
+    case "teacher":
       return slot.teacherId === userId
     default:
       return false
@@ -366,14 +408,16 @@ export function getSlotDisplayInfo(
   color: string
   isSubstitute: boolean
 } {
-  const subject = subjects.find(s => s.id === slot.subjectId)
-  const teacher = teachers.find(t => t.id === (slot.substituteTeacherId || slot.teacherId))
+  const subject = subjects.find((s) => s.id === slot.subjectId)
+  const teacher = teachers.find(
+    (t) => t.id === (slot.substituteTeacherId || slot.teacherId)
+  )
 
   return {
-    subject: subject?.name || 'Unknown',
-    teacher: teacher ? `${teacher.firstName} ${teacher.lastName}` : 'TBA',
+    subject: subject?.name || "Unknown",
+    teacher: teacher ? `${teacher.firstName} ${teacher.lastName}` : "TBA",
     color: subject?.color || SUBJECT_COLORS.default,
-    isSubstitute: !!slot.isSubstitute
+    isSubstitute: !!slot.isSubstitute,
   }
 }
 

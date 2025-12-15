@@ -1,33 +1,33 @@
-"use server";
+"use server"
 
-import * as z from "zod";
+import * as z from "zod"
 
+import { sendPasswordResetEmail } from "@/components/auth/mail"
+import { generatePasswordResetToken } from "@/components/auth/tokens"
 
-import { sendPasswordResetEmail } from "@/components/auth/mail";
-import { generatePasswordResetToken } from "@/components/auth/tokens";
-import { ResetSchema } from "../validation";
-import { getUserByEmail } from "../user";
+import { getUserByEmail } from "../user"
+import { ResetSchema } from "../validation"
 
 export const reset = async (values: z.infer<typeof ResetSchema>) => {
-  const validatedFields = ResetSchema.safeParse(values);
+  const validatedFields = ResetSchema.safeParse(values)
 
   if (!validatedFields.success) {
-    return { error: "Invalid emaiL!" };
+    return { error: "Invalid emaiL!" }
   }
 
-  const { email } = validatedFields.data;
+  const { email } = validatedFields.data
 
-  const existingUser = await getUserByEmail(email);
+  const existingUser = await getUserByEmail(email)
 
   if (!existingUser) {
-    return { error: "Email not found!" };
+    return { error: "Email not found!" }
   }
 
-  const passwordResetToken = await generatePasswordResetToken(email);
+  const passwordResetToken = await generatePasswordResetToken(email)
   await sendPasswordResetEmail(
     passwordResetToken.email,
-    passwordResetToken.token,
-  );
+    passwordResetToken.token
+  )
 
-  return { success: "Reset email sent!" };
+  return { success: "Reset email sent!" }
 }

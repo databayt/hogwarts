@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * Loading skeleton for lab cards
@@ -13,11 +13,11 @@ export function DashboardCardSkeleton() {
         <Skeleton className="h-4 w-4" />
       </CardHeader>
       <CardContent>
-        <Skeleton className="h-8 w-[60px] mb-2" />
+        <Skeleton className="mb-2 h-8 w-[60px]" />
         <Skeleton className="h-3 w-[80px]" />
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -31,7 +31,7 @@ export function DashboardGridSkeleton() {
         <DashboardCardSkeleton key={i} />
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -41,8 +41,8 @@ export function ActivityCardSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="p-3 border rounded-lg">
-          <Skeleton className="h-4 w-[200px] mb-2" />
+        <div key={i} className="rounded-lg border p-3">
+          <Skeleton className="mb-2 h-4 w-[200px]" />
           <div className="flex items-center justify-between">
             <Skeleton className="h-3 w-[100px]" />
             <Skeleton className="h-5 w-[60px]" />
@@ -50,7 +50,7 @@ export function ActivityCardSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -60,19 +60,22 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+        <div
+          key={i}
+          className="flex items-center justify-between rounded-lg border p-3"
+        >
           <div className="space-y-2">
             <Skeleton className="h-4 w-[150px]" />
             <Skeleton className="h-3 w-[100px]" />
           </div>
-          <div className="text-right space-y-2">
-            <Skeleton className="h-6 w-[60px] ml-auto" />
+          <div className="space-y-2 text-right">
+            <Skeleton className="ml-auto h-6 w-[60px]" />
             <Skeleton className="h-3 w-[80px]" />
           </div>
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -118,17 +121,21 @@ export function DashboardLoadingSkeleton() {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Loading state with custom message
  */
-export function LoadingMessage({ message = "Loading lab..." }: { message?: string }) {
+export function LoadingMessage({
+  message = "Loading lab...",
+}: {
+  message?: string
+}) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+    <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+      <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2" />
+      <p className="text-muted-foreground text-sm">{message}</p>
     </div>
-  );
+  )
 }

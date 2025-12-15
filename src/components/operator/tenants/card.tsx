@@ -1,37 +1,56 @@
-"use client";
+"use client"
 
 /**
  * Tenant card components for displaying school information
  *
  * Reusable card components for showing tenant details in various layouts.
  */
+import Link from "next/link"
+import { Building2, Calendar, Globe, Users } from "lucide-react"
 
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Building2, Calendar, Globe, Users } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantBilling } from "./types";
-import { formatTenantUrl, getPlanTypeLabel, formatDate, formatTrialStatus, getTenantStatus } from "./util";
-import { TENANT_STATUS_VARIANTS } from "./config";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import { TENANT_STATUS_VARIANTS } from "./config"
+import type { Tenant, TenantBilling, TenantMetrics } from "./types"
+import {
+  formatDate,
+  formatTenantUrl,
+  formatTrialStatus,
+  getPlanTypeLabel,
+  getTenantStatus,
+} from "./util"
 
 interface TenantCardProps {
-  tenant: Tenant;
-  metrics?: TenantMetrics;
-  billing?: TenantBilling;
-  showActions?: boolean;
-  onViewDetails?: (tenantId: string) => void;
+  tenant: Tenant
+  metrics?: TenantMetrics
+  billing?: TenantBilling
+  showActions?: boolean
+  onViewDetails?: (tenantId: string) => void
 }
 
 /**
  * Basic tenant card with essential information
  */
-export function TenantCard({ tenant, metrics, showActions = false, onViewDetails }: TenantCardProps) {
+export function TenantCard({
+  tenant,
+  metrics,
+  showActions = false,
+  onViewDetails,
+}: TenantCardProps) {
   // Note: School model doesn't include trialEndsAt - would need to join with Subscription
-  const status = getTenantStatus(tenant.isActive, null);
+  const status = getTenantStatus(tenant.isActive, null)
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -41,7 +60,9 @@ export function TenantCard({ tenant, metrics, showActions = false, onViewDetails
             </CardTitle>
             <CardDescription>{tenant.domain}.schoolapp.com</CardDescription>
           </div>
-          <Badge variant={TENANT_STATUS_VARIANTS[status]}>{getPlanTypeLabel(tenant.planType)}</Badge>
+          <Badge variant={TENANT_STATUS_VARIANTS[status]}>
+            {getPlanTypeLabel(tenant.planType)}
+          </Badge>
         </div>
       </CardHeader>
 
@@ -49,14 +70,14 @@ export function TenantCard({ tenant, metrics, showActions = false, onViewDetails
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-muted-foreground" />
+              <Users className="text-muted-foreground size-4" />
               <div>
                 <small className="muted">Students</small>
                 <div className="font-medium">{metrics.students}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-muted-foreground" />
+              <Users className="text-muted-foreground size-4" />
               <div>
                 <small className="muted">Teachers</small>
                 <div className="font-medium">{metrics.teachers}</div>
@@ -79,7 +100,7 @@ export function TenantCard({ tenant, metrics, showActions = false, onViewDetails
         </CardFooter>
       )}
     </Card>
-  );
+  )
 }
 
 /**
@@ -87,13 +108,13 @@ export function TenantCard({ tenant, metrics, showActions = false, onViewDetails
  */
 export function TenantCompactCard({ tenant }: { tenant: Tenant }) {
   // Note: School model doesn't include trialEndsAt - would need to join with Subscription
-  const status = getTenantStatus(tenant.isActive, null);
+  const status = getTenantStatus(tenant.isActive, null)
 
   return (
     <Card className="flex items-center justify-between p-4">
       <div className="flex items-center gap-4">
-        <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-          <Building2 className="size-5 text-primary" />
+        <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+          <Building2 className="text-primary size-5" />
         </div>
         <div>
           <h5>{tenant.name}</h5>
@@ -102,18 +123,26 @@ export function TenantCompactCard({ tenant }: { tenant: Tenant }) {
       </div>
       <Badge variant={TENANT_STATUS_VARIANTS[status]}>{status}</Badge>
     </Card>
-  );
+  )
 }
 
 /**
  * Tenant card with billing information
  */
-export function TenantBillingCard({ tenant, billing }: { tenant: Tenant; billing: TenantBilling }) {
+export function TenantBillingCard({
+  tenant,
+  billing,
+}: {
+  tenant: Tenant
+  billing: TenantBilling
+}) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{tenant.name}</CardTitle>
-        <CardDescription>{getPlanTypeLabel(tenant.planType)} Plan</CardDescription>
+        <CardDescription>
+          {getPlanTypeLabel(tenant.planType)} Plan
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -125,28 +154,37 @@ export function TenantBillingCard({ tenant, billing }: { tenant: Tenant; billing
           </div>
           <div>
             <small className="muted">Next Invoice</small>
-            <div className="font-medium">{formatDate(billing.nextInvoiceDate)}</div>
+            <div className="font-medium">
+              {formatDate(billing.nextInvoiceDate)}
+            </div>
           </div>
         </div>
         {billing.trialEndsAt && (
-          <div className="rounded-md bg-muted p-3">
+          <div className="bg-muted rounded-md p-3">
             <small className="muted">Trial Status</small>
-            <div className="font-medium">{formatTrialStatus(billing.trialEndsAt)}</div>
+            <div className="font-medium">
+              {formatTrialStatus(billing.trialEndsAt)}
+            </div>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
  * Tenant statistics card
  */
-export function TenantStatsCard({ title, value, icon: Icon, description }: {
-  title: string;
-  value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
-  description?: string;
+export function TenantStatsCard({
+  title,
+  value,
+  icon: Icon,
+  description,
+}: {
+  title: string
+  value: string | number
+  icon: React.ComponentType<{ className?: string }>
+  description?: string
 }) {
   return (
     <Card>
@@ -154,14 +192,14 @@ export function TenantStatsCard({ title, value, icon: Icon, description }: {
         <CardTitle>
           <small>{title}</small>
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className="text-muted-foreground size-4" />
       </CardHeader>
       <CardContent>
         <h2 className="font-bold">{value}</h2>
         {description && <small className="muted">{description}</small>}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 /**
@@ -176,7 +214,7 @@ export function TenantInfoCard({ tenant }: { tenant: Tenant }) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2">
-          <Globe className="size-4 text-muted-foreground" />
+          <Globe className="text-muted-foreground size-4" />
           <div>
             <small className="muted">Domain</small>
             <div className="font-medium">
@@ -192,7 +230,7 @@ export function TenantInfoCard({ tenant }: { tenant: Tenant }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar className="size-4 text-muted-foreground" />
+          <Calendar className="text-muted-foreground size-4" />
           <div>
             <small className="muted">Created</small>
             <div className="font-medium">{formatDate(tenant.createdAt)}</div>
@@ -207,7 +245,10 @@ export function TenantInfoCard({ tenant }: { tenant: Tenant }) {
         {tenant.email && (
           <div>
             <small className="muted">Email</small>
-            <Link href={`mailto:${tenant.email}`} className="muted hover:underline">
+            <Link
+              href={`mailto:${tenant.email}`}
+              className="muted hover:underline"
+            >
               {tenant.email}
             </Link>
           </div>
@@ -215,12 +256,15 @@ export function TenantInfoCard({ tenant }: { tenant: Tenant }) {
         {tenant.phoneNumber && (
           <div>
             <small className="muted">Phone</small>
-            <Link href={`tel:${tenant.phoneNumber}`} className="muted hover:underline">
+            <Link
+              href={`tel:${tenant.phoneNumber}`}
+              className="muted hover:underline"
+            >
               {tenant.phoneNumber}
             </Link>
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

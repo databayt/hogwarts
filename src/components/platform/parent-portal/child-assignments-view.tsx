@@ -1,11 +1,11 @@
-import { getChildAssignments } from "./actions";
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -13,41 +13,46 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/table"
+
+import { getChildAssignments } from "./actions"
 
 interface Props {
-  studentId: string;
+  studentId: string
 }
 
 export async function ChildAssignmentsView({ studentId }: Props) {
-  const { assignments } = await getChildAssignments({ studentId });
+  const { assignments } = await getChildAssignments({ studentId })
 
   const getStatusBadge = (assignment: (typeof assignments)[0]) => {
     if (!assignment.submission) {
-      const dueDate = new Date(assignment.dueDate);
-      const now = new Date();
+      const dueDate = new Date(assignment.dueDate)
+      const now = new Date()
       if (dueDate < now) {
-        return <Badge variant="destructive">Missing</Badge>;
+        return <Badge variant="destructive">Missing</Badge>
       }
-      return <Badge variant="outline">Not Submitted</Badge>;
+      return <Badge variant="outline">Not Submitted</Badge>
     }
 
     switch (assignment.submission.status) {
       case "SUBMITTED":
-        return <Badge variant="default">Submitted</Badge>;
+        return <Badge variant="default">Submitted</Badge>
       case "GRADED":
-        return <Badge variant="default" className="bg-green-600">Graded</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-600">
+            Graded
+          </Badge>
+        )
       case "LATE_SUBMITTED":
-        return <Badge variant="destructive">Late</Badge>;
+        return <Badge variant="destructive">Late</Badge>
       case "DRAFT":
-        return <Badge variant="outline">Draft</Badge>;
+        return <Badge variant="outline">Draft</Badge>
       case "RETURNED":
-        return <Badge variant="default">Returned</Badge>;
+        return <Badge variant="default">Returned</Badge>
       default:
-        return <Badge variant="outline">{assignment.submission.status}</Badge>;
+        return <Badge variant="outline">{assignment.submission.status}</Badge>
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -62,7 +67,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
         </CardHeader>
         <CardContent>
           {assignments.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">
+            <p className="text-muted-foreground py-8 text-center">
               No assignments assigned yet
             </p>
           ) : (
@@ -82,10 +87,12 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                 </TableHeader>
                 <TableBody>
                   {assignments.map((assignment) => {
-                    const dueDate = new Date(assignment.dueDate);
-                    const publishDate = assignment.publishDate ? new Date(assignment.publishDate) : null;
-                    const now = new Date();
-                    const isOverdue = !assignment.submission && dueDate < now;
+                    const dueDate = new Date(assignment.dueDate)
+                    const publishDate = assignment.publishDate
+                      ? new Date(assignment.publishDate)
+                      : null
+                    const now = new Date()
+                    const isOverdue = !assignment.submission && dueDate < now
 
                     return (
                       <TableRow key={assignment.id}>
@@ -93,7 +100,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                           <div>
                             <p className="font-medium">{assignment.title}</p>
                             {assignment.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-1">
+                              <p className="text-muted-foreground line-clamp-1 text-sm">
                                 {assignment.description}
                               </p>
                             )}
@@ -105,7 +112,11 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                           {publishDate?.toLocaleDateString() || "-"}
                         </TableCell>
                         <TableCell>
-                          <span className={isOverdue ? "text-destructive font-medium" : ""}>
+                          <span
+                            className={
+                              isOverdue ? "text-destructive font-medium" : ""
+                            }
+                          >
                             {dueDate.toLocaleDateString()}
                           </span>
                         </TableCell>
@@ -118,7 +129,8 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                           {assignment.submission?.score !== null &&
                           assignment.submission?.score !== undefined ? (
                             <span className="font-medium">
-                              {assignment.submission.score}/{assignment.totalPoints}
+                              {assignment.submission.score}/
+                              {assignment.totalPoints}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -126,7 +138,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                         </TableCell>
                         <TableCell>{getStatusBadge(assignment)}</TableCell>
                       </TableRow>
-                    );
+                    )
                   })}
                 </TableBody>
               </Table>
@@ -135,5 +147,5 @@ export async function ChildAssignmentsView({ studentId }: Props) {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

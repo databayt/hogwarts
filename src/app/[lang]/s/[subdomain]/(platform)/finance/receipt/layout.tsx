@@ -1,7 +1,7 @@
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,18 +15,16 @@ export default async function ReceiptLayout({ children, params }: Props) {
 
   // Define receipt page navigation
   const receiptPages: PageNavItem[] = [
-    { name: 'Overview', href: `/${lang}/finance/receipt` },
-    { name: 'Generate Receipt', href: `/${lang}/finance/receipt/generate` },
-    { name: 'Receipt History', href: `/${lang}/finance/receipt/history` },
-    { name: 'Templates', href: `/${lang}/finance/receipt/templates` },
-    { name: 'Manage Plans', href: `/${lang}/finance/receipt/manage-plan` },
+    { name: "Overview", href: `/${lang}/finance/receipt` },
+    { name: "Generate Receipt", href: `/${lang}/finance/receipt/generate` },
+    { name: "Receipt History", href: `/${lang}/finance/receipt/history` },
+    { name: "Templates", href: `/${lang}/finance/receipt/templates` },
+    { name: "Manage Plans", href: `/${lang}/finance/receipt/manage-plan` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Receipt'}
-      />
+      <PageHeadingSetter title={d?.title || "Receipt"} />
       <PageNav pages={receiptPages} />
       {children}
     </div>

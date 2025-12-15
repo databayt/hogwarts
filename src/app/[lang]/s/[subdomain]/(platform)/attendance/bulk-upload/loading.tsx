@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AttendanceBulkUploadLoading() {
   return (
@@ -14,12 +14,12 @@ export default function AttendanceBulkUploadLoading() {
           <Skeleton className="h-4 w-64" />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center">
-            <Skeleton className="h-12 w-12 mb-4" />
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8">
+            <Skeleton className="mb-4 h-12 w-12" />
             <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-32 mt-2" />
+            <Skeleton className="mt-2 h-4 w-32" />
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="mt-4 flex gap-2">
             <Skeleton className="h-9 w-32" />
             <Skeleton className="h-9 w-32" />
           </div>

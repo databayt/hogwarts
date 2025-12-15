@@ -1,22 +1,31 @@
-"use client";
+"use client"
 
-import { ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable } from "./data-table";
-import { ColumnDef } from "@tanstack/react-table";
-import type { UserInvoice } from "@prisma/client";
-import { STATS_CARD_DEFS } from "./config";
+import { ReactNode } from "react"
+import type { UserInvoice } from "@prisma/client"
+import { ColumnDef } from "@tanstack/react-table"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { STATS_CARD_DEFS } from "./config"
+import { DataTable } from "./data-table"
 
 interface StatCardProps {
-  title: string;
-  value: ReactNode;
-  subtitle?: string;
-  className?: string;
+  title: string
+  value: ReactNode
+  subtitle?: string
+  className?: string
 }
 
-export function StatCard({ title, value, subtitle = "last 30 days", className }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  subtitle = "last 30 days",
+  className,
+}: StatCardProps) {
   return (
-    <Card className={`grid gap-3 shadow-none border-none bg-muted ${className ?? ""}`}>
+    <Card
+      className={`bg-muted grid gap-3 border-none shadow-none ${className ?? ""}`}
+    >
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
@@ -27,14 +36,14 @@ export function StatCard({ title, value, subtitle = "last 30 days", className }:
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 export interface StatsData {
-  totalRevenue: string | number;
-  totalInvoice: number | string;
-  paidInvoice: number | string;
-  UnpaidInvoice: number | string;
+  totalRevenue: string | number
+  totalInvoice: number | string
+  paidInvoice: number | string
+  UnpaidInvoice: number | string
 }
 
 export function StatsCards({ stats }: { stats: StatsData }) {
@@ -48,14 +57,14 @@ export function StatsCards({ stats }: { stats: StatsData }) {
         />
       ))}
     </>
-  );
+  )
 }
 
 interface RecentInvoicesCardProps<TData> {
-  data: TData[];
-  columns: ColumnDef<TData, unknown>[];
-  emptyText?: string;
-  className?: string;
+  data: TData[]
+  columns: ColumnDef<TData, unknown>[]
+  emptyText?: string
+  className?: string
 }
 
 export function RecentInvoicesCard({
@@ -77,7 +86,5 @@ export function RecentInvoicesCard({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
-
-

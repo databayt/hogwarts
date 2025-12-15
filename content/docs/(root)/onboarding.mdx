@@ -48,12 +48,12 @@ src/
 
 ### File Statistics
 
-| Category | Count |
-|----------|-------|
-| Route files | 21 |
-| Component files | 145 |
-| Step directories | 17 |
-| **Total** | **166 files** |
+| Category         | Count         |
+| ---------------- | ------------- |
+| Route files      | 21            |
+| Component files  | 145           |
+| Step directories | 17            |
+| **Total**        | **166 files** |
 
 ### Step Directory Pattern
 
@@ -81,13 +81,13 @@ The onboarding flow consists of **16 steps** organized into **3 groups**:
 
 Basic details about the school and its unique characteristics.
 
-| Step | Path | Required | Fields | Database |
-|------|------|----------|--------|----------|
-| **About School** | `/about-school` | No | N/A (static) | N/A |
-| **Title** | `/title` | Yes | School name | `School.name` |
-| **Description** | `/description` | Yes | Type, level, description | `School.planType` |
-| **Location** | `/location` | Yes | Address, city, state, country | `School.address` |
-| **Stand Out** | `/stand-out` | No | Unique features (static) | N/A |
+| Step             | Path            | Required | Fields                        | Database          |
+| ---------------- | --------------- | -------- | ----------------------------- | ----------------- |
+| **About School** | `/about-school` | No       | N/A (static)                  | N/A               |
+| **Title**        | `/title`        | Yes      | School name                   | `School.name`     |
+| **Description**  | `/description`  | Yes      | Type, level, description      | `School.planType` |
+| **Location**     | `/location`     | Yes      | Address, city, state, country | `School.address`  |
+| **Stand Out**    | `/stand-out`    | No       | Unique features (static)      | N/A               |
 
 **Purpose**: Establish school identity and basic information.
 
@@ -95,12 +95,12 @@ Basic details about the school and its unique characteristics.
 
 Operational configuration and technical setup.
 
-| Step | Path | Required | Fields | Database |
-|------|------|----------|--------|----------|
-| **Capacity** | `/capacity` | Yes | maxStudents, maxTeachers, maxClasses | `School.max*` |
-| **Branding** | `/branding` | No | Logo, colors, theme | `School.primaryColor`, `borderRadius`, `shadow` |
-| **Import** | `/import` | No | CSV/Excel upload | Bulk insert |
-| **Finish Setup** | `/finish-setup` | No | Review (static) | N/A |
+| Step             | Path            | Required | Fields                               | Database                                        |
+| ---------------- | --------------- | -------- | ------------------------------------ | ----------------------------------------------- |
+| **Capacity**     | `/capacity`     | Yes      | maxStudents, maxTeachers, maxClasses | `School.max*`                                   |
+| **Branding**     | `/branding`     | No       | Logo, colors, theme                  | `School.primaryColor`, `borderRadius`, `shadow` |
+| **Import**       | `/import`       | No       | CSV/Excel upload                     | Bulk insert                                     |
+| **Finish Setup** | `/finish-setup` | No       | Review (static)                      | N/A                                             |
 
 **Purpose**: Configure capacity limits and visual identity.
 
@@ -108,15 +108,15 @@ Operational configuration and technical setup.
 
 Pricing, compliance, and platform integration.
 
-| Step | Path | Required | Fields | Database |
-|------|------|----------|--------|----------|
-| **Join** | `/join` | Yes | Registration data | `User` (stored as JSON in email) |
-| **Visibility** | `/visibility` | No | Public/private settings | `School.isPublished` |
-| **Price** | `/price` | Yes | Tuition, fees, currency | `School.website` (pricing-set-*) |
-| **Discount** | `/discount` | No | Promo codes | `Discount` model |
-| **Legal** | `/legal` | Yes | Terms acceptance | `LegalConsent` |
-| **Subdomain** | `/subdomain` | No | Custom domain | `School.domain` |
-| **Congratulations** | `/congratulations` | No | Completion (static) | N/A |
+| Step                | Path               | Required | Fields                  | Database                          |
+| ------------------- | ------------------ | -------- | ----------------------- | --------------------------------- |
+| **Join**            | `/join`            | Yes      | Registration data       | `User` (stored as JSON in email)  |
+| **Visibility**      | `/visibility`      | No       | Public/private settings | `School.isPublished`              |
+| **Price**           | `/price`           | Yes      | Tuition, fees, currency | `School.website` (pricing-set-\*) |
+| **Discount**        | `/discount`        | No       | Promo codes             | `Discount` model                  |
+| **Legal**           | `/legal`           | Yes      | Terms acceptance        | `LegalConsent`                    |
+| **Subdomain**       | `/subdomain`       | No       | Custom domain           | `School.domain`                   |
+| **Congratulations** | `/congratulations` | No       | Completion (static)     | N/A                               |
 
 **Purpose**: Set up business operations and legal compliance.
 
@@ -194,15 +194,15 @@ export async function ensureUserSchool(userId: string) {
     // 1. Check if user already has a school
     const user = await tx.user.findUnique({
       where: { id: userId },
-      select: { schoolId: true }
-    });
+      select: { schoolId: true },
+    })
 
     if (user?.schoolId) {
       // Idempotent: Return existing school
       const school = await tx.school.findUnique({
-        where: { id: user.schoolId }
-      });
-      return { success: true, schoolId: user.schoolId, school };
+        where: { id: user.schoolId },
+      })
+      return { success: true, schoolId: user.schoolId, school }
     }
 
     // 2. Create school and link user atomically
@@ -211,24 +211,25 @@ export async function ensureUserSchool(userId: string) {
         name: "New School",
         domain: `school-${Date.now()}`,
         createdByUserId: userId, // Track creator
-      }
-    });
+      },
+    })
 
     // 3. Link user to school and set role
     await tx.user.update({
       where: { id: userId },
       data: {
         schoolId: school.id,
-        role: "ADMIN"
-      }
-    });
+        role: "ADMIN",
+      },
+    })
 
-    return { success: true, schoolId: school.id, school };
-  });
+    return { success: true, schoolId: school.id, school }
+  })
 }
 ```
 
 **Key Features:**
+
 - **Atomicity**: School creation and user linking happen in a single transaction
 - **Idempotency**: Safe to call multiple times (returns existing school)
 - **Race Condition Handling**: Transaction isolation prevents duplicate schools
@@ -240,14 +241,14 @@ After atomic school creation, the session must be refreshed to include the new `
 
 ```typescript
 // Client-side (after initializeSchoolSetup)
-const result = await initializeSchoolSetup();
+const result = await initializeSchoolSetup()
 
 if (result.success && result.data._sessionRefreshRequired) {
   // Trigger session refresh
-  await fetch('/api/auth/session', { method: 'GET' });
+  await fetch("/api/auth/session", { method: "GET" })
 
   // Navigate to first step
-  router.push(result.data._redirect);
+  router.push(result.data._redirect)
 }
 ```
 
@@ -257,8 +258,11 @@ All onboarding queries include `schoolId` for tenant isolation:
 
 ```typescript
 // ✅ CORRECT - Scoped by schoolId
-export async function updateListing(id: string, data: Partial<ListingFormData>) {
-  await requireSchoolOwnership(id); // Validates user owns this school
+export async function updateListing(
+  id: string,
+  data: Partial<ListingFormData>
+) {
+  await requireSchoolOwnership(id) // Validates user owns this school
 
   const listing = await db.school.update({
     where: { id }, // schoolId is the primary key
@@ -266,19 +270,22 @@ export async function updateListing(id: string, data: Partial<ListingFormData>) 
       ...data,
       updatedAt: new Date(),
     },
-  });
+  })
 
-  revalidatePath("/onboarding");
-  return createActionResponse(listing);
+  revalidatePath("/onboarding")
+  return createActionResponse(listing)
 }
 
 // ❌ WRONG - Missing ownership check
-export async function updateListing(id: string, data: Partial<ListingFormData>) {
+export async function updateListing(
+  id: string,
+  data: Partial<ListingFormData>
+) {
   // Anyone could update any school!
   const listing = await db.school.update({
     where: { id },
     data,
-  });
+  })
 }
 ```
 
@@ -363,14 +370,17 @@ model Student {
 All server actions verify ownership before mutations:
 
 ```typescript
-import { requireSchoolOwnership } from "@/lib/auth-security";
+import { requireSchoolOwnership } from "@/lib/auth-security"
 
-export async function updateListing(id: string, data: Partial<ListingFormData>) {
+export async function updateListing(
+  id: string,
+  data: Partial<ListingFormData>
+) {
   // Throws TenantError if user doesn't own this school
-  await requireSchoolOwnership(id);
+  await requireSchoolOwnership(id)
 
   // Proceed with mutation
-  await db.school.update({ where: { id }, data });
+  await db.school.update({ where: { id }, data })
 }
 ```
 
@@ -384,18 +394,20 @@ The onboarding system uses Zod for type-safe validation with i18n support.
 
 ```typescript
 // validation.ts
-import { getValidationMessages } from "@/components/internationalization/helpers";
+import { getValidationMessages } from "@/components/internationalization/helpers"
 
 export function createTitleStepValidation(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary);
+  const v = getValidationMessages(dictionary)
 
-  return z.object({
-    name: z
-      .string()
-      .min(2, { message: v.minLength(2) })
-      .max(100, { message: v.maxLength(100) })
-      .trim()
-  }).required({ name: true });
+  return z
+    .object({
+      name: z
+        .string()
+        .min(2, { message: v.minLength(2) })
+        .max(100, { message: v.maxLength(100) })
+        .trim(),
+    })
+    .required({ name: true })
 }
 ```
 
@@ -403,14 +415,14 @@ export function createTitleStepValidation(dictionary: Dictionary) {
 
 Each step has its own validation schema:
 
-| Step | Schema | Required Fields |
-|------|--------|----------------|
-| Title | `titleStepValidation` | name |
-| Description | `descriptionStepValidation` | description, schoolLevel, schoolType |
-| Location | `locationStepValidation` | address, city, state |
-| Capacity | `capacityStepValidation` | maxStudents, maxTeachers |
-| Price | `priceStepValidation` | tuitionFee, currency, paymentSchedule |
-| Legal | `legalStepValidation` | termsAccepted, privacyAccepted, dataProcessingAccepted |
+| Step        | Schema                      | Required Fields                                        |
+| ----------- | --------------------------- | ------------------------------------------------------ |
+| Title       | `titleStepValidation`       | name                                                   |
+| Description | `descriptionStepValidation` | description, schoolLevel, schoolType                   |
+| Location    | `locationStepValidation`    | address, city, state                                   |
+| Capacity    | `capacityStepValidation`    | maxStudents, maxTeachers                               |
+| Price       | `priceStepValidation`       | tuitionFee, currency, paymentSchedule                  |
+| Legal       | `legalStepValidation`       | termsAccepted, privacyAccepted, dataProcessingAccepted |
 
 ### Validation Helpers
 
@@ -419,39 +431,46 @@ Each step has its own validation schema:
 export function validateStep(step: OnboardingStep, data: any) {
   try {
     switch (step) {
-      case 'title':
-        titleStepValidation.parse(data);
-        break;
-      case 'description':
-        descriptionStepValidation.parse(data);
-        break;
+      case "title":
+        titleStepValidation.parse(data)
+        break
+      case "description":
+        descriptionStepValidation.parse(data)
+        break
       // ...
     }
-    return { isValid: true, errors: {} };
+    return { isValid: true, errors: {} }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors: Record<string, string> = {};
-      error.issues.forEach(err => {
+      const errors: Record<string, string> = {}
+      error.issues.forEach((err) => {
         if (err.path.length > 0) {
-          errors[err.path.join('.')] = err.message;
+          errors[err.path.join(".")] = err.message
         }
-      });
-      return { isValid: false, errors };
+      })
+      return { isValid: false, errors }
     }
-    return { isValid: false, errors: { general: 'Validation failed' } };
+    return { isValid: false, errors: { general: "Validation failed" } }
   }
 }
 
 // Get required fields for a step
 export function getRequiredFieldsForStep(step: OnboardingStep): string[] {
   switch (step) {
-    case 'title': return ['name'];
-    case 'description': return ['description'];
-    case 'location': return ['address', 'city', 'state'];
-    case 'capacity': return ['maxStudents', 'maxTeachers'];
-    case 'price': return ['tuitionFee', 'currency', 'paymentSchedule'];
-    case 'legal': return ['termsAccepted', 'privacyAccepted', 'dataProcessingAccepted'];
-    default: return [];
+    case "title":
+      return ["name"]
+    case "description":
+      return ["description"]
+    case "location":
+      return ["address", "city", "state"]
+    case "capacity":
+      return ["maxStudents", "maxTeachers"]
+    case "price":
+      return ["tuitionFee", "currency", "paymentSchedule"]
+    case "legal":
+      return ["termsAccepted", "privacyAccepted", "dataProcessingAccepted"]
+    default:
+      return []
   }
 }
 ```
@@ -465,10 +484,16 @@ export const domainSchema = z
   .string()
   .min(3, "Domain must be at least 3 characters")
   .max(63, "Domain must be less than 63 characters")
-  .regex(/^[a-z0-9-]+$/, "Domain can only contain lowercase letters, numbers, and hyphens")
+  .regex(
+    /^[a-z0-9-]+$/,
+    "Domain can only contain lowercase letters, numbers, and hyphens"
+  )
   .regex(/^[a-z0-9]/, "Domain must start with a letter or number")
   .regex(/[a-z0-9]$/, "Domain must end with a letter or number")
-  .refine(val => !val.includes('--'), "Domain cannot contain consecutive hyphens");
+  .refine(
+    (val) => !val.includes("--"),
+    "Domain cannot contain consecutive hyphens"
+  )
 ```
 
 ---
@@ -571,30 +596,30 @@ Main hook for navigation and validation:
 
 ```typescript
 export function useOnboarding(schoolId?: string) {
-  const [school, setSchool] = useState<OnboardingSchoolData | null>(null);
-  const [progress, setProgress] = useState<OnboardingProgress | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [school, setSchool] = useState<OnboardingSchoolData | null>(null)
+  const [progress, setProgress] = useState<OnboardingProgress | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load school data and progress
   const loadSchoolData = useCallback(async () => {
     const [schoolResponse, statusResponse] = await Promise.all([
       getListing(schoolId),
-      getSchoolSetupStatus(schoolId)
-    ]);
+      getSchoolSetupStatus(schoolId),
+    ])
 
-    if (schoolResponse.success) setSchool(schoolResponse.data);
-    if (statusResponse.success) setProgress(statusResponse.data);
-  }, [schoolId]);
+    if (schoolResponse.success) setSchool(schoolResponse.data)
+    if (statusResponse.success) setProgress(statusResponse.data)
+  }, [schoolId])
 
   // Navigate to next step
   const goToNextStep = useCallback(async () => {
-    await proceedToTitle(schoolId);
-  }, [schoolId]);
+    await proceedToTitle(schoolId)
+  }, [schoolId])
 
   // Validate current step
   const validateCurrentStep = useCallback(() => {
-    return validateStep(currentStep, school);
-  }, [school, currentStep]);
+    return validateStep(currentStep, school)
+  }, [school, currentStep])
 
   return {
     school,
@@ -603,7 +628,7 @@ export function useOnboarding(schoolId?: string) {
     updateSchool: updateSchoolData,
     goToNextStep,
     validateCurrentStep,
-  };
+  }
 }
 ```
 
@@ -627,11 +652,12 @@ Comprehensive tracking of issues preventing production deployment.
   await db.user.update({
     where: { id: userId },
     data: {
-      email: JSON.stringify(registrationData) // ❌ Violates email field type
-    }
-  });
+      email: JSON.stringify(registrationData), // ❌ Violates email field type
+    },
+  })
   ```
 - **Fix Required**:
+
   ```typescript
   // Create proper UserProfile model
   model UserProfile {
@@ -651,6 +677,7 @@ Comprehensive tracking of issues preventing production deployment.
 - **Issue**: Legal consent not persisted to database
 - **Impact**: No audit trail for compliance (GDPR, data protection)
 - **Fix Required**:
+
   ```prisma
   model LegalConsent {
     id                      String   @id @default(cuid())
@@ -763,6 +790,7 @@ export async function initializeSchoolSetup(): Promise<ActionResponse>
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: true,
@@ -777,6 +805,7 @@ export async function initializeSchoolSetup(): Promise<ActionResponse>
 ```
 
 **Flow:**
+
 1. Get authenticated user context
 2. Check if user already has a school (idempotent)
 3. If not, create school and link user atomically
@@ -784,13 +813,14 @@ export async function initializeSchoolSetup(): Promise<ActionResponse>
 5. Client refreshes session to get `schoolId` in JWT
 
 **Usage:**
+
 ```typescript
 // onboarding/page.tsx
-const result = await initializeSchoolSetup();
+const result = await initializeSchoolSetup()
 
 if (result.success && result.data._sessionRefreshRequired) {
-  await fetch('/api/auth/session'); // Refresh session
-  router.push(result.data._redirect);
+  await fetch("/api/auth/session") // Refresh session
+  router.push(result.data._redirect)
 }
 ```
 
@@ -805,14 +835,15 @@ export async function createListing(
 ```
 
 **Parameters:**
+
 ```typescript
 interface ListingFormData {
-  name?: string;
-  description?: string;
-  address?: string;
-  domain?: string;
-  maxStudents?: number;
-  maxTeachers?: number;
+  name?: string
+  description?: string
+  address?: string
+  domain?: string
+  maxStudents?: number
+  maxTeachers?: number
   // ... (30+ fields)
 }
 ```
@@ -829,16 +860,17 @@ export async function updateListing(
 ```
 
 **Example:**
+
 ```typescript
 // title/actions.ts
 export async function updateSchoolTitle(schoolId: string, name: string) {
-  const result = await updateListing(schoolId, { name });
+  const result = await updateListing(schoolId, { name })
 
   if (result.success) {
-    revalidatePath(`/onboarding/${schoolId}`);
+    revalidatePath(`/onboarding/${schoolId}`)
   }
 
-  return result;
+  return result
 }
 ```
 
@@ -851,6 +883,7 @@ export async function getListing(id: string): Promise<ActionResponse>
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: true,
@@ -865,6 +898,7 @@ export async function getListing(id: string): Promise<ActionResponse>
 ```
 
 **Security:**
+
 - Verifies `requireSchoolOwnership(id)` before returning data
 - Uses onboarding fallback for 1-hour grace period during setup
 - Returns 403 if user doesn't own the school
@@ -880,6 +914,7 @@ export async function getSchoolSetupStatus(
 ```
 
 **Returns:**
+
 ```typescript
 {
   success: true,
@@ -894,19 +929,20 @@ export async function getSchoolSetupStatus(
 ```
 
 **Logic:**
+
 ```typescript
 const checks = [
   !!school.name && school.name !== "New School",
   !!school.address,
-  !!school.planType?.includes('-'), // Has school description
-  !!school.website?.startsWith('pricing-set-'), // Has pricing
+  !!school.planType?.includes("-"), // Has school description
+  !!school.website?.startsWith("pricing-set-"), // Has pricing
   !!school.maxStudents,
   !!school.maxTeachers,
-];
+]
 
 const completionPercentage = Math.round(
   (checks.filter(Boolean).length / checks.length) * 100
-);
+)
 ```
 
 ### reserveSubdomainForSchool()
@@ -921,6 +957,7 @@ export async function reserveSubdomainForSchool(
 ```
 
 **Validation:**
+
 - Checks subdomain availability
 - Validates format (lowercase, alphanumeric + hyphens)
 - Prevents reserved subdomains (www, api, admin, etc.)
@@ -994,33 +1031,36 @@ Test validation schemas and utility functions:
 
 ```typescript
 // validation.test.ts
-import { describe, it, expect } from 'vitest';
-import { validateStep } from './validation';
+import { describe, expect, it } from "vitest"
 
-describe('Onboarding Validation', () => {
-  it('should validate title step with valid name', () => {
-    const result = validateStep('title', { name: 'Hogwarts School' });
-    expect(result.isValid).toBe(true);
-    expect(result.errors).toEqual({});
-  });
+import { validateStep } from "./validation"
 
-  it('should reject title step with short name', () => {
-    const result = validateStep('title', { name: 'H' });
-    expect(result.isValid).toBe(false);
-    expect(result.errors.name).toContain('at least 2 characters');
-  });
+describe("Onboarding Validation", () => {
+  it("should validate title step with valid name", () => {
+    const result = validateStep("title", { name: "Hogwarts School" })
+    expect(result.isValid).toBe(true)
+    expect(result.errors).toEqual({})
+  })
 
-  it('should validate domain format', () => {
-    const result = validateStep('subdomain', { domain: 'hogwarts-school' });
-    expect(result.isValid).toBe(true);
-  });
+  it("should reject title step with short name", () => {
+    const result = validateStep("title", { name: "H" })
+    expect(result.isValid).toBe(false)
+    expect(result.errors.name).toContain("at least 2 characters")
+  })
 
-  it('should reject invalid domain format', () => {
-    const result = validateStep('subdomain', { domain: 'Hogwarts_123' });
-    expect(result.isValid).toBe(false);
-    expect(result.errors.domain).toContain('lowercase letters, numbers, and hyphens');
-  });
-});
+  it("should validate domain format", () => {
+    const result = validateStep("subdomain", { domain: "hogwarts-school" })
+    expect(result.isValid).toBe(true)
+  })
+
+  it("should reject invalid domain format", () => {
+    const result = validateStep("subdomain", { domain: "Hogwarts_123" })
+    expect(result.isValid).toBe(false)
+    expect(result.errors.domain).toContain(
+      "lowercase letters, numbers, and hyphens"
+    )
+  })
+})
 ```
 
 ### Integration Tests
@@ -1029,37 +1069,39 @@ Test server actions with database:
 
 ```typescript
 // actions.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { initializeSchoolSetup, updateListing } from './actions';
-import { db } from '@/lib/db';
+import { beforeEach, describe, expect, it } from "vitest"
 
-describe('Onboarding Actions', () => {
+import { db } from "@/lib/db"
+
+import { initializeSchoolSetup, updateListing } from "./actions"
+
+describe("Onboarding Actions", () => {
   beforeEach(async () => {
-    await db.school.deleteMany();
-    await db.user.deleteMany();
-  });
+    await db.school.deleteMany()
+    await db.user.deleteMany()
+  })
 
-  it('should create school and link user atomically', async () => {
-    const userId = 'user-123';
-    const result = await initializeSchoolSetup(userId);
+  it("should create school and link user atomically", async () => {
+    const userId = "user-123"
+    const result = await initializeSchoolSetup(userId)
 
-    expect(result.success).toBe(true);
-    expect(result.data.name).toBe('New School');
+    expect(result.success).toBe(true)
+    expect(result.data.name).toBe("New School")
 
     // Verify user is linked
-    const user = await db.user.findUnique({ where: { id: userId } });
-    expect(user.schoolId).toBe(result.data.id);
-    expect(user.role).toBe('ADMIN');
-  });
+    const user = await db.user.findUnique({ where: { id: userId } })
+    expect(user.schoolId).toBe(result.data.id)
+    expect(user.role).toBe("ADMIN")
+  })
 
-  it('should be idempotent - return existing school', async () => {
-    const userId = 'user-123';
-    const result1 = await initializeSchoolSetup(userId);
-    const result2 = await initializeSchoolSetup(userId);
+  it("should be idempotent - return existing school", async () => {
+    const userId = "user-123"
+    const result1 = await initializeSchoolSetup(userId)
+    const result2 = await initializeSchoolSetup(userId)
 
-    expect(result1.data.id).toBe(result2.data.id);
-  });
-});
+    expect(result1.data.id).toBe(result2.data.id)
+  })
+})
 ```
 
 ### E2E Tests (Playwright)
@@ -1068,56 +1110,56 @@ Test complete onboarding flow:
 
 ```typescript
 // onboarding.e2e.ts
-import { test, expect } from '@playwright/test';
+import { expect, test } from "@playwright/test"
 
-test.describe('Onboarding Flow', () => {
-  test('should complete onboarding successfully', async ({ page }) => {
+test.describe("Onboarding Flow", () => {
+  test("should complete onboarding successfully", async ({ page }) => {
     // 1. Start onboarding
-    await page.goto('/onboarding');
-    await page.click('text=Get Started');
+    await page.goto("/onboarding")
+    await page.click("text=Get Started")
 
     // 2. Login
-    await page.fill('input[name="email"]', 'admin@hogwarts.edu');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button[type="submit"]');
+    await page.fill('input[name="email"]', "admin@hogwarts.edu")
+    await page.fill('input[name="password"]', "password123")
+    await page.click('button[type="submit"]')
 
     // 3. Initialize school
-    await page.waitForURL(/\/onboarding\/[^\/]+\/about-school/);
-    await page.click('text=Next');
+    await page.waitForURL(/\/onboarding\/[^\/]+\/about-school/)
+    await page.click("text=Next")
 
     // 4. Title step
-    await page.fill('input[name="name"]', 'Hogwarts School of Witchcraft');
-    await page.click('button:has-text("Next")');
+    await page.fill('input[name="name"]', "Hogwarts School of Witchcraft")
+    await page.click('button:has-text("Next")')
 
     // 5. Description step
-    await page.selectOption('select[name="schoolType"]', 'private');
-    await page.selectOption('select[name="schoolLevel"]', 'both');
-    await page.fill('textarea[name="description"]', 'A magical school...');
-    await page.click('button:has-text("Next")');
+    await page.selectOption('select[name="schoolType"]', "private")
+    await page.selectOption('select[name="schoolLevel"]', "both")
+    await page.fill('textarea[name="description"]', "A magical school...")
+    await page.click('button:has-text("Next")')
 
     // 6. Location step
-    await page.fill('input[name="address"]', '123 Hogwarts Lane');
-    await page.fill('input[name="city"]', 'Hogsmeade');
-    await page.fill('input[name="state"]', 'Scotland');
-    await page.click('button:has-text("Next")');
+    await page.fill('input[name="address"]', "123 Hogwarts Lane")
+    await page.fill('input[name="city"]', "Hogsmeade")
+    await page.fill('input[name="state"]', "Scotland")
+    await page.click('button:has-text("Next")')
 
     // ... Continue through all steps
 
     // 16. Congratulations
-    await page.waitForURL(/\/congratulations/);
-    await expect(page.locator('h1')).toContainText('Congratulations');
-  });
-});
+    await page.waitForURL(/\/congratulations/)
+    await expect(page.locator("h1")).toContainText("Congratulations")
+  })
+})
 ```
 
 ### Test Types Summary
 
-| Test Type | Tool | Coverage | Files |
-|-----------|------|----------|-------|
-| Unit | Vitest | Validation, utils | `*.test.ts` |
-| Integration | Vitest + Prisma | Server actions | `*.integration.test.ts` |
-| E2E | Playwright | Complete flow | `onboarding.e2e.ts` |
-| Visual | Storybook | UI components | `*.stories.tsx` |
+| Test Type   | Tool            | Coverage          | Files                   |
+| ----------- | --------------- | ----------------- | ----------------------- |
+| Unit        | Vitest          | Validation, utils | `*.test.ts`             |
+| Integration | Vitest + Prisma | Server actions    | `*.integration.test.ts` |
+| E2E         | Playwright      | Complete flow     | `onboarding.e2e.ts`     |
+| Visual      | Storybook       | UI components     | `*.stories.tsx`         |
 
 ---
 
@@ -1130,6 +1172,7 @@ Common issues and solutions.
 **Cause:** TypeScript errors in onboarding components.
 
 **Fix:**
+
 ```bash
 # Check for errors
 pnpm tsc --noEmit
@@ -1145,16 +1188,17 @@ pnpm tsc --noEmit
 **Cause:** Session not refreshed after atomic transaction.
 
 **Fix:**
+
 ```typescript
 // Client-side after initializeSchoolSetup
-const result = await initializeSchoolSetup();
+const result = await initializeSchoolSetup()
 
 if (result.success && result.data._sessionRefreshRequired) {
   // REQUIRED: Refresh session
-  await fetch('/api/auth/session', { method: 'GET' });
+  await fetch("/api/auth/session", { method: "GET" })
 
   // Now navigate
-  router.push(result.data._redirect);
+  router.push(result.data._redirect)
 }
 ```
 
@@ -1163,13 +1207,17 @@ if (result.success && result.data._sessionRefreshRequired) {
 **Cause:** User trying to access school they don't own.
 
 **Fix:**
+
 ```typescript
 // Verify ownership before mutation
-export async function updateListing(id: string, data: Partial<ListingFormData>) {
-  await requireSchoolOwnership(id); // Throws TenantError if not owner
+export async function updateListing(
+  id: string,
+  data: Partial<ListingFormData>
+) {
+  await requireSchoolOwnership(id) // Throws TenantError if not owner
 
   // Proceed with update
-  await db.school.update({ where: { id }, data });
+  await db.school.update({ where: { id }, data })
 }
 ```
 
@@ -1178,20 +1226,21 @@ export async function updateListing(id: string, data: Partial<ListingFormData>) 
 **Cause:** Another school reserved the subdomain.
 
 **Fix:**
+
 ```typescript
 // Check availability before reservation
 const existing = await db.school.findFirst({
-  where: { domain: subdomain }
-});
+  where: { domain: subdomain },
+})
 
 if (existing) {
   return {
     success: false,
     error: {
       message: `Domain "${subdomain}" is already taken`,
-      code: 'DOMAIN_TAKEN'
-    }
-  };
+      code: "DOMAIN_TAKEN",
+    },
+  }
 }
 ```
 
@@ -1200,17 +1249,18 @@ if (existing) {
 **Cause:** Missing `revalidatePath()` after mutation.
 
 **Fix:**
+
 ```typescript
 export async function updateSchoolTitle(schoolId: string, name: string) {
   await db.school.update({
     where: { id: schoolId },
-    data: { name }
-  });
+    data: { name },
+  })
 
   // REQUIRED: Revalidate cache
-  revalidatePath(`/onboarding/${schoolId}`);
+  revalidatePath(`/onboarding/${schoolId}`)
 
-  return { success: true };
+  return { success: true }
 }
 ```
 
@@ -1219,6 +1269,7 @@ export async function updateSchoolTitle(schoolId: string, name: string) {
 **Cause:** Missing translation key in dictionary.
 
 **Fix:**
+
 ```typescript
 // Always provide fallback
 const label = dictionary?.onboarding?.title?.label || 'School Name';
@@ -1253,19 +1304,19 @@ Update UI immediately before server confirmation:
 export function useListing() {
   const updateListing = async (data: Partial<OnboardingSchoolData>) => {
     // Optimistic update
-    setListing(prev => ({ ...prev, ...data }));
+    setListing((prev) => ({ ...prev, ...data }))
 
     try {
-      const response = await updateListingAction(schoolId, data);
+      const response = await updateListingAction(schoolId, data)
       if (!response.success) {
         // Rollback on error
-        await refreshListing();
+        await refreshListing()
       }
     } catch (error) {
       // Rollback on error
-      await refreshListing();
+      await refreshListing()
     }
-  };
+  }
 }
 ```
 
@@ -1275,23 +1326,23 @@ Load next step data in background:
 
 ```typescript
 export function HostFooter() {
-  const nextStep = getNextStep(currentStep);
+  const nextStep = getNextStep(currentStep)
 
   useEffect(() => {
     // Prefetch next step component
-    router.prefetch(`/onboarding/${schoolId}/${nextStep}`);
-  }, [nextStep]);
+    router.prefetch(`/onboarding/${schoolId}/${nextStep}`)
+  }, [nextStep])
 }
 ```
 
 ### Performance Targets
 
-| Metric | Target | Actual |
-|--------|--------|--------|
-| Initial Load | < 2s | 1.8s |
-| Step Navigation | < 500ms | 420ms |
-| Form Submit | < 1s | 850ms |
-| Data Persistence | < 2s | 1.5s |
+| Metric           | Target  | Actual |
+| ---------------- | ------- | ------ |
+| Initial Load     | < 2s    | 1.8s   |
+| Step Navigation  | < 500ms | 420ms  |
+| Form Submit      | < 1s    | 850ms  |
+| Data Persistence | < 2s    | 1.5s   |
 
 ---
 

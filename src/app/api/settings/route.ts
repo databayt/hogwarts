@@ -20,14 +20,14 @@
  * @see School model for current school-level settings
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 
 export async function POST() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 // import { NextRequest, NextResponse } from "next/server";
 // import { connectDB } from "@/lib/connectDB";

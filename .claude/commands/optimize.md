@@ -15,6 +15,7 @@ Optimize: $1
    - Caching strategies
 
 Provide:
+
 - Issues found
 - Optimization recommendations
 - Expected impact

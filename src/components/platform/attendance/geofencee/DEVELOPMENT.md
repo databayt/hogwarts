@@ -93,6 +93,7 @@ pnpm dev
 ```
 
 **Expected Output**:
+
 ```
 ✅ Connected to PostgreSQL for LISTEN/NOTIFY
 🚀 Server ready on http://localhost:3000
@@ -181,15 +182,18 @@ git checkout -b feature/geo-add-polygon-editing
 #### 3. Make Changes
 
 **Recommended Order**:
+
 1. **Write test first** (TDD approach)
+
    ```typescript
    // geo-service.test.ts
-   it('should detect polygon geofence', async () => {
+   it("should detect polygon geofence", async () => {
      // ... test code
    })
    ```
 
 2. **Implement feature**
+
    ```typescript
    // geo-service.ts
    export async function checkPolygonGeofence(...) {
@@ -198,6 +202,7 @@ git checkout -b feature/geo-add-polygon-editing
    ```
 
 3. **Run tests**
+
    ```bash
    pnpm test src/lib/geo-service.test.ts
    ```
@@ -246,6 +251,7 @@ git push origin feature/geo-add-polygon-editing
 ```
 
 **Conventional Commit Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -275,10 +281,10 @@ git push origin feature/geo-add-polygon-editing
 // src/app/api/geo/location/route.ts
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  console.log('📍 Location received:', body)
+  console.log("📍 Location received:", body)
 
   const result = await submitLocation(body)
-  console.log('✅ Location saved:', result)
+  console.log("✅ Location saved:", result)
 
   return NextResponse.json(result)
 }
@@ -311,6 +317,7 @@ export async function POST(req: NextRequest) {
 ```
 
 **Usage**:
+
 1. Set breakpoint in `route.ts`
 2. Press F5 → Select "Next.js: debug server-side"
 3. Submit location from browser
@@ -390,12 +397,12 @@ curl -X POST http://localhost:3000/api/geo/location ...
 
 ```javascript
 // Open browser console (F12)
-const ws = new WebSocket('ws://localhost:3000/api/geo/ws')
+const ws = new WebSocket("ws://localhost:3000/api/geo/ws")
 
-ws.onopen = () => console.log('🔌 WebSocket connected')
-ws.onmessage = (e) => console.log('📨 Received:', JSON.parse(e.data))
-ws.onerror = (e) => console.error('❌ WebSocket error:', e)
-ws.onclose = () => console.log('🔌 WebSocket disconnected')
+ws.onopen = () => console.log("🔌 WebSocket connected")
+ws.onmessage = (e) => console.log("📨 Received:", JSON.parse(e.data))
+ws.onerror = (e) => console.error("❌ WebSocket error:", e)
+ws.onclose = () => console.log("🔌 WebSocket disconnected")
 ```
 
 ### Debug Database Queries
@@ -406,11 +413,12 @@ ws.onclose = () => console.log('🔌 WebSocket disconnected')
 
 ```typescript
 export const db = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
+  log: ["query", "info", "warn", "error"],
 })
 ```
 
 **Output** (in terminal):
+
 ```
 prisma:query SELECT * FROM geo_fences WHERE school_id = $1 [school_123]
 prisma:info Query took 12ms
@@ -421,7 +429,7 @@ prisma:info Query took 12ms
 ```typescript
 // In geo-service.ts
 const geofences = await db.geoFence.findMany({
-  where: { schoolId, isActive: true }
+  where: { schoolId, isActive: true },
 })
 
 // Prisma generates SQL:
@@ -429,6 +437,7 @@ const geofences = await db.geoFence.findMany({
 ```
 
 **Manually Test SQL**:
+
 ```bash
 # Open Prisma Studio
 pnpm prisma studio
@@ -452,10 +461,11 @@ const result = await db.$queryRaw`
     ) as inside
 `
 
-console.log('📍 Point inside polygon:', result[0].inside)
+console.log("📍 Point inside polygon:", result[0].inside)
 ```
 
 **Explain Query Plan**:
+
 ```sql
 EXPLAIN ANALYZE
 SELECT
@@ -556,27 +566,27 @@ export function MyComponent({ dictionary, lang }: Props) { ... }
 #### Follow Pattern
 
 ```typescript
-'use server' // MUST be first line
+"use server" // MUST be first line
 
 export async function myAction(input: ActionInput) {
   // 1. Auth check
   const session = await auth()
-  if (!session?.user) throw new Error('Unauthorized')
+  if (!session?.user) throw new Error("Unauthorized")
 
   // 2. Tenant context
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) throw new Error("Missing school context")
 
   // 3. Validation
   const validated = schema.parse(input)
 
   // 4. Execute with schoolId
   await db.model.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   // 5. Revalidate
-  revalidatePath('/path')
+  revalidatePath("/path")
 
   return { success: true as const }
 }
@@ -588,13 +598,13 @@ export async function myAction(input: ActionInput) {
 
 ```typescript
 // Lowercase with hyphens
-geo-service.ts
-live-map.tsx
-use-geolocation.ts
+geo - service.ts
+live - map.tsx
+use - geolocation.ts
 
 // Test files
-geo-service.test.ts
-live-map.test.tsx
+geo - service.test.ts
+live - map.test.tsx
 ```
 
 #### Components
@@ -627,22 +637,20 @@ export const MAX_ACCURACY = 50
 
 ```typescript
 // 1. React
-import { useState, useEffect } from 'react'
-
+import { useEffect, useState } from "react"
 // 2. Next.js
-import { NextRequest, NextResponse } from 'next/server'
-
-// 3. Third-party libraries
-import { z } from 'zod'
-
+import { NextRequest, NextResponse } from "next/server"
 // 4. Internal imports (sorted by path)
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { Button } from '@/components/ui/button'
-import { calculateDistance } from './geo-service'
+import { auth } from "@/auth"
+// 3. Third-party libraries
+import { z } from "zod"
 
+import { db } from "@/lib/db"
+import { Button } from "@/components/ui/button"
+
+import { calculateDistance } from "./geo-service"
 // 5. Types
-import type { Coordinates } from './types'
+import type { Coordinates } from "./types"
 ```
 
 ---
@@ -652,11 +660,13 @@ import type { Coordinates } from './types'
 ### Issue 1: "PostGIS extension not found"
 
 **Symptom**:
+
 ```
 Error: function st_geomfromgeojson does not exist
 ```
 
 **Solution**:
+
 ```sql
 -- In Neon console or psql
 CREATE EXTENSION IF NOT EXISTS postgis;
@@ -666,9 +676,11 @@ SELECT PostGIS_version(); -- Verify installation
 ### Issue 2: "Geolocation not supported"
 
 **Symptom**:
+
 - Browser console: `navigator.geolocation is undefined`
 
 **Solution**:
+
 1. Use HTTPS (required for Geolocation API)
    - Development: Use `localhost` (HTTP allowed)
    - Production: Must use HTTPS
@@ -679,13 +691,14 @@ SELECT PostGIS_version(); -- Verify installation
 3. Test browser compatibility:
    ```javascript
    if (!navigator.geolocation) {
-     alert('Geolocation not supported. Use Chrome/Safari/Firefox.')
+     alert("Geolocation not supported. Use Chrome/Safari/Firefox.")
    }
    ```
 
 ### Issue 3: WebSocket connection fails
 
 **Symptom**:
+
 ```
 WebSocket connection to 'ws://localhost:3000/api/geo/ws' failed
 ```
@@ -693,12 +706,14 @@ WebSocket connection to 'ws://localhost:3000/api/geo/ws' failed
 **Solution**:
 
 1. Verify custom server is running:
+
    ```bash
    # Check terminal output
    # Should see: 🔌 WebSocket server ready on ws://localhost:3000/api/geo/ws
    ```
 
 2. Check `package.json` script:
+
    ```json
    {
      "scripts": {
@@ -715,23 +730,26 @@ WebSocket connection to 'ws://localhost:3000/api/geo/ws' failed
 ### Issue 4: Rate limiting blocks all requests
 
 **Symptom**:
+
 - HTTP 429 Too Many Requests on every location submission
 
 **Solution**:
 
 1. Clear rate limit cache:
+
    ```typescript
    // In src/lib/rate-limit.ts
    export const rateLimitStore = new Map() // This is in-memory, restart server to clear
    ```
 
 2. Adjust rate limit (development only):
+
    ```typescript
    export const RATE_LIMITS = {
      GEO_LOCATION: {
        windowMs: 10000,
-       maxRequests: 100 // Increase for development
-     }
+       maxRequests: 100, // Increase for development
+     },
    }
    ```
 
@@ -744,6 +762,7 @@ WebSocket connection to 'ws://localhost:3000/api/geo/ws' failed
 ### Issue 5: "Cannot find module 'leaflet'"
 
 **Symptom**:
+
 ```
 Module not found: Can't resolve 'leaflet'
 ```
@@ -751,20 +770,22 @@ Module not found: Can't resolve 'leaflet'
 **Solution**:
 
 1. Install dependencies:
+
    ```bash
    pnpm add leaflet react-leaflet @types/leaflet
    ```
 
 2. Import Leaflet CSS:
+
    ```typescript
    // In app/layout.tsx or component
-   import 'leaflet/dist/leaflet.css'
+   import "leaflet/dist/leaflet.css"
    ```
 
 3. Use dynamic import (avoid SSR issues):
    ```typescript
    const MapContainer = dynamic(
-     () => import('react-leaflet').then(mod => mod.MapContainer),
+     () => import("react-leaflet").then((mod) => mod.MapContainer),
      { ssr: false }
    )
    ```
@@ -772,11 +793,13 @@ Module not found: Can't resolve 'leaflet'
 ### Issue 6: Prisma client not generated
 
 **Symptom**:
+
 ```
 Error: @prisma/client did not initialize yet
 ```
 
 **Solution**:
+
 ```bash
 # Generate Prisma client
 pnpm prisma generate
@@ -789,6 +812,7 @@ ls node_modules/.prisma/client
 ### Issue 7: Database connection timeout
 
 **Symptom**:
+
 ```
 Error: Can't reach database server at `host.neon.tech:5432`
 ```
@@ -796,12 +820,14 @@ Error: Can't reach database server at `host.neon.tech:5432`
 **Solution**:
 
 1. Check `DATABASE_URL` in `.env.local`:
+
    ```bash
    echo $DATABASE_URL
    # Should be: postgresql://user:pass@host.neon.tech/dbname?sslmode=require
    ```
 
 2. Test connection manually:
+
    ```bash
    psql $DATABASE_URL
    # Should connect successfully
@@ -814,6 +840,7 @@ Error: Can't reach database server at `host.neon.tech:5432`
 ### Issue 8: TypeScript errors in components
 
 **Symptom**:
+
 ```
 Type 'string | null' is not assignable to type 'string'
 ```
@@ -821,13 +848,14 @@ Type 'string | null' is not assignable to type 'string'
 **Solution**:
 
 1. Handle null values:
+
    ```typescript
    // ❌ BAD
    const name: string = student.name // Error if name is nullable
 
    // ✅ GOOD
-   const name = student.name || 'Unknown'
-   const name = student.name ?? 'Unknown'
+   const name = student.name || "Unknown"
+   const name = student.name ?? "Unknown"
    ```
 
 2. Use type guards:
@@ -865,8 +893,8 @@ const mockGeolocation = {
       coords: {
         latitude: 24.7136,
         longitude: 46.6753,
-        accuracy: 10
-      }
+        accuracy: 10,
+      },
     })
   },
   watchPosition: (success) => {
@@ -875,18 +903,18 @@ const mockGeolocation = {
         coords: {
           latitude: 24.7136 + Math.random() * 0.001,
           longitude: 46.6753 + Math.random() * 0.001,
-          accuracy: 10
-        }
+          accuracy: 10,
+        },
       })
     }, 5000)
     return 1 // watchId
   },
-  clearWatch: (id) => {}
+  clearWatch: (id) => {},
 }
 
-if (process.env.NEXT_PUBLIC_MOCK_GEOLOCATION === 'true') {
-  Object.defineProperty(navigator, 'geolocation', {
-    value: mockGeolocation
+if (process.env.NEXT_PUBLIC_MOCK_GEOLOCATION === "true") {
+  Object.defineProperty(navigator, "geolocation", {
+    value: mockGeolocation,
   })
 }
 ```

@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
 /**
  * Featured logs and metrics lab
  */
+import { Activity, AlertTriangle, Clock } from "lucide-react"
 
-import { LogCard, MetricCard, HealthStatusCard } from "./card";
-import { Activity, AlertTriangle, Clock } from "lucide-react";
-import type { UnifiedLog, MetricValue } from "./types";
-import { formatRelativeTime } from "./util";
+import { HealthStatusCard, LogCard, MetricCard } from "./card"
+import type { MetricValue, UnifiedLog } from "./types"
+import { formatRelativeTime } from "./util"
 
 interface FeaturedLogsProps {
-  logs: UnifiedLog[];
-  maxItems?: number;
+  logs: UnifiedLog[]
+  maxItems?: number
 }
 
 export function FeaturedLogs({ logs, maxItems = 10 }: FeaturedLogsProps) {
-  const recentLogs = logs.slice(0, maxItems);
+  const recentLogs = logs.slice(0, maxItems)
 
   return (
     <div className="space-y-4">
@@ -26,22 +26,22 @@ export function FeaturedLogs({ logs, maxItems = 10 }: FeaturedLogsProps) {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 export function ErrorLogs({ logs }: { logs: UnifiedLog[] }) {
-  const errorLogs = logs.filter((log) => log.level === "error").slice(0, 5);
+  const errorLogs = logs.filter((log) => log.level === "error").slice(0, 5)
 
   if (errorLogs.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-green-500/10 mx-auto">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-500/10">
           <Activity className="size-6 text-green-600" />
         </div>
         <h5 className="mt-4">No errors</h5>
         <p className="muted mt-2">System running smoothly</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -55,30 +55,37 @@ export function ErrorLogs({ logs }: { logs: UnifiedLog[] }) {
       </div>
       <div className="space-y-2">
         {errorLogs.map((log) => (
-          <div key={log.id} className="rounded-lg border border-red-200 bg-red-50/50 dark:bg-red-950/10 p-3">
+          <div
+            key={log.id}
+            className="rounded-lg border border-red-200 bg-red-50/50 p-3 dark:bg-red-950/10"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <h6>{log.action}</h6>
                 <small className="muted">{log.userEmail || log.userId}</small>
               </div>
-              <small className="muted">{formatRelativeTime(log.createdAt)}</small>
+              <small className="muted">
+                {formatRelativeTime(log.createdAt)}
+              </small>
             </div>
-            {log.reason && <p className="muted mt-2 line-clamp-2">{log.reason}</p>}
+            {log.reason && (
+              <p className="muted mt-2 line-clamp-2">{log.reason}</p>
+            )}
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 export function MetricsOverview({
   metrics,
 }: {
   metrics: {
-    cpu: MetricValue;
-    memory: MetricValue;
-    requests: MetricValue;
-  };
+    cpu: MetricValue
+    memory: MetricValue
+    requests: MetricValue
+  }
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -86,21 +93,18 @@ export function MetricsOverview({
       <MetricCard title="Memory" metric={metrics.memory} icon={Activity} />
       <MetricCard title="Requests/min" metric={metrics.requests} icon={Clock} />
     </div>
-  );
+  )
 }
 
 export function ObservabilityDashboard({ logs }: { logs: UnifiedLog[] }) {
   return (
     <div className="space-y-6">
-      <HealthStatusCard
-        status="healthy"
-        message="All systems operational"
-      />
+      <HealthStatusCard status="healthy" message="All systems operational" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <FeaturedLogs logs={logs} />
         <ErrorLogs logs={logs} />
       </div>
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { TrendingUp } from "lucide-react";
-import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
+import { TrendingUp } from "lucide-react"
+import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
 
 import {
   Card,
@@ -10,13 +10,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/ui/chart"
 
 const chartData = [
   { month: "January", desktop: 186 },
@@ -25,18 +25,18 @@ const chartData = [
   { month: "April", desktop: 273 },
   { month: "May", desktop: 209 },
   { month: "June", desktop: 214 },
-];
+]
 
 const chartConfig = {
   desktop: {
     label: "Desktop",
     color: "hsl(var(--chart-1))",
   },
-} satisfies ChartConfig;
+} satisfies ChartConfig
 
 export function RadarChartSimple() {
   return (
-    <Card className="border-none shadow-none bg-muted">
+    <Card className="bg-muted border-none shadow-none">
       {/* <CardHeader className="items-center pb-4">
         <CardTitle>Radar Chart</CardTitle>
         <CardDescription>
@@ -60,14 +60,14 @@ export function RadarChartSimple() {
           </RadarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
+        <div className="flex items-center gap-2 leading-none font-medium">
           Trending up by 5.2% this month <TrendingUp className="size-4" />
         </div>
-        <div className="leading-none text-muted-foreground">
+        <div className="text-muted-foreground leading-none">
           January - June 2024
         </div>
       </CardFooter>
     </Card>
-  );
+  )
 }

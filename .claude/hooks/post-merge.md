@@ -9,6 +9,7 @@ Handles cleanup, dependency updates, and validation after branch merges.
 ## Execution Flow
 
 ### 1. Detect Merge Conflicts Resolution
+
 ```bash
 # Check if we just resolved conflicts
 if [ -f .git/MERGE_HEAD ]; then
@@ -23,6 +24,7 @@ fi
 ```
 
 ### 2. Validate Merged Code
+
 ```bash
 # Full validation suite
 echo "🔍 Validating merged code..."
@@ -42,6 +44,7 @@ fi
 ```
 
 ### 3. Deduplicate Dependencies
+
 ```bash
 # Check for duplicate dependencies
 if [ -f pnpm-lock.yaml ]; then
@@ -59,6 +62,7 @@ fi
 ```
 
 ### 4. Reconcile Database Migrations
+
 ```bash
 # Check for multiple new migrations
 MIGRATIONS=$(git diff HEAD~1 --name-only | grep "prisma/migrations/" | wc -l)
@@ -74,6 +78,7 @@ fi
 ```
 
 ### 5. Merge Feature Documentation
+
 ```bash
 # Detect documentation from both branches
 if git diff HEAD~1 --name-only | grep -q "^docs/"; then
@@ -94,6 +99,7 @@ fi
 ```
 
 ### 6. Update Test Coverage
+
 ```bash
 # Run tests to ensure merge didn't break anything
 echo "🧪 Running tests..."
@@ -108,6 +114,7 @@ fi
 ```
 
 ### 7. Clean Temporary Files
+
 ```bash
 # Remove merge artifacts
 echo "🧹 Cleaning up..."
@@ -117,6 +124,7 @@ find . -name "*.rej" -delete
 ```
 
 ### 8. Update Feature Flags
+
 ```bash
 # Check for feature flag changes
 if git diff HEAD~1 --name-only | grep -qE "(feature-flags|config)\.ts"; then
@@ -156,6 +164,7 @@ fi
 ## Conflict Resolution Helpers
 
 ### Smart Merge for Package.json
+
 ```javascript
 // Automatically resolves version conflicts
 {
@@ -167,6 +176,7 @@ fi
 ```
 
 ### Migration Ordering
+
 ```bash
 # Reorder migrations if needed
 if [ -f .migration-conflict ]; then
@@ -176,6 +186,7 @@ fi
 ```
 
 ### Style Conflict Resolution
+
 ```bash
 # Prettier format all files to resolve style conflicts
 git diff --name-only --diff-filter=U | xargs pnpm prettier --write
@@ -219,16 +230,19 @@ Warnings: 1 (duplicate docs section)
 ## Branch-Specific Behavior
 
 ### Main Branch Merge
+
 - Full test suite execution
 - Production build validation
 - Deployment readiness check
 
 ### Feature Branch Merge
+
 - Quick validation only
 - Dependency deduplication
 - Documentation merge
 
 ### Hotfix Merge
+
 - Immediate test execution
 - Version bump check
 - Changelog update

@@ -7,6 +7,7 @@
 ## 1. CORE MODULE - Foundation Features
 
 ### Student Management
+
 - **Student Registration**
   - Create and manage student profiles
   - Assign unique GR (General Register) numbers
@@ -33,6 +34,7 @@
   - Health records management
 
 ### Course Management
+
 - **Course Creation**
   - Define course name, code, and description
   - Set course duration
@@ -50,6 +52,7 @@
   - Batch-wise student lists
 
 ### Faculty Management
+
 - **Faculty Profiles**
   - Personal information management
   - Qualification tracking
@@ -66,6 +69,7 @@
   - Workload distribution
 
 ### Subject Management
+
 - **Subject Creation**
   - Subject name and code
   - Credit hours allocation
@@ -80,6 +84,7 @@
   - Credit limit validation
 
 ### Department Management
+
 - **Department Structure**
   - Department creation with code and name
   - Department head assignment
@@ -88,6 +93,7 @@
   - Department programs management
 
 ### Academic Calendar
+
 - **Academic Year**
   - Define academic year with start and end dates
   - Set current academic year
@@ -100,6 +106,7 @@
   - Term-wise course planning
 
 ### Additional Core Features
+
 - **Student Categories** - Classification of students (Regular, Part-time, Distance)
 - **Programs** - Degree program management (Bachelor's, Master's, PhD)
 - **Classroom Management** - Physical classroom allocation
@@ -111,6 +118,7 @@
 ## 2. ADMISSION MODULE - Application & Enrollment Features
 
 ### Application Management
+
 - **Online Application Forms**
   - Customizable application forms
   - Multiple course applications
@@ -128,6 +136,7 @@
   - Application history tracking
 
 ### Admission Campaigns
+
 - **Admission Registers**
   - Create admission campaigns for different programs
   - Set application start and end dates
@@ -137,6 +146,7 @@
   - Campaign status management
 
 ### Merit & Selection
+
 - **Merit List Generation**
   - Automatic merit calculation
   - Custom merit criteria
@@ -154,6 +164,7 @@
   - Seat cancellation handling
 
 ### Admission Workflow
+
 - **Application States**
   - Draft applications
   - Submitted for review
@@ -164,6 +175,7 @@
   - Admission cancelled
 
 ### Post-Admission
+
 - **Student Creation**
   - Automatic student record generation
   - GR number assignment
@@ -178,6 +190,7 @@
   - Payment tracking
 
 ### Reporting & Analytics
+
 - **Admission Statistics**
   - Application count by course
   - Conversion rate analysis
@@ -192,6 +205,7 @@
 ## 3. ASSIGNMENT MODULE - Coursework Management Features
 
 ### Assignment Creation
+
 - **Assignment Setup**
   - Create assignments with title and description
   - Set submission deadlines
@@ -211,6 +225,7 @@
   - Online assignments
 
 ### Assignment Distribution
+
 - **Assignment Allocation**
   - Assign to specific courses
   - Batch-wise assignment
@@ -220,6 +235,7 @@
   - Assignment templates
 
 ### Submission Management
+
 - **Student Submissions**
   - Online submission portal
   - File upload support
@@ -238,6 +254,7 @@
   - Download all submissions
 
 ### Evaluation & Grading
+
 - **Assignment Evaluation**
   - Online evaluation interface
   - Marks/grades entry
@@ -254,6 +271,7 @@
   - Grade distribution analysis
 
 ### Communication
+
 - **Notifications**
   - Assignment announcement
   - Deadline reminders
@@ -266,6 +284,7 @@
 ## 4. ATTENDANCE MODULE - Attendance Tracking Features
 
 ### Attendance Recording
+
 - **Daily Attendance**
   - Mark daily attendance
   - Period-wise attendance
@@ -284,6 +303,7 @@
   - Holiday
 
 ### Attendance Sheets
+
 - **Sheet Management**
   - Create attendance sheets
   - Course-wise sheets
@@ -293,6 +313,7 @@
   - Attendance register maintenance
 
 ### Leave Management
+
 - **Leave Requests**
   - Student leave applications
   - Leave approval workflow
@@ -302,6 +323,7 @@
   - Emergency leave handling
 
 ### Attendance Analytics
+
 - **Attendance Calculation**
   - Percentage calculation
   - Monthly attendance summary
@@ -319,6 +341,7 @@
   - Faculty workload reports
 
 ### Notifications
+
 - **Attendance Alerts**
   - Low attendance warnings
   - Parent notifications for absence
@@ -328,6 +351,7 @@
   - Monthly attendance summary to parents
 
 ### Special Features
+
 - **Biometric Integration** - Support for fingerprint/card attendance
 - **Geo-location Tracking** - Location-based attendance
 - **QR Code Attendance** - Quick scan attendance marking
@@ -338,6 +362,7 @@
 ## 5. CLASSROOM MODULE - Infrastructure Management Features
 
 ### Classroom Management
+
 - **Classroom Setup**
   - Define classroom name and code
   - Set seating capacity
@@ -347,6 +372,7 @@
   - Accessibility features
 
 ### Asset Management
+
 - **Classroom Assets**
   - Track classroom equipment (projectors, boards, computers)
   - Asset condition monitoring
@@ -356,6 +382,7 @@
   - Asset requisition
 
 ### Facility Management
+
 - **Facilities Tracking**
   - Air conditioning
   - Audio-visual equipment
@@ -365,6 +392,7 @@
   - Furniture inventory
 
 ### Allocation & Scheduling
+
 - **Room Allocation**
   - Timetable integration
   - Exam hall allocation
@@ -374,6 +402,7 @@
   - Optimal utilization tracking
 
 ### Maintenance
+
 - **Maintenance Management**
   - Maintenance requests
   - Scheduled maintenance
@@ -387,6 +416,7 @@
 ## 6. EXAM MODULE - Complete Examination Management Features
 
 ### Exam Planning
+
 - **Exam Creation**
   - Define exam name and code
   - Set exam dates and times
@@ -406,6 +436,7 @@
   - Improvement exams
 
 ### Exam Scheduling
+
 - **Timetable Creation**
   - Date-wise exam schedule
   - Time slot management
@@ -421,6 +452,7 @@
   - Session timing
 
 ### Venue Management
+
 - **Exam Centers**
   - Define exam halls/rooms
   - Set hall capacity
@@ -436,6 +468,7 @@
   - Hall-wise seating lists
 
 ### Student Management
+
 - **Hall Tickets**
   - Hall ticket generation
   - Photo and signature inclusion
@@ -451,6 +484,7 @@
   - Debarred students list
 
 ### Invigilation
+
 - **Invigilator Assignment**
   - Faculty duty allocation
   - Duty roster creation
@@ -460,6 +494,7 @@
   - Attendance tracking
 
 ### Evaluation
+
 - **Marks Entry**
   - Online marks entry portal
   - Subject-wise marks entry
@@ -477,6 +512,7 @@
   - Double evaluation
 
 ### Grading System
+
 - **Grade Configuration**
   - Percentage to grade mapping
   - GPA calculation
@@ -493,6 +529,7 @@
   - Class/Division
 
 ### Results
+
 - **Result Processing**
   - Result compilation
   - Subject-wise results
@@ -510,6 +547,7 @@
   - Pass certificates
 
 ### Analysis & Reports
+
 - **Result Analysis**
   - Pass percentage
   - Subject-wise analysis
@@ -525,6 +563,7 @@
   - Performance trends
 
 ### Re-examination
+
 - **Supplementary Exams**
   - Eligibility checking
   - Application process
@@ -537,6 +576,7 @@
 ## 7. ACTIVITY MODULE - Co-curricular Management Features
 
 ### Activity Management
+
 - **Activity Creation**
   - Define activity name and description
   - Set activity type
@@ -556,6 +596,7 @@
   - Field trips
 
 ### Participation
+
 - **Student Registration**
   - Online registration
   - Team formation
@@ -565,6 +606,7 @@
   - Attendance tracking
 
 ### Achievement Tracking
+
 - **Performance Records**
   - Competition results
   - Awards and medals
@@ -574,6 +616,7 @@
   - Achievement certificates
 
 ### Activity Calendar
+
 - **Event Scheduling**
   - Annual activity calendar
   - Monthly schedules
@@ -586,6 +629,7 @@
 ## 8. FACILITY MODULE - Resource Management Features
 
 ### Facility Definition
+
 - **Facility Types**
   - Laboratories
   - Sports facilities
@@ -597,6 +641,7 @@
   - Hostels
 
 ### Facility Allocation
+
 - **Booking System**
   - Online booking portal
   - Availability checking
@@ -606,6 +651,7 @@
   - Cancellation handling
 
 ### Usage Tracking
+
 - **Utilization Monitoring**
   - Usage statistics
   - Peak hour analysis
@@ -618,6 +664,7 @@
 ## 9. FEES MODULE - Financial Management Features
 
 ### Fee Structure
+
 - **Fee Configuration**
   - Course-wise fee setup
   - Category-wise fees
@@ -638,6 +685,7 @@
   - Miscellaneous fees
 
 ### Payment Terms
+
 - **Payment Scheduling**
   - Installment options
   - Payment deadlines
@@ -647,6 +695,7 @@
   - Auto-calculation of dues
 
 ### Fee Collection
+
 - **Payment Processing**
   - Multiple payment modes (Cash, Cheque, Online)
   - Online payment gateway integration
@@ -664,6 +713,7 @@
   - Duplicate receipts
 
 ### Discounts & Scholarships
+
 - **Discount Management**
   - Merit-based discounts
   - Need-based discounts
@@ -673,6 +723,7 @@
   - Scholarship tracking
 
 ### Outstanding Management
+
 - **Dues Tracking**
   - Student-wise outstanding
   - Course-wise outstanding
@@ -682,6 +733,7 @@
   - Outstanding certificates
 
 ### Refunds
+
 - **Refund Processing**
   - Refund applications
   - Refund calculation
@@ -691,6 +743,7 @@
   - Refund reports
 
 ### Financial Reports
+
 - **Collection Reports**
   - Daily collection reports
   - Monthly fee collection
@@ -708,6 +761,7 @@
   - Department-wise collection
 
 ### Integration
+
 - **Accounting Integration**
   - General ledger posting
   - Account receivables
@@ -720,6 +774,7 @@
 ## 10. LIBRARY MODULE - Complete Library Management Features
 
 ### Catalog Management
+
 - **Book/Media Management**
   - Add books with ISBN
   - Title, author, publisher details
@@ -742,6 +797,7 @@
   - Thesis/Dissertations
 
 ### Inventory
+
 - **Stock Management**
   - Multiple copies tracking
   - Unique barcode for each copy
@@ -752,6 +808,7 @@
   - New arrivals section
 
 ### Circulation
+
 - **Issue Process**
   - Barcode scanning
   - Manual issue option
@@ -777,6 +834,7 @@
   - Auto-renewal option
 
 ### Reservation System
+
 - **Book Reservation**
   - Online reservation
   - Queue management
@@ -786,6 +844,7 @@
   - Cancellation option
 
 ### Library Cards
+
 - **Membership Management**
   - Library card generation
   - Card types (Student, Faculty, Guest)
@@ -796,6 +855,7 @@
   - Temporary cards
 
 ### Fine Management
+
 - **Fine Calculation**
   - Day-wise fine rates
   - Book-type based fines
@@ -805,6 +865,7 @@
   - Fine reports
 
 ### Digital Library
+
 - **E-Resource Management**
   - E-book catalog
   - PDF uploads
@@ -814,6 +875,7 @@
   - Online reading
 
 ### Search & Discovery
+
 - **Search Features**
   - Title search
   - Author search
@@ -824,6 +886,7 @@
   - Tag-based search
 
 ### Reports & Analytics
+
 - **Circulation Reports**
   - Daily issue/return reports
   - Most borrowed books
@@ -840,6 +903,7 @@
   - Annual statistics
 
 ### Special Features
+
 - **Book Suggestions** - Student book request system
 - **Book Reviews** - Rating and review system
 - **Reading Lists** - Course-wise recommended books
@@ -851,6 +915,7 @@
 ## 11. PARENT MODULE - Parent Portal Features
 
 ### Parent Registration
+
 - **Account Creation**
   - Parent profile creation
   - Multiple children linking
@@ -860,6 +925,7 @@
   - Emergency contact setup
 
 ### Student Information Access
+
 - **Academic Viewing**
   - View child's courses
   - Current semester details
@@ -876,6 +942,7 @@
   - Assignment scores
 
 ### Attendance Monitoring
+
 - **Attendance Access**
   - Daily attendance status
   - Monthly attendance summary
@@ -885,6 +952,7 @@
   - Low attendance alerts
 
 ### Fee Information
+
 - **Fee Tracking**
   - Fee structure viewing
   - Payment history
@@ -894,6 +962,7 @@
   - Payment reminders
 
 ### Communication
+
 - **Interaction Features**
   - Message teachers
   - View announcements
@@ -903,6 +972,7 @@
   - Complaint registration
 
 ### Reports & Documents
+
 - **Document Access**
   - Download report cards
   - Progress reports
@@ -912,6 +982,7 @@
   - Leave certificates
 
 ### Notifications
+
 - **Alert System**
   - Absence notifications
   - Low attendance alerts
@@ -925,6 +996,7 @@
 ## 12. TIMETABLE MODULE - Schedule Management Features
 
 ### Timetable Creation
+
 - **Master Timetable**
   - Weekly schedule creation
   - Period-wise planning
@@ -942,6 +1014,7 @@
   - Tutorial schedules
 
 ### Time Slot Management
+
 - **Period Configuration**
   - Define time slots
   - Break periods
@@ -951,6 +1024,7 @@
   - Extra classes
 
 ### Scheduling Rules
+
 - **Constraint Management**
   - Maximum periods per day
   - Faculty availability
@@ -960,6 +1034,7 @@
   - Lab session grouping
 
 ### Conflict Resolution
+
 - **Clash Detection**
   - Faculty conflicts
   - Room conflicts
@@ -969,6 +1044,7 @@
   - Manual override options
 
 ### Substitution Management
+
 - **Substitute Arrangement**
   - Faculty leave handling
   - Substitute teacher assignment
@@ -978,6 +1054,7 @@
   - Substitute history
 
 ### Special Schedules
+
 - **Variations**
   - Holiday management
   - Half-day schedules
@@ -987,6 +1064,7 @@
   - Saturday schedules
 
 ### Views & Reports
+
 - **Multiple Views**
   - Daily view
   - Weekly view
@@ -1003,6 +1081,7 @@
   - Schedule comparison
 
 ### Integration Features
+
 - **Calendar Sync**
   - Google Calendar integration
   - Outlook integration
@@ -1015,6 +1094,7 @@
 ## 13. COMMUNICATION FEATURES (Across Modules)
 
 ### Announcement System
+
 - **Announcements**
   - General announcements
   - Course-specific notices
@@ -1024,6 +1104,7 @@
   - Exam notifications
 
 ### Messaging
+
 - **Internal Messaging**
   - Student-Faculty messaging
   - Parent-Teacher communication
@@ -1033,6 +1114,7 @@
   - Read receipts
 
 ### Email Integration
+
 - **Automated Emails**
   - Admission confirmations
   - Fee receipts
@@ -1042,6 +1124,7 @@
   - Password resets
 
 ### SMS Integration
+
 - **SMS Alerts**
   - Attendance SMS
   - Fee reminders
@@ -1051,6 +1134,7 @@
   - Result notifications
 
 ### Notice Board
+
 - **Digital Notice Board**
   - Important notices
   - Upcoming events
@@ -1064,6 +1148,7 @@
 ## 14. REPORTING FEATURES (System-wide)
 
 ### Student Reports
+
 - **Academic Documents**
   - Bonafide certificates
   - Character certificates
@@ -1081,6 +1166,7 @@
   - Rank certificates
 
 ### Administrative Reports
+
 - **Management Reports**
   - Enrollment statistics
   - Department-wise strength
@@ -1090,6 +1176,7 @@
   - Financial summaries
 
 ### Analytical Reports
+
 - **Performance Analytics**
   - Student performance trends
   - Pass/fail analysis
@@ -1099,6 +1186,7 @@
   - Predictive analytics
 
 ### Custom Reports
+
 - **Report Builder**
   - Custom report creation
   - Filter options
@@ -1112,18 +1200,21 @@
 ## 15. ADDITIONAL SYSTEM FEATURES
 
 ### Multi-language Support
+
 - Interface in 12+ languages
 - Language switching
 - Regional language support
 - RTL language support
 
 ### Mobile Accessibility
+
 - Responsive design
 - Mobile app support
 - Offline capability
 - Push notifications
 
 ### Data Management
+
 - **Import/Export**
   - Bulk data import
   - Excel imports
@@ -1132,6 +1223,7 @@
   - Backup/restore
 
 ### Security Features
+
 - Role-based access control
 - Two-factor authentication
 - Session management
@@ -1140,6 +1232,7 @@
 - Regular backups
 
 ### Integration Capabilities
+
 - Payment gateway integration
 - SMS gateway integration
 - Email server integration
@@ -1148,6 +1241,7 @@
 - API access
 
 ### Customization Options
+
 - Custom fields
 - Workflow customization
 - Report customization
@@ -1157,4 +1251,4 @@
 
 ---
 
-*This comprehensive feature documentation covers all functional capabilities of OpenEduCat ERP modules without technical implementation details.*
+_This comprehensive feature documentation covers all functional capabilities of OpenEduCat ERP modules without technical implementation details._

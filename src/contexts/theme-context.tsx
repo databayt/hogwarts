@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react"
 
 interface ThemeContextValue {
-  currentTheme: string;
-  setCurrentTheme: (theme: string) => void;
-  previewDarkMode: boolean;
-  setPreviewDarkMode: (darkMode: boolean) => void;
+  currentTheme: string
+  setCurrentTheme: (theme: string) => void
+  previewDarkMode: boolean
+  setPreviewDarkMode: (darkMode: boolean) => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [currentTheme, setCurrentTheme] = useState("default");
-  const [previewDarkMode, setPreviewDarkMode] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState("default")
+  const [previewDarkMode, setPreviewDarkMode] = useState(false)
 
   return (
     <ThemeContext.Provider
@@ -26,11 +26,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     >
       {children}
     </ThemeContext.Provider>
-  );
+  )
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
+  const context = useContext(ThemeContext)
   if (context === undefined) {
     // Return default values if not within provider
     return {
@@ -38,7 +38,7 @@ export function useTheme() {
       setCurrentTheme: () => {},
       previewDarkMode: false,
       setPreviewDarkMode: () => {},
-    };
+    }
   }
-  return context;
+  return context
 }

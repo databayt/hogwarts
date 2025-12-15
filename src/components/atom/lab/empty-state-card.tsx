@@ -1,6 +1,8 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
+
 import type { CardSize } from "./types"
 
 interface EmptyStateCardProps {
@@ -66,14 +68,14 @@ export function EmptyStateCard({
   return (
     <Card className={cn(className)}>
       <CardContent className={cn(sizeClasses[size])}>
-        <div className="flex flex-col items-center justify-center text-center space-y-4">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center">
           {/* Icon */}
-          <div className="rounded-full bg-muted p-4 text-muted-foreground">
+          <div className="bg-muted text-muted-foreground rounded-full p-4">
             {icon}
           </div>
 
           {/* Content */}
-          <div className="space-y-2 max-w-sm">
+          <div className="max-w-sm space-y-2">
             <h4>{title}</h4>
             <p className="muted">{description}</p>
           </div>

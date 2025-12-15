@@ -1,26 +1,28 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { DataTable } from "@/components/table/data-table";
-import { DataTableAdvancedToolbar } from "@/components/table/data-table-advanced-toolbar";
-import { DataTableFilterList } from "@/components/table/data-table-filter-list";
-import { DataTableFilterMenu } from "@/components/table/data-table-filter-menu";
-import { DataTableSortList } from "@/components/table/data-table-sort-list";
-import { DataTableToolbar } from "@/components/table/data-table-toolbar";
-import type { Task } from "@prisma/client";
-import { useDataTable } from "@/components/table/use-data-table";
-import type { DataTableRowAction } from "@/components/table/types";
+import * as React from "react"
+import type { Task } from "@prisma/client"
+
+import { DataTable } from "@/components/table/data-table"
+import { DataTableAdvancedToolbar } from "@/components/table/data-table-advanced-toolbar"
+import { DataTableFilterList } from "@/components/table/data-table-filter-list"
+import { DataTableFilterMenu } from "@/components/table/data-table-filter-menu"
+import { DataTableSortList } from "@/components/table/data-table-sort-list"
+import { DataTableToolbar } from "@/components/table/data-table-toolbar"
+import type { DataTableRowAction } from "@/components/table/types"
+import { useDataTable } from "@/components/table/use-data-table"
+
 import type {
   getEstimatedHoursRange,
   getTaskPriorityCounts,
-  getTaskStatusCounts,
   getTasks,
-} from "../_lib/queries";
-import { DeleteTasksDialog } from "./delete-tasks-dialog";
-import { useFeatureFlags } from "./feature-flags-provider";
-import { TasksTableActionBar } from "./tasks-table-action-bar";
-import { getTasksTableColumns } from "./tasks-table-columns";
-import { UpdateTaskSheet } from "./update-task-sheet";
+  getTaskStatusCounts,
+} from "../_lib/queries"
+import { DeleteTasksDialog } from "./delete-tasks-dialog"
+import { useFeatureFlags } from "./feature-flags-provider"
+import { TasksTableActionBar } from "./tasks-table-action-bar"
+import { getTasksTableColumns } from "./tasks-table-columns"
+import { UpdateTaskSheet } from "./update-task-sheet"
 
 interface TasksTableProps {
   promises: Promise<
@@ -30,21 +32,21 @@ interface TasksTableProps {
       Awaited<ReturnType<typeof getTaskPriorityCounts>>,
       Awaited<ReturnType<typeof getEstimatedHoursRange>>,
     ]
-  >;
+  >
 }
 
 export function TasksTable({ promises }: TasksTableProps) {
-  const { enableAdvancedFilter, filterFlag } = useFeatureFlags();
+  const { enableAdvancedFilter, filterFlag } = useFeatureFlags()
 
   const [
     { data, pageCount },
     statusCounts,
     priorityCounts,
     estimatedHoursRange,
-  ] = React.use(promises);
+  ] = React.use(promises)
 
   const [rowAction, setRowAction] =
-    React.useState<DataTableRowAction<Task> | null>(null);
+    React.useState<DataTableRowAction<Task> | null>(null)
 
   const columns = React.useMemo(
     () =>
@@ -54,8 +56,8 @@ export function TasksTable({ promises }: TasksTableProps) {
         estimatedHoursRange,
         setRowAction,
       }),
-    [statusCounts, priorityCounts, estimatedHoursRange],
-  );
+    [statusCounts, priorityCounts, estimatedHoursRange]
+  )
 
   const { table, shallow, debounceMs, throttleMs } = useDataTable({
     data,
@@ -69,7 +71,7 @@ export function TasksTable({ promises }: TasksTableProps) {
     getRowId: (originalRow) => originalRow.id,
     shallow: false,
     clearOnDefault: true,
-  });
+  })
 
   return (
     <>
@@ -116,5 +118,5 @@ export function TasksTable({ promises }: TasksTableProps) {
         onSuccess={() => rowAction?.row.toggleSelected(false)}
       />
     </>
-  );
+  )
 }

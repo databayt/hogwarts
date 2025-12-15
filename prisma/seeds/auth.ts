@@ -11,36 +11,37 @@
  * Usernames are stored in English (database) with Arabic display names in constants
  */
 
-import { UserRole } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import type { SeedPrisma, UserRef } from "./types";
-import { DEMO_PASSWORD, ADMIN_USERS } from "./constants";
+import { UserRole } from "@prisma/client"
+import bcrypt from "bcryptjs"
+
+import { ADMIN_USERS, DEMO_PASSWORD } from "./constants"
+import type { SeedPrisma, UserRef } from "./types"
 
 export async function seedAuth(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<{
-  devUser: UserRef;
-  adminUser: UserRef;
-  accountantUser: UserRef;
-  staffUser: UserRef;
+  devUser: UserRef
+  adminUser: UserRef
+  accountantUser: UserRef
+  staffUser: UserRef
 }> {
-  console.log("👥 Creating Admin Users (Bilingual AR/EN)...");
-  console.log(`   🔑 Password for all users: ${DEMO_PASSWORD}`);
-  console.log("");
+  console.log("👥 Creating Admin Users (Bilingual AR/EN)...")
+  console.log(`   🔑 Password for all users: ${DEMO_PASSWORD}`)
+  console.log("")
 
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10)
 
   // Find user data from constants
-  const devData = ADMIN_USERS.find(u => u.role === "DEVELOPER")!;
-  const adminData = ADMIN_USERS.find(u => u.role === "ADMIN")!;
-  const accountantData = ADMIN_USERS.find(u => u.role === "ACCOUNTANT")!;
-  const staffData = ADMIN_USERS.find(u => u.role === "STAFF")!;
+  const devData = ADMIN_USERS.find((u) => u.role === "DEVELOPER")!
+  const adminData = ADMIN_USERS.find((u) => u.role === "ADMIN")!
+  const accountantData = ADMIN_USERS.find((u) => u.role === "ACCOUNTANT")!
+  const staffData = ADMIN_USERS.find((u) => u.role === "STAFF")!
 
   // Developer (platform-wide, not tied to school) - findFirst + create
   let devUser = await prisma.user.findFirst({
     where: { email: devData.email, schoolId: null },
-  });
+  })
   if (!devUser) {
     devUser = await prisma.user.create({
       data: {
@@ -50,13 +51,13 @@ export async function seedAuth(
         password: passwordHash,
         emailVerified: new Date(),
       },
-    });
+    })
   }
 
   // School Admin - findFirst + create (by email + schoolId)
   let adminUser = await prisma.user.findFirst({
     where: { email: adminData.email, schoolId },
-  });
+  })
   if (!adminUser) {
     adminUser = await prisma.user.create({
       data: {
@@ -67,13 +68,13 @@ export async function seedAuth(
         emailVerified: new Date(),
         school: { connect: { id: schoolId } },
       },
-    });
+    })
   }
 
   // Accountant - findFirst + create (by email + schoolId)
   let accountantUser = await prisma.user.findFirst({
     where: { email: accountantData.email, schoolId },
-  });
+  })
   if (!accountantUser) {
     accountantUser = await prisma.user.create({
       data: {
@@ -84,13 +85,13 @@ export async function seedAuth(
         emailVerified: new Date(),
         school: { connect: { id: schoolId } },
       },
-    });
+    })
   }
 
   // Staff - findFirst + create (by email + schoolId)
   let staffUser = await prisma.user.findFirst({
     where: { email: staffData.email, schoolId },
-  });
+  })
   if (!staffUser) {
     staffUser = await prisma.user.create({
       data: {
@@ -101,46 +102,80 @@ export async function seedAuth(
         emailVerified: new Date(),
         school: { connect: { id: schoolId } },
       },
-    });
+    })
   }
 
   // Print bilingual information
-  console.log("   ✅ Admin Users Created Successfully");
-  console.log("");
-  console.log("   📋 User Credentials (Bilingual):");
-  console.log("   ┌────────────────────────────────────────────────────────────────────────┐");
-  console.log("   │ Role          │ Email                    │ EN Name          │ AR Name   │");
-  console.log("   ├────────────────────────────────────────────────────────────────────────┤");
+  console.log("   ✅ Admin Users Created Successfully")
+  console.log("")
+  console.log("   📋 User Credentials (Bilingual):")
+  console.log(
+    "   ┌────────────────────────────────────────────────────────────────────────┐"
+  )
+  console.log(
+    "   │ Role          │ Email                    │ EN Name          │ AR Name   │"
+  )
+  console.log(
+    "   ├────────────────────────────────────────────────────────────────────────┤"
+  )
 
   for (const user of ADMIN_USERS) {
-    const roleStr = user.role.padEnd(13);
-    const emailStr = user.email.padEnd(24);
-    const enStr = user.usernameEn.padEnd(16);
-    const arStr = user.usernameAr;
-    console.log(`   │ ${roleStr}│ ${emailStr}│ ${enStr}│ ${arStr}`.padEnd(76) + "│");
+    const roleStr = user.role.padEnd(13)
+    const emailStr = user.email.padEnd(24)
+    const enStr = user.usernameEn.padEnd(16)
+    const arStr = user.usernameAr
+    console.log(
+      `   │ ${roleStr}│ ${emailStr}│ ${enStr}│ ${arStr}`.padEnd(76) + "│"
+    )
   }
 
-  console.log("   ├────────────────────────────────────────────────────────────────────────┤");
-  console.log("   │ Password: 1234 for all accounts                                        │");
-  console.log("   └────────────────────────────────────────────────────────────────────────┘");
-  console.log("");
+  console.log(
+    "   ├────────────────────────────────────────────────────────────────────────┤"
+  )
+  console.log(
+    "   │ Password: 1234 for all accounts                                        │"
+  )
+  console.log(
+    "   └────────────────────────────────────────────────────────────────────────┘"
+  )
+  console.log("")
 
-  console.log("   🔐 Role Descriptions (Bilingual):");
-  console.log("   ┌────────────────────────────────────────────────────────────────────────┐");
+  console.log("   🔐 Role Descriptions (Bilingual):")
+  console.log(
+    "   ┌────────────────────────────────────────────────────────────────────────┐"
+  )
   for (const user of ADMIN_USERS) {
-    console.log(`   │ ${user.role.padEnd(13)}: ${user.descriptionEn.padEnd(53)}│`);
-    console.log(`   │              : ${user.descriptionAr.padEnd(53)}│`);
+    console.log(
+      `   │ ${user.role.padEnd(13)}: ${user.descriptionEn.padEnd(53)}│`
+    )
+    console.log(`   │              : ${user.descriptionAr.padEnd(53)}│`)
     if (user !== ADMIN_USERS[ADMIN_USERS.length - 1]) {
-      console.log("   ├────────────────────────────────────────────────────────────────────────┤");
+      console.log(
+        "   ├────────────────────────────────────────────────────────────────────────┤"
+      )
     }
   }
-  console.log("   └────────────────────────────────────────────────────────────────────────┘");
-  console.log("");
+  console.log(
+    "   └────────────────────────────────────────────────────────────────────────┘"
+  )
+  console.log("")
 
   return {
     devUser: { id: devUser.id, email: devUser.email!, role: devUser.role },
-    adminUser: { id: adminUser.id, email: adminUser.email!, role: adminUser.role },
-    accountantUser: { id: accountantUser.id, email: accountantUser.email!, role: accountantUser.role },
-    staffUser: { id: staffUser.id, email: staffUser.email!, role: staffUser.role },
-  };
+    adminUser: {
+      id: adminUser.id,
+      email: adminUser.email!,
+      role: adminUser.role,
+    },
+    accountantUser: {
+      id: accountantUser.id,
+      email: accountantUser.email!,
+      role: accountantUser.role,
+    },
+    staffUser: {
+      id: staffUser.id,
+      email: staffUser.email!,
+      role: staffUser.role,
+    },
+  }
 }

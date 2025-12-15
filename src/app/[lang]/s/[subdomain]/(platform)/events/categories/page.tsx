@@ -1,9 +1,10 @@
-import EventCategoriesContent from '@/components/platform/events/categories/content'
-import { SearchParams } from 'nuqs/server'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { SearchParams } from "nuqs/server"
 
-export const metadata = { title: 'Dashboard: Event Categories' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import EventCategoriesContent from "@/components/platform/events/categories/content"
+
+export const metadata = { title: "Dashboard: Event Categories" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -14,5 +15,10 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <EventCategoriesContent searchParams={searchParams} dictionary={dictionary.school} />
+  return (
+    <EventCategoriesContent
+      searchParams={searchParams}
+      dictionary={dictionary.school}
+    />
+  )
 }

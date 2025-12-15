@@ -1,20 +1,22 @@
 // Main Marking Dashboard Content (Server Component)
 
+import Link from "next/link"
 import { auth } from "@/auth"
+import { CircleAlert, CircleCheck, Clock, FileText, Plus } from "lucide-react"
+
 import { db } from "@/lib/db"
-import { MarkingTable } from "./table"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, FileText, Clock, CircleCheck, CircleAlert } from "lucide-react";
-import Link from "next/link"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { MarkingTable } from "./table"
 
 export async function MarkingContent({
   examId,
   dictionary,
-  locale
+  locale,
 }: {
   examId?: string
   dictionary: Dictionary
@@ -61,106 +63,122 @@ export async function MarkingContent({
 
   return (
     <div className="space-y-6">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div></div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link href={`/${locale}/exams/mark/questions`}>
-                <FileText className="mr-2 h-4 w-4" />
-                {dict.navigation.questionBank}
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href={`/${locale}/exams/mark/questions/create`}>
-                <Plus className="mr-2 h-4 w-4" />
-                {dict.buttons.newQuestion}
-              </Link>
-            </Button>
+      {/* Header Actions */}
+      <div className="flex items-center justify-between">
+        <div></div>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/${locale}/exams/mark/questions`}>
+              <FileText className="mr-2 h-4 w-4" />
+              {dict.navigation.questionBank}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/${locale}/exams/mark/questions/create`}>
+              <Plus className="mr-2 h-4 w-4" />
+              {dict.buttons.newQuestion}
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-2">
+            <FileText className="text-muted-foreground h-5 w-5" />
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {dict.statistics.totalSubmissions}
+              </p>
+              <h3 className="text-2xl font-bold">{total}</h3>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">{dict.statistics.totalSubmissions}</p>
-                <h3 className="text-2xl font-bold">{total}</h3>
-              </div>
+        <Card className="p-4">
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-yellow-600" />
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {dict.statistics.notStarted}
+              </p>
+              <h3 className="text-2xl font-bold">{notStarted}</h3>
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">{dict.statistics.notStarted}</p>
-                <h3 className="text-2xl font-bold">{notStarted}</h3>
-              </div>
+        <Card className="p-4">
+          <div className="flex items-center gap-2">
+            <CircleAlert className="h-5 w-5 text-orange-600" />
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {dict.statistics.needsReview}
+              </p>
+              <h3 className="text-2xl font-bold">{needsReview}</h3>
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <CircleAlert className="h-5 w-5 text-orange-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">{dict.statistics.needsReview}</p>
-                <h3 className="text-2xl font-bold">{needsReview}</h3>
-              </div>
+        <Card className="p-4">
+          <div className="flex items-center gap-2">
+            <CircleCheck className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {dict.statistics.completed}
+              </p>
+              <h3 className="text-2xl font-bold">{completed}</h3>
             </div>
-          </Card>
+          </div>
+        </Card>
+      </div>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-2">
-              <CircleCheck className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">{dict.statistics.completed}</p>
-                <h3 className="text-2xl font-bold">{completed}</h3>
-              </div>
-            </div>
-          </Card>
-        </div>
+      {/* Tabs for filtering */}
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">
+            {dict.tabs.all} ({total})
+          </TabsTrigger>
+          <TabsTrigger value="pending">
+            {dict.tabs.pending} ({notStarted})
+          </TabsTrigger>
+          <TabsTrigger value="review">
+            {dict.tabs.review} ({needsReview})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            {dict.tabs.completed} ({completed})
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Tabs for filtering */}
-        <Tabs defaultValue="all" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="all">{dict.tabs.all} ({total})</TabsTrigger>
-            <TabsTrigger value="pending">{dict.tabs.pending} ({notStarted})</TabsTrigger>
-            <TabsTrigger value="review">{dict.tabs.review} ({needsReview})</TabsTrigger>
-            <TabsTrigger value="completed">{dict.tabs.completed} ({completed})</TabsTrigger>
-          </TabsList>
+        <TabsContent value="all">
+          <MarkingTable data={submissions} dictionary={dictionary} />
+        </TabsContent>
 
-          <TabsContent value="all">
-            <MarkingTable data={submissions} dictionary={dictionary} />
-          </TabsContent>
+        <TabsContent value="pending">
+          <MarkingTable
+            data={submissions.filter((s) => !s.markingResult)}
+            dictionary={dictionary}
+          />
+        </TabsContent>
 
-          <TabsContent value="pending">
-            <MarkingTable
-              data={submissions.filter((s) => !s.markingResult)}
-              dictionary={dictionary}
-            />
-          </TabsContent>
+        <TabsContent value="review">
+          <MarkingTable
+            data={submissions.filter(
+              (s) => s.markingResult && s.markingResult.needsReview
+            )}
+            dictionary={dictionary}
+          />
+        </TabsContent>
 
-          <TabsContent value="review">
-            <MarkingTable
-              data={submissions.filter(
-                (s) => s.markingResult && s.markingResult.needsReview
-              )}
-              dictionary={dictionary}
-            />
-          </TabsContent>
-
-          <TabsContent value="completed">
-            <MarkingTable
-              data={submissions.filter(
-                (s) => s.markingResult && s.markingResult.status === "COMPLETED"
-              )}
-              dictionary={dictionary}
-            />
-          </TabsContent>
-        </Tabs>
+        <TabsContent value="completed">
+          <MarkingTable
+            data={submissions.filter(
+              (s) => s.markingResult && s.markingResult.status === "COMPLETED"
+            )}
+            dictionary={dictionary}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

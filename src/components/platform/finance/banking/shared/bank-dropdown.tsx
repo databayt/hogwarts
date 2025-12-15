@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
   Select,
@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { formatAmount } from '@/components/platform/finance/banking/lib/utils'
+} from "@/components/ui/select"
+import { formatAmount } from "@/components/platform/finance/banking/lib/utils"
 
 interface BankDropdownProps {
   accounts: any[]
@@ -20,19 +20,21 @@ export function BankDropdown({
   accounts,
   selectedAccount,
   onSelectAccount,
-  dictionary
+  dictionary,
 }: BankDropdownProps) {
   return (
     <Select value={selectedAccount} onValueChange={onSelectAccount}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={dictionary?.selectAccount || "Select an account"} />
+        <SelectValue
+          placeholder={dictionary?.selectAccount || "Select an account"}
+        />
       </SelectTrigger>
       <SelectContent>
         {accounts.map((account) => (
           <SelectItem key={account.id} value={account.id}>
-            <div className="flex items-center justify-between w-full">
+            <div className="flex w-full items-center justify-between">
               <span>{account.name}</span>
-              <span className="ml-2 text-sm text-muted-foreground">
+              <span className="text-muted-foreground ml-2 text-sm">
                 {formatAmount(Number(account.currentBalance))}
               </span>
             </div>

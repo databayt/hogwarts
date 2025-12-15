@@ -1,11 +1,15 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { z } from "zod";
-import { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
+import { LoaderCircle, Plus, X } from "lucide-react"
+import { useForm, type UseFormReturn } from "react-hook-form"
+import type { z } from "zod"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
   FormControl,
@@ -14,39 +18,37 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, X, LoaderCircle } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { createQuestion, updateQuestion } from "./actions";
-import { questionBankSchema } from "./validation";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { createQuestion, updateQuestion } from "./actions"
 import {
-  QUESTION_TYPES,
-  DIFFICULTY_LEVELS,
   BLOOM_LEVELS,
   calculateDefaultPoints,
-} from "./config";
-import { SuccessToast, ErrorToast } from "@/components/atom/toast";
-import { useModal } from "@/components/atom/modal/context";
-import type { QuestionBankDTO } from "./types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+  DIFFICULTY_LEVELS,
+  QUESTION_TYPES,
+} from "./config"
+import type { QuestionBankDTO } from "./types"
+import { questionBankSchema } from "./validation"
 
 interface QuestionBankFormProps {
-  initialData?: QuestionBankDTO;
-  subjectId?: string;
-  isView?: boolean;
-  dictionary?: Dictionary;
+  initialData?: QuestionBankDTO
+  subjectId?: string
+  isView?: boolean
+  dictionary?: Dictionary
   /** Callback fired on successful create/update - use for optimistic refresh */
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 export function QuestionBankForm({
@@ -57,12 +59,12 @@ export function QuestionBankForm({
   onSuccess,
 }: QuestionBankFormProps) {
   // Default dictionary fallback for when component is used without i18n
-  const dict = dictionary?.generate || {};
-  const { closeModal } = useModal();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dict = dictionary?.generate || {}
+  const { closeModal } = useModal()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedType, setSelectedType] = useState<QuestionType>(
     initialData?.questionType || QuestionType.MULTIPLE_CHOICE
-  );
+  )
 
   const form = useForm({
     resolver: zodResolver(questionBankSchema),
@@ -74,19 +76,31 @@ export function QuestionBankForm({
       bloomLevel: initialData?.bloomLevel || BloomLevel.UNDERSTAND,
       points: initialData?.points || 1,
       timeEstimate: initialData?.timeEstimate || undefined,
-      options:
-        (initialData?.options as { text: string; isCorrect: boolean; explanation?: string }[]) ||
-        [
-          { text: "", isCorrect: false, explanation: "" },
-          { text: "", isCorrect: false, explanation: "" },
-        ],
+      options: (initialData?.options as {
+        text: string
+        isCorrect: boolean
+        explanation?: string
+      }[]) || [
+        { text: "", isCorrect: false, explanation: "" },
+        { text: "", isCorrect: false, explanation: "" },
+      ],
       acceptedAnswers:
         initialData?.questionType === "FILL_BLANK"
-          ? ((initialData.options as { acceptedAnswers?: string[], caseSensitive?: boolean })?.acceptedAnswers || [""])
+          ? (
+              initialData.options as {
+                acceptedAnswers?: string[]
+                caseSensitive?: boolean
+              }
+            )?.acceptedAnswers || [""]
           : [""],
       caseSensitive:
         initialData?.questionType === "FILL_BLANK"
-          ? ((initialData.options as { acceptedAnswers?: string[], caseSensitive?: boolean })?.caseSensitive || false)
+          ? (
+              initialData.options as {
+                acceptedAnswers?: string[]
+                caseSensitive?: boolean
+              }
+            )?.caseSensitive || false
           : false,
       sampleAnswer: initialData?.sampleAnswer || "",
       gradingRubric: initialData?.gradingRubric || "",
@@ -94,79 +108,75 @@ export function QuestionBankForm({
       explanation: initialData?.explanation || "",
       imageUrl: initialData?.imageUrl || "",
     },
-  });
+  })
 
-  const watchType = form.watch("questionType");
-  const watchDifficulty = form.watch("difficulty");
+  const watchType = form.watch("questionType")
+  const watchDifficulty = form.watch("difficulty")
 
   // Update selected type when form value changes
   useEffect(() => {
-    setSelectedType(watchType);
-  }, [watchType]);
+    setSelectedType(watchType)
+  }, [watchType])
 
   // Auto-calculate default points based on type and difficulty
   useEffect(() => {
-    const defaultPoints = calculateDefaultPoints(watchType, watchDifficulty);
+    const defaultPoints = calculateDefaultPoints(watchType, watchDifficulty)
     if (!initialData) {
-      form.setValue("points", defaultPoints);
+      form.setValue("points", defaultPoints)
     }
-  }, [watchType, watchDifficulty, initialData, form]);
+  }, [watchType, watchDifficulty, initialData, form])
 
   const onSubmit = async (values: z.infer<typeof questionBankSchema>) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const formData = new FormData();
+      const formData = new FormData()
 
       // Append all fields
       Object.entries(values).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (typeof value === "object") {
-            formData.append(key, JSON.stringify(value));
+            formData.append(key, JSON.stringify(value))
           } else {
-            formData.append(key, value.toString());
+            formData.append(key, value.toString())
           }
         }
-      });
+      })
 
       if (initialData?.id) {
-        formData.append("id", initialData.id);
+        formData.append("id", initialData.id)
       }
 
       const result = initialData?.id
         ? await updateQuestion(formData)
-        : await createQuestion(formData);
+        : await createQuestion(formData)
 
       if (result.success) {
         SuccessToast(
-          initialData?.id
-            ? "Question updated!"
-            : "Question created!"
-        );
-        closeModal();
+          initialData?.id ? "Question updated!" : "Question created!"
+        )
+        closeModal()
         // Use callback for optimistic update instead of page reload
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         }
       } else {
-        ErrorToast(result.error);
+        ErrorToast(result.error)
       }
     } catch (error) {
       ErrorToast(
         error instanceof Error ? error.message : "Failed to save question"
-      );
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
-            {initialData?.id
-              ? "Pencil Question"
-              : "Create Question"}
+            {initialData?.id ? "Pencil Question" : "Create Question"}
           </h2>
 
           {/* Subject Selection */}
@@ -224,7 +234,10 @@ export function QuestionBankForm({
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  {QUESTION_TYPES.find((t) => t.value === field.value)?.description}
+                  {
+                    QUESTION_TYPES.find((t) => t.value === field.value)
+                      ?.description
+                  }
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -358,7 +371,7 @@ export function QuestionBankForm({
                       min="1"
                       max="480"
                       disabled={isView}
-                      value={(field.value as number) || ''}
+                      value={(field.value as number) || ""}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
                       onBlur={field.onBlur}
                       name={field.name}
@@ -375,7 +388,11 @@ export function QuestionBankForm({
           {/* Dynamic Fields Based on Question Type */}
           {(selectedType === QuestionType.MULTIPLE_CHOICE ||
             selectedType === QuestionType.TRUE_FALSE) && (
-            <MultipleChoiceFields form={form} isView={isView} type={selectedType} />
+            <MultipleChoiceFields
+              form={form}
+              isView={isView}
+              type={selectedType}
+            />
           )}
 
           {selectedType === QuestionType.FILL_BLANK && (
@@ -441,14 +458,16 @@ export function QuestionBankForm({
               {"Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <LoaderCircle className="me-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <LoaderCircle className="me-2 h-4 w-4 animate-spin" />
+              )}
               {initialData?.id ? "Update" : "Create"}
             </Button>
           </div>
         )}
       </form>
     </Form>
-  );
+  )
 }
 
 // Multiple Choice Options Component
@@ -457,41 +476,36 @@ function MultipleChoiceFields({
   isView,
   type,
 }: {
-  form: UseFormReturn<any>;
-  isView: boolean;
-  type: QuestionType;
+  form: UseFormReturn<any>
+  isView: boolean
+  type: QuestionType
 }) {
-  const options = form.watch("options") || [];
-  const isTrueFalse = type === QuestionType.TRUE_FALSE;
+  const options = form.watch("options") || []
+  const isTrueFalse = type === QuestionType.TRUE_FALSE
 
   const addOption = () => {
-    const current = form.getValues("options") || [];
+    const current = form.getValues("options") || []
     form.setValue("options", [
       ...current,
       { text: "", isCorrect: false, explanation: "" },
-    ]);
-  };
+    ])
+  }
 
   const removeOption = (index: number) => {
-    const current = form.getValues("options") || [];
+    const current = form.getValues("options") || []
     form.setValue(
       "options",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       current.filter((_: any, i: number) => i !== index)
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <FormLabel>Options</FormLabel>
         {!isTrueFalse && !isView && options.length < 6 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addOption}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={addOption}>
             <Plus className="me-2 h-4 w-4" />
             Add Option
           </Button>
@@ -501,13 +515,16 @@ function MultipleChoiceFields({
       <div className="space-y-3">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {options.map((option: any, index: number) => (
-          <div key={index} className="flex gap-2 items-start border p-3 rounded-md">
+          <div
+            key={index}
+            className="flex items-start gap-2 rounded-md border p-3"
+          >
             <Checkbox
               checked={option.isCorrect}
               onCheckedChange={(checked) => {
-                const current = form.getValues("options");
-                current[index].isCorrect = checked;
-                form.setValue("options", [...current]);
+                const current = form.getValues("options")
+                current[index].isCorrect = checked
+                form.setValue("options", [...current])
               }}
               disabled={isView}
             />
@@ -516,9 +533,9 @@ function MultipleChoiceFields({
                 placeholder={`Option ${index + 1}`}
                 value={option.text}
                 onChange={(e) => {
-                  const current = form.getValues("options");
-                  current[index].text = e.target.value;
-                  form.setValue("options", [...current]);
+                  const current = form.getValues("options")
+                  current[index].text = e.target.value
+                  form.setValue("options", [...current])
                 }}
                 disabled={isView}
               />
@@ -526,9 +543,9 @@ function MultipleChoiceFields({
                 placeholder="Explanation (optional)"
                 value={option.explanation || ""}
                 onChange={(e) => {
-                  const current = form.getValues("options");
-                  current[index].explanation = e.target.value;
-                  form.setValue("options", [...current]);
+                  const current = form.getValues("options")
+                  current[index].explanation = e.target.value
+                  form.setValue("options", [...current])
                 }}
                 disabled={isView}
                 className="text-sm"
@@ -548,26 +565,32 @@ function MultipleChoiceFields({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 // Fill in the Blank Fields
-function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
-  const answers = form.watch("acceptedAnswers") || [""];
+function FillBlankFields({
+  form,
+  isView,
+}: {
+  form: UseFormReturn<any>
+  isView: boolean
+}) {
+  const answers = form.watch("acceptedAnswers") || [""]
 
   const addAnswer = () => {
-    const current = form.getValues("acceptedAnswers") || [];
-    form.setValue("acceptedAnswers", [...current, ""]);
-  };
+    const current = form.getValues("acceptedAnswers") || []
+    form.setValue("acceptedAnswers", [...current, ""])
+  }
 
   const removeAnswer = (index: number) => {
-    const current = form.getValues("acceptedAnswers") || [];
+    const current = form.getValues("acceptedAnswers") || []
     form.setValue(
       "acceptedAnswers",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       current.filter((_: any, i: number) => i !== index)
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-3">
@@ -588,9 +611,9 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: b
               placeholder={`Answer ${index + 1}`}
               value={answer}
               onChange={(e) => {
-                const current = form.getValues("acceptedAnswers");
-                current[index] = e.target.value;
-                form.setValue("acceptedAnswers", [...current]);
+                const current = form.getValues("acceptedAnswers")
+                current[index] = e.target.value
+                form.setValue("acceptedAnswers", [...current])
               }}
               disabled={isView}
             />
@@ -625,11 +648,17 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: b
         )}
       />
     </div>
-  );
+  )
 }
 
 // Subjective Question Fields
-function SubjectiveFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
+function SubjectiveFields({
+  form,
+  isView,
+}: {
+  form: UseFormReturn<any>
+  isView: boolean
+}) {
   return (
     <div className="space-y-4">
       <FormField
@@ -672,7 +701,7 @@ function SubjectiveFields({ form, isView }: { form: UseFormReturn<any>; isView: 
         )}
       />
     </div>
-  );
+  )
 }
 
 // Tags Input Component
@@ -681,23 +710,23 @@ function TagsInput({
   onChange,
   disabled,
 }: {
-  value: string[];
-  onChange: (tags: string[]) => void;
-  disabled?: boolean;
+  value: string[]
+  onChange: (tags: string[]) => void
+  disabled?: boolean
 }) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState("")
 
   const addTag = () => {
-    const tag = input.trim().toLowerCase();
+    const tag = input.trim().toLowerCase()
     if (tag && !value.includes(tag)) {
-      onChange([...value, tag]);
-      setInput("");
+      onChange([...value, tag])
+      setInput("")
     }
-  };
+  }
 
   const removeTag = (tag: string) => {
-    onChange(value.filter((t) => t !== tag));
-  };
+    onChange(value.filter((t) => t !== tag))
+  }
 
   return (
     <div className="space-y-2">
@@ -707,8 +736,8 @@ function TagsInput({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              e.preventDefault();
-              addTag();
+              e.preventDefault()
+              addTag()
             }
           }}
           placeholder="Type and press Enter"
@@ -733,7 +762,7 @@ function TagsInput({
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ms-1 hover:text-destructive"
+                  className="hover:text-destructive ms-1"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -743,5 +772,5 @@ function TagsInput({
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -12,6 +12,7 @@ import {
   Tag,
   Trash2,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -101,7 +102,10 @@ export function ShadcnButtonGroupDemo() {
                   Label As...
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  <DropdownMenuRadioGroup value={label} onValueChange={setLabel}>
+                  <DropdownMenuRadioGroup
+                    value={label}
+                    onValueChange={setLabel}
+                  >
                     <DropdownMenuRadioItem value="personal">
                       Personal
                     </DropdownMenuRadioItem>

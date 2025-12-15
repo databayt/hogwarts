@@ -1,10 +1,20 @@
 "use client"
 
 // Question Card Component
+import Link from "next/link"
+import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
+import {
+  Copy,
+  EllipsisVertical,
+  Eye,
+  FileText,
+  Pencil,
+  Trash,
+} from "lucide-react"
 
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +22,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Pencil, Trash, Copy, Eye, EllipsisVertical, FileText } from "lucide-react";
-import Link from "next/link"
-import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { QUESTION_TYPES } from "./config"
 
 interface QuestionCardProps {
@@ -65,12 +73,12 @@ export function QuestionCard({
   const typeKey = questionType as keyof typeof dict.questionTypes
 
   return (
-    <Card className="group hover:shadow-md transition-shadow">
+    <Card className="group transition-shadow hover:shadow-md">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-2">
             {/* Type and Difficulty Badges */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 {dict.questionTypes[typeKey]}
               </Badge>
@@ -91,14 +99,14 @@ export function QuestionCard({
               </Badge>
               {hasRubric && (
                 <Badge variant="secondary" className="text-xs">
-                  <FileText className="h-3 w-3 mr-1" />
+                  <FileText className="mr-1 h-3 w-3" />
                   {dict.rubric.title}
                 </Badge>
               )}
             </div>
 
             {/* Question Text */}
-            <p className="text-sm font-medium line-clamp-2 text-foreground">
+            <p className="text-foreground line-clamp-2 text-sm font-medium">
               {questionText}
             </p>
           </div>
@@ -109,7 +117,7 @@ export function QuestionCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
               >
                 <EllipsisVertical className="h-4 w-4" />
               </Button>
@@ -117,19 +125,19 @@ export function QuestionCard({
             <DropdownMenuContent align="end">
               {onPreview && (
                 <DropdownMenuItem onClick={() => onPreview(id)}>
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Eye className="mr-2 h-4 w-4" />
                   {dict.buttons.viewAnswer}
                 </DropdownMenuItem>
               )}
               {onEdit && (
                 <DropdownMenuItem onClick={() => onEdit(id)}>
-                  <Pencil className="h-4 w-4 mr-2" />
+                  <Pencil className="mr-2 h-4 w-4" />
                   {dict.buttons.editQuestion}
                 </DropdownMenuItem>
               )}
               {onDuplicate && (
                 <DropdownMenuItem onClick={() => onDuplicate(id)}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="mr-2 h-4 w-4" />
                   Duplicate
                 </DropdownMenuItem>
               )}
@@ -139,7 +147,7 @@ export function QuestionCard({
                   onClick={() => onDelete(id)}
                   className="text-destructive"
                 >
-                  <Trash className="h-4 w-4 mr-2" />
+                  <Trash className="mr-2 h-4 w-4" />
                   {dict.buttons.deleteQuestion}
                 </DropdownMenuItem>
               )}
@@ -150,7 +158,7 @@ export function QuestionCard({
 
       <CardContent className="pb-3">
         {/* Metadata */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-4 text-xs">
           <span>{subjectName}</span>
           <span>
             {points.toString()} {dict.questionBank.points}
@@ -167,7 +175,7 @@ export function QuestionCard({
 
         {/* Tags */}
         {tags.length > 0 && (
-          <div className="flex items-center gap-1 mt-2 flex-wrap">
+          <div className="mt-2 flex flex-wrap items-center gap-1">
             {tags.slice(0, 3).map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
                 {tag}

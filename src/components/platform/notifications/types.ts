@@ -1,12 +1,12 @@
+import type {
+  Notification,
+  NotificationChannel,
+  NotificationPreference,
+  NotificationPriority,
+  NotificationType,
+} from "@prisma/client"
 import type { UseFormReturn } from "react-hook-form"
 import type { z } from "zod"
-import type {
-  NotificationType,
-  NotificationPriority,
-  NotificationChannel,
-  Notification,
-  NotificationPreference,
-} from "@prisma/client"
 
 // DTO types for API responses (dates are serialized as ISO strings for client components)
 export type NotificationDTO = {

@@ -11,7 +11,7 @@ export default function DashboardSettingsLoading() {
       </div>
 
       {/* Settings sections */}
-      <div className="divide-y divide-muted pb-10">
+      <div className="divide-muted divide-y pb-10">
         <SkeletonFormSection fields={3} />
         <SkeletonFormSection fields={4} />
         <SkeletonFormSection fields={2} />

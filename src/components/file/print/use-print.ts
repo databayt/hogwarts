@@ -27,22 +27,28 @@
  * - Tables may still split across pages despite CSS (browser-dependent)
  */
 
-"use client";
+"use client"
 
-import { useState, useCallback, useRef } from "react";
-import type { PrintConfig, PrintProgress, PrintResult, UsePrintReturn } from "./types";
-import { DEFAULT_MARGINS } from "./types";
+import { useCallback, useRef, useState } from "react"
+
+import type {
+  PrintConfig,
+  PrintProgress,
+  PrintResult,
+  UsePrintReturn,
+} from "./types"
+import { DEFAULT_MARGINS } from "./types"
 
 // ============================================================================
 // Hook Implementation
 // ============================================================================
 
 export function usePrint(): UsePrintReturn {
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [progress, setProgress] = useState<PrintProgress>({ status: "idle" });
-  const [error, setError] = useState<string | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [progress, setProgress] = useState<PrintProgress>({ status: "idle" })
+  const [error, setError] = useState<string | null>(null)
 
-  const printFrameRef = useRef<HTMLIFrameElement | null>(null);
+  const printFrameRef = useRef<HTMLIFrameElement | null>(null)
 
   // ============================================================================
   // Create Print Frame
@@ -51,34 +57,34 @@ export function usePrint(): UsePrintReturn {
   const createPrintFrame = useCallback((): HTMLIFrameElement => {
     // Remove existing frame if any - prevents multiple frames accumulating
     if (printFrameRef.current) {
-      document.body.removeChild(printFrameRef.current);
+      document.body.removeChild(printFrameRef.current)
     }
 
     // Create new hidden iframe - isolated context for print styling
     // Fixed positioning ensures it's off-screen and invisible to user
-    const frame = document.createElement("iframe");
-    frame.style.position = "fixed";
-    frame.style.right = "0";
-    frame.style.bottom = "0";
-    frame.style.width = "0";
-    frame.style.height = "0";
-    frame.style.border = "0";
-    frame.style.visibility = "hidden";
+    const frame = document.createElement("iframe")
+    frame.style.position = "fixed"
+    frame.style.right = "0"
+    frame.style.bottom = "0"
+    frame.style.width = "0"
+    frame.style.height = "0"
+    frame.style.border = "0"
+    frame.style.visibility = "hidden"
 
-    document.body.appendChild(frame);
-    printFrameRef.current = frame;
+    document.body.appendChild(frame)
+    printFrameRef.current = frame
 
-    return frame;
-  }, []);
+    return frame
+  }, [])
 
   // ============================================================================
   // Generate Print Styles
   // ============================================================================
 
   const generatePrintStyles = useCallback((config: PrintConfig): string => {
-    const margins = config.margins || DEFAULT_MARGINS;
-    const orientation = config.orientation || "portrait";
-    const pageSize = config.pageSize || "A4";
+    const margins = config.margins || DEFAULT_MARGINS
+    const orientation = config.orientation || "portrait"
+    const pageSize = config.pageSize || "A4"
 
     return `
       @media print {
@@ -131,52 +137,58 @@ export function usePrint(): UsePrintReturn {
           display: table-footer-group;
         }
       }
-    `;
-  }, []);
+    `
+  }, [])
 
   // ============================================================================
   // Print Element
   // ============================================================================
 
   const print = useCallback(
-    async (element?: HTMLElement | null, config: PrintConfig = {}): Promise<PrintResult> => {
-      setIsPrinting(true);
-      setError(null);
-      setProgress({ status: "preparing", message: "Preparing print..." });
+    async (
+      element?: HTMLElement | null,
+      config: PrintConfig = {}
+    ): Promise<PrintResult> => {
+      setIsPrinting(true)
+      setError(null)
+      setProgress({ status: "preparing", message: "Preparing print..." })
 
       try {
         // If no element, print the whole page
         if (!element) {
-          setProgress({ status: "printing", message: "Opening print dialog..." });
-          window.print();
-          setProgress({ status: "completed" });
-          return { success: true };
+          setProgress({
+            status: "printing",
+            message: "Opening print dialog...",
+          })
+          window.print()
+          setProgress({ status: "completed" })
+          return { success: true }
         }
 
         // Create print frame
-        const frame = createPrintFrame();
-        const frameDoc = frame.contentDocument || frame.contentWindow?.document;
+        const frame = createPrintFrame()
+        const frameDoc = frame.contentDocument || frame.contentWindow?.document
 
         if (!frameDoc) {
-          throw new Error("Could not create print frame");
+          throw new Error("Could not create print frame")
         }
 
         // Clone the element
-        const clone = element.cloneNode(true) as HTMLElement;
+        const clone = element.cloneNode(true) as HTMLElement
 
         // Get computed styles from the original document
-        const stylesheets = Array.from(document.styleSheets);
-        let stylesHtml = "";
+        const stylesheets = Array.from(document.styleSheets)
+        let stylesHtml = ""
 
         for (const stylesheet of stylesheets) {
           try {
             if (stylesheet.href) {
-              stylesHtml += `<link rel="stylesheet" href="${stylesheet.href}" />`;
+              stylesHtml += `<link rel="stylesheet" href="${stylesheet.href}" />`
             } else if (stylesheet.cssRules) {
               const rules = Array.from(stylesheet.cssRules)
                 .map((rule) => rule.cssText)
-                .join("\n");
-              stylesHtml += `<style>${rules}</style>`;
+                .join("\n")
+              stylesHtml += `<style>${rules}</style>`
             }
           } catch {
             // Cross-origin stylesheets will throw
@@ -184,14 +196,14 @@ export function usePrint(): UsePrintReturn {
         }
 
         // Add print-specific styles
-        const printStyles = generatePrintStyles(config);
-        stylesHtml += `<style>${printStyles}</style>`;
+        const printStyles = generatePrintStyles(config)
+        stylesHtml += `<style>${printStyles}</style>`
 
         // Get document direction for RTL support
-        const direction = document.documentElement.dir || "ltr";
+        const direction = document.documentElement.dir || "ltr"
 
         // Build print document
-        frameDoc.open();
+        frameDoc.open()
         frameDoc.write(`
           <!DOCTYPE html>
           <html dir="${direction}" lang="${document.documentElement.lang || "en"}">
@@ -204,57 +216,60 @@ export function usePrint(): UsePrintReturn {
               ${clone.outerHTML}
             </body>
           </html>
-        `);
-        frameDoc.close();
+        `)
+        frameDoc.close()
 
         // Wait for resources to load
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500))
 
-        setProgress({ status: "printing", message: "Opening print dialog..." });
+        setProgress({ status: "printing", message: "Opening print dialog..." })
 
         // Trigger print
-        frame.contentWindow?.focus();
-        frame.contentWindow?.print();
+        frame.contentWindow?.focus()
+        frame.contentWindow?.print()
 
-        setProgress({ status: "completed" });
-        return { success: true };
+        setProgress({ status: "completed" })
+        return { success: true }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Print failed";
-        setError(errorMessage);
-        setProgress({ status: "error", error: errorMessage });
-        return { success: false, error: errorMessage };
+        const errorMessage = err instanceof Error ? err.message : "Print failed"
+        setError(errorMessage)
+        setProgress({ status: "error", error: errorMessage })
+        return { success: false, error: errorMessage }
       } finally {
-        setIsPrinting(false);
+        setIsPrinting(false)
         // Cleanup frame after a delay
         setTimeout(() => {
           if (printFrameRef.current) {
-            document.body.removeChild(printFrameRef.current);
-            printFrameRef.current = null;
+            document.body.removeChild(printFrameRef.current)
+            printFrameRef.current = null
           }
-        }, 1000);
+        }, 1000)
       }
     },
     [createPrintFrame, generatePrintStyles]
-  );
+  )
 
   // ============================================================================
   // Print by Element ID
   // ============================================================================
 
   const printById = useCallback(
-    async (elementId: string, config: PrintConfig = {}): Promise<PrintResult> => {
-      const element = document.getElementById(elementId);
+    async (
+      elementId: string,
+      config: PrintConfig = {}
+    ): Promise<PrintResult> => {
+      const element = document.getElementById(elementId)
 
       if (!element) {
-        const errorMessage = `Element with id "${elementId}" not found`;
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        const errorMessage = `Element with id "${elementId}" not found`
+        setError(errorMessage)
+        return { success: false, error: errorMessage }
       }
 
-      return print(element, config);
+      return print(element, config)
     },
     [print]
-  );
+  )
 
   // ============================================================================
   // Print HTML Content
@@ -262,22 +277,22 @@ export function usePrint(): UsePrintReturn {
 
   const printHtml = useCallback(
     async (html: string, config: PrintConfig = {}): Promise<PrintResult> => {
-      setIsPrinting(true);
-      setError(null);
-      setProgress({ status: "preparing", message: "Preparing print..." });
+      setIsPrinting(true)
+      setError(null)
+      setProgress({ status: "preparing", message: "Preparing print..." })
 
       try {
-        const frame = createPrintFrame();
-        const frameDoc = frame.contentDocument || frame.contentWindow?.document;
+        const frame = createPrintFrame()
+        const frameDoc = frame.contentDocument || frame.contentWindow?.document
 
         if (!frameDoc) {
-          throw new Error("Could not create print frame");
+          throw new Error("Could not create print frame")
         }
 
-        const printStyles = generatePrintStyles(config);
-        const direction = document.documentElement.dir || "ltr";
+        const printStyles = generatePrintStyles(config)
+        const direction = document.documentElement.dir || "ltr"
 
-        frameDoc.open();
+        frameDoc.open()
         frameDoc.write(`
           <!DOCTYPE html>
           <html dir="${direction}" lang="${document.documentElement.lang || "en"}">
@@ -290,45 +305,45 @@ export function usePrint(): UsePrintReturn {
               ${html}
             </body>
           </html>
-        `);
-        frameDoc.close();
+        `)
+        frameDoc.close()
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300))
 
-        setProgress({ status: "printing", message: "Opening print dialog..." });
+        setProgress({ status: "printing", message: "Opening print dialog..." })
 
-        frame.contentWindow?.focus();
-        frame.contentWindow?.print();
+        frame.contentWindow?.focus()
+        frame.contentWindow?.print()
 
-        setProgress({ status: "completed" });
-        return { success: true };
+        setProgress({ status: "completed" })
+        return { success: true }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Print failed";
-        setError(errorMessage);
-        setProgress({ status: "error", error: errorMessage });
-        return { success: false, error: errorMessage };
+        const errorMessage = err instanceof Error ? err.message : "Print failed"
+        setError(errorMessage)
+        setProgress({ status: "error", error: errorMessage })
+        return { success: false, error: errorMessage }
       } finally {
-        setIsPrinting(false);
+        setIsPrinting(false)
         setTimeout(() => {
           if (printFrameRef.current) {
-            document.body.removeChild(printFrameRef.current);
-            printFrameRef.current = null;
+            document.body.removeChild(printFrameRef.current)
+            printFrameRef.current = null
           }
-        }, 1000);
+        }, 1000)
       }
     },
     [createPrintFrame, generatePrintStyles]
-  );
+  )
 
   // ============================================================================
   // Reset
   // ============================================================================
 
   const reset = useCallback(() => {
-    setIsPrinting(false);
-    setProgress({ status: "idle" });
-    setError(null);
-  }, []);
+    setIsPrinting(false)
+    setProgress({ status: "idle" })
+    setError(null)
+  }, [])
 
   return {
     isPrinting,
@@ -338,5 +353,5 @@ export function usePrint(): UsePrintReturn {
     printById,
     printHtml,
     reset,
-  };
+  }
 }

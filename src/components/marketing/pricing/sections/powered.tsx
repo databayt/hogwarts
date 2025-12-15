@@ -1,6 +1,6 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import MaxWidthWrapper from "../shared/max-width-wrapper";
+import MaxWidthWrapper from "../shared/max-width-wrapper"
 
 const logos = [
   {
@@ -236,11 +236,11 @@ const logos = [
       </svg>
     ),
   },
-];
+]
 
 export default function Powered() {
   return (
-    <section className="py-14 text-muted-foreground">
+    <section className="text-muted-foreground py-14">
       <MaxWidthWrapper>
         <div className="text-center uppercase">
           <small>Powered by</small>
@@ -253,7 +253,7 @@ export default function Powered() {
               key={logo.title}
               href={logo.href}
               aria-label={logo.title}
-              className="duration-250 grayscale transition hover:text-foreground hover:grayscale-0"
+              className="hover:text-foreground grayscale transition duration-250 hover:grayscale-0"
             >
               {logo.icon}
             </Link>
@@ -267,7 +267,7 @@ export default function Powered() {
               key={logo.title}
               href={logo.href}
               aria-label={logo.title}
-              className="duration-250 grayscale transition hover:text-foreground hover:grayscale-0"
+              className="hover:text-foreground grayscale transition duration-250 hover:grayscale-0"
             >
               {logo.icon}
             </Link>
@@ -275,5 +275,5 @@ export default function Powered() {
         </div>
       </MaxWidthWrapper>
     </section>
-  );
+  )
 }

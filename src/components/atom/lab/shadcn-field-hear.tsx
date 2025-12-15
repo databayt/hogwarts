@@ -27,7 +27,7 @@ export function ShadcnFieldHear() {
         <form>
           <fieldset className="space-y-4">
             <legend className="font-medium">How did you hear about us?</legend>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Select the option that best describes how you heard about us.
             </p>
 
@@ -36,7 +36,7 @@ export function ShadcnFieldHear() {
                 <label
                   key={option.value}
                   htmlFor={option.value}
-                  className="group flex w-fit cursor-pointer items-center gap-1.5 overflow-hidden rounded-full border border-border px-3 py-1.5 transition-all duration-100 ease-linear hover:bg-accent has-[:checked]:px-2"
+                  className="group border-border hover:bg-accent flex w-fit cursor-pointer items-center gap-1.5 overflow-hidden rounded-full border px-3 py-1.5 transition-all duration-100 ease-linear has-[:checked]:px-2"
                 >
                   <Checkbox
                     value={option.value}

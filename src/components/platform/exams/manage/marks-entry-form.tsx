@@ -1,12 +1,22 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { LoaderCircle } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -14,37 +24,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { toast } from "sonner";
-import { LoaderCircle } from "lucide-react";
-import { getExamWithStudents, enterMarks } from "./actions";
+} from "@/components/ui/table"
+
+import { enterMarks, getExamWithStudents } from "./actions"
 
 interface Props {
-  examId: string;
+  examId: string
 }
 
 interface Student {
-  id: string;
-  studentId: string | null;
-  name: string;
-  marksObtained: number | null;
-  isAbsent: boolean;
-  resultId: string | null;
+  id: string
+  studentId: string | null
+  name: string
+  marksObtained: number | null
+  isAbsent: boolean
+  resultId: string | null
 }
 
 interface ExamInfo {
-  id: string;
-  title: string;
-  totalMarks: number;
-  passingMarks: number;
-  className: string;
+  id: string
+  title: string
+  totalMarks: number
+  passingMarks: number
+  className: string
 }
 
 const marksEntrySchema = z.object({
@@ -55,13 +57,13 @@ const marksEntrySchema = z.object({
       isAbsent: z.boolean(),
     })
   ),
-});
+})
 
 export function MarksEntryForm({ examId }: Props) {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [exam, setExam] = useState<ExamInfo | null>(null);
-  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [exam, setExam] = useState<ExamInfo | null>(null)
+  const [students, setStudents] = useState<Student[]>([])
 
   const {
     register,
@@ -74,18 +76,18 @@ export function MarksEntryForm({ examId }: Props) {
     defaultValues: {
       marks: [],
     },
-  });
+  })
 
-  const marksValues = watch("marks");
+  const marksValues = watch("marks")
 
   useEffect(() => {
     async function loadData() {
       try {
-        setLoading(true);
-        const data = await getExamWithStudents({ examId });
+        setLoading(true)
+        const data = await getExamWithStudents({ examId })
         if (data.exam) {
-          setExam(data.exam);
-          setStudents(data.students);
+          setExam(data.exam)
+          setStudents(data.students)
           setValue(
             "marks",
             data.students.map((s: Student) => ({
@@ -93,68 +95,68 @@ export function MarksEntryForm({ examId }: Props) {
               marksObtained: s.marksObtained,
               isAbsent: s.isAbsent,
             }))
-          );
+          )
         }
       } catch (error) {
-        toast.error("Failed to load exam data");
-        console.error(error);
+        toast.error("Failed to load exam data")
+        console.error(error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    loadData();
-  }, [examId, setValue]);
+    loadData()
+  }, [examId, setValue])
 
   const onSubmit = async (data: z.infer<typeof marksEntrySchema>) => {
     try {
-      setSaving(true);
+      setSaving(true)
       const result = await enterMarks({
         examId,
         marks: data.marks,
-      });
+      })
       if (result.success && result.data) {
-        toast.success(`Saved marks for ${result.data.count} students`);
+        toast.success(`Saved marks for ${result.data.count} students`)
       }
     } catch (error) {
-      toast.error("Failed to save marks");
-      console.error(error);
+      toast.error("Failed to save marks")
+      console.error(error)
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const handleMarksChange = (index: number, value: string) => {
-    const numValue = value === "" ? null : parseFloat(value);
+    const numValue = value === "" ? null : parseFloat(value)
     if (numValue !== null && exam && numValue > exam.totalMarks) {
-      toast.error(`Marks cannot exceed ${exam.totalMarks}`);
-      return;
+      toast.error(`Marks cannot exceed ${exam.totalMarks}`)
+      return
     }
-    setValue(`marks.${index}.marksObtained`, numValue);
-  };
+    setValue(`marks.${index}.marksObtained`, numValue)
+  }
 
   const handleAbsentChange = (index: number, checked: boolean) => {
-    setValue(`marks.${index}.isAbsent`, checked);
+    setValue(`marks.${index}.isAbsent`, checked)
     if (checked) {
-      setValue(`marks.${index}.marksObtained`, null);
+      setValue(`marks.${index}.marksObtained`, null)
     }
-  };
+  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoaderCircle className="h-8 w-8 animate-spin text-muted-foreground" />
+        <LoaderCircle className="text-muted-foreground h-8 w-8 animate-spin" />
       </div>
-    );
+    )
   }
 
   if (!exam) {
     return (
       <Card>
         <CardContent className="py-12">
-          <p className="text-center text-muted-foreground">Exam not found</p>
+          <p className="text-muted-foreground text-center">Exam not found</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -162,7 +164,8 @@ export function MarksEntryForm({ examId }: Props) {
       <CardHeader>
         <CardTitle>{exam.title}</CardTitle>
         <CardDescription>
-          {exam.className} • Total Marks: {exam.totalMarks} • Passing Marks: {exam.passingMarks}
+          {exam.className} • Total Marks: {exam.totalMarks} • Passing Marks:{" "}
+          {exam.passingMarks}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -181,21 +184,27 @@ export function MarksEntryForm({ examId }: Props) {
               <TableBody>
                 {students.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="text-muted-foreground py-8 text-center"
+                    >
                       No students enrolled in this class
                     </TableCell>
                   </TableRow>
                 ) : (
                   students.map((student, index) => {
-                    const marks = marksValues[index];
+                    const marks = marksValues[index]
                     const percentage =
                       marks?.marksObtained !== null && !marks?.isAbsent
-                        ? ((marks.marksObtained / exam.totalMarks) * 100).toFixed(2)
-                        : "-";
+                        ? (
+                            (marks.marksObtained / exam.totalMarks) *
+                            100
+                          ).toFixed(2)
+                        : "-"
                     const isPassing =
                       marks?.marksObtained !== null &&
                       !marks?.isAbsent &&
-                      marks.marksObtained >= exam.passingMarks;
+                      marks.marksObtained >= exam.passingMarks
 
                     return (
                       <TableRow key={student.id}>
@@ -211,7 +220,9 @@ export function MarksEntryForm({ examId }: Props) {
                             step="0.5"
                             disabled={marks?.isAbsent}
                             value={marks?.marksObtained ?? ""}
-                            onChange={(e) => handleMarksChange(index, e.target.value)}
+                            onChange={(e) =>
+                              handleMarksChange(index, e.target.value)
+                            }
                             className="w-full"
                             placeholder="Enter marks"
                           />
@@ -225,12 +236,16 @@ export function MarksEntryForm({ examId }: Props) {
                           />
                         </TableCell>
                         <TableCell>
-                          <span className={isPassing ? "text-green-600 font-medium" : ""}>
+                          <span
+                            className={
+                              isPassing ? "font-medium text-green-600" : ""
+                            }
+                          >
                             {percentage}%
                           </span>
                         </TableCell>
                       </TableRow>
-                    );
+                    )
                   })
                 )}
               </TableBody>
@@ -238,7 +253,7 @@ export function MarksEntryForm({ examId }: Props) {
           </div>
 
           {errors.marks && (
-            <p className="text-sm text-destructive">{errors.marks.message}</p>
+            <p className="text-destructive text-sm">{errors.marks.message}</p>
           )}
 
           <div className="flex justify-end gap-4">
@@ -260,5 +275,5 @@ export function MarksEntryForm({ examId }: Props) {
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }

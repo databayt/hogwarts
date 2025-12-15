@@ -7,6 +7,7 @@
 ## 📖 Overview
 
 This directory contains a comprehensive Claude Code automation system with:
+
 - **32 specialized AI agents** (expanded from 20)
 - **22 workflow commands** (shortcuts for common tasks)
 - **7 reusable skills** (shared capabilities)
@@ -14,6 +15,7 @@ This directory contains a comprehensive Claude Code automation system with:
 - **MCP integration** (13 servers: PostgreSQL, GitHub, Vercel, Sentry, and more)
 
 **Premium Model Strategy**:
+
 - **Claude Opus 4.1** for orchestration (complex multi-agent coordination)
 - **Claude Sonnet 4.5** for all technical agents (maximum quality)
 
@@ -61,9 +63,11 @@ Commands are quick shortcuts:
 ## 🤖 Available Agents (35)
 
 ### Core Orchestration (1)
+
 - **orchestrate** - Master coordinator for complex tasks
 
 ### Tech Stack (7)
+
 - **nextjs** - Next.js 15, build optimization
 - **react** - React 19, performance
 - **shadcn** - shadcn/ui components
@@ -73,6 +77,7 @@ Commands are quick shortcuts:
 - **i18n** - Arabic/English bilingual
 
 ### Process (6)
+
 - **architecture** - Design, pattern enforcement
 - **test** - TDD, 95%+ coverage
 - **security** - OWASP Top 10
@@ -81,12 +86,14 @@ Commands are quick shortcuts:
 - **typography** - Semantic HTML
 
 ### Workflow (4)
+
 - **git-github** - Git + GitHub
 - **api** - Server actions
 - **multi-tenant** - Tenant safety
 - **database-optimizer** - Query optimization (MCP)
 
 ### Specialized (2)
+
 - **debug** - Systematic debugging
 - **react-reviewer** - React code review
 
@@ -95,14 +102,17 @@ Commands are quick shortcuts:
 ## ⚡ Workflow Commands (22)
 
 **Component & Page**:
+
 - `/component <name>` - Generate component
 - `/page <path>` - Create page
 - `/api <method> <path>` - Create API
 
 **Database**:
+
 - `/migration <name>` - Generate migration
 
 **Quality & Testing**:
+
 - `/review` - Code review
 - `/test <file>` - Run tests
 - `/fix-all` - Auto-fix all
@@ -111,12 +121,14 @@ Commands are quick shortcuts:
 - `/e2e [workflow]` - E2E test generation
 
 **Error Prevention**:
+
 - `/validate-prisma <file>` - Validate Prisma queries
 - `/scan-errors [pattern]` - Error detection
 - `/pre-commit-full` - Pre-commit validation
 - `/fix-build [type]` - Auto-fix build errors
 
 **Performance**:
+
 - `/optimize <file>` - Optimize
 - `/build-changed` - Incremental build
 - `/benchmark [target]` - Performance benchmarking
@@ -124,9 +136,11 @@ Commands are quick shortcuts:
 - `/refactor-all [scope]` - Bulk refactoring
 
 **i18n**:
+
 - `/i18n-check` - Check translations
 
 **Deploy**:
+
 - `/deploy <env>` - Deploy
 
 ---
@@ -146,13 +160,16 @@ Commands are quick shortcuts:
 ## 🔧 Configuration Files
 
 ### Main
+
 - **settings.json** - Main config (automation, hooks, MCP)
 - **settings.local.json** - Local overrides (NOT committed)
 
 ### MCP
+
 - **../.mcp.json** - MCP server configurations
 
 ### Directories
+
 - **agents/** - 35 agent definitions
 - **commands/** - 22 command shortcuts
 - **skills/** - 7 skill packages
@@ -163,26 +180,31 @@ Commands are quick shortcuts:
 ## 🎯 Usage Patterns
 
 ### New Feature
+
 ```bash
 /agents/orchestrate -p "Create attendance tracking with calendar, bulk actions, tests"
 ```
 
 ### Quick Component
+
 ```bash
 /component AttendanceCalendar
 ```
 
 ### Code Review
+
 ```bash
 /review
 ```
 
 ### Database Migration
+
 ```bash
 /migration add_attendance_tracking
 ```
 
 ### Debugging
+
 ```bash
 /agents/debug -p "TypeError in processAttendance"
 ```
@@ -191,27 +213,27 @@ Commands are quick shortcuts:
 
 ## 📊 Agent Selection Guide
 
-| Task | Agent | Why |
-|------|-------|-----|
-| Pages/Build | nextjs | App Router + build |
-| Components | react | Performance |
-| UI | shadcn | Component library |
-| Database | prisma | ORM |
-| Types | typescript | Type system |
-| Styling | tailwind | CSS utilities |
-| i18n | i18n | RTL/LTR |
-| Architecture | architecture | Design + patterns |
-| Tests | test | TDD |
-| Security | security | OWASP |
-| Performance | performance | Optimization |
-| Git/GitHub | git-github | All Git ops |
-| Debugging | debug | Systematic |
-| React review | react-reviewer | Code review |
-| Documentation | docs | Technical writing |
-| Refactoring | refactor | Code improvement |
-| Dependencies | deps | Package management |
-| Build issues | build | Optimization |
-| Complex | orchestrate | Multi-agent |
+| Task          | Agent          | Why                |
+| ------------- | -------------- | ------------------ |
+| Pages/Build   | nextjs         | App Router + build |
+| Components    | react          | Performance        |
+| UI            | shadcn         | Component library  |
+| Database      | prisma         | ORM                |
+| Types         | typescript     | Type system        |
+| Styling       | tailwind       | CSS utilities      |
+| i18n          | i18n           | RTL/LTR            |
+| Architecture  | architecture   | Design + patterns  |
+| Tests         | test           | TDD                |
+| Security      | security       | OWASP              |
+| Performance   | performance    | Optimization       |
+| Git/GitHub    | git-github     | All Git ops        |
+| Debugging     | debug          | Systematic         |
+| React review  | react-reviewer | Code review        |
+| Documentation | docs           | Technical writing  |
+| Refactoring   | refactor       | Code improvement   |
+| Dependencies  | deps           | Package management |
+| Build issues  | build          | Optimization       |
+| Complex       | orchestrate    | Multi-agent        |
 
 ---
 
@@ -246,20 +268,24 @@ prettier → Automatic via hooks
 ## 🐛 Troubleshooting
 
 **Agent not working**:
+
 - Check agent name (see list above)
 - Verify Task tool in settings.json
 - See migration guide
 
 **Command not found**:
+
 - Check commands/ directory
 - Verify command syntax
 
 **Auto-format not working**:
+
 - Check PostToolUse hooks
 - Verify Prettier installed
 - Check .prettierrc.json
 
 **MCP connection failed**:
+
 - Check .mcp.json config
 - Verify environment variables
 - Test MCP server

@@ -1,23 +1,23 @@
 // Auto-Marking System TypeScript Types
 
 import type {
-  QuestionBank,
-  Rubric,
-  RubricCriterion,
-  StudentAnswer,
-  MarkingResult,
-  GradeOverride,
-  Exam,
-  Student,
-  Subject,
-  QuestionType,
-  DifficultyLevel,
   BloomLevel,
-  GradingMethod,
-  SubmissionType,
-  MarkingStatus,
+  DifficultyLevel,
+  Exam,
   GeneratedExam,
   GeneratedExamQuestion,
+  GradeOverride,
+  GradingMethod,
+  MarkingResult,
+  MarkingStatus,
+  QuestionBank,
+  QuestionType,
+  Rubric,
+  RubricCriterion,
+  Student,
+  StudentAnswer,
+  Subject,
+  SubmissionType,
 } from "@prisma/client"
 
 // ========== Extended Types with Relations ==========
@@ -47,11 +47,13 @@ export type MarkingResultWithOverrides = MarkingResult & {
 }
 
 export type ExamWithQuestions = Exam & {
-  generatedExam?: (GeneratedExam & {
-    questions: (GeneratedExamQuestion & {
-      question: QuestionBank
-    })[]
-  }) | null
+  generatedExam?:
+    | (GeneratedExam & {
+        questions: (GeneratedExamQuestion & {
+          question: QuestionBank
+        })[]
+      })
+    | null
   studentAnswers?: StudentAnswer[]
   markingResults?: MarkingResult[]
 }
@@ -189,17 +191,23 @@ export interface ExamMarkingAnalytics {
   totalGradingTime: number | null
 
   // By Question Type
-  byQuestionType: Record<QuestionType, {
-    total: number
-    graded: number
-    avgScore: number
-  }>
+  byQuestionType: Record<
+    QuestionType,
+    {
+      total: number
+      graded: number
+      avgScore: number
+    }
+  >
 
   // By Grading Method
-  byGradingMethod: Record<GradingMethod, {
-    total: number
-    completed: number
-  }>
+  byGradingMethod: Record<
+    GradingMethod,
+    {
+      total: number
+      completed: number
+    }
+  >
 }
 
 export interface StudentExamProgress {

@@ -17,17 +17,21 @@ Effective communication with AI is an art. A well-crafted prompt can be the diff
 ### Prompting Techniques
 
 #### Zero-Shot Prompting
+
 Ask a direct question without providing any examples. This works best for simple tasks where the AI already has sufficient training data.
 
 **Example:**
+
 ```
 "Summarize the key benefits of using a component-based architecture in web development."
 ```
 
 #### Few-Shot Prompting
+
 Provide a few examples of the input and desired output to guide the AI's response. This is highly effective for tasks requiring a specific format or style.
 
 **Example:**
+
 ```
 "Translate the following English sentences to French:
 
@@ -42,9 +46,11 @@ French: "
 ```
 
 #### Chain-of-Thought (CoT) Prompting
+
 Encourage the AI to break down a problem and "think" step-by-step before giving the final answer. This is useful for complex reasoning and multi-step problems.
 
 **Example:**
+
 ```
 "Q: A farmer has 15 cows. He sells all but 9 of them. How many cows does he have left?
 
@@ -60,10 +66,10 @@ A: Let's think step by step. The birds 'deciding' to fly away doesn't mean they 
 - **Assign a Role**: Tell the AI to act as a specific persona (e.g., "Act as a senior software engineer...").
 - **Use Delimiters**: Use characters like triple backticks (```), XML tags (`<tag>`), or dashes to clearly separate different parts of your prompt.
 - **Specify Output Format**: Explicitly ask for the output in a specific format like JSON, Markdown, or a numbered list.
-- **Negative Prompts**: Clearly state what you *don't* want to see in the response.
+- **Negative Prompts**: Clearly state what you _don't_ want to see in the response.
 
 write tests first, then the code, then run the tests and update the code until tests pass
 
 i have got some build errors, run 'pnpm build' to see the errors, and then fix them, and then run build until build passes
 
- claude --dangerously-skip-permissions
+claude --dangerously-skip-permissions

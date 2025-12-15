@@ -4,17 +4,17 @@
  */
 
 // Re-export all action types
-export * from './actions.types'
-export * from './bank.types'
-export * from './component.types'
-export * from './utils.types'
+export * from "./actions.types"
+export * from "./bank.types"
+export * from "./component.types"
+export * from "./utils.types"
 
 export interface BankAccount {
   id: string
   name: string
   officialName?: string
   mask?: string
-  type: 'checking' | 'savings' | 'credit' | 'investment' | 'loan' | 'other'
+  type: "checking" | "savings" | "credit" | "investment" | "loan" | "other"
   subtype?: string
   currentBalance: number
   availableBalance: number
@@ -23,7 +23,7 @@ export interface BankAccount {
   institutionId?: string
   institutionName?: string
   lastUpdated?: Date | string
-  status?: 'active' | 'inactive' | 'frozen' | 'closed'
+  status?: "active" | "inactive" | "frozen" | "closed"
 }
 
 export interface Transaction {
@@ -35,9 +35,9 @@ export interface Transaction {
   merchantName?: string
   category: string
   subcategory?: string[]
-  type: 'credit' | 'debit'
+  type: "credit" | "debit"
   pending: boolean
-  paymentChannel?: 'online' | 'in_store' | 'other'
+  paymentChannel?: "online" | "in_store" | "other"
   location?: TransactionLocation
   personalFinanceCategory?: string
   accountOwner?: string

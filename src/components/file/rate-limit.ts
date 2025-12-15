@@ -3,30 +3,30 @@
  * Prevents abuse by limiting upload operations using Upstash Redis
  */
 
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
 
 // Initialize Redis client
-let redis: Redis | null = null;
+let redis: Redis | null = null
 
 function getRedisClient(): Redis {
   if (!redis) {
-    const url = process.env.UPSTASH_REDIS_REST_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+    const url = process.env.UPSTASH_REDIS_REST_URL
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN
 
     if (!url || !token) {
       throw new Error(
         "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set"
-      );
+      )
     }
 
     redis = new Redis({
       url,
       token,
-    });
+    })
   }
 
-  return redis;
+  return redis
 }
 
 // Rate limit configurations
@@ -46,7 +46,7 @@ export const RATE_LIMITS = {
   // API endpoint limits
   UPLOAD_ENDPOINT_PER_MINUTE: 10, // 10 requests per minute per IP
   LIST_ENDPOINT_PER_MINUTE: 30, // 30 requests per minute per IP
-} as const;
+} as const
 
 /**
  * Create rate limiter for file uploads (count-based)
@@ -61,7 +61,7 @@ export function createUploadRateLimiter(
     limiter: Ratelimit.slidingWindow(maxRequests, `${windowSeconds} s`),
     analytics: true,
     prefix: "upload_ratelimit",
-  });
+  })
 }
 
 /**
@@ -81,15 +81,15 @@ export function createBandwidthRateLimiter(
     ),
     analytics: true,
     prefix: "bandwidth_ratelimit",
-  });
+  })
 }
 
 export interface RateLimitResult {
-  allowed: boolean;
-  limit: number;
-  remaining: number;
-  reset: number; // Timestamp when limit resets
-  retryAfter?: number; // Seconds to wait before retrying
+  allowed: boolean
+  limit: number
+  remaining: number
+  reset: number // Timestamp when limit resets
+  retryAfter?: number // Seconds to wait before retrying
 }
 
 /**
@@ -104,9 +104,9 @@ export async function checkSchoolUploadLimit(
   const countLimiter = createUploadRateLimiter(
     RATE_LIMITS.SCHOOL_UPLOADS_PER_HOUR,
     3600
-  );
+  )
 
-  const countResult = await countLimiter.limit(`school:${schoolId}:count`);
+  const countResult = await countLimiter.limit(`school:${schoolId}:count`)
 
   if (!countResult.success) {
     return {
@@ -115,19 +115,19 @@ export async function checkSchoolUploadLimit(
       remaining: 0,
       reset: countResult.reset,
       retryAfter: Math.ceil((countResult.reset - Date.now()) / 1000),
-    };
+    }
   }
 
   // Check hourly bandwidth
   const bandwidthLimiter = createBandwidthRateLimiter(
     RATE_LIMITS.SCHOOL_BYTES_PER_HOUR,
     3600
-  );
+  )
 
   const bandwidthResult = await bandwidthLimiter.limit(
     `school:${schoolId}:bytes`,
     { rate: fileSize } // Consume tokens equal to file size
-  );
+  )
 
   if (!bandwidthResult.success) {
     return {
@@ -136,7 +136,7 @@ export async function checkSchoolUploadLimit(
       remaining: bandwidthResult.remaining,
       reset: bandwidthResult.reset,
       retryAfter: Math.ceil((bandwidthResult.reset - Date.now()) / 1000),
-    };
+    }
   }
 
   return {
@@ -144,7 +144,7 @@ export async function checkSchoolUploadLimit(
     limit: RATE_LIMITS.SCHOOL_UPLOADS_PER_HOUR,
     remaining: countResult.remaining,
     reset: countResult.reset,
-  };
+  }
 }
 
 /**
@@ -159,9 +159,9 @@ export async function checkUserUploadLimit(
   const countLimiter = createUploadRateLimiter(
     RATE_LIMITS.USER_UPLOADS_PER_HOUR,
     3600
-  );
+  )
 
-  const countResult = await countLimiter.limit(`user:${userId}:count`);
+  const countResult = await countLimiter.limit(`user:${userId}:count`)
 
   if (!countResult.success) {
     return {
@@ -170,19 +170,18 @@ export async function checkUserUploadLimit(
       remaining: 0,
       reset: countResult.reset,
       retryAfter: Math.ceil((countResult.reset - Date.now()) / 1000),
-    };
+    }
   }
 
   // Check hourly bandwidth
   const bandwidthLimiter = createBandwidthRateLimiter(
     RATE_LIMITS.USER_BYTES_PER_HOUR,
     3600
-  );
+  )
 
-  const bandwidthResult = await bandwidthLimiter.limit(
-    `user:${userId}:bytes`,
-    { rate: fileSize }
-  );
+  const bandwidthResult = await bandwidthLimiter.limit(`user:${userId}:bytes`, {
+    rate: fileSize,
+  })
 
   if (!bandwidthResult.success) {
     return {
@@ -191,7 +190,7 @@ export async function checkUserUploadLimit(
       remaining: bandwidthResult.remaining,
       reset: bandwidthResult.reset,
       retryAfter: Math.ceil((bandwidthResult.reset - Date.now()) / 1000),
-    };
+    }
   }
 
   return {
@@ -199,7 +198,7 @@ export async function checkUserUploadLimit(
     limit: RATE_LIMITS.USER_UPLOADS_PER_HOUR,
     remaining: countResult.remaining,
     reset: countResult.reset,
-  };
+  }
 }
 
 /**
@@ -213,9 +212,9 @@ export async function checkEndpointRateLimit(
   const limiter = createUploadRateLimiter(
     RATE_LIMITS.UPLOAD_ENDPOINT_PER_MINUTE,
     60
-  );
+  )
 
-  const result = await limiter.limit(`endpoint:${endpoint}:${ipAddress}`);
+  const result = await limiter.limit(`endpoint:${endpoint}:${ipAddress}`)
 
   return {
     allowed: result.success,
@@ -225,7 +224,7 @@ export async function checkEndpointRateLimit(
     retryAfter: result.success
       ? undefined
       : Math.ceil((result.reset - Date.now()) / 1000),
-  };
+  }
 }
 
 /**
@@ -236,16 +235,16 @@ export async function getRateLimitStatus(
   key: string
 ): Promise<{ remaining: number; limit: number; reset: number } | null> {
   try {
-    const client = getRedisClient();
-    const data = await client.get(`upload_ratelimit:${key}`);
+    const client = getRedisClient()
+    const data = await client.get(`upload_ratelimit:${key}`)
 
     if (!data) {
-      return null;
+      return null
     }
 
-    return data as { remaining: number; limit: number; reset: number };
+    return data as { remaining: number; limit: number; reset: number }
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -254,9 +253,9 @@ export async function getRateLimitStatus(
  * Use with caution - only for emergency situations
  */
 export async function resetRateLimit(key: string): Promise<void> {
-  const client = getRedisClient();
-  await client.del(`upload_ratelimit:${key}`);
-  await client.del(`bandwidth_ratelimit:${key}`);
+  const client = getRedisClient()
+  await client.del(`upload_ratelimit:${key}`)
+  await client.del(`bandwidth_ratelimit:${key}`)
 }
 
 /**
@@ -268,9 +267,9 @@ export async function getRateLimitAnalytics(
   startTime: Date,
   endTime: Date
 ): Promise<{
-  totalRequests: number;
-  blockedRequests: number;
-  uniqueKeys: number;
+  totalRequests: number
+  blockedRequests: number
+  uniqueKeys: number
 }> {
   // This would integrate with Upstash Analytics API
   // For now, return placeholder
@@ -278,28 +277,28 @@ export async function getRateLimitAnalytics(
     totalRequests: 0,
     blockedRequests: 0,
     uniqueKeys: 0,
-  };
+  }
 }
 
 /**
  * Format rate limit error message for user
  */
 export function formatRateLimitError(result: RateLimitResult): string {
-  const resetDate = new Date(result.reset);
-  const resetTime = resetDate.toLocaleTimeString();
+  const resetDate = new Date(result.reset)
+  const resetTime = resetDate.toLocaleTimeString()
 
   if (result.retryAfter) {
     if (result.retryAfter < 60) {
-      return `Rate limit exceeded. Please try again in ${result.retryAfter} seconds.`;
+      return `Rate limit exceeded. Please try again in ${result.retryAfter} seconds.`
     } else if (result.retryAfter < 3600) {
-      const minutes = Math.ceil(result.retryAfter / 60);
-      return `Rate limit exceeded. Please try again in ${minutes} minutes.`;
+      const minutes = Math.ceil(result.retryAfter / 60)
+      return `Rate limit exceeded. Please try again in ${minutes} minutes.`
     } else {
-      return `Rate limit exceeded. Limit resets at ${resetTime}.`;
+      return `Rate limit exceeded. Limit resets at ${resetTime}.`
     }
   }
 
-  return `Rate limit exceeded. You have ${result.remaining} requests remaining out of ${result.limit}.`;
+  return `Rate limit exceeded. You have ${result.remaining} requests remaining out of ${result.limit}.`
 }
 
 /**
@@ -312,8 +311,8 @@ export async function withRateLimit<T>(
   windowSeconds: number,
   action: () => Promise<T>
 ): Promise<T> {
-  const limiter = createUploadRateLimiter(maxRequests, windowSeconds);
-  const result = await limiter.limit(identifier);
+  const limiter = createUploadRateLimiter(maxRequests, windowSeconds)
+  const result = await limiter.limit(identifier)
 
   if (!result.success) {
     throw new Error(
@@ -324,19 +323,19 @@ export async function withRateLimit<T>(
         reset: result.reset,
         retryAfter: Math.ceil((result.reset - Date.now()) / 1000),
       })
-    );
+    )
   }
 
-  return action();
+  return action()
 }
 
 /**
  * Create custom rate limiter with specific configuration
  */
 export function createCustomRateLimiter(config: {
-  maxRequests: number;
-  windowSeconds: number;
-  prefix?: string;
+  maxRequests: number
+  windowSeconds: number
+  prefix?: string
 }) {
   return new Ratelimit({
     redis: getRedisClient(),
@@ -346,5 +345,5 @@ export function createCustomRateLimiter(config: {
     ),
     analytics: true,
     prefix: config.prefix || "custom_ratelimit",
-  });
+  })
 }

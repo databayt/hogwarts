@@ -5,6 +5,7 @@ Comprehensive real-time notification center for the Hogwarts School Automation P
 ## Overview
 
 The notification system provides:
+
 - ✅ **Real-time Updates**: WebSocket integration for instant notifications
 - ✅ **Multi-Channel Delivery**: In-app, email, push, and SMS (future)
 - ✅ **User Preferences**: Granular control over notification types and channels
@@ -19,51 +20,51 @@ The notification system provides:
 
 ### Notification Types (26 Total)
 
-| Type | Description | Priority | Roles |
-|------|-------------|----------|-------|
-| `message` | New direct/group message | normal | All |
-| `message_mention` | User mentioned in message | high | All |
-| `assignment_created` | New assignment posted | normal | STUDENT, GUARDIAN |
-| `assignment_due` | Assignment due reminder | high | STUDENT, GUARDIAN |
-| `assignment_graded` | Assignment graded | high | STUDENT, GUARDIAN |
-| `grade_posted` | New grade posted | high | STUDENT, GUARDIAN |
-| `attendance_marked` | Attendance marked | normal | All |
-| `attendance_alert` | Absence alert for guardians | high | GUARDIAN |
-| `fee_due` | Fee payment due | high | GUARDIAN, ACCOUNTANT |
-| `fee_overdue` | Overdue fee payment | urgent | GUARDIAN, ACCOUNTANT |
-| `fee_paid` | Fee payment received | normal | GUARDIAN, ACCOUNTANT |
-| `announcement` | New announcement | normal-urgent | All |
-| `event_reminder` | Calendar event reminder | normal | All |
-| `class_cancelled` | Class cancellation | urgent | STUDENT, TEACHER, GUARDIAN |
-| `class_rescheduled` | Class rescheduled | high | STUDENT, TEACHER, GUARDIAN |
-| `system_alert` | System-wide alert | urgent | All |
-| `account_created` | Account created | low | All |
-| `password_reset` | Password reset request | high | All |
-| `login_alert` | Unusual login detected | urgent | All |
-| `document_shared` | Document shared with user | normal | All |
-| `report_ready` | Report generated | normal | ADMIN, TEACHER |
-| `exam_scheduled` | Exam scheduled | high | STUDENT, GUARDIAN |
-| `exam_result` | Exam result available | high | STUDENT, GUARDIAN |
-| `library_due` | Library book due | normal | STUDENT |
-| `general` | General notification | low | All |
+| Type                 | Description                 | Priority      | Roles                      |
+| -------------------- | --------------------------- | ------------- | -------------------------- |
+| `message`            | New direct/group message    | normal        | All                        |
+| `message_mention`    | User mentioned in message   | high          | All                        |
+| `assignment_created` | New assignment posted       | normal        | STUDENT, GUARDIAN          |
+| `assignment_due`     | Assignment due reminder     | high          | STUDENT, GUARDIAN          |
+| `assignment_graded`  | Assignment graded           | high          | STUDENT, GUARDIAN          |
+| `grade_posted`       | New grade posted            | high          | STUDENT, GUARDIAN          |
+| `attendance_marked`  | Attendance marked           | normal        | All                        |
+| `attendance_alert`   | Absence alert for guardians | high          | GUARDIAN                   |
+| `fee_due`            | Fee payment due             | high          | GUARDIAN, ACCOUNTANT       |
+| `fee_overdue`        | Overdue fee payment         | urgent        | GUARDIAN, ACCOUNTANT       |
+| `fee_paid`           | Fee payment received        | normal        | GUARDIAN, ACCOUNTANT       |
+| `announcement`       | New announcement            | normal-urgent | All                        |
+| `event_reminder`     | Calendar event reminder     | normal        | All                        |
+| `class_cancelled`    | Class cancellation          | urgent        | STUDENT, TEACHER, GUARDIAN |
+| `class_rescheduled`  | Class rescheduled           | high          | STUDENT, TEACHER, GUARDIAN |
+| `system_alert`       | System-wide alert           | urgent        | All                        |
+| `account_created`    | Account created             | low           | All                        |
+| `password_reset`     | Password reset request      | high          | All                        |
+| `login_alert`        | Unusual login detected      | urgent        | All                        |
+| `document_shared`    | Document shared with user   | normal        | All                        |
+| `report_ready`       | Report generated            | normal        | ADMIN, TEACHER             |
+| `exam_scheduled`     | Exam scheduled              | high          | STUDENT, GUARDIAN          |
+| `exam_result`        | Exam result available       | high          | STUDENT, GUARDIAN          |
+| `library_due`        | Library book due            | normal        | STUDENT                    |
+| `general`            | General notification        | low           | All                        |
 
 ### Priority Levels
 
-| Priority | Use Case | Badge Color |
-|----------|----------|-------------|
-| `low` | Non-urgent information | Blue |
-| `normal` | Standard notifications | Default |
-| `high` | Important updates | Orange |
-| `urgent` | Critical alerts requiring immediate attention | Red |
+| Priority | Use Case                                      | Badge Color |
+| -------- | --------------------------------------------- | ----------- |
+| `low`    | Non-urgent information                        | Blue        |
+| `normal` | Standard notifications                        | Default     |
+| `high`   | Important updates                             | Orange      |
+| `urgent` | Critical alerts requiring immediate attention | Red         |
 
 ### Delivery Channels
 
-| Channel | Status | Description |
-|---------|--------|-------------|
+| Channel  | Status        | Description                |
+| -------- | ------------- | -------------------------- |
 | `in_app` | ✅ Production | In-app notification center |
-| `email` | ⚠️ Pending | Email delivery via Resend |
-| `push` | ⚠️ Future | Browser push notifications |
-| `sms` | ⚠️ Future | SMS delivery via Twilio |
+| `email`  | ⚠️ Pending    | Email delivery via Resend  |
+| `push`   | ⚠️ Future     | Browser push notifications |
+| `sms`    | ⚠️ Future     | SMS delivery via Twilio    |
 
 ## Architecture
 
@@ -139,14 +140,15 @@ import { getNotificationDictionary } from "@/components/internationalization/dic
 const dict = await getNotificationDictionary(locale)
 
 // Access translations
-dict.notifications.title              // "Notifications" / "الإشعارات"
-dict.notifications.types.message      // "New message" / "رسالة جديدة"
+dict.notifications.title // "Notifications" / "الإشعارات"
+dict.notifications.types.message // "New message" / "رسالة جديدة"
 dict.notifications.actions.markAsRead // "Mark as read" / "تعليم كمقروء"
 ```
 
 ### Dictionary Keys
 
 **Main sections:**
+
 - `title`, `subtitle`, `description` - Page headers
 - `tabs` - All, Unread, Read, Archived
 - `actions` - Mark as read, Archive, Delete, etc.
@@ -171,6 +173,7 @@ dict.notifications.actions.markAsRead // "Mark as read" / "تعليم كمقرو
 ### Pattern for Updating Components
 
 **Server Components:**
+
 ```typescript
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
@@ -188,6 +191,7 @@ export async function MyServerComponent({ locale }: { locale: Locale }) {
 ```
 
 **Client Components:**
+
 ```typescript
 'use client'
 
@@ -209,17 +213,17 @@ export function MyClientComponent({ dictionary }: MyClientComponentProps) {
 **EVERY database operation MUST include `schoolId` filter:**
 
 ```typescript
-// ❌ WRONG - No tenant scoping
-const notifications = await prisma.notification.findMany({
-  where: { userId }
-})
-
 // ✅ CORRECT - Scoped by schoolId
 import { getTenantContext } from "@/lib/tenant-context"
 
+// ❌ WRONG - No tenant scoping
+const notifications = await prisma.notification.findMany({
+  where: { userId },
+})
+
 const { schoolId } = await getTenantContext()
 const notifications = await prisma.notification.findMany({
-  where: { schoolId, userId }
+  where: { schoolId, userId },
 })
 ```
 
@@ -231,27 +235,27 @@ All server actions use comprehensive RBAC via `authorization.ts`:
 import { canPerformAction, canReceiveNotificationType } from "./authorization"
 
 // Check if user can perform action
-const canCreate = canPerformAction(session.user.role, 'create')
+const canCreate = canPerformAction(session.user.role, "create")
 
 // Check if user can receive notification type
 const canReceive = canReceiveNotificationType(
   session.user.role,
-  'assignment_graded'
+  "assignment_graded"
 )
 ```
 
 ### 8-Role System
 
-| Role | Create | View Own | View All | Manage | Delete | Special Permissions |
-|------|--------|----------|----------|--------|--------|---------------------|
-| **DEVELOPER** | ✅ | ✅ | ✅ | ✅ | ✅ | Platform admin, all schools |
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | School admin, all school users |
-| **TEACHER** | ✅ | ✅ | ✅ Class | ✅ Own | Class-specific notifications |
-| **STUDENT** | ❌ | ✅ | ❌ | ❌ | ❌ | Own data only |
-| **GUARDIAN** | ❌ | ✅ | ❌ | ❌ | ❌ | Children's data only |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ Finance | ✅ Finance | Finance features only |
-| **STAFF** | ❌ | ✅ | ❌ | ❌ | ❌ | Limited access |
-| **USER** | ❌ | ✅ | ❌ | ❌ | ❌ | Minimal access |
+| Role           | Create | View Own | View All   | Manage     | Delete                       | Special Permissions            |
+| -------------- | ------ | -------- | ---------- | ---------- | ---------------------------- | ------------------------------ |
+| **DEVELOPER**  | ✅     | ✅       | ✅         | ✅         | ✅                           | Platform admin, all schools    |
+| **ADMIN**      | ✅     | ✅       | ✅         | ✅         | ✅                           | School admin, all school users |
+| **TEACHER**    | ✅     | ✅       | ✅ Class   | ✅ Own     | Class-specific notifications |
+| **STUDENT**    | ❌     | ✅       | ❌         | ❌         | ❌                           | Own data only                  |
+| **GUARDIAN**   | ❌     | ✅       | ❌         | ❌         | ❌                           | Children's data only           |
+| **ACCOUNTANT** | ✅     | ✅       | ✅ Finance | ✅ Finance | Finance features only        |
+| **STAFF**      | ❌     | ✅       | ❌         | ❌         | ❌                           | Limited access                 |
+| **USER**       | ❌     | ✅       | ❌         | ❌         | ❌                           | Minimal access                 |
 
 ## Real-Time Updates
 
@@ -301,7 +305,7 @@ await createNotification({
   body: "Your assignment has been graded",
   targetUserId: studentId,
   metadata: { assignmentId, grade },
-  channels: ["in_app", "email"]
+  channels: ["in_app", "email"],
 })
 
 // Mark as read
@@ -319,7 +323,7 @@ await updateNotificationPreferences({
   channel: "email",
   enabled: true,
   quietHoursStart: 22, // 10 PM
-  quietHoursEnd: 8     // 8 AM
+  quietHoursEnd: 8, // 8 AM
 })
 
 // Batch create
@@ -329,13 +333,14 @@ await createBulkNotifications({
   body: "Due to weather conditions...",
   priority: "urgent",
   targetRole: "ALL",
-  channels: ["in_app", "email", "push"]
+  channels: ["in_app", "email", "push"],
 })
 ```
 
 ### Action Response Type
 
 All actions return:
+
 ```typescript
 type ActionResponse<T> =
   | { success: true; data: T }
@@ -350,22 +355,22 @@ All queries use optimized query builders from `queries.ts`:
 
 ```typescript
 import {
+  getNotificationById,
   getNotificationsList,
   getNotificationStats,
   getUnreadCount,
-  getNotificationById
 } from "./queries"
 
 // Paginated list with filters
 const { rows, count } = await getNotificationsList(schoolId, userId, {
   page: 1,
   perPage: 20,
-  read: 'unread',
-  type: 'assignment_graded',
-  priority: 'high',
-  search: 'homework',
-  sortBy: 'createdAt',
-  sortOrder: 'desc'
+  read: "unread",
+  type: "assignment_graded",
+  priority: "high",
+  search: "homework",
+  sortBy: "createdAt",
+  sortOrder: "desc",
 })
 
 // Statistics
@@ -434,13 +439,13 @@ Minimum Priority
 
 ### Performance Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Initial Load | <100ms | ✅ 85ms |
-| Mark as Read | <50ms (optimistic) | ✅ 40ms |
-| Real-time Latency | <500ms | ✅ 350ms |
-| Unread Count | <20ms | ✅ 15ms |
-| Pagination | <200ms | ✅ 180ms |
+| Metric            | Target             | Current  |
+| ----------------- | ------------------ | -------- |
+| Initial Load      | <100ms             | ✅ 85ms  |
+| Mark as Read      | <50ms (optimistic) | ✅ 40ms  |
+| Real-time Latency | <500ms             | ✅ 350ms |
+| Unread Count      | <20ms              | ✅ 15ms  |
+| Pagination        | <200ms             | ✅ 180ms |
 
 ## Accessibility
 
@@ -478,24 +483,28 @@ Minimum Priority
 ### Test Coverage Target: 90%+
 
 **Unit Tests** (Vitest):
+
 - `actions.test.ts` - Server actions
 - `queries.test.ts` - Query builders
 - `validation.test.ts` - Zod schemas
 - `authorization.test.ts` - RBAC logic
 
 **Component Tests** (React Testing Library):
+
 - `card.test.tsx` - NotificationCard
 - `list.test.tsx` - NotificationList
 - `bell-icon.test.tsx` - NotificationBell
 - `preferences-form.test.tsx` - PreferencesForm
 
 **Integration Tests**:
+
 - Real-time updates flow
 - Mark as read flow
 - Preferences update flow
 - Batch operations
 
 **E2E Tests** (Playwright):
+
 - Complete notification journey
 - Multi-device testing
 - Real-time sync verification
@@ -519,11 +528,12 @@ await sendEmail({
 
 ```typescript
 // Web Push API
-const subscription = await navigator.serviceWorker.ready
-  .then(registration => registration.pushManager.subscribe({
+const subscription = await navigator.serviceWorker.ready.then((registration) =>
+  registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: VAPID_PUBLIC_KEY
-  }))
+    applicationServerKey: VAPID_PUBLIC_KEY,
+  })
+)
 
 await subscribeToPush(subscription)
 ```
@@ -541,23 +551,27 @@ await subscribeToPush(subscription)
 ### Common Issues
 
 **1. Notifications not appearing**
+
 - Check `schoolId` scoping in queries
 - Verify user has permissions (authorization.ts)
 - Check WebSocket connection status
 - Verify notification preferences
 
 **2. Real-time updates not working**
+
 - Check WebSocket connection in Network tab
 - Verify `use-notifications.ts` hook is being used
 - Check browser console for errors
 - Test fallback polling
 
 **3. Internationalization not working**
+
 - Verify `getNotificationDictionary` is called with correct locale
 - Check dictionary files exist in both en/ and ar/
 - Ensure component receives dictionary prop (client components)
 
 **4. Performance issues**
+
 - Check database indexes are created
 - Verify cursor-based pagination is used
 - Enable query result caching
@@ -602,6 +616,7 @@ await subscribeToPush(subscription)
 ## Support
 
 For questions or issues:
+
 1. Check this README
 2. Review code comments in relevant files
 3. Check the architecture documentation

@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
@@ -24,7 +25,10 @@ const exploreRoles = [
   { title: "Cyber Security Analyst", href: "/courses?role=cyber-security" },
   { title: "Data Scientist", href: "/courses?role=data-scientist" },
   { title: "Business Intelligence Analyst", href: "/courses?role=bi-analyst" },
-  { title: "Digital Marketing Specialist", href: "/courses?role=digital-marketing" },
+  {
+    title: "Digital Marketing Specialist",
+    href: "/courses?role=digital-marketing",
+  },
   { title: "UI / UX Designer", href: "/courses?role=ui-ux" },
   { title: "Machine Learning Engineer", href: "/courses?role=ml-engineer" },
 ]
@@ -36,7 +40,10 @@ const exploreCategories = [
   { title: "Information Technology", href: "/courses?category=it" },
   { title: "Computer Science", href: "/courses?category=cs" },
   { title: "Healthcare", href: "/courses?category=healthcare" },
-  { title: "Physical Science and Engineering", href: "/courses?category=engineering" },
+  {
+    title: "Physical Science and Engineering",
+    href: "/courses?category=engineering",
+  },
   { title: "Personal Development", href: "/courses?category=personal-dev" },
   { title: "Social Sciences", href: "/courses?category=social-sciences" },
   { title: "Language Learning", href: "/courses?category=languages" },
@@ -79,13 +86,15 @@ export function Explore({ lang, dictionary }: ExploreProps) {
             </span>
           </NavigationMenuTrigger>
           <NavigationMenuContent>
-            <div className={cn(
-              "grid gap-8 p-8 w-[52rem] lg:w-[58rem] grid-cols-4",
-              isRTL && "direction-rtl"
-            )}>
+            <div
+              className={cn(
+                "grid w-[52rem] grid-cols-4 gap-8 p-8 lg:w-[58rem]",
+                isRTL && "direction-rtl"
+              )}
+            >
               {/* Column 1: Explore roles */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm">
+                <h4 className="text-sm font-semibold">
                   {dictionary?.explore?.roles || "Explore roles"}
                 </h4>
                 <ul className="space-y-2">
@@ -94,7 +103,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                       <NavigationMenuLink asChild>
                         <Link
                           href={`/${lang}/stream${role.href}`}
-                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                         >
                           {role.title}
                         </Link>
@@ -104,7 +113,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                   <li>
                     <Link
                       href={`/${lang}/stream/courses`}
-                      className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                      className="hover:text-primary text-sm font-medium underline underline-offset-2"
                     >
                       {dictionary?.explore?.viewAll || "View all"}
                     </Link>
@@ -114,7 +123,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
 
               {/* Column 2: Explore categories */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-sm">
+                <h4 className="text-sm font-semibold">
                   {dictionary?.explore?.categories || "Explore categories"}
                 </h4>
                 <ul className="space-y-2">
@@ -123,7 +132,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                       <NavigationMenuLink asChild>
                         <Link
                           href={`/${lang}/stream${category.href}`}
-                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                         >
                           {category.title}
                         </Link>
@@ -133,7 +142,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                   <li>
                     <Link
                       href={`/${lang}/stream/courses`}
-                      className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                      className="hover:text-primary text-sm font-medium underline underline-offset-2"
                     >
                       {dictionary?.explore?.viewAll || "View all"}
                     </Link>
@@ -144,8 +153,9 @@ export function Explore({ lang, dictionary }: ExploreProps) {
               {/* Column 3: Certificates & Degrees */}
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">
-                    {dictionary?.explore?.certificates || "Earn a Professional Certificate"}
+                  <h4 className="text-sm font-semibold">
+                    {dictionary?.explore?.certificates ||
+                      "Earn a Professional Certificate"}
                   </h4>
                   <ul className="space-y-2">
                     {certificates.map((cert) => (
@@ -153,7 +163,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                         <NavigationMenuLink asChild>
                           <Link
                             href={`/${lang}/stream${cert.href}`}
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                           >
                             {cert.title}
                           </Link>
@@ -163,7 +173,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                     <li>
                       <Link
                         href={`/${lang}/stream/certificates`}
-                        className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                        className="hover:text-primary text-sm font-medium underline underline-offset-2"
                       >
                         {dictionary?.explore?.viewAll || "View all"}
                       </Link>
@@ -172,7 +182,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">
+                  <h4 className="text-sm font-semibold">
                     {dictionary?.explore?.degrees || "Earn an online degree"}
                   </h4>
                   <ul className="space-y-2">
@@ -181,7 +191,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                         <NavigationMenuLink asChild>
                           <Link
                             href={`/${lang}/stream${degree.href}`}
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                           >
                             {degree.title}
                           </Link>
@@ -191,7 +201,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                     <li>
                       <Link
                         href={`/${lang}/stream/degrees`}
-                        className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                        className="hover:text-primary text-sm font-medium underline underline-offset-2"
                       >
                         {dictionary?.explore?.viewAll || "View all"}
                       </Link>
@@ -203,7 +213,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
               {/* Column 4: Trending skills */}
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">
+                  <h4 className="text-sm font-semibold">
                     {dictionary?.explore?.trending || "Explore trending skills"}
                   </h4>
                   <ul className="space-y-2">
@@ -212,7 +222,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                         <NavigationMenuLink asChild>
                           <Link
                             href={`/${lang}/stream${skill.href}`}
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                           >
                             {skill.title}
                           </Link>
@@ -223,12 +233,13 @@ export function Explore({ lang, dictionary }: ExploreProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-sm">
-                    {dictionary?.explore?.certification || "Prepare for a certification exam"}
+                  <h4 className="text-sm font-semibold">
+                    {dictionary?.explore?.certification ||
+                      "Prepare for a certification exam"}
                   </h4>
                   <Link
                     href={`/${lang}/stream/certifications`}
-                    className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                    className="hover:text-primary text-sm font-medium underline underline-offset-2"
                   >
                     {dictionary?.explore?.viewAll || "View all"}
                   </Link>
@@ -237,12 +248,12 @@ export function Explore({ lang, dictionary }: ExploreProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t py-5 bg-muted/30 rounded-b-2xl">
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-muted/30 rounded-b-2xl border-t py-5">
+              <p className="text-muted-foreground text-sm">
                 {dictionary?.explore?.notSure || "Not sure where to begin?"}{" "}
                 <Link
                   href={`/${lang}/stream/courses?filter=free`}
-                  className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                  className="text-foreground hover:text-primary font-medium underline underline-offset-2"
                 >
                   {dictionary?.explore?.browseFree || "Browse free courses"}
                 </Link>

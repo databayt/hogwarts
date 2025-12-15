@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback } from "react"
 
 /**
  * Hook to trigger confetti animation
@@ -7,8 +7,8 @@ import { useCallback } from "react";
 export function useConfetti() {
   const triggerConfetti = useCallback(() => {
     // For now, just log - can be enhanced with a confetti library later
-    console.log("🎉 Confetti triggered!");
-  }, []);
+    console.log("🎉 Confetti triggered!")
+  }, [])
 
-  return triggerConfetti;
+  return triggerConfetti
 }

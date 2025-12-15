@@ -3,18 +3,19 @@
  * Tracks and enforces per-school storage limits
  */
 
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { DEFAULT_QUOTA } from "./constants";
+import { db } from "@/lib/db"
+
+import { DEFAULT_QUOTA } from "./constants"
 import type {
-  QuotaStatus,
-  QuotaCheckResult,
-  QuotaStats,
   QuotaByCategory,
   QuotaByTier,
+  QuotaCheckResult,
   QuotaLimits,
-} from "./types";
+  QuotaStats,
+  QuotaStatus,
+} from "./types"
 
 // ============================================================================
 // Core Quota Functions
@@ -26,7 +27,7 @@ import type {
 export async function getSchoolQuota(schoolId: string) {
   let quota = await db.uploadQuota.findUnique({
     where: { schoolId },
-  });
+  })
 
   if (!quota) {
     // Create default quota
@@ -45,36 +46,35 @@ export async function getSchoolQuota(schoolId: string) {
         currentFiles: 0,
         warningThreshold: DEFAULT_QUOTA.warningThreshold,
       },
-    });
+    })
   }
 
-  return quota;
+  return quota
 }
 
 /**
  * Get quota status with calculated fields
  */
 export async function getQuotaStatus(schoolId: string): Promise<QuotaStatus> {
-  const quota = await getSchoolQuota(schoolId);
+  const quota = await getSchoolQuota(schoolId)
 
   // Reset daily quota if needed
-  const now = new Date();
+  const now = new Date()
   if (now > quota.dailyResetAt) {
-    await resetDailyQuota(schoolId);
-    quota.dailyUploadUsed = BigInt(0);
-    quota.dailyResetAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    await resetDailyQuota(schoolId)
+    quota.dailyUploadUsed = BigInt(0)
+    quota.dailyResetAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
   }
 
-  const availableStorage = quota.totalStorageLimit - quota.usedStorage;
+  const availableStorage = quota.totalStorageLimit - quota.usedStorage
   const storageUsagePercent =
-    Number((quota.usedStorage * BigInt(100)) / quota.totalStorageLimit) / 100;
+    Number((quota.usedStorage * BigInt(100)) / quota.totalStorageLimit) / 100
 
-  const dailyUploadAvailable = quota.dailyUploadLimit - quota.dailyUploadUsed;
+  const dailyUploadAvailable = quota.dailyUploadLimit - quota.dailyUploadUsed
   const dailyUploadUsagePercent =
-    Number((quota.dailyUploadUsed * BigInt(100)) / quota.dailyUploadLimit) /
-    100;
+    Number((quota.dailyUploadUsed * BigInt(100)) / quota.dailyUploadLimit) / 100
 
-  const availableFiles = quota.maxFiles - quota.currentFiles;
+  const availableFiles = quota.maxFiles - quota.currentFiles
 
   return {
     schoolId: quota.schoolId,
@@ -96,7 +96,7 @@ export async function getQuotaStatus(schoolId: string): Promise<QuotaStatus> {
     isNearLimit: storageUsagePercent >= quota.warningThreshold,
     isAtLimit: storageUsagePercent >= 1,
     warningThreshold: quota.warningThreshold,
-  };
+  }
 }
 
 /**
@@ -106,17 +106,18 @@ export async function checkQuota(
   schoolId: string,
   fileSize: bigint
 ): Promise<QuotaCheckResult> {
-  const status = await getQuotaStatus(schoolId);
+  const status = await getQuotaStatus(schoolId)
 
   // Check if at storage limit
   if (status.isAtLimit) {
     return {
       allowed: false,
-      reason: "Storage quota exceeded. Please upgrade your plan or delete old files.",
+      reason:
+        "Storage quota exceeded. Please upgrade your plan or delete old files.",
       currentUsage: status.usedStorage,
       limit: status.totalStorageLimit,
       availableSpace: BigInt(0),
-    };
+    }
   }
 
   // Check if this upload would exceed storage limit
@@ -127,7 +128,7 @@ export async function checkQuota(
       currentUsage: status.usedStorage,
       limit: status.totalStorageLimit,
       availableSpace: status.availableStorage,
-    };
+    }
   }
 
   // Check if file exceeds max file size
@@ -137,7 +138,7 @@ export async function checkQuota(
       reason: `File too large. Maximum file size: ${formatBytes(status.maxFileSize)}, your file: ${formatBytes(fileSize)}.`,
       currentUsage: status.usedStorage,
       limit: status.maxFileSize,
-    };
+    }
   }
 
   // Check daily upload limit
@@ -148,7 +149,7 @@ export async function checkQuota(
       currentUsage: status.dailyUploadUsed,
       limit: status.dailyUploadLimit,
       availableSpace: status.dailyUploadAvailable,
-    };
+    }
   }
 
   // Check file count limit
@@ -158,7 +159,7 @@ export async function checkQuota(
       reason: `Maximum number of files reached (${status.maxFiles}). Please delete old files before uploading new ones.`,
       currentUsage: BigInt(status.currentFiles),
       limit: BigInt(status.maxFiles),
-    };
+    }
   }
 
   return {
@@ -166,7 +167,7 @@ export async function checkQuota(
     currentUsage: status.usedStorage,
     limit: status.totalStorageLimit,
     availableSpace: status.availableStorage,
-  };
+  }
 }
 
 // ============================================================================
@@ -187,12 +188,12 @@ export async function incrementUsage(
       dailyUploadUsed: { increment: fileSize },
       currentFiles: { increment: 1 },
     },
-  });
+  })
 
   // Check if quota warning should be sent
-  const status = await getQuotaStatus(schoolId);
+  const status = await getQuotaStatus(schoolId)
   if (status.isNearLimit && !status.isAtLimit) {
-    await sendQuotaWarning(schoolId, status);
+    await sendQuotaWarning(schoolId, status)
   }
 }
 
@@ -209,16 +210,16 @@ export async function decrementUsage(
       usedStorage: { decrement: fileSize },
       currentFiles: { decrement: 1 },
     },
-  });
+  })
 }
 
 /**
  * Reset daily quota (runs automatically at midnight)
  */
 export async function resetDailyQuota(schoolId: string): Promise<void> {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
 
   await db.uploadQuota.update({
     where: { schoolId },
@@ -226,14 +227,14 @@ export async function resetDailyQuota(schoolId: string): Promise<void> {
       dailyUploadUsed: BigInt(0),
       dailyResetAt: tomorrow,
     },
-  });
+  })
 }
 
 /**
  * Reset all daily quotas (cron job)
  */
 export async function resetAllDailyQuotas(): Promise<void> {
-  const now = new Date();
+  const now = new Date()
   const quotasToReset = await db.uploadQuota.findMany({
     where: {
       dailyResetAt: {
@@ -241,11 +242,11 @@ export async function resetAllDailyQuotas(): Promise<void> {
       },
     },
     select: { schoolId: true },
-  });
+  })
 
   await Promise.all(
     quotasToReset.map((quota) => resetDailyQuota(quota.schoolId))
-  );
+  )
 }
 
 // ============================================================================
@@ -262,7 +263,7 @@ export async function updateQuotaLimits(
   await db.uploadQuota.update({
     where: { schoolId },
     data: limits,
-  });
+  })
 }
 
 /**
@@ -279,10 +280,10 @@ export async function recalculateUsage(schoolId: string): Promise<void> {
       size: true,
     },
     _count: true,
-  });
+  })
 
-  const actualUsage = result._sum.size || BigInt(0);
-  const actualCount = result._count;
+  const actualUsage = result._sum.size || BigInt(0)
+  const actualCount = result._count
 
   await db.uploadQuota.update({
     where: { schoolId },
@@ -290,7 +291,7 @@ export async function recalculateUsage(schoolId: string): Promise<void> {
       usedStorage: actualUsage,
       currentFiles: actualCount,
     },
-  });
+  })
 }
 
 // ============================================================================
@@ -301,7 +302,7 @@ export async function recalculateUsage(schoolId: string): Promise<void> {
  * Get quota statistics for dashboard
  */
 export async function getQuotaStats(schoolId: string): Promise<QuotaStats> {
-  const status = await getQuotaStatus(schoolId);
+  const status = await getQuotaStatus(schoolId)
 
   return {
     storage: {
@@ -333,13 +334,15 @@ export async function getQuotaStats(schoolId: string): Promise<QuotaStats> {
       isAtLimit: status.isAtLimit,
       warningThreshold: Math.round(status.warningThreshold * 100),
     },
-  };
+  }
 }
 
 /**
  * Get quota usage by file category
  */
-export async function getQuotaByCategory(schoolId: string): Promise<QuotaByCategory[]> {
+export async function getQuotaByCategory(
+  schoolId: string
+): Promise<QuotaByCategory[]> {
   const files = await db.fileMetadata.groupBy({
     by: ["category"],
     where: {
@@ -350,14 +353,14 @@ export async function getQuotaByCategory(schoolId: string): Promise<QuotaByCateg
       size: true,
     },
     _count: true,
-  });
+  })
 
   return files.map((file) => ({
     category: file.category,
     size: file._sum.size || BigInt(0),
     sizeFormatted: formatBytes(file._sum.size || BigInt(0)),
     count: file._count,
-  }));
+  }))
 }
 
 /**
@@ -374,14 +377,14 @@ export async function getQuotaByTier(schoolId: string): Promise<QuotaByTier[]> {
       size: true,
     },
     _count: true,
-  });
+  })
 
   return files.map((file) => ({
     tier: file.storageTier,
     size: file._sum.size || BigInt(0),
     sizeFormatted: formatBytes(file._sum.size || BigInt(0)),
     count: file._count,
-  }));
+  }))
 }
 
 // ============================================================================
@@ -400,40 +403,42 @@ async function sendQuotaWarning(
   const quota = await db.uploadQuota.findUnique({
     where: { schoolId },
     select: { lastWarningAt: true },
-  });
+  })
 
-  const now = new Date();
+  const now = new Date()
   if (
     quota?.lastWarningAt &&
     now.getTime() - quota.lastWarningAt.getTime() < 24 * 60 * 60 * 1000
   ) {
     // Warning sent in last 24 hours, don't spam
-    return;
+    return
   }
 
   // Update last warning timestamp
   await db.uploadQuota.update({
     where: { schoolId },
     data: { lastWarningAt: now },
-  });
+  })
 
   // TODO: Send notification to school admins
   // This would integrate with your notification system
-  console.log(`[QUOTA WARNING] School ${schoolId} at ${Math.round(status.storageUsagePercent * 100)}% storage usage`);
+  console.log(
+    `[QUOTA WARNING] School ${schoolId} at ${Math.round(status.storageUsagePercent * 100)}% storage usage`
+  )
 }
 
 /**
  * Format bytes to human-readable format
  */
 function formatBytes(bytes: bigint): string {
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = Number(bytes);
-  let unitIndex = 0;
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let value = Number(bytes)
+  let unitIndex = 0
 
   while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex++;
+    value /= 1024
+    unitIndex++
   }
 
-  return `${value.toFixed(2)} ${units[unitIndex]}`;
+  return `${value.toFixed(2)} ${units[unitIndex]}`
 }

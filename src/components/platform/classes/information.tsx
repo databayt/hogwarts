@@ -1,55 +1,76 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { classCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
-import { getSubjects } from "@/components/platform/subjects/actions";
-import { getTeachers } from "@/components/platform/teachers/actions";
+import { useEffect, useState } from "react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { ClassFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { getSubjects } from "@/components/platform/subjects/actions"
+import { getTeachers } from "@/components/platform/teachers/actions"
+
+import { ClassFormStepProps } from "./types"
+import { classCreateSchema } from "./validation"
 
 export function InformationStep({ form, isView }: ClassFormStepProps) {
-  const [subjects, setSubjects] = useState<Array<{ id: string; subjectName: string }>>([]);
-  const [teachers, setTeachers] = useState<Array<{ id: string; givenName: string; surname: string }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [subjects, setSubjects] = useState<
+    Array<{ id: string; subjectName: string }>
+  >([])
+  const [teachers, setTeachers] = useState<
+    Array<{ id: string; givenName: string; surname: string }>
+  >([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(true)
         // Load subjects from database
-        const subjectsRes = await getSubjects({ perPage: 100 });
+        const subjectsRes = await getSubjects({ perPage: 100 })
         if (subjectsRes.success && subjectsRes.data) {
-          setSubjects(subjectsRes.data.rows.map((s: any) => ({
-            id: s.id,
-            subjectName: s.subjectName || s.name || 'Unknown'
-          })));
+          setSubjects(
+            subjectsRes.data.rows.map((s: any) => ({
+              id: s.id,
+              subjectName: s.subjectName || s.name || "Unknown",
+            }))
+          )
         }
 
         // Load teachers from database
-        const teachersRes = await getTeachers({ perPage: 100 });
+        const teachersRes = await getTeachers({ perPage: 100 })
         if (teachersRes.success && teachersRes.data) {
-          setTeachers(teachersRes.data.rows.map((t: any) => ({
-            id: t.id,
-            givenName: t.givenName || '',
-            surname: t.surname || ''
-          })));
+          setTeachers(
+            teachersRes.data.rows.map((t: any) => ({
+              id: t.id,
+              givenName: t.givenName || "",
+              surname: t.surname || "",
+            }))
+          )
         }
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("Failed to load data:", error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    loadData();
-  }, []);
+    }
+    loadData()
+  }, [])
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="name"
@@ -57,7 +78,11 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
           <FormItem>
             <FormLabel>Class Name</FormLabel>
             <FormControl>
-              <Input placeholder="Enter class name" disabled={isView} {...field} />
+              <Input
+                placeholder="Enter class name"
+                disabled={isView}
+                {...field}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -70,7 +95,11 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Subject</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select subject" />
@@ -95,7 +124,11 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Teacher</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select teacher" />
@@ -114,5 +147,5 @@ export function InformationStep({ form, isView }: ClassFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

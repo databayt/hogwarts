@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import * as React from "react"
 import {
   Document,
+  Font,
   Page,
+  pdf,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
-  pdf,
-  Font,
-} from "@react-pdf/renderer";
+} from "@react-pdf/renderer"
 
 // Register fonts (optional - uses default sans-serif)
 // Font.register({ family: 'Tajawal', src: '/fonts/Tajawal-Regular.ttf' })
@@ -143,51 +143,51 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#666",
   },
-});
+})
 
 interface ReportRecord {
-  id: string;
-  date: string;
-  studentName: string;
-  className: string;
-  status: string;
-  method: string;
-  checkInTime?: string;
-  checkOutTime?: string;
-  notes?: string | null;
+  id: string
+  date: string
+  studentName: string
+  className: string
+  status: string
+  method: string
+  checkInTime?: string
+  checkOutTime?: string
+  notes?: string | null
 }
 
 interface Stats {
-  total: number;
-  present: number;
-  absent: number;
-  late: number;
-  attendanceRate: number;
+  total: number
+  present: number
+  absent: number
+  late: number
+  attendanceRate: number
 }
 
 interface AttendancePDFProps {
-  records: ReportRecord[];
-  stats: Stats | null;
-  dateRange: { from: Date; to: Date };
-  schoolName?: string;
-  className?: string;
-  locale?: string;
+  records: ReportRecord[]
+  stats: Stats | null
+  dateRange: { from: Date; to: Date }
+  schoolName?: string
+  className?: string
+  locale?: string
 }
 
 const getStatusStyle = (status: string) => {
   switch (status) {
     case "PRESENT":
-      return styles.statusPresent;
+      return styles.statusPresent
     case "ABSENT":
-      return styles.statusAbsent;
+      return styles.statusAbsent
     case "LATE":
-      return styles.statusLate;
+      return styles.statusLate
     case "EXCUSED":
-      return styles.statusExcused;
+      return styles.statusExcused
     default:
-      return {};
+      return {}
   }
-};
+}
 
 const formatDate = (dateStr: string, locale: string = "en") => {
   return new Date(dateStr).toLocaleDateString(
@@ -197,19 +197,19 @@ const formatDate = (dateStr: string, locale: string = "en") => {
       month: "short",
       day: "numeric",
     }
-  );
-};
+  )
+}
 
 const formatTime = (timeStr: string | undefined, locale: string = "en") => {
-  if (!timeStr) return "-";
+  if (!timeStr) return "-"
   return new Date(timeStr).toLocaleTimeString(
     locale === "ar" ? "ar-SA" : "en-US",
     {
       hour: "2-digit",
       minute: "2-digit",
     }
-  );
-};
+  )
+}
 
 function AttendanceReportDocument({
   records,
@@ -219,22 +219,27 @@ function AttendanceReportDocument({
   className,
   locale = "en",
 }: AttendancePDFProps) {
-  const isArabic = locale === "ar";
-  const itemsPerPage = 25;
-  const pages = [];
+  const isArabic = locale === "ar"
+  const itemsPerPage = 25
+  const pages = []
 
   for (let i = 0; i < records.length; i += itemsPerPage) {
-    pages.push(records.slice(i, i + itemsPerPage));
+    pages.push(records.slice(i, i + itemsPerPage))
   }
 
   if (pages.length === 0) {
-    pages.push([]);
+    pages.push([])
   }
 
   return (
     <Document>
       {pages.map((pageRecords, pageIndex) => (
-        <Page key={pageIndex} size="A4" style={styles.page} orientation="landscape">
+        <Page
+          key={pageIndex}
+          size="A4"
+          style={styles.page}
+          orientation="landscape"
+        >
           {/* Header - only on first page */}
           {pageIndex === 0 && (
             <>
@@ -299,7 +304,9 @@ function AttendanceReportDocument({
                     <Text style={styles.statLabel}>
                       {isArabic ? "نسبة الحضور" : "Attendance Rate"}
                     </Text>
-                    <Text style={styles.statValue}>{stats.attendanceRate}%</Text>
+                    <Text style={styles.statValue}>
+                      {stats.attendanceRate}%
+                    </Text>
                   </View>
                 </View>
               )}
@@ -390,24 +397,24 @@ function AttendanceReportDocument({
         </Page>
       ))}
     </Document>
-  );
+  )
 }
 
 export async function generateAttendancePDF(
   props: AttendancePDFProps
 ): Promise<Blob> {
-  const doc = <AttendanceReportDocument {...props} />;
-  const blob = await pdf(doc).toBlob();
-  return blob;
+  const doc = <AttendanceReportDocument {...props} />
+  const blob = await pdf(doc).toBlob()
+  return blob
 }
 
 export function downloadPDF(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }

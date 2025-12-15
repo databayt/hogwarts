@@ -6,54 +6,54 @@
 
 export interface Prompt {
   /** Unique identifier (kebab-case from filename) */
-  id: string;
+  id: string
 
   /** Display name of the prompt */
-  name: string;
+  name: string
 
   /** Brief description of what the prompt does */
-  description: string;
+  description: string
 
   /** Category for organization (Components, Database, Testing, etc.) */
-  category: PromptCategory;
+  category: PromptCategory
 
   /** Full prompt content/text */
-  content: string;
+  content: string
 
   /** Variables that need to be replaced (e.g., <name>, [path]) */
-  variables: string[];
+  variables: string[]
 
   /** Optional usage example showing how to use the prompt */
-  usageExample?: string;
+  usageExample?: string
 
   /** Tags for filtering and search */
-  tags: string[];
+  tags: string[]
 
   /** Source file type (agent or command) */
-  source: 'agent' | 'command';
+  source: "agent" | "command"
 
   /** Original file path for reference */
-  filePath: string;
+  filePath: string
 }
 
 export type PromptCategory =
-  | 'Components'
-  | 'Database'
-  | 'Testing'
-  | 'API'
-  | 'Security'
-  | 'i18n'
-  | 'Git'
-  | 'Performance'
-  | 'Architecture'
-  | 'General';
+  | "Components"
+  | "Database"
+  | "Testing"
+  | "API"
+  | "Security"
+  | "i18n"
+  | "Git"
+  | "Performance"
+  | "Architecture"
+  | "General"
 
 export interface PromptsByCategory {
-  [category: string]: Prompt[];
+  [category: string]: Prompt[]
 }
 
 export interface PromptParserResult {
-  prompts: Prompt[];
-  promptsByCategory: PromptsByCategory;
-  categories: PromptCategory[];
+  prompts: Prompt[]
+  promptsByCategory: PromptsByCategory
+  categories: PromptCategory[]
 }

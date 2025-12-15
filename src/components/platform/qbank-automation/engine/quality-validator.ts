@@ -5,7 +5,7 @@
  * using multiple validation checks and metrics.
  */
 
-import type { GeneratedQuestion } from './question-generator'
+import type { GeneratedQuestion } from "./question-generator"
 
 export interface ValidationResult {
   score: number // 0-100
@@ -36,7 +36,7 @@ export async function validateQuestion(
   const questionTextCheck = validateQuestionText(question.questionText)
   checks.push(questionTextCheck)
   if (!questionTextCheck.passed) {
-    issues.push(questionTextCheck.details || 'Question text validation failed')
+    issues.push(questionTextCheck.details || "Question text validation failed")
   }
 
   // 2. Options validation (for MCQ)
@@ -44,7 +44,7 @@ export async function validateQuestion(
     const optionsCheck = validateOptions(question.options)
     checks.push(optionsCheck)
     if (!optionsCheck.passed) {
-      issues.push(optionsCheck.details || 'Options validation failed')
+      issues.push(optionsCheck.details || "Options validation failed")
     }
 
     // Check option balance
@@ -52,7 +52,7 @@ export async function validateQuestion(
     checks.push(balanceCheck)
     if (!balanceCheck.passed) {
       suggestions.push(
-        'Consider making options more similar in length for better quality'
+        "Consider making options more similar in length for better quality"
       )
     }
   }
@@ -62,7 +62,7 @@ export async function validateQuestion(
   checks.push(explanationCheck)
   if (!explanationCheck.passed) {
     issues.push(
-      explanationCheck.details || 'Explanation is too short or missing'
+      explanationCheck.details || "Explanation is too short or missing"
     )
   }
 
@@ -70,14 +70,14 @@ export async function validateQuestion(
   const tagsCheck = validateTags(question.tags)
   checks.push(tagsCheck)
   if (!tagsCheck.passed) {
-    suggestions.push('Add more descriptive tags to improve discoverability')
+    suggestions.push("Add more descriptive tags to improve discoverability")
   }
 
   // 5. Grammar and spelling check (basic)
   const grammarCheck = validateGrammar(question.questionText)
   checks.push(grammarCheck)
   if (!grammarCheck.passed) {
-    issues.push(grammarCheck.details || 'Grammar issues detected')
+    issues.push(grammarCheck.details || "Grammar issues detected")
   }
 
   // 6. Duplicate detection (future: semantic similarity check)
@@ -95,12 +95,12 @@ export async function validateQuestion(
 
   const weightedScore =
     (questionTextCheck.score * weights.questionText +
-      (checks.find((c) => c.name === 'Options')?.score || 100) *
+      (checks.find((c) => c.name === "Options")?.score || 100) *
         weights.options +
       explanationCheck.score * weights.explanation +
       tagsCheck.score * weights.tags +
       grammarCheck.score * weights.grammar +
-      (checks.find((c) => c.name === 'Option Balance')?.score || 100) *
+      (checks.find((c) => c.name === "Option Balance")?.score || 100) *
         weights.balance) /
     (weights.questionText +
       weights.options +
@@ -141,18 +141,18 @@ function validateQuestionText(text: string): ValidationCheck {
     details = `Question is very long (${wordCount} words, consider simplifying)`
   }
   // Check for question mark (common in direct questions)
-  else if (!text.includes('?') && !text.toLowerCase().includes('which')) {
+  else if (!text.includes("?") && !text.toLowerCase().includes("which")) {
     score = 90
-    details = 'Question might benefit from clearer phrasing'
+    details = "Question might benefit from clearer phrasing"
   }
   // Check for empty or very short
   else if (charCount < 50) {
     score = 40
-    details = 'Question text is too brief'
+    details = "Question text is too brief"
   }
 
   return {
-    name: 'Question Text',
+    name: "Question Text",
     passed: score >= 70,
     score,
     details,
@@ -171,10 +171,10 @@ function validateOptions(
   // Check number of options
   if (options.length < 2) {
     return {
-      name: 'Options',
+      name: "Options",
       passed: false,
       score: 0,
-      details: 'Must have at least 2 options',
+      details: "Must have at least 2 options",
     }
   }
 
@@ -183,16 +183,16 @@ function validateOptions(
 
   if (correctCount === 0) {
     return {
-      name: 'Options',
+      name: "Options",
       passed: false,
       score: 0,
-      details: 'No correct answer specified',
+      details: "No correct answer specified",
     }
   }
 
   if (correctCount > 1 && options.length > 2) {
     score = 60
-    details = 'Multiple correct answers (ensure this is intentional)'
+    details = "Multiple correct answers (ensure this is intentional)"
   }
 
   // Check option text lengths
@@ -206,11 +206,11 @@ function validateOptions(
   const uniqueTexts = new Set(options.map((o) => o.text.toLowerCase()))
   if (uniqueTexts.size < options.length) {
     score = 40
-    details = 'Duplicate options detected'
+    details = "Duplicate options detected"
   }
 
   return {
-    name: 'Options',
+    name: "Options",
     passed: score >= 70,
     score,
     details,
@@ -241,7 +241,7 @@ function validateOptionBalance(
   }
 
   return {
-    name: 'Option Balance',
+    name: "Option Balance",
     passed: score >= 70,
     score,
     details:
@@ -264,23 +264,23 @@ function validateExplanation(explanation: string): ValidationCheck {
     details = `Explanation is too brief (${wordCount} words, minimum 20 recommended)`
   } else if (wordCount < 50) {
     score = 70
-    details = 'Explanation could be more detailed'
+    details = "Explanation could be more detailed"
   } else if (wordCount > 300) {
     score = 85
-    details = 'Explanation is quite lengthy (consider condensing)'
+    details = "Explanation is quite lengthy (consider condensing)"
   }
 
   // Check for key teaching words
   const teachingWords = [
-    'because',
-    'therefore',
-    'thus',
-    'since',
-    'however',
-    'although',
-    'indicates',
-    'shows',
-    'demonstrates',
+    "because",
+    "therefore",
+    "thus",
+    "since",
+    "however",
+    "although",
+    "indicates",
+    "shows",
+    "demonstrates",
   ]
   const hasTeachingLanguage = teachingWords.some((word) =>
     explanation.toLowerCase().includes(word)
@@ -288,11 +288,11 @@ function validateExplanation(explanation: string): ValidationCheck {
 
   if (!hasTeachingLanguage && wordCount > 20) {
     score = Math.min(score, 90)
-    details = 'Explanation could benefit from clearer reasoning language'
+    details = "Explanation could benefit from clearer reasoning language"
   }
 
   return {
-    name: 'Explanation',
+    name: "Explanation",
     passed: score >= 70,
     score,
     details,
@@ -308,24 +308,24 @@ function validateTags(tags: string[]): ValidationCheck {
 
   if (tags.length === 0) {
     score = 50
-    details = 'No tags provided (add tags for better organization)'
+    details = "No tags provided (add tags for better organization)"
   } else if (tags.length === 1) {
     score = 75
-    details = 'Consider adding more tags'
+    details = "Consider adding more tags"
   } else if (tags.length > 10) {
     score = 85
-    details = 'Many tags (consider reducing to most relevant)'
+    details = "Many tags (consider reducing to most relevant)"
   }
 
   // Check tag quality
   const shortTags = tags.filter((t) => t.length < 3)
   if (shortTags.length > 0) {
     score = Math.min(score, 80)
-    details = 'Some tags are very short'
+    details = "Some tags are very short"
   }
 
   return {
-    name: 'Tags',
+    name: "Tags",
     passed: score >= 70,
     score,
     details,
@@ -343,20 +343,20 @@ function validateGrammar(text: string): ValidationCheck {
   // Check for double spaces
   if (/  +/.test(text)) {
     score -= 5
-    issues.push('Double spaces detected')
+    issues.push("Double spaces detected")
   }
 
   // Check for missing capitalization at start
   if (text.length > 0 && !/^[A-Z]/.test(text)) {
     score -= 10
-    issues.push('Question should start with capital letter')
+    issues.push("Question should start with capital letter")
   }
 
   // Check for common typos/issues
   const commonIssues = [
-    { pattern: /\s,/, issue: 'Space before comma' },
-    { pattern: /\s\./, issue: 'Space before period' },
-    { pattern: /[a-z]\.[A-Z]/, issue: 'Missing space after period' },
+    { pattern: /\s,/, issue: "Space before comma" },
+    { pattern: /\s\./, issue: "Space before period" },
+    { pattern: /[a-z]\.[A-Z]/, issue: "Missing space after period" },
   ]
 
   for (const check of commonIssues) {
@@ -367,10 +367,10 @@ function validateGrammar(text: string): ValidationCheck {
   }
 
   return {
-    name: 'Grammar',
+    name: "Grammar",
     passed: score >= 70,
     score: Math.max(0, score),
-    details: issues.length > 0 ? issues.join('; ') : undefined,
+    details: issues.length > 0 ? issues.join("; ") : undefined,
   }
 }
 

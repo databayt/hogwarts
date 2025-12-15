@@ -3,15 +3,17 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, Users } from "lucide-react"
 import Autoplay from "embla-carousel-autoplay"
+import { ArrowRight, Users } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel"
-import { cn } from "@/lib/utils"
+
 import type { StreamContentProps } from "../types"
 
 const skills = [
@@ -35,7 +37,10 @@ const skills = [
   },
 ]
 
-export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'schoolId'>) {
+export function SkillsSection({
+  dictionary,
+  lang,
+}: Omit<StreamContentProps, "schoolId">) {
   const isRTL = lang === "ar"
   const [api, setApi] = React.useState<CarouselApi>()
   const [current, setCurrent] = React.useState(0)
@@ -65,13 +70,16 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
 
   return (
     <section className="py-16 md:py-24">
-      <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 items-center">
+      <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
         {/* Left: Heading (3 cols) with more padding */}
-        <div className={`lg:col-span-3 ${isRTL ? "lg:order-2 text-right" : ""}`}>
-          <h2 className="text-2xl md:text-[28px] font-bold leading-tight">
-            {dictionary?.skills?.title || "Learn essential career and life skills"}
+        <div
+          className={`lg:col-span-3 ${isRTL ? "text-right lg:order-2" : ""}`}
+        >
+          <h2 className="text-2xl leading-tight font-bold md:text-[28px]">
+            {dictionary?.skills?.title ||
+              "Learn essential career and life skills"}
           </h2>
-          <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
+          <p className="text-muted-foreground mt-4 text-[15px] leading-relaxed">
             {dictionary?.skills?.description ||
               "Hogwarts helps you build in-demand skills fast and advance your career in a changing job market."}
           </p>
@@ -93,11 +101,11 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
               {skills.map((skill) => (
                 <CarouselItem
                   key={skill.title}
-                  className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
+                  className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3"
                 >
-                  <Link href={`/${lang}${skill.href}`} className="block group">
+                  <Link href={`/${lang}${skill.href}`} className="group block">
                     {/* Card - Hogwarts style */}
-                    <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 h-[400px]">
+                    <div className="relative h-[400px] overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:shadow-xl">
                       {/* Image as full background */}
                       <Image
                         src={skill.image}
@@ -107,22 +115,32 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                       />
 
                       {/* Info Section - White box at bottom with padding on sides */}
-                      <div className="absolute bottom-2 left-2 right-2 p-3 bg-card rounded-xl flex flex-col gap-2">
+                      <div className="bg-card absolute right-2 bottom-2 left-2 flex flex-col gap-2 rounded-xl p-3">
                         {/* Learner Count Badge */}
-                        <div className="inline-flex items-center gap-1 px-2 py-0.5 w-fit rounded-full border border-border text-xs text-muted-foreground">
+                        <div className="border-border text-muted-foreground inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs">
                           <Users className="h-3 w-3" />
                           <span>{skill.learners}</span>
                         </div>
 
                         {/* Title with Arrow */}
-                        <div className="flex flex-col gap-2 w-full">
-                          <h4 className={cn("font-medium text-foreground text-base", isRTL && "text-right")}>
+                        <div className="flex w-full flex-col gap-2">
+                          <h4
+                            className={cn(
+                              "text-foreground text-base font-medium",
+                              isRTL && "text-right"
+                            )}
+                          >
                             {skill.title}
                           </h4>
-                          <div className={cn("flex", isRTL ? "justify-start" : "justify-end")}>
+                          <div
+                            className={cn(
+                              "flex",
+                              isRTL ? "justify-start" : "justify-end"
+                            )}
+                          >
                             <ArrowRight
                               className={cn(
-                                "h-5 w-5 text-muted-foreground transition-transform duration-300",
+                                "text-muted-foreground h-5 w-5 transition-transform duration-300",
                                 "group-hover:translate-x-1",
                                 isRTL && "rotate-180 group-hover:-translate-x-1"
                               )}
@@ -137,7 +155,7 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
             </CarouselContent>
 
             {/* Dot Indicators Only - No arrows */}
-            <div className="flex items-center justify-center mt-8">
+            <div className="mt-8 flex items-center justify-center">
               <div className="flex items-center gap-2">
                 {Array.from({ length: count }).map((_, index) => (
                   <button
@@ -147,7 +165,7 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                       "rounded-full transition-all duration-300",
                       current === index
                         ? "bg-primary h-2.5 w-6"
-                        : "bg-muted-foreground/30 h-2.5 w-2.5 hover:bg-muted-foreground/50"
+                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50 h-2.5 w-2.5"
                     )}
                     aria-label={`Go to slide ${index + 1}`}
                   />

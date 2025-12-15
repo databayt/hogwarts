@@ -1,20 +1,21 @@
-import { Users, UserCheck, Building2, Laptop, DoorOpen } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, DoorOpen, Laptop, UserCheck, Users } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface CapacityCardProps {
-  studentCount: number;
-  teachers: number;
-  classrooms: number;
-  facilities: number;
-  className?: string;
+  studentCount: number
+  teachers: number
+  classrooms: number
+  facilities: number
+  className?: string
 }
 
-export function CapacityCard({ 
-  studentCount, 
-  teachers, 
+export function CapacityCard({
+  studentCount,
+  teachers,
   classrooms,
   facilities,
-  className 
+  className,
 }: CapacityCardProps) {
   const capacityItems = [
     {
@@ -41,7 +42,7 @@ export function CapacityCard({
       icon: Building2,
       color: "text-chart-3",
     },
-  ];
+  ]
 
   return (
     <Card className={className}>
@@ -52,29 +53,31 @@ export function CapacityCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {capacityItems.map((item) => (
             <div
               key={item.label}
-              className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+              className="bg-muted/50 flex items-center gap-3 rounded-lg p-3"
             >
-              <div className={`p-2 rounded-lg bg-background ${item.color}`}>
+              <div className={`bg-background rounded-lg p-2 ${item.color}`}>
                 <item.icon size={20} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="text-lg font-semibold">{item.value.toLocaleString()}</p>
+                <p className="text-muted-foreground text-sm">{item.label}</p>
+                <p className="text-lg font-semibold">
+                  {item.value.toLocaleString()}
+                </p>
               </div>
             </div>
           ))}
         </div>
-        
-        <div className="mt-4 p-3 bg-accent/50 rounded-lg">
-          <p className="text-sm text-muted-foreground">
+
+        <div className="bg-accent/50 mt-4 rounded-lg p-3">
+          <p className="text-muted-foreground text-sm">
             Total capacity configured for your school management system
           </p>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

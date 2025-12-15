@@ -1,9 +1,27 @@
 "use client"
 
 import * as React from "react"
-import { Users, BookOpen, GraduationCap, Calendar, FileText, Clock, Bell, Award, TrendingUp, CircleCheck, TriangleAlert, Settings } from "lucide-react"
+import {
+  Award,
+  Bell,
+  BookOpen,
+  Calendar,
+  CircleCheck,
+  Clock,
+  FileText,
+  GraduationCap,
+  Settings,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+
 import { TrendingStats } from "../trending-stats"
-import type { TrendingStatItem, EducationDashboardStatsData, StatsDictionary } from "../types"
+import type {
+  EducationDashboardStatsData,
+  StatsDictionary,
+  TrendingStatItem,
+} from "../types"
 
 interface EducationDashboardStatsProps {
   /** Stats data */
@@ -49,38 +67,56 @@ export function EducationDashboardStats({
 
   const items: TrendingStatItem[] = [
     ...(data.totalStudents !== undefined
-      ? [{
-          label: labels.totalStudents || "Total Students",
-          value: data.totalStudents,
-          change: data.studentsChange,
-          changeType: (data.studentsChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
-          icon: <Users className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.totalStudents || "Total Students",
+            value: data.totalStudents,
+            change: data.studentsChange,
+            changeType:
+              (data.studentsChange ?? 0) >= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <Users className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.attendance !== undefined
-      ? [{
-          label: labels.attendance || "Attendance Rate",
-          value: `${data.attendance}%`,
-          change: data.attendanceChange,
-          changeType: (data.attendanceChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
-          icon: <Calendar className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.attendance || "Attendance Rate",
+            value: `${data.attendance}%`,
+            change: data.attendanceChange,
+            changeType:
+              (data.attendanceChange ?? 0) >= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <Calendar className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.averageGrade !== undefined
-      ? [{
-          label: labels.averageGrade || "Average Grade",
-          value: `${data.averageGrade}%`,
-          change: data.gradeChange,
-          changeType: (data.gradeChange ?? 0) >= 0 ? "positive" as const : "negative" as const,
-          icon: <GraduationCap className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label: labels.averageGrade || "Average Grade",
+            value: `${data.averageGrade}%`,
+            change: data.gradeChange,
+            changeType:
+              (data.gradeChange ?? 0) >= 0
+                ? ("positive" as const)
+                : ("negative" as const),
+            icon: <GraduationCap className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.pendingItems !== undefined
-      ? [{
-          label: data.pendingLabel || labels.pendingGrading || "Pending Items",
-          value: data.pendingItems,
-          icon: <FileText className="h-4 w-4" />,
-        }]
+      ? [
+          {
+            label:
+              data.pendingLabel || labels.pendingGrading || "Pending Items",
+            value: data.pendingItems,
+            icon: <FileText className="h-4 w-4" />,
+          },
+        ]
       : []),
     ...(data.custom || []),
   ]
@@ -242,12 +278,15 @@ export function StudentDashboardStats({
       icon: <GraduationCap className="h-4 w-4" />,
     },
     ...(daysUntilExam !== undefined
-      ? [{
-          label: dictionary?.daysUntilExam || "Days Until Exam",
-          value: daysUntilExam,
-          icon: <BookOpen className="h-4 w-4" />,
-          variant: daysUntilExam <= 7 ? "warning" as const : "default" as const,
-        }]
+      ? [
+          {
+            label: dictionary?.daysUntilExam || "Days Until Exam",
+            value: daysUntilExam,
+            icon: <BookOpen className="h-4 w-4" />,
+            variant:
+              daysUntilExam <= 7 ? ("warning" as const) : ("default" as const),
+          },
+        ]
       : []),
   ]
 

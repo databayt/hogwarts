@@ -1,6 +1,6 @@
-import { Resend } from "resend";
+import { Resend } from "resend"
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+export const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendEmail(to: string, subject: string, reactHTML: any) {
   try {
@@ -9,16 +9,16 @@ export async function sendEmail(to: string, subject: string, reactHTML: any) {
       to: to,
       subject: subject,
       react: reactHTML,
-    });
+    })
 
     if (error) {
-      console.error("Error sending email:", error);
-      return { success: false, error };
+      console.error("Error sending email:", error)
+      return { success: false, error }
     }
 
-    return { success: true, data };
+    return { success: true, data }
   } catch (error) {
-    console.error("Failed to send email:", error);
-    return { success: false, error: "Failed to send email" };
+    console.error("Failed to send email:", error)
+    return { success: false, error: "Failed to send email" }
   }
 }

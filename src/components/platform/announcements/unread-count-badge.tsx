@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 interface UnreadCountBadgeProps {
-  count: number;
-  className?: string;
-  max?: number;
+  count: number
+  className?: string
+  max?: number
 }
 
 export function UnreadCountBadge({
@@ -15,10 +15,10 @@ export function UnreadCountBadge({
   max = 99,
 }: UnreadCountBadgeProps) {
   if (count === 0) {
-    return null;
+    return null
   }
 
-  const displayCount = count > max ? `${max}+` : count.toString();
+  const displayCount = count > max ? `${max}+` : count.toString()
 
   return (
     <Badge
@@ -30,7 +30,7 @@ export function UnreadCountBadge({
     >
       {displayCount}
     </Badge>
-  );
+  )
 }
 
 /**
@@ -41,14 +41,14 @@ export async function UnreadCountBadgeServer({
   schoolId,
   className,
 }: {
-  userId: string;
-  schoolId: string;
-  className?: string;
+  userId: string
+  schoolId: string
+  className?: string
 }) {
   // Import the read tracking function
-  const { getUnreadAnnouncementCount } = await import("./read-tracking");
+  const { getUnreadAnnouncementCount } = await import("./read-tracking")
 
-  const count = await getUnreadAnnouncementCount(userId, schoolId);
+  const count = await getUnreadAnnouncementCount(userId, schoolId)
 
-  return <UnreadCountBadge count={count} className={className} />;
+  return <UnreadCountBadge count={count} className={className} />
 }

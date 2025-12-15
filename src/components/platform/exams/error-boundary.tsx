@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
-import { CircleAlert, RefreshCw, House } from "lucide-react";
 import Link from "next/link"
+import { CircleAlert, House, RefreshCw } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ export function ExamErrorBoundary({
         <AlertDescription className="mt-2 space-y-2">
           <p>{description}</p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Error reference: {error.digest}
             </p>
           )}

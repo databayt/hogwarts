@@ -1,15 +1,22 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { examCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { ExamFormStepProps } from "./types";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
+
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
+
+import { ExamFormStepProps } from "./types"
+import { examCreateSchema } from "./validation"
 
 export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       {/* Instructions */}
       <FormField
         control={form.control}
@@ -17,10 +24,10 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea 
-                placeholder="Exam instructions for students (optional)" 
-                disabled={isView} 
-                {...field} 
+              <Textarea
+                placeholder="Exam instructions for students (optional)"
+                disabled={isView}
+                {...field}
                 rows={8}
                 className="min-h-[200px]"
               />
@@ -33,7 +40,7 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
       {/* Additional Notes Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Additional Information</h3>
-        <div className="text-sm text-muted-foreground space-y-2">
+        <div className="text-muted-foreground space-y-2 text-sm">
           <p>• Students should arrive 15 minutes before the exam starts</p>
           <p>• Bring necessary stationery and calculators if allowed</p>
           <p>• Mobile phones and electronic devices are not permitted</p>
@@ -41,5 +48,5 @@ export function InstructionsDetailsStep({ form, isView }: ExamFormStepProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

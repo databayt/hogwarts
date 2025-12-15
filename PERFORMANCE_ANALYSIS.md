@@ -28,17 +28,19 @@ Your development environment has **6 critical performance issues** causing slow,
 **File:** `server.js` (271 lines)
 
 **Problem:**
+
 ```javascript
 // Current: Custom server with WebSocket ALWAYS running
-const dev = process.env.NODE_ENV !== 'production'
+const dev = process.env.NODE_ENV !== "production"
 const app = next({ dev, hostname, port })
 const server = createServer((req, res) => {
   handle(req, res, parsedUrl)
 })
-const wss = new WebSocketServer({ server, path: '/api/geo/ws' })
+const wss = new WebSocketServer({ server, path: "/api/geo/ws" })
 ```
 
 **Impact:**
+
 - **+500ms** startup time vs native Next.js
 - PostgreSQL connection pool created immediately (even if not needed)
 - WebSocket server overhead on every request
@@ -46,6 +48,7 @@ const wss = new WebSocketServer({ server, path: '/api/geo/ws' })
 - Missing Next.js optimizations
 
 **Why it exists:**
+
 - Real-time geofence attendance via PostgreSQL LISTEN/NOTIFY
 - WebSocket for live location updates
 
@@ -67,32 +70,36 @@ pnpm dev:full
 **File:** `package.json`
 
 **Current:**
+
 ```json
 {
   "scripts": {
-    "dev": "node server.js",           // ❌ No Turbopack
-    "dev:next": "next dev --turbopack"  // ✅ Has Turbopack (unused)
+    "dev": "node server.js", // ❌ No Turbopack
+    "dev:next": "next dev --turbopack" // ✅ Has Turbopack (unused)
   }
 }
 ```
 
 **Impact:**
+
 - **5x slower** HMR (Hot Module Reload)
 - **3x slower** initial compile
 - Missing Rust-based bundler speed improvements
 
 **Fix:**
+
 ```json
 {
   "scripts": {
-    "dev": "next dev --turbopack",           // ✅ Fast default
-    "dev:ws": "node server.js",              // WebSocket when needed
-    "dev:full": "node server.js"             // Alias for clarity
+    "dev": "next dev --turbopack", // ✅ Fast default
+    "dev:ws": "node server.js", // WebSocket when needed
+    "dev:full": "node server.js" // Alias for clarity
   }
 }
 ```
 
 **Benchmark (Next.js 15 with Turbopack):**
+
 - Initial compile: 28s → 9s (3x faster)
 - HMR: 2s → 400ms (5x faster)
 - Cold start: 5s → 1.5s
@@ -104,16 +111,18 @@ pnpm dev:full
 **File:** `src/middleware.ts` (292 lines)
 
 **Runs on EVERY request:**
+
 ```typescript
 export async function middleware(req: NextRequest) {
-  const requestId = generateRequestId()           // UUID generation
-  const session = await auth()                    // Database query!
-  const currentLocale = getLocale(req)            // Negotiator + matching
+  const requestId = generateRequestId() // UUID generation
+  const session = await auth() // Database query!
+  const currentLocale = getLocale(req) // Negotiator + matching
   // ... 250+ more lines of subdomain parsing, logging, redirects
 }
 ```
 
 **Performance Impact per request:**
+
 - Session check: **50-150ms** (database query)
 - Locale negotiation: **10-30ms**
 - Subdomain parsing: **5-10ms**
@@ -124,9 +133,11 @@ export async function middleware(req: NextRequest) {
 
 ```typescript
 // Skip middleware for static assets (already doing this ✅)
-if (url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith("/api/auth") ||
-    url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)) {
+if (
+  url.pathname.startsWith("/_next") ||
+  url.pathname.startsWith("/api/auth") ||
+  url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
+) {
   return NextResponse.next()
 }
 
@@ -137,7 +148,7 @@ if (isPublicRoute || isDocsRoute) {
 }
 
 // NEW: Cache locale detection result
-const cachedLocale = req.cookies.get('NEXT_LOCALE')?.value
+const cachedLocale = req.cookies.get("NEXT_LOCALE")?.value
 if (cachedLocale) {
   // Skip Negotiator parsing (30ms saved)
   currentLocale = cachedLocale
@@ -153,6 +164,7 @@ if (cachedLocale) {
 **File:** `server.js` lines 22-24
 
 **Problem:**
+
 ```javascript
 // PostgreSQL connection pool created IMMEDIATELY
 const pool = new Pool({
@@ -161,6 +173,7 @@ const pool = new Pool({
 ```
 
 **Impact:**
+
 - **+200-500ms** startup time (connecting to Neon)
 - Connection overhead even when not using WebSocket features
 - Potential connection leaks if not properly managed
@@ -181,7 +194,7 @@ async function getPool() {
 }
 
 // Only create pool when WebSocket client connects
-wss.on('connection', async (ws, req) => {
+wss.on("connection", async (ws, req) => {
   const dbPool = await getPool() // Lazy init
   // ... rest of logic
 })
@@ -196,11 +209,13 @@ wss.on('connection', async (ws, req) => {
 **Found:** 1,115 console.log/warn/error statements across codebase
 
 **Impact:**
+
 - **10-50ms** per middleware execution (formatting + I/O)
 - Console spam makes debugging harder
 - Slows down dev server
 
 **Top offenders:**
+
 - `src/middleware.ts`: Multiple debug logs per request
 - `server.js`: WebSocket event logging
 - Component files: 1,115+ scattered logs
@@ -224,6 +239,7 @@ if (process.env.LOG_MIDDLEWARE === 'true') {
 ```
 
 **Cleanup command:**
+
 ```bash
 # Find all console.log in src/
 grep -r "console\.log" src/ --include="*.ts" --include="*.tsx"
@@ -238,6 +254,7 @@ grep -r "console\.log" src/ --include="*.ts" --include="*.tsx"
 **File:** `src/middleware.ts` line 83
 
 **Problem:**
+
 ```typescript
 // Runs database query on EVERY request (even static pages)
 const session = await auth()
@@ -245,6 +262,7 @@ const isLoggedIn = !!session?.user
 ```
 
 **Impact:**
+
 - **50-150ms** per request
 - Database load scales with page views (not good!)
 - Even docs pages check authentication
@@ -252,11 +270,13 @@ const isLoggedIn = !!session?.user
 **Solution:**
 
 **Option A: Skip for public routes (RECOMMENDED)**
+
 ```typescript
 // Check if route needs auth BEFORE querying database
-const requiresAuth = !publicRoutes.includes(pathnameWithoutLocale) &&
-                     !isDocsRoute &&
-                     !isStreamPublicRoute
+const requiresAuth =
+  !publicRoutes.includes(pathnameWithoutLocale) &&
+  !isDocsRoute &&
+  !isStreamPublicRoute
 
 if (requiresAuth) {
   const session = await auth() // Only check when needed
@@ -267,11 +287,12 @@ if (requiresAuth) {
 ```
 
 **Option B: Use edge-compatible session**
+
 ```typescript
 // Use lightweight JWT decode instead of full session query
-import { decode } from 'next-auth/jwt'
+import { decode } from "next-auth/jwt"
 
-const token = req.cookies.get('next-auth.session-token')?.value
+const token = req.cookies.get("next-auth.session-token")?.value
 const session = token ? await decode({ token, secret }) : null
 ```
 
@@ -286,6 +307,7 @@ const session = token ? await decode({ token, secret }) : null
 **1. Switch to Turbopack by default**
 
 Edit `package.json`:
+
 ```json
 {
   "scripts": {
@@ -303,6 +325,7 @@ Edit `package.json`:
 **2. Skip auth check for public routes**
 
 Edit `src/middleware.ts`:
+
 ```typescript
 // BEFORE auth check (line 82)
 const needsAuth = !isPublicRoute && !isDocsRoute && !isStreamPublicRoute
@@ -326,6 +349,7 @@ const session = await auth()
 **3. Disable verbose logging**
 
 Add to `.env`:
+
 ```bash
 # Disable middleware logging in dev
 LOG_MIDDLEWARE=false
@@ -334,6 +358,7 @@ VERBOSE_LOGGING=false
 ```
 
 Edit `src/middleware.ts`:
+
 ```typescript
 // Replace logger.debug calls with conditional
 if (process.env.LOG_MIDDLEWARE === 'true') {
@@ -350,12 +375,13 @@ if (process.env.LOG_MIDDLEWARE === 'true') {
 **4. Lazy database connection**
 
 Edit `server.js`:
+
 ```javascript
 let pool = null
 
 async function getOrCreatePool() {
   if (!pool) {
-    console.log('🔌 Initializing database connection pool...')
+    console.log("🔌 Initializing database connection pool...")
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
     })
@@ -378,17 +404,18 @@ async function startListening(schoolId) {
 **5. Cache locale detection**
 
 Edit `src/middleware.ts`:
+
 ```typescript
 function getLocale(request: NextRequest): Locale {
   // 1. Check cookie (already cached ✅)
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+  const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value
   if (cookieLocale && i18n.locales.includes(cookieLocale as Locale)) {
     return cookieLocale as Locale // Fast path!
   }
 
   // 2. Only do expensive negotiation if no cookie
   const headers = {
-    'accept-language': request.headers.get('accept-language') ?? 'ar', // Default
+    "accept-language": request.headers.get("accept-language") ?? "ar", // Default
   }
   const languages = new Negotiator({ headers }).languages()
   const locale = match(languages, i18n.locales, i18n.defaultLocale) as Locale
@@ -437,6 +464,7 @@ src/middleware/
 ```
 
 **Benefits:**
+
 - Easier to maintain
 - Can selectively disable features
 - Better code organization
@@ -447,7 +475,7 @@ src/middleware/
 
 ```typescript
 // Use React cache() for request-level memoization
-import { cache } from 'react'
+import { cache } from "react"
 
 export const getSession = cache(async () => {
   return await auth()
@@ -478,6 +506,7 @@ ENABLE_REALTIME=true
 ```
 
 **Usage:**
+
 ```bash
 # Fast dev
 cp .env.development.fast .env.local && pnpm dev
@@ -490,13 +519,13 @@ cp .env.development.full .env.local && pnpm dev:ws
 
 ## Expected Performance Improvements
 
-| Metric | Before | After Phase 1 | After Phase 2 | After Phase 3 |
-|--------|--------|---------------|---------------|---------------|
-| **Server startup** | 5-7s | 3-4s | 1-2s | 1-2s |
-| **Initial page load** | 2-5s | 800ms-1.5s | 500ms-1s | 300-700ms |
-| **HMR (code change)** | 2-3s | 400-600ms | 400-600ms | 300-500ms |
-| **Docs page load** | 1-2s | 400-800ms | 200-400ms | 150-300ms |
-| **Middleware overhead** | 70-210ms | 50-100ms | 20-50ms | 10-30ms |
+| Metric                  | Before   | After Phase 1 | After Phase 2 | After Phase 3 |
+| ----------------------- | -------- | ------------- | ------------- | ------------- |
+| **Server startup**      | 5-7s     | 3-4s          | 1-2s          | 1-2s          |
+| **Initial page load**   | 2-5s     | 800ms-1.5s    | 500ms-1s      | 300-700ms     |
+| **HMR (code change)**   | 2-3s     | 400-600ms     | 400-600ms     | 300-500ms     |
+| **Docs page load**      | 1-2s     | 400-800ms     | 200-400ms     | 150-300ms     |
+| **Middleware overhead** | 70-210ms | 50-100ms      | 20-50ms       | 10-30ms       |
 
 **Overall improvement:** **5-10x faster** development experience
 
@@ -505,6 +534,7 @@ cp .env.development.full .env.local && pnpm dev:ws
 ## Implementation Priority
 
 ### Immediate (Do Now) ✅
+
 1. Switch to Turbopack (`dev: "next dev --turbopack"`)
 2. Skip auth for public routes
 3. Disable verbose logging
@@ -513,6 +543,7 @@ cp .env.development.full .env.local && pnpm dev:ws
 **Impact:** 3-5x faster
 
 ### Short-term (This Week) ⚡
+
 4. Lazy database connection
 5. Cache locale detection
 6. Comment out console.log statements
@@ -521,6 +552,7 @@ cp .env.development.full .env.local && pnpm dev:ws
 **Impact:** 2x additional speedup
 
 ### Long-term (Next Sprint) 🚀
+
 7. Split middleware
 8. Request-level caching
 9. Development profiles
@@ -572,7 +604,7 @@ NextAuth v5 supports edge runtime with faster cold starts:
 
 ```typescript
 // src/auth.ts
-export const runtime = 'edge'
+export const runtime = "edge"
 ```
 
 ### 3. Implement Request Coalescing
@@ -599,6 +631,7 @@ NODE_OPTIONS='--inspect' pnpm dev
 ## Conclusion
 
 Your localhost is slow due to **layered overhead**:
+
 - Custom server (500ms)
 - No Turbopack (3x slower)
 - Heavy middleware (100ms/request)

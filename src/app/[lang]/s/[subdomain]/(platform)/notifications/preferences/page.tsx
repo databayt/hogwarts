@@ -1,9 +1,10 @@
 import { Suspense } from "react"
-import { getDictionary } from "@/components/internationalization/dictionaries"
-import type { Locale } from "@/components/internationalization/config"
-import { NotificationPreferencesContent } from "@/components/platform/notifications/preferences-content"
-import { Skeleton } from "@/components/ui/skeleton"
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { NotificationPreferencesContent } from "@/components/platform/notifications/preferences-content"
 
 interface NotificationPreferencesPageProps {
   params: Promise<{
@@ -12,7 +13,9 @@ interface NotificationPreferencesPageProps {
   }>
 }
 
-export async function generateMetadata({ params }: NotificationPreferencesPageProps) {
+export async function generateMetadata({
+  params,
+}: NotificationPreferencesPageProps) {
   const { lang } = await params
 
   return {
@@ -23,7 +26,7 @@ export async function generateMetadata({ params }: NotificationPreferencesPagePr
 
 function PreferencesSkeleton() {
   return (
-    <div className="py-6 space-y-6">
+    <div className="space-y-6 py-6">
       {/* Header Skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />

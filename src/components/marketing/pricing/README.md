@@ -88,14 +88,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### Stripe Dashboard Setup
 
-1) Create Products and Prices in Stripe:
+1. Create Products and Prices in Stripe:
    - Pro (Monthly and Yearly) → map to `NEXT_PUBLIC_STRIPE_PRO_*`.
    - Business (Monthly and Yearly) → map to `NEXT_PUBLIC_STRIPE_BUSINESS_*`.
-2) Add a webhook endpoint pointing to:
+2. Add a webhook endpoint pointing to:
    - Local via Stripe CLI: `/api/webhooks/stripe`
    - Production: `{YOUR_DOMAIN}/api/webhooks/stripe`
    - Listen to `checkout.session.completed` and `invoice.payment_succeeded`.
-3) Set `STRIPE_WEBHOOK_SECRET` from the created endpoint.
+3. Set `STRIPE_WEBHOOK_SECRET` from the created endpoint.
 
 ### Flow Details
 
@@ -151,12 +151,9 @@ stripe trigger invoice.payment_succeeded
 ### References
 
 - Stripe with dashboard built from starter saa kit at:
-https://github.com/mickasmt/next-saas-stripe-starter
-https://next-saas-stripe-starter.vercel.app/
-
+  https://github.com/mickasmt/next-saas-stripe-starter
+  https://next-saas-stripe-starter.vercel.app/
 
 - Arrangements: `src/app/docs/arrangements/page.mdx`
 - Authentication: `src/app/docs/authantication/page.mdx`, `src/auth.ts`
 - Database: `src/app/docs/database/*`, `src/lib/db.ts`
-
-

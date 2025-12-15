@@ -1,9 +1,17 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Timetable validation schema tests
 describe("Timetable Validation Schemas", () => {
-  const dayOfWeekEnum = z.enum(["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"])
+  const dayOfWeekEnum = z.enum([
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+  ])
 
   const timetableEntrySchema = z.object({
     classId: z.string().min(1, "Class is required"),
@@ -24,13 +32,17 @@ describe("Timetable Validation Schemas", () => {
   const bulkTimetableSchema = z.object({
     classId: z.string().min(1, "Class is required"),
     termId: z.string().optional(),
-    entries: z.array(z.object({
-      subjectId: z.string().min(1),
-      teacherId: z.string().min(1),
-      dayOfWeek: dayOfWeekEnum,
-      periodId: z.string().min(1),
-      classroomId: z.string().optional(),
-    })).min(1, "At least one entry is required"),
+    entries: z
+      .array(
+        z.object({
+          subjectId: z.string().min(1),
+          teacherId: z.string().min(1),
+          dayOfWeek: dayOfWeekEnum,
+          periodId: z.string().min(1),
+          classroomId: z.string().optional(),
+        })
+      )
+      .min(1, "At least one entry is required"),
     clearExisting: z.boolean().default(false),
   })
 
@@ -45,16 +57,18 @@ describe("Timetable Validation Schemas", () => {
     week: z.string().optional(), // ISO week format
   })
 
-  const conflictCheckSchema = z.object({
-    teacherId: z.string().optional(),
-    classroomId: z.string().optional(),
-    classId: z.string().optional(),
-    dayOfWeek: dayOfWeekEnum,
-    periodId: z.string().min(1),
-    excludeId: z.string().optional(), // Exclude self when updating
-  }).refine((data) => data.teacherId || data.classroomId || data.classId, {
-    message: "At least one of teacherId, classroomId, or classId is required",
-  })
+  const conflictCheckSchema = z
+    .object({
+      teacherId: z.string().optional(),
+      classroomId: z.string().optional(),
+      classId: z.string().optional(),
+      dayOfWeek: dayOfWeekEnum,
+      periodId: z.string().min(1),
+      excludeId: z.string().optional(), // Exclude self when updating
+    })
+    .refine((data) => data.teacherId || data.classroomId || data.classId, {
+      message: "At least one of teacherId, classroomId, or classId is required",
+    })
 
   describe("timetableEntrySchema", () => {
     it("validates complete timetable entry", () => {
@@ -102,7 +116,15 @@ describe("Timetable Validation Schemas", () => {
     })
 
     it("validates dayOfWeek enum", () => {
-      const validDays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+      const validDays = [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY",
+      ]
 
       validDays.forEach((dayOfWeek) => {
         const data = {
@@ -166,9 +188,24 @@ describe("Timetable Validation Schemas", () => {
         classId: "class-123",
         termId: "term-123",
         entries: [
-          { subjectId: "s1", teacherId: "t1", dayOfWeek: "MONDAY", periodId: "p1" },
-          { subjectId: "s2", teacherId: "t2", dayOfWeek: "MONDAY", periodId: "p2" },
-          { subjectId: "s1", teacherId: "t1", dayOfWeek: "TUESDAY", periodId: "p1" },
+          {
+            subjectId: "s1",
+            teacherId: "t1",
+            dayOfWeek: "MONDAY",
+            periodId: "p1",
+          },
+          {
+            subjectId: "s2",
+            teacherId: "t2",
+            dayOfWeek: "MONDAY",
+            periodId: "p2",
+          },
+          {
+            subjectId: "s1",
+            teacherId: "t1",
+            dayOfWeek: "TUESDAY",
+            periodId: "p1",
+          },
         ],
         clearExisting: true,
       }
@@ -191,8 +228,18 @@ describe("Timetable Validation Schemas", () => {
       const invalidEntry = {
         classId: "class-123",
         entries: [
-          { subjectId: "s1", teacherId: "t1", dayOfWeek: "MONDAY", periodId: "p1" },
-          { subjectId: "", teacherId: "t2", dayOfWeek: "MONDAY", periodId: "p2" }, // Invalid
+          {
+            subjectId: "s1",
+            teacherId: "t1",
+            dayOfWeek: "MONDAY",
+            periodId: "p1",
+          },
+          {
+            subjectId: "",
+            teacherId: "t2",
+            dayOfWeek: "MONDAY",
+            periodId: "p2",
+          }, // Invalid
         ],
       }
 
@@ -203,7 +250,14 @@ describe("Timetable Validation Schemas", () => {
     it("applies default for clearExisting", () => {
       const minimal = {
         classId: "class-123",
-        entries: [{ subjectId: "s1", teacherId: "t1", dayOfWeek: "MONDAY", periodId: "p1" }],
+        entries: [
+          {
+            subjectId: "s1",
+            teacherId: "t1",
+            dayOfWeek: "MONDAY",
+            periodId: "p1",
+          },
+        ],
       }
 
       const result = bulkTimetableSchema.parse(minimal)

@@ -9,16 +9,16 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from "@react-email/components"
 
-import { Icons } from "../shared/icons";
+import { Icons } from "../shared/icons"
 
 type MagicLinkEmailProps = {
-  actionUrl: string;
-  firstName: string;
-  mailType: "login" | "register";
-  siteName: string;
-};
+  actionUrl: string
+  firstName: string
+  mailType: "login" | "register"
+  siteName: string
+}
 
 export const MagicLinkEmail = ({
   firstName = "",
@@ -48,9 +48,7 @@ export const MagicLinkEmail = ({
               {mailType === "login" ? "Sign in" : "Activate Account"}
             </Button>
           </Section>
-          <Text>
-            This link expires in 24 hours and can only be used once.
-          </Text>
+          <Text>This link expires in 24 hours and can only be used once.</Text>
           {mailType === "login" ? (
             <Text>
               If you did not try to log into your account, you can safely ignore
@@ -65,4 +63,4 @@ export const MagicLinkEmail = ({
       </Body>
     </Tailwind>
   </Html>
-);
+)

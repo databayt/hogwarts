@@ -1,6 +1,7 @@
 "use client"
 
-import { FileCode, Copy, CornerDownLeft, RotateCw } from "lucide-react"
+import { Copy, CornerDownLeft, FileCode, RotateCw } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -17,9 +18,9 @@ import { Textarea } from "@/components/ui/textarea"
 export function ShadcnInputGroupTextarea() {
   return (
     <div className="w-full max-w-md">
-      <div className="relative overflow-hidden rounded-lg border border-border">
+      <div className="border-border relative overflow-hidden rounded-lg border">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-3 py-2">
+        <div className="border-border bg-muted/50 flex items-center justify-between border-b px-3 py-2">
           <div className="flex items-center gap-2 font-mono text-sm font-medium">
             <FileCode className="size-4" />
             script.js
@@ -42,8 +43,10 @@ export function ShadcnInputGroupTextarea() {
         />
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-border bg-muted/50 px-3 py-2">
-          <span className="text-sm text-muted-foreground">Line 1, Column 1</span>
+        <div className="border-border bg-muted/50 flex items-center justify-between border-t px-3 py-2">
+          <span className="text-muted-foreground text-sm">
+            Line 1, Column 1
+          </span>
           <Button size="sm">
             Run <CornerDownLeft className="ml-1 size-4" />
           </Button>

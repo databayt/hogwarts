@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import React, { forwardRef, useImperativeHandle, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams } from 'next/navigation';
-import { Input } from '@/components/ui/input';
+import React, { forwardRef, useEffect, useImperativeHandle } from "react"
+import { useParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
 import {
   Form,
   FormControl,
@@ -12,90 +12,106 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useLocale } from '@/components/internationalization/use-locale';
-import { useApplication } from '../application-context';
-import { guardianSchema, type GuardianSchemaType } from './validation';
-import { saveGuardianStep } from './actions';
-import { GUARDIAN_RELATION_OPTIONS } from './config';
-import type { GuardianFormRef, GuardianFormProps } from './types';
+} from "@/components/ui/select"
+import { useLocale } from "@/components/internationalization/use-locale"
+
+import { useApplication } from "../application-context"
+import { saveGuardianStep } from "./actions"
+import { GUARDIAN_RELATION_OPTIONS } from "./config"
+import type { GuardianFormProps, GuardianFormRef } from "./types"
+import { guardianSchema, type GuardianSchemaType } from "./validation"
 
 export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
   ({ initialData, onSuccess, dictionary }, ref) => {
-    const params = useParams();
-    const subdomain = params.subdomain as string;
-    const { locale: lang } = useLocale();
-    const isRTL = lang === 'ar';
-    const { session, updateStepData } = useApplication();
+    const params = useParams()
+    const subdomain = params.subdomain as string
+    const { locale: lang } = useLocale()
+    const isRTL = lang === "ar"
+    const { session, updateStepData } = useApplication()
 
     const form = useForm<GuardianSchemaType>({
       resolver: zodResolver(guardianSchema),
       defaultValues: {
-        fatherName: initialData?.fatherName || '',
-        fatherOccupation: initialData?.fatherOccupation || '',
-        fatherPhone: initialData?.fatherPhone || '',
-        fatherEmail: initialData?.fatherEmail || '',
-        motherName: initialData?.motherName || '',
-        motherOccupation: initialData?.motherOccupation || '',
-        motherPhone: initialData?.motherPhone || '',
-        motherEmail: initialData?.motherEmail || '',
-        guardianName: initialData?.guardianName || '',
-        guardianRelation: initialData?.guardianRelation || '',
-        guardianPhone: initialData?.guardianPhone || '',
-        guardianEmail: initialData?.guardianEmail || ''
-      }
-    });
+        fatherName: initialData?.fatherName || "",
+        fatherOccupation: initialData?.fatherOccupation || "",
+        fatherPhone: initialData?.fatherPhone || "",
+        fatherEmail: initialData?.fatherEmail || "",
+        motherName: initialData?.motherName || "",
+        motherOccupation: initialData?.motherOccupation || "",
+        motherPhone: initialData?.motherPhone || "",
+        motherEmail: initialData?.motherEmail || "",
+        guardianName: initialData?.guardianName || "",
+        guardianRelation: initialData?.guardianRelation || "",
+        guardianPhone: initialData?.guardianPhone || "",
+        guardianEmail: initialData?.guardianEmail || "",
+      },
+    })
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)?.apply?.guardian ?? {}) as Record<string, string>;
+    const dict = ((dictionary as Record<string, Record<string, string>> | null)
+      ?.apply?.guardian ?? {}) as Record<string, string>
 
     useEffect(() => {
       const subscription = form.watch((value) => {
-        updateStepData('guardian', value as GuardianSchemaType);
-      });
-      return () => subscription.unsubscribe();
-    }, [form, updateStepData]);
+        updateStepData("guardian", value as GuardianSchemaType)
+      })
+      return () => subscription.unsubscribe()
+    }, [form, updateStepData])
 
     const saveAndNext = async () => {
-      const isValid = await form.trigger();
-      if (!isValid) throw new Error('Form validation failed');
+      const isValid = await form.trigger()
+      if (!isValid) throw new Error("Form validation failed")
 
-      const data = form.getValues();
-      const result = await saveGuardianStep(data);
+      const data = form.getValues()
+      const result = await saveGuardianStep(data)
 
-      if (!result.success) throw new Error(result.error || 'Failed to save');
+      if (!result.success) throw new Error(result.error || "Failed to save")
 
       // Update context with validated data
       if (result.data) {
-        updateStepData('guardian', result.data);
+        updateStepData("guardian", result.data)
       }
 
-      onSuccess?.();
-    };
+      onSuccess?.()
+    }
 
-    useImperativeHandle(ref, () => ({ saveAndNext }));
+    useImperativeHandle(ref, () => ({ saveAndNext }))
 
     return (
       <Form {...form}>
         <form className="space-y-8">
           {/* Father's Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.fatherInfo || (isRTL ? 'معلومات الأب' : "Father's Information")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.fatherInfo ||
+                (isRTL ? "معلومات الأب" : "Father's Information")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="fatherName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.fatherName || (isRTL ? 'اسم الأب' : "Father's Name")} *</FormLabel>
+                    <FormLabel>
+                      {dict.fatherName ||
+                        (isRTL ? "اسم الأب" : "Father's Name")}{" "}
+                      *
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.namePlaceholder || (isRTL ? 'أدخل الاسم' : 'Enter name')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.namePlaceholder ||
+                          (isRTL ? "أدخل الاسم" : "Enter name")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,9 +122,17 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherOccupation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.occupation || (isRTL ? 'المهنة' : 'Occupation')}</FormLabel>
+                    <FormLabel>
+                      {dict.occupation || (isRTL ? "المهنة" : "Occupation")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.occupationPlaceholder || (isRTL ? 'أدخل المهنة' : 'Enter occupation')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.occupationPlaceholder ||
+                          (isRTL ? "أدخل المهنة" : "Enter occupation")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -119,9 +143,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.phone || (isRTL ? 'رقم الهاتف' : 'Phone')}</FormLabel>
+                    <FormLabel>
+                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" placeholder="+249 XXX XXX XXXX" />
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="+249 XXX XXX XXXX"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,9 +162,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="fatherEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.email || (isRTL ? 'البريد الإلكتروني' : 'Email')}</FormLabel>
+                    <FormLabel>
+                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" placeholder="email@example.com" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="email@example.com"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,16 +181,29 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
 
           {/* Mother's Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.motherInfo || (isRTL ? 'معلومات الأم' : "Mother's Information")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.motherInfo ||
+                (isRTL ? "معلومات الأم" : "Mother's Information")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="motherName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.motherName || (isRTL ? 'اسم الأم' : "Mother's Name")} *</FormLabel>
+                    <FormLabel>
+                      {dict.motherName ||
+                        (isRTL ? "اسم الأم" : "Mother's Name")}{" "}
+                      *
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.namePlaceholder || (isRTL ? 'أدخل الاسم' : 'Enter name')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.namePlaceholder ||
+                          (isRTL ? "أدخل الاسم" : "Enter name")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,9 +214,17 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherOccupation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.occupation || (isRTL ? 'المهنة' : 'Occupation')}</FormLabel>
+                    <FormLabel>
+                      {dict.occupation || (isRTL ? "المهنة" : "Occupation")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.occupationPlaceholder || (isRTL ? 'أدخل المهنة' : 'Enter occupation')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.occupationPlaceholder ||
+                          (isRTL ? "أدخل المهنة" : "Enter occupation")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,9 +235,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.phone || (isRTL ? 'رقم الهاتف' : 'Phone')}</FormLabel>
+                    <FormLabel>
+                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" placeholder="+249 XXX XXX XXXX" />
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="+249 XXX XXX XXXX"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,9 +254,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="motherEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.email || (isRTL ? 'البريد الإلكتروني' : 'Email')}</FormLabel>
+                    <FormLabel>
+                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" placeholder="email@example.com" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="email@example.com"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -204,16 +273,28 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
 
           {/* Other Guardian Information (Optional) */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{dict.guardianInfo || (isRTL ? 'ولي أمر آخر (اختياري)' : 'Other Guardian (Optional)')}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h3 className="text-lg font-semibold">
+              {dict.guardianInfo ||
+                (isRTL ? "ولي أمر آخر (اختياري)" : "Other Guardian (Optional)")}
+            </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="guardianName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.guardianName || (isRTL ? 'اسم ولي الأمر' : "Guardian's Name")}</FormLabel>
+                    <FormLabel>
+                      {dict.guardianName ||
+                        (isRTL ? "اسم ولي الأمر" : "Guardian's Name")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dict.namePlaceholder || (isRTL ? 'أدخل الاسم' : 'Enter name')} />
+                      <Input
+                        {...field}
+                        placeholder={
+                          dict.namePlaceholder ||
+                          (isRTL ? "أدخل الاسم" : "Enter name")
+                        }
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -224,11 +305,18 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianRelation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.relation || (isRTL ? 'صلة القرابة' : 'Relation')}</FormLabel>
+                    <FormLabel>
+                      {dict.relation || (isRTL ? "صلة القرابة" : "Relation")}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={dict.selectRelation || (isRTL ? 'اختر صلة القرابة' : 'Select relation')} />
+                          <SelectValue
+                            placeholder={
+                              dict.selectRelation ||
+                              (isRTL ? "اختر صلة القرابة" : "Select relation")
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -248,9 +336,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.phone || (isRTL ? 'رقم الهاتف' : 'Phone')}</FormLabel>
+                    <FormLabel>
+                      {dict.phone || (isRTL ? "رقم الهاتف" : "Phone")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="tel" placeholder="+249 XXX XXX XXXX" />
+                      <Input
+                        {...field}
+                        type="tel"
+                        placeholder="+249 XXX XXX XXXX"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -261,9 +355,15 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
                 name="guardianEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dict.email || (isRTL ? 'البريد الإلكتروني' : 'Email')}</FormLabel>
+                    <FormLabel>
+                      {dict.email || (isRTL ? "البريد الإلكتروني" : "Email")}
+                    </FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" placeholder="email@example.com" />
+                      <Input
+                        {...field}
+                        type="email"
+                        placeholder="email@example.com"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -273,8 +373,8 @@ export const GuardianForm = forwardRef<GuardianFormRef, GuardianFormProps>(
           </div>
         </form>
       </Form>
-    );
+    )
   }
-);
+)
 
-GuardianForm.displayName = 'GuardianForm';
+GuardianForm.displayName = "GuardianForm"

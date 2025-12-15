@@ -5,27 +5,29 @@
 
 "use client"
 
-import React, { useMemo, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
+import React, { useMemo, useState } from "react"
+import { addDays, format, isSameMonth, isToday, startOfWeek } from "date-fns"
+import { ar, enUS } from "date-fns/locale"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { cn } from '@/lib/utils'
-import { format, startOfWeek, addDays, isSameMonth, isToday } from 'date-fns'
-import { ar, enUS } from 'date-fns/locale'
-import type { ContributionData, DailyContribution } from '../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { ContributionData, DailyContribution } from "../types"
 
 // ============================================================================
 // Types
@@ -34,7 +36,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface ContributionGraphProps {
   data: ContributionData
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   className?: string
   onDayClick?: (date: string) => void
 }
@@ -51,25 +53,53 @@ interface ContributionLevel {
 // ============================================================================
 
 const CONTRIBUTION_LEVELS: ContributionLevel[] = [
-  { level: 0, color: 'bg-muted', label: 'No activity', min: 0 },
-  { level: 1, color: 'bg-chart-1/30', label: 'Low activity', min: 1 },
-  { level: 2, color: 'bg-chart-1/50', label: 'Moderate activity', min: 3 },
-  { level: 3, color: 'bg-chart-1/70', label: 'High activity', min: 6 },
-  { level: 4, color: 'bg-chart-1', label: 'Very high activity', min: 10 }
+  { level: 0, color: "bg-muted", label: "No activity", min: 0 },
+  { level: 1, color: "bg-chart-1/30", label: "Low activity", min: 1 },
+  { level: 2, color: "bg-chart-1/50", label: "Moderate activity", min: 3 },
+  { level: 3, color: "bg-chart-1/70", label: "High activity", min: 6 },
+  { level: 4, color: "bg-chart-1", label: "Very high activity", min: 10 },
 ]
 
 const MONTHS = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ]
 
 const MONTHS_AR = [
-  'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
 ]
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const DAYS_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAYS_AR = [
+  "الأحد",
+  "الإثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+]
 
 // ============================================================================
 // Utility Functions
@@ -92,9 +122,9 @@ function generateEmptyYear(): DailyContribution[] {
   let currentDate = oneYearAgo
   while (currentDate <= today) {
     contributions.push({
-      date: format(currentDate, 'yyyy-MM-dd'),
+      date: format(currentDate, "yyyy-MM-dd"),
       count: 0,
-      level: 0
+      level: 0,
     })
     currentDate = addDays(currentDate, 1)
   }
@@ -106,14 +136,14 @@ function mergeContributions(
   emptyYear: DailyContribution[],
   actualData: DailyContribution[]
 ): DailyContribution[] {
-  const dataMap = new Map(actualData.map(d => [d.date, d]))
+  const dataMap = new Map(actualData.map((d) => [d.date, d]))
 
-  return emptyYear.map(day => {
+  return emptyYear.map((day) => {
     const actual = dataMap.get(day.date)
     if (actual) {
       return {
         ...actual,
-        level: getContributionLevel(actual.count)
+        level: getContributionLevel(actual.count),
       }
     }
     return day
@@ -132,10 +162,10 @@ function groupContributionsByWeek(contributions: DailyContribution[]) {
       // Add empty cells for the first week
       for (let i = 0; i < dayOfWeek; i++) {
         currentWeek.push({
-          date: '',
+          date: "",
           count: 0,
           level: 0,
-          details: undefined
+          details: undefined,
         })
       }
     }
@@ -147,10 +177,10 @@ function groupContributionsByWeek(contributions: DailyContribution[]) {
       if (dayOfWeek !== 6) {
         for (let i = dayOfWeek + 1; i <= 6; i++) {
           currentWeek.push({
-            date: '',
+            date: "",
             count: 0,
             level: 0,
-            details: undefined
+            details: undefined,
           })
         }
       }
@@ -169,12 +199,12 @@ function groupContributionsByWeek(contributions: DailyContribution[]) {
 export function ContributionGraph({
   data,
   dictionary,
-  lang = 'en',
+  lang = "en",
   className,
-  onDayClick
+  onDayClick,
 }: ContributionGraphProps) {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const locale = lang === 'ar' ? ar : enUS
+  const locale = lang === "ar" ? ar : enUS
 
   // Generate contribution grid
   const contributionGrid = useMemo(() => {
@@ -190,15 +220,16 @@ export function ContributionGraph({
     let colSpan = 0
 
     contributionGrid.forEach((week) => {
-      const firstValidDay = week.find(day => day.date)
+      const firstValidDay = week.find((day) => day.date)
       if (firstValidDay) {
         const date = new Date(firstValidDay.date)
         const month = date.getMonth()
         if (month !== currentMonth) {
           if (currentMonth !== -1) {
             monthLabels.push({
-              label: lang === 'ar' ? MONTHS_AR[currentMonth] : MONTHS[currentMonth],
-              colSpan
+              label:
+                lang === "ar" ? MONTHS_AR[currentMonth] : MONTHS[currentMonth],
+              colSpan,
             })
           }
           currentMonth = month
@@ -214,8 +245,8 @@ export function ContributionGraph({
     // Add the last month
     if (currentMonth !== -1) {
       monthLabels.push({
-        label: lang === 'ar' ? MONTHS_AR[currentMonth] : MONTHS[currentMonth],
-        colSpan
+        label: lang === "ar" ? MONTHS_AR[currentMonth] : MONTHS[currentMonth],
+        colSpan,
       })
     }
 
@@ -233,7 +264,7 @@ export function ContributionGraph({
   }, [])
 
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-medium">
@@ -243,11 +274,11 @@ export function ContributionGraph({
             value={selectedYear.toString()}
             onValueChange={(value) => setSelectedYear(parseInt(value))}
           >
-            <SelectTrigger className="w-[100px] h-8">
+            <SelectTrigger className="h-8 w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {yearOptions.map(year => (
+              {yearOptions.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
                 </SelectItem>
@@ -262,11 +293,11 @@ export function ContributionGraph({
           <div className="overflow-x-auto">
             <div className="inline-block">
               {/* Month labels */}
-              <div className="flex gap-[3px] mb-1 ml-[30px]">
+              <div className="mb-1 ml-[30px] flex gap-[3px]">
                 {months.map((month, index) => (
                   <div
                     key={index}
-                    className="text-xs text-muted-foreground"
+                    className="text-muted-foreground text-xs"
                     style={{ width: `${month.colSpan * 13}px` }}
                   >
                     {month.label}
@@ -277,12 +308,17 @@ export function ContributionGraph({
               {/* Days grid */}
               <div className="flex gap-[3px]">
                 {/* Day labels */}
-                <div className="flex flex-col gap-[3px] mr-1">
+                <div className="mr-1 flex flex-col gap-[3px]">
                   <div className="h-[11px]" /> {/* Spacer for first row */}
-                  {[1, 3, 5].map(dayIndex => (
-                    <div key={dayIndex} className="h-[11px] text-xs text-muted-foreground">
+                  {[1, 3, 5].map((dayIndex) => (
+                    <div
+                      key={dayIndex}
+                      className="text-muted-foreground h-[11px] text-xs"
+                    >
                       <span className="text-[10px]">
-                        {lang === 'ar' ? DAYS_AR[dayIndex][0] : DAYS[dayIndex].slice(0, 3)}
+                        {lang === "ar"
+                          ? DAYS_AR[dayIndex][0]
+                          : DAYS[dayIndex].slice(0, 3)}
                       </span>
                     </div>
                   ))}
@@ -294,11 +330,15 @@ export function ContributionGraph({
                     <div key={weekIndex} className="flex flex-col gap-[3px]">
                       {week.map((day, dayIndex) => {
                         if (!day.date) {
-                          return <div key={dayIndex} className="w-[11px] h-[11px]" />
+                          return (
+                            <div key={dayIndex} className="h-[11px] w-[11px]" />
+                          )
                         }
 
                         const date = new Date(day.date)
-                        const formattedDate = format(date, 'MMM d, yyyy', { locale })
+                        const formattedDate = format(date, "MMM d, yyyy", {
+                          locale,
+                        })
                         const isCurrentDay = isToday(date)
 
                         return (
@@ -307,11 +347,12 @@ export function ContributionGraph({
                               <TooltipTrigger asChild>
                                 <button
                                   className={cn(
-                                    'w-[11px] h-[11px] rounded-sm border transition-all',
+                                    "h-[11px] w-[11px] rounded-sm border transition-all",
                                     CONTRIBUTION_LEVELS[day.level].color,
-                                    isCurrentDay && 'ring-1 ring-primary ring-offset-1',
-                                    'hover:ring-1 hover:ring-primary hover:ring-offset-1',
-                                    'focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1'
+                                    isCurrentDay &&
+                                      "ring-primary ring-1 ring-offset-1",
+                                    "hover:ring-primary hover:ring-1 hover:ring-offset-1",
+                                    "focus:ring-primary focus:ring-1 focus:ring-offset-1 focus:outline-none"
                                   )}
                                   onClick={() => onDayClick?.(day.date)}
                                   aria-label={`${day.count} contributions on ${formattedDate}`}
@@ -319,21 +360,34 @@ export function ContributionGraph({
                               </TooltipTrigger>
                               <TooltipContent>
                                 <div className="text-xs">
-                                  <p className="font-medium">{day.count} contributions</p>
-                                  <p className="text-muted-foreground">{formattedDate}</p>
+                                  <p className="font-medium">
+                                    {day.count} contributions
+                                  </p>
+                                  <p className="text-muted-foreground">
+                                    {formattedDate}
+                                  </p>
                                   {day.details && (
-                                    <div className="mt-1 pt-1 border-t">
+                                    <div className="mt-1 border-t pt-1">
                                       {day.details.assignments && (
-                                        <p>Assignments: {day.details.assignments}</p>
+                                        <p>
+                                          Assignments: {day.details.assignments}
+                                        </p>
                                       )}
                                       {day.details.attendance && (
-                                        <p>Attendance: {day.details.attendance}</p>
+                                        <p>
+                                          Attendance: {day.details.attendance}
+                                        </p>
                                       )}
                                       {day.details.activities && (
-                                        <p>Activities: {day.details.activities}</p>
+                                        <p>
+                                          Activities: {day.details.activities}
+                                        </p>
                                       )}
                                       {day.details.achievements && (
-                                        <p>Achievements: {day.details.achievements}</p>
+                                        <p>
+                                          Achievements:{" "}
+                                          {day.details.achievements}
+                                        </p>
                                       )}
                                     </div>
                                   )}
@@ -349,16 +403,16 @@ export function ContributionGraph({
               </div>
 
               {/* Legend */}
-              <div className="flex items-center gap-2 mt-4">
-                <span className="text-xs text-muted-foreground">Less</span>
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-muted-foreground text-xs">Less</span>
                 <div className="flex gap-[3px]">
-                  {CONTRIBUTION_LEVELS.map(level => (
+                  {CONTRIBUTION_LEVELS.map((level) => (
                     <TooltipProvider key={level.level}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div
                             className={cn(
-                              'w-[11px] h-[11px] rounded-sm border',
+                              "h-[11px] w-[11px] rounded-sm border",
                               level.color
                             )}
                             aria-label={level.label}
@@ -371,42 +425,48 @@ export function ContributionGraph({
                     </TooltipProvider>
                   ))}
                 </div>
-                <span className="text-xs text-muted-foreground">More</span>
+                <span className="text-muted-foreground text-xs">More</span>
               </div>
             </div>
           </div>
 
           {/* Stats Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-4 border-t pt-4 md:grid-cols-4">
             <div>
-              <p className="text-2xl font-semibold">{data.totalContributions}</p>
-              <p className="text-xs text-muted-foreground">Total contributions</p>
+              <p className="text-2xl font-semibold">
+                {data.totalContributions}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Total contributions
+              </p>
             </div>
             <div>
               <p className="text-2xl font-semibold">{data.currentStreak}</p>
-              <p className="text-xs text-muted-foreground">Current streak</p>
+              <p className="text-muted-foreground text-xs">Current streak</p>
             </div>
             <div>
               <p className="text-2xl font-semibold">{data.longestStreak}</p>
-              <p className="text-xs text-muted-foreground">Longest streak</p>
+              <p className="text-muted-foreground text-xs">Longest streak</p>
             </div>
             <div>
               <p className="text-2xl font-semibold">
                 {(data.totalContributions / 365).toFixed(1)}
               </p>
-              <p className="text-xs text-muted-foreground">Daily average</p>
+              <p className="text-muted-foreground text-xs">Daily average</p>
             </div>
           </div>
 
           {/* Monthly Breakdown */}
           {data.monthlyStats && data.monthlyStats.length > 0 && (
-            <div className="pt-4 border-t">
-              <h4 className="text-sm font-medium mb-3">Monthly Breakdown</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="border-t pt-4">
+              <h4 className="mb-3 text-sm font-medium">Monthly Breakdown</h4>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {data.monthlyStats.slice(-4).map((month, index) => (
                   <div key={index} className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(month.month + '-01'), 'MMM yyyy', { locale })}
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(month.month + "-01"), "MMM yyyy", {
+                        locale,
+                      })}
                     </p>
                     <p className="font-medium">{month.totalContributions}</p>
                     <div className="space-y-1">

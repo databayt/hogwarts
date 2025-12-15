@@ -57,19 +57,20 @@ src/
 
 ```tsx
 // Server Component - Fetches data and renders UI
-import { FeatureTable } from './table'
-import { getFeatureData } from './actions'
-import { getTenantContext } from '@/lib/tenant-context'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getFeatureData } from "./actions"
+import { FeatureTable } from "./table"
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  dictionary?: Dictionary;
+  searchParams: Promise<SearchParams>
+  dictionary?: Dictionary
 }
 
 export default async function FeatureContent({
   searchParams,
-  dictionary
+  dictionary,
 }: Props) {
   // Get tenant context
   const { schoolId } = await getTenantContext()
@@ -80,16 +81,11 @@ export default async function FeatureContent({
   // Fetch data with schoolId scope
   const data = await getFeatureData({
     schoolId,
-    ...params
+    ...params,
   })
 
   // Render client components with data
-  return (
-    <FeatureTable
-      initialData={data}
-      dictionary={dictionary}
-    />
-  )
+  return <FeatureTable initialData={data} dictionary={dictionary} />
 }
 ```
 
@@ -98,31 +94,25 @@ export default async function FeatureContent({
 ```tsx
 "use client"
 
-import { useState, useMemo } from "react"
+import { useMemo, useState } from "react"
+
 import { DataTable } from "@/components/ui/data-table"
+
 import { getColumns } from "./columns"
 
 export function FeatureTable({
   initialData,
-  dictionary
+  dictionary,
 }: {
-  initialData: FeatureItem[];
-  dictionary?: Dictionary;
+  initialData: FeatureItem[]
+  dictionary?: Dictionary
 }) {
   const [data, setData] = useState(initialData)
 
   // Generate columns in client component
-  const columns = useMemo(
-    () => getColumns(dictionary),
-    [dictionary]
-  )
+  const columns = useMemo(() => getColumns(dictionary), [dictionary])
 
-  return (
-    <DataTable
-      columns={columns}
-      data={data}
-    />
-  )
+  return <DataTable columns={columns} data={data} />
 }
 ```
 
@@ -131,21 +121,22 @@ export function FeatureTable({
 ### Basic Pattern
 
 ```typescript
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // CREATE
 export async function createItem(input: unknown) {
   // 1. Tenant validation (CRITICAL)
-  const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Unauthorized");
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Unauthorized")
 
   // 2. Input validation
-  const parsed = createSchema.parse(input);
+  const parsed = createSchema.parse(input)
 
   // 3. Database operation with schoolId
   const item = await db.item.create({
@@ -153,61 +144,61 @@ export async function createItem(input: unknown) {
       ...parsed,
       schoolId, // ALWAYS include
     },
-  });
+  })
 
   // 4. Cache revalidation
-  revalidatePath("/items");
+  revalidatePath("/items")
 
   // 5. Return typed result
-  return { success: true as const, data: item };
+  return { success: true as const, data: item }
 }
 
 // UPDATE (use updateMany for tenant safety)
 export async function updateItem(input: unknown) {
-  const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Unauthorized");
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Unauthorized")
 
-  const parsed = updateSchema.parse(input);
-  const { id, ...data } = parsed;
+  const parsed = updateSchema.parse(input)
+  const { id, ...data } = parsed
 
   // updateMany ensures schoolId scope
   const result = await db.item.updateMany({
     where: { id, schoolId },
     data,
-  });
+  })
 
-  revalidatePath("/items");
-  return { success: true as const };
+  revalidatePath("/items")
+  return { success: true as const }
 }
 
 // DELETE (use deleteMany for tenant safety)
 export async function deleteItem(input: { id: string }) {
-  const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Unauthorized");
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Unauthorized")
 
-  const { id } = z.object({ id: z.string() }).parse(input);
+  const { id } = z.object({ id: z.string() }).parse(input)
 
   // deleteMany ensures schoolId scope
   await db.item.deleteMany({
     where: { id, schoolId },
-  });
+  })
 
-  revalidatePath("/items");
-  return { success: true as const };
+  revalidatePath("/items")
+  return { success: true as const }
 }
 
 // READ
 export async function getItems(filters?: ItemFilters) {
-  const { schoolId } = await getTenantContext();
-  if (!schoolId) return [];
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return []
 
   return db.item.findMany({
     where: {
       schoolId, // ALWAYS first
       ...filters,
     },
-    orderBy: { createdAt: 'desc' },
-  });
+    orderBy: { createdAt: "desc" },
+  })
 }
 ```
 
@@ -216,22 +207,22 @@ export async function getItems(filters?: ItemFilters) {
 ```typescript
 export async function safeAction(input: unknown) {
   try {
-    const parsed = schema.parse(input);
-    const result = await operation(parsed);
-    return { success: true as const, data: result };
+    const parsed = schema.parse(input)
+    const result = await operation(parsed)
+    return { success: true as const, data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         success: false as const,
         error: "Validation failed",
         issues: error.issues,
-      };
+      }
     }
-    console.error("Action failed:", error);
+    console.error("Action failed:", error)
     return {
       success: false as const,
       error: "Operation failed",
-    };
+    }
   }
 }
 ```
@@ -274,38 +265,38 @@ components/platform/students/
 
 ### Files
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `StudentCard.tsx` |
-| Server Actions | camelCase | `actions.ts` |
-| Utilities | kebab-case | `get-tenant-context.ts` |
-| Types | kebab-case | `types.ts` |
-| Validation | kebab-case | `validation.ts` |
-| Hooks | kebab-case | `use-student.ts` |
-| Config | kebab-case | `config.ts` |
+| Type           | Convention | Example                 |
+| -------------- | ---------- | ----------------------- |
+| Components     | PascalCase | `StudentCard.tsx`       |
+| Server Actions | camelCase  | `actions.ts`            |
+| Utilities      | kebab-case | `get-tenant-context.ts` |
+| Types          | kebab-case | `types.ts`              |
+| Validation     | kebab-case | `validation.ts`         |
+| Hooks          | kebab-case | `use-student.ts`        |
+| Config         | kebab-case | `config.ts`             |
 
 ### Code
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `function StudentCard() {}` |
-| Functions | camelCase | `function getStudent() {}` |
-| Variables | camelCase | `const studentName = ""` |
-| Constants | UPPER_SNAKE | `const MAX_ITEMS = 100` |
-| Types | PascalCase | `type StudentData = {}` |
+| Type       | Convention         | Example                         |
+| ---------- | ------------------ | ------------------------------- |
+| Components | PascalCase         | `function StudentCard() {}`     |
+| Functions  | camelCase          | `function getStudent() {}`      |
+| Variables  | camelCase          | `const studentName = ""`        |
+| Constants  | UPPER_SNAKE        | `const MAX_ITEMS = 100`         |
+| Types      | PascalCase         | `type StudentData = {}`         |
 | Interfaces | PascalCase + Props | `interface StudentCardProps {}` |
-| Enums | PascalCase | `enum UserRole {}` |
-| Hooks | camelCase + use | `function useStudent() {}` |
+| Enums      | PascalCase         | `enum UserRole {}`              |
+| Hooks      | camelCase + use    | `function useStudent() {}`      |
 
 ### Database & API
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Table names | PascalCase | `Student` |
-| Column names | camelCase | `firstName` |
-| Relations | camelCase | `students` |
-| API routes | kebab-case | `/api/get-students` |
-| Query params | camelCase | `?studentId=123` |
+| Type         | Convention | Example             |
+| ------------ | ---------- | ------------------- |
+| Table names  | PascalCase | `Student`           |
+| Column names | camelCase  | `firstName`         |
+| Relations    | camelCase  | `students`          |
+| API routes   | kebab-case | `/api/get-students` |
+| Query params | camelCase  | `?studentId=123`    |
 
 ## Multi-Tenant Patterns
 
@@ -314,13 +305,13 @@ components/platform/students/
 ```typescript
 // ❌ WRONG - No tenant isolation
 const students = await db.student.findMany({
-  where: { status: 'active' }
+  where: { status: "active" },
 })
 
 // ✅ CORRECT - Tenant isolated
 const { schoolId } = await getTenantContext()
 const students = await db.student.findMany({
-  where: { schoolId, status: 'active' }
+  where: { schoolId, status: "active" },
 })
 ```
 
@@ -330,13 +321,13 @@ const students = await db.student.findMany({
 // ❌ RISKY - Could affect other tenants
 await db.student.update({
   where: { id },
-  data: updates
+  data: updates,
 })
 
 // ✅ SAFE - Scoped to tenant
 await db.student.updateMany({
   where: { id, schoolId },
-  data: updates
+  data: updates,
 })
 ```
 
@@ -362,50 +353,46 @@ model Student {
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+
 import { cn } from "@/lib/utils"
 
-const componentVariants = cva(
-  "base-classes",
-  {
-    variants: {
-      variant: {
-        default: "default-classes",
-        secondary: "secondary-classes",
-      },
-      size: {
-        default: "h-9 px-4",
-        sm: "h-8 px-3",
-        lg: "h-10 px-6",
-      },
+const componentVariants = cva("base-classes", {
+  variants: {
+    variant: {
+      default: "default-classes",
+      secondary: "secondary-classes",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
+    size: {
+      default: "h-9 px-4",
+      sm: "h-8 px-3",
+      lg: "h-10 px-6",
     },
-  }
-)
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
+  },
+})
 
 interface ComponentProps
-  extends React.ComponentProps<"div">,
-    VariantProps<typeof componentVariants> {
-  asChild?: boolean;
+  extends React.ComponentProps<"div">, VariantProps<typeof componentVariants> {
+  asChild?: boolean
 }
 
-const Component = React.forwardRef<
-  HTMLDivElement,
-  ComponentProps
->(({ className, variant, size, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : "div"
+const Component = React.forwardRef<HTMLDivElement, ComponentProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "div"
 
-  return (
-    <Comp
-      ref={ref}
-      data-slot="component"
-      className={cn(componentVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-})
+    return (
+      <Comp
+        ref={ref}
+        data-slot="component"
+        className={cn(componentVariants({ variant, size, className }))}
+        {...props}
+      />
+    )
+  }
+)
 
 Component.displayName = "Component"
 
@@ -435,11 +422,12 @@ export { Component, componentVariants }
 ```typescript
 // validation.ts
 import { z } from "zod"
+
 import { getValidationMessages } from "@/components/internationalization/helpers"
 
 // Factory function for i18n
 export function createStudentSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary);
+  const v = getValidationMessages(dictionary)
 
   return z.object({
     givenName: z.string().min(1, v.required()),
@@ -447,7 +435,7 @@ export function createStudentSchema(dictionary: Dictionary) {
     email: z.string().email(v.email()),
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, v.date()),
     gender: z.enum(["male", "female", "other"]),
-  });
+  })
 }
 
 // Legacy schema for compatibility
@@ -457,9 +445,9 @@ export const studentSchema = z.object({
   email: z.string().email("Invalid email"),
   dateOfBirth: z.string(),
   gender: z.enum(["male", "female", "other"]),
-});
+})
 
-export type StudentFormData = z.infer<typeof studentSchema>;
+export type StudentFormData = z.infer<typeof studentSchema>
 ```
 
 ### Form Component Pattern
@@ -467,8 +455,9 @@ export type StudentFormData = z.infer<typeof studentSchema>;
 ```tsx
 "use client"
 
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -485,13 +474,11 @@ export function StudentForm({
   defaultValues,
   dictionary,
 }: {
-  onSubmit: (data: StudentFormData) => Promise<void>;
-  defaultValues?: Partial<StudentFormData>;
-  dictionary?: Dictionary;
+  onSubmit: (data: StudentFormData) => Promise<void>
+  defaultValues?: Partial<StudentFormData>
+  dictionary?: Dictionary
 }) {
-  const schema = dictionary
-    ? createStudentSchema(dictionary)
-    : studentSchema;
+  const schema = dictionary ? createStudentSchema(dictionary) : studentSchema
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -500,7 +487,7 @@ export function StudentForm({
       surname: "",
       ...defaultValues,
     },
-  });
+  })
 
   return (
     <Form {...form}>
@@ -521,12 +508,10 @@ export function StudentForm({
           )}
         />
 
-        <Button type="submit">
-          {dictionary?.form?.submit || "Submit"}
-        </Button>
+        <Button type="submit">{dictionary?.form?.submit || "Submit"}</Button>
       </form>
     </Form>
-  );
+  )
 }
 ```
 
@@ -539,8 +524,9 @@ export function StudentForm({
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 export function getColumns(dictionary?: Dictionary): ColumnDef<StudentRow>[] {
   return [
@@ -556,7 +542,9 @@ export function getColumns(dictionary?: Dictionary): ColumnDef<StudentRow>[] {
       accessorKey: "status",
       header: dictionary?.table?.status || "Status",
       cell: ({ row }) => (
-        <Badge variant={row.original.status === "active" ? "default" : "secondary"}>
+        <Badge
+          variant={row.original.status === "active" ? "default" : "secondary"}
+        >
           {row.original.status}
         </Badge>
       ),
@@ -577,7 +565,7 @@ export function getColumns(dictionary?: Dictionary): ColumnDef<StudentRow>[] {
         </DropdownMenu>
       ),
     },
-  ];
+  ]
 }
 ```
 
@@ -587,34 +575,29 @@ export function getColumns(dictionary?: Dictionary): ColumnDef<StudentRow>[] {
 // table.tsx
 "use client"
 
-import { DataTable } from "@/components/ui/data-table"
-import { getColumns } from "./columns"
 import { useMemo } from "react"
+
+import { DataTable } from "@/components/ui/data-table"
+
+import { getColumns } from "./columns"
 
 export function StudentsTable({
   initialData,
   total,
   dictionary,
 }: {
-  initialData: StudentRow[];
-  total: number;
-  dictionary?: Dictionary;
+  initialData: StudentRow[]
+  total: number
+  dictionary?: Dictionary
 }) {
   // Generate columns in client component
-  const columns = useMemo(
-    () => getColumns(dictionary),
-    [dictionary]
-  );
+  const columns = useMemo(() => getColumns(dictionary), [dictionary])
 
   return (
     <div className="space-y-4">
-      <DataTable
-        columns={columns}
-        data={initialData}
-        total={total}
-      />
+      <DataTable columns={columns} data={initialData} total={total} />
     </div>
-  );
+  )
 }
 ```
 
@@ -653,27 +636,23 @@ import * as React from "react"
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 // 2. External packages
 import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-
-// 3. UI components
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-
-// 4. Internal components
-import { StudentCard } from "@/components/platform/students/card"
-import { StudentForm } from "@/components/platform/students/form"
-
-// 5. Actions and utilities
-import { createStudent } from "@/components/platform/students/actions"
-import { cn } from "@/lib/utils"
-import { db } from "@/lib/db"
 
 // 6. Types and schemas
 import type { Student } from "@/types/student"
+import { db } from "@/lib/db"
+import { cn } from "@/lib/utils"
+// 3. UI components
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+// 5. Actions and utilities
+import { createStudent } from "@/components/platform/students/actions"
+// 4. Internal components
+import { StudentCard } from "@/components/platform/students/card"
+import { StudentForm } from "@/components/platform/students/form"
 import { studentSchema } from "@/components/platform/students/validation"
 
 // 7. Styles (if needed)
@@ -687,11 +666,11 @@ import styles from "./styles.module.css"
 ```typescript
 // list-params.ts
 import {
-  parseAsString,
-  parseAsInteger,
+  createSearchParamsCache,
   parseAsArrayOf,
-  createSearchParamsCache
-} from 'nuqs/server'
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
 
 export const studentsSearchParams = createSearchParamsCache({
   // Pagination
@@ -728,7 +707,7 @@ export function StudentCard({ student }: { student: Student }) {
 
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="size-4 text-muted-foreground" />
+          <CalendarIcon className="text-muted-foreground size-4" />
           <span className="text-sm">{student.enrollmentDate}</span>
         </div>
 
@@ -744,7 +723,7 @@ export function StudentCard({ student }: { student: Student }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 ```
 
@@ -754,23 +733,24 @@ export function StudentCard({ student }: { student: Student }) {
 
 ```tsx
 // __tests__/student-card.test.tsx
-import { render, screen } from '@testing-library/react'
-import { StudentCard } from '../student-card'
+import { render, screen } from "@testing-library/react"
 
-describe('StudentCard', () => {
+import { StudentCard } from "../student-card"
+
+describe("StudentCard", () => {
   const mockStudent = {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    status: 'active',
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    status: "active",
   }
 
-  it('renders student information', () => {
+  it("renders student information", () => {
     render(<StudentCard student={mockStudent} />)
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByText('john@example.com')).toBeInTheDocument()
-    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.getByText("John Doe")).toBeInTheDocument()
+    expect(screen.getByText("john@example.com")).toBeInTheDocument()
+    expect(screen.getByText("active")).toBeInTheDocument()
   })
 })
 ```
@@ -779,20 +759,21 @@ describe('StudentCard', () => {
 
 ```typescript
 // __tests__/actions.test.ts
-import { createStudent } from '../actions'
-import { db } from '@/lib/db'
+import { db } from "@/lib/db"
 
-jest.mock('@/lib/db')
-jest.mock('@/lib/tenant-context', () => ({
-  getTenantContext: () => ({ schoolId: 'school-123' })
+import { createStudent } from "../actions"
+
+jest.mock("@/lib/db")
+jest.mock("@/lib/tenant-context", () => ({
+  getTenantContext: () => ({ schoolId: "school-123" }),
 }))
 
-describe('createStudent', () => {
-  it('creates student with schoolId', async () => {
+describe("createStudent", () => {
+  it("creates student with schoolId", async () => {
     const input = {
-      givenName: 'John',
-      surname: 'Doe',
-      email: 'john@example.com',
+      givenName: "John",
+      surname: "Doe",
+      email: "john@example.com",
     }
 
     await createStudent(input)
@@ -800,7 +781,7 @@ describe('createStudent', () => {
     expect(db.student.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         ...input,
-        schoolId: 'school-123',
+        schoolId: "school-123",
       }),
     })
   })
@@ -813,7 +794,7 @@ describe('createStudent', () => {
 
 ```tsx
 // Lazy load heavy components
-const HeavyChart = lazy(() => import('./heavy-chart'))
+const HeavyChart = lazy(() => import("./heavy-chart"))
 
 export function Dashboard() {
   return (

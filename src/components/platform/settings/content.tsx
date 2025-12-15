@@ -1,41 +1,57 @@
-"use client";
+"use client"
 
-import * as React from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import * as React from "react"
 
-import { SuccessToast, ErrorToast } from '@/components/atom/toast'
-import { useSchool } from '@/components/platform/context/school-context'
-import { updateSchoolSettings } from '@/app/[lang]/s/[subdomain]/(platform)/settings/actions'
+import { Button } from "@/components/ui/button"
 import {
-  supportedTimezones,
-  getTimezoneDisplayName,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { useSchool } from "@/components/platform/context/school-context"
+import { updateSchoolSettings } from "@/app/[lang]/s/[subdomain]/(platform)/settings/actions"
+
+import {
   getCurrentTimeInTimezone,
-  type SupportedTimezone
-} from './validation';
-import { type Locale } from '@/components/internationalization/config'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+  getTimezoneDisplayName,
+  supportedTimezones,
+  type SupportedTimezone,
+} from "./validation"
 
 interface Props {
   dictionary: Dictionary
   lang: Locale
 }
 
-export const SettingsContent = React.memo(function SettingsContent({ dictionary, lang }: Props) {
+export const SettingsContent = React.memo(function SettingsContent({
+  dictionary,
+  lang,
+}: Props) {
   const { school } = useSchool()
-  const [name, setName] = React.useState(school.name || '')
+  const [name, setName] = React.useState(school.name || "")
   const [timezone, setTimezone] = React.useState<SupportedTimezone>(
-    (school.timezone as SupportedTimezone) || 'Africa/Khartoum'
+    (school.timezone as SupportedTimezone) || "Africa/Khartoum"
   )
-  const [locale, setLocale] = React.useState<'ar' | 'en'>(
-    (school.locale as 'ar' | 'en') || 'ar'
+  const [locale, setLocale] = React.useState<"ar" | "en">(
+    (school.locale as "ar" | "en") || "ar"
   )
-  const [logoUrl, setLogoUrl] = React.useState(school.logoUrl || '')
+  const [logoUrl, setLogoUrl] = React.useState(school.logoUrl || "")
   const [submitting, setSubmitting] = React.useState(false)
-  const [currentTime, setCurrentTime] = React.useState('')
+  const [currentTime, setCurrentTime] = React.useState("")
 
   // Update current time in selected timezone
   React.useEffect(() => {
@@ -55,7 +71,7 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
       await updateSchoolSettings({ name, timezone, locale, logoUrl })
       SuccessToast("Settings updated successfully")
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : 'Failed to update settings')
+      ErrorToast(e instanceof Error ? e.message : "Failed to update settings")
     } finally {
       setSubmitting(false)
     }
@@ -64,8 +80,13 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{dictionary?.school?.settings?.schoolSettings || "School Settings"}</CardTitle>
-        <CardDescription>{dictionary?.school?.settings?.description || "Configure your school's basic information and preferences"}</CardDescription>
+        <CardTitle>
+          {dictionary?.school?.settings?.schoolSettings || "School Settings"}
+        </CardTitle>
+        <CardDescription>
+          {dictionary?.school?.settings?.description ||
+            "Configure your school's basic information and preferences"}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="grid gap-6">
@@ -85,7 +106,10 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
           <Label htmlFor="timezone" className="text-sm font-medium">
             {dictionary?.school?.settings?.timezone || "Timezone"}
           </Label>
-          <Select value={timezone} onValueChange={(value) => setTimezone(value as SupportedTimezone)}>
+          <Select
+            value={timezone}
+            onValueChange={(value) => setTimezone(value as SupportedTimezone)}
+          >
             <SelectTrigger id="timezone">
               <SelectValue placeholder="Select timezone">
                 {getTimezoneDisplayName(timezone)}
@@ -105,8 +129,9 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
             </SelectContent>
           </Select>
           {currentTime && (
-            <p className="text-xs text-muted-foreground">
-              Current time in {getTimezoneDisplayName(timezone)}: <span className="font-mono">{currentTime}</span>
+            <p className="text-muted-foreground text-xs">
+              Current time in {getTimezoneDisplayName(timezone)}:{" "}
+              <span className="font-mono">{currentTime}</span>
             </p>
           )}
         </div>
@@ -115,10 +140,13 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
           <Label htmlFor="locale" className="text-sm font-medium">
             {dictionary?.school?.settings?.language || "Language"}
           </Label>
-          <Select value={locale} onValueChange={(value) => setLocale(value as 'ar' | 'en')}>
+          <Select
+            value={locale}
+            onValueChange={(value) => setLocale(value as "ar" | "en")}
+          >
             <SelectTrigger id="locale">
               <SelectValue>
-                {locale === 'ar' ? 'العربية (Arabic)' : 'English'}
+                {locale === "ar" ? "العربية (Arabic)" : "English"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -140,8 +168,14 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
             onChange={(e) => setLogoUrl(e.target.value)}
           />
           {logoUrl && (
-            <p className="text-xs text-muted-foreground">
-              Preview: <a href={logoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            <p className="text-muted-foreground text-xs">
+              Preview:{" "}
+              <a
+                href={logoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
                 {logoUrl}
               </a>
             </p>
@@ -153,17 +187,13 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
           disabled={submitting || !name.trim()}
           className="w-fit"
         >
-          {submitting ? (dictionary?.school?.settings?.userManagementLabels?.saving || 'Saving...') : (dictionary?.school?.settings?.userManagementLabels?.saveSettings || 'Save Settings')}
+          {submitting
+            ? dictionary?.school?.settings?.userManagementLabels?.saving ||
+              "Saving..."
+            : dictionary?.school?.settings?.userManagementLabels
+                ?.saveSettings || "Save Settings"}
         </Button>
       </CardContent>
     </Card>
   )
 })
-
-
-
-
-
-
-
-

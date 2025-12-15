@@ -17,6 +17,7 @@
 ## Philosophy
 
 This seed system follows an **additive-only** pattern:
+
 - Running `pnpm db:seed` multiple times is **100% safe**
 - Existing data is **never deleted**
 - New records are added only if they don't exist
@@ -73,36 +74,36 @@ Used for bulk inserts where duplicates should be ignored:
 ```typescript
 await prisma.studentClass.createMany({
   data: enrollments,
-  skipDuplicates: true  // Silently skip existing records
-});
+  skipDuplicates: true, // Silently skip existing records
+})
 ```
 
 ## Module Reference
 
 ### Available Modules
 
-| Module | Command | What It Seeds |
-|--------|---------|---------------|
-| school | `pnpm db:seed:single school` | Demo school + branding |
-| auth | `pnpm db:seed:single auth` | Admin users (dev, admin, accountant, staff) |
-| academic | `pnpm db:seed:single academic` | School year, terms, periods, year levels |
-| departments | `pnpm db:seed:single departments` | 6 departments, 20 subjects |
-| classrooms | `pnpm db:seed:single classrooms` | 17 rooms, classroom types |
-| people | `pnpm db:seed:single people` | 25 teachers, 100 students, 200 guardians |
-| classes | `pnpm db:seed:single classes` | Class sections + enrollments |
-| library | `pnpm db:seed:single library` | 38 books (Arabic + English) |
-| announcements | `pnpm db:seed:single announcements` | School announcements |
-| events | `pnpm db:seed:single events` | School calendar events |
-| fees | `pnpm db:seed:single fees` | Fee structures + assignments |
-| finance | `pnpm db:seed:single finance` | Accounts, payroll, banking, budgets |
-| exams | `pnpm db:seed:single exams` | Questions, templates, exams, results |
-| grades | `pnpm db:seed:single grades` | Academic results |
-| timetable | `pnpm db:seed:single timetable` | Class schedules |
-| stream | `pnpm db:seed:single stream` | LMS courses |
-| lessons | `pnpm db:seed:single lessons` | Lesson plans |
-| reports | `pnpm db:seed:single reports` | Report cards |
-| attendance | `pnpm db:seed:single attendance` | Attendance records |
-| admission | `pnpm db:seed:single admission` | Admission campaigns + applications |
+| Module        | Command                             | What It Seeds                               |
+| ------------- | ----------------------------------- | ------------------------------------------- |
+| school        | `pnpm db:seed:single school`        | Demo school + branding                      |
+| auth          | `pnpm db:seed:single auth`          | Admin users (dev, admin, accountant, staff) |
+| academic      | `pnpm db:seed:single academic`      | School year, terms, periods, year levels    |
+| departments   | `pnpm db:seed:single departments`   | 6 departments, 20 subjects                  |
+| classrooms    | `pnpm db:seed:single classrooms`    | 17 rooms, classroom types                   |
+| people        | `pnpm db:seed:single people`        | 25 teachers, 100 students, 200 guardians    |
+| classes       | `pnpm db:seed:single classes`       | Class sections + enrollments                |
+| library       | `pnpm db:seed:single library`       | 38 books (Arabic + English)                 |
+| announcements | `pnpm db:seed:single announcements` | School announcements                        |
+| events        | `pnpm db:seed:single events`        | School calendar events                      |
+| fees          | `pnpm db:seed:single fees`          | Fee structures + assignments                |
+| finance       | `pnpm db:seed:single finance`       | Accounts, payroll, banking, budgets         |
+| exams         | `pnpm db:seed:single exams`         | Questions, templates, exams, results        |
+| grades        | `pnpm db:seed:single grades`        | Academic results                            |
+| timetable     | `pnpm db:seed:single timetable`     | Class schedules                             |
+| stream        | `pnpm db:seed:single stream`        | LMS courses                                 |
+| lessons       | `pnpm db:seed:single lessons`       | Lesson plans                                |
+| reports       | `pnpm db:seed:single reports`       | Report cards                                |
+| attendance    | `pnpm db:seed:single attendance`    | Attendance records                          |
+| admission     | `pnpm db:seed:single admission`     | Admission campaigns + applications          |
 
 ### Module Dependencies
 
@@ -143,6 +144,7 @@ Edit `prisma/seeds/constants.ts` and add books to the `BOOKS` array:
 ```
 
 Then run:
+
 ```bash
 pnpm db:seed:single library
 ```
@@ -159,6 +161,7 @@ Edit the `STUDENT_DISTRIBUTION` in `constants.ts`:
 ```
 
 Then run:
+
 ```bash
 pnpm db:seed:single people
 ```
@@ -176,11 +179,12 @@ const events = [
     title: "New School Event",
     startDate: new Date("2025-06-15"),
     // ... other fields
-  }
-];
+  },
+]
 ```
 
 Then run:
+
 ```bash
 pnpm db:seed:single events
 ```
@@ -208,9 +212,10 @@ npx prisma studio
 ```
 
 Or query directly:
+
 ```typescript
-const count = await prisma.book.count({ where: { schoolId } });
-console.log(`Books: ${count}`);  // Should never decrease
+const count = await prisma.book.count({ where: { schoolId } })
+console.log(`Books: ${count}`) // Should never decrease
 ```
 
 ## Safety Guarantees
@@ -226,12 +231,14 @@ console.log(`Books: ${count}`);  // Should never decrease
 ### "Unique constraint failed"
 
 This means the upsert key doesn't match. Check:
+
 1. The `where` clause uses the correct unique index
 2. All required fields are in `create` and `update`
 
 ### "Record not found"
 
 A dependency is missing. Run modules in order:
+
 ```bash
 pnpm db:seed:single school
 pnpm db:seed:single academic
@@ -278,17 +285,17 @@ model Announcement {
 
 Located in `constants.ts`, grades support Sudanese/Arabic education:
 
-| Grade | Arabic | English | Min % | GPA |
-|-------|--------|---------|-------|-----|
-| A+ | ممتاز مرتفع | Excellent High | 95 | 4.0 |
-| A | ممتاز | Excellent | 90 | 4.0 |
-| B+ | جيد جداً مرتفع | Very Good High | 85 | 3.5 |
-| B | جيد جداً | Very Good | 80 | 3.0 |
-| C+ | جيد مرتفع | Good High | 75 | 2.5 |
-| C | جيد | Good | 70 | 2.0 |
-| D+ | مقبول مرتفع | Pass High | 60 | 1.5 |
-| D | مقبول | Pass | 50 | 1.0 |
-| F | راسب | Fail | 0 | 0.0 |
+| Grade | Arabic         | English        | Min % | GPA |
+| ----- | -------------- | -------------- | ----- | --- |
+| A+    | ممتاز مرتفع    | Excellent High | 95    | 4.0 |
+| A     | ممتاز          | Excellent      | 90    | 4.0 |
+| B+    | جيد جداً مرتفع | Very Good High | 85    | 3.5 |
+| B     | جيد جداً       | Very Good      | 80    | 3.0 |
+| C+    | جيد مرتفع      | Good High      | 75    | 2.5 |
+| C     | جيد            | Good           | 70    | 2.0 |
+| D+    | مقبول مرتفع    | Pass High      | 60    | 1.5 |
+| D     | مقبول          | Pass           | 50    | 1.0 |
+| F     | راسب           | Fail           | 0     | 0.0 |
 
 ### Report Categories
 
@@ -313,19 +320,19 @@ When creating entities at runtime (not seeds), use the auto-translate wrapper fo
 ### Usage in Server Actions
 
 ```typescript
-import { withAutoTranslation } from "@/lib/auto-translate";
+import { withAutoTranslation } from "@/lib/auto-translate"
 
 export async function createAnnouncement(input: {
-  title: string;
-  body: string;
-  sourceLanguage: "en" | "ar";
+  title: string
+  body: string
+  sourceLanguage: "en" | "ar"
 }) {
   // Auto-translate to other language
   const translated = await withAutoTranslation(
     { title: input.title, body: input.body },
     ["title", "body"],
     input.sourceLanguage
-  );
+  )
 
   // Create with both languages
   const announcement = await db.announcement.create({
@@ -336,20 +343,20 @@ export async function createAnnouncement(input: {
       bodyAr: translated.data.bodyAr,
       schoolId,
     },
-  });
+  })
 
-  return announcement;
+  return announcement
 }
 ```
 
 ### Display Logic
 
 ```typescript
-import { getLocalizedField } from "@/lib/auto-translate";
+import { getLocalizedField } from "@/lib/auto-translate"
 
 // In components
-const title = getLocalizedField(announcement, "title", locale);
-const body = getLocalizedField(announcement, "body", locale);
+const title = getLocalizedField(announcement, "title", locale)
+const body = getLocalizedField(announcement, "body", locale)
 
 // Returns localized version with fallback
 // e.g., titleAr if locale="ar", otherwise titleEn
@@ -357,31 +364,31 @@ const body = getLocalizedField(announcement, "body", locale);
 
 ### Supported Entities
 
-| Entity | Translatable Fields |
-|--------|---------------------|
-| Announcement | title, body |
-| Event | name, description |
-| Assignment | title, description |
-| Lesson | title, objectives |
-| Exam | name, instructions |
-| Book | title, description |
-| Course | name, description |
+| Entity       | Translatable Fields |
+| ------------ | ------------------- |
+| Announcement | title, body         |
+| Event        | name, description   |
+| Assignment   | title, description  |
+| Lesson       | title, objectives   |
+| Exam         | name, instructions  |
+| Book         | title, description  |
+| Course       | name, description   |
 
 ## Cultural Events
 
 Seeds include Islamic/Sudanese cultural events in `events.ts`:
 
-| Event | Arabic | Type |
-|-------|--------|------|
-| Eid al-Fitr | عيد الفطر المبارك | CELEBRATION |
-| Eid al-Adha | عيد الأضحى المبارك | CELEBRATION |
-| Mawlid an-Nabi | المولد النبوي الشريف | CELEBRATION |
-| Islamic New Year | رأس السنة الهجرية | CELEBRATION |
+| Event               | Arabic                     | Type        |
+| ------------------- | -------------------------- | ----------- |
+| Eid al-Fitr         | عيد الفطر المبارك          | CELEBRATION |
+| Eid al-Adha         | عيد الأضحى المبارك         | CELEBRATION |
+| Mawlid an-Nabi      | المولد النبوي الشريف       | CELEBRATION |
+| Islamic New Year    | رأس السنة الهجرية          | CELEBRATION |
 | Arabic Language Day | اليوم العالمي للغة العربية | CELEBRATION |
-| Teachers' Day | يوم المعلم | CELEBRATION |
-| Mother's Day | عيد الأم | CELEBRATION |
-| Children's Day | يوم الطفل | CELEBRATION |
-| Quran Competition | مسابقة حفظ القرآن الكريم | COMPETITION |
+| Teachers' Day       | يوم المعلم                 | CELEBRATION |
+| Mother's Day        | عيد الأم                   | CELEBRATION |
+| Children's Day      | يوم الطفل                  | CELEBRATION |
+| Quran Competition   | مسابقة حفظ القرآن الكريم   | COMPETITION |
 
 ### Adding New Cultural Events
 
@@ -408,12 +415,12 @@ Seeds include Islamic/Sudanese cultural events in `events.ts`:
 
 The following are **FORBIDDEN** in seed files:
 
-| Pattern | Risk | Alternative |
-|---------|------|-------------|
-| `deleteMany()` | Data loss | `upsert()` with update |
-| `.delete()` | Record deletion | `findFirst()` + conditional create |
-| `TRUNCATE` | Table wipe | Never needed in seeds |
-| `DROP` | Table/schema destruction | Never needed |
+| Pattern        | Risk                     | Alternative                        |
+| -------------- | ------------------------ | ---------------------------------- |
+| `deleteMany()` | Data loss                | `upsert()` with update             |
+| `.delete()`    | Record deletion          | `findFirst()` + conditional create |
+| `TRUNCATE`     | Table wipe               | Never needed in seeds              |
+| `DROP`         | Table/schema destruction | Never needed                       |
 
 ### How It Works
 
@@ -431,27 +438,27 @@ fi
 
 ```typescript
 // ❌ FORBIDDEN - Deletes data
-await prisma.student.deleteMany({ where: { schoolId } });
-await prisma.student.delete({ where: { id } });
+await prisma.student.deleteMany({ where: { schoolId } })
+await prisma.student.delete({ where: { id } })
 
 // ✅ SAFE - Upsert (create or update)
 await prisma.student.upsert({
   where: { schoolId_email: { schoolId, email } },
   create: { schoolId, email, name },
-  update: { name },  // Update if exists
-});
+  update: { name }, // Update if exists
+})
 
 // ✅ SAFE - Conditional create
-const existing = await prisma.student.findFirst({ where: { email, schoolId } });
+const existing = await prisma.student.findFirst({ where: { email, schoolId } })
 if (!existing) {
-  await prisma.student.create({ data: { email, schoolId, name } });
+  await prisma.student.create({ data: { email, schoolId, name } })
 }
 
 // ✅ SAFE - Skip duplicates
 await prisma.student.createMany({
   data: students,
   skipDuplicates: true,
-});
+})
 ```
 
 ### Emergency Override
@@ -463,6 +470,7 @@ git commit --no-verify -m "message"
 ```
 
 **WARNING**: This bypasses all safety checks. Use only when:
+
 - Team has approved the destructive operation
 - You have a backup of the data
 - This is a controlled development environment
@@ -533,12 +541,12 @@ src/lib/
 
 ## Login Credentials
 
-| Role | Email |
-|------|-------|
-| Developer | dev@databayt.org |
-| Admin | admin@databayt.org |
-| Accountant | accountant@databayt.org |
-| Staff | staff@databayt.org |
-| Teacher | teacher1@demo.databayt.org |
-| Student | student1@demo.databayt.org |
-| Guardian | father1@demo.databayt.org |
+| Role       | Email                      |
+| ---------- | -------------------------- |
+| Developer  | dev@databayt.org           |
+| Admin      | admin@databayt.org         |
+| Accountant | accountant@databayt.org    |
+| Staff      | staff@databayt.org         |
+| Teacher    | teacher1@demo.databayt.org |
+| Student    | student1@demo.databayt.org |
+| Guardian   | father1@demo.databayt.org  |

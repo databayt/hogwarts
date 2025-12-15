@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react"
 
 interface IndicatorProps {
-  totalSteps: number;
-  currentStep: number;
+  totalSteps: number
+  currentStep: number
 }
 
 const Indicator: React.FC<IndicatorProps> = ({ totalSteps, currentStep }) => {
@@ -17,7 +17,7 @@ const Indicator: React.FC<IndicatorProps> = ({ totalSteps, currentStep }) => {
         />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default Indicator;
+export default Indicator

@@ -3,28 +3,34 @@
  * Enables exporting announcement data to CSV format
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import { getAuthContext, assertAnnouncementPermission } from "./authorization";
-import { getAnnouncementsList } from "./queries";
-import { arrayToCSV, generateCSVFilename } from "@/components/file";
-import type { ActionResponse } from "./actions";
-import type { AnnouncementListFilters, PaginationParams, SortParam } from "./queries";
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { arrayToCSV, generateCSVFilename } from "@/components/file"
+
+import type { ActionResponse } from "./actions"
+import { assertAnnouncementPermission, getAuthContext } from "./authorization"
+import { getAnnouncementsList } from "./queries"
+import type {
+  AnnouncementListFilters,
+  PaginationParams,
+  SortParam,
+} from "./queries"
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type ExportFormat = "csv" | "json";
+type ExportFormat = "csv" | "json"
 
 interface ExportParams extends Partial<AnnouncementListFilters> {
-  page?: number;
-  perPage?: number;
-  sort?: SortParam[];
-  format?: ExportFormat;
+  page?: number
+  perPage?: number
+  sort?: SortParam[]
+  format?: ExportFormat
 }
 
 // ============================================================================
@@ -45,7 +51,7 @@ const ANNOUNCEMENT_EXPORT_COLUMNS = [
   { key: "publishedAt", label: "Published Date" },
   { key: "scheduledFor", label: "Scheduled For" },
   { key: "expiresAt", label: "Expires At" },
-] as const;
+] as const
 
 // ============================================================================
 // Export Functions
@@ -61,26 +67,29 @@ export async function exportAnnouncementsToCSV(
 ): Promise<ActionResponse<{ csv: string; filename: string }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Check read permission (any authenticated user can export what they can see)
     try {
-      assertAnnouncementPermission(authContext, "read");
+      assertAnnouncementPermission(authContext, "read")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to export announcements",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to export announcements",
+      }
     }
 
     // Get announcements with applied filters
@@ -95,10 +104,10 @@ export async function exportAnnouncementsToCSV(
       page: input.page || 1,
       perPage: input.perPage || 1000, // Default to 1000 for exports
       sort: input.sort,
-    });
+    })
 
     if (rows.length === 0) {
-      return { success: false, error: "No announcements to export" };
+      return { success: false, error: "No announcements to export" }
     }
 
     // Map data to export format
@@ -113,21 +122,27 @@ export async function exportAnnouncementsToCSV(
       featured: row.featured ? "Yes" : "No",
       createdBy: row.createdBy || "N/A",
       createdAt: new Date(row.createdAt).toLocaleString(),
-      publishedAt: row.publishedAt ? new Date(row.publishedAt).toLocaleString() : "N/A",
-      scheduledFor: row.scheduledFor ? new Date(row.scheduledFor).toLocaleString() : "N/A",
-      expiresAt: row.expiresAt ? new Date(row.expiresAt).toLocaleString() : "N/A",
-    }));
+      publishedAt: row.publishedAt
+        ? new Date(row.publishedAt).toLocaleString()
+        : "N/A",
+      scheduledFor: row.scheduledFor
+        ? new Date(row.scheduledFor).toLocaleString()
+        : "N/A",
+      expiresAt: row.expiresAt
+        ? new Date(row.expiresAt).toLocaleString()
+        : "N/A",
+    }))
 
     // Generate CSV
     const csv = arrayToCSV(exportData, {
       columns: ANNOUNCEMENT_EXPORT_COLUMNS as any,
       includeHeaders: true,
-    });
+    })
 
     // Generate filename with timestamp
     const filename = generateCSVFilename("announcements", {
       timestamp: true,
-    });
+    })
 
     return {
       success: true,
@@ -135,24 +150,27 @@ export async function exportAnnouncementsToCSV(
         csv,
         filename,
       },
-    };
+    }
   } catch (error) {
     console.error("[exportAnnouncementsToCSV] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export announcements",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to export announcements",
+    }
   }
 }
 
@@ -161,21 +179,21 @@ export async function exportAnnouncementsToCSV(
  * @param input - Array of announcement IDs
  * @returns CSV string or error
  */
-export async function exportSelectedAnnouncements(
-  input: { ids: string[] }
-): Promise<ActionResponse<{ csv: string; filename: string }>> {
+export async function exportSelectedAnnouncements(input: {
+  ids: string[]
+}): Promise<ActionResponse<{ csv: string; filename: string }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
@@ -183,26 +201,29 @@ export async function exportSelectedAnnouncements(
       .object({
         ids: z.array(z.string().min(1)).min(1).max(1000),
       })
-      .parse(input);
+      .parse(input)
 
     // Check read permission
     try {
-      assertAnnouncementPermission(authContext, "read");
+      assertAnnouncementPermission(authContext, "read")
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to export announcements",
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to export announcements",
+      }
     }
 
     // Import getAnnouncementsByIds from queries
-    const { getAnnouncementsByIds } = await import("./queries");
+    const { getAnnouncementsByIds } = await import("./queries")
 
     // Fetch announcements by IDs
-    const announcements = await getAnnouncementsByIds(schoolId, ids);
+    const announcements = await getAnnouncementsByIds(schoolId, ids)
 
     if (announcements.length === 0) {
-      return { success: false, error: "No announcements found" };
+      return { success: false, error: "No announcements found" }
     }
 
     // Map data to export format
@@ -226,18 +247,18 @@ export async function exportSelectedAnnouncements(
       expiresAt: announcement.expiresAt
         ? new Date(announcement.expiresAt).toLocaleString()
         : "N/A",
-    }));
+    }))
 
     // Generate CSV
     const csv = arrayToCSV(exportData, {
       columns: ANNOUNCEMENT_EXPORT_COLUMNS as any,
       includeHeaders: true,
-    });
+    })
 
     // Generate filename with timestamp
     const filename = generateCSVFilename("announcements_selected", {
       timestamp: true,
-    });
+    })
 
     return {
       success: true,
@@ -245,24 +266,27 @@ export async function exportSelectedAnnouncements(
         csv,
         filename,
       },
-    };
+    }
   } catch (error) {
     console.error("[exportSelectedAnnouncements] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-      };
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export announcements",
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to export announcements",
+    }
   }
 }
 
@@ -272,16 +296,18 @@ export async function exportSelectedAnnouncements(
  */
 export function downloadAnnouncementsCSV(csv: string, filename: string): void {
   if (typeof window === "undefined") {
-    throw new Error("downloadAnnouncementsCSV can only be called in browser context");
+    throw new Error(
+      "downloadAnnouncementsCSV can only be called in browser context"
+    )
   }
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }

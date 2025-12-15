@@ -1,18 +1,18 @@
 import {
-  User,
-  School,
-  Department,
+  Announcement,
   Classroom,
-  Teacher,
-  Student,
+  Department,
   Guardian,
+  School,
   SchoolYear,
-  Term,
-  YearLevel,
-  SubscriptionTier,
+  Student,
   Subscription,
-  Announcement
-} from '@prisma/client'
+  SubscriptionTier,
+  Teacher,
+  Term,
+  User,
+  YearLevel,
+} from "@prisma/client"
 
 // Admin Dashboard Stats
 export interface AdminStats {
@@ -94,22 +94,22 @@ export interface BulkImportResult {
 // System Types
 export interface SystemHealth {
   database: {
-    status: 'healthy' | 'degraded' | 'down'
+    status: "healthy" | "degraded" | "down"
     responseTime: number
     connections: number
   }
   cache: {
-    status: 'healthy' | 'degraded' | 'down'
+    status: "healthy" | "degraded" | "down"
     hitRate: number
     memory: number
   }
   storage: {
-    status: 'healthy' | 'degraded' | 'down'
+    status: "healthy" | "degraded" | "down"
     used: number
     total: number
   }
   api: {
-    status: 'healthy' | 'degraded' | 'down'
+    status: "healthy" | "degraded" | "down"
     requestsPerMinute: number
     errorRate: number
   }
@@ -131,15 +131,15 @@ export interface AuditLog {
 export interface BackupInfo {
   id: string
   name: string
-  type: 'full' | 'incremental'
+  type: "full" | "incremental"
   size: number
   createdAt: Date
-  status: 'completed' | 'in-progress' | 'failed'
+  status: "completed" | "in-progress" | "failed"
 }
 
 // Integration Types
 export interface OAuthProvider {
-  name: 'google' | 'facebook' | 'github' | 'microsoft'
+  name: "google" | "facebook" | "github" | "microsoft"
   enabled: boolean
   clientId: string
   callbackUrl: string
@@ -147,7 +147,7 @@ export interface OAuthProvider {
 }
 
 export interface EmailSettings {
-  provider: 'resend' | 'sendgrid' | 'ses' | 'smtp'
+  provider: "resend" | "sendgrid" | "ses" | "smtp"
   apiKey?: string
   fromEmail: string
   fromName: string
@@ -156,7 +156,7 @@ export interface EmailSettings {
 }
 
 export interface PaymentGateway {
-  provider: 'stripe' | 'paypal' | 'razorpay'
+  provider: "stripe" | "paypal" | "razorpay"
   enabled: boolean
   publicKey: string
   webhookEndpoint: string
@@ -190,7 +190,11 @@ export interface SecurityPolicy {
 
 export interface SecurityEvent {
   id: string
-  type: 'login_failed' | 'password_reset' | 'permission_denied' | 'suspicious_activity'
+  type:
+    | "login_failed"
+    | "password_reset"
+    | "permission_denied"
+    | "suspicious_activity"
   userId?: string
   ipAddress: string
   userAgent: string
@@ -214,12 +218,12 @@ export interface ActiveSession {
 export interface ReportConfig {
   id: string
   name: string
-  type: 'users' | 'finance' | 'academic' | 'attendance' | 'custom'
-  schedule?: 'daily' | 'weekly' | 'monthly'
+  type: "users" | "finance" | "academic" | "attendance" | "custom"
+  schedule?: "daily" | "weekly" | "monthly"
   recipients: string[]
   filters: Record<string, any>
   columns: string[]
-  format: 'pdf' | 'excel' | 'csv'
+  format: "pdf" | "excel" | "csv"
 }
 
 export interface AnalyticsData {
@@ -249,24 +253,24 @@ export interface EmailTemplate {
   subject: string
   body: string
   variables: string[]
-  type: 'welcome' | 'reset_password' | 'announcement' | 'custom'
+  type: "welcome" | "reset_password" | "announcement" | "custom"
 }
 
 export interface BroadcastMessage {
   id: string
   title: string
   content: string
-  recipients: 'all' | 'teachers' | 'students' | 'parents' | 'custom'
+  recipients: "all" | "teachers" | "students" | "parents" | "custom"
   customRecipients?: string[]
   scheduled?: Date
-  status: 'draft' | 'scheduled' | 'sent'
+  status: "draft" | "scheduled" | "sent"
   sentCount: number
 }
 
 export interface NotificationSetting {
   type: string
   enabled: boolean
-  channels: ('email' | 'sms' | 'push' | 'in-app')[]
+  channels: ("email" | "sms" | "push" | "in-app")[]
   recipients: string[]
 }
 
@@ -291,7 +295,7 @@ export interface BillingSettings {
 export interface DiscountCode {
   id: string
   code: string
-  type: 'percentage' | 'fixed'
+  type: "percentage" | "fixed"
   value: number
   maxUses: number
   usedCount: number
@@ -302,7 +306,7 @@ export interface DiscountCode {
 
 // Admin Action Types
 export interface AdminAction {
-  type: 'create' | 'update' | 'delete' | 'import' | 'export' | 'configure'
+  type: "create" | "update" | "delete" | "import" | "export" | "configure"
   resource: string
   data?: Record<string, any>
   schoolId: string

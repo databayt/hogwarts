@@ -1,11 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
   createParent,
-  updateParent,
   deleteParent,
   getParents,
   linkGuardian,
   unlinkGuardian,
+  updateParent,
 } from "../actions"
 
 // Mock dependencies
@@ -27,21 +31,23 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      guardian: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-        findFirst: vi.fn(),
-        findMany: vi.fn(),
-        count: vi.fn(),
-      },
-      studentGuardian: {
-        create: vi.fn(),
-        deleteMany: vi.fn(),
-        findFirst: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        guardian: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+          count: vi.fn(),
+        },
+        studentGuardian: {
+          create: vi.fn(),
+          deleteMany: vi.fn(),
+          findFirst: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -52,9 +58,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Parent/Guardian Actions", () => {
   const mockSchoolId = "school-123"
@@ -118,7 +121,9 @@ describe("Parent/Guardian Actions", () => {
       vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
           guardian: {
-            findFirst: vi.fn().mockResolvedValue({ id: "guardian-1", schoolId: mockSchoolId }),
+            findFirst: vi
+              .fn()
+              .mockResolvedValue({ id: "guardian-1", schoolId: mockSchoolId }),
           },
           studentGuardian: {
             findFirst: vi.fn().mockResolvedValue(null),
@@ -187,8 +192,18 @@ describe("Parent/Guardian Actions", () => {
   describe("getParents", () => {
     it("fetches guardians scoped to schoolId", async () => {
       const mockGuardians = [
-        { id: "1", givenName: "Robert", surname: "Smith", schoolId: mockSchoolId },
-        { id: "2", givenName: "Mary", surname: "Johnson", schoolId: mockSchoolId },
+        {
+          id: "1",
+          givenName: "Robert",
+          surname: "Smith",
+          schoolId: mockSchoolId,
+        },
+        {
+          id: "2",
+          givenName: "Mary",
+          surname: "Johnson",
+          schoolId: mockSchoolId,
+        },
       ]
 
       vi.mocked(db.guardian.findMany).mockResolvedValue(mockGuardians as any)

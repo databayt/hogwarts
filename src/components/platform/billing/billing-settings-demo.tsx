@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { BillingSettings } from "@/components/billingsdk/billing-settings";
+import { useState } from "react"
+
+import { BillingSettings } from "@/components/billingsdk/billing-settings"
 
 const demoCards = [
   {
@@ -17,16 +18,16 @@ const demoCards = [
     brand: "Mastercard",
     expiry: "08/26",
   },
-];
+]
 
 export function BillingSettingsDemo() {
-  const [activeTab, setActiveTab] = useState("general");
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [usageAlerts, setUsageAlerts] = useState(true);
-  const [invoiceReminders, setInvoiceReminders] = useState(false);
-  const [invoiceFormat, setInvoiceFormat] = useState<"PDF" | "HTML">("PDF");
-  const [overageProtection, setOverageProtection] = useState(true);
-  const [usageLimitAlerts, setUsageLimitAlerts] = useState(true);
+  const [activeTab, setActiveTab] = useState("general")
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [usageAlerts, setUsageAlerts] = useState(true)
+  const [invoiceReminders, setInvoiceReminders] = useState(false)
+  const [invoiceFormat, setInvoiceFormat] = useState<"PDF" | "HTML">("PDF")
+  const [overageProtection, setOverageProtection] = useState(true)
+  const [usageLimitAlerts, setUsageLimitAlerts] = useState(true)
 
   return (
     <BillingSettings
@@ -48,5 +49,5 @@ export function BillingSettingsDemo() {
       usageLimitAlerts={usageLimitAlerts}
       onUsageLimitAlertsChange={setUsageLimitAlerts}
     />
-  );
+  )
 }

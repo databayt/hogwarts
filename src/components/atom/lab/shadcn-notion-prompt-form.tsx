@@ -11,6 +11,7 @@ import {
   User,
   X,
 } from "lucide-react"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -125,7 +126,10 @@ export function ShadcnNotionPromptForm() {
   )
 
   const addMention = (item: Item) => {
-    setMentions([...mentions, { id: item.id, name: item.name, type: item.type }])
+    setMentions([
+      ...mentions,
+      { id: item.id, name: item.name, type: item.type },
+    ])
     setMentionPopoverOpen(false)
   }
 
@@ -136,10 +140,10 @@ export function ShadcnNotionPromptForm() {
   return (
     <TooltipProvider>
       <div className="w-full max-w-2xl">
-        <div className="relative overflow-hidden rounded-lg border border-border bg-card">
+        <div className="border-border bg-card relative overflow-hidden rounded-lg border">
           {/* Mentions Display */}
           {mentions.length > 0 && (
-            <div className="flex flex-wrap gap-2 border-b border-border bg-muted/50 p-3">
+            <div className="border-border bg-muted/50 flex flex-wrap gap-2 border-b p-3">
               {mentions.map((mention) => (
                 <Badge key={mention.id} variant="secondary" className="gap-1">
                   {mention.type === "page" ? (
@@ -150,7 +154,7 @@ export function ShadcnNotionPromptForm() {
                   {mention.name}
                   <button
                     onClick={() => removeMention(mention.id)}
-                    className="ml-1 hover:text-foreground"
+                    className="hover:text-foreground ml-1"
                   >
                     <X className="size-3" />
                   </button>
@@ -166,10 +170,13 @@ export function ShadcnNotionPromptForm() {
           />
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-between border-t border-border bg-muted/50 p-2">
+          <div className="border-border bg-muted/50 flex items-center justify-between border-t p-2">
             <div className="flex items-center gap-1">
               {/* Mention Selector */}
-              <Popover open={mentionPopoverOpen} onOpenChange={setMentionPopoverOpen}>
+              <Popover
+                open={mentionPopoverOpen}
+                onOpenChange={setMentionPopoverOpen}
+              >
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
@@ -187,7 +194,9 @@ export function ShadcnNotionPromptForm() {
                       <CommandEmpty>No results found.</CommandEmpty>
                       <CommandGroup heading="Pages">
                         {filteredItems
-                          .filter((item): item is PageItem => item.type === "page")
+                          .filter(
+                            (item): item is PageItem => item.type === "page"
+                          )
                           .map((page) => {
                             const Icon = page.icon
                             return (
@@ -203,7 +212,9 @@ export function ShadcnNotionPromptForm() {
                       </CommandGroup>
                       <CommandGroup heading="People">
                         {filteredItems
-                          .filter((item): item is UserItem => item.type === "user")
+                          .filter(
+                            (item): item is UserItem => item.type === "user"
+                          )
                           .map((user) => (
                             <CommandItem
                               key={user.id}
@@ -217,7 +228,7 @@ export function ShadcnNotionPromptForm() {
                               </Avatar>
                               <div className="flex flex-col">
                                 <span className="text-sm">{user.name}</span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="text-muted-foreground text-xs">
                                   {user.workspace}
                                 </span>
                               </div>
@@ -267,13 +278,19 @@ export function ShadcnNotionPromptForm() {
                     Auto
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setModel("agent")}>
-                    <Badge variant="secondary" className="mr-2 h-4 px-1 text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="mr-2 h-4 px-1 text-xs"
+                    >
                       Agent
                     </Badge>
                     Agent Mode
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setModel("plan")}>
-                    <Badge variant="secondary" className="mr-2 h-4 px-1 text-xs">
+                    <Badge
+                      variant="secondary"
+                      className="mr-2 h-4 px-1 text-xs"
+                    >
                       Plan
                     </Badge>
                     Plan Mode

@@ -37,25 +37,30 @@ The admin dashboard follows a **5-section vertical layout**:
 
 Displays upcoming class information and weather widget:
 
-| Component | Purpose |
-|-----------|---------|
+| Component           | Purpose                                          |
+| ------------------- | ------------------------------------------------ |
 | Upcoming Class Card | Next scheduled class with time, subject, teacher |
-| Weather Widget | Current weather conditions for school location |
+| Weather Widget      | Current weather conditions for school location   |
 
 ## Quick Look Section
 
 **4-column responsive grid** with metric cards:
 
 ```tsx
-<div className="grid gap-3 grid-cols-4">
+<div className="grid grid-cols-4 gap-3">
   <MetricCard title="Students" value={enrollment.total} icon={Users} />
   <MetricCard title="Teachers" value={staff.total} icon={GraduationCap} />
-  <MetricCard title="Attendance" value={`${attendance.rate}%`} icon={CalendarCheck} />
+  <MetricCard
+    title="Attendance"
+    value={`${attendance.rate}%`}
+    icon={CalendarCheck}
+  />
   <MetricCard title="Classes" value={classes.total} icon={BookOpen} />
 </div>
 ```
 
 Each metric card includes:
+
 - **Title**: Metric name
 - **Value**: Current count/percentage
 - **Icon**: Visual indicator
@@ -65,20 +70,21 @@ Each metric card includes:
 
 Shared component from billing module displaying:
 
-| Resource | Display | Threshold |
-|----------|---------|-----------|
+| Resource | Display         | Threshold      |
+| -------- | --------------- | -------------- |
 | Students | Current / Limit | Warning at 80% |
 | Teachers | Current / Limit | Warning at 80% |
-| Classes | Current / Limit | Warning at 80% |
-| Storage | MB Used / Limit | Warning at 80% |
+| Classes  | Current / Limit | Warning at 80% |
+| Storage  | MB Used / Limit | Warning at 80% |
 
 ```tsx
 import { DetailedUsageTableDemo } from "@/components/platform/billing/detailed-usage-table-demo"
 
-<DetailedUsageTableDemo />
+;<DetailedUsageTableDemo />
 ```
 
 Features:
+
 - Progress bars with color-coded status
 - Usage percentage display
 - Upgrade prompts when approaching limits
@@ -90,10 +96,11 @@ Tabbed interface for financial data:
 ```tsx
 import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-history-demo"
 
-<InvoiceHistoryDemo />
+;<InvoiceHistoryDemo />
 ```
 
 **Invoices Tab**:
+
 - Invoice number (last 8 chars of Stripe ID)
 - Period dates
 - Amount due
@@ -101,6 +108,7 @@ import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-histor
 - Download action
 
 **Payment Methods Tab**:
+
 - Card brand and last 4 digits
 - Billing name
 - Default indicator
@@ -112,21 +120,44 @@ import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-histor
 
 ```tsx
 const actions = [
-  { icon: UserPlus, label: "Add Student", description: "Enroll new student", href: "/students/new" },
-  { icon: Bell, label: "Announce", description: "Send notification", href: "/announcements/new" },
-  { icon: FileText, label: "View Reports", description: "Analytics & data", href: "/admin/reports" },
-  { icon: CreditCard, label: "Billing", description: "Manage payments", href: "/billing" },
-];
+  {
+    icon: UserPlus,
+    label: "Add Student",
+    description: "Enroll new student",
+    href: "/students/new",
+  },
+  {
+    icon: Bell,
+    label: "Announce",
+    description: "Send notification",
+    href: "/announcements/new",
+  },
+  {
+    icon: FileText,
+    label: "View Reports",
+    description: "Analytics & data",
+    href: "/admin/reports",
+  },
+  {
+    icon: CreditCard,
+    label: "Billing",
+    description: "Manage payments",
+    href: "/billing",
+  },
+]
 ```
 
 Layout pattern:
+
 ```tsx
-<Button variant="outline" className="justify-start h-auto py-3">
+<Button variant="outline" className="h-auto justify-start py-3">
   <Link href={action.href}>
     <action.icon className="mr-2 h-4 w-4" />
     <span className="flex flex-col items-start">
       <span className="font-medium">{action.label}</span>
-      <span className="text-xs text-muted-foreground">{action.description}</span>
+      <span className="text-muted-foreground text-xs">
+        {action.description}
+      </span>
     </span>
   </Link>
 </Button>
@@ -153,7 +184,7 @@ const [
   getAnnouncementsMetrics(),
   getClassesMetrics(),
   getRecentActivities(),
-]);
+])
 ```
 
 ## Multi-Tenant Scoping
@@ -161,17 +192,17 @@ const [
 All queries include `schoolId`:
 
 ```tsx
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 
 // Enrollment metrics
-const total = await db.student.count({ where: { schoolId } });
+const total = await db.student.count({ where: { schoolId } })
 
 // Attendance metrics
 const todayAttendance = await db.attendance.groupBy({
   by: ["status"],
   where: { schoolId, date: today },
   _count: true,
-});
+})
 ```
 
 ## Client/Server Split
@@ -184,6 +215,7 @@ admin-dashboard-client.tsx # Client component (UI rendering)
 ```
 
 This enables:
+
 - Server-side data fetching with `async/await`
 - Client-side interactivity (hooks, state)
 - Proper error boundaries
@@ -192,8 +224,8 @@ This enables:
 
 ```tsx
 try {
-  const dashboardData = await getDashboardSummary();
-  return <AdminDashboardClient data={dashboardData} />;
+  const dashboardData = await getDashboardSummary()
+  return <AdminDashboardClient data={dashboardData} />
 } catch (error) {
   return (
     <Card>
@@ -204,19 +236,19 @@ try {
         </p>
       </CardContent>
     </Card>
-  );
+  )
 }
 ```
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `dashboards/admin-dashboard.tsx` | Server wrapper |
-| `dashboards/admin-dashboard-client.tsx` | UI rendering |
-| `dashboards/actions.ts` | Server actions |
-| `billing/detailed-usage-table-demo.tsx` | Resource usage |
-| `billing/invoice-history-demo.tsx` | Invoice history |
+| File                                    | Purpose         |
+| --------------------------------------- | --------------- |
+| `dashboards/admin-dashboard.tsx`        | Server wrapper  |
+| `dashboards/admin-dashboard-client.tsx` | UI rendering    |
+| `dashboards/actions.ts`                 | Server actions  |
+| `billing/detailed-usage-table-demo.tsx` | Resource usage  |
+| `billing/invoice-history-demo.tsx`      | Invoice history |
 
 ## Customization
 

@@ -1,8 +1,8 @@
-import SecurityContent from '@/components/platform/school/security/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import SecurityContent from "@/components/platform/school/security/content"
 
-export const metadata = { title: 'School: Security' }
+export const metadata = { title: "School: Security" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

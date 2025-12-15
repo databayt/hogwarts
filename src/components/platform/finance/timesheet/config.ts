@@ -2,43 +2,43 @@
  * Timesheet Module - Configuration
  */
 
-import { PeriodStatus, EntryStatus } from '@prisma/client'
+import { EntryStatus, PeriodStatus } from "@prisma/client"
 
 export const PeriodStatusLabels: Record<PeriodStatus, string> = {
-  OPEN: 'Open',
-  CLOSED: 'Closed',
-  LOCKED: 'Locked',
+  OPEN: "Open",
+  CLOSED: "Closed",
+  LOCKED: "Locked",
 }
 
 export const EntryStatusLabels: Record<EntryStatus, string> = {
-  DRAFT: 'Draft',
-  SUBMITTED: 'Submitted',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
+  DRAFT: "Draft",
+  SUBMITTED: "Submitted",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
 }
 
 export const TaskTypes = [
-  'TEACHING',
-  'ADMINISTRATION',
-  'MEETINGS',
-  'PREPARATION',
-  'GRADING',
-  'PROFESSIONAL_DEVELOPMENT',
-  'SUPERVISION',
-  'OTHER',
+  "TEACHING",
+  "ADMINISTRATION",
+  "MEETINGS",
+  "PREPARATION",
+  "GRADING",
+  "PROFESSIONAL_DEVELOPMENT",
+  "SUPERVISION",
+  "OTHER",
 ] as const
 
-export type TaskType = typeof TaskTypes[number]
+export type TaskType = (typeof TaskTypes)[number]
 
 export const TaskTypeLabels: Record<TaskType, string> = {
-  TEACHING: 'Teaching',
-  ADMINISTRATION: 'Administration',
-  MEETINGS: 'Meetings',
-  PREPARATION: 'Lesson Preparation',
-  GRADING: 'Grading & Assessment',
-  PROFESSIONAL_DEVELOPMENT: 'Professional Development',
-  SUPERVISION: 'Student Supervision',
-  OTHER: 'Other',
+  TEACHING: "Teaching",
+  ADMINISTRATION: "Administration",
+  MEETINGS: "Meetings",
+  PREPARATION: "Lesson Preparation",
+  GRADING: "Grading & Assessment",
+  PROFESSIONAL_DEVELOPMENT: "Professional Development",
+  SUPERVISION: "Student Supervision",
+  OTHER: "Other",
 }
 
 export const TIMESHEET_CONFIG = {

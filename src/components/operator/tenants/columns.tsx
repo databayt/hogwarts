@@ -1,7 +1,9 @@
-"use client";
-import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+"use client"
+
+import { ColumnDef } from "@tanstack/react-table"
+import { MoreHorizontal } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,22 +11,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { TenantDetail } from "./detail";
-import { SuccessToast, ErrorToast } from "@/components/atom/toast";
+} from "@/components/ui/dropdown-menu"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
+import { TenantDetail } from "./detail"
 
 export type TenantRow = {
-  id: string;
-  name: string;
-  subdomain: string;
-  isActive: boolean;
-  planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE";
-  studentCount: number;
-  teacherCount: number;
-  createdAt: string;
-  trialEndsAt?: string | null;
-};
+  id: string
+  name: string
+  subdomain: string
+  isActive: boolean
+  planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE"
+  studentCount: number
+  teacherCount: number
+  createdAt: string
+  trialEndsAt?: string | null
+}
 
 export const tenantColumns: ColumnDef<TenantRow>[] = [
   {
@@ -40,9 +43,15 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       <DataTableColumnHeader column={column} title="Subdomain" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-sm font-mono">{getValue<string>()}.databayt.org</span>
+      <span className="font-mono text-sm">
+        {getValue<string>()}.databayt.org
+      </span>
     ),
-    meta: { label: "Subdomain", variant: "text", placeholder: "Search subdomain" },
+    meta: {
+      label: "Subdomain",
+      variant: "text",
+      placeholder: "Search subdomain",
+    },
   },
   {
     accessorKey: "planType",
@@ -50,17 +59,22 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       <DataTableColumnHeader column={column} title="Plan" />
     ),
     cell: ({ getValue }) => {
-      const plan = getValue<string>();
+      const plan = getValue<string>()
       return (
-        <span className={`text-xs font-medium px-2 py-1 rounded ${
-          plan === "ENTERPRISE" ? "bg-purple-100 text-purple-800" :
-          plan === "PREMIUM" ? "bg-blue-100 text-blue-800" :
-          plan === "BASIC" ? "bg-gray-100 text-gray-800" :
-          "bg-yellow-100 text-yellow-800"
-        }`}>
+        <span
+          className={`rounded px-2 py-1 text-xs font-medium ${
+            plan === "ENTERPRISE"
+              ? "bg-purple-100 text-purple-800"
+              : plan === "PREMIUM"
+                ? "bg-blue-100 text-blue-800"
+                : plan === "BASIC"
+                  ? "bg-gray-100 text-gray-800"
+                  : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
           {plan}
         </span>
-      );
+      )
     },
     meta: {
       label: "Plan",
@@ -78,13 +92,15 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
     id: "users",
     header: "Users",
     cell: ({ row }) => {
-      const tenant = row.original;
+      const tenant = row.original
       return (
         <div className="text-sm">
           <div>{tenant.studentCount.toLocaleString()} students</div>
-          <div className="text-muted-foreground">{tenant.teacherCount.toLocaleString()} teachers</div>
+          <div className="text-muted-foreground">
+            {tenant.teacherCount.toLocaleString()} teachers
+          </div>
         </div>
-      );
+      )
     },
   },
   {
@@ -113,7 +129,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
@@ -125,10 +141,10 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       <DataTableColumnHeader column={column} title="Trial Ends" />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {(() => {
-          const v = getValue<string | null | undefined>();
-          return v ? new Date(v).toLocaleDateString() : "-";
+          const v = getValue<string | null | undefined>()
+          return v ? new Date(v).toLocaleDateString() : "-"
         })()}
       </span>
     ),
@@ -142,30 +158,49 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       const tenant = row.original as TenantRow
       const onStartImpersonation = async () => {
         try {
-          const reason = prompt(`Reason to impersonate ${tenant.name}?`) || "";
-          const res = await fetch(`/operator/actions/impersonation/${tenant.id}/start`, {
-            method: "POST",
-            body: (() => { const fd = new FormData(); fd.set("reason", reason); return fd; })(),
-          });
-          if (!res.ok) throw new Error("Failed to start impersonation");
-          SuccessToast("Impersonation started successfully");
+          const reason = prompt(`Reason to impersonate ${tenant.name}?`) || ""
+          const res = await fetch(
+            `/operator/actions/impersonation/${tenant.id}/start`,
+            {
+              method: "POST",
+              body: (() => {
+                const fd = new FormData()
+                fd.set("reason", reason)
+                return fd
+              })(),
+            }
+          )
+          if (!res.ok) throw new Error("Failed to start impersonation")
+          SuccessToast("Impersonation started successfully")
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to start impersonation");
+          ErrorToast(
+            e instanceof Error ? e.message : "Failed to start impersonation"
+          )
         }
-      };
+      }
       const onToggleActive = async () => {
         try {
-          const reason = prompt(`Reason to ${tenant.isActive ? "suspend" : "activate"} ${tenant.name}?`) || "";
-          const res = await fetch(`/operator/actions/tenants/${tenant.id}/toggle-active`, {
-            method: "POST",
-            body: (() => { const fd = new FormData(); fd.set("reason", reason); return fd; })(),
-          });
-          if (!res.ok) throw new Error("Failed to toggle status");
-          SuccessToast("Status toggled successfully");
+          const reason =
+            prompt(
+              `Reason to ${tenant.isActive ? "suspend" : "activate"} ${tenant.name}?`
+            ) || ""
+          const res = await fetch(
+            `/operator/actions/tenants/${tenant.id}/toggle-active`,
+            {
+              method: "POST",
+              body: (() => {
+                const fd = new FormData()
+                fd.set("reason", reason)
+                return fd
+              })(),
+            }
+          )
+          if (!res.ok) throw new Error("Failed to toggle status")
+          SuccessToast("Status toggled successfully")
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to toggle status");
+          ErrorToast(e instanceof Error ? e.message : "Failed to toggle status")
         }
-      };
+      }
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -178,7 +213,9 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <a href={`/operator/tenants?impersonate=${tenant.id}`}>Impersonate</a>
+              <a href={`/operator/tenants?impersonate=${tenant.id}`}>
+                Impersonate
+              </a>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onStartImpersonation}>
               Start impersonation
@@ -202,6 +239,4 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
       )
     },
   },
-];
-
-
+]

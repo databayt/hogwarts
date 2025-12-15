@@ -1,11 +1,19 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface TeamMember {
@@ -171,7 +179,9 @@ export function TeamMembersCard({
             ) : (
               <>
                 <CardTitle>{title}</CardTitle>
-                {description && <CardDescription>{description}</CardDescription>}
+                {description && (
+                  <CardDescription>{description}</CardDescription>
+                )}
               </>
             )}
           </div>
@@ -202,8 +212,8 @@ export function TeamMembersCard({
               <div
                 key={index}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg transition-colors",
-                  member.onClick && "cursor-pointer hover:bg-accent/50"
+                  "flex items-center gap-3 rounded-lg p-3 transition-colors",
+                  member.onClick && "hover:bg-accent/50 cursor-pointer"
                 )}
                 onClick={member.onClick}
               >
@@ -217,15 +227,15 @@ export function TeamMembersCard({
                   {showStatus && member.status && (
                     <span
                       className={cn(
-                        "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background",
+                        "border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2",
                         statusColors[member.status]
                       )}
                       title={statusLabels[member.status]}
                     />
                   )}
                 </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="font-medium text-foreground leading-none truncate">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-foreground truncate leading-none font-medium">
                     {member.name}
                   </p>
                   <p className="muted truncate">{member.role}</p>

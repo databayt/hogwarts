@@ -5,22 +5,23 @@
  * Based on tweakcn's dynamic-font-loader.tsx pattern.
  */
 
-'use client'
+"use client"
 
-import { useEffect, useMemo } from 'react'
-import { useEditorStore } from '@/store/theme-editor-store'
-import { extractFontFamily, getDefaultWeights } from '@/lib/fonts'
-import { loadGoogleFont } from '@/lib/fonts/google-fonts'
-import { useMounted } from '@/hooks/use-mounted'
+import { useEffect, useMemo } from "react"
+import { useEditorStore } from "@/store/theme-editor-store"
+
+import { extractFontFamily, getDefaultWeights } from "@/lib/fonts"
+import { loadGoogleFont } from "@/lib/fonts/google-fonts"
+import { useMounted } from "@/hooks/use-mounted"
 
 export function DynamicFontLoader() {
   const { themeState } = useEditorStore()
   const isMounted = useMounted()
 
   // Extract fonts from light mode styles (fonts are common to both modes)
-  const fontSans = themeState.styles.light['font-sans']
-  const fontSerif = themeState.styles.light['font-serif']
-  const fontMono = themeState.styles.light['font-mono']
+  const fontSans = themeState.styles.light["font-sans"]
+  const fontSerif = themeState.styles.light["font-serif"]
+  const fontMono = themeState.styles.light["font-mono"]
 
   const currentFonts = useMemo(() => {
     return {
@@ -40,12 +41,12 @@ export function DynamicFontLoader() {
 
         const fontFamily = extractFontFamily(fontValue)
         if (fontFamily) {
-          const weights = getDefaultWeights(['400', '500', '600', '700'])
+          const weights = getDefaultWeights(["400", "500", "600", "700"])
           loadGoogleFont(fontFamily, weights)
         }
       })
     } catch (e) {
-      console.warn('DynamicFontLoader: Failed to load Google fonts:', e)
+      console.warn("DynamicFontLoader: Failed to load Google fonts:", e)
     }
   }, [isMounted, currentFonts])
 

@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import React from "react";
+import React from "react"
 
 interface ModalFormLayoutProps {
   /** Modal title (e.g., "Create Student", "Edit Announcement") */
-  title: string;
+  title: string
   /** Modal description explaining the action */
-  description: string;
+  description: string
   /** Form content (fields, steps, etc.) */
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 /**
@@ -39,22 +39,20 @@ export function ModalFormLayout({
 }: ModalFormLayoutProps) {
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
         {/* LEFT: Title + Description */}
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+          <p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
             {description}
           </p>
         </div>
 
         {/* RIGHT: Form Content */}
-        <div className="flex-1">
-          {children}
-        </div>
+        <div className="flex-1">{children}</div>
       </div>
     </div>
-  );
+  )
 }
 
-export default ModalFormLayout;
+export default ModalFormLayout

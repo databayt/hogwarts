@@ -1,25 +1,26 @@
 import {
-  LayoutDashboard,
-  Megaphone,
-  Receipt,
-  GraduationCap,
-  Users,
-  UserCheck,
+  BarChart3,
   BookOpen,
+  BookPlus,
   Calendar,
   CheckCircle,
-  BarChart3,
+  ClipboardCheck,
   Clock,
-  Video,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  Megaphone,
+  Plus,
+  Receipt,
   Settings,
   User,
-  FileText,
-  ClipboardCheck,
-  Plus,
+  UserCheck,
   UserPlus,
-  BookPlus,
-} from "lucide-react";
-import type { SearchConfig, Role } from "./types";
+  Users,
+  Video,
+} from "lucide-react"
+
+import type { Role, SearchConfig } from "./types"
 
 const ALL_ROLES: Role[] = [
   "DEVELOPER",
@@ -30,7 +31,7 @@ const ALL_ROLES: Role[] = [
   "ACCOUNTANT",
   "STAFF",
   "USER",
-];
+]
 
 export const platformSearchConfig: SearchConfig = {
   navigation: [
@@ -91,7 +92,15 @@ export const platformSearchConfig: SearchConfig = {
       type: "navigation",
       href: "/lab/settings",
       icon: Settings,
-      roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN", "ACCOUNTANT", "DEVELOPER"],
+      roles: [
+        "ADMIN",
+        "STAFF",
+        "TEACHER",
+        "STUDENT",
+        "GUARDIAN",
+        "ACCOUNTANT",
+        "DEVELOPER",
+      ],
       keywords: ["preferences", "configuration"],
       breadcrumb: ["Platform", "Dashboard"],
     },
@@ -343,4 +352,4 @@ export const platformSearchConfig: SearchConfig = {
   settings: [],
   showRecent: true,
   maxRecent: 5,
-};
+}

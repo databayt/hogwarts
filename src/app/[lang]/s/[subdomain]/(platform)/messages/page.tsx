@@ -1,10 +1,15 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import { MessagingContent, MessagingContentSkeleton } from "@/components/platform/messaging/content"
+
+import {
+  MessagingContent,
+  MessagingContentSkeleton,
+} from "@/components/platform/messaging/content"
 
 export const metadata: Metadata = {
   title: `Messages | Hogwarts`,
-  description: "Send and receive messages, communicate with your school community",
+  description:
+    "Send and receive messages, communicate with your school community",
 }
 
 interface MessagesPageProps {

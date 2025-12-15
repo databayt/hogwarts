@@ -10,6 +10,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 ## ✅ Production-Ready Core Features
 
 ### Tenants Management
+
 - [x] Server-rendered table with pagination, sorting, filtering
 - [x] Comprehensive stats dashboard (9 cards): total, active, students, teachers, growth
 - [x] Plan distribution breakdown (trial, basic, premium, enterprise)
@@ -21,6 +22,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - [x] 4 API endpoints (summary, billing, invoices, info)
 
 ### Billing & Invoices
+
 - [x] Invoice table with server pagination
 - [x] Billing stats (4 cards): revenue, payment rate, open invoices, pending receipts
 - [x] Invoice filtering by status and search
@@ -28,6 +30,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - [x] Stripe invoice integration (stripeInvoiceId)
 
 ### Domains Management
+
 - [x] Domain requests table with pagination
 - [x] Stats cards (5 cards): total, pending, approved, verified, approval rate
 - [x] Approval/reject workflow
@@ -35,18 +38,21 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - [x] Status badges and alerts
 
 ### Observability
+
 - [x] Audit logs table with filtering
 - [x] Provider abstraction (DB + HTTP)
 - [x] Filters: action, level, IP, date range, request ID
 - [x] Empty states and loading skeletons
 
 ### Dashboard
+
 - [x] Metrics cards with real-time deltas
 - [x] Period switcher (7d/30d/90d)
 - [x] Server-side metrics calculation
 - [x] Loading states and error boundaries
 
 ### Security & RBAC
+
 - [x] requireOperator() middleware
 - [x] Audit logging for all actions
 - [x] Impersonation with full trail
@@ -59,11 +65,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Provide deep insights into revenue, MRR, churn, and financial health
 
 **Reusable Blocks:**
+
 - Invoice dashboard components (`src/components/invoice/dashboard/`)
 - Recharts library (already in dashboard)
 - Stats card pattern from tenants/billing
 
 ### 1.1 MRR (Monthly Recurring Revenue) Dashboard ✅
+
 - [x] Create `src/components/operator/analytics/mrr-chart.tsx`
   - Reuse ChartInvoice pattern from invoice dashboard
   - Line chart showing MRR trend (last 6 months)
@@ -82,12 +90,14 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Export to CSV option
 
 **Acceptance Criteria:**
+
 - MRR updates in real-time when plans change
 - Accurate calculation: (sum of monthly subscription fees for active schools)
 - Chart shows clear trend with tooltips
 - Works with all plan types
 
 ### 1.2 Revenue Trends & Forecasting
+
 - [ ] Create `src/components/operator/analytics/revenue-trends.tsx`
   - 6-month revenue chart (bar + line combo)
   - Actual revenue vs projected revenue
@@ -102,11 +112,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Include payment method breakdown
 
 **Acceptance Criteria:**
+
 - Charts load within 2 seconds
 - Data matches invoice records exactly
 - Projections based on current MRR + growth rate
 
 ### 1.3 Churn Analysis & At-Risk Schools ✅
+
 - [x] Create churn rate calculation
   - Cancelled schools / total schools (monthly)
   - Reasons for churn (if available)
@@ -127,6 +139,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - At-risk schools table with actions
 
 **Acceptance Criteria:**
+
 - At-risk detection runs daily
 - Risk scores accurate and actionable
 - Clear path to retention actions
@@ -138,11 +151,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Full billing lifecycle management including receipts, exports, and automation
 
 **Reusable Blocks:**
+
 - FileUploader (`src/components/operator/file-uploader.tsx`)
 - ExportButton pattern (`src/components/platform/*/export-button.tsx`)
 - DataTable with all features
 
 ### 2.1 Receipts Management ✅
+
 - [x] Create receipts table using DataTable
   - Columns: school, invoice, amount, file, status, uploaded date
   - Filters: status (pending/approved/rejected), school, date range
@@ -167,6 +182,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Server-side filtering and sorting
 
 **Acceptance Criteria:**
+
 - File upload with progress indicator
 - Files stored securely (S3 or similar)
 - Receipts linked to correct invoices
@@ -174,6 +190,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - Email notifications on status change
 
 ### 2.2 Billing Exports ✅
+
 - [x] Add ExportButton to invoices table
   - Reuse pattern from students export
   - Export with current filters applied
@@ -190,12 +207,14 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Payment method breakdown
 
 **Acceptance Criteria:**
+
 - CSV includes all visible columns
 - Filename auto-generated with date
 - Large exports (1000+ rows) don't timeout
 - UTF-8 encoding for international characters
 
 ### 2.3 Payment Automation via Stripe
+
 - [ ] Create Stripe webhook endpoint
   - Route: `/api/webhooks/stripe`
   - Handle events: invoice.paid, invoice.payment_failed, customer.subscription.deleted
@@ -213,6 +232,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Log retry attempts
 
 **Acceptance Criteria:**
+
 - Webhook signature verification
 - Idempotent event handling
 - All status changes logged
@@ -225,11 +245,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Proactive monitoring of school health, usage, and engagement
 
 **Reusable Blocks:**
+
 - Stats cards pattern
 - DataTable with custom columns
 - Chart components from dashboard
 
 ### 3.1 School Health Score Dashboard
+
 - [ ] Create health score algorithm
   - Factors: payment status (40%), usage frequency (30%), support tickets (20%), feature adoption (10%)
   - Scale: 0-100
@@ -247,11 +269,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Trend vs last month
 
 **Acceptance Criteria:**
+
 - Score updates daily
 - Algorithm weights configurable
 - Clear action items for low scores
 
 ### 3.2 Usage Analytics per School
+
 - [ ] Track key usage metrics
   - Daily active users (teachers + students)
   - Feature usage: attendance, grades, assignments, announcements
@@ -267,11 +291,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Schools with zero usage of key features
 
 **Acceptance Criteria:**
+
 - Metrics tracked in real-time or near real-time
 - Privacy-compliant (aggregated data only)
 - Identifies underutilized features
 
 ### 3.3 Engagement Trends
+
 - [ ] Create engagement metrics
   - Weekly active schools (logged in within 7 days)
   - Monthly active schools
@@ -286,6 +312,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - No key feature usage (e.g., no grades entered)
 
 **Acceptance Criteria:**
+
 - Charts update weekly
 - Alerts trigger email to operator
 - Engagement data exportable
@@ -297,11 +324,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Deeper tenant insights and bulk operations
 
 **Reusable Blocks:**
+
 - CSV import workflow (`src/components/platform/import/csv-import.tsx`)
 - DataTable with bulk actions
 - Server actions pattern
 
 ### 4.1 Growth Tracking per School
+
 - [ ] Add growth metrics to tenant detail
   - Student count trend (last 6 months)
   - Teacher count trend
@@ -315,11 +344,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Color-coded by growth rate
 
 **Acceptance Criteria:**
+
 - Historical data accurate
 - Growth % calculated correctly
 - Charts interactive with tooltips
 
 ### 4.2 Onboarding Progress Tracker
+
 - [ ] Track onboarding step completion
   - School created → Email verified → First user added → First class created → First student added → First grade entered
   - Time spent at each step
@@ -337,11 +368,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - High-value school (trial, >100 students planned) stalled
 
 **Acceptance Criteria:**
+
 - Progress tracked automatically
 - Alerts actionable
 - Clear path to help stalled schools
 
 ### 4.3 Bulk Operations
+
 - [ ] Adapt CSV import for operator use
   - Bulk plan changes via CSV
   - Format: school_id, new_plan, reason
@@ -360,6 +393,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Confirmation modal with preview
 
 **Acceptance Criteria:**
+
 - CSV validation comprehensive
 - All actions audited
 - Rollback available for errors
@@ -372,11 +406,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Real-time awareness of critical events
 
 **Reusable Blocks:**
+
 - Toast notification system (Sonner)
 - Badge components
 - Server actions with revalidation
 
 ### 5.1 Real-Time Alert System
+
 - [ ] Define alert types
   - Trial expiring (7 days, 3 days, 1 day, expired)
   - Payment failure
@@ -395,11 +431,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Click to view alert center
 
 **Acceptance Criteria:**
+
 - Alerts generated accurately
 - No duplicate alerts for same event
 - Alerts cleared when condition resolved
 
 ### 5.2 Notification Center
+
 - [ ] Create notifications table component
   - Columns: type, school, message, priority, time
   - Filters: priority, type, read/unread
@@ -418,6 +456,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Dismiss button removes notification
 
 **Acceptance Criteria:**
+
 - Real-time updates (WebSocket or polling)
 - Notifications persist until dismissed
 - Clear visual hierarchy by priority
@@ -429,11 +468,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 **Goal:** Comprehensive reporting for all data
 
 **Reusable Blocks:**
+
 - ExportButton pattern throughout
 - CSV generation utilities
 - Email system (Resend)
 
 ### 6.1 Universal CSV Exports
+
 - [ ] Add ExportButton to all tables
   - Tenants table → tenants CSV
   - Domains table → domains CSV
@@ -448,11 +489,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Link to download again (cache for 24h)
 
 **Acceptance Criteria:**
+
 - All tables have export button
 - Exports respect applied filters
 - Large exports (10k+ rows) handled efficiently
 
 ### 6.2 Custom Date Range Reports
+
 - [ ] Create date range picker component
   - Preset ranges: last 7d, 30d, 90d, year, custom
   - Apply to any report
@@ -467,11 +510,13 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - One-click regenerate
 
 **Acceptance Criteria:**
+
 - Date range picker intuitive
 - Reports generate within 5 seconds
 - Saved templates editable
 
 ### 6.3 Email Report Delivery
+
 - [ ] Create email report scheduler
   - Schedule report generation (daily, weekly, monthly)
   - Select recipients (operator emails)
@@ -486,6 +531,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
   - Manual trigger
 
 **Acceptance Criteria:**
+
 - Emails sent reliably
 - Reports attached correctly
 - Recipients can opt-out
@@ -495,6 +541,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 ## Testing & Quality Assurance
 
 ### Unit Tests
+
 - [ ] Test MRR calculation accuracy
 - [ ] Test churn rate calculation
 - [ ] Test health score algorithm
@@ -502,12 +549,14 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - [ ] Test bulk operations validation
 
 ### Integration Tests
+
 - [ ] Test Stripe webhook handling
 - [ ] Test alert generation system
 - [ ] Test notification delivery
 - [ ] Test email report sending
 
 ### E2E Tests (Playwright)
+
 - [ ] Operator login and navigation
 - [ ] Tenant detail workflow
 - [ ] Invoice review workflow
@@ -539,6 +588,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 ## Notes
 
 **Reusable Block Locations:**
+
 - DataTable: `src/components/table/data-table/`
 - ExportButton: `src/components/platform/*/export-button.tsx`
 - CSV Import: `src/components/platform/import/csv-import.tsx`
@@ -548,6 +598,7 @@ This roadmap outlines the path to a world-class SaaS operator dashboard for scho
 - Charts: Recharts in dashboard (area-graph, bar-graph, pie-graph)
 
 **Dependencies:**
+
 - All features follow mirror pattern: components mirror routes
 - All mutations use server actions with "use server" directive
 - All actions include Zod validation

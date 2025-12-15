@@ -1,32 +1,52 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Heart, Plus, Trash, TriangleAlert } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useFieldArray } from "react-hook-form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { format } from "date-fns"
+import {
+  Calendar as CalendarIcon,
+  Heart,
+  Plus,
+  Trash,
+  TriangleAlert,
+} from "lucide-react"
+import { useFieldArray, UseFormReturn } from "react-hook-form"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Textarea } from "@/components/ui/textarea"
 
 interface HealthInfoStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
 export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
-  const hasSpecialNeeds = form.watch("hasSpecialNeeds");
+  const hasSpecialNeeds = form.watch("hasSpecialNeeds")
 
-  const { fields: vaccinations, append: addVaccination, remove: removeVaccination } = useFieldArray({
+  const {
+    fields: vaccinations,
+    append: addVaccination,
+    remove: removeVaccination,
+  } = useFieldArray({
     control: form.control,
     name: "vaccinations",
-  });
+  })
 
   return (
     <div className="grid gap-6">
@@ -34,7 +54,8 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
         <Heart className="h-4 w-4" />
         <AlertTitle>Medical Information</AlertTitle>
         <AlertDescription>
-          This information helps us provide appropriate care and respond effectively in case of medical emergencies.
+          This information helps us provide appropriate care and respond
+          effectively in case of medical emergencies.
         </AlertDescription>
       </Alert>
 
@@ -64,7 +85,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
             <FormItem>
               <FormLabel>
                 Allergies
-                <TriangleAlert className="h-4 w-4 inline ml-2 text-yellow-500" />
+                <TriangleAlert className="ml-2 inline h-4 w-4 text-yellow-500" />
               </FormLabel>
               <FormControl>
                 <Textarea
@@ -221,9 +242,11 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => addVaccination({ name: "", date: new Date(), nextDueDate: null })}
+            onClick={() =>
+              addVaccination({ name: "", date: new Date(), nextDueDate: null })
+            }
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Add Vaccination
           </Button>
         </div>
@@ -231,7 +254,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
         {vaccinations.map((field, index) => (
           <Card key={field.id}>
             <CardHeader className="py-3">
-              <CardTitle className="text-sm flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-sm">
                 Vaccination {index + 1}
                 <Button
                   type="button"
@@ -274,7 +297,11 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -310,7 +337,11 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? format(field.value, "PPP") : <span>Optional</span>}
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Optional</span>
+                            )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -347,7 +378,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
-              <FormLabel className="text-sm font-normal cursor-pointer">
+              <FormLabel className="cursor-pointer text-sm font-normal">
                 Student has special needs or requires special assistance
               </FormLabel>
               <FormMessage />
@@ -375,5 +406,5 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

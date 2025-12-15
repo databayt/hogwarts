@@ -1,7 +1,8 @@
-import Image from "next/image";
+import Image from "next/image"
 
-import { testimonials } from "../config/landing";
-import { HeaderSection } from "@/components/atom/header-section";
+import { HeaderSection } from "@/components/atom/header-section"
+
+import { testimonials } from "../config/landing"
 
 export default function Testimonials() {
   return (
@@ -14,10 +15,10 @@ export default function Testimonials() {
             worldwide."
         />
 
-        <div className="column-1 gap-5 space-y-5 md:columns-2 lg:columns-3 ">
+        <div className="column-1 gap-5 space-y-5 md:columns-2 lg:columns-3">
           {testimonials.map((item) => (
             <div className="break-inside-avoid" key={item.name}>
-              <div className="relative rounded-xl border bg-muted/25">
+              <div className="bg-muted/25 relative rounded-xl border">
                 <div className="flex flex-col px-4 py-5 sm:p-6">
                   <div>
                     <div className="relative mb-4 flex items-center gap-3">
@@ -31,12 +32,8 @@ export default function Testimonials() {
                         />
                       </span>
                       <div>
-                        <p className="muted text-foreground">
-                          {item.name}
-                        </p>
-                        <p className="muted">
-                          {item.job}
-                        </p>
+                        <p className="muted text-foreground">{item.name}</p>
+                        <p className="muted">{item.job}</p>
                       </div>
                     </div>
                     <q className="text-muted-foreground">{item.review}</q>
@@ -48,5 +45,5 @@ export default function Testimonials() {
         </div>
       </div>
     </section>
-  );
+  )
 }

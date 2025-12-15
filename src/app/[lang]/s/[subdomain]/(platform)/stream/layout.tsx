@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode } from "react"
 
 interface StreamLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export default function StreamLayout({ children }: StreamLayoutProps) {
-  return <>{children}</>;
+  return <>{children}</>
 }

@@ -58,21 +58,36 @@
 
 "use server"
 
-import { z } from 'zod'
-import { db } from '@/lib/db'
-import type { Prisma, AttendanceStatus, AttendanceMethod } from '@prisma/client'
-import { getTenantContext } from '@/lib/tenant-context'
-import { revalidatePath } from 'next/cache'
-import { auth } from '@/auth'
-import { markAttendanceSchema } from '@/components/platform/attendance/validation'
+import { randomBytes } from "crypto"
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import type { AttendanceMethod, AttendanceStatus, Prisma } from "@prisma/client"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { markAttendanceSchema } from "@/components/platform/attendance/validation"
+
+// ============================================================================
+// EXCUSE MANAGEMENT (Phase 2.2 - Parent Excuse Submission)
+// ============================================================================
 import {
-  manualAttendanceSchema,
   attendanceFilterSchema,
   bulkUploadSchema,
+  manualAttendanceSchema,
   qrCodeGenerationSchema,
+  reviewExcuseSchema,
   studentIdentifierSchema,
-} from './shared/validation'
-import { randomBytes } from 'crypto'
+  submitExcuseSchema,
+} from "./shared/validation"
+// ============================================================================
+// INTERVENTION TRACKING ACTIONS
+// ============================================================================
+
+import type {
+  InterventionStatus as InterventionStatusVal,
+  InterventionType as InterventionTypeVal,
+} from "./validation"
 
 // ============================================================================
 // Types
@@ -80,7 +95,7 @@ import { randomBytes } from 'crypto'
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 // ============================================================================
 // ABSENCE NOTIFICATION HELPER
@@ -113,46 +128,52 @@ async function triggerAbsenceNotification(
                 surname: true,
                 userId: true,
                 emailAddress: true,
-              }
-            }
-          }
-        }
-      }
-    });
+              },
+            },
+          },
+        },
+      },
+    })
 
     if (!student || student.studentGuardians.length === 0) {
-      console.log('[triggerAbsenceNotification] No guardians found for student', studentId);
-      return;
+      console.log(
+        "[triggerAbsenceNotification] No guardians found for student",
+        studentId
+      )
+      return
     }
 
     // Get class info
     const classInfo = await db.class.findFirst({
       where: { id: classId, schoolId },
-      select: { name: true }
-    });
+      select: { name: true },
+    })
 
-    const studentName = `${student.givenName} ${student.surname}`;
-    const className = classInfo?.name || 'Unknown class';
-    const dateStr = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    const dateStrAr = date.toLocaleDateString('ar-SA', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const studentName = `${student.givenName} ${student.surname}`
+    const className = classInfo?.name || "Unknown class"
+    const dateStr = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+    const dateStrAr = date.toLocaleDateString("ar-SA", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
 
     // Create notifications for each guardian with a userId
     for (const sg of student.studentGuardians) {
-      const guardian = sg.guardian;
+      const guardian = sg.guardian
 
       if (!guardian.userId) {
-        console.log('[triggerAbsenceNotification] Guardian has no userId', guardian.id);
-        continue;
+        console.log(
+          "[triggerAbsenceNotification] Guardian has no userId",
+          guardian.id
+        )
+        continue
       }
 
       // Create in-app notification (and email via notification system)
@@ -160,8 +181,8 @@ async function triggerAbsenceNotification(
         data: {
           schoolId,
           userId: guardian.userId,
-          type: 'attendance_alert',
-          priority: 'high',
+          type: "attendance_alert",
+          priority: "high",
           title: `Absence Alert: ${studentName}`,
           body: `${studentName} was marked absent from ${className} on ${dateStr}. If this is unexpected, please contact the school.`,
           metadata: {
@@ -175,18 +196,24 @@ async function triggerAbsenceNotification(
             markedBy,
             // Arabic message for RTL support
             titleAr: `تنبيه غياب: ${studentName}`,
-            bodyAr: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`
+            bodyAr: `تم تسجيل غياب ${studentName} من ${className} في ${dateStrAr}. إذا كان هذا غير متوقع، يرجى التواصل مع المدرسة.`,
           },
-          channels: ['in_app', 'email'],
+          channels: ["in_app", "email"],
           actorId: markedBy,
-        }
-      });
+        },
+      })
 
-      console.log('[triggerAbsenceNotification] Notification created for guardian', guardian.id);
+      console.log(
+        "[triggerAbsenceNotification] Notification created for guardian",
+        guardian.id
+      )
     }
   } catch (error) {
     // Don't fail the attendance marking if notification fails
-    console.error('[triggerAbsenceNotification] Error sending notifications:', error);
+    console.error(
+      "[triggerAbsenceNotification] Error sending notifications:",
+      error
+    )
   }
 }
 
@@ -197,20 +224,22 @@ async function triggerAbsenceNotification(
 /**
  * Mark attendance for multiple students in a class
  */
-export async function markAttendance(input: z.infer<typeof markAttendanceSchema>): Promise<ActionResponse<{ count: number }>> {
+export async function markAttendance(
+  input: z.infer<typeof markAttendanceSchema>
+): Promise<ActionResponse<{ count: number }>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     const parsed = markAttendanceSchema.parse(input)
 
-    const statusMap: Record<'present' | 'absent' | 'late', AttendanceStatus> = {
-      present: 'PRESENT',
-      absent: 'ABSENT',
-      late: 'LATE',
+    const statusMap: Record<"present" | "absent" | "late", AttendanceStatus> = {
+      present: "PRESENT",
+      absent: "ABSENT",
+      late: "LATE",
     }
 
     const results = []
@@ -225,7 +254,7 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
           classId: parsed.classId,
           date: new Date(parsed.date),
           periodId: null,
-        }
+        },
       })
 
       let result
@@ -246,7 +275,7 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
             classId: parsed.classId,
             date: new Date(parsed.date),
             status: statusMap[rec.status],
-            method: 'MANUAL',
+            method: "MANUAL",
             markedBy: session?.user?.id,
             markedAt: new Date(),
             checkInTime: new Date(),
@@ -256,7 +285,7 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
       results.push(result)
 
       // Track absent students for notification
-      if (rec.status === 'absent') {
+      if (rec.status === "absent") {
         absentStudents.push(rec.studentId)
       }
     }
@@ -264,7 +293,7 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
     // Send absence notifications to guardians (non-blocking)
     const attendanceDate = new Date(parsed.date)
     Promise.all(
-      absentStudents.map(studentId =>
+      absentStudents.map((studentId) =>
         triggerAbsenceNotification(
           schoolId,
           studentId,
@@ -273,15 +302,16 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
           session?.user?.id
         )
       )
-    ).catch(err => console.error('[markAttendance] Notification error:', err))
+    ).catch((err) => console.error("[markAttendance] Notification error:", err))
 
-    revalidatePath('/attendance')
+    revalidatePath("/attendance")
     return { success: true, data: { count: results.length } }
   } catch (error) {
-    console.error('[markAttendance] Error:', error)
+    console.error("[markAttendance] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to mark attendance'
+      error:
+        error instanceof Error ? error.message : "Failed to mark attendance",
     }
   }
 }
@@ -305,7 +335,7 @@ export async function markSingleAttendance(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
@@ -318,7 +348,7 @@ export async function markSingleAttendance(input: {
         classId: input.classId,
         date: new Date(input.date),
         periodId: null,
-      }
+      },
     })
 
     let result
@@ -330,7 +360,9 @@ export async function markSingleAttendance(input: {
           method: input.method,
           markedBy: session?.user?.id,
           markedAt: new Date(),
-          checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
+          checkOutTime: input.checkOutTime
+            ? new Date(input.checkOutTime)
+            : undefined,
           notes: input.notes,
         },
       })
@@ -345,8 +377,12 @@ export async function markSingleAttendance(input: {
           method: input.method,
           markedBy: session?.user?.id,
           markedAt: new Date(),
-          checkInTime: input.checkInTime ? new Date(input.checkInTime) : new Date(),
-          checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
+          checkInTime: input.checkInTime
+            ? new Date(input.checkInTime)
+            : new Date(),
+          checkOutTime: input.checkOutTime
+            ? new Date(input.checkOutTime)
+            : undefined,
           location: input.location ? input.location : undefined,
           notes: input.notes,
           confidence: input.confidence,
@@ -356,23 +392,28 @@ export async function markSingleAttendance(input: {
     }
 
     // Send absence notification to guardians if student marked absent (non-blocking)
-    if (input.status === 'ABSENT') {
+    if (input.status === "ABSENT") {
       triggerAbsenceNotification(
         schoolId,
         input.studentId,
         input.classId,
         new Date(input.date),
         session?.user?.id
-      ).catch(err => console.error('[markSingleAttendance] Notification error:', err))
+      ).catch((err) =>
+        console.error("[markSingleAttendance] Notification error:", err)
+      )
     }
 
-    revalidatePath('/attendance')
+    revalidatePath("/attendance")
     return { success: true, data: { attendance: result } }
   } catch (error) {
-    console.error('[markSingleAttendance] Error:', error)
+    console.error("[markSingleAttendance] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to mark single attendance'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to mark single attendance",
     }
   }
 }
@@ -380,25 +421,32 @@ export async function markSingleAttendance(input: {
 /**
  * Get attendance list for a class on a specific date
  */
-export async function getAttendanceList(input: { classId: string; date: string }): Promise<ActionResponse<{
-  rows: Array<{
-    studentId: string
-    name: string
-    status: 'present' | 'absent' | 'late'
-    checkInTime?: Date
-    method?: string
+export async function getAttendanceList(input: {
+  classId: string
+  date: string
+}): Promise<
+  ActionResponse<{
+    rows: Array<{
+      studentId: string
+      name: string
+      status: "present" | "absent" | "late"
+      checkInTime?: Date
+      method?: string
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = z.object({
-      classId: z.string().min(1),
-      date: z.string().min(1)
-    }).parse(input)
+    const parsed = z
+      .object({
+        classId: z.string().min(1),
+        date: z.string().min(1),
+      })
+      .parse(input)
 
     const [enrollments, marks] = await Promise.all([
       db.studentClass.findMany({
@@ -410,20 +458,23 @@ export async function getAttendanceList(input: { classId: string; date: string }
               givenName: true,
               surname: true,
               userId: true,
-            }
-          }
+            },
+          },
         },
       }),
       db.attendance.findMany({
         where: {
           schoolId,
           classId: parsed.classId,
-          date: new Date(parsed.date)
-        }
+          date: new Date(parsed.date),
+        },
       }),
     ])
 
-    const statusByStudent: Record<string, { status: string; checkInTime?: Date; method?: string }> = {}
+    const statusByStudent: Record<
+      string,
+      { status: string; checkInTime?: Date; method?: string }
+    > = {}
     marks.forEach((m) => {
       statusByStudent[m.studentId] = {
         status: String(m.status).toLowerCase(),
@@ -434,18 +485,27 @@ export async function getAttendanceList(input: { classId: string; date: string }
 
     const rows = enrollments.map((e) => ({
       studentId: e.studentId,
-      name: [e.student?.givenName, e.student?.surname].filter(Boolean).join(' '),
-      status: (statusByStudent[e.studentId]?.status as 'present' | 'absent' | 'late') || 'present',
+      name: [e.student?.givenName, e.student?.surname]
+        .filter(Boolean)
+        .join(" "),
+      status:
+        (statusByStudent[e.studentId]?.status as
+          | "present"
+          | "absent"
+          | "late") || "present",
       checkInTime: statusByStudent[e.studentId]?.checkInTime,
       method: statusByStudent[e.studentId]?.method,
     }))
 
     return { success: true, data: { rows } }
   } catch (error) {
-    console.error('[getAttendanceList] Error:', error)
+    console.error("[getAttendanceList] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get attendance list'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get attendance list",
     }
   }
 }
@@ -453,46 +513,53 @@ export async function getAttendanceList(input: { classId: string; date: string }
 /**
  * Get classes for selection dropdown
  */
-export async function getClassesForSelection(): Promise<ActionResponse<{
-  classes: Array<{
-    id: string
-    name: string
-    teacher: string | null
+export async function getClassesForSelection(): Promise<
+  ActionResponse<{
+    classes: Array<{
+      id: string
+      name: string
+      teacher: string | null
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const classes = await db.class.findMany({
       where: { schoolId },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
       select: {
         id: true,
         name: true,
         teacher: {
-          select: { givenName: true, surname: true }
-        }
-      }
+          select: { givenName: true, surname: true },
+        },
+      },
     })
 
     return {
       success: true,
       data: {
-        classes: classes.map(c => ({
+        classes: classes.map((c) => ({
           id: c.id,
           name: c.name,
-          teacher: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : null
-        }))
-      }
+          teacher: c.teacher
+            ? `${c.teacher.givenName} ${c.teacher.surname}`
+            : null,
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getClassesForSelection] Error:', error)
+    console.error("[getClassesForSelection] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get classes for selection'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get classes for selection",
     }
   }
 }
@@ -549,11 +616,11 @@ export async function getAttendanceStats(input?: {
 
   const [total, present, absent, late, excused, sick] = await Promise.all([
     db.attendance.count({ where }),
-    db.attendance.count({ where: { ...where, status: 'PRESENT' } }),
-    db.attendance.count({ where: { ...where, status: 'ABSENT' } }),
-    db.attendance.count({ where: { ...where, status: 'LATE' } }),
-    db.attendance.count({ where: { ...where, status: 'EXCUSED' } }),
-    db.attendance.count({ where: { ...where, status: 'SICK' } }),
+    db.attendance.count({ where: { ...where, status: "PRESENT" } }),
+    db.attendance.count({ where: { ...where, status: "ABSENT" } }),
+    db.attendance.count({ where: { ...where, status: "LATE" } }),
+    db.attendance.count({ where: { ...where, status: "EXCUSED" } }),
+    db.attendance.count({ where: { ...where, status: "SICK" } }),
   ])
 
   const attendanceRate = total > 0 ? ((present + late) / total) * 100 : 0
@@ -578,59 +645,79 @@ export async function getAttendanceTrends(input: {
   dateFrom: string
   dateTo: string
   classId?: string
-  groupBy?: 'day' | 'week' | 'month'
-}): Promise<ActionResponse<{ trends: Array<{ date: string; present: number; absent: number; late: number; total: number; rate: number }> }>> {
+  groupBy?: "day" | "week" | "month"
+}): Promise<
+  ActionResponse<{
+    trends: Array<{
+      date: string
+      present: number
+      absent: number
+      late: number
+      total: number
+      rate: number
+    }>
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
-  const where: Prisma.AttendanceWhereInput = {
-    schoolId,
-    date: {
-      gte: new Date(input.dateFrom),
-      lte: new Date(input.dateTo),
+    const where: Prisma.AttendanceWhereInput = {
+      schoolId,
+      date: {
+        gte: new Date(input.dateFrom),
+        lte: new Date(input.dateTo),
+      },
     }
-  }
 
-  if (input.classId) where.classId = input.classId
+    if (input.classId) where.classId = input.classId
 
-  const attendance = await db.attendance.findMany({
-    where,
-    select: {
-      date: true,
-      status: true,
-    },
-    orderBy: { date: 'asc' }
-  })
+    const attendance = await db.attendance.findMany({
+      where,
+      select: {
+        date: true,
+        status: true,
+      },
+      orderBy: { date: "asc" },
+    })
 
-  // Group by date
-  const byDate: Record<string, { present: number; absent: number; late: number; total: number }> = {}
+    // Group by date
+    const byDate: Record<
+      string,
+      { present: number; absent: number; late: number; total: number }
+    > = {}
 
-  attendance.forEach(record => {
-    const dateKey = record.date.toISOString().split('T')[0]
-    if (!byDate[dateKey]) {
-      byDate[dateKey] = { present: 0, absent: 0, late: 0, total: 0 }
-    }
-    byDate[dateKey].total++
-    if (record.status === 'PRESENT') byDate[dateKey].present++
-    else if (record.status === 'ABSENT') byDate[dateKey].absent++
-    else if (record.status === 'LATE') byDate[dateKey].late++
-  })
+    attendance.forEach((record) => {
+      const dateKey = record.date.toISOString().split("T")[0]
+      if (!byDate[dateKey]) {
+        byDate[dateKey] = { present: 0, absent: 0, late: 0, total: 0 }
+      }
+      byDate[dateKey].total++
+      if (record.status === "PRESENT") byDate[dateKey].present++
+      else if (record.status === "ABSENT") byDate[dateKey].absent++
+      else if (record.status === "LATE") byDate[dateKey].late++
+    })
 
-  const trends = Object.entries(byDate).map(([date, stats]) => ({
-    date,
-    ...stats,
-    rate: stats.total > 0 ? Math.round(((stats.present + stats.late) / stats.total) * 100) : 0
-  }))
+    const trends = Object.entries(byDate).map(([date, stats]) => ({
+      date,
+      ...stats,
+      rate:
+        stats.total > 0
+          ? Math.round(((stats.present + stats.late) / stats.total) * 100)
+          : 0,
+    }))
 
     return { success: true, data: { trends } }
   } catch (error) {
-    console.error('[getAttendanceTrends] Error:', error)
+    console.error("[getAttendanceTrends] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get attendance trends'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get attendance trends",
     }
   }
 }
@@ -644,8 +731,8 @@ export async function getMethodUsageStats(input?: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -656,17 +743,17 @@ export async function getMethodUsageStats(input?: {
   }
 
   const methodCounts = await db.attendance.groupBy({
-    by: ['method'],
+    by: ["method"],
     where,
-    _count: { method: true }
+    _count: { method: true },
   })
 
   const total = methodCounts.reduce((sum, m) => sum + m._count.method, 0)
 
-  const stats = methodCounts.map(m => ({
+  const stats = methodCounts.map((m) => ({
     method: m.method,
     count: m._count.method,
-    percentage: total > 0 ? Math.round((m._count.method / total) * 100) : 0
+    percentage: total > 0 ? Math.round((m._count.method / total) * 100) : 0,
   }))
 
   return { stats, total }
@@ -682,8 +769,8 @@ export async function getDayWisePatterns(input?: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -696,30 +783,44 @@ export async function getDayWisePatterns(input?: {
 
   const attendance = await db.attendance.findMany({
     where,
-    select: { date: true, status: true }
+    select: { date: true, status: true },
   })
 
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const byDay: Record<number, { present: number; absent: number; late: number; total: number }> = {}
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ]
+  const byDay: Record<
+    number,
+    { present: number; absent: number; late: number; total: number }
+  > = {}
 
   // Initialize all days
   for (let i = 0; i < 7; i++) {
     byDay[i] = { present: 0, absent: 0, late: 0, total: 0 }
   }
 
-  attendance.forEach(record => {
+  attendance.forEach((record) => {
     const day = record.date.getDay()
     byDay[day].total++
-    if (record.status === 'PRESENT') byDay[day].present++
-    else if (record.status === 'ABSENT') byDay[day].absent++
-    else if (record.status === 'LATE') byDay[day].late++
+    if (record.status === "PRESENT") byDay[day].present++
+    else if (record.status === "ABSENT") byDay[day].absent++
+    else if (record.status === "LATE") byDay[day].late++
   })
 
   const patterns = Object.entries(byDay).map(([day, stats]) => ({
     day: dayNames[parseInt(day)],
     dayIndex: parseInt(day),
     ...stats,
-    rate: stats.total > 0 ? Math.round(((stats.present + stats.late) / stats.total) * 100) : 0
+    rate:
+      stats.total > 0
+        ? Math.round(((stats.present + stats.late) / stats.total) * 100)
+        : 0,
   }))
 
   return { patterns }
@@ -734,8 +835,8 @@ export async function getClassComparisonStats(input?: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -750,16 +851,20 @@ export async function getClassComparisonStats(input?: {
     select: {
       id: true,
       name: true,
-      _count: { select: { studentClasses: true } }
-    }
+      _count: { select: { studentClasses: true } },
+    },
   })
 
   const stats = await Promise.all(
     classes.map(async (cls) => {
       const [total, present, late] = await Promise.all([
         db.attendance.count({ where: { ...where, classId: cls.id } }),
-        db.attendance.count({ where: { ...where, classId: cls.id, status: 'PRESENT' } }),
-        db.attendance.count({ where: { ...where, classId: cls.id, status: 'LATE' } }),
+        db.attendance.count({
+          where: { ...where, classId: cls.id, status: "PRESENT" },
+        }),
+        db.attendance.count({
+          where: { ...where, classId: cls.id, status: "LATE" },
+        }),
       ])
 
       return {
@@ -767,7 +872,7 @@ export async function getClassComparisonStats(input?: {
         className: cls.name,
         studentCount: cls._count.studentClasses,
         totalRecords: total,
-        rate: total > 0 ? Math.round(((present + late) / total) * 100) : 0
+        rate: total > 0 ? Math.round(((present + late) / total) * 100) : 0,
       }
     })
   )
@@ -785,8 +890,8 @@ export async function getStudentsAtRisk(input?: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const threshold = input?.threshold ?? 80
 
@@ -806,15 +911,17 @@ export async function getStudentsAtRisk(input?: {
       surname: true,
       attendances: {
         where,
-        select: { status: true }
-      }
-    }
+        select: { status: true },
+      },
+    },
   })
 
   const atRisk = students
-    .map(student => {
+    .map((student) => {
       const total = student.attendances.length
-      const present = student.attendances.filter((a: { status: string }) => a.status === 'PRESENT' || a.status === 'LATE').length
+      const present = student.attendances.filter(
+        (a: { status: string }) => a.status === "PRESENT" || a.status === "LATE"
+      ).length
       const rate = total > 0 ? Math.round((present / total) * 100) : 100
 
       return {
@@ -823,10 +930,10 @@ export async function getStudentsAtRisk(input?: {
         totalDays: total,
         presentDays: present,
         absentDays: total - present,
-        rate
+        rate,
       }
     })
-    .filter(s => s.rate < threshold && s.totalDays > 0)
+    .filter((s) => s.rate < threshold && s.totalDays > 0)
     .sort((a, b) => a.rate - b.rate)
 
   return { students: atRisk, threshold }
@@ -857,20 +964,20 @@ export async function getRecentAttendance(input?: {
 
   const records = await db.attendance.findMany({
     where,
-    orderBy: { markedAt: 'desc' },
+    orderBy: { markedAt: "desc" },
     take: limit,
     include: {
       student: {
-        select: { givenName: true, surname: true }
+        select: { givenName: true, surname: true },
       },
       class: {
-        select: { name: true }
-      }
-    }
+        select: { name: true },
+      },
+    },
   })
 
   return {
-    records: records.map(r => ({
+    records: records.map((r) => ({
       id: r.id,
       studentId: r.studentId,
       studentName: `${r.student.givenName} ${r.student.surname}`,
@@ -882,7 +989,7 @@ export async function getRecentAttendance(input?: {
       checkInTime: r.checkInTime?.toISOString(),
       markedAt: r.markedAt.toISOString(),
       markedBy: r.markedBy,
-    }))
+    })),
   }
 }
 
@@ -893,23 +1000,25 @@ export async function getRecentAttendance(input?: {
 /**
  * Generate QR code session for a class
  */
-export async function generateQRSession(input: z.infer<typeof qrCodeGenerationSchema>) {
+export async function generateQRSession(
+  input: z.infer<typeof qrCodeGenerationSchema>
+) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const session = await auth()
   const parsed = qrCodeGenerationSchema.parse(input)
 
   // Generate unique code
-  const code = randomBytes(16).toString('hex')
+  const code = randomBytes(16).toString("hex")
   const expiresAt = new Date(Date.now() + parsed.validFor * 1000)
 
   // Invalidate previous active sessions for this class
   await db.qRCodeSession.updateMany({
     where: { schoolId, classId: parsed.classId, isActive: true },
-    data: { isActive: false, invalidatedAt: new Date() }
+    data: { isActive: false, invalidatedAt: new Date() },
   })
 
   const qrSession = await db.qRCodeSession.create({
@@ -923,14 +1032,14 @@ export async function generateQRSession(input: z.infer<typeof qrCodeGenerationSc
         includeLocation: parsed.includeLocation,
         createdAt: new Date().toISOString(),
       },
-      generatedBy: session?.user?.id || 'system',
+      generatedBy: session?.user?.id || "system",
       expiresAt,
       isActive: true,
       configuration: {
         validFor: parsed.validFor,
         includeLocation: parsed.includeLocation,
-      }
-    }
+      },
+    },
   })
 
   return {
@@ -952,8 +1061,8 @@ export async function processQRScan(input: {
 }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   // Find and validate session
   const qrSession = await db.qRCodeSession.findFirst({
@@ -961,18 +1070,18 @@ export async function processQRScan(input: {
       schoolId,
       code: input.code,
       isActive: true,
-      expiresAt: { gt: new Date() }
-    }
+      expiresAt: { gt: new Date() },
+    },
   })
 
   if (!qrSession) {
-    return { success: false, error: 'Invalid or expired QR code' }
+    return { success: false, error: "Invalid or expired QR code" }
   }
 
   // Check if student already scanned
   const scannedBy = qrSession.scannedBy as string[]
   if (scannedBy.includes(input.studentId)) {
-    return { success: false, error: 'Already checked in' }
+    return { success: false, error: "Already checked in" }
   }
 
   // Mark attendance
@@ -987,15 +1096,15 @@ export async function processQRScan(input: {
       classId: qrSession.classId,
       date: today,
       periodId: null,
-    }
+    },
   })
 
   if (existing) {
     await db.attendance.update({
       where: { id: existing.id },
       data: {
-        status: 'PRESENT',
-        method: 'QR_CODE',
+        status: "PRESENT",
+        method: "QR_CODE",
         checkInTime: new Date(),
         location: input.location,
       },
@@ -1007,8 +1116,8 @@ export async function processQRScan(input: {
         studentId: input.studentId,
         classId: qrSession.classId,
         date: today,
-        status: 'PRESENT',
-        method: 'QR_CODE',
+        status: "PRESENT",
+        method: "QR_CODE",
         checkInTime: new Date(),
         location: input.location,
         deviceId: input.deviceId,
@@ -1021,11 +1130,11 @@ export async function processQRScan(input: {
     where: { id: qrSession.id },
     data: {
       scanCount: { increment: 1 },
-      scannedBy: [...scannedBy, input.studentId]
-    }
+      scannedBy: [...scannedBy, input.studentId],
+    },
   })
 
-  return { success: true, message: 'Attendance marked successfully' }
+  return { success: true, message: "Attendance marked successfully" }
 }
 
 /**
@@ -1034,13 +1143,13 @@ export async function processQRScan(input: {
 export async function getActiveQRSessions(classId?: string) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const where: Prisma.QRCodeSessionWhereInput = {
     schoolId,
     isActive: true,
-    expiresAt: { gt: new Date() }
+    expiresAt: { gt: new Date() },
   }
 
   if (classId) where.classId = classId
@@ -1048,13 +1157,13 @@ export async function getActiveQRSessions(classId?: string) {
   const sessions = await db.qRCodeSession.findMany({
     where,
     include: {
-      class: { select: { name: true } }
+      class: { select: { name: true } },
     },
-    orderBy: { generatedAt: 'desc' }
+    orderBy: { generatedAt: "desc" },
   })
 
   return {
-    sessions: sessions.map(s => ({
+    sessions: sessions.map((s) => ({
       id: s.id,
       code: s.code,
       classId: s.classId,
@@ -1062,7 +1171,7 @@ export async function getActiveQRSessions(classId?: string) {
       expiresAt: s.expiresAt.toISOString(),
       scanCount: s.scanCount,
       scannedBy: s.scannedBy as string[],
-    }))
+    })),
   }
 }
 
@@ -1073,11 +1182,13 @@ export async function getActiveQRSessions(classId?: string) {
 /**
  * Add student identifier (barcode, RFID, etc.)
  */
-export async function addStudentIdentifier(input: z.infer<typeof studentIdentifierSchema>) {
+export async function addStudentIdentifier(
+  input: z.infer<typeof studentIdentifierSchema>
+) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const session = await auth()
   const parsed = studentIdentifierSchema.parse(input)
@@ -1091,7 +1202,7 @@ export async function addStudentIdentifier(input: z.infer<typeof studentIdentifi
       isActive: parsed.isActive,
       expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,
       issuedBy: session?.user?.id,
-    }
+    },
   })
 
   return { success: true, identifier }
@@ -1103,8 +1214,8 @@ export async function addStudentIdentifier(input: z.infer<typeof studentIdentifi
 export async function getStudentIdentifiers(studentId?: string) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const where: Prisma.StudentIdentifierWhereInput = { schoolId }
   if (studentId) where.studentId = studentId
@@ -1113,14 +1224,14 @@ export async function getStudentIdentifiers(studentId?: string) {
     where,
     include: {
       student: {
-        select: { givenName: true, surname: true }
-      }
+        select: { givenName: true, surname: true },
+      },
     },
-    orderBy: { issuedAt: 'desc' }
+    orderBy: { issuedAt: "desc" },
   })
 
   return {
-    identifiers: identifiers.map(i => ({
+    identifiers: identifiers.map((i) => ({
       id: i.id,
       studentId: i.studentId,
       studentName: `${i.student.givenName} ${i.student.surname}`,
@@ -1132,7 +1243,7 @@ export async function getStudentIdentifiers(studentId?: string) {
       expiresAt: i.expiresAt?.toISOString(),
       lastUsedAt: i.lastUsedAt?.toISOString(),
       usageCount: i.usageCount,
-    }))
+    })),
   }
 }
 
@@ -1148,19 +1259,23 @@ export async function findStudentByIdentifier(input: {
 > {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { found: false, error: 'Missing school context' }
-    }
+    return { found: false, error: "Missing school context" }
+  }
 
   const identifier = await db.studentIdentifier.findFirst({
     where: {
       schoolId,
-      type: input.type as 'BARCODE' | 'QR_CODE' | 'RFID_CARD' | 'NFC_TAG' | 'FINGERPRINT' | 'FACE_ID' | 'BLUETOOTH_MAC',
+      type: input.type as
+        | "BARCODE"
+        | "QR_CODE"
+        | "RFID_CARD"
+        | "NFC_TAG"
+        | "FINGERPRINT"
+        | "FACE_ID"
+        | "BLUETOOTH_MAC",
       value: input.value,
       isActive: true,
-      OR: [
-        { expiresAt: null },
-        { expiresAt: { gt: new Date() } }
-      ]
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },
     include: {
       student: {
@@ -1168,13 +1283,13 @@ export async function findStudentByIdentifier(input: {
           id: true,
           givenName: true,
           surname: true,
-        }
-      }
-    }
+        },
+      },
+    },
   })
 
   if (!identifier) {
-    return { found: false, error: 'Identifier not found or expired' }
+    return { found: false, error: "Identifier not found or expired" }
   }
 
   // Update usage stats
@@ -1182,8 +1297,8 @@ export async function findStudentByIdentifier(input: {
     where: { id: identifier.id },
     data: {
       lastUsedAt: new Date(),
-      usageCount: { increment: 1 }
-    }
+      usageCount: { increment: 1 },
+    },
   })
 
   return {
@@ -1191,7 +1306,7 @@ export async function findStudentByIdentifier(input: {
     student: {
       id: identifier.student.id,
       name: `${identifier.student.givenName} ${identifier.student.surname}`,
-    }
+    },
   }
 }
 
@@ -1202,15 +1317,21 @@ export async function findStudentByIdentifier(input: {
 /**
  * Bulk upload attendance records
  */
-export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchema>): Promise<{
+export async function bulkUploadAttendance(
+  input: z.infer<typeof bulkUploadSchema>
+): Promise<{
   successful: number
   failed: number
   errors: Array<{ studentId: string; error: string }>
 }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { successful: 0, failed: 0, errors: [{ studentId: '', error: 'Missing school context' }] }
+    return {
+      successful: 0,
+      failed: 0,
+      errors: [{ studentId: "", error: "Missing school context" }],
     }
+  }
 
   const session = await auth()
   const parsed = bulkUploadSchema.parse(input)
@@ -1218,7 +1339,7 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
   const results = {
     successful: 0,
     failed: 0,
-    errors: [] as { studentId: string; error: string }[]
+    errors: [] as { studentId: string; error: string }[],
   }
 
   for (const record of parsed.records) {
@@ -1231,7 +1352,7 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
           classId: parsed.classId,
           date: new Date(parsed.date),
           periodId: null,
-        }
+        },
       })
 
       if (existing) {
@@ -1239,8 +1360,12 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
           where: { id: existing.id },
           data: {
             status: record.status,
-            checkInTime: record.checkInTime ? new Date(record.checkInTime) : undefined,
-            checkOutTime: record.checkOutTime ? new Date(record.checkOutTime) : undefined,
+            checkInTime: record.checkInTime
+              ? new Date(record.checkInTime)
+              : undefined,
+            checkOutTime: record.checkOutTime
+              ? new Date(record.checkOutTime)
+              : undefined,
             notes: record.notes,
           },
         })
@@ -1255,8 +1380,12 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
             method: parsed.method,
             markedBy: session?.user?.id,
             markedAt: new Date(),
-            checkInTime: record.checkInTime ? new Date(record.checkInTime) : undefined,
-            checkOutTime: record.checkOutTime ? new Date(record.checkOutTime) : undefined,
+            checkInTime: record.checkInTime
+              ? new Date(record.checkInTime)
+              : undefined,
+            checkOutTime: record.checkOutTime
+              ? new Date(record.checkOutTime)
+              : undefined,
             notes: record.notes,
           },
         })
@@ -1266,12 +1395,12 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
       results.failed++
       results.errors.push({
         studentId: record.studentId,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       })
     }
   }
 
-  revalidatePath('/attendance')
+  revalidatePath("/attendance")
   return results
 }
 
@@ -1282,11 +1411,13 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
 /**
  * Get attendance report data
  */
-export async function getAttendanceReport(input: z.infer<typeof attendanceFilterSchema>) {
+export async function getAttendanceReport(
+  input: z.infer<typeof attendanceFilterSchema>
+) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const parsed = attendanceFilterSchema.parse(input)
 
@@ -1317,15 +1448,15 @@ export async function getAttendanceReport(input: z.infer<typeof attendanceFilter
         student: { select: { givenName: true, surname: true } },
         class: { select: { name: true } },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
       take: parsed.limit,
       skip: parsed.offset,
     }),
-    db.attendance.count({ where })
+    db.attendance.count({ where }),
   ])
 
   return {
-    records: records.map(r => ({
+    records: records.map((r) => ({
       id: r.id,
       date: r.date.toISOString(),
       studentId: r.studentId,
@@ -1358,8 +1489,8 @@ export async function getAttendanceReportCsv(input: {
 }): Promise<string> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      throw new Error('Missing school context')
-    }
+    throw new Error("Missing school context")
+  }
 
   const schema = z.object({
     classId: z.string().optional(),
@@ -1383,29 +1514,32 @@ export async function getAttendanceReportCsv(input: {
 
   const rows = await db.attendance.findMany({
     where,
-    orderBy: { date: 'desc' },
+    orderBy: { date: "desc" },
     take: sp.limit ?? 1000,
     include: {
       student: { select: { givenName: true, surname: true } },
       class: { select: { name: true } },
-    }
+    },
   })
 
-  const header = 'date,studentId,studentName,classId,className,status,method,checkInTime,checkOutTime,notes\n'
+  const header =
+    "date,studentId,studentName,classId,className,status,method,checkInTime,checkOutTime,notes\n"
   const body = rows
-    .map((r) => [
-      new Date(r.date).toISOString().slice(0, 10),
-      r.studentId,
-      `"${r.student.givenName} ${r.student.surname}"`,
-      r.classId,
-      `"${r.class.name}"`,
-      String(r.status),
-      String(r.method),
-      r.checkInTime?.toISOString() || '',
-      r.checkOutTime?.toISOString() || '',
-      `"${r.notes || ''}"`,
-    ].join(','))
-    .join('\n')
+    .map((r) =>
+      [
+        new Date(r.date).toISOString().slice(0, 10),
+        r.studentId,
+        `"${r.student.givenName} ${r.student.surname}"`,
+        r.classId,
+        `"${r.class.name}"`,
+        String(r.status),
+        String(r.method),
+        r.checkInTime?.toISOString() || "",
+        r.checkOutTime?.toISOString() || "",
+        `"${r.notes || ""}"`,
+      ].join(",")
+    )
+    .join("\n")
 
   return header + body
 }
@@ -1424,8 +1558,8 @@ export async function checkOutStudent(input: {
 }): Promise<{ success: boolean; error?: string }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
-    }
+    return { success: false, error: "Missing school context" }
+  }
 
   const attendance = await db.attendance.findFirst({
     where: {
@@ -1434,23 +1568,23 @@ export async function checkOutStudent(input: {
       classId: input.classId,
       date: new Date(input.date),
       periodId: null,
-    }
+    },
   })
 
   if (!attendance) {
-    return { success: false, error: 'No check-in record found' }
+    return { success: false, error: "No check-in record found" }
   }
 
   if (attendance.checkOutTime) {
-    return { success: false, error: 'Already checked out' }
+    return { success: false, error: "Already checked out" }
   }
 
   await db.attendance.update({
     where: { id: attendance.id },
-    data: { checkOutTime: new Date() }
+    data: { checkOutTime: new Date() },
   })
 
-  revalidatePath('/attendance')
+  revalidatePath("/attendance")
   return { success: true }
 }
 
@@ -1463,8 +1597,8 @@ export async function bulkCheckOut(input: {
 }): Promise<{ success: boolean; count: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) {
-      return { success: false, count: 0 }
-    }
+    return { success: false, count: 0 }
+  }
 
   const result = await db.attendance.updateMany({
     where: {
@@ -1473,10 +1607,10 @@ export async function bulkCheckOut(input: {
       date: new Date(input.date),
       checkOutTime: null,
     },
-    data: { checkOutTime: new Date() }
+    data: { checkOutTime: new Date() },
   })
 
-  revalidatePath('/attendance')
+  revalidatePath("/attendance")
   return { success: true, count: result.count }
 }
 
@@ -1502,25 +1636,25 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
 
   // Get unique date+class combinations for BULK_UPLOAD method
   const recentUploads = await db.attendance.groupBy({
-    by: ['date', 'classId'],
+    by: ["date", "classId"],
     where: {
       schoolId,
-      method: 'BULK_UPLOAD',
+      method: "BULK_UPLOAD",
     },
     _count: {
       _all: true,
     },
-    orderBy: { date: 'desc' },
+    orderBy: { date: "desc" },
     take: limit,
   })
 
   // Get class names
-  const classIds = [...new Set(recentUploads.map(u => u.classId))]
+  const classIds = [...new Set(recentUploads.map((u) => u.classId))]
   const classes = await db.class.findMany({
     where: { id: { in: classIds }, schoolId },
     select: { id: true, name: true },
   })
-  const classMap = new Map(classes.map(c => [c.id, c.name]))
+  const classMap = new Map(classes.map((c) => [c.id, c.name]))
 
   // Get success/fail counts for each upload
   const uploads = await Promise.all(
@@ -1530,15 +1664,15 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
           schoolId,
           date: upload.date,
           classId: upload.classId,
-          method: 'BULK_UPLOAD',
-          status: { not: 'ABSENT' }, // Consider non-absent as successful processing
+          method: "BULK_UPLOAD",
+          status: { not: "ABSENT" }, // Consider non-absent as successful processing
         },
       })
 
       return {
         date: upload.date,
         classId: upload.classId,
-        className: classMap.get(upload.classId) || 'Unknown Class',
+        className: classMap.get(upload.classId) || "Unknown Class",
         total: upload._count._all,
         successful: successCount,
         failed: upload._count._all - successCount,
@@ -1557,7 +1691,11 @@ export async function getRecentBulkUploads(limit = 5): Promise<{
  * Risk levels based on US Department of Education guidelines
  * https://www.ed.gov/teaching-and-administration/supporting-students/chronic-absenteeism
  */
-export type AttendanceRiskLevel = 'SATISFACTORY' | 'AT_RISK' | 'MODERATELY_CHRONIC' | 'SEVERELY_CHRONIC'
+export type AttendanceRiskLevel =
+  | "SATISFACTORY"
+  | "AT_RISK"
+  | "MODERATELY_CHRONIC"
+  | "SEVERELY_CHRONIC"
 
 interface StudentRiskData {
   studentId: string
@@ -1571,7 +1709,7 @@ interface StudentRiskData {
   excusedDays: number
   attendanceRate: number
   riskLevel: AttendanceRiskLevel
-  trend: 'improving' | 'stable' | 'declining'
+  trend: "improving" | "stable" | "declining"
   consecutiveAbsences: number
   lastAttendance: string | null
 }
@@ -1580,10 +1718,10 @@ interface StudentRiskData {
  * Calculate risk level based on attendance rate
  */
 function calculateRiskLevel(rate: number): AttendanceRiskLevel {
-  if (rate >= 95) return 'SATISFACTORY'
-  if (rate >= 90) return 'AT_RISK'
-  if (rate >= 80) return 'MODERATELY_CHRONIC'
-  return 'SEVERELY_CHRONIC'
+  if (rate >= 95) return "SATISFACTORY"
+  if (rate >= 90) return "AT_RISK"
+  if (rate >= 80) return "MODERATELY_CHRONIC"
+  return "SEVERELY_CHRONIC"
 }
 
 /**
@@ -1595,24 +1733,28 @@ export async function getStudentsByRiskLevel(input?: {
   dateFrom?: string
   dateTo?: string
   limit?: number
-}): Promise<ActionResponse<{
-  students: StudentRiskData[]
-  summary: {
-    satisfactory: number
-    atRisk: number
-    moderatelyChronic: number
-    severelyChronic: number
-    total: number
-  }
-}>> {
+}): Promise<
+  ActionResponse<{
+    students: StudentRiskData[]
+    summary: {
+      satisfactory: number
+      atRisk: number
+      moderatelyChronic: number
+      severelyChronic: number
+      total: number
+    }
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     // Default to current school year (last 90 days if not specified)
-    const dateFrom = input?.dateFrom ? new Date(input.dateFrom) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    const dateFrom = input?.dateFrom
+      ? new Date(input.dateFrom)
+      : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     const dateTo = input?.dateTo ? new Date(input.dateTo) : new Date()
 
     // Get all students with their attendance
@@ -1629,29 +1771,36 @@ export async function getStudentsByRiskLevel(input?: {
         surname: true,
         studentClasses: {
           take: 1,
-          include: { class: { select: { id: true, name: true } } }
+          include: { class: { select: { id: true, name: true } } },
         },
         attendances: {
           where: {
             date: { gte: dateFrom, lte: dateTo },
             schoolId,
           },
-          orderBy: { date: 'desc' },
-          select: { status: true, date: true }
-        }
-      }
+          orderBy: { date: "desc" },
+          select: { status: true, date: true },
+        },
+      },
     })
 
-    const riskData: StudentRiskData[] = students.map(student => {
+    const riskData: StudentRiskData[] = students.map((student) => {
       const attendances = student.attendances
       const totalDays = attendances.length
-      const presentDays = attendances.filter(a => a.status === 'PRESENT').length
-      const lateDays = attendances.filter(a => a.status === 'LATE').length
-      const absentDays = attendances.filter(a => a.status === 'ABSENT').length
-      const excusedDays = attendances.filter(a => a.status === 'EXCUSED' || a.status === 'SICK').length
+      const presentDays = attendances.filter(
+        (a) => a.status === "PRESENT"
+      ).length
+      const lateDays = attendances.filter((a) => a.status === "LATE").length
+      const absentDays = attendances.filter((a) => a.status === "ABSENT").length
+      const excusedDays = attendances.filter(
+        (a) => a.status === "EXCUSED" || a.status === "SICK"
+      ).length
 
       // Late counts as present for rate calculation
-      const attendanceRate = totalDays > 0 ? Math.round(((presentDays + lateDays) / totalDays) * 100) : 100
+      const attendanceRate =
+        totalDays > 0
+          ? Math.round(((presentDays + lateDays) / totalDays) * 100)
+          : 100
       const riskLevel = calculateRiskLevel(attendanceRate)
 
       // Calculate trend (compare last 30 days vs previous 30 days)
@@ -1659,21 +1808,31 @@ export async function getStudentsByRiskLevel(input?: {
       const recentAttendances = attendances.slice(0, midpoint)
       const olderAttendances = attendances.slice(midpoint)
 
-      const recentRate = recentAttendances.length > 0
-        ? (recentAttendances.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / recentAttendances.length) * 100
-        : 100
-      const olderRate = olderAttendances.length > 0
-        ? (olderAttendances.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / olderAttendances.length) * 100
-        : 100
+      const recentRate =
+        recentAttendances.length > 0
+          ? (recentAttendances.filter(
+              (a) => a.status === "PRESENT" || a.status === "LATE"
+            ).length /
+              recentAttendances.length) *
+            100
+          : 100
+      const olderRate =
+        olderAttendances.length > 0
+          ? (olderAttendances.filter(
+              (a) => a.status === "PRESENT" || a.status === "LATE"
+            ).length /
+              olderAttendances.length) *
+            100
+          : 100
 
-      let trend: 'improving' | 'stable' | 'declining' = 'stable'
-      if (recentRate - olderRate > 5) trend = 'improving'
-      else if (olderRate - recentRate > 5) trend = 'declining'
+      let trend: "improving" | "stable" | "declining" = "stable"
+      if (recentRate - olderRate > 5) trend = "improving"
+      else if (olderRate - recentRate > 5) trend = "declining"
 
       // Count consecutive absences from most recent
       let consecutiveAbsences = 0
       for (const a of attendances) {
-        if (a.status === 'ABSENT') consecutiveAbsences++
+        if (a.status === "ABSENT") consecutiveAbsences++
         else break
       }
 
@@ -1700,7 +1859,7 @@ export async function getStudentsByRiskLevel(input?: {
     // Filter by risk level if specified
     let filteredData = riskData
     if (input?.riskLevel) {
-      filteredData = riskData.filter(s => s.riskLevel === input.riskLevel)
+      filteredData = riskData.filter((s) => s.riskLevel === input.riskLevel)
     }
 
     // Sort by attendance rate (lowest first) and limit
@@ -1711,19 +1870,27 @@ export async function getStudentsByRiskLevel(input?: {
 
     // Calculate summary
     const summary = {
-      satisfactory: riskData.filter(s => s.riskLevel === 'SATISFACTORY').length,
-      atRisk: riskData.filter(s => s.riskLevel === 'AT_RISK').length,
-      moderatelyChronic: riskData.filter(s => s.riskLevel === 'MODERATELY_CHRONIC').length,
-      severelyChronic: riskData.filter(s => s.riskLevel === 'SEVERELY_CHRONIC').length,
+      satisfactory: riskData.filter((s) => s.riskLevel === "SATISFACTORY")
+        .length,
+      atRisk: riskData.filter((s) => s.riskLevel === "AT_RISK").length,
+      moderatelyChronic: riskData.filter(
+        (s) => s.riskLevel === "MODERATELY_CHRONIC"
+      ).length,
+      severelyChronic: riskData.filter(
+        (s) => s.riskLevel === "SEVERELY_CHRONIC"
+      ).length,
       total: riskData.length,
     }
 
     return { success: true, data: { students: filteredData, summary } }
   } catch (error) {
-    console.error('[getStudentsByRiskLevel] Error:', error)
+    console.error("[getStudentsByRiskLevel] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get students by risk level'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get students by risk level",
     }
   }
 }
@@ -1731,16 +1898,26 @@ export async function getStudentsByRiskLevel(input?: {
 /**
  * Get detailed early warning data for a specific student
  */
-export async function getStudentEarlyWarningDetails(studentId: string): Promise<ActionResponse<{
-  student: StudentRiskData
-  weeklyTrends: Array<{ week: string; rate: number; absences: number }>
-  recentAbsences: Array<{ date: string; className: string; hasExcuse: boolean }>
-  alerts: Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }>
-}>> {
+export async function getStudentEarlyWarningDetails(studentId: string): Promise<
+  ActionResponse<{
+    student: StudentRiskData
+    weeklyTrends: Array<{ week: string; rate: number; absences: number }>
+    recentAbsences: Array<{
+      date: string
+      className: string
+      hasExcuse: boolean
+    }>
+    alerts: Array<{
+      type: string
+      message: string
+      severity: "low" | "medium" | "high"
+    }>
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     // Get last 90 days of attendance
@@ -1754,105 +1931,121 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
         surname: true,
         studentClasses: {
           take: 1,
-          include: { class: { select: { id: true, name: true } } }
+          include: { class: { select: { id: true, name: true } } },
         },
         attendances: {
           where: { date: { gte: dateFrom }, schoolId },
-          orderBy: { date: 'desc' },
+          orderBy: { date: "desc" },
           include: {
             class: { select: { name: true } },
-            excuse: { select: { status: true } }
-          }
-        }
-      }
+            excuse: { select: { status: true } },
+          },
+        },
+      },
     })
 
     if (!student) {
-      return { success: false, error: 'Student not found' }
+      return { success: false, error: "Student not found" }
     }
 
     const attendances = student.attendances
     const totalDays = attendances.length
-    const presentDays = attendances.filter(a => a.status === 'PRESENT').length
-    const lateDays = attendances.filter(a => a.status === 'LATE').length
-    const absentDays = attendances.filter(a => a.status === 'ABSENT').length
-    const excusedDays = attendances.filter(a => a.status === 'EXCUSED' || a.status === 'SICK').length
-    const attendanceRate = totalDays > 0 ? Math.round(((presentDays + lateDays) / totalDays) * 100) : 100
+    const presentDays = attendances.filter((a) => a.status === "PRESENT").length
+    const lateDays = attendances.filter((a) => a.status === "LATE").length
+    const absentDays = attendances.filter((a) => a.status === "ABSENT").length
+    const excusedDays = attendances.filter(
+      (a) => a.status === "EXCUSED" || a.status === "SICK"
+    ).length
+    const attendanceRate =
+      totalDays > 0
+        ? Math.round(((presentDays + lateDays) / totalDays) * 100)
+        : 100
 
     // Calculate weekly trends
-    const weeklyData: Record<string, { total: number; present: number; absent: number }> = {}
-    attendances.forEach(a => {
+    const weeklyData: Record<
+      string,
+      { total: number; present: number; absent: number }
+    > = {}
+    attendances.forEach((a) => {
       const weekStart = new Date(a.date)
       weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-      const weekKey = weekStart.toISOString().split('T')[0]
+      const weekKey = weekStart.toISOString().split("T")[0]
 
       if (!weeklyData[weekKey]) {
         weeklyData[weekKey] = { total: 0, present: 0, absent: 0 }
       }
       weeklyData[weekKey].total++
-      if (a.status === 'PRESENT' || a.status === 'LATE') weeklyData[weekKey].present++
-      if (a.status === 'ABSENT') weeklyData[weekKey].absent++
+      if (a.status === "PRESENT" || a.status === "LATE")
+        weeklyData[weekKey].present++
+      if (a.status === "ABSENT") weeklyData[weekKey].absent++
     })
 
     const weeklyTrends = Object.entries(weeklyData)
       .map(([week, data]) => ({
         week,
-        rate: data.total > 0 ? Math.round((data.present / data.total) * 100) : 100,
-        absences: data.absent
+        rate:
+          data.total > 0 ? Math.round((data.present / data.total) * 100) : 100,
+        absences: data.absent,
       }))
       .sort((a, b) => a.week.localeCompare(b.week))
 
     // Get recent absences
     const recentAbsences = attendances
-      .filter(a => a.status === 'ABSENT')
+      .filter((a) => a.status === "ABSENT")
       .slice(0, 10)
-      .map(a => ({
+      .map((a) => ({
         date: a.date.toISOString(),
         className: a.class.name,
-        hasExcuse: !!a.excuse && a.excuse.status === 'APPROVED'
+        hasExcuse: !!a.excuse && a.excuse.status === "APPROVED",
       }))
 
     // Generate alerts
-    const alerts: Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }> = []
+    const alerts: Array<{
+      type: string
+      message: string
+      severity: "low" | "medium" | "high"
+    }> = []
 
     // Calculate consecutive absences
     let consecutiveAbsences = 0
     for (const a of attendances) {
-      if (a.status === 'ABSENT') consecutiveAbsences++
+      if (a.status === "ABSENT") consecutiveAbsences++
       else break
     }
 
     if (consecutiveAbsences >= 5) {
       alerts.push({
-        type: 'consecutive_absences',
+        type: "consecutive_absences",
         message: `Student has ${consecutiveAbsences} consecutive absences`,
-        severity: 'high'
+        severity: "high",
       })
     } else if (consecutiveAbsences >= 3) {
       alerts.push({
-        type: 'consecutive_absences',
+        type: "consecutive_absences",
         message: `Student has ${consecutiveAbsences} consecutive absences`,
-        severity: 'medium'
+        severity: "medium",
       })
     }
 
     if (attendanceRate < 80) {
       alerts.push({
-        type: 'severely_chronic',
-        message: 'Student is severely chronically absent (<80% attendance)',
-        severity: 'high'
+        type: "severely_chronic",
+        message: "Student is severely chronically absent (<80% attendance)",
+        severity: "high",
       })
     } else if (attendanceRate < 90) {
       alerts.push({
-        type: 'moderately_chronic',
-        message: 'Student is moderately chronically absent (80-89.9% attendance)',
-        severity: 'medium'
+        type: "moderately_chronic",
+        message:
+          "Student is moderately chronically absent (80-89.9% attendance)",
+        severity: "medium",
       })
     } else if (attendanceRate < 95) {
       alerts.push({
-        type: 'at_risk',
-        message: 'Student is at risk of chronic absenteeism (90-94.9% attendance)',
-        severity: 'low'
+        type: "at_risk",
+        message:
+          "Student is at risk of chronic absenteeism (90-94.9% attendance)",
+        severity: "low",
       })
     }
 
@@ -1860,21 +2053,30 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
     const midpoint = Math.floor(attendances.length / 2)
     const recentAtt = attendances.slice(0, midpoint)
     const olderAtt = attendances.slice(midpoint)
-    const recentRate = recentAtt.length > 0
-      ? (recentAtt.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / recentAtt.length) * 100
-      : 100
-    const olderRate = olderAtt.length > 0
-      ? (olderAtt.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length / olderAtt.length) * 100
-      : 100
+    const recentRate =
+      recentAtt.length > 0
+        ? (recentAtt.filter(
+            (a) => a.status === "PRESENT" || a.status === "LATE"
+          ).length /
+            recentAtt.length) *
+          100
+        : 100
+    const olderRate =
+      olderAtt.length > 0
+        ? (olderAtt.filter((a) => a.status === "PRESENT" || a.status === "LATE")
+            .length /
+            olderAtt.length) *
+          100
+        : 100
 
-    let trend: 'improving' | 'stable' | 'declining' = 'stable'
-    if (recentRate - olderRate > 5) trend = 'improving'
+    let trend: "improving" | "stable" | "declining" = "stable"
+    if (recentRate - olderRate > 5) trend = "improving"
     else if (olderRate - recentRate > 5) {
-      trend = 'declining'
+      trend = "declining"
       alerts.push({
-        type: 'declining_trend',
-        message: 'Attendance is declining compared to previous period',
-        severity: 'medium'
+        type: "declining_trend",
+        message: "Attendance is declining compared to previous period",
+        severity: "medium",
       })
     }
 
@@ -1902,44 +2104,45 @@ export async function getStudentEarlyWarningDetails(studentId: string): Promise<
         weeklyTrends,
         recentAbsences,
         alerts,
-      }
+      },
     }
   } catch (error) {
-    console.error('[getStudentEarlyWarningDetails] Error:', error)
+    console.error("[getStudentEarlyWarningDetails] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get student early warning details'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get student early warning details",
     }
   }
 }
-
-// ============================================================================
-// EXCUSE MANAGEMENT (Phase 2.2 - Parent Excuse Submission)
-// ============================================================================
-
-import {
-  submitExcuseSchema,
-  reviewExcuseSchema,
-} from './shared/validation'
 
 /**
  * Submit an excuse for an absence (called by parent/guardian)
  */
 export async function submitExcuse(input: {
   attendanceId: string
-  reason: 'MEDICAL' | 'FAMILY_EMERGENCY' | 'RELIGIOUS' | 'SCHOOL_ACTIVITY' | 'TRANSPORTATION' | 'WEATHER' | 'OTHER'
+  reason:
+    | "MEDICAL"
+    | "FAMILY_EMERGENCY"
+    | "RELIGIOUS"
+    | "SCHOOL_ACTIVITY"
+    | "TRANSPORTATION"
+    | "WEATHER"
+    | "OTHER"
   description?: string
   attachments?: string[]
 }): Promise<ActionResponse<{ excuseId: string }>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Validate input
@@ -1957,35 +2160,42 @@ export async function submitExcuse(input: {
             studentGuardians: {
               include: {
                 guardian: {
-                  select: { userId: true }
-                }
-              }
-            }
-          }
+                  select: { userId: true },
+                },
+              },
+            },
+          },
         },
         excuse: true, // Check if excuse already exists
-      }
+      },
     })
 
     if (!attendance) {
-      return { success: false, error: 'Attendance record not found' }
+      return { success: false, error: "Attendance record not found" }
     }
 
     // Check if an excuse already exists
     if (attendance.excuse) {
-      return { success: false, error: 'An excuse has already been submitted for this absence' }
+      return {
+        success: false,
+        error: "An excuse has already been submitted for this absence",
+      }
     }
 
     // Verify user is a guardian of this student
     const isGuardian = attendance.student.studentGuardians.some(
-      sg => sg.guardian.userId === session.user.id
+      (sg) => sg.guardian.userId === session.user.id
     )
 
     // Also allow admins and teachers to submit on behalf
-    const isStaff = session.user.role === 'ADMIN' || session.user.role === 'TEACHER'
+    const isStaff =
+      session.user.role === "ADMIN" || session.user.role === "TEACHER"
 
     if (!isGuardian && !isStaff) {
-      return { success: false, error: 'You are not authorized to submit an excuse for this student' }
+      return {
+        success: false,
+        error: "You are not authorized to submit an excuse for this student",
+      }
     }
 
     // Create the excuse
@@ -1997,8 +2207,8 @@ export async function submitExcuse(input: {
         description: parsed.description,
         attachments: parsed.attachments || [],
         submittedBy: session.user.id,
-        status: 'PENDING',
-      }
+        status: "PENDING",
+      },
     })
 
     // Send notification to teacher/admin about new excuse submission
@@ -2009,17 +2219,17 @@ export async function submitExcuse(input: {
       },
       include: {
         teacher: {
-          select: { userId: true, givenName: true, surname: true }
-        }
-      }
+          select: { userId: true, givenName: true, surname: true },
+        },
+      },
     })
 
     const studentName = `${attendance.student.givenName} ${attendance.student.surname}`
-    const dateStr = attendance.date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    const dateStr = attendance.date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
 
     // Notify each teacher assigned to the class
@@ -2029,8 +2239,8 @@ export async function submitExcuse(input: {
           data: {
             schoolId,
             userId: ct.teacher.userId,
-            type: 'attendance_alert',
-            priority: 'normal',
+            type: "attendance_alert",
+            priority: "normal",
             title: `Excuse Submitted: ${studentName}`,
             body: `An excuse has been submitted for ${studentName}'s absence on ${dateStr}. Please review and approve or reject.`,
             metadata: {
@@ -2041,22 +2251,22 @@ export async function submitExcuse(input: {
               date: attendance.date.toISOString(),
               reason: parsed.reason,
             },
-            channels: ['in_app', 'email'],
+            channels: ["in_app", "email"],
             actorId: session.user.id,
-          }
+          },
         })
       }
     }
 
-    revalidatePath('/attendance')
-    revalidatePath('/parent-portal/attendance')
+    revalidatePath("/attendance")
+    revalidatePath("/parent-portal/attendance")
 
     return { success: true, data: { excuseId: excuse.id } }
   } catch (error) {
-    console.error('[submitExcuse] Error:', error)
+    console.error("[submitExcuse] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to submit excuse'
+      error: error instanceof Error ? error.message : "Failed to submit excuse",
     }
   }
 }
@@ -2066,26 +2276,29 @@ export async function submitExcuse(input: {
  */
 export async function reviewExcuse(input: {
   excuseId: string
-  status: 'APPROVED' | 'REJECTED'
+  status: "APPROVED" | "REJECTED"
   reviewNotes?: string
 }): Promise<ActionResponse<{ updated: boolean }>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Validate input
     const parsed = reviewExcuseSchema.parse(input)
 
     // Check user role - only teachers and admins can review
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      return { success: false, error: 'Only teachers and administrators can review excuses' }
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      return {
+        success: false,
+        error: "Only teachers and administrators can review excuses",
+      }
     }
 
     // Get the excuse
@@ -2102,26 +2315,30 @@ export async function reviewExcuse(input: {
                 studentGuardians: {
                   include: {
                     guardian: {
-                      select: { userId: true, givenName: true, emailAddress: true }
-                    }
-                  }
-                }
-              }
+                      select: {
+                        userId: true,
+                        givenName: true,
+                        emailAddress: true,
+                      },
+                    },
+                  },
+                },
+              },
             },
             class: {
-              select: { name: true }
-            }
-          }
-        }
-      }
+              select: { name: true },
+            },
+          },
+        },
+      },
     })
 
     if (!excuse) {
-      return { success: false, error: 'Excuse not found' }
+      return { success: false, error: "Excuse not found" }
     }
 
-    if (excuse.status !== 'PENDING') {
-      return { success: false, error: 'This excuse has already been reviewed' }
+    if (excuse.status !== "PENDING") {
+      return { success: false, error: "This excuse has already been reviewed" }
     }
 
     // Update the excuse
@@ -2132,32 +2349,33 @@ export async function reviewExcuse(input: {
         reviewedBy: session.user.id,
         reviewedAt: new Date(),
         reviewNotes: parsed.reviewNotes,
-      }
+      },
     })
 
     // If approved, update attendance status to EXCUSED
-    if (parsed.status === 'APPROVED') {
+    if (parsed.status === "APPROVED") {
       await db.attendance.update({
         where: { id: excuse.attendanceId },
-        data: { status: 'EXCUSED' }
+        data: { status: "EXCUSED" },
       })
     }
 
     // Notify the guardian who submitted the excuse
     const studentName = `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`
     const className = excuse.attendance.class.name
-    const dateStr = excuse.attendance.date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    const dateStr = excuse.attendance.date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     })
-    const statusText = parsed.status === 'APPROVED' ? 'approved' : 'rejected'
-    const statusTextAr = parsed.status === 'APPROVED' ? 'تمت الموافقة على' : 'تم رفض'
+    const statusText = parsed.status === "APPROVED" ? "approved" : "rejected"
+    const statusTextAr =
+      parsed.status === "APPROVED" ? "تمت الموافقة على" : "تم رفض"
 
     // Find the guardian who submitted
     const submitter = excuse.attendance.student.studentGuardians.find(
-      sg => sg.guardian.userId === excuse.submittedBy
+      (sg) => sg.guardian.userId === excuse.submittedBy
     )
 
     if (submitter?.guardian.userId) {
@@ -2165,10 +2383,10 @@ export async function reviewExcuse(input: {
         data: {
           schoolId,
           userId: submitter.guardian.userId,
-          type: 'attendance_alert',
-          priority: 'normal',
-          title: `Excuse ${parsed.status === 'APPROVED' ? 'Approved' : 'Rejected'}: ${studentName}`,
-          body: `Your excuse for ${studentName}'s absence on ${dateStr} (${className}) has been ${statusText}.${parsed.reviewNotes ? ` Note: ${parsed.reviewNotes}` : ''}`,
+          type: "attendance_alert",
+          priority: "normal",
+          title: `Excuse ${parsed.status === "APPROVED" ? "Approved" : "Rejected"}: ${studentName}`,
+          body: `Your excuse for ${studentName}'s absence on ${dateStr} (${className}) has been ${statusText}.${parsed.reviewNotes ? ` Note: ${parsed.reviewNotes}` : ""}`,
           metadata: {
             excuseId: excuse.id,
             studentId: excuse.attendance.studentId,
@@ -2179,23 +2397,23 @@ export async function reviewExcuse(input: {
             reviewNotes: parsed.reviewNotes,
             // Arabic message
             titleAr: `${statusTextAr} العذر: ${studentName}`,
-            bodyAr: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString('ar-SA')} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ''}`,
+            bodyAr: `${statusTextAr} عذر غياب ${studentName} في ${excuse.attendance.date.toLocaleDateString("ar-SA")} (${className}).${parsed.reviewNotes ? ` ملاحظة: ${parsed.reviewNotes}` : ""}`,
           },
-          channels: ['in_app', 'email'],
+          channels: ["in_app", "email"],
           actorId: session.user.id,
-        }
+        },
       })
     }
 
-    revalidatePath('/attendance')
-    revalidatePath('/parent-portal/attendance')
+    revalidatePath("/attendance")
+    revalidatePath("/parent-portal/attendance")
 
     return { success: true, data: { updated: true } }
   } catch (error) {
-    console.error('[reviewExcuse] Error:', error)
+    console.error("[reviewExcuse] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to review excuse'
+      error: error instanceof Error ? error.message : "Failed to review excuse",
     }
   }
 }
@@ -2203,29 +2421,31 @@ export async function reviewExcuse(input: {
 /**
  * Get excuses for a specific student (for parent portal)
  */
-export async function getExcusesForStudent(studentId: string): Promise<ActionResponse<{
-  excuses: Array<{
-    id: string
-    attendanceId: string
-    date: string
-    className: string
-    reason: string
-    description: string | null
-    status: string
-    submittedAt: string
-    reviewedAt: string | null
-    reviewNotes: string | null
+export async function getExcusesForStudent(studentId: string): Promise<
+  ActionResponse<{
+    excuses: Array<{
+      id: string
+      attendanceId: string
+      date: string
+      className: string
+      reason: string
+      description: string | null
+      status: string
+      submittedAt: string
+      reviewedAt: string | null
+      reviewNotes: string | null
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Verify access: either guardian of the student, or staff
@@ -2238,24 +2458,28 @@ export async function getExcusesForStudent(studentId: string): Promise<ActionRes
         studentGuardians: {
           include: {
             guardian: {
-              select: { userId: true }
-            }
-          }
-        }
-      }
+              select: { userId: true },
+            },
+          },
+        },
+      },
     })
 
     if (!student) {
-      return { success: false, error: 'Student not found' }
+      return { success: false, error: "Student not found" }
     }
 
     const isGuardian = student.studentGuardians.some(
-      sg => sg.guardian.userId === session.user.id
+      (sg) => sg.guardian.userId === session.user.id
     )
-    const isStaff = session.user.role === 'ADMIN' || session.user.role === 'TEACHER'
+    const isStaff =
+      session.user.role === "ADMIN" || session.user.role === "TEACHER"
 
     if (!isGuardian && !isStaff) {
-      return { success: false, error: 'You are not authorized to view this student\'s excuses' }
+      return {
+        success: false,
+        error: "You are not authorized to view this student's excuses",
+      }
     }
 
     // Get all excuses for this student's attendance records
@@ -2264,24 +2488,24 @@ export async function getExcusesForStudent(studentId: string): Promise<ActionRes
         schoolId,
         attendance: {
           studentId,
-        }
+        },
       },
       include: {
         attendance: {
           include: {
             class: {
-              select: { name: true }
-            }
-          }
-        }
+              select: { name: true },
+            },
+          },
+        },
       },
-      orderBy: { submittedAt: 'desc' }
+      orderBy: { submittedAt: "desc" },
     })
 
     return {
       success: true,
       data: {
-        excuses: excuses.map(e => ({
+        excuses: excuses.map((e) => ({
           id: e.id,
           attendanceId: e.attendanceId,
           date: e.attendance.date.toISOString(),
@@ -2292,14 +2516,14 @@ export async function getExcusesForStudent(studentId: string): Promise<ActionRes
           submittedAt: e.submittedAt.toISOString(),
           reviewedAt: e.reviewedAt?.toISOString() || null,
           reviewNotes: e.reviewNotes,
-        }))
-      }
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getExcusesForStudent] Error:', error)
+    console.error("[getExcusesForStudent] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get excuses'
+      error: error instanceof Error ? error.message : "Failed to get excuses",
     }
   }
 }
@@ -2310,98 +2534,109 @@ export async function getExcusesForStudent(studentId: string): Promise<ActionRes
 export async function getPendingExcuses(input?: {
   classId?: string
   limit?: number
-}): Promise<ActionResponse<{
-  excuses: Array<{
-    id: string
-    attendanceId: string
-    studentId: string
-    studentName: string
-    className: string
-    date: string
-    reason: string
-    description: string | null
-    attachments: string[]
-    submittedBy: string
-    submitterName: string | null
-    submittedAt: string
+}): Promise<
+  ActionResponse<{
+    excuses: Array<{
+      id: string
+      attendanceId: string
+      studentId: string
+      studentName: string
+      className: string
+      date: string
+      reason: string
+      description: string | null
+      attachments: string[]
+      submittedBy: string
+      submitterName: string | null
+      submittedAt: string
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only teachers and admins can view pending excuses
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      return { success: false, error: 'Only teachers and administrators can review excuses' }
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      return {
+        success: false,
+        error: "Only teachers and administrators can review excuses",
+      }
     }
 
     const where: Prisma.AttendanceExcuseWhereInput = {
       schoolId,
-      status: 'PENDING',
+      status: "PENDING",
     }
 
     // For teachers, optionally filter to only their assigned classes
     let teacherClassIds: string[] | null = null
-    if (session.user.role === 'TEACHER') {
+    if (session.user.role === "TEACHER") {
       const teacherClasses = await db.classTeacher.findMany({
         where: {
           schoolId,
-          teacher: { userId: session.user.id }
+          teacher: { userId: session.user.id },
         },
-        select: { classId: true }
+        select: { classId: true },
       })
-      teacherClassIds = teacherClasses.map(tc => tc.classId)
+      teacherClassIds = teacherClasses.map((tc) => tc.classId)
     }
 
     const excuses = await db.attendanceExcuse.findMany({
       where: {
         ...where,
-        ...(teacherClassIds && teacherClassIds.length > 0 ? {
-          attendance: {
-            classId: { in: teacherClassIds }
-          }
-        } : {}),
-        ...(input?.classId ? {
-          attendance: {
-            classId: input.classId
-          }
-        } : {}),
+        ...(teacherClassIds && teacherClassIds.length > 0
+          ? {
+              attendance: {
+                classId: { in: teacherClassIds },
+              },
+            }
+          : {}),
+        ...(input?.classId
+          ? {
+              attendance: {
+                classId: input.classId,
+              },
+            }
+          : {}),
       },
       include: {
         attendance: {
           include: {
             student: {
-              select: { id: true, givenName: true, surname: true }
+              select: { id: true, givenName: true, surname: true },
             },
             class: {
-              select: { name: true }
-            }
-          }
-        }
+              select: { name: true },
+            },
+          },
+        },
       },
-      orderBy: { submittedAt: 'desc' },
+      orderBy: { submittedAt: "desc" },
       take: input?.limit ?? 50,
     })
 
     // Get submitter names (use username or email as fallback)
-    const submitterIds = [...new Set(excuses.map(e => e.submittedBy))]
+    const submitterIds = [...new Set(excuses.map((e) => e.submittedBy))]
     const users = await db.user.findMany({
       where: { id: { in: submitterIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
-    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+    const userMap = new Map(
+      users.map((u) => [u.id, u.username || u.email || "Unknown"])
+    )
 
     return {
       success: true,
       data: {
-        excuses: excuses.map(e => ({
+        excuses: excuses.map((e) => ({
           id: e.id,
           attendanceId: e.attendanceId,
           studentId: e.attendance.studentId,
@@ -2414,14 +2649,17 @@ export async function getPendingExcuses(input?: {
           submittedBy: e.submittedBy,
           submitterName: userMap.get(e.submittedBy) || null,
           submittedAt: e.submittedAt.toISOString(),
-        }))
-      }
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getPendingExcuses] Error:', error)
+    console.error("[getPendingExcuses] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get pending excuses'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get pending excuses",
     }
   }
 }
@@ -2429,37 +2667,39 @@ export async function getPendingExcuses(input?: {
 /**
  * Get excuse details by ID
  */
-export async function getExcuseById(excuseId: string): Promise<ActionResponse<{
-  excuse: {
-    id: string
-    attendanceId: string
-    studentId: string
-    studentName: string
-    className: string
-    date: string
-    attendanceStatus: string
-    reason: string
-    description: string | null
-    attachments: string[]
-    status: string
-    submittedBy: string
-    submitterName: string | null
-    submittedAt: string
-    reviewedBy: string | null
-    reviewerName: string | null
-    reviewedAt: string | null
-    reviewNotes: string | null
-  }
-}>> {
+export async function getExcuseById(excuseId: string): Promise<
+  ActionResponse<{
+    excuse: {
+      id: string
+      attendanceId: string
+      studentId: string
+      studentName: string
+      className: string
+      date: string
+      attendanceStatus: string
+      reason: string
+      description: string | null
+      attachments: string[]
+      status: string
+      submittedBy: string
+      submitterName: string | null
+      submittedAt: string
+      reviewedBy: string | null
+      reviewerName: string | null
+      reviewedAt: string | null
+      reviewNotes: string | null
+    }
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     const excuse = await db.attendanceExcuse.findFirst({
@@ -2471,27 +2711,31 @@ export async function getExcuseById(excuseId: string): Promise<ActionResponse<{
         attendance: {
           include: {
             student: {
-              select: { id: true, givenName: true, surname: true }
+              select: { id: true, givenName: true, surname: true },
             },
             class: {
-              select: { name: true }
-            }
-          }
-        }
-      }
+              select: { name: true },
+            },
+          },
+        },
+      },
     })
 
     if (!excuse) {
-      return { success: false, error: 'Excuse not found' }
+      return { success: false, error: "Excuse not found" }
     }
 
     // Get submitter and reviewer names (use username or email as fallback)
-    const userIds = [excuse.submittedBy, excuse.reviewedBy].filter(Boolean) as string[]
+    const userIds = [excuse.submittedBy, excuse.reviewedBy].filter(
+      Boolean
+    ) as string[]
     const users = await db.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
-    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+    const userMap = new Map(
+      users.map((u) => [u.id, u.username || u.email || "Unknown"])
+    )
 
     return {
       success: true,
@@ -2512,17 +2756,20 @@ export async function getExcuseById(excuseId: string): Promise<ActionResponse<{
           submitterName: userMap.get(excuse.submittedBy) || null,
           submittedAt: excuse.submittedAt.toISOString(),
           reviewedBy: excuse.reviewedBy,
-          reviewerName: excuse.reviewedBy ? userMap.get(excuse.reviewedBy) || null : null,
+          reviewerName: excuse.reviewedBy
+            ? userMap.get(excuse.reviewedBy) || null
+            : null,
           reviewedAt: excuse.reviewedAt?.toISOString() || null,
           reviewNotes: excuse.reviewNotes,
-        }
-      }
+        },
+      },
     }
   } catch (error) {
-    console.error('[getExcuseById] Error:', error)
+    console.error("[getExcuseById] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get excuse details'
+      error:
+        error instanceof Error ? error.message : "Failed to get excuse details",
     }
   }
 }
@@ -2531,26 +2778,28 @@ export async function getExcuseById(excuseId: string): Promise<ActionResponse<{
  * Get absences that can have an excuse submitted (for parent portal)
  * Returns unexcused absences for the guardian's children
  */
-export async function getUnexcusedAbsences(studentId?: string): Promise<ActionResponse<{
-  absences: Array<{
-    id: string
-    studentId: string
-    studentName: string
-    classId: string
-    className: string
-    date: string
-    status: string
+export async function getUnexcusedAbsences(studentId?: string): Promise<
+  ActionResponse<{
+    absences: Array<{
+      id: string
+      studentId: string
+      studentName: string
+      classId: string
+      className: string
+      date: string
+      status: string
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Get guardian's children
@@ -2563,21 +2812,24 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<ActionRe
         include: {
           studentGuardians: {
             include: {
-              guardian: { select: { userId: true } }
-            }
-          }
-        }
+              guardian: { select: { userId: true } },
+            },
+          },
+        },
       })
 
       if (!student) {
-        return { success: false, error: 'Student not found' }
+        return { success: false, error: "Student not found" }
       }
 
-      const isGuardian = student.studentGuardians.some(sg => sg.guardian.userId === session.user.id)
-      const isStaff = session.user.role === 'ADMIN' || session.user.role === 'TEACHER'
+      const isGuardian = student.studentGuardians.some(
+        (sg) => sg.guardian.userId === session.user.id
+      )
+      const isStaff =
+        session.user.role === "ADMIN" || session.user.role === "TEACHER"
 
       if (!isGuardian && !isStaff) {
-        return { success: false, error: 'Not authorized to view this student' }
+        return { success: false, error: "Not authorized to view this student" }
       }
 
       studentIds = [studentId]
@@ -2586,11 +2838,11 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<ActionRe
       const guardianStudents = await db.studentGuardian.findMany({
         where: {
           schoolId,
-          guardian: { userId: session.user.id }
+          guardian: { userId: session.user.id },
         },
-        select: { studentId: true }
+        select: { studentId: true },
       })
-      studentIds = guardianStudents.map(gs => gs.studentId)
+      studentIds = guardianStudents.map((gs) => gs.studentId)
     }
 
     if (studentIds.length === 0) {
@@ -2602,25 +2854,25 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<ActionRe
       where: {
         schoolId,
         studentId: { in: studentIds },
-        status: 'ABSENT',
+        status: "ABSENT",
         excuse: null, // No excuse submitted yet
       },
       include: {
         student: {
-          select: { id: true, givenName: true, surname: true }
+          select: { id: true, givenName: true, surname: true },
         },
         class: {
-          select: { id: true, name: true }
-        }
+          select: { id: true, name: true },
+        },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { date: "desc" },
       take: 50,
     })
 
     return {
       success: true,
       data: {
-        absences: absences.map(a => ({
+        absences: absences.map((a) => ({
           id: a.id,
           studentId: a.studentId,
           studentName: `${a.student.givenName} ${a.student.surname}`,
@@ -2628,23 +2880,20 @@ export async function getUnexcusedAbsences(studentId?: string): Promise<ActionRe
           className: a.class.name,
           date: a.date.toISOString(),
           status: a.status,
-        }))
-      }
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getUnexcusedAbsences] Error:', error)
+    console.error("[getUnexcusedAbsences] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get unexcused absences'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get unexcused absences",
     }
   }
 }
-
-// ============================================================================
-// INTERVENTION TRACKING ACTIONS
-// ============================================================================
-
-import type { InterventionType as InterventionTypeVal, InterventionStatus as InterventionStatusVal } from './validation'
 
 /**
  * Create a new intervention for a student with attendance issues
@@ -2662,26 +2911,33 @@ export async function createIntervention(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can create interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF') {
-      return { success: false, error: 'Only staff members can create interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can create interventions",
+      }
     }
 
     // Verify student exists
     const student = await db.student.findFirst({
-      where: { id: input.studentId, schoolId }
+      where: { id: input.studentId, schoolId },
     })
 
     if (!student) {
-      return { success: false, error: 'Student not found' }
+      return { success: false, error: "Student not found" }
     }
 
     const intervention = await db.attendanceIntervention.create({
@@ -2692,20 +2948,25 @@ export async function createIntervention(input: {
         title: input.title,
         description: input.description,
         priority: input.priority ?? 2,
-        scheduledDate: input.scheduledDate ? new Date(input.scheduledDate) : null,
+        scheduledDate: input.scheduledDate
+          ? new Date(input.scheduledDate)
+          : null,
         assignedTo: input.assignedTo,
         initiatedBy: session.user.id,
         tags: input.tags ?? [],
-        status: 'SCHEDULED',
-      }
+        status: "SCHEDULED",
+      },
     })
 
     return { success: true, data: { interventionId: intervention.id } }
   } catch (error) {
-    console.error('[createIntervention] Error:', error)
+    console.error("[createIntervention] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create intervention'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create intervention",
     }
   }
 }
@@ -2728,26 +2989,33 @@ export async function updateIntervention(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can update interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF') {
-      return { success: false, error: 'Only staff members can update interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can update interventions",
+      }
     }
 
     // Verify intervention exists and belongs to this school
     const existing = await db.attendanceIntervention.findFirst({
-      where: { id: input.interventionId, schoolId }
+      where: { id: input.interventionId, schoolId },
     })
 
     if (!existing) {
-      return { success: false, error: 'Intervention not found' }
+      return { success: false, error: "Intervention not found" }
     }
 
     await db.attendanceIntervention.update({
@@ -2755,22 +3023,31 @@ export async function updateIntervention(input: {
       data: {
         ...(input.status && { status: input.status }),
         ...(input.outcome && { outcome: input.outcome }),
-        ...(input.completedDate && { completedDate: new Date(input.completedDate) }),
-        ...(input.followUpDate && { followUpDate: new Date(input.followUpDate) }),
-        ...(input.parentNotified !== undefined && { parentNotified: input.parentNotified }),
+        ...(input.completedDate && {
+          completedDate: new Date(input.completedDate),
+        }),
+        ...(input.followUpDate && {
+          followUpDate: new Date(input.followUpDate),
+        }),
+        ...(input.parentNotified !== undefined && {
+          parentNotified: input.parentNotified,
+        }),
         ...(input.contactMethod && { contactMethod: input.contactMethod }),
         ...(input.contactResult && { contactResult: input.contactResult }),
         ...(input.assignedTo && { assignedTo: input.assignedTo }),
         ...(input.priority && { priority: input.priority }),
-      }
+      },
     })
 
     return { success: true, data: { updated: true } }
   } catch (error) {
-    console.error('[updateIntervention] Error:', error)
+    console.error("[updateIntervention] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update intervention'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update intervention",
     }
   }
 }
@@ -2788,35 +3065,42 @@ export async function escalateIntervention(input: {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can escalate interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF') {
-      return { success: false, error: 'Only staff members can escalate interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can escalate interventions",
+      }
     }
 
     // Get the existing intervention
     const existing = await db.attendanceIntervention.findFirst({
-      where: { id: input.interventionId, schoolId }
+      where: { id: input.interventionId, schoolId },
     })
 
     if (!existing) {
-      return { success: false, error: 'Intervention not found' }
+      return { success: false, error: "Intervention not found" }
     }
 
     // Update old intervention to ESCALATED status
     await db.attendanceIntervention.update({
       where: { id: input.interventionId },
       data: {
-        status: 'ESCALATED',
+        status: "ESCALATED",
         completedDate: new Date(),
-      }
+      },
     })
 
     // Create new escalated intervention
@@ -2831,17 +3115,20 @@ export async function escalateIntervention(input: {
         assignedTo: input.assignedTo,
         initiatedBy: session.user.id,
         escalatedFrom: existing.id,
-        status: 'SCHEDULED',
+        status: "SCHEDULED",
         tags: existing.tags,
-      }
+      },
     })
 
     return { success: true, data: { newInterventionId: newIntervention.id } }
   } catch (error) {
-    console.error('[escalateIntervention] Error:', error)
+    console.error("[escalateIntervention] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to escalate intervention'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to escalate intervention",
     }
   }
 }
@@ -2849,89 +3136,105 @@ export async function escalateIntervention(input: {
 /**
  * Get interventions for a specific student
  */
-export async function getStudentInterventions(studentId: string): Promise<ActionResponse<{
-  interventions: Array<{
-    id: string
-    type: string
-    title: string
-    description: string
-    status: string
-    priority: number
-    scheduledDate: string | null
-    completedDate: string | null
-    followUpDate: string | null
-    initiatedBy: string
-    initiatorName: string | null
-    assignedTo: string | null
-    assigneeName: string | null
-    parentNotified: boolean
-    outcome: string | null
-    createdAt: string
+export async function getStudentInterventions(studentId: string): Promise<
+  ActionResponse<{
+    interventions: Array<{
+      id: string
+      type: string
+      title: string
+      description: string
+      status: string
+      priority: number
+      scheduledDate: string | null
+      completedDate: string | null
+      followUpDate: string | null
+      initiatedBy: string
+      initiatorName: string | null
+      assignedTo: string | null
+      assigneeName: string | null
+      parentNotified: boolean
+      outcome: string | null
+      createdAt: string
+    }>
+    summary: {
+      total: number
+      scheduled: number
+      inProgress: number
+      completed: number
+      escalated: number
+    }
   }>
-  summary: {
-    total: number
-    scheduled: number
-    inProgress: number
-    completed: number
-    escalated: number
-  }
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can view interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF') {
-      return { success: false, error: 'Only staff members can view interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can view interventions",
+      }
     }
 
     // Verify student exists
     const student = await db.student.findFirst({
-      where: { id: studentId, schoolId }
+      where: { id: studentId, schoolId },
     })
 
     if (!student) {
-      return { success: false, error: 'Student not found' }
+      return { success: false, error: "Student not found" }
     }
 
     const interventions = await db.attendanceIntervention.findMany({
       where: { schoolId, studentId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" },
     })
 
     // Get user names for initiators and assignees
-    const userIds = [...new Set([
-      ...interventions.map(i => i.initiatedBy),
-      ...interventions.filter(i => i.assignedTo).map(i => i.assignedTo as string)
-    ])]
+    const userIds = [
+      ...new Set([
+        ...interventions.map((i) => i.initiatedBy),
+        ...interventions
+          .filter((i) => i.assignedTo)
+          .map((i) => i.assignedTo as string),
+      ]),
+    ]
 
     const users = await db.user.findMany({
       where: { id: { in: userIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
 
-    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+    const userMap = new Map(
+      users.map((u) => [u.id, u.username || u.email || "Unknown"])
+    )
 
     // Calculate summary
     const summary = {
       total: interventions.length,
-      scheduled: interventions.filter(i => i.status === 'SCHEDULED').length,
-      inProgress: interventions.filter(i => i.status === 'IN_PROGRESS').length,
-      completed: interventions.filter(i => i.status === 'COMPLETED').length,
-      escalated: interventions.filter(i => i.status === 'ESCALATED').length,
+      scheduled: interventions.filter((i) => i.status === "SCHEDULED").length,
+      inProgress: interventions.filter((i) => i.status === "IN_PROGRESS")
+        .length,
+      completed: interventions.filter((i) => i.status === "COMPLETED").length,
+      escalated: interventions.filter((i) => i.status === "ESCALATED").length,
     }
 
     return {
       success: true,
       data: {
-        interventions: interventions.map(i => ({
+        interventions: interventions.map((i) => ({
           id: i.id,
           type: i.type,
           title: i.title,
@@ -2950,13 +3253,16 @@ export async function getStudentInterventions(studentId: string): Promise<Action
           createdAt: i.createdAt.toISOString(),
         })),
         summary,
-      }
+      },
     }
   } catch (error) {
-    console.error('[getStudentInterventions] Error:', error)
+    console.error("[getStudentInterventions] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get student interventions'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get student interventions",
     }
   }
 }
@@ -2968,40 +3274,49 @@ export async function getActiveInterventions(input?: {
   assignedTo?: string
   status?: InterventionStatusVal
   limit?: number
-}): Promise<ActionResponse<{
-  interventions: Array<{
-    id: string
-    studentId: string
-    studentName: string
-    className: string | null
-    type: string
-    title: string
-    status: string
-    priority: number
-    scheduledDate: string | null
-    assigneeName: string | null
-    riskLevel: AttendanceRiskLevel
+}): Promise<
+  ActionResponse<{
+    interventions: Array<{
+      id: string
+      studentId: string
+      studentName: string
+      className: string | null
+      type: string
+      title: string
+      status: string
+      priority: number
+      scheduledDate: string | null
+      assigneeName: string | null
+      riskLevel: AttendanceRiskLevel
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can view interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF') {
-      return { success: false, error: 'Only staff members can view interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can view interventions",
+      }
     }
 
     const where: Prisma.AttendanceInterventionWhereInput = {
       schoolId,
-      status: input?.status || { in: ['SCHEDULED', 'IN_PROGRESS'] },
+      status: input?.status || { in: ["SCHEDULED", "IN_PROGRESS"] },
       ...(input?.assignedTo && { assignedTo: input.assignedTo }),
     }
 
@@ -3015,43 +3330,51 @@ export async function getActiveInterventions(input?: {
             surname: true,
             studentClasses: {
               include: {
-                class: { select: { name: true } }
+                class: { select: { name: true } },
               },
-              take: 1
+              take: 1,
             },
             attendances: {
               where: {
                 date: {
-                  gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // Last 90 days
-                }
+                  gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Last 90 days
+                },
               },
-              select: { status: true }
-            }
-          }
-        }
+              select: { status: true },
+            },
+          },
+        },
       },
-      orderBy: [
-        { priority: 'desc' },
-        { scheduledDate: 'asc' }
-      ],
+      orderBy: [{ priority: "desc" }, { scheduledDate: "asc" }],
       take: input?.limit ?? 50,
     })
 
     // Get assignee names
-    const assigneeIds = [...new Set(interventions.filter(i => i.assignedTo).map(i => i.assignedTo as string))]
+    const assigneeIds = [
+      ...new Set(
+        interventions
+          .filter((i) => i.assignedTo)
+          .map((i) => i.assignedTo as string)
+      ),
+    ]
     const users = await db.user.findMany({
       where: { id: { in: assigneeIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
-    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+    const userMap = new Map(
+      users.map((u) => [u.id, u.username || u.email || "Unknown"])
+    )
 
     return {
       success: true,
       data: {
-        interventions: interventions.map(intervention => {
+        interventions: interventions.map((intervention) => {
           // Calculate risk level from attendance
           const totalDays = intervention.student.attendances.length
-          const presentDays = intervention.student.attendances.filter((a: { status: string }) => a.status === 'PRESENT' || a.status === 'LATE').length
+          const presentDays = intervention.student.attendances.filter(
+            (a: { status: string }) =>
+              a.status === "PRESENT" || a.status === "LATE"
+          ).length
           const rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 100
           const riskLevel = calculateRiskLevel(rate)
 
@@ -3059,23 +3382,29 @@ export async function getActiveInterventions(input?: {
             id: intervention.id,
             studentId: intervention.studentId,
             studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
-            className: intervention.student.studentClasses[0]?.class.name || null,
+            className:
+              intervention.student.studentClasses[0]?.class.name || null,
             type: intervention.type,
             title: intervention.title,
             status: intervention.status,
             priority: intervention.priority,
             scheduledDate: intervention.scheduledDate?.toISOString() || null,
-            assigneeName: intervention.assignedTo ? userMap.get(intervention.assignedTo) || null : null,
+            assigneeName: intervention.assignedTo
+              ? userMap.get(intervention.assignedTo) || null
+              : null,
             riskLevel,
           }
-        })
-      }
+        }),
+      },
     }
   } catch (error) {
-    console.error('[getActiveInterventions] Error:', error)
+    console.error("[getActiveInterventions] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get active interventions'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get active interventions",
     }
   }
 }
@@ -3093,45 +3422,55 @@ export async function getAllInterventions(input?: {
   search?: string
   page?: number
   limit?: number
-}): Promise<ActionResponse<{
-  interventions: Array<{
-    id: string
-    studentId: string
-    studentName: string
-    className: string | null
-    type: string
-    title: string
-    description: string | null
-    status: string
-    priority: number
-    scheduledDate: string | null
-    completedDate: string | null
-    assigneeName: string | null
-    outcome: string | null
-    createdAt: string
-    riskLevel: AttendanceRiskLevel
+}): Promise<
+  ActionResponse<{
+    interventions: Array<{
+      id: string
+      studentId: string
+      studentName: string
+      className: string | null
+      type: string
+      title: string
+      description: string | null
+      status: string
+      priority: number
+      scheduledDate: string | null
+      completedDate: string | null
+      assigneeName: string | null
+      outcome: string | null
+      createdAt: string
+      riskLevel: AttendanceRiskLevel
+    }>
+    pagination: {
+      total: number
+      page: number
+      limit: number
+      totalPages: number
+    }
   }>
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only staff can view interventions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER' && session.user.role !== 'STAFF' && session.user.role !== 'DEVELOPER') {
-      return { success: false, error: 'Only staff members can view interventions' }
+    if (
+      session.user.role !== "ADMIN" &&
+      session.user.role !== "TEACHER" &&
+      session.user.role !== "STAFF" &&
+      session.user.role !== "DEVELOPER"
+    ) {
+      return {
+        success: false,
+        error: "Only staff members can view interventions",
+      }
     }
 
     const page = input?.page ?? 1
@@ -3142,30 +3481,32 @@ export async function getAllInterventions(input?: {
     const where: Prisma.AttendanceInterventionWhereInput = {
       schoolId,
       ...(input?.status && {
-        status: Array.isArray(input.status) ? { in: input.status } : input.status
+        status: Array.isArray(input.status)
+          ? { in: input.status }
+          : input.status,
       }),
       ...(input?.type && { type: input.type }),
       ...(input?.studentId && { studentId: input.studentId }),
       ...(input?.assignedTo && { assignedTo: input.assignedTo }),
       ...(input?.dateFrom && {
-        createdAt: { gte: new Date(input.dateFrom) }
+        createdAt: { gte: new Date(input.dateFrom) },
       }),
       ...(input?.dateTo && {
-        createdAt: { lte: new Date(input.dateTo) }
+        createdAt: { lte: new Date(input.dateTo) },
       }),
       ...(input?.search && {
         OR: [
-          { title: { contains: input.search, mode: 'insensitive' } },
-          { description: { contains: input.search, mode: 'insensitive' } },
+          { title: { contains: input.search, mode: "insensitive" } },
+          { description: { contains: input.search, mode: "insensitive" } },
           {
             student: {
               OR: [
-                { givenName: { contains: input.search, mode: 'insensitive' } },
-                { surname: { contains: input.search, mode: 'insensitive' } },
-              ]
-            }
-          }
-        ]
+                { givenName: { contains: input.search, mode: "insensitive" } },
+                { surname: { contains: input.search, mode: "insensitive" } },
+              ],
+            },
+          },
+        ],
       }),
     }
 
@@ -3182,43 +3523,52 @@ export async function getAllInterventions(input?: {
             surname: true,
             studentClasses: {
               include: {
-                class: { select: { name: true } }
+                class: { select: { name: true } },
               },
-              take: 1
+              take: 1,
             },
             attendances: {
               where: {
                 date: {
-                  gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-                }
+                  gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+                },
               },
-              select: { status: true }
-            }
-          }
-        }
+              select: { status: true },
+            },
+          },
+        },
       },
-      orderBy: [
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ createdAt: "desc" }],
       skip,
       take: limit,
     })
 
     // Get assignee names
-    const assigneeIds = [...new Set(interventions.filter(i => i.assignedTo).map(i => i.assignedTo as string))]
+    const assigneeIds = [
+      ...new Set(
+        interventions
+          .filter((i) => i.assignedTo)
+          .map((i) => i.assignedTo as string)
+      ),
+    ]
     const users = await db.user.findMany({
       where: { id: { in: assigneeIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
-    const userMap = new Map(users.map(u => [u.id, u.username || u.email || 'Unknown']))
+    const userMap = new Map(
+      users.map((u) => [u.id, u.username || u.email || "Unknown"])
+    )
 
     return {
       success: true,
       data: {
-        interventions: interventions.map(intervention => {
+        interventions: interventions.map((intervention) => {
           // Calculate risk level from attendance
           const totalDays = intervention.student.attendances.length
-          const presentDays = intervention.student.attendances.filter((a: { status: string }) => a.status === 'PRESENT' || a.status === 'LATE').length
+          const presentDays = intervention.student.attendances.filter(
+            (a: { status: string }) =>
+              a.status === "PRESENT" || a.status === "LATE"
+          ).length
           const rate = totalDays > 0 ? (presentDays / totalDays) * 100 : 100
           const riskLevel = calculateRiskLevel(rate)
 
@@ -3226,7 +3576,8 @@ export async function getAllInterventions(input?: {
             id: intervention.id,
             studentId: intervention.studentId,
             studentName: `${intervention.student.givenName} ${intervention.student.surname}`,
-            className: intervention.student.studentClasses[0]?.class.name || null,
+            className:
+              intervention.student.studentClasses[0]?.class.name || null,
             type: intervention.type,
             title: intervention.title,
             description: intervention.description,
@@ -3234,7 +3585,9 @@ export async function getAllInterventions(input?: {
             priority: intervention.priority,
             scheduledDate: intervention.scheduledDate?.toISOString() || null,
             completedDate: intervention.completedDate?.toISOString() || null,
-            assigneeName: intervention.assignedTo ? userMap.get(intervention.assignedTo) || null : null,
+            assigneeName: intervention.assignedTo
+              ? userMap.get(intervention.assignedTo) || null
+              : null,
             outcome: intervention.outcome,
             createdAt: intervention.createdAt.toISOString(),
             riskLevel,
@@ -3245,14 +3598,15 @@ export async function getAllInterventions(input?: {
           page,
           limit,
           totalPages: Math.ceil(total / limit),
-        }
-      }
+        },
+      },
     }
   } catch (error) {
-    console.error('[getAllInterventions] Error:', error)
+    console.error("[getAllInterventions] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get interventions'
+      error:
+        error instanceof Error ? error.message : "Failed to get interventions",
     }
   }
 }
@@ -3260,27 +3614,32 @@ export async function getAllInterventions(input?: {
 /**
  * Get intervention statistics for reporting
  */
-export async function getInterventionStats(): Promise<ActionResponse<{
-  byType: Array<{ type: string; count: number }>
-  byStatus: Array<{ status: string; count: number }>
-  byMonth: Array<{ month: string; created: number; completed: number }>
-  successRate: number
-  averageDaysToComplete: number
-}>> {
+export async function getInterventionStats(): Promise<
+  ActionResponse<{
+    byType: Array<{ type: string; count: number }>
+    byStatus: Array<{ status: string; count: number }>
+    byMonth: Array<{ month: string; created: number; completed: number }>
+    successRate: number
+    averageDaysToComplete: number
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only admins can view stats
-    if (session.user.role !== 'ADMIN') {
-      return { success: false, error: 'Only administrators can view intervention statistics' }
+    if (session.user.role !== "ADMIN") {
+      return {
+        success: false,
+        error: "Only administrators can view intervention statistics",
+      }
     }
 
     // Get all interventions for this school
@@ -3291,40 +3650,50 @@ export async function getInterventionStats(): Promise<ActionResponse<{
         status: true,
         createdAt: true,
         completedDate: true,
-      }
+      },
     })
 
     // Group by type
     const byType = Object.entries(
-      interventions.reduce((acc, i) => {
-        acc[i.type] = (acc[i.type] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      interventions.reduce(
+        (acc, i) => {
+          acc[i.type] = (acc[i.type] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>
+      )
     ).map(([type, count]) => ({ type, count }))
 
     // Group by status
     const byStatus = Object.entries(
-      interventions.reduce((acc, i) => {
-        acc[i.status] = (acc[i.status] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      interventions.reduce(
+        (acc, i) => {
+          acc[i.status] = (acc[i.status] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>
+      )
     ).map(([status, count]) => ({ status, count }))
 
     // Group by month (last 12 months)
     const now = new Date()
-    const byMonth: Array<{ month: string; created: number; completed: number }> = []
+    const byMonth: Array<{
+      month: string
+      created: number
+      completed: number
+    }> = []
 
     for (let i = 11; i >= 0; i--) {
       const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
       const monthKey = monthDate.toISOString().slice(0, 7) // YYYY-MM
 
-      const created = interventions.filter(int => {
+      const created = interventions.filter((int) => {
         const d = new Date(int.createdAt)
         return d >= monthDate && d <= monthEnd
       }).length
 
-      const completed = interventions.filter(int => {
+      const completed = interventions.filter((int) => {
         if (!int.completedDate) return false
         const d = new Date(int.completedDate)
         return d >= monthDate && d <= monthEnd
@@ -3334,20 +3703,28 @@ export async function getInterventionStats(): Promise<ActionResponse<{
     }
 
     // Calculate success rate (completed vs total excluding scheduled)
-    const nonScheduled = interventions.filter(i => i.status !== 'SCHEDULED')
-    const completed = interventions.filter(i => i.status === 'COMPLETED')
-    const successRate = nonScheduled.length > 0 ? (completed.length / nonScheduled.length) * 100 : 0
+    const nonScheduled = interventions.filter((i) => i.status !== "SCHEDULED")
+    const completed = interventions.filter((i) => i.status === "COMPLETED")
+    const successRate =
+      nonScheduled.length > 0
+        ? (completed.length / nonScheduled.length) * 100
+        : 0
 
     // Calculate average days to complete
-    const completedWithDates = interventions.filter(i => i.completedDate)
+    const completedWithDates = interventions.filter((i) => i.completedDate)
     let totalDays = 0
-    completedWithDates.forEach(i => {
+    completedWithDates.forEach((i) => {
       if (i.completedDate) {
-        const days = Math.floor((new Date(i.completedDate).getTime() - new Date(i.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        const days = Math.floor(
+          (new Date(i.completedDate).getTime() -
+            new Date(i.createdAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
         totalDays += days
       }
     })
-    const averageDaysToComplete = completedWithDates.length > 0 ? totalDays / completedWithDates.length : 0
+    const averageDaysToComplete =
+      completedWithDates.length > 0 ? totalDays / completedWithDates.length : 0
 
     return {
       success: true,
@@ -3357,13 +3734,16 @@ export async function getInterventionStats(): Promise<ActionResponse<{
         byMonth,
         successRate: Math.round(successRate * 10) / 10,
         averageDaysToComplete: Math.round(averageDaysToComplete * 10) / 10,
-      }
+      },
     }
   } catch (error) {
-    console.error('[getInterventionStats] Error:', error)
+    console.error("[getInterventionStats] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get intervention statistics'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get intervention statistics",
     }
   }
 }
@@ -3371,68 +3751,70 @@ export async function getInterventionStats(): Promise<ActionResponse<{
 /**
  * Get staff members who can be assigned interventions
  */
-export async function getInterventionAssignees(): Promise<ActionResponse<{
-  assignees: Array<{
-    id: string
-    name: string
-    role: string
-    activeInterventions: number
+export async function getInterventionAssignees(): Promise<
+  ActionResponse<{
+    assignees: Array<{
+      id: string
+      name: string
+      role: string
+      activeInterventions: number
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Get all staff users for this school
     const staffUsers = await db.user.findMany({
       where: {
         schoolId,
-        role: { in: ['ADMIN', 'TEACHER', 'STAFF'] }
+        role: { in: ["ADMIN", "TEACHER", "STAFF"] },
       },
       select: {
         id: true,
         username: true,
         email: true,
         role: true,
-      }
+      },
     })
 
     // Get count of active interventions per assignee
     const activeCounts = await db.attendanceIntervention.groupBy({
-      by: ['assignedTo'],
+      by: ["assignedTo"],
       where: {
         schoolId,
-        status: { in: ['SCHEDULED', 'IN_PROGRESS'] },
-        assignedTo: { not: null }
+        status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+        assignedTo: { not: null },
       },
-      _count: true
+      _count: true,
     })
 
-    const countMap = new Map(activeCounts.map(c => [c.assignedTo, c._count]))
+    const countMap = new Map(activeCounts.map((c) => [c.assignedTo, c._count]))
 
     return {
       success: true,
       data: {
-        assignees: staffUsers.map(u => ({
+        assignees: staffUsers.map((u) => ({
           id: u.id,
-          name: u.username || u.email || 'Unknown',
+          name: u.username || u.email || "Unknown",
           role: u.role,
           activeInterventions: countMap.get(u.id) || 0,
-        }))
-      }
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getInterventionAssignees] Error:', error)
+    console.error("[getInterventionAssignees] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get assignees'
+      error: error instanceof Error ? error.message : "Failed to get assignees",
     }
   }
 }
@@ -3447,31 +3829,33 @@ export async function getInterventionAssignees(): Promise<ActionResponse<{
 export async function getPeriodsForClass(input: {
   classId: string
   date: string
-}): Promise<ActionResponse<{
-  periods: Array<{
-    periodId: string
-    periodName: string
-    startTime: string
-    endTime: string
-    timetableId: string
-    subjectName: string | null
-    teacherName: string | null
-    hasAttendance: boolean
+}): Promise<
+  ActionResponse<{
+    periods: Array<{
+      periodId: string
+      periodName: string
+      startTime: string
+      endTime: string
+      timetableId: string
+      subjectName: string | null
+      teacherName: string | null
+      hasAttendance: boolean
+    }>
+    settings: {
+      isPeriodBasedAttendance: boolean
+      schoolName: string
+    }
   }>
-  settings: {
-    isPeriodBasedAttendance: boolean
-    schoolName: string
-  }
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Get day of week from date
@@ -3483,7 +3867,7 @@ export async function getPeriodsForClass(input: {
       where: {
         schoolId,
         isActive: true,
-      }
+      },
     })
 
     if (!activeTerm) {
@@ -3493,9 +3877,9 @@ export async function getPeriodsForClass(input: {
           periods: [],
           settings: {
             isPeriodBasedAttendance: false,
-            schoolName: '',
-          }
-        }
+            schoolName: "",
+          },
+        },
       }
     }
 
@@ -3514,33 +3898,33 @@ export async function getPeriodsForClass(input: {
             name: true,
             startTime: true,
             endTime: true,
-          }
+          },
         },
         class: {
           include: {
             subject: {
-              select: { subjectName: true }
-            }
-          }
+              select: { subjectName: true },
+            },
+          },
         },
         teacher: {
           select: {
             givenName: true,
             surname: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
         period: {
-          startTime: 'asc'
-        }
-      }
+          startTime: "asc",
+        },
+      },
     })
 
     // Get school for settings
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { name: true }
+      select: { name: true },
     })
 
     // Check which periods already have attendance
@@ -3551,35 +3935,37 @@ export async function getPeriodsForClass(input: {
         date: dateObj,
         periodId: { not: null },
       },
-      select: { periodId: true }
+      select: { periodId: true },
     })
 
-    const attendedPeriods = new Set(existingAttendance.map(a => a.periodId))
+    const attendedPeriods = new Set(existingAttendance.map((a) => a.periodId))
 
     return {
       success: true,
       data: {
-        periods: timetableEntries.map(entry => ({
+        periods: timetableEntries.map((entry) => ({
           periodId: entry.periodId,
           periodName: entry.period.name,
           startTime: entry.period.startTime.toISOString(),
           endTime: entry.period.endTime.toISOString(),
           timetableId: entry.id,
           subjectName: entry.class.subject?.subjectName || null,
-          teacherName: entry.teacher ? `${entry.teacher.givenName} ${entry.teacher.surname}` : null,
+          teacherName: entry.teacher
+            ? `${entry.teacher.givenName} ${entry.teacher.surname}`
+            : null,
           hasAttendance: attendedPeriods.has(entry.periodId),
         })),
         settings: {
           isPeriodBasedAttendance: timetableEntries.length > 0,
-          schoolName: school?.name || '',
-        }
-      }
+          schoolName: school?.name || "",
+        },
+      },
     }
   } catch (error) {
-    console.error('[getPeriodsForClass] Error:', error)
+    console.error("[getPeriodsForClass] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get periods'
+      error: error instanceof Error ? error.message : "Failed to get periods",
     }
   }
 }
@@ -3587,31 +3973,33 @@ export async function getPeriodsForClass(input: {
 /**
  * Get current period based on time and timetable
  */
-export async function getCurrentPeriod(classId?: string): Promise<ActionResponse<{
-  currentPeriod: {
-    periodId: string
-    periodName: string
-    startTime: string
-    endTime: string
-    classId: string | null
-    className: string | null
-    subjectName: string | null
-  } | null
-  nextPeriod: {
-    periodId: string
-    periodName: string
-    startTime: string
-  } | null
-}>> {
+export async function getCurrentPeriod(classId?: string): Promise<
+  ActionResponse<{
+    currentPeriod: {
+      periodId: string
+      periodName: string
+      startTime: string
+      endTime: string
+      classId: string | null
+      className: string | null
+      subjectName: string | null
+    } | null
+    nextPeriod: {
+      periodId: string
+      periodName: string
+      startTime: string
+    } | null
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     const now = new Date()
@@ -3623,7 +4011,7 @@ export async function getCurrentPeriod(classId?: string): Promise<ActionResponse
       where: {
         schoolId,
         isActive: true,
-      }
+      },
     })
 
     if (!activeTerm) {
@@ -3631,8 +4019,8 @@ export async function getCurrentPeriod(classId?: string): Promise<ActionResponse
         success: true,
         data: {
           currentPeriod: null,
-          nextPeriod: null
-        }
+          nextPeriod: null,
+        },
       }
     }
 
@@ -3642,7 +4030,7 @@ export async function getCurrentPeriod(classId?: string): Promise<ActionResponse
         schoolId,
         yearId: activeTerm.yearId,
       },
-      orderBy: { startTime: 'asc' }
+      orderBy: { startTime: "asc" },
     })
 
     // Find current period
@@ -3670,10 +4058,10 @@ export async function getCurrentPeriod(classId?: string): Promise<ActionResponse
               class: {
                 select: {
                   name: true,
-                  subject: { select: { subjectName: true } }
-                }
-              }
-            }
+                  subject: { select: { subjectName: true } },
+                },
+              },
+            },
           })
 
           if (timetableEntry) {
@@ -3721,14 +4109,15 @@ export async function getCurrentPeriod(classId?: string): Promise<ActionResponse
       success: true,
       data: {
         currentPeriod,
-        nextPeriod
-      }
+        nextPeriod,
+      },
     }
   } catch (error) {
-    console.error('[getCurrentPeriod] Error:', error)
+    console.error("[getCurrentPeriod] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get current period'
+      error:
+        error instanceof Error ? error.message : "Failed to get current period",
     }
   }
 }
@@ -3743,42 +4132,47 @@ export async function markPeriodAttendance(input: {
   timetableId?: string
   records: Array<{
     studentId: string
-    status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED'
+    status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED"
     notes?: string
     checkInTime?: string
   }>
-}): Promise<ActionResponse<{
-  marked: number
-  updated: number
-}>> {
+}): Promise<
+  ActionResponse<{
+    marked: number
+    updated: number
+  }>
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Only teachers and admins can mark attendance
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      return { success: false, error: 'Only teachers and administrators can mark attendance' }
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      return {
+        success: false,
+        error: "Only teachers and administrators can mark attendance",
+      }
     }
 
     // Verify class exists
     const classRecord = await db.class.findFirst({
-      where: { id: input.classId, schoolId }
+      where: { id: input.classId, schoolId },
     })
 
     if (!classRecord) {
-      return { success: false, error: 'Class not found' }
+      return { success: false, error: "Class not found" }
     }
 
     // Get period name for caching
     const period = await db.period.findFirst({
-      where: { id: input.periodId, schoolId }
+      where: { id: input.periodId, schoolId },
     })
 
     const dateObj = new Date(input.date)
@@ -3794,7 +4188,7 @@ export async function markPeriodAttendance(input: {
           classId: input.classId,
           date: dateObj,
           periodId: input.periodId,
-        }
+        },
       })
 
       if (existing) {
@@ -3804,10 +4198,12 @@ export async function markPeriodAttendance(input: {
           data: {
             status: record.status,
             notes: record.notes,
-            checkInTime: record.checkInTime ? new Date(record.checkInTime) : null,
+            checkInTime: record.checkInTime
+              ? new Date(record.checkInTime)
+              : null,
             markedBy: session.user.id,
             markedAt: new Date(),
-          }
+          },
         })
         updated++
       } else {
@@ -3824,25 +4220,30 @@ export async function markPeriodAttendance(input: {
             periodName: period?.name,
             timetableId: input.timetableId,
             markedBy: session.user.id,
-            checkInTime: record.checkInTime ? new Date(record.checkInTime) : null,
-            method: 'MANUAL',
-          }
+            checkInTime: record.checkInTime
+              ? new Date(record.checkInTime)
+              : null,
+            method: "MANUAL",
+          },
         })
         marked++
       }
     }
 
-    revalidatePath('/attendance')
+    revalidatePath("/attendance")
 
     return {
       success: true,
-      data: { marked, updated }
+      data: { marked, updated },
     }
   } catch (error) {
-    console.error('[markPeriodAttendance] Error:', error)
+    console.error("[markPeriodAttendance] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to mark period attendance'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to mark period attendance",
     }
   }
 }
@@ -3854,40 +4255,44 @@ export async function getPeriodAttendanceAnalytics(input?: {
   classId?: string
   dateFrom?: string
   dateTo?: string
-}): Promise<ActionResponse<{
-  byPeriod: Array<{
-    periodId: string
-    periodName: string
-    totalRecords: number
-    presentCount: number
-    absentCount: number
-    lateCount: number
-    attendanceRate: number
+}): Promise<
+  ActionResponse<{
+    byPeriod: Array<{
+      periodId: string
+      periodName: string
+      totalRecords: number
+      presentCount: number
+      absentCount: number
+      lateCount: number
+      attendanceRate: number
+    }>
+    worstPeriods: Array<{
+      periodName: string
+      attendanceRate: number
+      absentCount: number
+    }>
+    insights: Array<{
+      type: "warning" | "info"
+      message: string
+      periodName?: string
+    }>
   }>
-  worstPeriods: Array<{
-    periodName: string
-    attendanceRate: number
-    absentCount: number
-  }>
-  insights: Array<{
-    type: 'warning' | 'info'
-    message: string
-    periodName?: string
-  }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Default date range: last 30 days
-    const dateFrom = input?.dateFrom ? new Date(input.dateFrom) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const dateFrom = input?.dateFrom
+      ? new Date(input.dateFrom)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     const dateTo = input?.dateTo ? new Date(input.dateTo) : new Date()
 
     const where: Prisma.AttendanceWhereInput = {
@@ -3907,24 +4312,27 @@ export async function getPeriodAttendanceAnalytics(input?: {
         periodId: true,
         periodName: true,
         status: true,
-      }
+      },
     })
 
     // Group by period
-    const periodStats = new Map<string, {
-      periodName: string
-      totalRecords: number
-      presentCount: number
-      absentCount: number
-      lateCount: number
-    }>()
+    const periodStats = new Map<
+      string,
+      {
+        periodName: string
+        totalRecords: number
+        presentCount: number
+        absentCount: number
+        lateCount: number
+      }
+    >()
 
     for (const a of attendances) {
       if (!a.periodId) continue
 
       if (!periodStats.has(a.periodId)) {
         periodStats.set(a.periodId, {
-          periodName: a.periodName || 'Unknown',
+          periodName: a.periodName || "Unknown",
           totalRecords: 0,
           presentCount: 0,
           absentCount: 0,
@@ -3935,46 +4343,56 @@ export async function getPeriodAttendanceAnalytics(input?: {
       const stats = periodStats.get(a.periodId)!
       stats.totalRecords++
 
-      if (a.status === 'PRESENT') {
+      if (a.status === "PRESENT") {
         stats.presentCount++
-      } else if (a.status === 'ABSENT') {
+      } else if (a.status === "ABSENT") {
         stats.absentCount++
-      } else if (a.status === 'LATE') {
+      } else if (a.status === "LATE") {
         stats.lateCount++
       }
     }
 
     // Convert to array with attendance rates
-    const byPeriod = Array.from(periodStats.entries()).map(([periodId, stats]) => ({
-      periodId,
-      periodName: stats.periodName,
-      totalRecords: stats.totalRecords,
-      presentCount: stats.presentCount,
-      absentCount: stats.absentCount,
-      lateCount: stats.lateCount,
-      attendanceRate: stats.totalRecords > 0
-        ? Math.round(((stats.presentCount + stats.lateCount) / stats.totalRecords) * 1000) / 10
-        : 100,
-    }))
+    const byPeriod = Array.from(periodStats.entries()).map(
+      ([periodId, stats]) => ({
+        periodId,
+        periodName: stats.periodName,
+        totalRecords: stats.totalRecords,
+        presentCount: stats.presentCount,
+        absentCount: stats.absentCount,
+        lateCount: stats.lateCount,
+        attendanceRate:
+          stats.totalRecords > 0
+            ? Math.round(
+                ((stats.presentCount + stats.lateCount) / stats.totalRecords) *
+                  1000
+              ) / 10
+            : 100,
+      })
+    )
 
     // Sort by attendance rate (worst first)
     const worstPeriods = [...byPeriod]
       .sort((a, b) => a.attendanceRate - b.attendanceRate)
       .slice(0, 3)
-      .map(p => ({
+      .map((p) => ({
         periodName: p.periodName,
         attendanceRate: p.attendanceRate,
         absentCount: p.absentCount,
       }))
 
     // Generate insights
-    const insights: Array<{ type: 'warning' | 'info'; message: string; periodName?: string }> = []
+    const insights: Array<{
+      type: "warning" | "info"
+      message: string
+      periodName?: string
+    }> = []
 
     // Check for periods with high absence rates
     for (const period of byPeriod) {
       if (period.attendanceRate < 80 && period.totalRecords >= 10) {
         insights.push({
-          type: 'warning',
+          type: "warning",
           message: `${period.periodName} has a ${period.attendanceRate}% attendance rate - consider investigating`,
           periodName: period.periodName,
         })
@@ -3985,18 +4403,23 @@ export async function getPeriodAttendanceAnalytics(input?: {
     const firstPeriods = byPeriod.slice(0, Math.ceil(byPeriod.length / 2))
     const lastPeriods = byPeriod.slice(Math.ceil(byPeriod.length / 2))
 
-    const firstHalfRate = firstPeriods.length > 0
-      ? firstPeriods.reduce((sum, p) => sum + p.attendanceRate, 0) / firstPeriods.length
-      : 100
+    const firstHalfRate =
+      firstPeriods.length > 0
+        ? firstPeriods.reduce((sum, p) => sum + p.attendanceRate, 0) /
+          firstPeriods.length
+        : 100
 
-    const lastHalfRate = lastPeriods.length > 0
-      ? lastPeriods.reduce((sum, p) => sum + p.attendanceRate, 0) / lastPeriods.length
-      : 100
+    const lastHalfRate =
+      lastPeriods.length > 0
+        ? lastPeriods.reduce((sum, p) => sum + p.attendanceRate, 0) /
+          lastPeriods.length
+        : 100
 
     if (firstHalfRate - lastHalfRate > 10) {
       insights.push({
-        type: 'info',
-        message: 'Attendance drops significantly in later periods - students may be leaving early',
+        type: "info",
+        message:
+          "Attendance drops significantly in later periods - students may be leaving early",
       })
     }
 
@@ -4006,13 +4429,16 @@ export async function getPeriodAttendanceAnalytics(input?: {
         byPeriod,
         worstPeriods,
         insights,
-      }
+      },
     }
   } catch (error) {
-    console.error('[getPeriodAttendanceAnalytics] Error:', error)
+    console.error("[getPeriodAttendanceAnalytics] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get period analytics'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get period analytics",
     }
   }
 }
@@ -4023,48 +4449,50 @@ export async function getPeriodAttendanceAnalytics(input?: {
 export async function getStudentDayAttendance(input: {
   studentId: string
   date: string
-}): Promise<ActionResponse<{
-  student: {
-    id: string
-    name: string
-  }
-  periods: Array<{
-    periodId: string | null
-    periodName: string
-    className: string
-    subjectName: string | null
-    status: string
-    checkInTime: string | null
-    notes: string | null
-    markedAt: string
-    markedBy: string | null
+}): Promise<
+  ActionResponse<{
+    student: {
+      id: string
+      name: string
+    }
+    periods: Array<{
+      periodId: string | null
+      periodName: string
+      className: string
+      subjectName: string | null
+      status: string
+      checkInTime: string | null
+      notes: string | null
+      markedAt: string
+      markedBy: string | null
+    }>
+    summary: {
+      totalPeriods: number
+      present: number
+      absent: number
+      late: number
+    }
   }>
-  summary: {
-    totalPeriods: number
-    present: number
-    absent: number
-    late: number
-  }
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     // Get student
     const student = await db.student.findFirst({
       where: { id: input.studentId, schoolId },
-      select: { id: true, givenName: true, surname: true }
+      select: { id: true, givenName: true, surname: true },
     })
 
     if (!student) {
-      return { success: false, error: 'Student not found' }
+      return { success: false, error: "Student not found" }
     }
 
     // Get all attendance records for the student on this day
@@ -4080,30 +4508,33 @@ export async function getStudentDayAttendance(input: {
         class: {
           select: {
             name: true,
-            subject: { select: { subjectName: true } }
-          }
-        }
+            subject: { select: { subjectName: true } },
+          },
+        },
       },
-      orderBy: [
-        { periodName: 'asc' },
-        { markedAt: 'asc' }
-      ]
+      orderBy: [{ periodName: "asc" }, { markedAt: "asc" }],
     })
 
     // Get marker names
-    const markerIds = [...new Set(attendances.filter(a => a.markedBy).map(a => a.markedBy as string))]
+    const markerIds = [
+      ...new Set(
+        attendances.filter((a) => a.markedBy).map((a) => a.markedBy as string)
+      ),
+    ]
     const markers = await db.user.findMany({
       where: { id: { in: markerIds } },
-      select: { id: true, username: true, email: true }
+      select: { id: true, username: true, email: true },
     })
-    const markerMap = new Map(markers.map(m => [m.id, m.username || m.email || 'Unknown']))
+    const markerMap = new Map(
+      markers.map((m) => [m.id, m.username || m.email || "Unknown"])
+    )
 
     // Calculate summary
     const summary = {
       totalPeriods: attendances.length,
-      present: attendances.filter(a => a.status === 'PRESENT').length,
-      absent: attendances.filter(a => a.status === 'ABSENT').length,
-      late: attendances.filter(a => a.status === 'LATE').length,
+      present: attendances.filter((a) => a.status === "PRESENT").length,
+      absent: attendances.filter((a) => a.status === "ABSENT").length,
+      late: attendances.filter((a) => a.status === "LATE").length,
     }
 
     return {
@@ -4113,9 +4544,9 @@ export async function getStudentDayAttendance(input: {
           id: student.id,
           name: `${student.givenName} ${student.surname}`,
         },
-        periods: attendances.map(a => ({
+        periods: attendances.map((a) => ({
           periodId: a.periodId,
-          periodName: a.periodName || 'All Day',
+          periodName: a.periodName || "All Day",
           className: a.class.name,
           subjectName: a.class.subject?.subjectName || null,
           status: a.status,
@@ -4125,13 +4556,16 @@ export async function getStudentDayAttendance(input: {
           markedBy: a.markedBy ? markerMap.get(a.markedBy) || null : null,
         })),
         summary,
-      }
+      },
     }
   } catch (error) {
-    console.error('[getStudentDayAttendance] Error:', error)
+    console.error("[getStudentDayAttendance] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get student day attendance'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get student day attendance",
     }
   }
 }
@@ -4144,50 +4578,60 @@ export async function getStudentDayAttendance(input: {
  * Get comprehensive today's attendance dashboard
  * Returns everything needed for actionable overview
  */
-export async function getTodaysDashboard(): Promise<ActionResponse<{
-  today: {
-    date: string
-    dayName: string
-  }
-  stats: {
-    totalStudents: number
-    markedToday: number
-    present: number
-    absent: number
-    late: number
-    attendanceRate: number
-  }
-  unmarkedClasses: Array<{
-    id: string
-    name: string
-    studentCount: number
-    scheduledTime?: string
+export async function getTodaysDashboard(): Promise<
+  ActionResponse<{
+    today: {
+      date: string
+      dayName: string
+    }
+    stats: {
+      totalStudents: number
+      markedToday: number
+      present: number
+      absent: number
+      late: number
+      attendanceRate: number
+    }
+    unmarkedClasses: Array<{
+      id: string
+      name: string
+      studentCount: number
+      scheduledTime?: string
+    }>
+    followUpNeeded: Array<{
+      studentId: string
+      studentName: string
+      className: string
+      issue: "consecutive_absence" | "chronic" | "unexcused_pending"
+      details: string
+      priority: "high" | "medium" | "low"
+    }>
+    recentActivity: Array<{
+      id: string
+      studentName: string
+      className: string
+      status: string
+      time: string
+    }>
   }>
-  followUpNeeded: Array<{
-    studentId: string
-    studentName: string
-    className: string
-    issue: 'consecutive_absence' | 'chronic' | 'unexcused_pending'
-    details: string
-    priority: 'high' | 'medium' | 'low'
-  }>
-  recentActivity: Array<{
-    id: string
-    studentName: string
-    className: string
-    status: string
-    time: string
-  }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ]
 
     // Get all classes with student counts
     const classes = await db.class.findMany({
@@ -4195,8 +4639,8 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
       select: {
         id: true,
         name: true,
-        _count: { select: { studentClasses: true } }
-      }
+        _count: { select: { studentClasses: true } },
+      },
     })
 
     // Get today's attendance records
@@ -4212,20 +4656,27 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
         status: true,
         markedAt: true,
         student: { select: { givenName: true, surname: true } },
-        class: { select: { name: true } }
+        class: { select: { name: true } },
       },
-      orderBy: { markedAt: 'desc' }
+      orderBy: { markedAt: "desc" },
     })
 
     // Calculate stats
-    const markedClassIds = new Set(todayAttendance.map(a => a.classId))
-    const unmarkedClasses = classes.filter(c => !markedClassIds.has(c.id) && c._count.studentClasses > 0)
+    const markedClassIds = new Set(todayAttendance.map((a) => a.classId))
+    const unmarkedClasses = classes.filter(
+      (c) => !markedClassIds.has(c.id) && c._count.studentClasses > 0
+    )
 
-    const totalStudents = classes.reduce((sum, c) => sum + c._count.studentClasses, 0)
-    const uniqueStudentsMarked = new Set(todayAttendance.map(a => a.studentId)).size
-    const present = todayAttendance.filter(a => a.status === 'PRESENT').length
-    const absent = todayAttendance.filter(a => a.status === 'ABSENT').length
-    const late = todayAttendance.filter(a => a.status === 'LATE').length
+    const totalStudents = classes.reduce(
+      (sum, c) => sum + c._count.studentClasses,
+      0
+    )
+    const uniqueStudentsMarked = new Set(
+      todayAttendance.map((a) => a.studentId)
+    ).size
+    const present = todayAttendance.filter((a) => a.status === "PRESENT").length
+    const absent = todayAttendance.filter((a) => a.status === "ABSENT").length
+    const late = todayAttendance.filter((a) => a.status === "LATE").length
 
     // Get students with consecutive absences (3+ days)
     const threeDaysAgo = new Date(today)
@@ -4234,27 +4685,30 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
     const recentAbsences = await db.attendance.findMany({
       where: {
         schoolId,
-        status: 'ABSENT',
-        date: { gte: threeDaysAgo, lte: today }
+        status: "ABSENT",
+        date: { gte: threeDaysAgo, lte: today },
       },
       select: {
         studentId: true,
         date: true,
         student: { select: { givenName: true, surname: true } },
-        class: { select: { name: true } }
+        class: { select: { name: true } },
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: "desc" },
     })
 
     // Group absences by student
-    const studentAbsences = new Map<string, { name: string; className: string; dates: Date[] }>()
+    const studentAbsences = new Map<
+      string,
+      { name: string; className: string; dates: Date[] }
+    >()
     for (const absence of recentAbsences) {
       const key = absence.studentId
       if (!studentAbsences.has(key)) {
         studentAbsences.set(key, {
           name: `${absence.student.givenName} ${absence.student.surname}`,
           className: absence.class.name,
-          dates: []
+          dates: [],
         })
       }
       studentAbsences.get(key)!.dates.push(absence.date)
@@ -4265,9 +4719,9 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
       studentId: string
       studentName: string
       className: string
-      issue: 'consecutive_absence' | 'chronic' | 'unexcused_pending'
+      issue: "consecutive_absence" | "chronic" | "unexcused_pending"
       details: string
-      priority: 'high' | 'medium' | 'low'
+      priority: "high" | "medium" | "low"
     }> = []
 
     for (const [studentId, data] of studentAbsences) {
@@ -4275,7 +4729,9 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
       const sortedDates = data.dates.sort((a, b) => b.getTime() - a.getTime())
       let consecutiveCount = 1
       for (let i = 1; i < sortedDates.length; i++) {
-        const diff = (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) / (1000 * 60 * 60 * 24)
+        const diff =
+          (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) /
+          (1000 * 60 * 60 * 24)
         if (diff <= 1) {
           consecutiveCount++
         } else {
@@ -4288,28 +4744,31 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
           studentId,
           studentName: data.name,
           className: data.className,
-          issue: 'consecutive_absence',
+          issue: "consecutive_absence",
           details: `Absent ${consecutiveCount} consecutive days`,
-          priority: consecutiveCount >= 5 ? 'high' : 'medium'
+          priority: consecutiveCount >= 5 ? "high" : "medium",
         })
       }
     }
 
     // Get recent activity (last 10)
-    const recentActivity = todayAttendance.slice(0, 10).map(a => ({
+    const recentActivity = todayAttendance.slice(0, 10).map((a) => ({
       id: a.id,
       studentName: `${a.student.givenName} ${a.student.surname}`,
       className: a.class.name,
       status: a.status,
-      time: a.markedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      time: a.markedAt.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     }))
 
     return {
       success: true,
       data: {
         today: {
-          date: today.toISOString().split('T')[0],
-          dayName: dayNames[today.getDay()]
+          date: today.toISOString().split("T")[0],
+          dayName: dayNames[today.getDay()],
         },
         stats: {
           totalStudents,
@@ -4317,22 +4776,28 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
           present,
           absent,
           late,
-          attendanceRate: totalStudents > 0 ? Math.round((present / Math.max(uniqueStudentsMarked, 1)) * 100) : 0
+          attendanceRate:
+            totalStudents > 0
+              ? Math.round((present / Math.max(uniqueStudentsMarked, 1)) * 100)
+              : 0,
         },
-        unmarkedClasses: unmarkedClasses.map(c => ({
+        unmarkedClasses: unmarkedClasses.map((c) => ({
           id: c.id,
           name: c.name,
-          studentCount: c._count.studentClasses
+          studentCount: c._count.studentClasses,
         })),
         followUpNeeded: followUpNeeded.slice(0, 5), // Top 5 priority
-        recentActivity
-      }
+        recentActivity,
+      },
     }
   } catch (error) {
-    console.error('[getTodaysDashboard] Error:', error)
+    console.error("[getTodaysDashboard] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get today\'s dashboard'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get today's dashboard",
     }
   }
 }
@@ -4340,26 +4805,28 @@ export async function getTodaysDashboard(): Promise<ActionResponse<{
 /**
  * Get teacher's classes for today based on timetable
  */
-export async function getTeacherClassesToday(): Promise<ActionResponse<{
-  classes: Array<{
-    id: string
-    name: string
-    studentCount: number
-    period?: string
-    time?: string
-    isMarked: boolean
-    markedCount: number
+export async function getTeacherClassesToday(): Promise<
+  ActionResponse<{
+    classes: Array<{
+      id: string
+      name: string
+      studentCount: number
+      period?: string
+      time?: string
+      isMarked: boolean
+      markedCount: number
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     const today = new Date()
@@ -4374,10 +4841,10 @@ export async function getTeacherClassesToday(): Promise<ActionResponse<{
           select: {
             id: true,
             name: true,
-            _count: { select: { studentClasses: true } }
-          }
-        }
-      }
+            _count: { select: { studentClasses: true } },
+          },
+        },
+      },
     })
 
     if (!teacher) {
@@ -4387,30 +4854,32 @@ export async function getTeacherClassesToday(): Promise<ActionResponse<{
         select: {
           id: true,
           name: true,
-          _count: { select: { studentClasses: true } }
-        }
+          _count: { select: { studentClasses: true } },
+        },
       })
 
       // Get today's attendance counts per class
       const attendanceCounts = await db.attendance.groupBy({
-        by: ['classId'],
+        by: ["classId"],
         where: { schoolId, date: today },
-        _count: true
+        _count: true,
       })
 
-      const countsMap = new Map(attendanceCounts.map(a => [a.classId, a._count]))
+      const countsMap = new Map(
+        attendanceCounts.map((a) => [a.classId, a._count])
+      )
 
       return {
         success: true,
         data: {
-          classes: allClasses.map(c => ({
+          classes: allClasses.map((c) => ({
             id: c.id,
             name: c.name,
             studentCount: c._count.studentClasses,
             isMarked: (countsMap.get(c.id) || 0) > 0,
-            markedCount: countsMap.get(c.id) || 0
-          }))
-        }
+            markedCount: countsMap.get(c.id) || 0,
+          })),
+        },
       }
     }
 
@@ -4418,32 +4887,37 @@ export async function getTeacherClassesToday(): Promise<ActionResponse<{
     const teacherClasses = teacher.classes
 
     // Get today's attendance counts per class
-    const classIds = teacherClasses.map(c => c.id)
+    const classIds = teacherClasses.map((c) => c.id)
     const attendanceCounts = await db.attendance.groupBy({
-      by: ['classId'],
+      by: ["classId"],
       where: { schoolId, date: today, classId: { in: classIds } },
-      _count: true
+      _count: true,
     })
 
-    const countsMap = new Map(attendanceCounts.map(a => [a.classId, a._count]))
+    const countsMap = new Map(
+      attendanceCounts.map((a) => [a.classId, a._count])
+    )
 
     return {
       success: true,
       data: {
-        classes: teacherClasses.map(c => ({
+        classes: teacherClasses.map((c) => ({
           id: c.id,
           name: c.name,
           studentCount: c._count.studentClasses,
           isMarked: (countsMap.get(c.id) || 0) > 0,
-          markedCount: countsMap.get(c.id) || 0
-        }))
-      }
+          markedCount: countsMap.get(c.id) || 0,
+        })),
+      },
     }
   } catch (error) {
-    console.error('[getTeacherClassesToday] Error:', error)
+    console.error("[getTeacherClassesToday] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get teacher classes'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get teacher classes",
     }
   }
 }
@@ -4455,23 +4929,25 @@ export async function getTeacherClassesToday(): Promise<ActionResponse<{
 export async function quickMarkAllPresent(input: {
   classId: string
   date?: string
-}): Promise<ActionResponse<{
-  markedCount: number
-  students: Array<{
-    id: string
-    name: string
-    status: 'PRESENT'
+}): Promise<
+  ActionResponse<{
+    markedCount: number
+    students: Array<{
+      id: string
+      name: string
+      status: "PRESENT"
+    }>
   }>
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Authentication required' }
+      return { success: false, error: "Authentication required" }
     }
 
     const date = input.date ? new Date(input.date) : new Date()
@@ -4488,20 +4964,20 @@ export async function quickMarkAllPresent(input: {
               select: {
                 id: true,
                 givenName: true,
-                surname: true
-              }
-            }
-          }
-        }
-      }
+                surname: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     if (!classData) {
-      return { success: false, error: 'Class not found' }
+      return { success: false, error: "Class not found" }
     }
 
     // Extract students from StudentClass join table
-    const students = classData.studentClasses.map(sc => sc.student)
+    const students = classData.studentClasses.map((sc) => sc.student)
 
     // Mark all students present
     const now = new Date()
@@ -4515,8 +4991,8 @@ export async function quickMarkAllPresent(input: {
           studentId: student.id,
           classId: input.classId,
           date,
-          periodId: null
-        }
+          periodId: null,
+        },
       })
 
       if (existing) {
@@ -4524,10 +5000,10 @@ export async function quickMarkAllPresent(input: {
         await db.attendance.update({
           where: { id: existing.id },
           data: {
-            status: 'PRESENT',
+            status: "PRESENT",
             markedBy: session.user.id,
-            markedAt: now
-          }
+            markedAt: now,
+          },
         })
       } else {
         // Create new
@@ -4537,36 +5013,37 @@ export async function quickMarkAllPresent(input: {
             studentId: student.id,
             classId: input.classId,
             date,
-            status: 'PRESENT',
-            method: 'MANUAL',
+            status: "PRESENT",
+            method: "MANUAL",
             markedBy: session.user.id,
             markedAt: now,
-            checkInTime: now
-          }
+            checkInTime: now,
+          },
         })
       }
 
       results.push({
         id: student.id,
         name: `${student.givenName} ${student.surname}`,
-        status: 'PRESENT' as const
+        status: "PRESENT" as const,
       })
     }
 
-    revalidatePath('/attendance')
+    revalidatePath("/attendance")
 
     return {
       success: true,
       data: {
         markedCount: results.length,
-        students: results
-      }
+        students: results,
+      },
     }
   } catch (error) {
-    console.error('[quickMarkAllPresent] Error:', error)
+    console.error("[quickMarkAllPresent] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to mark attendance'
+      error:
+        error instanceof Error ? error.message : "Failed to mark attendance",
     }
   }
 }
@@ -4577,28 +5054,28 @@ export async function quickMarkAllPresent(input: {
  * - Low attendance rate (<80%)
  * - Pending unexcused absences
  */
-export async function getFollowUpStudents(input?: {
-  limit?: number
-}): Promise<ActionResponse<{
-  students: Array<{
-    studentId: string
-    studentName: string
-    className: string
-    issue: 'consecutive_absence' | 'low_attendance' | 'unexcused_pending'
-    severity: 'critical' | 'warning' | 'info'
-    details: string
-    actionUrl?: string
+export async function getFollowUpStudents(input?: { limit?: number }): Promise<
+  ActionResponse<{
+    students: Array<{
+      studentId: string
+      studentName: string
+      className: string
+      issue: "consecutive_absence" | "low_attendance" | "unexcused_pending"
+      severity: "critical" | "warning" | "info"
+      details: string
+      actionUrl?: string
+    }>
+    summary: {
+      critical: number
+      warning: number
+      info: number
+    }
   }>
-  summary: {
-    critical: number
-    warning: number
-    info: number
-  }
-}>> {
+> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: 'Missing school context' }
+      return { success: false, error: "Missing school context" }
     }
 
     const limit = input?.limit || 20
@@ -4609,8 +5086,8 @@ export async function getFollowUpStudents(input?: {
       studentId: string
       studentName: string
       className: string
-      issue: 'consecutive_absence' | 'low_attendance' | 'unexcused_pending'
-      severity: 'critical' | 'warning' | 'info'
+      issue: "consecutive_absence" | "low_attendance" | "unexcused_pending"
+      severity: "critical" | "warning" | "info"
       details: string
       actionUrl?: string
     }> = []
@@ -4622,26 +5099,29 @@ export async function getFollowUpStudents(input?: {
     const recentAbsences = await db.attendance.findMany({
       where: {
         schoolId,
-        status: 'ABSENT',
-        date: { gte: sevenDaysAgo, lte: today }
+        status: "ABSENT",
+        date: { gte: sevenDaysAgo, lte: today },
       },
       select: {
         studentId: true,
         date: true,
         student: { select: { givenName: true, surname: true } },
-        class: { select: { name: true } }
+        class: { select: { name: true } },
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: "desc" },
     })
 
     // Group and find consecutive absences
-    const studentAbsenceMap = new Map<string, { name: string; className: string; dates: Date[] }>()
+    const studentAbsenceMap = new Map<
+      string,
+      { name: string; className: string; dates: Date[] }
+    >()
     for (const absence of recentAbsences) {
       if (!studentAbsenceMap.has(absence.studentId)) {
         studentAbsenceMap.set(absence.studentId, {
           name: `${absence.student.givenName} ${absence.student.surname}`,
           className: absence.class.name,
-          dates: []
+          dates: [],
         })
       }
       studentAbsenceMap.get(absence.studentId)!.dates.push(absence.date)
@@ -4652,7 +5132,10 @@ export async function getFollowUpStudents(input?: {
       let consecutive = 1
 
       for (let i = 1; i < sortedDates.length; i++) {
-        const diffDays = Math.round((sortedDates[i - 1].getTime() - sortedDates[i].getTime()) / (1000 * 60 * 60 * 24))
+        const diffDays = Math.round(
+          (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
         if (diffDays <= 1) {
           consecutive++
         } else {
@@ -4665,10 +5148,10 @@ export async function getFollowUpStudents(input?: {
           studentId,
           studentName: data.name,
           className: data.className,
-          issue: 'consecutive_absence',
-          severity: consecutive >= 5 ? 'critical' : 'warning',
+          issue: "consecutive_absence",
+          severity: consecutive >= 5 ? "critical" : "warning",
           details: `Absent ${consecutive} consecutive days`,
-          actionUrl: `/students/${studentId}`
+          actionUrl: `/students/${studentId}`,
         })
       }
     }
@@ -4677,7 +5160,7 @@ export async function getFollowUpStudents(input?: {
     const pendingExcuses = await db.attendanceExcuse.findMany({
       where: {
         schoolId,
-        status: 'PENDING'
+        status: "PENDING",
       },
       select: {
         id: true,
@@ -4686,11 +5169,11 @@ export async function getFollowUpStudents(input?: {
             studentId: true,
             date: true,
             student: { select: { givenName: true, surname: true } },
-            class: { select: { name: true } }
-          }
-        }
+            class: { select: { name: true } },
+          },
+        },
       },
-      take: 10
+      take: 10,
     })
 
     for (const excuse of pendingExcuses) {
@@ -4698,35 +5181,40 @@ export async function getFollowUpStudents(input?: {
         studentId: excuse.attendance.studentId,
         studentName: `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`,
         className: excuse.attendance.class.name,
-        issue: 'unexcused_pending',
-        severity: 'info',
+        issue: "unexcused_pending",
+        severity: "info",
         details: `Excuse pending review since ${excuse.attendance.date.toLocaleDateString()}`,
-        actionUrl: `/attendance/excuses/${excuse.id}`
+        actionUrl: `/attendance/excuses/${excuse.id}`,
       })
     }
 
     // Sort by severity and limit
     const severityOrder = { critical: 0, warning: 1, info: 2 }
-    results.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+    results.sort(
+      (a, b) => severityOrder[a.severity] - severityOrder[b.severity]
+    )
 
     const summary = {
-      critical: results.filter(r => r.severity === 'critical').length,
-      warning: results.filter(r => r.severity === 'warning').length,
-      info: results.filter(r => r.severity === 'info').length
+      critical: results.filter((r) => r.severity === "critical").length,
+      warning: results.filter((r) => r.severity === "warning").length,
+      info: results.filter((r) => r.severity === "info").length,
     }
 
     return {
       success: true,
       data: {
         students: results.slice(0, limit),
-        summary
-      }
+        summary,
+      },
     }
   } catch (error) {
-    console.error('[getFollowUpStudents] Error:', error)
+    console.error("[getFollowUpStudents] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get follow-up students'
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get follow-up students",
     }
   }
 }

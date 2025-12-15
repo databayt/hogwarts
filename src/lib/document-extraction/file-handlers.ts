@@ -3,7 +3,7 @@
  * Handles parsing of CSV, Excel, PDF, and Word documents
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from "@/lib/logger"
 
 // === CSV HANDLER ===
 
@@ -14,7 +14,7 @@ export async function parseCSV(content: string): Promise<{
 }> {
   try {
     // Use papaparse for CSV parsing
-    const Papa = await import('papaparse')
+    const Papa = await import("papaparse")
 
     const result = Papa.parse(content, {
       header: true,
@@ -23,39 +23,39 @@ export async function parseCSV(content: string): Promise<{
     })
 
     if (result.errors.length > 0) {
-      logger.warn('CSV parsing warnings', { errors: result.errors })
+      logger.warn("CSV parsing warnings", { errors: result.errors })
     }
 
     // Convert parsed data to readable text format
-    const text = convertParsedDataToText(result.data as Record<string, unknown>[])
+    const text = convertParsedDataToText(
+      result.data as Record<string, unknown>[]
+    )
 
     return {
       success: true,
       text,
     }
   } catch (error) {
-    logger.error('Failed to parse CSV', error as Error)
+    logger.error("Failed to parse CSV", error as Error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'CSV parsing failed',
+      error: error instanceof Error ? error.message : "CSV parsing failed",
     }
   }
 }
 
 // === EXCEL HANDLER ===
 
-export async function parseExcel(
-  buffer: ArrayBuffer
-): Promise<{
+export async function parseExcel(buffer: ArrayBuffer): Promise<{
   success: boolean
   text?: string
   error?: string
 }> {
   try {
-    const XLSX = await import('xlsx')
+    const XLSX = await import("xlsx")
 
     // Read workbook
-    const workbook = XLSX.read(buffer, { type: 'array' })
+    const workbook = XLSX.read(buffer, { type: "array" })
 
     // Extract text from all sheets
     const textParts: string[] = []
@@ -67,12 +67,12 @@ export async function parseExcel(
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
         raw: false,
-        defval: '',
+        defval: "",
       }) as string[][]
 
       // Add sheet name as header
       textParts.push(`Sheet: ${sheetName}`)
-      textParts.push('-'.repeat(50))
+      textParts.push("-".repeat(50))
 
       // Convert to readable text
       if (jsonData.length > 0) {
@@ -81,9 +81,9 @@ export async function parseExcel(
 
         rows.forEach((row) => {
           const rowText = headers
-            .map((header, i) => `${header}: ${row[i] || ''}`)
-            .filter((text) => text.split(':')[1].trim() !== '')
-            .join(', ')
+            .map((header, i) => `${header}: ${row[i] || ""}`)
+            .filter((text) => text.split(":")[1].trim() !== "")
+            .join(", ")
 
           if (rowText) {
             textParts.push(rowText)
@@ -91,34 +91,32 @@ export async function parseExcel(
         })
       }
 
-      textParts.push('') // Empty line between sheets
+      textParts.push("") // Empty line between sheets
     })
 
     return {
       success: true,
-      text: textParts.join('\n'),
+      text: textParts.join("\n"),
     }
   } catch (error) {
-    logger.error('Failed to parse Excel', error as Error)
+    logger.error("Failed to parse Excel", error as Error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Excel parsing failed',
+      error: error instanceof Error ? error.message : "Excel parsing failed",
     }
   }
 }
 
 // === PDF HANDLER ===
 
-export async function parsePDF(
-  buffer: Buffer
-): Promise<{
+export async function parsePDF(buffer: Buffer): Promise<{
   success: boolean
   text?: string
   error?: string
 }> {
   try {
     // pdf-parse is a CommonJS module, we need to access it differently
-    const pdfParseModule = await import('pdf-parse')
+    const pdfParseModule = await import("pdf-parse")
     const pdfParse = (pdfParseModule as any).default || pdfParseModule
 
     const data = await pdfParse(buffer)
@@ -128,31 +126,29 @@ export async function parsePDF(
       text: data.text,
     }
   } catch (error) {
-    logger.error('Failed to parse PDF', error as Error)
+    logger.error("Failed to parse PDF", error as Error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'PDF parsing failed',
+      error: error instanceof Error ? error.message : "PDF parsing failed",
     }
   }
 }
 
 // === WORD HANDLER ===
 
-export async function parseWord(
-  buffer: Buffer
-): Promise<{
+export async function parseWord(buffer: Buffer): Promise<{
   success: boolean
   text?: string
   html?: string
   error?: string
 }> {
   try {
-    const mammoth = await import('mammoth')
+    const mammoth = await import("mammoth")
 
     const result = await mammoth.extractRawText({ buffer })
 
     if (result.messages.length > 0) {
-      logger.warn('Word parsing warnings', { messages: result.messages })
+      logger.warn("Word parsing warnings", { messages: result.messages })
     }
 
     return {
@@ -160,10 +156,10 @@ export async function parseWord(
       text: result.value,
     }
   } catch (error) {
-    logger.error('Failed to parse Word document', error as Error)
+    logger.error("Failed to parse Word document", error as Error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Word parsing failed',
+      error: error instanceof Error ? error.message : "Word parsing failed",
     }
   }
 }
@@ -179,7 +175,7 @@ export async function handleImage(
   error?: string
 }> {
   try {
-    const base64 = buffer.toString('base64')
+    const base64 = buffer.toString("base64")
     const dataUrl = `data:${mimeType};base64,${base64}`
 
     return {
@@ -187,10 +183,10 @@ export async function handleImage(
       base64: dataUrl,
     }
   } catch (error) {
-    logger.error('Failed to process image', error as Error)
+    logger.error("Failed to process image", error as Error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Image processing failed',
+      error: error instanceof Error ? error.message : "Image processing failed",
     }
   }
 }
@@ -202,68 +198,72 @@ function convertParsedDataToText(data: Record<string, unknown>[]): string {
 
   data.forEach((row, index) => {
     const rowText = Object.entries(row)
-      .filter(([, value]) => value !== null && value !== undefined && value !== '')
+      .filter(
+        ([, value]) => value !== null && value !== undefined && value !== ""
+      )
       .map(([key, value]) => `${key}: ${value}`)
-      .join(', ')
+      .join(", ")
 
     if (rowText) {
       lines.push(`Row ${index + 1}: ${rowText}`)
     }
   })
 
-  return lines.join('\n')
+  return lines.join("\n")
 }
 
 // === FILE TYPE DETECTION ===
 
 export interface FileInfo {
-  type: 'csv' | 'excel' | 'pdf' | 'word' | 'image' | 'unknown'
+  type: "csv" | "excel" | "pdf" | "word" | "image" | "unknown"
   mimeType: string
   extension: string
 }
 
 export function detectFileType(filename: string, mimeType: string): FileInfo {
-  const extension = filename.split('.').pop()?.toLowerCase() || ''
+  const extension = filename.split(".").pop()?.toLowerCase() || ""
 
   // CSV
-  if (mimeType === 'text/csv' || extension === 'csv') {
-    return { type: 'csv', mimeType, extension }
+  if (mimeType === "text/csv" || extension === "csv") {
+    return { type: "csv", mimeType, extension }
   }
 
   // Excel
   if (
-    mimeType === 'application/vnd.ms-excel' ||
-    mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-    extension === 'xls' ||
-    extension === 'xlsx'
+    mimeType === "application/vnd.ms-excel" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    extension === "xls" ||
+    extension === "xlsx"
   ) {
-    return { type: 'excel', mimeType, extension }
+    return { type: "excel", mimeType, extension }
   }
 
   // PDF
-  if (mimeType === 'application/pdf' || extension === 'pdf') {
-    return { type: 'pdf', mimeType, extension }
+  if (mimeType === "application/pdf" || extension === "pdf") {
+    return { type: "pdf", mimeType, extension }
   }
 
   // Word
   if (
-    mimeType === 'application/msword' ||
-    mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-    extension === 'doc' ||
-    extension === 'docx'
+    mimeType === "application/msword" ||
+    mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    extension === "doc" ||
+    extension === "docx"
   ) {
-    return { type: 'word', mimeType, extension }
+    return { type: "word", mimeType, extension }
   }
 
   // Images
   if (
-    mimeType.startsWith('image/') ||
-    ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension)
+    mimeType.startsWith("image/") ||
+    ["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension)
   ) {
-    return { type: 'image', mimeType, extension }
+    return { type: "image", mimeType, extension }
   }
 
-  return { type: 'unknown', mimeType, extension }
+  return { type: "unknown", mimeType, extension }
 }
 
 // === FILE VALIDATION ===
@@ -282,11 +282,11 @@ export function validateFile(
 ): ValidationResult {
   const maxSize = options?.maxSize || 10 * 1024 * 1024 // 10MB default
   const allowedTypes = options?.allowedTypes || [
-    'csv',
-    'excel',
-    'pdf',
-    'word',
-    'image',
+    "csv",
+    "excel",
+    "pdf",
+    "word",
+    "image",
   ]
 
   // Check file size
@@ -300,17 +300,17 @@ export function validateFile(
   // Check file type
   const fileInfo = detectFileType(file.name, file.type)
 
-  if (fileInfo.type === 'unknown') {
+  if (fileInfo.type === "unknown") {
     return {
       valid: false,
-      error: 'Unsupported file type',
+      error: "Unsupported file type",
     }
   }
 
   if (!allowedTypes.includes(fileInfo.type)) {
     return {
       valid: false,
-      error: `File type ${fileInfo.type} not allowed. Allowed types: ${allowedTypes.join(', ')}`,
+      error: `File type ${fileInfo.type} not allowed. Allowed types: ${allowedTypes.join(", ")}`,
     }
   }
 

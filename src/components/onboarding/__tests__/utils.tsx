@@ -5,14 +5,15 @@
  * providers and configuring mocks for database, auth, and navigation.
  */
 
-import * as React from 'react'
-import { render, RenderOptions } from '@testing-library/react'
-import { vi } from 'vitest'
-import { HostValidationProvider } from '../host-validation-context'
+import * as React from "react"
+import { render, RenderOptions } from "@testing-library/react"
+import { vi } from "vitest"
+
+import { HostValidationProvider } from "../host-validation-context"
 
 // Re-export everything from testing-library
-export * from '@testing-library/react'
-export { default as userEvent } from '@testing-library/user-event'
+export * from "@testing-library/react"
+export { default as userEvent } from "@testing-library/user-event"
 
 // ============================================================================
 // Provider Wrapper
@@ -26,19 +27,18 @@ interface AllProvidersProps {
 /**
  * Wrapper component that includes all providers needed for onboarding tests
  */
-function AllProviders({ children, initialNextDisabled = true }: AllProvidersProps) {
-  return (
-    <HostValidationProvider>
-      {children}
-    </HostValidationProvider>
-  )
+function AllProviders({
+  children,
+  initialNextDisabled = true,
+}: AllProvidersProps) {
+  return <HostValidationProvider>{children}</HostValidationProvider>
 }
 
 // ============================================================================
 // Custom Render Function
 // ============================================================================
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface ExtendedRenderOptions extends Omit<RenderOptions, "wrapper"> {
   /**
    * Initial state for the next button (default: true = disabled)
    */
@@ -97,7 +97,7 @@ export function renderWithProviders(
  */
 export function setupOnboardingMocks() {
   // Mock database
-  vi.mock('@/lib/db', () => ({
+  vi.mock("@/lib/db", () => ({
     db: {
       school: {
         findUnique: vi.fn(),
@@ -114,18 +114,18 @@ export function setupOnboardingMocks() {
   }))
 
   // Mock auth
-  vi.mock('@/auth', () => ({
+  vi.mock("@/auth", () => ({
     auth: vi.fn(),
   }))
 
   // Mock next/cache
-  vi.mock('next/cache', () => ({
+  vi.mock("next/cache", () => ({
     revalidatePath: vi.fn(),
     revalidateTag: vi.fn(),
   }))
 
   // Mock next/navigation
-  vi.mock('next/navigation', () => ({
+  vi.mock("next/navigation", () => ({
     useRouter: () => ({
       push: vi.fn(),
       replace: vi.fn(),
@@ -134,9 +134,9 @@ export function setupOnboardingMocks() {
       refresh: vi.fn(),
       prefetch: vi.fn(),
     }),
-    usePathname: () => '/en/host/title',
+    usePathname: () => "/en/host/title",
     useSearchParams: () => new URLSearchParams(),
-    useParams: () => ({ lang: 'en' }),
+    useParams: () => ({ lang: "en" }),
     redirect: vi.fn(),
   }))
 }
@@ -159,7 +159,7 @@ export function setupOnboardingMocks() {
 export function setupOnboardingMocksWithAuth(session: unknown) {
   setupOnboardingMocks()
 
-  vi.mock('@/auth', () => ({
+  vi.mock("@/auth", () => ({
     auth: vi.fn().mockResolvedValue(session),
   }))
 }
@@ -234,13 +234,13 @@ export async function waitForFormSubmission() {
  */
 export async function fillFormInputs(
   inputs: Record<string, string>,
-  screen: ReturnType<typeof import('@testing-library/react').screen>
+  screen: ReturnType<typeof import("@testing-library/react").screen>
 ) {
-  const userEvent = (await import('@testing-library/user-event')).default
+  const userEvent = (await import("@testing-library/user-event")).default
   const user = userEvent.setup()
 
   for (const [label, value] of Object.entries(inputs)) {
-    const input = screen.getByLabelText(new RegExp(label, 'i'))
+    const input = screen.getByLabelText(new RegExp(label, "i"))
     await user.clear(input)
     await user.type(input, value)
   }
@@ -253,7 +253,7 @@ export async function fillFormInputs(
  */
 export function assertValidationError(
   errorMessage: string | RegExp,
-  screen: ReturnType<typeof import('@testing-library/react').screen>
+  screen: ReturnType<typeof import("@testing-library/react").screen>
 ) {
   const error = screen.queryByText(errorMessage)
   expect(error).toBeInTheDocument()
@@ -266,7 +266,7 @@ export function assertValidationError(
  */
 export function assertNoValidationError(
   errorMessage: string | RegExp,
-  screen: ReturnType<typeof import('@testing-library/react').screen>
+  screen: ReturnType<typeof import("@testing-library/react").screen>
 ) {
   const error = screen.queryByText(errorMessage)
   expect(error).not.toBeInTheDocument()

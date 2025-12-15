@@ -1,8 +1,8 @@
-import ExpensesContent from '@/components/platform/finance/expenses/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import ExpensesContent from "@/components/platform/finance/expenses/content"
 
-export const metadata = { title: 'Dashboard: Expense Management' }
+export const metadata = { title: "Dashboard: Expense Management" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

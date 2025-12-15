@@ -41,6 +41,7 @@ Launch VS Code, then open terminal: View → Terminal
 ---
 
 **05. Install pnpm**
+
 ```text
 npm install -g pnpm
 ```
@@ -48,6 +49,7 @@ npm install -g pnpm
 ---
 
 **06. Clone the repository**
+
 ```bash
 git clone https://github.com/databayt/hogwarts.git
 ```
@@ -67,6 +69,7 @@ View → Terminal or `` Ctrl + ` ``
 ---
 
 **09. Install dependencies**
+
 ```bash
 pnpm install
 ```
@@ -80,6 +83,7 @@ Create `.env` in root folder and paste the content from WhatsApp group
 ---
 
 **11. Generate Prisma client**
+
 ```bash
 pnpm prisma generate
 ```
@@ -87,6 +91,7 @@ pnpm prisma generate
 ---
 
 **12. Setup database**
+
 ```bash
 pnpm prisma migrate dev
 ```
@@ -94,6 +99,7 @@ pnpm prisma migrate dev
 ---
 
 **13. Start dev server**
+
 ```bash
 pnpm dev
 ```
@@ -111,6 +117,7 @@ _For detailed setup, see [Localhost Setup](/docs/localhost)._
 Add your name to the blog page as your first contribution.
 
 **01. Create a new branch**
+
 ```bash
 git checkout -b feat/your-name
 ```
@@ -126,10 +133,9 @@ Open `src/components/marketing/blog/content.tsx` in VS Code
 **03. Find the Blog text**
 
 Look for this code:
+
 ```tsx
-<div>
-    Blog
-</div>
+<div>Blog</div>
 ```
 
 ---
@@ -137,10 +143,11 @@ Look for this code:
 **04. Add your name below Blog**
 
 Change it to:
+
 ```tsx
 <div>
-    Blog
-    <p>Your Name</p>
+  Blog
+  <p>Your Name</p>
 </div>
 ```
 
@@ -153,6 +160,7 @@ Press `Ctrl + S`
 ---
 
 **06. Stage changes**
+
 ```bash
 git add .
 ```
@@ -160,6 +168,7 @@ git add .
 ---
 
 **07. Commit changes**
+
 ```bash
 git commit -m "feat: add Your Name to blog"
 ```
@@ -167,6 +176,7 @@ git commit -m "feat: add Your Name to blog"
 ---
 
 **08. Push to GitHub**
+
 ```bash
 git push origin feat/your-name
 ```

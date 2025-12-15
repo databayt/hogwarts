@@ -45,7 +45,11 @@ export interface TeacherProfileData extends BaseProfileData {
 // Parent/Guardian profile data
 export interface ParentProfileData extends BaseProfileData {
   emailAddress?: string
-  phoneNumbers?: { phoneNumber: string; phoneType: string; isPrimary: boolean }[]
+  phoneNumbers?: {
+    phoneNumber: string
+    phoneType: string
+    isPrimary: boolean
+  }[]
 }
 
 // Staff profile data
@@ -57,7 +61,11 @@ export interface StaffProfileData extends BaseProfileData {
 }
 
 // Unified profile data type
-export type ProfileData = StudentProfileData | TeacherProfileData | ParentProfileData | StaffProfileData
+export type ProfileData =
+  | StudentProfileData
+  | TeacherProfileData
+  | ParentProfileData
+  | StaffProfileData
 
 // Stat items for the sidebar
 export interface ProfileStat {
@@ -99,7 +107,15 @@ export interface ActivityDataPoint {
 // Activity item for the timeline
 export interface ActivityItem {
   id: string
-  type: "assignment" | "attendance" | "grade" | "event" | "achievement" | "message" | "enrollment" | "class"
+  type:
+    | "assignment"
+    | "attendance"
+    | "grade"
+    | "event"
+    | "achievement"
+    | "message"
+    | "enrollment"
+    | "class"
   title: string
   description?: string
   timestamp: Date | string
@@ -155,7 +171,20 @@ export const CONTRIBUTION_COLORS = {
 } as const
 
 // Month labels for contribution graph
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+export const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+]
 
 // Weekday labels for contribution graph
 export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]

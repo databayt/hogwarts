@@ -130,18 +130,19 @@ Each step follows a consistent structure:
 
 ### File Statistics
 
-| Category | Count |
-|----------|-------|
-| Route files | 21 |
-| Component files | 145 |
-| Step directories | 17 |
-| **Total** | **166 files** |
+| Category         | Count         |
+| ---------------- | ------------- |
+| Route files      | 21            |
+| Component files  | 145           |
+| Step directories | 17            |
+| **Total**        | **166 files** |
 
 ## 🔄 Onboarding Flow
 
 ### Step Groups
 
 #### 1. **Basic Information** (Group: `basic`)
+
 - **About School** - Welcome and introduction (static)
 - **Title** - School name configuration
 - **Description** - School type, level, and description
@@ -149,12 +150,14 @@ Each step follows a consistent structure:
 - **Stand Out** - Highlight unique features (static)
 
 #### 2. **School Setup** (Group: `setup`)
+
 - **Capacity** - Student, teacher, classroom limits
 - **Branding** - Logo, colors, visual theme
 - **Import** - Bulk data import (CSV/Excel)
 - **Finish Setup** - Review and confirmation (static)
 
 #### 3. **Business & Legal** (Group: `business`)
+
 - **Join** - Platform account creation
 - **Visibility** - Public/private settings
 - **Price** - Tuition fees and payment
@@ -165,6 +168,7 @@ Each step follows a consistent structure:
 ## 🚀 Current Implementation Status
 
 ### ✅ Core Infrastructure
+
 - [x] Dynamic routing with school ID
 - [x] ListingProvider context at layout level
 - [x] Server actions with authentication
@@ -174,41 +178,44 @@ Each step follows a consistent structure:
 
 ### 📋 Step Implementation
 
-| Step | UI | Form | Actions | Validation | Database | Production Ready |
-|------|-----|------|---------|------------|----------|-----------------|
-| About School | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
-| Title | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Description | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Location | ✅ | ✅ | ✅ | ✅ | ✅ | 🔶 (Maps API pending) |
-| Stand Out | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
-| Capacity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Branding | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Import | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Parser incomplete) |
-| Finish Setup | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
-| Join | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Workflow pending) |
-| Visibility | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Price | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Stripe pending) |
-| Discount | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Legal | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Docs pending) |
-| Subdomain | ✅ | ✅ | ✅ | ✅ | ✅ | 🔶 (DNS config pending) |
+| Step         | UI  | Form | Actions | Validation | Database | Production Ready        |
+| ------------ | --- | ---- | ------- | ---------- | -------- | ----------------------- |
+| About School | ✅  | ✅   | ✅      | ✅         | N/A      | ✅                      |
+| Title        | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Description  | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Location     | ✅  | ✅   | ✅      | ✅         | ✅       | 🔶 (Maps API pending)   |
+| Stand Out    | ✅  | ✅   | ✅      | ✅         | N/A      | ✅                      |
+| Capacity     | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Branding     | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Import       | ✅  | ✅   | ✅      | ✅         | ⚠️       | 🔶 (Parser incomplete)  |
+| Finish Setup | ✅  | ✅   | ✅      | ✅         | N/A      | ✅                      |
+| Join         | ✅  | ✅   | ✅      | ✅         | ⚠️       | 🔶 (Workflow pending)   |
+| Visibility   | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Price        | ✅  | ✅   | ✅      | ✅         | ⚠️       | 🔶 (Stripe pending)     |
+| Discount     | ✅  | ✅   | ✅      | ✅         | ✅       | ✅                      |
+| Legal        | ✅  | ✅   | ✅      | ✅         | ⚠️       | 🔶 (Docs pending)       |
+| Subdomain    | ✅  | ✅   | ✅      | ✅         | ✅       | 🔶 (DNS config pending) |
 
 Legend: ✅ Complete | 🔶 Partial | ⚠️ In Progress | ❌ Not Started
 
 ## 🔧 Key Components
 
 ### ListingProvider Context
+
 - Manages school data state across all steps
 - Handles optimistic updates and server sync
 - Provides `useListing` hook for components
 - Automatically available in all step pages (set at layout level)
 
 ### Server Actions
+
 - `initializeSchoolSetup()` - Creates new school record
 - `getListing()` - Fetches school data with auth
 - `updateListing()` - Updates school fields
 - `deleteListing()` - Removes school (with safeguards)
 
 ### Navigation & Validation
+
 - `useOnboarding()` - Step navigation and validation
 - Automatic progress tracking
 - Step dependencies and requirements
@@ -225,11 +232,13 @@ Legend: ✅ Complete | 🔶 Partial | ⚠️ In Progress | ❌ Not Started
 ## 💾 Database Models
 
 ### Primary Models
+
 - `School` - Core school information
 - `SchoolBranding` - Visual customization
 - `User` - Platform users with school association
 
 ### Supporting Models
+
 - `SubscriptionTier` - Plan limits and features
 - `Subscription` - Active subscriptions
 - `Invoice` - Payment records
@@ -304,6 +313,7 @@ UPLOADTHING_SECRET="..."
 ## 🚧 Known Issues & TODOs
 
 See [ISSUE.md](./ISSUE.md) for detailed tracking of:
+
 - Pending integrations (Maps, Stripe, DNS)
 - Data import parser implementation
 - Legal document templates
@@ -331,21 +341,21 @@ See [ISSUE.md](./ISSUE.md) for detailed tracking of:
 
 ### Phase 1: Legacy Code Removal
 
-| Removed File | Reason |
-|-------------|--------|
-| `action.ts` | Superseded by `actions.ts` |
-| `use-optimized-listing.tsx` | Never integrated (ListingProvider is used) |
-| `enums.ts` | Legacy Airbnb/rental concepts (WiFi, Pool, etc.) |
-| `host-refactor-plan.md` | Old planning document |
-| Legacy types in `types.ts` | Removed: HostStep, StepCompletion, HostingProgress, AmenityOption, etc. |
+| Removed File                | Reason                                                                  |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `action.ts`                 | Superseded by `actions.ts`                                              |
+| `use-optimized-listing.tsx` | Never integrated (ListingProvider is used)                              |
+| `enums.ts`                  | Legacy Airbnb/rental concepts (WiFi, Pool, etc.)                        |
+| `host-refactor-plan.md`     | Old planning document                                                   |
+| Legacy types in `types.ts`  | Removed: HostStep, StepCompletion, HostingProgress, AmenityOption, etc. |
 
 ### Phase 2: External Files Consolidation
 
-| Action | File | From | To |
-|--------|------|------|-----|
-| Moved | `onboarding-auth.ts` | `src/lib/` | `components/onboarding/auth.ts` |
-| Deleted | `onboarding-optimization.ts` | `src/lib/` | (unused - was only imported by deleted file) |
-| Deleted | `onboarding.config.ts` | `src/config/` | (unused - never imported) |
+| Action  | File                         | From          | To                                           |
+| ------- | ---------------------------- | ------------- | -------------------------------------------- |
+| Moved   | `onboarding-auth.ts`         | `src/lib/`    | `components/onboarding/auth.ts`              |
+| Deleted | `onboarding-optimization.ts` | `src/lib/`    | (unused - was only imported by deleted file) |
+| Deleted | `onboarding.config.ts`       | `src/config/` | (unused - never imported)                    |
 
 The onboarding system is now **100% consolidated** into the two-directory pattern with no external dependencies.
 

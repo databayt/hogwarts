@@ -1,19 +1,20 @@
-import { z } from 'zod';
-import { getValidationMessages } from '@/components/internationalization/helpers';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
+import { z } from "zod"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getValidationMessages } from "@/components/internationalization/helpers"
 
 // ============================================================================
 // Schema Factory Functions (i18n-enabled)
 // ============================================================================
 
 export function createFloorPlanSchema(dictionary: Dictionary) {
-  const v = getValidationMessages(dictionary);
+  const v = getValidationMessages(dictionary)
 
   return z.object({
-    teachers: z.number().min(1, { message: v.get('atLeastOneTeacher') }),
-    facilities: z.number().min(1, { message: v.get('atLeastOneFacility') }),
-    studentCount: z.number().min(1, { message: v.get('atLeastOneStudent') }),
-  });
+    teachers: z.number().min(1, { message: v.get("atLeastOneTeacher") }),
+    facilities: z.number().min(1, { message: v.get("atLeastOneFacility") }),
+    studentCount: z.number().min(1, { message: v.get("atLeastOneStudent") }),
+  })
 }
 
 // ============================================================================
@@ -21,9 +22,9 @@ export function createFloorPlanSchema(dictionary: Dictionary) {
 // ============================================================================
 
 export const floorPlanSchema = z.object({
-  teachers: z.number().min(1, 'At least 1 teacher is required'),
-  facilities: z.number().min(1, 'At least 1 facility is required'),
-  studentCount: z.number().min(1, 'At least 1 student is required'),
-});
+  teachers: z.number().min(1, "At least 1 teacher is required"),
+  facilities: z.number().min(1, "At least 1 facility is required"),
+  studentCount: z.number().min(1, "At least 1 student is required"),
+})
 
-export type FloorPlanFormData = z.infer<typeof floorPlanSchema>;
+export type FloorPlanFormData = z.infer<typeof floorPlanSchema>

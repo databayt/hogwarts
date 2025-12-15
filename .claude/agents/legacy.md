@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Modernization Areas
+
 - **React Patterns**: Class Components → Functional + Hooks → Server/Client Components
 - **Next.js Migration**: Pages Router → App Router (if applicable)
 - **State Management**: Redux/MobX → Server Actions + SWR
@@ -24,6 +25,7 @@ model: sonnet
 - **TypeScript**: Loose types → Strict mode
 
 ### Migration Strategy
+
 - **Strangler Fig Pattern**: Gradual replacement, not big bang
 - **Incremental Adoption**: Feature-by-feature migration
 - **Zero Downtime**: Maintain functionality throughout
@@ -31,6 +33,7 @@ model: sonnet
 - **Rollback Strategy**: Always have escape hatch
 
 ### Success Metrics
+
 - Modules migrated: Track progress (e.g., 15/50 components)
 - Test coverage maintained: >80%
 - Performance improvements: Measure before/after
@@ -44,6 +47,7 @@ model: sonnet
 ### 1. Class Components → Functional Components
 
 **Before (Legacy)**:
+
 ```tsx
 // Old pattern: Class component with lifecycle
 class StudentList extends React.Component {
@@ -57,7 +61,7 @@ class StudentList extends React.Component {
   }
 
   fetchStudents = async () => {
-    const response = await fetch('/api/students')
+    const response = await fetch("/api/students")
     const students = await response.json()
     this.setState({ students, loading: false })
   }
@@ -79,9 +83,10 @@ class StudentList extends React.Component {
 ```
 
 **After (Modern)**:
+
 ```tsx
 // Modern pattern: Server Component + Server Action
-import { getStudents } from './actions'
+import { getStudents } from "./actions"
 
 export default async function StudentList() {
   const students = await getStudents()
@@ -96,7 +101,7 @@ export default async function StudentList() {
 }
 
 // actions.ts
-'use server'
+;("use server")
 export async function getStudents() {
   const session = await auth()
   return db.student.findMany({
@@ -108,6 +113,7 @@ export async function getStudents() {
 ### 2. Pages Router → App Router
 
 **Before (Pages Router)**:
+
 ```tsx
 // pages/students/[id].tsx
 export async function getServerSideProps({ params }) {
@@ -126,6 +132,7 @@ export default function StudentPage({ student }) {
 ```
 
 **After (App Router)**:
+
 ```tsx
 // app/[lang]/s/[subdomain]/(platform)/students/[id]/page.tsx
 export default async function StudentPage({
@@ -150,17 +157,18 @@ export default async function StudentPage({
 ### 3. Redux → Server Actions + SWR
 
 **Before (Redux)**:
+
 ```tsx
 // store/students/actions.ts
 export const fetchStudents = () => async (dispatch) => {
-  dispatch({ type: 'FETCH_STUDENTS_REQUEST' })
+  dispatch({ type: "FETCH_STUDENTS_REQUEST" })
 
   try {
-    const response = await fetch('/api/students')
+    const response = await fetch("/api/students")
     const students = await response.json()
-    dispatch({ type: 'FETCH_STUDENTS_SUCCESS', payload: students })
+    dispatch({ type: "FETCH_STUDENTS_SUCCESS", payload: students })
   } catch (error) {
-    dispatch({ type: 'FETCH_STUDENTS_FAILURE', error })
+    dispatch({ type: "FETCH_STUDENTS_FAILURE", error })
   }
 }
 
@@ -178,9 +186,15 @@ const StudentList = () => {
 ```
 
 **After (Server Actions + SWR)**:
+
 ```tsx
 // actions.ts
-'use server'
+"use server"
+
+import useSWR from "swr"
+
+import { getStudents } from "./actions"
+
 export async function getStudents() {
   const session = await auth()
   return db.student.findMany({
@@ -189,13 +203,10 @@ export async function getStudents() {
 }
 
 // components/StudentList.tsx (Client Component for SWR)
-'use client'
-
-import useSWR from 'swr'
-import { getStudents } from './actions'
+;("use client")
 
 export function StudentList() {
-  const { data: students, isLoading } = useSWR('students', getStudents)
+  const { data: students, isLoading } = useSWR("students", getStudents)
 
   if (isLoading) return <Skeleton />
 
@@ -206,6 +217,7 @@ export function StudentList() {
 ### 4. CSS Modules → Tailwind CSS
 
 **Before (CSS Modules)**:
+
 ```tsx
 // StudentCard.module.css
 .card {
@@ -238,18 +250,19 @@ export function StudentCard({ student }) {
 ```
 
 **After (Tailwind CSS)**:
+
 ```tsx
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 
 export function StudentCard({ student }: Props) {
   return (
-    <div className={cn(
-      'p-4 border rounded-lg bg-white',
-      'hover:shadow-md transition-shadow'
-    )}>
-      <h3 className="text-xl font-semibold mb-2">
-        {student.name}
-      </h3>
+    <div
+      className={cn(
+        "rounded-lg border bg-white p-4",
+        "transition-shadow hover:shadow-md"
+      )}
+    >
+      <h3 className="mb-2 text-xl font-semibold">{student.name}</h3>
     </div>
   )
 }
@@ -258,30 +271,32 @@ export function StudentCard({ student }: Props) {
 ### 5. REST API → Server Actions
 
 **Before (REST API)**:
+
 ```tsx
 // pages/api/students/index.ts
 export default async function handler(req, res) {
-  if (req.method === 'GET') {
+  if (req.method === "GET") {
     const students = await db.student.findMany()
     res.json(students)
-  } else if (req.method === 'POST') {
+  } else if (req.method === "POST") {
     const student = await db.student.create({ data: req.body })
     res.json(student)
   }
 }
 
 // Client usage
-const response = await fetch('/api/students', {
-  method: 'POST',
+const response = await fetch("/api/students", {
+  method: "POST",
   body: JSON.stringify(data),
 })
 const student = await response.json()
 ```
 
 **After (Server Actions)**:
+
 ```tsx
 // actions.ts
-'use server'
+"use server"
 
 export async function createStudent(data: FormData) {
   const session = await auth()
@@ -291,12 +306,12 @@ export async function createStudent(data: FormData) {
     data: { ...validated, schoolId: session.user.schoolId },
   })
 
-  revalidatePath('/students')
+  revalidatePath("/students")
   return { success: true, data: student }
 }
 
 // Client usage
-<form action={createStudent}>
+;<form action={createStudent}>
   <input name="firstName" />
   <button>Create</button>
 </form>
@@ -309,6 +324,7 @@ export async function createStudent(data: FormData) {
 ### Phase 1: Assessment
 
 **Identify Legacy Code**:
+
 ```bash
 # Find class components
 grep -r "extends React.Component" src/
@@ -324,9 +340,10 @@ grep -r "useSelector\|useDispatch" src/
 ```
 
 **Complexity Analysis**:
+
 ```typescript
 // scripts/analyze-complexity.ts
-import { ESLintUtils } from '@typescript-eslint/utils'
+import { ESLintUtils } from "@typescript-eslint/utils"
 
 // Measure cyclomatic complexity
 // Identify high-risk areas for migration
@@ -339,6 +356,7 @@ import { ESLintUtils } from '@typescript-eslint/utils'
 ### Phase 2: Create Migration Plan
 
 **Priority Matrix**:
+
 ```
 High Impact, Low Effort → Do First
 ├── Simple class components
@@ -364,6 +382,7 @@ Low Impact, High Effort → Do Last (or never)
 ### Phase 3: Incremental Migration
 
 **Strangler Fig Pattern**:
+
 ```tsx
 // Step 1: Create new version alongside old
 // old: src/components/legacy/StudentList.tsx (keep working)
@@ -371,7 +390,7 @@ Low Impact, High Effort → Do Last (or never)
 
 // Step 2: Route to new version gradually
 export function StudentListWrapper() {
-  const useNewVersion = useFeatureFlag('new-student-list')
+  const useNewVersion = useFeatureFlag("new-student-list")
 
   if (useNewVersion) {
     return <NewStudentList />
@@ -388,6 +407,7 @@ export function StudentListWrapper() {
 ### Phase 4: Test & Validate
 
 **Test Coverage Requirements**:
+
 ```bash
 # Before migration
 pnpm test src/components/legacy/StudentList.test.tsx
@@ -402,6 +422,7 @@ pnpm test:e2e tests/students.spec.ts
 ```
 
 **Performance Benchmarking**:
+
 ```typescript
 // Before migration
 // Load time: 2.5s
@@ -419,6 +440,7 @@ pnpm test:e2e tests/students.spec.ts
 ## Modernization Checklist
 
 **React Patterns** ✅
+
 - [ ] Class components → Functional components
 - [ ] Higher-order components → Custom hooks
 - [ ] Render props → Hooks
@@ -426,25 +448,29 @@ pnpm test:e2e tests/students.spec.ts
 - [ ] PropTypes → TypeScript
 
 **Next.js Migration** ✅
+
 - [ ] Pages Router → App Router
 - [ ] getServerSideProps → Server Components
 - [ ] getStaticProps → generateStaticParams
 - [ ] API routes → Server Actions
-- [ ] _app.tsx → layout.tsx
+- [ ] \_app.tsx → layout.tsx
 
 **State Management** ✅
+
 - [ ] Redux → Server Actions + SWR
 - [ ] Context overuse → Server Components
 - [ ] Client state → useOptimistic
 - [ ] Form state → Server Actions
 
 **Styling** ✅
+
 - [ ] CSS Modules → Tailwind CSS
 - [ ] styled-components → Tailwind
 - [ ] Inline styles → Tailwind utilities
 - [ ] hardcoded values → Tailwind theme
 
 **TypeScript** ✅
+
 - [ ] Enable strict mode
 - [ ] Add missing type definitions
 - [ ] Remove `any` types
@@ -452,6 +478,7 @@ pnpm test:e2e tests/students.spec.ts
 - [ ] Infer types from Zod schemas
 
 **Multi-Tenant Safety** ✅
+
 - [ ] Add schoolId to all database queries
 - [ ] Verify session validation
 - [ ] Update unique constraints
@@ -462,6 +489,7 @@ pnpm test:e2e tests/students.spec.ts
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/refactor` - Code refactoring during migration
 - `/agents/test` - Maintain test coverage
 - `/agents/typescript` - Type safety during migration
@@ -498,6 +526,7 @@ pnpm test:e2e tests/students.spec.ts
 ## Success Metrics
 
 **Target Achievements**:
+
 - Modules migrated: 100% (tracked incrementally)
 - Test coverage maintained: >80%
 - Performance improvement: 30%+ average

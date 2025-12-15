@@ -1,17 +1,19 @@
-"use client";
-import { Button } from "@/components/ui/button";
-import { ChartInvoice } from "./chart-invoice";
-import { ChartConfig } from "@/components/ui/chart";
-import { useEffect, useState } from "react";
-import type { UserInvoice } from "@prisma/client";
-import { Badge } from "@/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import { RecentInvoicesCard, StatsCards } from "./card";
+"use client"
 
-import { chartConfig } from "./config";
-import { type Locale } from '@/components/internationalization/config'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { useEffect, useState } from "react"
+import type { UserInvoice } from "@prisma/client"
+import { ColumnDef } from "@tanstack/react-table"
+import { format } from "date-fns"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ChartConfig } from "@/components/ui/chart"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { RecentInvoicesCard, StatsCards } from "./card"
+import { ChartInvoice } from "./chart-invoice"
+import { chartConfig } from "./config"
 
 interface Props {
   dictionary: Dictionary
@@ -26,14 +28,14 @@ export function DashboardContent({ dictionary, lang }: Props) {
     UnpaidInvoice: 0,
     recentInvoice: [],
     chartData: [],
-  });
+  })
 
   const fetchData = async () => {
     try {
-      const response = await fetch("/api/dashboard");
-      const responseData = await response.json();
+      const response = await fetch("/api/dashboard")
+      const responseData = await response.json()
 
-      console.log("responseData",responseData)
+      console.log("responseData", responseData)
       if (response.status === 200) {
         setData({
           totalRevenue: responseData.totalRevenue,
@@ -42,18 +44,18 @@ export function DashboardContent({ dictionary, lang }: Props) {
           UnpaidInvoice: responseData.UnpaidInvoice,
           recentInvoice: responseData.recentInvoice || [],
           chartData: responseData.chartData || [],
-        });
+        })
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
-   const columns: ColumnDef<UserInvoice>[] = [
+  const columns: ColumnDef<UserInvoice>[] = [
     {
       accessorKey: "invoice_no",
       header: "Invoice No",
@@ -62,9 +64,9 @@ export function DashboardContent({ dictionary, lang }: Props) {
       accessorKey: "invoice_date",
       header: "Date",
       cell: ({ row }) => {
-         return format(row.original.invoice_date, "PP");
+        return format(row.original.invoice_date, "PP")
       },
-    }, 
+    },
     {
       accessorKey: "total",
       header: "Amount",
@@ -72,19 +74,19 @@ export function DashboardContent({ dictionary, lang }: Props) {
         const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-us", {
           style: "currency",
           currency: row.original.currency,
-        }).format(row.original.total);
+        }).format(row.original.total)
 
-        return totalAmountInCurrencyFormat;
+        return totalAmountInCurrencyFormat
       },
     },
     {
-       accessorKey : "status",
-       header : "Status",
-       cell : ({row})=>{
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
         return <Badge>{row.original.status}</Badge>
-       }
+      },
     },
-  ];
+  ]
 
   const d = dictionary?.finance?.invoice
 
@@ -111,5 +113,5 @@ export function DashboardContent({ dictionary, lang }: Props) {
         />
       </div>
     </div>
-  );
+  )
 }

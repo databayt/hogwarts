@@ -11,6 +11,7 @@ Part of the [Exam Block System](../README.md) | [Generate Block README](./README
 ### Issue: Not Enough Questions to Meet Distribution
 
 **Symptoms:**
+
 - Template requires 10 HARD MCQ questions
 - Question bank only has 5
 - Generation fails
@@ -22,8 +23,8 @@ Part of the [Exam Block System](../README.md) | [Generate Block README](./README
 export async function validateDistribution(
   templateId: string
 ): Promise<ValidationResult> {
-  const template = await getExamTemplate(templateId);
-  const warnings: string[] = [];
+  const template = await getExamTemplate(templateId)
+  const warnings: string[] = []
 
   for (const [type, diffMap] of Object.entries(template.distribution)) {
     for (const [diff, count] of Object.entries(diffMap)) {
@@ -32,22 +33,22 @@ export async function validateDistribution(
           schoolId,
           subjectId: template.subjectId,
           questionType: type,
-          difficulty: diff
-        }
-      });
+          difficulty: diff,
+        },
+      })
 
       if (available < count) {
         warnings.push(
           `Need ${count} ${diff} ${type} questions, only ${available} available`
-        );
+        )
       }
     }
   }
 
   return {
     isValid: warnings.length === 0,
-    warnings
-  };
+    warnings,
+  }
 }
 ```
 
@@ -56,6 +57,7 @@ export async function validateDistribution(
 ### Issue: Generated Exam Always Same Questions
 
 **Symptoms:**
+
 - Generate exam multiple times
 - Same questions selected each time
 - Randomization enabled but not working
@@ -65,19 +67,19 @@ export async function validateDistribution(
 ```typescript
 // actions.ts
 export async function generateExamFromTemplate(params) {
-  const { randomize, seed } = params.options;
+  const { randomize, seed } = params.options
 
   if (randomize) {
     // Use seed for reproducible randomization
-    const rng = seedrandom(seed || `${Date.now()}`);
+    const rng = seedrandom(seed || `${Date.now()}`)
 
-    questions.sort(() => rng() - 0.5);  // Shuffle
+    questions.sort(() => rng() - 0.5) // Shuffle
   } else {
     // Use least-used questions
-    questions.sort((a, b) => a.timesUsed - b.timesUsed);
+    questions.sort((a, b) => a.timesUsed - b.timesUsed)
   }
 
-  return selected.slice(0, required);
+  return selected.slice(0, required)
 }
 ```
 
@@ -86,6 +88,7 @@ export async function generateExamFromTemplate(params) {
 ### Issue: Bloom Distribution Not Respected
 
 **Symptoms:**
+
 - Template specifies 50% REMEMBER, 30% UNDERSTAND
 - Generated exam has different distribution
 - Questions don't match Bloom requirements
@@ -98,22 +101,22 @@ function filterByBloomLevel(
   questions: QuestionBank[],
   bloomDist: BloomDistribution
 ): QuestionBank[] {
-  const selected: QuestionBank[] = [];
-  const total = Object.values(bloomDist).reduce((a, b) => a + b, 0);
+  const selected: QuestionBank[] = []
+  const total = Object.values(bloomDist).reduce((a, b) => a + b, 0)
 
   for (const [level, count] of Object.entries(bloomDist)) {
-    const matching = questions.filter(q => q.bloomLevel === level);
+    const matching = questions.filter((q) => q.bloomLevel === level)
 
     if (matching.length < count) {
       throw new Error(
         `Need ${count} ${level} questions, only ${matching.length} available`
-      );
+      )
     }
 
-    selected.push(...matching.slice(0, count));
+    selected.push(...matching.slice(0, count))
   }
 
-  return selected;
+  return selected
 }
 ```
 
@@ -122,6 +125,7 @@ function filterByBloomLevel(
 ### Issue: Template Saves But Shows Wrong Total Marks
 
 **Symptoms:**
+
 - Configure distribution with 50 questions
 - Each question 2 points
 - Template shows 75 marks instead of 100
@@ -131,17 +135,17 @@ function filterByBloomLevel(
 ```typescript
 // distribution-editor.tsx
 const totalMarks = useMemo(() => {
-  let total = 0;
+  let total = 0
 
   for (const [type, diffMap] of Object.entries(distribution)) {
     for (const [diff, count] of Object.entries(diffMap)) {
-      const points = calculateDefaultPoints(type, diff);
-      total += points * count;
+      const points = calculateDefaultPoints(type, diff)
+      total += points * count
     }
   }
 
-  return total;
-}, [distribution]);
+  return total
+}, [distribution])
 ```
 
 ---

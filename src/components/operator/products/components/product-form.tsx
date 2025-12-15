@@ -1,93 +1,99 @@
-'use client';
+"use client"
 
-import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from '@/components/file';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  ACCEPT_IMAGES,
+  FileUploader,
+  type UploadedFileResult,
+} from "@/components/file"
+
 type Product = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  description?: string;
-  image?: string;
-};
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+  id: string
+  name: string
+  category: string
+  price: number
+  description?: string
+  image?: string
+}
 
 const formSchema = z.object({
-  image: z.string().min(1, 'Image is required.'),
+  image: z.string().min(1, "Image is required."),
   name: z.string().min(2, {
-    message: 'Product name must be at least 2 characters.'
+    message: "Product name must be at least 2 characters.",
   }),
   category: z.string(),
   price: z.number(),
   description: z.string().min(10, {
-    message: 'Description must be at least 10 characters.'
-  })
-});
+    message: "Description must be at least 10 characters.",
+  }),
+})
 
 export default function ProductForm({
   initialData,
-  pageTitle
+  pageTitle,
 }: {
-  initialData: Product | null;
-  pageTitle: string;
+  initialData: Product | null
+  pageTitle: string
 }) {
   const defaultValues = {
-    image: initialData?.image || '',
-    name: initialData?.name || '',
-    category: initialData?.category || '',
+    image: initialData?.image || "",
+    name: initialData?.name || "",
+    category: initialData?.category || "",
     price: initialData?.price || 0,
-    description: initialData?.description || ''
-  };
+    description: initialData?.description || "",
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    values: defaultValues
-  });
+    values: defaultValues,
+  })
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     if (files.length > 0) {
-      form.setValue('image', files[0].url);
+      form.setValue("image", files[0].url)
     }
-  };
+  }
 
   function onSubmit(_: z.infer<typeof formSchema>) {}
 
   return (
-    <Card className='mx-auto w-full'>
+    <Card className="mx-auto w-full">
       <CardHeader>
-        <CardTitle className='text-left text-2xl font-bold'>
+        <CardTitle className="text-left text-2xl font-bold">
           {pageTitle}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
-              name='image'
+              name="image"
               render={() => (
-                <div className='space-y-6'>
-                  <FormItem className='w-full'>
+                <div className="space-y-6">
+                  <FormItem className="w-full">
                     <FormLabel>Images</FormLabel>
                     <FormControl>
                       <FileUploader
@@ -103,15 +109,15 @@ export default function ProductForm({
               )}
             />
 
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
-                name='name'
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Product Name</FormLabel>
                     <FormControl>
-                      <Input placeholder='Enter product name' {...field} />
+                      <Input placeholder="Enter product name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -119,7 +125,7 @@ export default function ProductForm({
               />
               <FormField
                 control={form.control}
-                name='category'
+                name="category"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
@@ -129,15 +135,15 @@ export default function ProductForm({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder='Select categories' />
+                          <SelectValue placeholder="Select categories" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value='beauty'>Beauty Products</SelectItem>
-                        <SelectItem value='electronics'>Electronics</SelectItem>
-                        <SelectItem value='clothing'>Clothing</SelectItem>
-                        <SelectItem value='home'>Home & Garden</SelectItem>
-                        <SelectItem value='sports'>
+                        <SelectItem value="beauty">Beauty Products</SelectItem>
+                        <SelectItem value="electronics">Electronics</SelectItem>
+                        <SelectItem value="clothing">Clothing</SelectItem>
+                        <SelectItem value="home">Home & Garden</SelectItem>
+                        <SelectItem value="sports">
                           Sports & Outdoors
                         </SelectItem>
                       </SelectContent>
@@ -148,15 +154,15 @@ export default function ProductForm({
               />
               <FormField
                 control={form.control}
-                name='price'
+                name="price"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Price</FormLabel>
                     <FormControl>
                       <Input
-                        type='number'
-                        step='0.01'
-                        placeholder='Enter price'
+                        type="number"
+                        step="0.01"
+                        placeholder="Enter price"
                         {...field}
                       />
                     </FormControl>
@@ -167,14 +173,14 @@ export default function ProductForm({
             </div>
             <FormField
               control={form.control}
-              name='description'
+              name="description"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder='Enter product description'
-                      className='resize-none'
+                      placeholder="Enter product description"
+                      className="resize-none"
                       {...field}
                     />
                   </FormControl>
@@ -182,10 +188,10 @@ export default function ProductForm({
                 </FormItem>
               )}
             />
-            <Button type='submit'>Add Product</Button>
+            <Button type="submit">Add Product</Button>
           </form>
         </Form>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -45,6 +45,7 @@ import ProfileContent from "@/components/profile/content";
 ### Data Structure
 
 Each role expects a `data` object with at least these fields:
+
 - `id` - Unique identifier
 - `givenName` - First name
 - `surname` - Last name
@@ -57,10 +58,14 @@ Each role expects a `data` object with at least these fields:
 
 ```tsx
 // In a page component
-export default async function StudentProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const { schoolId } = await getTenantContext();
-  
+export default async function StudentProfilePage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  const { schoolId } = await getTenantContext()
+
   const student = await db.student.findFirst({
     where: { id, schoolId },
     select: {
@@ -69,11 +74,11 @@ export default async function StudentProfilePage({ params }: { params: Promise<{
       surname: true,
       // ... other fields
     },
-  });
-  
-  if (!student) return notFound();
-  
-  return <ProfileContent role="student" data={student} />;
+  })
+
+  if (!student) return notFound()
+
+  return <ProfileContent role="student" data={student} />
 }
 ```
 

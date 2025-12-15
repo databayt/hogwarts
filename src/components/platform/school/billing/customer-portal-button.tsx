@@ -1,26 +1,27 @@
-"use client";
+"use client"
 
-import { useTransition } from "react";
-import { openCustomerPortal } from "./actions";
+import { useTransition } from "react"
 
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { Button } from "@/components/ui/button"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
+
+import { openCustomerPortal } from "./actions"
 
 interface CustomerPortalButtonProps {
-  userStripeId: string;
+  userStripeId: string
 }
 
 export function CustomerPortalButton({
   userStripeId,
 }: CustomerPortalButtonProps) {
-  const [isPending, startTransition] = useTransition();
-  const generateUserStripeSession = openCustomerPortal.bind(null, userStripeId);
+  const [isPending, startTransition] = useTransition()
+  const generateUserStripeSession = openCustomerPortal.bind(null, userStripeId)
 
   const stripeSessionAction = () => {
     startTransition(() => {
-      void generateUserStripeSession();
-    });
-  };
+      void generateUserStripeSession()
+    })
+  }
 
   return (
     <Button disabled={isPending} onClick={stripeSessionAction}>
@@ -29,5 +30,5 @@ export function CustomerPortalButton({
       ) : null}
       Open Customer Portal
     </Button>
-  );
+  )
 }

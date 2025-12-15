@@ -1,30 +1,45 @@
-"use client";
+"use client"
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Upload, FileSpreadsheet, Edit, Info, Download } from 'lucide-react';
-import { importSchema } from './validation';
-import { IMPORT_TYPES, SUPPORTED_FORMATS } from "./config";
-import { ImportCard } from './card';
-import type { ImportFormData } from './validation';
+import React, { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Download, Edit, FileSpreadsheet, Info, Upload } from "lucide-react"
+import { useForm } from "react-hook-form"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+
+import { ImportCard } from "./card"
+import { IMPORT_TYPES, SUPPORTED_FORMATS } from "./config"
+import { importSchema } from "./validation"
+import type { ImportFormData } from "./validation"
 
 interface ImportFormProps {
-  initialData?: ImportFormData;
-  onSubmit: (data: ImportFormData) => Promise<void>;
-  onSkip?: () => void;
-  onBack?: () => void;
-  isSubmitting?: boolean;
+  initialData?: ImportFormData
+  onSubmit: (data: ImportFormData) => Promise<void>
+  onSkip?: () => void
+  onBack?: () => void
+  isSubmitting?: boolean
 }
 
 export function ImportForm({
-  initialData = { 
-    dataSource: 'manual' as const,
+  initialData = {
+    dataSource: "manual" as const,
     includeStudents: true,
     includeTeachers: true,
     includeParents: true,
@@ -34,44 +49,41 @@ export function ImportForm({
   onBack,
   isSubmitting = false,
 }: ImportFormProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const form = useForm<ImportFormData>({
     resolver: zodResolver(importSchema),
     defaultValues: initialData,
-  });
+  })
 
-  const selectedImportType = form.watch('dataSource');
+  const selectedImportType = form.watch("dataSource")
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event.target.files?.[0]
     if (file) {
-      setSelectedFile(file);
+      setSelectedFile(file)
     }
-  };
+  }
 
   const getImportIcon = (type: string) => {
     switch (type) {
-      case 'csv':
-        return <FileSpreadsheet className="h-5 w-5" />;
-      case 'excel':
-        return <FileSpreadsheet className="h-5 w-5" />;
-      case 'manual':
-        return <Edit className="h-5 w-5" />;
+      case "csv":
+        return <FileSpreadsheet className="h-5 w-5" />
+      case "excel":
+        return <FileSpreadsheet className="h-5 w-5" />
+      case "manual":
+        return <Edit className="h-5 w-5" />
       default:
-        return <Upload className="h-5 w-5" />;
+        return <Upload className="h-5 w-5" />
     }
-  };
+  }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Preview */}
-          <ImportCard
-            importType={selectedImportType}
-            showPreview={true}
-          />
+          <ImportCard importType={selectedImportType} showPreview={true} />
 
           {/* Import Method Selection */}
           <Card>
@@ -94,19 +106,24 @@ export function ImportForm({
                         className="space-y-4"
                       >
                         {IMPORT_TYPES.map((type) => (
-                          <div key={type.value} className="flex items-start space-x-3">
-                            <RadioGroupItem value={type.value} id={type.value} className="mt-1" />
+                          <div
+                            key={type.value}
+                            className="flex items-start space-x-3"
+                          >
+                            <RadioGroupItem
+                              value={type.value}
+                              id={type.value}
+                              className="mt-1"
+                            />
                             <div className="flex-1">
-                              <Label 
-                                htmlFor={type.value} 
-                                className="flex items-center gap-2 cursor-pointer"
+                              <Label
+                                htmlFor={type.value}
+                                className="flex cursor-pointer items-center gap-2"
                               >
                                 {getImportIcon(type.value)}
                                 {type.label}
                               </Label>
-                              <p className="muted mt-1">
-                                {type.description}
-                              </p>
+                              <p className="muted mt-1">{type.description}</p>
                             </div>
                           </div>
                         ))}
@@ -120,7 +137,7 @@ export function ImportForm({
           </Card>
 
           {/* File Upload (if file import selected) */}
-          {selectedImportType === 'csv' && (
+          {selectedImportType === "csv" && (
             <Card>
               <CardHeader>
                 <CardTitle>Upload File</CardTitle>
@@ -130,16 +147,20 @@ export function ImportForm({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+                  <div className="border-muted rounded-lg border-2 border-dashed p-6 text-center">
                     <input
                       type="file"
-                      accept={selectedImportType === 'csv' ? '.csv,.xlsx,.xls' : undefined}
+                      accept={
+                        selectedImportType === "csv"
+                          ? ".csv,.xlsx,.xls"
+                          : undefined
+                      }
                       onChange={handleFileChange}
                       className="hidden"
                       id="file-upload"
                     />
                     <Label htmlFor="file-upload" className="cursor-pointer">
-                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
                       <p className="text-sm">
                         {selectedFile ? (
                           <>Selected: {selectedFile.name}</>
@@ -147,18 +168,20 @@ export function ImportForm({
                           <>Click to upload or drag and drop</>
                         )}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {selectedImportType === 'csv' ? 'CSV, Excel (.csv, .xlsx, .xls)' : 'Select import type'}
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {selectedImportType === "csv"
+                          ? "CSV, Excel (.csv, .xlsx, .xls)"
+                          : "Select import type"}
                       </p>
                     </Label>
                   </div>
 
                   {/* Download Template */}
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Info className="h-4 w-4" />
                     <span>Need a template?</span>
-                    <Button variant="link" size="sm" className="p-0 h-auto">
-                      <Download className="h-3 w-3 me-1" />
+                    <Button variant="link" size="sm" className="h-auto p-0">
+                      <Download className="me-1 h-3 w-3" />
                       Download template
                     </Button>
                   </div>
@@ -168,7 +191,7 @@ export function ImportForm({
           )}
 
           {/* Manual Entry Info */}
-          {selectedImportType === 'manual' && (
+          {selectedImportType === "manual" && (
             <Card>
               <CardHeader>
                 <CardTitle>Manual Entry</CardTitle>
@@ -177,7 +200,7 @@ export function ImportForm({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="text-muted-foreground space-y-2 text-sm">
                   <p>• Add students and teachers one by one</p>
                   <p>• Import data later from your dashboard</p>
                   <p>• Start with a small pilot group</p>
@@ -210,28 +233,27 @@ export function ImportForm({
                 </Button>
               )}
             </div>
-            
+
             <Button
               type="submit"
               disabled={
-                isSubmitting || 
-                (selectedImportType === 'csv' && !selectedFile)
+                isSubmitting || (selectedImportType === "csv" && !selectedFile)
               }
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
+                  <div className="me-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
                   Processing...
                 </>
               ) : (
-                'Continue'
+                "Continue"
               )}
             </Button>
           </div>
         </form>
       </Form>
     </div>
-  );
+  )
 }
 
-export default ImportForm;
+export default ImportForm

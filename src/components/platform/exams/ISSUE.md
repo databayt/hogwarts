@@ -33,6 +33,7 @@
 **Issue:** Query returns data from other schools or no data at all
 
 **Symptoms:**
+
 ```typescript
 // Error: PrismaClientKnownRequestError: Record to update not found
 // Or: Unexpected empty results
@@ -41,25 +42,27 @@
 **Root Cause:** Missing `schoolId` in query scope
 
 **Solution:**
+
 ```typescript
+// ✅ CORRECT - Always include schoolId
+import { getTenantContext } from "@/lib/tenant-context"
+
 // ❌ WRONG - Missing schoolId
 const exam = await db.exam.findUnique({
-  where: { id: examId }
-});
+  where: { id: examId },
+})
 
-// ✅ CORRECT - Always include schoolId
-import { getTenantContext } from '@/lib/tenant-context';
-
-const { schoolId } = await getTenantContext();
+const { schoolId } = await getTenantContext()
 const exam = await db.exam.findUnique({
   where: {
     id: examId,
-    schoolId  // Required for multi-tenant safety
-  }
-});
+    schoolId, // Required for multi-tenant safety
+  },
+})
 ```
 
 **Prevention:**
+
 - Use `getTenantContext()` in all server actions
 - Include `schoolId` in all queries
 - Test with multiple tenant accounts
@@ -72,6 +75,7 @@ const exam = await db.exam.findUnique({
 **Issue:** Form submission fails silently or with generic error
 
 **Symptoms:**
+
 - Form doesn't submit
 - No validation feedback
 - Console shows Zod validation errors
@@ -79,26 +83,28 @@ const exam = await db.exam.findUnique({
 **Root Cause:** Zod schema mismatch between client and server
 
 **Solution:**
+
 ```typescript
+// form.tsx (client)
+// actions.ts (server)
+import { examSchema, examSchema } from "./validation"
+
 // Ensure schema is imported from same file on both sides
 // validation.ts
 export const examSchema = z.object({
   title: z.string().min(1, "Title is required"),
   // ...
-});
+})
 
-// form.tsx (client)
-import { examSchema } from './validation';
 const form = useForm({
-  resolver: zodResolver(examSchema)
-});
+  resolver: zodResolver(examSchema),
+})
 
-// actions.ts (server)
-import { examSchema } from './validation';
-const validated = examSchema.parse(data);
+const validated = examSchema.parse(data)
 ```
 
 **Prevention:**
+
 - Co-locate validation schemas in `validation.ts`
 - Import from single source of truth
 - Test validation on both client and server
@@ -111,6 +117,7 @@ const validated = examSchema.parse(data);
 **Issue:** PDF generation fails or produces blank pages
 
 **Symptoms:**
+
 - `@react-pdf/renderer` throws errors
 - PDF downloads but is blank
 - Memory errors during generation
@@ -118,6 +125,7 @@ const validated = examSchema.parse(data);
 **Common Causes:**
 
 1. **Invalid JSX in PDF template**
+
 ```typescript
 // ❌ WRONG - Using div in PDF
 <View>
@@ -131,6 +139,7 @@ const validated = examSchema.parse(data);
 ```
 
 2. **Missing required data**
+
 ```typescript
 // ❌ WRONG - Undefined data
 <Text>{exam.title}</Text>  // exam might be undefined
@@ -140,16 +149,18 @@ const validated = examSchema.parse(data);
 ```
 
 3. **Large dataset causing memory issues**
+
 ```typescript
 // ✅ SOLUTION - Paginate or limit data
 const results = await db.examResult.findMany({
   where: { examId, schoolId },
-  take: 100,  // Limit results
-  include: { student: true }
-});
+  take: 100, // Limit results
+  include: { student: true },
+})
 ```
 
 **File References:**
+
 - `src/components/platform/exams/results/lib/pdf-generator.ts:1-280`
 - `src/components/platform/exams/results/lib/templates/*.tsx`
 
@@ -160,16 +171,19 @@ const results = await db.examResult.findMany({
 **Issue:** UI shows translation key instead of text
 
 **Symptoms:**
+
 ```
 dictionary?.results?.title  // Shows as "dictionary.results.title"
 ```
 
 **Solution:**
+
 1. Check dictionary files have all keys:
    - `src/components/internationalization/school-en.json`
    - `src/components/internationalization/school-ar.json`
 
 2. Add missing keys:
+
 ```json
 // school-en.json
 {
@@ -184,6 +198,7 @@ dictionary?.results?.title  // Shows as "dictionary.results.title"
 ```
 
 3. Verify dictionary is passed to component:
+
 ```typescript
 // page.tsx
 const dictionary = await getDictionary(lang);
@@ -191,6 +206,7 @@ const dictionary = await getDictionary(lang);
 ```
 
 **Prevention:**
+
 - Maintain parity between en/ar dictionaries
 - Use TypeScript for dictionary types
 - Test both languages
@@ -209,11 +225,12 @@ const dictionary = await getDictionary(lang);
 **Symptoms:** Multiple exams scheduled for same class at same time
 
 **Solution:**
+
 ```typescript
 // Add conflict detection in actions.ts
 export async function createExam(data: ExamFormData) {
-  "use server";
-  const { schoolId } = await getTenantContext();
+  "use server"
+  const { schoolId } = await getTenantContext()
 
   // Check for conflicts
   const conflict = await db.exam.findFirst({
@@ -224,18 +241,18 @@ export async function createExam(data: ExamFormData) {
       OR: [
         {
           startTime: { lte: data.startTime },
-          endTime: { gt: data.startTime }
+          endTime: { gt: data.startTime },
         },
         {
           startTime: { lt: data.endTime },
-          endTime: { gte: data.endTime }
-        }
-      ]
-    }
-  });
+          endTime: { gte: data.endTime },
+        },
+      ],
+    },
+  })
 
   if (conflict) {
-    throw new Error(`Conflict with exam: ${conflict.title}`);
+    throw new Error(`Conflict with exam: ${conflict.title}`)
   }
 
   // Create exam...
@@ -253,23 +270,24 @@ export async function createExam(data: ExamFormData) {
 **Root Cause:** Time string parsing issues or timezone problems
 
 **Solution:**
+
 ```typescript
 // utils.ts - Robust duration calculation
 export function calculateDuration(startTime: string, endTime: string): number {
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
+  const [startHour, startMin] = startTime.split(":").map(Number)
+  const [endHour, endMin] = endTime.split(":").map(Number)
 
-  const startMinutes = startHour * 60 + startMin;
-  const endMinutes = endHour * 60 + endMin;
+  const startMinutes = startHour * 60 + startMin
+  const endMinutes = endHour * 60 + endMin
 
-  let duration = endMinutes - startMinutes;
+  let duration = endMinutes - startMinutes
 
   // Handle overnight exams (rare but possible)
   if (duration < 0) {
-    duration += 24 * 60;
+    duration += 24 * 60
   }
 
-  return duration;
+  return duration
 }
 ```
 
@@ -286,11 +304,12 @@ export function calculateDuration(startTime: string, endTime: string): number {
 **Root Cause:** Nested Prisma create without proper relation handling
 
 **Solution:**
+
 ```typescript
 // actions.ts
 export async function createQuestion(data: QuestionFormData) {
-  "use server";
-  const { schoolId } = await getTenantContext();
+  "use server"
+  const { schoolId } = await getTenantContext()
 
   const question = await db.questionBank.create({
     data: {
@@ -302,17 +321,18 @@ export async function createQuestion(data: QuestionFormData) {
       points: data.points,
       // Properly create related options
       options: {
-        create: data.options?.map((opt, index) => ({
-          text: opt.text,
-          isCorrect: opt.isCorrect,
-          order: index
-        })) || []
-      }
+        create:
+          data.options?.map((opt, index) => ({
+            text: opt.text,
+            isCorrect: opt.isCorrect,
+            order: index,
+          })) || [],
+      },
     },
-    include: { options: true }
-  });
+    include: { options: true },
+  })
 
-  return question;
+  return question
 }
 ```
 
@@ -327,25 +347,25 @@ export async function createQuestion(data: QuestionFormData) {
 ```typescript
 // actions.ts
 export async function searchQuestions(query: string, subjectId?: string) {
-  "use server";
-  const { schoolId } = await getTenantContext();
+  "use server"
+  const { schoolId } = await getTenantContext()
 
   return await db.questionBank.findMany({
     where: {
       schoolId,
       ...(subjectId && { subjectId }),
       OR: [
-        { questionText: { contains: query, mode: 'insensitive' } },
-        { topic: { contains: query, mode: 'insensitive' } },
-        { tags: { has: query } }
-      ]
+        { questionText: { contains: query, mode: "insensitive" } },
+        { topic: { contains: query, mode: "insensitive" } },
+        { tags: { has: query } },
+      ],
     },
     include: {
       subject: true,
-      options: true
+      options: true,
     },
-    take: 50
-  });
+    take: 50,
+  })
 }
 ```
 
@@ -362,6 +382,7 @@ export async function searchQuestions(query: string, subjectId?: string) {
 **Root Cause:** Selection algorithm doesn't enforce distribution
 
 **Solution:**
+
 ```typescript
 // utils.ts
 export async function selectQuestions(
@@ -369,8 +390,8 @@ export async function selectQuestions(
   subjectId: string,
   schoolId: string
 ) {
-  const distribution = template.questionDistribution;
-  const questions: QuestionBank[] = [];
+  const distribution = template.questionDistribution
+  const questions: QuestionBank[] = []
 
   // Select by difficulty
   for (const [difficulty, count] of Object.entries(distribution.byDifficulty)) {
@@ -378,23 +399,23 @@ export async function selectQuestions(
       where: {
         schoolId,
         subjectId,
-        difficulty: difficulty as Difficulty
+        difficulty: difficulty as Difficulty,
       },
       take: count,
-      orderBy: { createdAt: 'desc' }
-    });
+      orderBy: { createdAt: "desc" },
+    })
 
     if (selected.length < count) {
       throw new Error(
         `Not enough ${difficulty} questions. Need ${count}, found ${selected.length}`
-      );
+      )
     }
 
-    questions.push(...selected);
+    questions.push(...selected)
   }
 
   // Shuffle questions
-  return questions.sort(() => Math.random() - 0.5);
+  return questions.sort(() => Math.random() - 0.5)
 }
 ```
 
@@ -408,27 +429,24 @@ export async function selectQuestions(
 
 ```typescript
 // actions.ts
-export async function generateQuestionsWithAI(
-  prompt: string,
-  count: number
-) {
-  "use server";
+export async function generateQuestionsWithAI(prompt: string, count: number) {
+  "use server"
 
   // Generate in batches of 5
-  const batchSize = 5;
-  const batches = Math.ceil(count / batchSize);
-  const questions: Question[] = [];
+  const batchSize = 5
+  const batches = Math.ceil(count / batchSize)
+  const questions: Question[] = []
 
   for (let i = 0; i < batches; i++) {
-    const batchCount = Math.min(batchSize, count - i * batchSize);
-    const batchQuestions = await aiGenerateQuestions(prompt, batchCount);
-    questions.push(...batchQuestions);
+    const batchCount = Math.min(batchSize, count - i * batchSize)
+    const batchQuestions = await aiGenerateQuestions(prompt, batchCount)
+    questions.push(...batchQuestions)
 
     // Small delay to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
-  return questions;
+  return questions
 }
 ```
 
@@ -445,6 +463,7 @@ export async function generateQuestionsWithAI(
 **Root Cause:** Case sensitivity or whitespace in answer comparison
 
 **Solution:**
+
 ```typescript
 // utils.ts
 export function gradeMCQAnswer(
@@ -452,9 +471,9 @@ export function gradeMCQAnswer(
   correctAnswer: string
 ): boolean {
   const normalize = (str: string) =>
-    str.trim().toLowerCase().replace(/\s+/g, ' ');
+    str.trim().toLowerCase().replace(/\s+/g, " ")
 
-  return normalize(studentAnswer) === normalize(correctAnswer);
+  return normalize(studentAnswer) === normalize(correctAnswer)
 }
 ```
 
@@ -473,18 +492,18 @@ export async function gradeEssay(
   rubric: Rubric,
   maxPoints: number
 ) {
-  "use server";
+  "use server"
 
-  const aiScore = await aiGradeEssay(answer, rubric);
+  const aiScore = await aiGradeEssay(answer, rubric)
 
   // Validate AI response
-  const score = Math.max(0, Math.min(maxPoints, aiScore));
+  const score = Math.max(0, Math.min(maxPoints, aiScore))
 
   if (score !== aiScore) {
-    console.warn(`AI score ${aiScore} clamped to ${score} (max: ${maxPoints})`);
+    console.warn(`AI score ${aiScore} clamped to ${score} (max: ${maxPoints})`)
   }
 
-  return score;
+  return score
 }
 ```
 
@@ -501,6 +520,7 @@ export async function gradeEssay(
 **Root Cause:** Grade boundaries not configured or wrong logic
 
 **Solution:**
+
 ```typescript
 // lib/calculator.ts
 export async function calculateGrade(
@@ -514,22 +534,22 @@ export async function calculateGrade(
       schoolId,
       ...(subjectId && { subjectId }),
       minScore: { lte: percentage },
-      maxScore: { gte: percentage }
+      maxScore: { gte: percentage },
     },
-    orderBy: { gpaValue: 'desc' },
-    take: 1
-  });
+    orderBy: { gpaValue: "desc" },
+    take: 1,
+  })
 
   if (!boundaries.length) {
     // Fallback to default grading
-    return getDefaultGrade(percentage);
+    return getDefaultGrade(percentage)
   }
 
-  const boundary = boundaries[0];
+  const boundary = boundaries[0]
   return {
     grade: boundary.grade,
-    gpa: boundary.gpaValue
-  };
+    gpa: boundary.gpaValue,
+  }
 }
 ```
 
@@ -549,29 +569,29 @@ export function calculateRanks(
   results: ExamResult[]
 ): Array<ExamResult & { rank: number }> {
   // Sort by percentage descending
-  const sorted = [...results].sort((a, b) => b.percentage - a.percentage);
+  const sorted = [...results].sort((a, b) => b.percentage - a.percentage)
 
-  let currentRank = 1;
-  let previousPercentage: number | null = null;
-  let studentsAtSameRank = 0;
+  let currentRank = 1
+  let previousPercentage: number | null = null
+  let studentsAtSameRank = 0
 
   return sorted.map((result, index) => {
     if (previousPercentage === result.percentage) {
       // Same score, same rank
-      studentsAtSameRank++;
+      studentsAtSameRank++
     } else {
       // New score, new rank (skip tied positions)
-      currentRank = index + 1;
-      studentsAtSameRank = 0;
+      currentRank = index + 1
+      studentsAtSameRank = 0
     }
 
-    previousPercentage = result.percentage;
+    previousPercentage = result.percentage
 
     return {
       ...result,
-      rank: currentRank
-    };
-  });
+      rank: currentRank,
+    }
+  })
 }
 ```
 
@@ -587,20 +607,20 @@ export function calculateRanks(
 // lib/templates/modern.tsx
 const rtlStyles = StyleSheet.create({
   page: {
-    flexDirection: lang === 'ar' ? 'row-reverse' : 'row',
-    fontFamily: lang === 'ar' ? 'Tajawal' : 'Inter',
-    textAlign: lang === 'ar' ? 'right' : 'left'
+    flexDirection: lang === "ar" ? "row-reverse" : "row",
+    fontFamily: lang === "ar" ? "Tajawal" : "Inter",
+    textAlign: lang === "ar" ? "right" : "left",
   },
   text: {
-    direction: lang === 'ar' ? 'rtl' : 'ltr'
-  }
-});
+    direction: lang === "ar" ? "rtl" : "ltr",
+  },
+})
 
 // Register Arabic font
 Font.register({
-  family: 'Tajawal',
-  src: '/fonts/Tajawal-Regular.ttf'
-});
+  family: "Tajawal",
+  src: "/fonts/Tajawal-Regular.ttf",
+})
 ```
 
 ---
@@ -612,6 +632,7 @@ Font.register({
 **Issue:** Exam list takes >3s to load
 
 **Diagnosis:**
+
 ```bash
 # Check slow queries in Prisma
 pnpm prisma studio
@@ -622,6 +643,7 @@ pnpm prisma db execute --file=check_indexes.sql
 **Solutions:**
 
 1. **Add database indexes**
+
 ```prisma
 // prisma/models/exam.prisma
 model Exam {
@@ -634,6 +656,7 @@ model Exam {
 ```
 
 2. **Optimize query with selective includes**
+
 ```typescript
 // Instead of including everything
 const exams = await db.exam.findMany({
@@ -641,10 +664,10 @@ const exams = await db.exam.findMany({
   include: {
     class: true,
     subject: true,
-    examResults: true,  // ❌ Expensive
-    generatedExams: true
-  }
-});
+    examResults: true, // ❌ Expensive
+    generatedExams: true,
+  },
+})
 
 // ✅ Select only needed fields
 const exams = await db.exam.findMany({
@@ -655,32 +678,30 @@ const exams = await db.exam.findMany({
     examDate: true,
     class: { select: { name: true } },
     subject: { select: { subjectName: true } },
-    _count: { select: { examResults: true } }  // Count instead of full data
-  }
-});
+    _count: { select: { examResults: true } }, // Count instead of full data
+  },
+})
 ```
 
 3. **Use pagination**
+
 ```typescript
 // Add to actions.ts
-export async function getExams(params: {
-  page: number;
-  pageSize: number;
-}) {
-  const { page, pageSize } = params;
-  const skip = (page - 1) * pageSize;
+export async function getExams(params: { page: number; pageSize: number }) {
+  const { page, pageSize } = params
+  const skip = (page - 1) * pageSize
 
   const [exams, total] = await Promise.all([
     db.exam.findMany({
       where: { schoolId },
       skip,
       take: pageSize,
-      orderBy: { examDate: 'desc' }
+      orderBy: { examDate: "desc" },
     }),
-    db.exam.count({ where: { schoolId } })
-  ]);
+    db.exam.count({ where: { schoolId } }),
+  ])
 
-  return { exams, total, pages: Math.ceil(total / pageSize) };
+  return { exams, total, pages: Math.ceil(total / pageSize) }
 }
 ```
 
@@ -695,22 +716,22 @@ export async function getExams(params: {
 ```typescript
 // Option 1: Generate on-demand, one at a time
 export async function generateSinglePDF(examId: string, studentId: string) {
-  const result = await getExamResult(examId, studentId);
-  return await generatePDF(result);
+  const result = await getExamResult(examId, studentId)
+  return await generatePDF(result)
 }
 
 // Option 2: Pre-generate and store (requires storage)
 export async function preGenerateAllPDFs(examId: string) {
-  const results = await getExamResults(examId);
+  const results = await getExamResults(examId)
 
   const jobs = results.map(async (result) => {
-    const pdf = await generatePDF(result);
-    await uploadToStorage(pdf, `results/${examId}/${result.studentId}.pdf`);
-  });
+    const pdf = await generatePDF(result)
+    await uploadToStorage(pdf, `results/${examId}/${result.studentId}.pdf`)
+  })
 
   // Process in batches of 10
   for (let i = 0; i < jobs.length; i += 10) {
-    await Promise.all(jobs.slice(i, i + 10));
+    await Promise.all(jobs.slice(i, i + 10))
   }
 }
 ```
@@ -732,48 +753,48 @@ export async function updateGrade(
   studentId: string,
   newGrade: number
 ) {
-  "use server";
+  "use server"
 
-  const session = await auth();
-  const { schoolId } = await getTenantContext();
+  const session = await auth()
+  const { schoolId } = await getTenantContext()
 
   // Permission check
-  if (!session?.user || !['ADMIN', 'TEACHER'].includes(session.user.role)) {
-    throw new Error('Unauthorized');
+  if (!session?.user || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+    throw new Error("Unauthorized")
   }
 
   // Get old grade for audit
   const oldResult = await db.examResult.findUnique({
     where: {
       examId_studentId: { examId, studentId },
-      schoolId
-    }
-  });
+      schoolId,
+    },
+  })
 
   // Update grade
   const updated = await db.examResult.update({
     where: {
       examId_studentId: { examId, studentId },
-      schoolId
+      schoolId,
     },
-    data: { marksObtained: newGrade }
-  });
+    data: { marksObtained: newGrade },
+  })
 
   // Audit log
   await db.auditLog.create({
     data: {
       schoolId,
       userId: session.user.id,
-      action: 'UPDATE_GRADE',
-      entityType: 'ExamResult',
+      action: "UPDATE_GRADE",
+      entityType: "ExamResult",
       entityId: updated.id,
       oldValue: JSON.stringify({ marksObtained: oldResult?.marksObtained }),
       newValue: JSON.stringify({ marksObtained: newGrade }),
-      timestamp: new Date()
-    }
-  });
+      timestamp: new Date(),
+    },
+  })
 
-  return updated;
+  return updated
 }
 ```
 
@@ -784,6 +805,7 @@ export async function updateGrade(
 **Issue:** Student from School A sees School B's exams
 
 **Prevention Checklist:**
+
 - [ ] All queries include `schoolId` from `getTenantContext()`
 - [ ] Use `updateMany`/`deleteMany` with `schoolId` filter
 - [ ] Test with multiple tenant accounts
@@ -801,11 +823,13 @@ export async function updateGrade(
 **Common Causes:**
 
 1. **Existing data conflicts with new constraint**
+
 ```bash
 # Error: Unique constraint violation
 ```
 
 **Solution:** Add data migration
+
 ```sql
 -- migrations/xxx_fix_duplicates.sql
 DELETE FROM exam_results
@@ -817,6 +841,7 @@ WHERE id NOT IN (
 ```
 
 2. **Required field added without default**
+
 ```prisma
 model Exam {
   newRequiredField String  // ❌ Will fail if existing data
@@ -824,6 +849,7 @@ model Exam {
 ```
 
 **Solution:** Make optional or provide default
+
 ```prisma
 model Exam {
   newRequiredField String @default("")  // ✅ Provide default
@@ -839,6 +865,7 @@ model Exam {
 **Issue:** TypeScript errors about missing Prisma models
 
 **Solution:**
+
 ```bash
 # Regenerate Prisma client
 pnpm prisma generate
@@ -859,15 +886,16 @@ pnpm prisma generate
 **Root Cause:** Missing integration layer
 
 **Solution:** Create sync function
+
 ```typescript
 // lib/gradebook-sync.ts
 export async function syncExamToGradebook(examId: string) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    include: { examResults: true }
-  });
+    include: { examResults: true },
+  })
 
-  if (!exam) return;
+  if (!exam) return
 
   // Create gradebook entries
   for (const result of exam.examResults) {
@@ -876,8 +904,8 @@ export async function syncExamToGradebook(examId: string) {
         studentId_subjectId_assessmentName: {
           studentId: result.studentId,
           subjectId: exam.subjectId,
-          assessmentName: exam.title
-        }
+          assessmentName: exam.title,
+        },
       },
       create: {
         schoolId: exam.schoolId,
@@ -886,12 +914,12 @@ export async function syncExamToGradebook(examId: string) {
         assessmentName: exam.title,
         score: result.marksObtained,
         maxScore: exam.totalMarks,
-        weight: exam.examType === 'FINAL' ? 0.5 : 0.25
+        weight: exam.examType === "FINAL" ? 0.5 : 0.25,
       },
       update: {
-        score: result.marksObtained
-      }
-    });
+        score: result.marksObtained,
+      },
+    })
   }
 }
 ```
@@ -955,6 +983,7 @@ A: `src/components/platform/exams/results/lib/templates/` - see `classic.tsx`, `
 
 **Q: How do I add a new question type?**
 A:
+
 1. Add to `QuestionType` enum in `prisma/models/exam.prisma`
 2. Update validation in `qbank/validation.ts`
 3. Add UI rendering in `qbank/form.tsx`
@@ -965,6 +994,7 @@ A: Yes, modify `calculateGrade()` in `results/lib/calculator.ts:1-340`
 
 **Q: How do I debug a failed PDF generation?**
 A:
+
 ```typescript
 // Add logging in pdf-generator.ts
 console.log('Generating PDF for exam:', examId);
@@ -991,12 +1021,14 @@ If you encounter issues not covered here:
    - Database logs: Prisma query logging
 
 2. **Debug Mode:**
+
 ```bash
 # Enable Prisma query logging
 DEBUG=prisma:query pnpm dev
 ```
 
 3. **Test in Isolation:**
+
 ```bash
 # Test specific feature
 pnpm test src/components/platform/exams/results/**/*.test.ts

@@ -3,15 +3,17 @@
  * Simple button to trigger print operations
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useCallback } from "react";
-import { cn } from "@/lib/utils";
-import { Printer, Loader2 } from "lucide-react";
-import { Button, type ButtonProps } from "@/components/ui/button";
-import type { PrintConfig } from "./types";
-import { usePrint } from "./use-print";
+import * as React from "react"
+import { useCallback } from "react"
+import { Loader2, Printer } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button, type ButtonProps } from "@/components/ui/button"
+
+import type { PrintConfig } from "./types"
+import { usePrint } from "./use-print"
 
 // ============================================================================
 // Types
@@ -19,25 +21,25 @@ import { usePrint } from "./use-print";
 
 interface PrintButtonProps extends Omit<ButtonProps, "onClick" | "onError"> {
   /** Element to print (optional - prints whole page if not provided) */
-  elementRef?: React.RefObject<HTMLElement | null>;
+  elementRef?: React.RefObject<HTMLElement | null>
 
   /** Element ID to print */
-  elementId?: string;
+  elementId?: string
 
   /** HTML content to print */
-  htmlContent?: string;
+  htmlContent?: string
 
   /** Print configuration */
-  config?: PrintConfig;
+  config?: PrintConfig
 
   /** Callback after print */
-  onPrint?: () => void;
+  onPrint?: () => void
 
   /** Callback on error */
-  onError?: (error: string) => void;
+  onError?: (error: string) => void
 
   /** Children for button text */
-  children?: React.ReactNode;
+  children?: React.ReactNode
 }
 
 // ============================================================================
@@ -56,27 +58,37 @@ export function PrintButton({
   disabled,
   ...buttonProps
 }: PrintButtonProps) {
-  const { isPrinting, print, printById, printHtml } = usePrint();
+  const { isPrinting, print, printById, printHtml } = usePrint()
 
   const handleClick = useCallback(async () => {
-    let result;
+    let result
 
     if (htmlContent) {
-      result = await printHtml(htmlContent, config);
+      result = await printHtml(htmlContent, config)
     } else if (elementId) {
-      result = await printById(elementId, config);
+      result = await printById(elementId, config)
     } else if (elementRef?.current) {
-      result = await print(elementRef.current, config);
+      result = await print(elementRef.current, config)
     } else {
-      result = await print(null, config);
+      result = await print(null, config)
     }
 
     if (result.success) {
-      onPrint?.();
+      onPrint?.()
     } else {
-      onError?.(result.error || "Print failed");
+      onError?.(result.error || "Print failed")
     }
-  }, [htmlContent, elementId, elementRef, config, print, printById, printHtml, onPrint, onError]);
+  }, [
+    htmlContent,
+    elementId,
+    elementRef,
+    config,
+    print,
+    printById,
+    printHtml,
+    onPrint,
+    onError,
+  ])
 
   return (
     <Button
@@ -93,7 +105,7 @@ export function PrintButton({
       )}
       {children || (isPrinting ? "Printing..." : "Print")}
     </Button>
-  );
+  )
 }
 
 // ============================================================================
@@ -101,9 +113,9 @@ export function PrintButton({
 // ============================================================================
 
 interface PrintAreaProps {
-  children: React.ReactNode;
-  className?: string;
-  id?: string;
+  children: React.ReactNode
+  className?: string
+  id?: string
 }
 
 /**
@@ -114,21 +126,27 @@ export function PrintArea({ children, className, id }: PrintAreaProps) {
     <div id={id} className={cn("print-area", className)}>
       {children}
     </div>
-  );
+  )
 }
 
 /**
  * Wrapper for content that should not be printed
  */
-export function NoPrint({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("no-print", className)}>{children}</div>;
+export function NoPrint({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return <div className={cn("no-print", className)}>{children}</div>
 }
 
 /**
  * Component that forces a page break when printing
  */
 export function PageBreak() {
-  return <div className="page-break" style={{ pageBreakBefore: "always" }} />;
+  return <div className="page-break" style={{ pageBreakBefore: "always" }} />
 }
 
-export type { PrintButtonProps, PrintAreaProps };
+export type { PrintButtonProps, PrintAreaProps }

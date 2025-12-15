@@ -3,60 +3,80 @@
  * Drag-and-drop file uploader with preview and progress
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useCallback, useState } from "react";
-import { useDropzone, type DropzoneOptions } from "react-dropzone";
-import { cn } from "@/lib/utils";
-import { Upload, X, File, Image, Video, Music, Archive, FileText, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import type { FileCategory, FileType, StorageProvider, StorageTier, UploadProgress } from "../types";
-import { useUpload, type UploadResult } from "./use-upload";
-import { formatBytes } from "../formatters";
+import * as React from "react"
+import { useCallback, useState } from "react"
+import {
+  AlertCircle,
+  Archive,
+  CheckCircle,
+  File,
+  FileText,
+  Image,
+  Loader2,
+  Music,
+  Upload,
+  Video,
+  X,
+} from "lucide-react"
+import { useDropzone, type DropzoneOptions } from "react-dropzone"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+
+import { formatBytes } from "../formatters"
+import type {
+  FileCategory,
+  FileType,
+  StorageProvider,
+  StorageTier,
+  UploadProgress,
+} from "../types"
+import { useUpload, type UploadResult } from "./use-upload"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface UploaderProps {
-  category: FileCategory;
-  type?: FileType;
-  folder?: string;
-  provider?: StorageProvider;
-  tier?: StorageTier;
-  maxSize?: number;
-  maxFiles?: number;
-  allowedTypes?: string[];
-  className?: string;
-  disabled?: boolean;
-  showPreview?: boolean;
-  showFileList?: boolean;
-  variant?: "default" | "compact" | "avatar" | "banner";
-  placeholder?: string;
-  accept?: Record<string, string[]>;
-  onUploadComplete?: (results: UploadResult[]) => void;
-  onUploadError?: (error: string) => void;
-  onFilesChange?: (files: UploadResult[]) => void;
+  category: FileCategory
+  type?: FileType
+  folder?: string
+  provider?: StorageProvider
+  tier?: StorageTier
+  maxSize?: number
+  maxFiles?: number
+  allowedTypes?: string[]
+  className?: string
+  disabled?: boolean
+  showPreview?: boolean
+  showFileList?: boolean
+  variant?: "default" | "compact" | "avatar" | "banner"
+  placeholder?: string
+  accept?: Record<string, string[]>
+  onUploadComplete?: (results: UploadResult[]) => void
+  onUploadError?: (error: string) => void
+  onFilesChange?: (files: UploadResult[]) => void
   dictionary?: {
-    dropzone?: string;
-    browse?: string;
-    uploading?: string;
-    uploadComplete?: string;
-    uploadFailed?: string;
-    remove?: string;
-    maxSize?: string;
-  };
+    dropzone?: string
+    browse?: string
+    uploading?: string
+    uploadComplete?: string
+    uploadFailed?: string
+    remove?: string
+    maxSize?: string
+  }
 }
 
 interface FilePreview {
-  file: File;
-  preview?: string;
-  status: "pending" | "uploading" | "completed" | "error";
-  progress: number;
-  error?: string;
-  result?: UploadResult;
+  file: File
+  preview?: string
+  status: "pending" | "uploading" | "completed" | "error"
+  progress: number
+  error?: string
+  result?: UploadResult
 }
 
 // ============================================================================
@@ -64,13 +84,13 @@ interface FilePreview {
 // ============================================================================
 
 const categoryIcons: Record<FileCategory, React.ReactNode> = {
-  image: <Image className="h-8 w-8 text-muted-foreground" />,
-  video: <Video className="h-8 w-8 text-muted-foreground" />,
-  document: <FileText className="h-8 w-8 text-muted-foreground" />,
-  audio: <Music className="h-8 w-8 text-muted-foreground" />,
-  archive: <Archive className="h-8 w-8 text-muted-foreground" />,
-  other: <File className="h-8 w-8 text-muted-foreground" />,
-};
+  image: <Image className="text-muted-foreground h-8 w-8" />,
+  video: <Video className="text-muted-foreground h-8 w-8" />,
+  document: <FileText className="text-muted-foreground h-8 w-8" />,
+  audio: <Music className="text-muted-foreground h-8 w-8" />,
+  archive: <Archive className="text-muted-foreground h-8 w-8" />,
+  other: <File className="text-muted-foreground h-8 w-8" />,
+}
 
 // ============================================================================
 // Component
@@ -97,7 +117,7 @@ export function Uploader({
   onFilesChange,
   dictionary,
 }: UploaderProps) {
-  const [previews, setPreviews] = useState<FilePreview[]>([]);
+  const [previews, setPreviews] = useState<FilePreview[]>([])
 
   const {
     isUploading,
@@ -125,29 +145,27 @@ export function Uploader({
             ? { ...p, status: "completed", progress: 100, result }
             : p
         )
-      );
+      )
     },
     onError: (err, filename) => {
       setPreviews((prev) =>
         prev.map((p) =>
-          p.file.name === filename
-            ? { ...p, status: "error", error: err }
-            : p
+          p.file.name === filename ? { ...p, status: "error", error: err } : p
         )
-      );
-      onUploadError?.(err);
+      )
+      onUploadError?.(err)
     },
-  });
+  })
 
   // Update parent when files change
   React.useEffect(() => {
-    onFilesChange?.(uploadedFiles);
-  }, [uploadedFiles, onFilesChange]);
+    onFilesChange?.(uploadedFiles)
+  }, [uploadedFiles, onFilesChange])
 
   // Handle file drop
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      if (disabled || acceptedFiles.length === 0) return;
+      if (disabled || acceptedFiles.length === 0) return
 
       // Create previews
       const newPreviews: FilePreview[] = acceptedFiles.map((file) => ({
@@ -157,34 +175,34 @@ export function Uploader({
           : undefined,
         status: "pending" as const,
         progress: 0,
-      }));
+      }))
 
-      setPreviews((prev) => [...prev, ...newPreviews]);
+      setPreviews((prev) => [...prev, ...newPreviews])
 
       // Upload files
-      const results = await uploadMultiple(acceptedFiles);
+      const results = await uploadMultiple(acceptedFiles)
 
       if (results.length > 0) {
-        onUploadComplete?.(results);
+        onUploadComplete?.(results)
       }
     },
     [disabled, uploadMultiple, onUploadComplete]
-  );
+  )
 
   // Remove file preview
   const removePreview = useCallback(
     async (index: number) => {
-      const preview = previews[index];
+      const preview = previews[index]
       if (preview.result) {
-        await remove(preview.result.id);
+        await remove(preview.result.id)
       }
       if (preview.preview) {
-        URL.revokeObjectURL(preview.preview);
+        URL.revokeObjectURL(preview.preview)
       }
-      setPreviews((prev) => prev.filter((_, i) => i !== index));
+      setPreviews((prev) => prev.filter((_, i) => i !== index))
     },
     [previews, remove]
-  );
+  )
 
   // Configure dropzone
   const dropzoneOptions: DropzoneOptions = {
@@ -194,18 +212,19 @@ export function Uploader({
     maxFiles,
     disabled: disabled || isUploading,
     multiple: maxFiles > 1,
-  };
+  }
 
-  const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone(dropzoneOptions);
+  const { getRootProps, getInputProps, isDragActive, isDragReject } =
+    useDropzone(dropzoneOptions)
 
   // Cleanup previews on unmount
   React.useEffect(() => {
     return () => {
       previews.forEach((p) => {
-        if (p.preview) URL.revokeObjectURL(p.preview);
-      });
-    };
-  }, []);
+        if (p.preview) URL.revokeObjectURL(p.preview)
+      })
+    }
+  }, [])
 
   // ============================================================================
   // Render Variants
@@ -217,8 +236,8 @@ export function Uploader({
         <div
           {...getRootProps()}
           className={cn(
-            "relative h-32 w-32 rounded-full border-2 border-dashed border-border bg-muted/50",
-            "flex items-center justify-center cursor-pointer transition-colors",
+            "border-border bg-muted/50 relative h-32 w-32 rounded-full border-2 border-dashed",
+            "flex cursor-pointer items-center justify-center transition-colors",
             isDragActive && "border-primary bg-primary/10",
             isDragReject && "border-destructive bg-destructive/10",
             disabled && "cursor-not-allowed opacity-50"
@@ -238,19 +257,17 @@ export function Uploader({
               className="h-full w-full rounded-full object-cover"
             />
           ) : (
-            <Upload className="h-8 w-8 text-muted-foreground" />
+            <Upload className="text-muted-foreground h-8 w-8" />
           )}
           {isUploading && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/80">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="bg-background/80 absolute inset-0 flex items-center justify-center rounded-full">
+              <Loader2 className="text-primary h-8 w-8 animate-spin" />
             </div>
           )}
         </div>
-        {error && (
-          <p className="mt-2 text-sm text-destructive">{error}</p>
-        )}
+        {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
       </div>
-    );
+    )
   }
 
   if (variant === "compact") {
@@ -273,15 +290,13 @@ export function Uploader({
           {dictionary?.browse || "Upload"}
         </Button>
         {uploadedFiles.length > 0 && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {uploadedFiles.length} file(s) uploaded
           </span>
         )}
-        {error && (
-          <span className="text-sm text-destructive">{error}</span>
-        )}
+        {error && <span className="text-destructive text-sm">{error}</span>}
       </div>
-    );
+    )
   }
 
   // ============================================================================
@@ -294,8 +309,8 @@ export function Uploader({
       <div
         {...getRootProps()}
         className={cn(
-          "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border",
-          "bg-muted/50 p-8 text-center transition-colors cursor-pointer",
+          "border-border relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed",
+          "bg-muted/50 cursor-pointer p-8 text-center transition-colors",
           isDragActive && "border-primary bg-primary/10",
           isDragReject && "border-destructive bg-destructive/10",
           disabled && "cursor-not-allowed opacity-50",
@@ -306,8 +321,8 @@ export function Uploader({
 
         {isUploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">
+            <Loader2 className="text-primary h-10 w-10 animate-spin" />
+            <p className="text-muted-foreground text-sm">
               {dictionary?.uploading || "Uploading..."}
             </p>
             {progress && (
@@ -322,7 +337,7 @@ export function Uploader({
                 ? dictionary?.dropzone || "Drop files here"
                 : placeholder || "Drag & drop files here, or click to browse"}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               {maxSize &&
                 `${dictionary?.maxSize || "Max size"}: ${formatBytes(maxSize)}`}
             </p>
@@ -332,7 +347,7 @@ export function Uploader({
 
       {/* Error Message */}
       {error && (
-        <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-md p-3 text-sm">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>
@@ -344,7 +359,7 @@ export function Uploader({
           {previews.map((preview, index) => (
             <div
               key={`${preview.file.name}-${index}`}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+              className="border-border bg-card flex items-center gap-3 rounded-lg border p-3"
             >
               {/* Preview/Icon */}
               {showPreview && preview.preview ? (
@@ -354,35 +369,37 @@ export function Uploader({
                   className="h-12 w-12 rounded object-cover"
                 />
               ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded bg-muted">
+                <div className="bg-muted flex h-12 w-12 items-center justify-center rounded">
                   {categoryIcons[category]}
                 </div>
               )}
 
               {/* File Info */}
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium">{preview.file.name}</p>
-                <p className="text-xs text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">
+                  {preview.file.name}
+                </p>
+                <p className="text-muted-foreground text-xs">
                   {formatBytes(preview.file.size)}
                 </p>
                 {preview.status === "uploading" && (
                   <Progress value={preview.progress} className="mt-1 h-1" />
                 )}
                 {preview.error && (
-                  <p className="text-xs text-destructive">{preview.error}</p>
+                  <p className="text-destructive text-xs">{preview.error}</p>
                 )}
               </div>
 
               {/* Status/Actions */}
               <div className="flex items-center gap-2">
                 {preview.status === "uploading" && (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <Loader2 className="text-primary h-4 w-4 animate-spin" />
                 )}
                 {preview.status === "completed" && (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 )}
                 {preview.status === "error" && (
-                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <AlertCircle className="text-destructive h-4 w-4" />
                 )}
                 <Button
                   type="button"
@@ -399,7 +416,7 @@ export function Uploader({
         </div>
       )}
     </div>
-  );
+  )
 }
 
-export type { UploaderProps };
+export type { UploaderProps }

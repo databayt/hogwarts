@@ -3,19 +3,19 @@
  * Run: npx tsx scripts/dev-crud.ts --entity Book --tenant-scoped
  */
 
-import { Command } from 'commander'
-import chalk from 'chalk'
-import ora from 'ora'
-import { writeFileSync } from 'fs'
-import { join } from 'path'
-import { execSync } from 'child_process'
+import { execSync } from "child_process"
+import { writeFileSync } from "fs"
+import { join } from "path"
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 const program = new Command()
 program
-  .requiredOption('-e, --entity <name>', 'Entity name (PascalCase, e.g., Book)')
-  .option('--tenant-scoped', 'Include schoolId scoping')
-  .option('--with-tests', 'Generate tests')
-  .option('--with-i18n', 'Generate i18n keys')
+  .requiredOption("-e, --entity <name>", "Entity name (PascalCase, e.g., Book)")
+  .option("--tenant-scoped", "Include schoolId scoping")
+  .option("--with-tests", "Generate tests")
+  .option("--with-i18n", "Generate i18n keys")
   .parse()
 
 const options = program.opts()
@@ -25,18 +25,18 @@ function toCamelCase(str: string): string {
 }
 
 function toKebabCase(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+  return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()
 }
 
 function toPlural(str: string): string {
   // Simple pluralization
-  if (str.endsWith('y')) {
-    return str.slice(0, -1) + 'ies'
+  if (str.endsWith("y")) {
+    return str.slice(0, -1) + "ies"
   }
-  if (str.endsWith('s')) {
-    return str + 'es'
+  if (str.endsWith("s")) {
+    return str + "es"
   }
-  return str + 's'
+  return str + "s"
 }
 
 const entityName = options.entity
@@ -50,37 +50,43 @@ function generatePrismaModel(): string {
 model ${entityName} {
   id        String   @id @default(cuid())
   name      String
-  ${options.tenantScoped ? 'schoolId  String' : ''}
+  ${options.tenantScoped ? "schoolId  String" : ""}
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ${options.tenantScoped ? `school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)` : ''}
+  ${options.tenantScoped ? `school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)` : ""}
 
-  ${options.tenantScoped ? '@@index([schoolId])' : ''}
+  ${options.tenantScoped ? "@@index([schoolId])" : ""}
   @@map("${entityPlural}")
 }
 
-${options.tenantScoped ? `
+${
+  options.tenantScoped
+    ? `
 // Don't forget to add to School model:
 model School {
   // ... existing fields
   ${entityPlural}  ${entityName}[]
 }
-` : ''}
+`
+    : ""
+}
 `
 }
 
 function generateActions(): string {
-  const tenantCheck = options.tenantScoped ? `
+  const tenantCheck = options.tenantScoped
+    ? `
   const session = await auth()
   if (!session?.user?.schoolId) {
     throw new Error('Unauthorized')
   }
   const schoolId = session.user.schoolId
-` : ''
+`
+    : ""
 
-  const tenantScope = options.tenantScoped ? 'schoolId, ' : ''
-  const tenantWhere = options.tenantScoped ? 'where: { schoolId },' : ''
+  const tenantScope = options.tenantScoped ? "schoolId, " : ""
+  const tenantWhere = options.tenantScoped ? "where: { schoolId }," : ""
 
   return `/**
  * ${entityName} Server Actions
@@ -88,7 +94,7 @@ function generateActions(): string {
 
 'use server'
 
-${options.tenantScoped ? "import { auth } from '@/auth'" : ''}
+${options.tenantScoped ? "import { auth } from '@/auth'" : ""}
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -106,7 +112,7 @@ export async function get${entityPlural}(): Promise<${entityName}[]> {
 export async function get${entityName}(id: string): Promise<${entityName} | null> {
   ${tenantCheck}
   return await db.${entityCamel}.findUnique({
-    where: { id${options.tenantScoped ? ', schoolId' : ''} }
+    where: { id${options.tenantScoped ? ", schoolId" : ""} }
   })
 }
 
@@ -132,7 +138,7 @@ export async function update${entityName}(id: string, formData: FormData) {
   const data = ${entityCamel}Schema.parse(Object.fromEntries(formData))
 
   await db.${entityCamel}.update({
-    where: { id${options.tenantScoped ? ', schoolId' : ''} },
+    where: { id${options.tenantScoped ? ", schoolId" : ""} },
     data
   })
 
@@ -144,7 +150,7 @@ export async function delete${entityName}(id: string) {
   ${tenantCheck}
 
   await db.${entityCamel}.delete({
-    where: { id${options.tenantScoped ? ', schoolId' : ''} }
+    where: { id${options.tenantScoped ? ", schoolId" : ""} }
   })
 
   revalidatePath('/${entityKebab}')
@@ -327,22 +333,22 @@ export function ${entityName}Table({ data }: ${entityName}TableProps) {
 }
 
 async function generateCRUD() {
-  const spinner = ora('Generating CRUD operations...').start()
+  const spinner = ora("Generating CRUD operations...").start()
 
   try {
     const outputDir = `generated-${entityKebab}`
-    const { mkdirSync, existsSync } = require('fs')
+    const { mkdirSync, existsSync } = require("fs")
     if (!existsSync(outputDir)) {
       mkdirSync(outputDir, { recursive: true })
     }
 
     const files = [
-      { name: 'prisma-model.txt', content: generatePrismaModel() },
-      { name: 'actions.ts', content: generateActions() },
-      { name: 'validation.ts', content: generateValidation() },
-      { name: 'form.tsx', content: generateForm() },
-      { name: 'content.tsx', content: generateContent() },
-      { name: 'table.tsx', content: generateTable() },
+      { name: "prisma-model.txt", content: generatePrismaModel() },
+      { name: "actions.ts", content: generateActions() },
+      { name: "validation.ts", content: generateValidation() },
+      { name: "form.tsx", content: generateForm() },
+      { name: "content.tsx", content: generateContent() },
+      { name: "table.tsx", content: generateTable() },
     ]
 
     for (const file of files) {
@@ -351,30 +357,34 @@ async function generateCRUD() {
       writeFileSync(filePath, file.content)
     }
 
-    spinner.succeed(chalk.green('CRUD operations generated!'))
+    spinner.succeed(chalk.green("CRUD operations generated!"))
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-    console.log(chalk.bold('✅ CRUD Generation Complete'))
-    console.log(chalk.cyan('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+    console.log(chalk.bold("✅ CRUD Generation Complete"))
+    console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
 
-    console.log(chalk.white('Entity:'), chalk.green(entityName))
-    console.log(chalk.white('Output:'), chalk.green(outputDir))
-    console.log(chalk.white('Tenant Scoped:'), chalk.green(options.tenantScoped ? 'Yes' : 'No'))
+    console.log(chalk.white("Entity:"), chalk.green(entityName))
+    console.log(chalk.white("Output:"), chalk.green(outputDir))
+    console.log(
+      chalk.white("Tenant Scoped:"),
+      chalk.green(options.tenantScoped ? "Yes" : "No")
+    )
 
-    console.log(chalk.white('\nGenerated Files:'))
-    files.forEach(f => console.log(`  ✓ ${f.name}`))
+    console.log(chalk.white("\nGenerated Files:"))
+    files.forEach((f) => console.log(`  ✓ ${f.name}`))
 
-    console.log(chalk.yellow('\n📋 Next Steps:\n'))
-    console.log(chalk.gray('1. Copy Prisma model to appropriate schema file'))
-    console.log(chalk.gray('2. Run: pnpm prisma generate'))
-    console.log(chalk.gray('3. Create migration: pnpm prisma migrate dev'))
+    console.log(chalk.yellow("\n📋 Next Steps:\n"))
+    console.log(chalk.gray("1. Copy Prisma model to appropriate schema file"))
+    console.log(chalk.gray("2. Run: pnpm prisma generate"))
+    console.log(chalk.gray("3. Create migration: pnpm prisma migrate dev"))
     console.log(chalk.gray(`4. Move files to src/components/${entityKebab}/`))
-    console.log(chalk.gray(`5. Create routes in src/app/[lang]/${entityKebab}/`))
+    console.log(
+      chalk.gray(`5. Create routes in src/app/[lang]/${entityKebab}/`)
+    )
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
-
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
   } catch (error) {
-    spinner.fail(chalk.red('Generation failed'))
+    spinner.fail(chalk.red("Generation failed"))
     console.error(error)
     process.exit(1)
   }

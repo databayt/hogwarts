@@ -5,10 +5,17 @@
  * reducing code duplication by ~67% while maintaining consistency and using semantic HTML.
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import type { ElementType, ReactNode } from 'react'
+import type { ElementType, ReactNode } from "react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 /**
  * StatsCard Component
@@ -20,17 +27,23 @@ interface StatsCardProps {
   value: string | number
   description?: string
   icon?: ElementType
-  trend?: 'up' | 'down' | 'neutral'
+  trend?: "up" | "down" | "neutral"
 }
 
-export function StatsCard({ title, value, description, icon: Icon, trend }: StatsCardProps) {
+export function StatsCard({
+  title,
+  value,
+  description,
+  icon: Icon,
+  trend,
+}: StatsCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle>
           <h6>{title}</h6>
         </CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
       </CardHeader>
       <CardContent>
         <h2>{value}</h2>
@@ -71,13 +84,15 @@ export function FeatureCard({
   icon: Icon,
   primaryAction,
   secondaryAction,
-  isPrimary = false
+  isPrimary = false,
 }: FeatureCardProps) {
   return (
-    <Card className={isPrimary ? 'border-primary/20' : ''}>
+    <Card className={isPrimary ? "border-primary/20" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {Icon && <Icon className={`h-5 w-5 ${isPrimary ? 'text-primary' : ''}`} />}
+          {Icon && (
+            <Icon className={`h-5 w-5 ${isPrimary ? "text-primary" : ""}`} />
+          )}
           {title}
         </CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -105,13 +120,14 @@ export function FeatureCard({
  */
 interface DashboardGridProps {
   children: ReactNode
-  type: 'stats' | 'features'
+  type: "stats" | "features"
 }
 
 export function DashboardGrid({ children, type }: DashboardGridProps) {
-  const gridClass = type === 'stats'
-    ? 'grid gap-4 md:grid-cols-4'
-    : 'grid gap-6 md:grid-cols-2 lg:grid-cols-3'
+  const gridClass =
+    type === "stats"
+      ? "grid gap-4 md:grid-cols-4"
+      : "grid gap-6 md:grid-cols-2 lg:grid-cols-3"
 
   return <div className={gridClass}>{children}</div>
 }
@@ -179,9 +195,13 @@ export interface DashboardStats {
  * formatCurrency
  * Helper function to format amounts from cents to display currency
  */
-export function formatCurrency(amountInCents: number, locale: string = 'en-US', currency: string = 'USD'): string {
+export function formatCurrency(
+  amountInCents: number,
+  locale: string = "en-US",
+  currency: string = "USD"
+): string {
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency,
   }).format(amountInCents / 100)
 }

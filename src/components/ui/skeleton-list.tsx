@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonList Component
@@ -46,7 +46,9 @@ export function SkeletonList({
         !showCards && "border-b last:border-b-0"
       )}
     >
-      {showAvatar && <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />}
+      {showAvatar && (
+        <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
+      )}
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-full" />
@@ -128,14 +130,14 @@ export function SkeletonActivityFeed({
           {/* Timeline dot */}
           <div className="flex flex-col items-center">
             <Skeleton className="h-8 w-8 rounded-full" />
-            {i < items - 1 && <div className="w-0.5 flex-1 bg-border mt-2" />}
+            {i < items - 1 && <div className="bg-border mt-2 w-0.5 flex-1" />}
           </div>
           {/* Content */}
           <div className="flex-1 space-y-2 pb-6">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-full" />
             <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-3 w-24 mt-2" />
+            <Skeleton className="mt-2 h-3 w-24" />
           </div>
         </div>
       ))}

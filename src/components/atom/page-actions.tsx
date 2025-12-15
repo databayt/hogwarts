@@ -1,13 +1,20 @@
 import React from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { ArrowRight, LucideIcon } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export interface ActionButton {
   label: string
   href: string
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link"
   icon?: LucideIcon
   iconPosition?: "left" | "right"
   external?: boolean

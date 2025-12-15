@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 import type { CardSize } from "./types"
 
 interface CollapsibleCardProps {
@@ -95,7 +97,7 @@ export function CollapsibleCard({
     <Card className={cn(className)}>
       <CardHeader className={cn(sizeClasses[size])}>
         <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0 space-y-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <CardTitle>{title}</CardTitle>
             {!isOpen && summary && summary}
           </div>
@@ -118,7 +120,7 @@ export function CollapsibleCard({
         <CardContent
           className={cn(
             sizeClasses[size],
-            "pt-0 animate-in slide-in-from-top-2 duration-200"
+            "animate-in slide-in-from-top-2 pt-0 duration-200"
           )}
         >
           {children}

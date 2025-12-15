@@ -11,6 +11,7 @@ Check internationalization:
 5. Verify font configuration
 
 Report:
+
 - Missing Arabic translations
 - Missing English translations
 - RTL layout issues

@@ -13,8 +13,8 @@
  * ```
  */
 
-import { vi } from 'vitest'
-import type { Prisma, PrismaClient } from '@prisma/client'
+import type { Prisma, PrismaClient } from "@prisma/client"
+import { vi } from "vitest"
 
 /**
  * Mock Prisma Client
@@ -113,7 +113,7 @@ export function mockPrisma() {
     },
     // Add more models as needed
     $transaction: vi.fn().mockImplementation((callback) => {
-      if (typeof callback === 'function') {
+      if (typeof callback === "function") {
         return callback({
           school: {
             findUnique: vi.fn(),
@@ -158,18 +158,18 @@ export function mockPrisma() {
 export function mockSession(overrides?: {
   userId?: string
   email?: string
-  role?: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'DEVELOPER'
+  role?: "ADMIN" | "TEACHER" | "STUDENT" | "DEVELOPER"
   schoolId?: string
   isPlatformAdmin?: boolean
 }) {
   return {
     user: {
-      id: overrides?.userId ?? 'u1',
-      email: overrides?.email ?? 'test@example.com',
-      role: overrides?.role ?? 'ADMIN',
-      schoolId: overrides?.schoolId ?? 's1',
+      id: overrides?.userId ?? "u1",
+      email: overrides?.email ?? "test@example.com",
+      role: overrides?.role ?? "ADMIN",
+      schoolId: overrides?.schoolId ?? "s1",
       isPlatformAdmin: overrides?.isPlatformAdmin ?? false,
-      name: 'Test User',
+      name: "Test User",
       image: null,
     },
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -191,8 +191,8 @@ export function mockSession(overrides?: {
 export function mockOperatorAuth() {
   return {
     requireOperator: vi.fn().mockResolvedValue({
-      userId: 'u1',
-      role: 'DEVELOPER',
+      userId: "u1",
+      role: "DEVELOPER",
       isPlatformAdmin: true,
     }),
     requireNotImpersonating: vi.fn().mockResolvedValue(undefined),
@@ -216,13 +216,13 @@ export function mockOperatorAuth() {
  */
 export function mockTenantContext(overrides?: {
   schoolId?: string
-  role?: 'ADMIN' | 'TEACHER' | 'STUDENT'
+  role?: "ADMIN" | "TEACHER" | "STUDENT"
   userId?: string
 }) {
   return vi.fn().mockResolvedValue({
-    schoolId: overrides?.schoolId ?? 's1',
-    role: overrides?.role ?? 'ADMIN',
-    userId: overrides?.userId ?? 'u1',
+    schoolId: overrides?.schoolId ?? "s1",
+    role: overrides?.role ?? "ADMIN",
+    userId: overrides?.userId ?? "u1",
   })
 }
 
@@ -268,7 +268,7 @@ export function mockNextCookies(initialCookies: Record<string, string> = {}) {
   return vi.fn(() => ({
     get: vi.fn((key: string) => ({
       name: key,
-      value: cookieStore[key] ?? '',
+      value: cookieStore[key] ?? "",
     })),
     set: vi.fn((key: string, value: string) => {
       cookieStore[key] = value
@@ -346,14 +346,14 @@ export function mockNextRedirect() {
  * ```
  */
 export function setupNextMocks() {
-  vi.mock('next/headers', () => ({
+  vi.mock("next/headers", () => ({
     headers: mockNextHeaders(),
     cookies: mockNextCookies(),
   }))
 
-  vi.mock('next/cache', () => mockNextCache())
+  vi.mock("next/cache", () => mockNextCache())
 
-  vi.mock('next/navigation', () => ({
+  vi.mock("next/navigation", () => ({
     redirect: mockNextRedirect(),
     useRouter: vi.fn(() => ({
       push: vi.fn(),
@@ -363,7 +363,7 @@ export function setupNextMocks() {
       forward: vi.fn(),
       prefetch: vi.fn(),
     })),
-    usePathname: vi.fn(() => '/'),
+    usePathname: vi.fn(() => "/"),
     useSearchParams: vi.fn(() => new URLSearchParams()),
   }))
 }
@@ -392,9 +392,11 @@ export function mockBcrypt(options?: {
   compareResult?: boolean
 }) {
   return {
-    hash: vi.fn().mockResolvedValue(options?.hashResult ?? '$2a$10$mockedHash'),
+    hash: vi.fn().mockResolvedValue(options?.hashResult ?? "$2a$10$mockedHash"),
     compare: vi.fn().mockResolvedValue(options?.compareResult ?? true),
-    hashSync: vi.fn().mockReturnValue(options?.hashResult ?? '$2a$10$mockedHash'),
+    hashSync: vi
+      .fn()
+      .mockReturnValue(options?.hashResult ?? "$2a$10$mockedHash"),
     compareSync: vi.fn().mockReturnValue(options?.compareResult ?? true),
   }
 }
@@ -425,7 +427,7 @@ export function mockSignIn(options?: {
 }) {
   return vi.fn().mockResolvedValue({
     error: options?.error ?? null,
-    url: options?.url ?? '/dashboard',
+    url: options?.url ?? "/dashboard",
     ok: options?.ok ?? true,
     status: options?.error ? 401 : 200,
   })
@@ -446,7 +448,7 @@ export function mockSignIn(options?: {
  * ```
  */
 export function mockSignOut() {
-  return vi.fn().mockResolvedValue({ url: '/login' })
+  return vi.fn().mockResolvedValue({ url: "/login" })
 }
 
 /**
@@ -477,7 +479,7 @@ export function mockResend(options?: {
       emails: {
         send: vi.fn().mockResolvedValue({
           data: null,
-          error: { message: options.errorMessage ?? 'Failed to send email' },
+          error: { message: options.errorMessage ?? "Failed to send email" },
         }),
       },
     }
@@ -486,7 +488,7 @@ export function mockResend(options?: {
   return {
     emails: {
       send: vi.fn().mockResolvedValue({
-        data: { id: 'mock-email-id' },
+        data: { id: "mock-email-id" },
         error: null,
       }),
     },
@@ -599,19 +601,27 @@ export function createMockUser(overrides?: {
   email?: string
   emailVerified?: Date | null
   password?: string | null
-  role?: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'DEVELOPER' | 'USER' | 'GUARDIAN' | 'ACCOUNTANT' | 'STAFF'
+  role?:
+    | "ADMIN"
+    | "TEACHER"
+    | "STUDENT"
+    | "DEVELOPER"
+    | "USER"
+    | "GUARDIAN"
+    | "ACCOUNTANT"
+    | "STAFF"
   schoolId?: string | null
   isTwoFactorEnabled?: boolean
   image?: string | null
   username?: string | null
 }) {
   return {
-    id: overrides?.id ?? 'user-1',
-    email: overrides?.email ?? 'test@example.com',
+    id: overrides?.id ?? "user-1",
+    email: overrides?.email ?? "test@example.com",
     emailVerified: overrides?.emailVerified ?? new Date(),
-    password: overrides?.password ?? '$2a$10$hashedPassword',
-    role: overrides?.role ?? 'USER',
-    schoolId: overrides?.schoolId ?? 'school-1',
+    password: overrides?.password ?? "$2a$10$hashedPassword",
+    role: overrides?.role ?? "USER",
+    schoolId: overrides?.schoolId ?? "school-1",
     isTwoFactorEnabled: overrides?.isTwoFactorEnabled ?? false,
     image: overrides?.image ?? null,
     username: overrides?.username ?? null,
@@ -644,9 +654,9 @@ export function createMockVerificationToken(overrides?: {
     : new Date(Date.now() + 3600000) // 1 hour from now
 
   return {
-    id: overrides?.id ?? 'vt-1',
-    email: overrides?.email ?? 'test@example.com',
-    token: overrides?.token ?? 'mock-verification-token',
+    id: overrides?.id ?? "vt-1",
+    email: overrides?.email ?? "test@example.com",
+    token: overrides?.token ?? "mock-verification-token",
     expires,
   }
 }
@@ -675,9 +685,9 @@ export function createMockPasswordResetToken(overrides?: {
     : new Date(Date.now() + 3600000)
 
   return {
-    id: overrides?.id ?? 'prt-1',
-    email: overrides?.email ?? 'test@example.com',
-    token: overrides?.token ?? 'mock-reset-token',
+    id: overrides?.id ?? "prt-1",
+    email: overrides?.email ?? "test@example.com",
+    token: overrides?.token ?? "mock-reset-token",
     expires,
   }
 }
@@ -706,9 +716,9 @@ export function createMockTwoFactorToken(overrides?: {
     : new Date(Date.now() + 300000) // 5 minutes from now
 
   return {
-    id: overrides?.id ?? '2fa-1',
-    email: overrides?.email ?? 'test@example.com',
-    token: overrides?.token ?? '123456',
+    id: overrides?.id ?? "2fa-1",
+    email: overrides?.email ?? "test@example.com",
+    token: overrides?.token ?? "123456",
     expires,
   }
 }
@@ -730,20 +740,20 @@ export function createMockAccount(overrides?: {
   id?: string
   userId?: string
   type?: string
-  provider?: 'google' | 'facebook' | 'credentials'
+  provider?: "google" | "facebook" | "credentials"
   providerAccountId?: string
 }) {
   return {
-    id: overrides?.id ?? 'acc-1',
-    userId: overrides?.userId ?? 'user-1',
-    type: overrides?.type ?? 'oauth',
-    provider: overrides?.provider ?? 'google',
-    providerAccountId: overrides?.providerAccountId ?? 'google-account-id',
+    id: overrides?.id ?? "acc-1",
+    userId: overrides?.userId ?? "user-1",
+    type: overrides?.type ?? "oauth",
+    provider: overrides?.provider ?? "google",
+    providerAccountId: overrides?.providerAccountId ?? "google-account-id",
     refresh_token: null,
-    access_token: 'mock-access-token',
+    access_token: "mock-access-token",
     expires_at: Math.floor(Date.now() / 1000) + 3600,
-    token_type: 'Bearer',
-    scope: 'openid email profile',
+    token_type: "Bearer",
+    scope: "openid email profile",
     id_token: null,
     session_state: null,
   }
@@ -771,12 +781,12 @@ export function createMockSchool(overrides?: {
   planType?: string
 }) {
   return {
-    id: overrides?.id ?? 'school-1',
-    name: overrides?.name ?? 'Test School',
-    domain: overrides?.domain ?? 'testschool',
-    address: overrides?.address ?? '123 Test St',
+    id: overrides?.id ?? "school-1",
+    name: overrides?.name ?? "Test School",
+    domain: overrides?.domain ?? "testschool",
+    address: overrides?.address ?? "123 Test St",
     website: overrides?.website ?? null,
-    planType: overrides?.planType ?? 'basic',
+    planType: overrides?.planType ?? "basic",
     maxStudents: 100,
     maxTeachers: 20,
     createdAt: new Date(),
@@ -800,20 +810,20 @@ export function createMockSchool(overrides?: {
  * ```
  */
 export function setupAuthMocks() {
-  vi.mock('bcryptjs', () => mockBcrypt())
+  vi.mock("bcryptjs", () => mockBcrypt())
 
-  vi.mock('next-auth/react', () => ({
+  vi.mock("next-auth/react", () => ({
     signIn: mockSignIn(),
     signOut: mockSignOut(),
     useSession: vi.fn(() => ({
       data: mockSession(),
-      status: 'authenticated',
+      status: "authenticated",
     })),
   }))
 
-  vi.mock('@/components/auth/mail', () => mockAuthMail())
+  vi.mock("@/components/auth/mail", () => mockAuthMail())
 
-  vi.mock('@/lib/db', () => ({ db: mockPrismaAuth() }))
+  vi.mock("@/lib/db", () => ({ db: mockPrismaAuth() }))
 }
 
 /**

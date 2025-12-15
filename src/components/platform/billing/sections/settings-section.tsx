@@ -1,36 +1,37 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { BillingSettings } from "@/components/billingsdk/billing-settings";
-import { BillingSettings2 } from "@/components/billingsdk/billing-settings-2";
-import type { PaymentCard } from "@/lib/billingsdk-config";
+import { useState } from "react"
+
+import type { PaymentCard } from "@/lib/billingsdk-config"
+import { BillingSettings } from "@/components/billingsdk/billing-settings"
+import { BillingSettings2 } from "@/components/billingsdk/billing-settings-2"
 
 interface SettingsSectionProps {
   // Billing Settings Props
-  cards: PaymentCard[];
-  onAddCard: () => void;
-  onEditBillingAddress: () => void;
+  cards: PaymentCard[]
+  onAddCard: () => void
+  onEditBillingAddress: () => void
 
   // Initial values
   initialSettings?: {
-    emailNotifications?: boolean;
-    usageAlerts?: boolean;
-    invoiceReminders?: boolean;
-    invoiceFormat?: "PDF" | "HTML";
-    overageProtection?: boolean;
-    usageLimitAlerts?: boolean;
-    autoRenewal?: boolean;
-    invoiceEmails?: boolean;
-    promotionalEmails?: boolean;
-    billingEmail?: string;
-    fullName?: string;
-    taxId?: string;
-    currency?: string;
-  };
+    emailNotifications?: boolean
+    usageAlerts?: boolean
+    invoiceReminders?: boolean
+    invoiceFormat?: "PDF" | "HTML"
+    overageProtection?: boolean
+    usageLimitAlerts?: boolean
+    autoRenewal?: boolean
+    invoiceEmails?: boolean
+    promotionalEmails?: boolean
+    billingEmail?: string
+    fullName?: string
+    taxId?: string
+    currency?: string
+  }
 
   // Callbacks
-  onSettingsChange?: (settings: Record<string, unknown>) => void;
-  onSaveSettings?: () => void;
+  onSettingsChange?: (settings: Record<string, unknown>) => void
+  onSaveSettings?: () => void
 }
 
 export function SettingsSection({
@@ -41,12 +42,12 @@ export function SettingsSection({
   onSettingsChange,
   onSaveSettings,
 }: SettingsSectionProps) {
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("general")
   const [settings, setSettings] = useState({
     emailNotifications: initialSettings.emailNotifications ?? true,
     usageAlerts: initialSettings.usageAlerts ?? true,
     invoiceReminders: initialSettings.invoiceReminders ?? true,
-    invoiceFormat: initialSettings.invoiceFormat ?? "PDF" as const,
+    invoiceFormat: initialSettings.invoiceFormat ?? ("PDF" as const),
     overageProtection: initialSettings.overageProtection ?? false,
     usageLimitAlerts: initialSettings.usageLimitAlerts ?? true,
     autoRenewal: initialSettings.autoRenewal ?? true,
@@ -56,16 +57,16 @@ export function SettingsSection({
     fullName: initialSettings.fullName ?? "",
     taxId: initialSettings.taxId ?? "",
     currency: initialSettings.currency ?? "USD",
-  });
+  })
 
   const updateSetting = <K extends keyof typeof settings>(
     key: K,
     value: (typeof settings)[K]
   ) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    onSettingsChange?.(newSettings);
-  };
+    const newSettings = { ...settings, [key]: value }
+    setSettings(newSettings)
+    onSettingsChange?.(newSettings)
+  }
 
   // Transform cards to the format BillingSettings expects
   const cardInfos = cards.map((card) => ({
@@ -74,7 +75,7 @@ export function SettingsSection({
     brand: card.brand,
     expiry: card.expiry,
     primary: card.primary,
-  }));
+  }))
 
   return (
     <section className="space-y-6">
@@ -91,7 +92,9 @@ export function SettingsSection({
           activeTab={activeTab}
           onTabChange={setActiveTab}
           emailNotifications={settings.emailNotifications}
-          onEmailNotificationsChange={(v) => updateSetting("emailNotifications", v)}
+          onEmailNotificationsChange={(v) =>
+            updateSetting("emailNotifications", v)
+          }
           usageAlerts={settings.usageAlerts}
           onUsageAlertsChange={(v) => updateSetting("usageAlerts", v)}
           invoiceReminders={settings.invoiceReminders}
@@ -102,7 +105,9 @@ export function SettingsSection({
           onInvoiceFormatChange={(v) => updateSetting("invoiceFormat", v)}
           onEditBillingAddress={onEditBillingAddress}
           overageProtection={settings.overageProtection}
-          onOverageProtectionChange={(v) => updateSetting("overageProtection", v)}
+          onOverageProtectionChange={(v) =>
+            updateSetting("overageProtection", v)
+          }
           usageLimitAlerts={settings.usageLimitAlerts}
           onUsageLimitAlertsChange={(v) => updateSetting("usageLimitAlerts", v)}
         />
@@ -186,12 +191,12 @@ export function SettingsSection({
               fullName: initialSettings.fullName ?? "",
               taxId: initialSettings.taxId ?? "",
               currency: initialSettings.currency ?? "USD",
-            });
+            })
           }}
           saveButtonText="Save Changes"
           cancelButtonText="Reset"
         />
       </div>
     </section>
-  );
+  )
 }

@@ -7,27 +7,28 @@ description: "Complete guide to GitHub collaboration, pull requests, branch prot
 
 Hogwarts follows industry-standard GitHub practices inspired by projects like [Next.js](https://github.com/vercel/next.js), [Cal.com](https://github.com/calcom/cal.com), and [shadcn/ui](https://github.com/shadcn-ui/ui). This guide covers everything you need to contribute effectively.
 
-<div className="text-sm text-muted-foreground pt-4 bg-muted rounded-lg px-4 flex items-center">
-  <strong>Key principle:</strong> All changes go through Pull Requests → Code Review → CI Checks → Merge
+<div className="text-muted-foreground bg-muted flex items-center rounded-lg px-4 pt-4 text-sm">
+  <strong>Key principle:</strong> All changes go through Pull Requests → Code
+  Review → CI Checks → Merge
 </div>
 
 ## Branch Protection
 
 The `main` branch is protected. This means:
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg border-destructive/50">
-    <h4 className="font-semibold mb-2 text-destructive">Not Allowed</h4>
-    <div className="text-sm text-muted-foreground space-y-1">
+<div className="my-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="border-destructive/50 rounded-lg border p-6">
+    <h4 className="text-destructive mb-2 font-semibold">Not Allowed</h4>
+    <div className="text-muted-foreground space-y-1 text-sm">
       <div>• Direct pushes to main</div>
       <div>• Force pushes</div>
       <div>• Deleting the branch</div>
       <div>• Merging without approval</div>
     </div>
   </div>
-  <div className="p-6 border rounded-lg border-green-500/50">
-    <h4 className="font-semibold mb-2 text-green-600">Required</h4>
-    <div className="text-sm text-muted-foreground space-y-1">
+  <div className="rounded-lg border border-green-500/50 p-6">
+    <h4 className="mb-2 font-semibold text-green-600">Required</h4>
+    <div className="text-muted-foreground space-y-1 text-sm">
       <div>• Pull Request for all changes</div>
       <div>• 1 approval from CODEOWNER</div>
       <div>• All CI checks passing</div>
@@ -39,6 +40,7 @@ The `main` branch is protected. This means:
 ### Why Branch Protection?
 
 Branch protection ensures:
+
 - **Code Quality**: Every change is reviewed before merging
 - **Stability**: CI checks catch bugs before they reach production
 - **Accountability**: Clear history of who approved what
@@ -69,6 +71,7 @@ git checkout -b feature/your-feature-name
 ```
 
 **Branch Naming Convention:**
+
 - `feature/` - New features (e.g., `feature/student-attendance-export`)
 - `fix/` - Bug fixes (e.g., `fix/login-redirect-issue`)
 - `docs/` - Documentation (e.g., `docs/api-reference`)
@@ -85,6 +88,7 @@ git commit -m "feat(platform): add attendance export to CSV"
 ```
 
 **Commit Message Format:**
+
 ```
 <type>(<scope>): <description>
 
@@ -103,6 +107,7 @@ git push origin feature/your-feature-name
 ```
 
 Then open a Pull Request via GitHub. Our PR template will guide you through:
+
 - Description of changes
 - Type of change
 - Screenshots/videos (for UI changes)
@@ -110,22 +115,22 @@ Then open a Pull Request via GitHub. Our PR template will guide you through:
 
 ### Step 5: CI Checks Run Automatically
 
-<div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
-  <div className="p-4 border rounded-lg text-center">
-    <div className="text-2xl mb-2">TypeScript</div>
-    <div className="text-sm text-muted-foreground">Type checking</div>
+<div className="my-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+  <div className="rounded-lg border p-4 text-center">
+    <div className="mb-2 text-2xl">TypeScript</div>
+    <div className="text-muted-foreground text-sm">Type checking</div>
   </div>
-  <div className="p-4 border rounded-lg text-center">
-    <div className="text-2xl mb-2">ESLint</div>
-    <div className="text-sm text-muted-foreground">Code linting</div>
+  <div className="rounded-lg border p-4 text-center">
+    <div className="mb-2 text-2xl">ESLint</div>
+    <div className="text-muted-foreground text-sm">Code linting</div>
   </div>
-  <div className="p-4 border rounded-lg text-center">
-    <div className="text-2xl mb-2">Vitest</div>
-    <div className="text-sm text-muted-foreground">Unit tests</div>
+  <div className="rounded-lg border p-4 text-center">
+    <div className="mb-2 text-2xl">Vitest</div>
+    <div className="text-muted-foreground text-sm">Unit tests</div>
   </div>
-  <div className="p-4 border rounded-lg text-center">
-    <div className="text-2xl mb-2">Build</div>
-    <div className="text-sm text-muted-foreground">Production build</div>
+  <div className="rounded-lg border p-4 text-center">
+    <div className="mb-2 text-2xl">Build</div>
+    <div className="text-muted-foreground text-sm">Production build</div>
   </div>
 </div>
 
@@ -134,6 +139,7 @@ Then open a Pull Request via GitHub. Our PR template will guide you through:
 ### Step 6: Code Review
 
 A maintainer will review your PR. They may:
+
 - **Approve**: Ready to merge
 - **Request Changes**: Needs modifications
 - **Comment**: Questions or suggestions
@@ -151,6 +157,7 @@ When reporting issues or requesting features, use our templates:
 ### Bug Reports
 
 Include:
+
 - Clear description of the bug
 - Steps to reproduce
 - Expected vs actual behavior
@@ -161,6 +168,7 @@ Include:
 ### Feature Requests
 
 Include:
+
 - Problem statement
 - Proposed solution
 - Alternatives considered
@@ -170,6 +178,7 @@ Include:
 ### Documentation Issues
 
 Include:
+
 - Location of incorrect/missing docs
 - What's wrong or missing
 - Suggested improvement
@@ -180,12 +189,12 @@ Include:
 
 Every PR triggers:
 
-| Job | Description | Must Pass |
-|-----|-------------|-----------|
-| `typecheck` | TypeScript compilation | Yes |
-| `lint` | ESLint validation | Yes |
-| `test` | Vitest unit tests | Yes |
-| `build` | Production build | Yes |
+| Job         | Description            | Must Pass |
+| ----------- | ---------------------- | --------- |
+| `typecheck` | TypeScript compilation | Yes       |
+| `lint`      | ESLint validation      | Yes       |
+| `test`      | Vitest unit tests      | Yes       |
+| `build`     | Production build       | Yes       |
 
 ### Security Scanning (`codeql.yml`)
 
@@ -203,15 +212,15 @@ Every PR triggers:
 
 PRs are automatically labeled based on files changed:
 
-| Label | Files |
-|-------|-------|
-| `area: platform` | `src/components/platform/**` |
-| `area: auth` | `src/auth*`, `auth.ts` |
-| `area: database` | `prisma/**` |
-| `area: docs` | `docs/**`, `content/**`, `*.md` |
-| `area: ui` | `src/components/ui/**` |
-| `type: ci` | `.github/**` |
-| `type: tests` | `*.test.*`, `tests/**` |
+| Label            | Files                           |
+| ---------------- | ------------------------------- |
+| `area: platform` | `src/components/platform/**`    |
+| `area: auth`     | `src/auth*`, `auth.ts`          |
+| `area: database` | `prisma/**`                     |
+| `area: docs`     | `docs/**`, `content/**`, `*.md` |
+| `area: ui`       | `src/components/ui/**`          |
+| `type: ci`       | `.github/**`                    |
+| `type: tests`    | `*.test.*`, `tests/**`          |
 
 ### Stale Issue Management
 
@@ -243,6 +252,7 @@ When you modify files in these areas, the corresponding owner is automatically r
 **DO NOT** open public issues for security vulnerabilities.
 
 Instead:
+
 1. Email `security@databayt.org`
 2. Include: type, affected files, reproduction steps, impact
 3. We'll respond within 48 hours
@@ -252,6 +262,7 @@ See [SECURITY.md](https://github.com/abdout/hogwarts/blob/main/SECURITY.md) for 
 ### Security Best Practices
 
 When contributing:
+
 - Always include `schoolId` in database queries (multi-tenant safety)
 - Use Zod schemas for input validation
 - Never commit secrets or credentials
@@ -304,10 +315,10 @@ git remote prune origin
 
 ## Quick Reference
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">For Contributors</h4>
-    <div className="text-sm text-muted-foreground space-y-1">
+<div className="my-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">For Contributors</h4>
+    <div className="text-muted-foreground space-y-1 text-sm">
       <div>1. Fork the repository</div>
       <div>2. Create a feature branch</div>
       <div>3. Make changes with conventional commits</div>
@@ -317,9 +328,9 @@ git remote prune origin
       <div>7. Get merged!</div>
     </div>
   </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Before Submitting PR</h4>
-    <div className="text-sm text-muted-foreground space-y-1">
+  <div className="rounded-lg border p-6">
+    <h4 className="mb-2 font-semibold">Before Submitting PR</h4>
+    <div className="text-muted-foreground space-y-1 text-sm">
       <div>• Run `pnpm tsc --noEmit`</div>
       <div>• Run `pnpm lint`</div>
       <div>• Run `pnpm test`</div>

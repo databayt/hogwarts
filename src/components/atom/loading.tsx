@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
 interface LoadingProps {
-  onComplete?: () => void;
+  onComplete?: () => void
 }
 
 const Loading: React.FC<LoadingProps> = ({ onComplete }) => {
@@ -9,19 +9,19 @@ const Loading: React.FC<LoadingProps> = ({ onComplete }) => {
     if (onComplete) {
       // Simulate loading completion after a short delay
       const timer = setTimeout(() => {
-        onComplete();
-      }, 1000);
-      return () => clearTimeout(timer);
+        onComplete()
+      }, 1000)
+      return () => clearTimeout(timer)
     }
-  }, [onComplete]);
+  }, [onComplete])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
       <div className="flex flex-col items-center">
-        <div className="w-9 h-9 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin"></div>
+        <div className="border-foreground/20 border-t-foreground h-9 w-9 animate-spin rounded-full border-2"></div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Loading; 
+export default Loading

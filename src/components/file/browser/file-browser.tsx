@@ -3,51 +3,37 @@
  * Grid/List view file browser with selection and actions
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { useState } from "react"
 import {
-  Folder,
-  File,
-  Image,
-  Video,
-  Music,
-  FileText,
   Archive,
+  ArrowUpDown,
+  Check,
   ChevronRight,
+  ChevronUp,
+  Download,
+  File,
+  FileText,
+  Folder,
   Grid,
-  List,
+  Image,
   LayoutList,
+  List,
+  Loader2,
+  MoreVertical,
+  Music,
+  RefreshCw,
   Search,
   Trash2,
-  Download,
   Upload,
-  RefreshCw,
-  MoreVertical,
-  Check,
-  ArrowUpDown,
-  ChevronUp,
-  Loader2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Video,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -55,41 +41,57 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { BrowserConfig, FileItem, FolderItem, ViewMode } from "./types";
-import type { FileCategory } from "../types";
-import { useBrowser } from "./use-browser";
-import { formatBytes, formatRelativeTime } from "../formatters";
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { formatBytes, formatRelativeTime } from "../formatters"
+import type { FileCategory } from "../types"
+import type { BrowserConfig, FileItem, FolderItem, ViewMode } from "./types"
+import { useBrowser } from "./use-browser"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface FileBrowserProps {
-  config?: BrowserConfig;
-  onSelect?: (files: FileItem[]) => void;
-  onOpen?: (file: FileItem) => void;
-  className?: string;
+  config?: BrowserConfig
+  onSelect?: (files: FileItem[]) => void
+  onOpen?: (file: FileItem) => void
+  className?: string
   dictionary?: {
-    files?: string;
-    folders?: string;
-    search?: string;
-    upload?: string;
-    delete?: string;
-    download?: string;
-    refresh?: string;
-    selectAll?: string;
-    deselectAll?: string;
-    noFiles?: string;
-    confirmDelete?: string;
-    deleteMessage?: string;
-    cancel?: string;
-    name?: string;
-    size?: string;
-    date?: string;
-    type?: string;
-  };
+    files?: string
+    folders?: string
+    search?: string
+    upload?: string
+    delete?: string
+    download?: string
+    refresh?: string
+    selectAll?: string
+    deselectAll?: string
+    noFiles?: string
+    confirmDelete?: string
+    deleteMessage?: string
+    cancel?: string
+    name?: string
+    size?: string
+    date?: string
+    type?: string
+  }
 }
 
 // ============================================================================
@@ -103,7 +105,7 @@ const categoryIcons: Record<FileCategory, React.ReactNode> = {
   audio: <Music className="h-5 w-5 text-pink-500" />,
   archive: <Archive className="h-5 w-5 text-yellow-600" />,
   other: <File className="h-5 w-5 text-gray-500" />,
-};
+}
 
 // ============================================================================
 // View Mode Icons
@@ -113,7 +115,7 @@ const viewModeIcons: Record<ViewMode, React.ReactNode> = {
   grid: <Grid className="h-4 w-4" />,
   list: <List className="h-4 w-4" />,
   compact: <LayoutList className="h-4 w-4" />,
-};
+}
 
 // ============================================================================
 // File Browser Component
@@ -126,7 +128,7 @@ export function FileBrowser({
   className,
   dictionary,
 }: FileBrowserProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const {
     files,
@@ -138,38 +140,42 @@ export function FileBrowser({
     totalPages,
     totalFiles,
     setPage,
-  } = useBrowser(config);
+  } = useBrowser(config)
 
   // Handle file selection change
   React.useEffect(() => {
-    const selectedFiles = files.filter((f) => state.selectedIds.has(f.id));
-    onSelect?.(selectedFiles);
-  }, [files, state.selectedIds, onSelect]);
+    const selectedFiles = files.filter((f) => state.selectedIds.has(f.id))
+    onSelect?.(selectedFiles)
+  }, [files, state.selectedIds, onSelect])
 
   // Handle file double click
   const handleFileOpen = (file: FileItem) => {
-    onOpen?.(file);
-  };
+    onOpen?.(file)
+  }
 
   // Handle folder click
   const handleFolderClick = (folder: FolderItem) => {
-    actions.navigateTo(folder.path);
-  };
+    actions.navigateTo(folder.path)
+  }
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex h-full flex-col", className)}>
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 p-4 border-b border-border">
+      <div className="border-border flex items-center justify-between gap-4 border-b p-4">
         {/* Left: Breadcrumbs */}
-        <div className="flex items-center gap-1 text-sm overflow-x-auto">
+        <div className="flex items-center gap-1 overflow-x-auto text-sm">
           {breadcrumbs.map((crumb, idx) => (
             <React.Fragment key={crumb.path}>
-              {idx > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+              {idx > 0 && (
+                <ChevronRight className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+              )}
               <button
                 onClick={() => actions.navigateTo(crumb.path)}
                 className={cn(
-                  "hover:text-primary transition-colors whitespace-nowrap",
-                  idx === breadcrumbs.length - 1 ? "font-medium" : "text-muted-foreground"
+                  "hover:text-primary whitespace-nowrap transition-colors",
+                  idx === breadcrumbs.length - 1
+                    ? "font-medium"
+                    : "text-muted-foreground"
                 )}
               >
                 {crumb.name}
@@ -182,19 +188,23 @@ export function FileBrowser({
         <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
             <Input
               placeholder={dictionary?.search || "Search..."}
               value={state.searchQuery}
               onChange={(e) => actions.setSearch(e.target.value)}
-              className="pl-8 w-48"
+              className="w-48 pl-8"
             />
           </div>
 
           {/* Category Filter */}
           <Select
             value={state.categoryFilter || "all"}
-            onValueChange={(v) => actions.setCategoryFilter(v === "all" ? undefined : v as FileCategory)}
+            onValueChange={(v) =>
+              actions.setCategoryFilter(
+                v === "all" ? undefined : (v as FileCategory)
+              )
+            }
           >
             <SelectTrigger className="w-32">
               <SelectValue />
@@ -210,14 +220,14 @@ export function FileBrowser({
           </Select>
 
           {/* View Mode */}
-          <div className="flex border border-border rounded-md">
+          <div className="border-border flex rounded-md border">
             {(["grid", "list", "compact"] as ViewMode[]).map((mode) => (
               <Button
                 key={mode}
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "rounded-none first:rounded-l-md last:rounded-r-md h-9 w-9",
+                  "h-9 w-9 rounded-none first:rounded-l-md last:rounded-r-md",
                   state.viewMode === mode && "bg-muted"
                 )}
                 onClick={() => actions.setViewMode(mode)}
@@ -228,16 +238,23 @@ export function FileBrowser({
           </div>
 
           {/* Refresh */}
-          <Button variant="ghost" size="icon" onClick={actions.refresh} disabled={state.isLoading}>
-            <RefreshCw className={cn("h-4 w-4", state.isLoading && "animate-spin")} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={actions.refresh}
+            disabled={state.isLoading}
+          >
+            <RefreshCw
+              className={cn("h-4 w-4", state.isLoading && "animate-spin")}
+            />
           </Button>
         </div>
       </div>
 
       {/* Selection Bar */}
       {state.selectedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-4 px-4 py-2 bg-muted/50 border-b border-border">
-          <span className="text-sm text-muted-foreground">
+        <div className="bg-muted/50 border-border flex items-center justify-between gap-4 border-b px-4 py-2">
+          <span className="text-muted-foreground text-sm">
             {state.selectedIds.size} selected
           </span>
           <div className="flex items-center gap-2">
@@ -271,12 +288,12 @@ export function FileBrowser({
       {/* Content Area */}
       <ScrollArea className="flex-1">
         {state.isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
           </div>
         ) : files.length === 0 && folders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-            <Folder className="h-12 w-12 mb-4" />
+          <div className="text-muted-foreground flex h-64 flex-col items-center justify-center">
+            <Folder className="mb-4 h-12 w-12" />
             <p>{dictionary?.noFiles || "No files found"}</p>
           </div>
         ) : state.viewMode === "grid" ? (
@@ -315,8 +332,8 @@ export function FileBrowser({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-          <span className="text-sm text-muted-foreground">
+        <div className="border-border flex items-center justify-between border-t px-4 py-2">
+          <span className="text-muted-foreground text-sm">
             {totalFiles} files
           </span>
           <div className="flex items-center gap-2">
@@ -347,21 +364,26 @@ export function FileBrowser({
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{dictionary?.confirmDelete || "Confirm Delete"}</DialogTitle>
+            <DialogTitle>
+              {dictionary?.confirmDelete || "Confirm Delete"}
+            </DialogTitle>
             <DialogDescription>
               {dictionary?.deleteMessage ||
                 `Are you sure you want to delete ${state.selectedIds.size} file(s)? This action cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+            >
               {dictionary?.cancel || "Cancel"}
             </Button>
             <Button
               variant="destructive"
               onClick={async () => {
-                await actions.deleteSelected();
-                setShowDeleteDialog(false);
+                await actions.deleteSelected()
+                setShowDeleteDialog(false)
               }}
               disabled={state.isDeleting}
             >
@@ -376,7 +398,7 @@ export function FileBrowser({
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 // ============================================================================
@@ -384,12 +406,12 @@ export function FileBrowser({
 // ============================================================================
 
 interface GridViewProps {
-  files: FileItem[];
-  folders: FolderItem[];
-  selectedIds: Set<string>;
-  onToggleSelect: (id: string) => void;
-  onFolderClick: (folder: FolderItem) => void;
-  onFileOpen: (file: FileItem) => void;
+  files: FileItem[]
+  folders: FolderItem[]
+  selectedIds: Set<string>
+  onToggleSelect: (id: string) => void
+  onFolderClick: (folder: FolderItem) => void
+  onFileOpen: (file: FileItem) => void
 }
 
 function GridView({
@@ -401,17 +423,19 @@ function GridView({
   onFileOpen,
 }: GridViewProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
+    <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
       {/* Folders */}
       {folders.map((folder) => (
         <button
           key={folder.path}
           onClick={() => onFolderClick(folder)}
-          className="flex flex-col items-center p-4 rounded-lg hover:bg-muted transition-colors text-center"
+          className="hover:bg-muted flex flex-col items-center rounded-lg p-4 text-center transition-colors"
         >
-          <Folder className="h-12 w-12 text-yellow-500 mb-2" />
-          <span className="text-sm font-medium truncate w-full">{folder.name}</span>
-          <span className="text-xs text-muted-foreground">
+          <Folder className="mb-2 h-12 w-12 text-yellow-500" />
+          <span className="w-full truncate text-sm font-medium">
+            {folder.name}
+          </span>
+          <span className="text-muted-foreground text-xs">
             {folder.fileCount} files
           </span>
         </button>
@@ -422,20 +446,22 @@ function GridView({
         <div
           key={file.id}
           className={cn(
-            "relative flex flex-col items-center p-4 rounded-lg transition-colors cursor-pointer group",
-            selectedIds.has(file.id) ? "bg-primary/10 ring-2 ring-primary" : "hover:bg-muted"
+            "group relative flex cursor-pointer flex-col items-center rounded-lg p-4 transition-colors",
+            selectedIds.has(file.id)
+              ? "bg-primary/10 ring-primary ring-2"
+              : "hover:bg-muted"
           )}
           onClick={() => onToggleSelect(file.id)}
           onDoubleClick={() => onFileOpen(file)}
         >
           {/* Selection Checkbox */}
-          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 left-2 opacity-0 transition-opacity group-hover:opacity-100">
             <Checkbox checked={selectedIds.has(file.id)} />
           </div>
 
           {/* Thumbnail or Icon */}
           {file.category === "image" && file.url ? (
-            <div className="h-16 w-16 rounded-lg overflow-hidden mb-2">
+            <div className="mb-2 h-16 w-16 overflow-hidden rounded-lg">
               <img
                 src={file.thumbnailUrl || file.url}
                 alt={file.originalName}
@@ -443,21 +469,21 @@ function GridView({
               />
             </div>
           ) : (
-            <div className="h-16 w-16 flex items-center justify-center mb-2">
+            <div className="mb-2 flex h-16 w-16 items-center justify-center">
               {categoryIcons[file.category]}
             </div>
           )}
 
-          <span className="text-sm font-medium truncate w-full text-center">
+          <span className="w-full truncate text-center text-sm font-medium">
             {file.originalName}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {formatBytes(file.size)}
           </span>
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 // ============================================================================
@@ -465,10 +491,10 @@ function GridView({
 // ============================================================================
 
 interface ListViewProps extends GridViewProps {
-  sortField: string;
-  sortDirection: "asc" | "desc";
-  onSort: (field: "name" | "size" | "date" | "type") => void;
-  dictionary?: FileBrowserProps["dictionary"];
+  sortField: string
+  sortDirection: "asc" | "desc"
+  onSort: (field: "name" | "size" | "date" | "type") => void
+  dictionary?: FileBrowserProps["dictionary"]
 }
 
 function ListView({
@@ -483,24 +509,33 @@ function ListView({
   onFileOpen,
   dictionary,
 }: ListViewProps) {
-  const SortHeader = ({ field, label }: { field: "name" | "size" | "date" | "type"; label: string }) => (
+  const SortHeader = ({
+    field,
+    label,
+  }: {
+    field: "name" | "size" | "date" | "type"
+    label: string
+  }) => (
     <button
-      className="flex items-center gap-1 hover:text-primary"
+      className="hover:text-primary flex items-center gap-1"
       onClick={() => onSort(field)}
     >
       {label}
       {sortField === field && (
         <ChevronUp
-          className={cn("h-4 w-4 transition-transform", sortDirection === "desc" && "rotate-180")}
+          className={cn(
+            "h-4 w-4 transition-transform",
+            sortDirection === "desc" && "rotate-180"
+          )}
         />
       )}
     </button>
-  );
+  )
 
   return (
     <div className="p-4">
       {/* Header */}
-      <div className="flex items-center gap-4 px-4 py-2 text-sm font-medium text-muted-foreground border-b border-border">
+      <div className="text-muted-foreground border-border flex items-center gap-4 border-b px-4 py-2 text-sm font-medium">
         <div className="w-8"></div>
         <div className="flex-1">
           <SortHeader field="name" label={dictionary?.name || "Name"} />
@@ -522,16 +557,16 @@ function ListView({
         <button
           key={folder.path}
           onClick={() => onFolderClick(folder)}
-          className="flex items-center gap-4 w-full px-4 py-3 hover:bg-muted transition-colors text-left"
+          className="hover:bg-muted flex w-full items-center gap-4 px-4 py-3 text-left transition-colors"
         >
           <div className="w-8"></div>
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex flex-1 items-center gap-3">
             <Folder className="h-5 w-5 text-yellow-500" />
             <span className="font-medium">{folder.name}</span>
           </div>
-          <div className="w-24 text-right text-sm text-muted-foreground">-</div>
-          <div className="w-32 text-sm text-muted-foreground">-</div>
-          <div className="w-24 text-sm text-muted-foreground">Folder</div>
+          <div className="text-muted-foreground w-24 text-right text-sm">-</div>
+          <div className="text-muted-foreground w-32 text-sm">-</div>
+          <div className="text-muted-foreground w-24 text-sm">Folder</div>
           <div className="w-8"></div>
         </button>
       ))}
@@ -541,7 +576,7 @@ function ListView({
         <div
           key={file.id}
           className={cn(
-            "flex items-center gap-4 px-4 py-3 cursor-pointer transition-colors",
+            "flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors",
             selectedIds.has(file.id) ? "bg-primary/10" : "hover:bg-muted"
           )}
           onClick={() => onToggleSelect(file.id)}
@@ -550,17 +585,17 @@ function ListView({
           <div className="w-8">
             <Checkbox checked={selectedIds.has(file.id)} />
           </div>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {categoryIcons[file.category]}
-            <span className="font-medium truncate">{file.originalName}</span>
+            <span className="truncate font-medium">{file.originalName}</span>
           </div>
-          <div className="w-24 text-right text-sm text-muted-foreground">
+          <div className="text-muted-foreground w-24 text-right text-sm">
             {formatBytes(file.size)}
           </div>
-          <div className="w-32 text-sm text-muted-foreground">
+          <div className="text-muted-foreground w-32 text-sm">
             {formatRelativeTime(file.uploadedAt, "en")}
           </div>
-          <div className="w-24 text-sm text-muted-foreground capitalize">
+          <div className="text-muted-foreground w-24 text-sm capitalize">
             {file.category}
           </div>
           <div className="w-8">
@@ -589,7 +624,7 @@ function ListView({
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 // ============================================================================
@@ -611,7 +646,7 @@ function CompactView({
         <button
           key={folder.path}
           onClick={() => onFolderClick(folder)}
-          className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-muted transition-colors text-left text-sm"
+          className="hover:bg-muted flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors"
         >
           <Folder className="h-4 w-4 text-yellow-500" />
           <span>{folder.name}</span>
@@ -623,20 +658,25 @@ function CompactView({
         <div
           key={file.id}
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors text-sm",
+            "flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm transition-colors",
             selectedIds.has(file.id) ? "bg-primary/10" : "hover:bg-muted"
           )}
           onClick={() => onToggleSelect(file.id)}
           onDoubleClick={() => onFileOpen(file)}
         >
-          <Checkbox checked={selectedIds.has(file.id)} className="h-3.5 w-3.5" />
+          <Checkbox
+            checked={selectedIds.has(file.id)}
+            className="h-3.5 w-3.5"
+          />
           {categoryIcons[file.category]}
           <span className="flex-1 truncate">{file.originalName}</span>
-          <span className="text-muted-foreground">{formatBytes(file.size)}</span>
+          <span className="text-muted-foreground">
+            {formatBytes(file.size)}
+          </span>
         </div>
       ))}
     </div>
-  );
+  )
 }
 
-export type { FileBrowserProps };
+export type { FileBrowserProps }

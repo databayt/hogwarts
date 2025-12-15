@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Tool Development
+
 - **CLI Tools**: Command-line utilities for common tasks
 - **Scripts**: Automation scripts for repetitive workflows
 - **Code Generators**: Boilerplate generation tools
@@ -22,6 +23,7 @@ model: sonnet
 - **Monitoring Tools**: Performance profilers, analyzers
 
 ### Tool Categories
+
 - **Build Tools**: Custom build optimizations, bundlers
 - **Testing Tools**: Test utilities, mocks, fixtures
 - **Database Tools**: Seeders, migrations, backups
@@ -29,6 +31,7 @@ model: sonnet
 - **Analysis Tools**: Code quality, performance, security
 
 ### Quality Standards
+
 - Fast execution: <100ms startup time
 - Cross-platform: Windows, macOS, Linux
 - Well-documented: Comprehensive help text
@@ -45,19 +48,19 @@ model: sonnet
 
 ```typescript
 // scripts/generate-feature.ts
-import { Command } from 'commander'
-import fs from 'fs/promises'
-import path from 'path'
+import fs from "fs/promises"
+import path from "path"
+import { Command } from "commander"
 
 const program = new Command()
 
 program
-  .name('generate')
-  .description('Generate code scaffolding')
-  .argument('<type>', 'Type: feature, component, page')
-  .argument('<name>', 'Name of the feature')
+  .name("generate")
+  .description("Generate code scaffolding")
+  .argument("<type>", "Type: feature, component, page")
+  .argument("<name>", "Name of the feature")
   .action(async (type, name) => {
-    if (type === 'feature') {
+    if (type === "feature") {
       await generateFeature(name)
     }
   })
@@ -67,28 +70,28 @@ async function generateFeature(name: string) {
   const pascalName = toPascalCase(name)
 
   // Create directory structure
-  const featurePath = path.join('src', 'components', kebabName)
+  const featurePath = path.join("src", "components", kebabName)
   await fs.mkdir(featurePath, { recursive: true })
 
   // Generate files from templates
   await fs.writeFile(
-    path.join(featurePath, 'content.tsx'),
-    generateContentTemplate(pascalName),
+    path.join(featurePath, "content.tsx"),
+    generateContentTemplate(pascalName)
   )
 
   await fs.writeFile(
-    path.join(featurePath, 'actions.ts'),
-    generateActionsTemplate(pascalName),
+    path.join(featurePath, "actions.ts"),
+    generateActionsTemplate(pascalName)
   )
 
   await fs.writeFile(
-    path.join(featurePath, 'types.ts'),
-    generateTypesTemplate(pascalName),
+    path.join(featurePath, "types.ts"),
+    generateTypesTemplate(pascalName)
   )
 
   await fs.writeFile(
-    path.join(featurePath, 'validation.ts'),
-    generateValidationTemplate(pascalName),
+    path.join(featurePath, "validation.ts"),
+    generateValidationTemplate(pascalName)
   )
 
   console.log(`✅ Feature "${name}" generated at ${featurePath}`)
@@ -119,8 +122,8 @@ export async function ${name}Content() {
 
 ```typescript
 // scripts/seed.ts
-import { PrismaClient } from '@prisma/client'
-import { faker } from '@faker-js/faker'
+import { faker } from "@faker-js/faker"
+import { PrismaClient } from "@prisma/client"
 
 const db = new PrismaClient()
 
@@ -129,7 +132,7 @@ export async function seedStudents(schoolId: string, count: number = 50) {
     firstName: faker.person.firstName(),
     lastName: faker.person.lastName(),
     email: faker.internet.email(),
-    dateOfBirth: faker.date.birthdate({ min: 5, max: 25, mode: 'age' }),
+    dateOfBirth: faker.date.birthdate({ min: 5, max: 25, mode: "age" }),
     schoolId,
   }))
 
@@ -163,13 +166,13 @@ if (require.main === module) {
   const [resource, schoolId, count] = process.argv.slice(2)
 
   if (!resource || !schoolId) {
-    console.error('Usage: pnpm seed <resource> <schoolId> [count]')
+    console.error("Usage: pnpm seed <resource> <schoolId> [count]")
     process.exit(1)
   }
 
-  if (resource === 'students') {
+  if (resource === "students") {
     seedStudents(schoolId, parseInt(count) || 50)
-  } else if (resource === 'teachers') {
+  } else if (resource === "teachers") {
     seedTeachers(schoolId, parseInt(count) || 20)
   }
 }
@@ -181,8 +184,8 @@ if (require.main === module) {
 
 ```typescript
 // scripts/analyze-performance.ts
-import { execSync } from 'child_process'
-import { performance } from 'perf_hooks'
+import { execSync } from "child_process"
+import { performance } from "perf_hooks"
 
 interface PerformanceMetrics {
   devServerStartup: number
@@ -195,34 +198,34 @@ interface PerformanceMetrics {
 async function analyzePerformance(): Promise<PerformanceMetrics> {
   const metrics: PerformanceMetrics = {} as any
 
-  console.log('🔍 Analyzing performance...\n')
+  console.log("🔍 Analyzing performance...\n")
 
   // Dev server startup
-  console.log('Testing dev server startup...')
+  console.log("Testing dev server startup...")
   const devStart = performance.now()
-  const devProcess = execSync('pnpm dev', {
+  const devProcess = execSync("pnpm dev", {
     timeout: 10000,
-    stdio: 'pipe',
+    stdio: "pipe",
   })
   metrics.devServerStartup = performance.now() - devStart
 
   // Cold build
-  console.log('Testing cold build...')
-  execSync('rm -rf .next', { stdio: 'ignore' })
+  console.log("Testing cold build...")
+  execSync("rm -rf .next", { stdio: "ignore" })
   const buildStart = performance.now()
-  execSync('pnpm build', { stdio: 'ignore' })
+  execSync("pnpm build", { stdio: "ignore" })
   metrics.coldBuild = performance.now() - buildStart
 
   // Test suite
-  console.log('Testing test suite...')
+  console.log("Testing test suite...")
   const testStart = performance.now()
-  execSync('pnpm test --run', { stdio: 'ignore' })
+  execSync("pnpm test --run", { stdio: "ignore" })
   metrics.testSuite = performance.now() - testStart
 
   // Type check
-  console.log('Testing type check...')
+  console.log("Testing type check...")
   const typeStart = performance.now()
-  execSync('pnpm type-check', { stdio: 'ignore' })
+  execSync("pnpm type-check", { stdio: "ignore" })
   metrics.typeCheck = performance.now() - typeStart
 
   return metrics
@@ -231,28 +234,29 @@ async function analyzePerformance(): Promise<PerformanceMetrics> {
 async function main() {
   const metrics = await analyzePerformance()
 
-  console.log('\n📊 Performance Results:\n')
+  console.log("\n📊 Performance Results:\n")
   console.table({
-    'Dev Server Startup': `${(metrics.devServerStartup / 1000).toFixed(2)}s`,
-    'Cold Build': `${(metrics.coldBuild / 1000).toFixed(2)}s`,
-    'Test Suite': `${(metrics.testSuite / 1000).toFixed(2)}s`,
-    'Type Check': `${(metrics.typeCheck / 1000).toFixed(2)}s`,
+    "Dev Server Startup": `${(metrics.devServerStartup / 1000).toFixed(2)}s`,
+    "Cold Build": `${(metrics.coldBuild / 1000).toFixed(2)}s`,
+    "Test Suite": `${(metrics.testSuite / 1000).toFixed(2)}s`,
+    "Type Check": `${(metrics.typeCheck / 1000).toFixed(2)}s`,
   })
 
   // Check against targets
   const issues = []
-  if (metrics.devServerStartup > 3000) issues.push('❌ Dev server too slow (>3s)')
-  if (metrics.coldBuild > 30000) issues.push('❌ Build too slow (>30s)')
-  if (metrics.testSuite > 120000) issues.push('❌ Tests too slow (>2min)')
-  if (metrics.typeCheck > 5000) issues.push('❌ Type check too slow (>5s)')
+  if (metrics.devServerStartup > 3000)
+    issues.push("❌ Dev server too slow (>3s)")
+  if (metrics.coldBuild > 30000) issues.push("❌ Build too slow (>30s)")
+  if (metrics.testSuite > 120000) issues.push("❌ Tests too slow (>2min)")
+  if (metrics.typeCheck > 5000) issues.push("❌ Type check too slow (>5s)")
 
   if (issues.length > 0) {
-    console.log('\n⚠️ Performance Issues:\n')
+    console.log("\n⚠️ Performance Issues:\n")
     issues.forEach((issue) => console.log(issue))
     process.exit(1)
   }
 
-  console.log('\n✅ All performance targets met!')
+  console.log("\n✅ All performance targets met!")
 }
 
 main()
@@ -264,8 +268,8 @@ main()
 
 ```typescript
 // scripts/validate-tenant-safety.ts
-import fs from 'fs'
-import path from 'path'
+import fs from "fs"
+import path from "path"
 
 function findServerActions(): string[] {
   const actionsFiles: string[] = []
@@ -279,35 +283,36 @@ function findServerActions(): string[] {
 
       if (stat.isDirectory()) {
         walk(fullPath)
-      } else if (file === 'actions.ts') {
+      } else if (file === "actions.ts") {
         actionsFiles.push(fullPath)
       }
     })
   }
 
-  walk('src')
+  walk("src")
   return actionsFiles
 }
 
 function checkSchoolIdInActions(filePath: string): string[] {
-  const content = fs.readFileSync(filePath, 'utf-8')
+  const content = fs.readFileSync(filePath, "utf-8")
   const violations: string[] = []
 
   // Find all database queries
-  const queryRegex = /db\.\w+\.(findMany|findUnique|findFirst|create|update|delete|upsert)/g
+  const queryRegex =
+    /db\.\w+\.(findMany|findUnique|findFirst|create|update|delete|upsert)/g
   let match
 
   while ((match = queryRegex.exec(content)) !== null) {
     const queryStart = match.index
-    const queryEnd = content.indexOf('})', queryStart) + 2
+    const queryEnd = content.indexOf("})", queryStart) + 2
 
     const queryContext = content.slice(
       Math.max(0, queryStart - 100),
-      Math.min(content.length, queryEnd + 100),
+      Math.min(content.length, queryEnd + 100)
     )
 
     // Check if schoolId is mentioned in query context
-    if (!queryContext.includes('schoolId')) {
+    if (!queryContext.includes("schoolId")) {
       violations.push(`Missing schoolId in query: ${match[0]}`)
     }
   }
@@ -316,7 +321,7 @@ function checkSchoolIdInActions(filePath: string): string[] {
 }
 
 function main() {
-  console.log('🔒 Validating multi-tenant safety...\n')
+  console.log("🔒 Validating multi-tenant safety...\n")
 
   const actionsFiles = findServerActions()
   const allViolations: Record<string, string[]> = {}
@@ -330,18 +335,20 @@ function main() {
   })
 
   if (Object.keys(allViolations).length > 0) {
-    console.log('❌ Multi-tenant safety violations found:\n')
+    console.log("❌ Multi-tenant safety violations found:\n")
 
     Object.entries(allViolations).forEach(([file, violations]) => {
       console.log(`\n${file}:`)
       violations.forEach((v) => console.log(`  - ${v}`))
     })
 
-    console.log('\n⚠️ Please ensure all database queries include schoolId scoping\n')
+    console.log(
+      "\n⚠️ Please ensure all database queries include schoolId scoping\n"
+    )
     process.exit(1)
   }
 
-  console.log('✅ All server actions include schoolId scoping')
+  console.log("✅ All server actions include schoolId scoping")
 }
 
 main()
@@ -418,11 +425,11 @@ Object.entries(manifest.pages).forEach(([page, files]) => {
 
 ```typescript
 program
-  .name('tool')
-  .description('Brief description')
-  .option('-f, --force', 'Force operation')
+  .name("tool")
+  .description("Brief description")
+  .option("-f, --force", "Force operation")
   .addHelpText(
-    'after',
+    "after",
     `
 Examples:
   $ tool generate feature students
@@ -430,22 +437,22 @@ Examples:
   $ tool analyze performance
 
 For more information, visit: https://docs.hogwarts.dev
-`,
+`
   )
 ```
 
 ### 2. Progress Indicators
 
 ```typescript
-import ora from 'ora'
+import ora from "ora"
 
-const spinner = ora('Processing...').start()
+const spinner = ora("Processing...").start()
 
 try {
   await longOperation()
-  spinner.succeed('Complete!')
+  spinner.succeed("Complete!")
 } catch (error) {
-  spinner.fail('Failed')
+  spinner.fail("Failed")
   throw error
 }
 ```
@@ -455,7 +462,7 @@ try {
 ```typescript
 function validateInput(schoolId: string) {
   if (!/^[a-z0-9]{8,}$/.test(schoolId)) {
-    throw new Error('Invalid school ID format')
+    throw new Error("Invalid school ID format")
   }
 }
 ```
@@ -465,6 +472,7 @@ function validateInput(schoolId: string) {
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/cli` - CLI tool development
 - `/agents/dx` - Developer experience
 - `/agents/build` - Build tooling
@@ -501,6 +509,7 @@ function validateInput(schoolId: string) {
 ## Success Metrics
 
 **Target Achievements**:
+
 - Tool startup time <100ms
 - 100% of tools documented
 - Cross-platform compatibility

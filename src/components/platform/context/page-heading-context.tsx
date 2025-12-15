@@ -1,6 +1,12 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react"
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react"
 
 interface PageHeadingData {
   title: string
@@ -13,7 +19,9 @@ interface PageHeadingContextValue {
   clearHeading: () => void
 }
 
-const PageHeadingContext = createContext<PageHeadingContextValue | undefined>(undefined)
+const PageHeadingContext = createContext<PageHeadingContextValue | undefined>(
+  undefined
+)
 
 export function PageHeadingProvider({ children }: { children: ReactNode }) {
   const [heading, setHeadingState] = useState<PageHeadingData | null>(null)

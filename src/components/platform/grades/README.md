@@ -6,9 +6,9 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/grades` | Gradebook | ✅ Ready |
+| URL                                                    | Page         | Status         |
+| ------------------------------------------------------ | ------------ | -------------- |
+| `/[lang]/s/[subdomain]/(platform)/grades`              | Gradebook    | ✅ Ready       |
 | `/[lang]/s/[subdomain]/(platform)/grades/report-cards` | Report Cards | 🚧 In Progress |
 
 **Status:** ✅ Production-Ready MVP (75%)
@@ -17,6 +17,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📊 View school-wide gradebook
 - 📈 Calculate term and year GPAs
 - 📑 Generate report cards
@@ -27,6 +28,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 - 📉 Track at-risk students
 
 ### What Teachers Can Do
+
 - ✅ Enter grades for their classes
 - ✅ View gradebook for assigned classes
 - ✅ Calculate class averages
@@ -36,6 +38,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 - ❌ Cannot view other teachers' gradebooks
 
 ### What Students Can View
+
 - ✅ View their own grades
 - ✅ See GPA calculation
 - ✅ View feedback from teachers
@@ -43,6 +46,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 - ❌ Cannot view other students' grades
 
 ### What Parents Can View
+
 - ✅ View their child's grades
 - ✅ See GPA and class rank
 - ✅ Download report cards
@@ -50,9 +54,11 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 - ❌ Cannot view full class gradebook
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Multi-step form (student/assignment → grading)
 - ✅ Grade entry (score, max score, letter grade)
@@ -62,11 +68,13 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 - ✅ Integration with assignments and exams
 
 **In Progress:**
+
 - 🚧 GPA calculation
 - 🚧 Report card generation
 - 🚧 Grade boundaries configuration
 
 **Planned:**
+
 - ⏸️ Automated report card distribution
 - ⏸️ Progress reports mid-term
 - ⏸️ Academic probation tracking
@@ -77,6 +85,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 ## Admin Workflows
 
 ### 1. Enter Grades for Assignment
+
 **After students complete an assignment:**
 
 1. Navigate to assignment detail page
@@ -91,6 +100,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 7. Students can view their grades
 
 ### 2. View Gradebook for Class
+
 **Comprehensive grade overview:**
 
 1. Navigate to `/results`
@@ -105,6 +115,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 5. Filter by assignment type
 
 ### 3. Calculate GPA
+
 **Term and cumulative GPA:**
 
 1. Navigate to student detail page
@@ -117,6 +128,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 5. Grade boundaries configurable per school
 
 ### 4. Generate Report Cards
+
 **End of term reporting:**
 
 1. Navigate to `/results/report-cards`
@@ -133,6 +145,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 6. Download ZIP file or email to parents
 
 ### 5. Analyze Academic Trends
+
 **Performance analytics:**
 
 1. Navigate to `/results/analytics`
@@ -145,6 +158,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 4. Export charts to PDF
 
 ### 6. Identify Honor Roll Students
+
 **Academic recognition:**
 
 1. Navigate to `/results/honor-roll`
@@ -157,6 +171,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 6. Send notifications to students and parents
 
 ### 7. Track At-Risk Students
+
 **Early intervention:**
 
 1. Navigate to `/results/at-risk`
@@ -173,6 +188,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 6. Track intervention outcomes
 
 ### 8. Export Grades to CSV
+
 **Data portability:**
 
 1. Navigate to `/results`
@@ -183,6 +199,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 5. Use for external analysis or record-keeping
 
 ### 9. Provide Teacher Feedback
+
 **Qualitative assessment:**
 
 1. When entering grades, add feedback:
@@ -196,6 +213,7 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 3. Feedback tracked historically
 
 ### 10. Configure Grade Boundaries
+
 **School-specific grading scale:**
 
 1. Navigate to `/settings/grading`
@@ -218,46 +236,55 @@ The Results feature provides a comprehensive gradebook where teachers and admini
 ## Integration with Other Features
 
 ### Links to Assignments
+
 - Results store grades for assignments
 - Weighted average calculation uses assignment weights
 - Assignment completion feeds into final grade
 
 ### Links to Exams
+
 - Exam scores stored as results
 - Exams typically weighted higher than homework
 - Exam analytics show class performance
 
 ### Links to Students
+
 - Student profile shows complete grade history
 - GPA calculated and displayed
 - Academic standing tracked
 
 ### Links to Classes
+
 - Gradebook organized by class
 - Class averages calculated
 - Class performance compared across subjects
 
 ### Links to Teachers
+
 - Teachers grade their assigned classes
 - Grading workload tracked
 - Teacher effectiveness metrics
 
 ### Links to Subjects
+
 - Subject-wise performance tracking
 - Subject averages across school
 - Curriculum effectiveness analysis
 
 ### Links to Dashboard
+
 - Teacher dashboard shows grading tasks
 - Student dashboard shows recent grades
 - Admin dashboard shows school-wide statistics
 
 ### Links to Announcements
+
 - Grade publication announcements
 - Report card distribution notifications
 - Honor roll announcements
 
 ### Links to Parent Portal
+
 - Parents view child's grades
 - Report card downloads
 - Grade alerts and notifications
@@ -286,10 +313,12 @@ The component follows the standardized file pattern:
 ## Features
 
 ### Multi-step Form
+
 - **Step 1**: Student & Assignment Selection (student, assignment, class)
 - **Step 2**: Grading & Feedback (score, max score, grade, feedback)
 
 ### Data Management
+
 - Create new results
 - Edit existing results
 - Delete results
@@ -297,6 +326,7 @@ The component follows the standardized file pattern:
 - Search and filter by student, assignment, class, and grade
 
 ### Validation
+
 - Client-side validation with Zod schemas
 - Server-side validation for all mutations
 - Multi-tenant safety with `schoolId` scoping
@@ -304,6 +334,7 @@ The component follows the standardized file pattern:
 - Auto-calculation of percentage based on score and max score
 
 ### Table Features
+
 - Sortable columns
 - Filterable data
 - Pagination
@@ -313,6 +344,7 @@ The component follows the standardized file pattern:
 ## Database Schema
 
 Results are stored with the following fields:
+
 - `id` - Unique identifier
 - `schoolId` - Multi-tenant identifier
 - `studentId` - Associated student
@@ -320,7 +352,7 @@ Results are stored with the following fields:
 - `classId` - Associated class
 - `score` - Student's score
 - `maxScore` - Maximum possible score
-- `percentage` - Calculated percentage (score/maxScore * 100)
+- `percentage` - Calculated percentage (score/maxScore \* 100)
 - `grade` - Letter grade (A+, A, A-, B+, B, B-, etc.)
 - `feedback` - Teacher feedback for the student
 - `submittedAt` - When the assignment was submitted
@@ -331,6 +363,7 @@ Results are stored with the following fields:
 ## Grade Options
 
 The component supports the following grade options:
+
 - A+, A, A-
 - B+, B, B-
 - C+, C, C-
@@ -340,10 +373,12 @@ The component supports the following grade options:
 ## Smart Features
 
 ### Auto-population
+
 - `maxScore` is automatically populated from the selected assignment's total points
 - `percentage` is automatically calculated when score or maxScore changes
 
 ### Data Integration
+
 - Integrates with existing Students, Classes, and Assignments components
 - Fetches related data for display in the table
 - Maintains referential integrity across the system
@@ -377,37 +412,44 @@ The component is used in the platform dashboard at `/dashboard/results` and auto
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

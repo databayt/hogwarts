@@ -1,70 +1,77 @@
-"use client";
+"use client"
 
 /**
  * All logs view component with filtering
  */
+import { useState } from "react"
+import { Download, FileText, Search } from "lucide-react"
 
-import { useState } from "react";
-import { LogCard } from "./card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, FileText } from "lucide-react";
-import type { UnifiedLog } from "./types";
-import { LOG_LEVELS } from "./config";
-import { sortLogs, exportLogsToCSV } from "./util";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { LogCard } from "./card"
+import { LOG_LEVELS } from "./config"
+import type { UnifiedLog } from "./types"
+import { exportLogsToCSV, sortLogs } from "./util"
 
 interface AllLogsProps {
-  logs: UnifiedLog[];
-  showFilters?: boolean;
-  onExport?: () => void;
+  logs: UnifiedLog[]
+  showFilters?: boolean
+  onExport?: () => void
 }
 
 export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
   const [filters, setFilters] = useState({
     search: "",
     level: "",
-  });
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  })
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   const filteredLogs = logs.filter((log) => {
     if (filters.search) {
-      const search = filters.search.toLowerCase();
+      const search = filters.search.toLowerCase()
       if (
         !log.action.toLowerCase().includes(search) &&
         !(log.userEmail || "").toLowerCase().includes(search)
       ) {
-        return false;
+        return false
       }
     }
     if (filters.level && log.level !== filters.level) {
-      return false;
+      return false
     }
-    return true;
-  });
+    return true
+  })
 
-  const sortedLogs = sortLogs(filteredLogs, "createdAt", sortDirection);
+  const sortedLogs = sortLogs(filteredLogs, "createdAt", sortDirection)
 
   const handleExport = () => {
     if (onExport) {
-      onExport();
+      onExport()
     } else {
-      const csv = exportLogsToCSV(sortedLogs);
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `logs-${new Date().toISOString()}.csv`;
-      a.click();
+      const csv = exportLogsToCSV(sortedLogs)
+      const blob = new Blob([csv], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `logs-${new Date().toISOString()}.csv`
+      a.click()
     }
-  };
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3>All Logs</h3>
-          <span className="rounded-full bg-muted px-2 py-1">
+          <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedLogs.length}</small>
           </span>
         </div>
@@ -77,16 +84,21 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-3">
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search logs..."
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
               className="pl-9"
             />
           </div>
 
-          <Select value={filters.level} onValueChange={(value) => setFilters({ ...filters, level: value })}>
+          <Select
+            value={filters.level}
+            onValueChange={(value) => setFilters({ ...filters, level: value })}
+          >
             <SelectTrigger>
               <SelectValue placeholder="All levels" />
             </SelectTrigger>
@@ -104,8 +116,8 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
 
       {sortedLogs.length === 0 ? (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8">
-          <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-            <FileText className="size-10 text-muted-foreground" />
+          <div className="bg-muted flex size-20 items-center justify-center rounded-full">
+            <FileText className="text-muted-foreground size-10" />
           </div>
           <h4 className="mt-4">No logs found</h4>
           <p className="muted mt-2">Try adjusting your filters</p>
@@ -118,5 +130,5 @@ export function AllLogs({ logs, showFilters = true, onExport }: AllLogsProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

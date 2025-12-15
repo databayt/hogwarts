@@ -50,15 +50,17 @@ Copy shadcn/ui showcase components to `src/components/atom/lab/`
 4. **Adapt to project standards**
 
    ### Semantic Tokens
+
    ```tsx
    // Original (hardcoded)
-   className="bg-white dark:bg-gray-900"
+   className = "bg-white dark:bg-gray-900"
 
    // Adapted (semantic)
-   className="bg-background"
+   className = "bg-background"
    ```
 
    ### Internationalization
+
    ```tsx
    // Original (hardcoded)
    <button>Save Changes</button>
@@ -69,19 +71,24 @@ Copy shadcn/ui showcase components to `src/components/atom/lab/`
    ```
 
    ### TypeScript
+
    ```tsx
    // Original (loose)
-   export function Component(props) { }
+   export function Component(props) {}
 
    // Adapted (strict)
    interface ComponentProps {
      variant?: "default" | "ghost"
      size?: "sm" | "md" | "lg"
    }
-   export function Component({ variant = "default", size = "md" }: ComponentProps) { }
+   export function Component({
+     variant = "default",
+     size = "md",
+   }: ComponentProps) {}
    ```
 
 5. **File structure**
+
    ```
    src/components/atom/lab/
    ├── field-components/
@@ -139,33 +146,42 @@ Next steps:
 ## Components Overview
 
 ### Field Components (2025 Patterns)
+
 Modern form field wrappers with labels, hints, and errors:
+
 - Field wrapper with label positioning
 - Checkbox fields with descriptions
 - Choice cards for radio/select patterns
 - Slider fields with value display
 
 ### Input Groups
+
 Compound input patterns for better UX:
+
 - Inputs with action buttons
 - Textarea with character count
 - Button groups with segments
 - Popovers integrated with buttons
 
 ### Display Patterns
+
 List and item display patterns:
+
 - Avatar lists with fallbacks
 - Item cards with metadata
 - Empty state patterns
 
 ### Loading States
+
 Skeleton and spinner patterns:
+
 - Badge with spinner
 - Empty state skeletons
 
 ## Customization
 
 After copying, customize:
+
 1. **Colors** - Already using semantic tokens
 2. **Spacing** - Adjust padding/margins
 3. **Typography** - Already using semantic HTML
@@ -175,11 +191,12 @@ After copying, customize:
 ## Integration
 
 Add to lab showcase page:
+
 ```tsx
 // src/components/platform/lab/dashboard-cards-showcase.tsx
-import { FieldDemo, InputGroupDemo } from '@/components/atom/lab'
+import { FieldDemo, InputGroupDemo } from "@/components/atom/lab"
 
-<DashboardSection title="shadcn 2025 Patterns">
+;<DashboardSection title="shadcn 2025 Patterns">
   <DashboardGrid>
     <FieldDemo />
     <InputGroupDemo />
@@ -215,6 +232,7 @@ import { FieldDemo, InputGroupDemo } from '@/components/atom/lab'
 ## Success Criteria
 
 Copy successful when:
+
 - ✅ All 20+ components copied
 - ✅ Zero import/build errors
 - ✅ All components pass `/ui-validate`

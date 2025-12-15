@@ -21,6 +21,7 @@ Examples:
 ```
 
 **Interactive Mode Benefits**:
+
 - Step-by-step guided workflow
 - Enforced quality gates at each step
 - TDD (tests generated BEFORE code)
@@ -28,6 +29,7 @@ Examples:
 - 99-100/100 quality score vs 85-95/100
 
 **Use interactive when**:
+
 - First time creating this component type
 - Need guidance through the process
 - Want to ensure zero quality violations
@@ -35,6 +37,7 @@ Examples:
 - Learning component generation
 
 **Use standard mode (below) when**:
+
 - Quick, simple components
 - Familiar with standards
 - Will validate manually later
@@ -53,6 +56,7 @@ Examples:
    - Plan component API
 
 2. **Invoke UI Factory Agent**
+
    ```
    /agents/ui-factory "$@"
    ```
@@ -81,6 +85,7 @@ Examples:
 ## Quality Standards (Automatic)
 
 Every generated component includes:
+
 - ✅ **100% semantic token usage** - No hardcoded colors
 - ✅ **Semantic HTML only** - No typography utilities
 - ✅ **WCAG 2.1 AA compliant** - Full accessibility
@@ -111,6 +116,7 @@ Every generated component includes:
 ## Component Types
 
 ### Form Components
+
 - Input fields with validation
 - Select dropdowns with search
 - Checkboxes, radios, switches
@@ -118,6 +124,7 @@ Every generated component includes:
 - File uploads with preview
 
 ### Display Components
+
 - Cards with variants
 - Stat cards with trends
 - Data tables with sorting
@@ -125,6 +132,7 @@ Every generated component includes:
 - Charts integration
 
 ### Layout Components
+
 - Modal dialogs
 - Side sheets/drawers
 - Tabs with persistence
@@ -132,6 +140,7 @@ Every generated component includes:
 - Collapsible sections
 
 ### Navigation Components
+
 - Menus with keyboard nav
 - Breadcrumbs
 - Pagination
@@ -139,6 +148,7 @@ Every generated component includes:
 - Search with filters
 
 ### Feedback Components
+
 - Toast notifications
 - Alert banners
 - Progress indicators
@@ -159,6 +169,7 @@ src/components/[category]/[component-name]/
 ## Post-Generation
 
 After component is generated:
+
 1. Review implementation
 2. Test in Storybook/dev environment
 3. Run `/ui-validate` to confirm quality
@@ -168,6 +179,7 @@ After component is generated:
 ## Success Criteria
 
 Generated component is ready when:
+
 - ✅ Passes all 7 quality gates
 - ✅ Works in dev environment without errors
 - ✅ Tests pass with 95%+ coverage
@@ -179,6 +191,7 @@ Generated component is ready when:
 ## Advanced Options
 
 Specify detailed requirements in your prompt:
+
 - **Variants**: "with primary, secondary, and destructive variants"
 - **Sizes**: "in small, medium, and large sizes"
 - **States**: "with loading, disabled, and error states"
@@ -205,16 +218,16 @@ Specify detailed requirements in your prompt:
 
 ## Mode Comparison
 
-| Aspect | Standard Mode | Interactive Mode (`--interactive`) |
-|--------|--------------|-----------------------------------|
-| **Speed** | Fast (1-2 min) | Moderate (3-5 min) |
-| **Guidance** | None | Step-by-step wizard |
-| **Validation** | Post-generation | At each step (blocking) |
-| **TDD** | Optional | Enforced (tests first) |
-| **Quality Score** | 85-95/100 | 99-100/100 |
-| **Auto-Fix** | Limited | Comprehensive (3 attempts) |
-| **Learning** | Self-directed | Guided with help |
-| **Use Case** | Quick prototypes | Production components |
+| Aspect            | Standard Mode    | Interactive Mode (`--interactive`) |
+| ----------------- | ---------------- | ---------------------------------- |
+| **Speed**         | Fast (1-2 min)   | Moderate (3-5 min)                 |
+| **Guidance**      | None             | Step-by-step wizard                |
+| **Validation**    | Post-generation  | At each step (blocking)            |
+| **TDD**           | Optional         | Enforced (tests first)             |
+| **Quality Score** | 85-95/100        | 99-100/100                         |
+| **Auto-Fix**      | Limited          | Comprehensive (3 attempts)         |
+| **Learning**      | Self-directed    | Guided with help                   |
+| **Use Case**      | Quick prototypes | Production components              |
 
 **Recommendation**: Start with `--interactive` until familiar with standards, then use standard mode for speed.
 

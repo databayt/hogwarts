@@ -7,56 +7,58 @@
 ### 1. Server Actions Best Practices
 
 #### Pattern Structure
+
 ```typescript
 // actions.ts
-"use server";
+"use server"
 
-import { z } from 'zod';
-import { auth } from '@/auth';
-import { db } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 
 // 1. Define validation schema
 const createSchema = z.object({
   name: z.string().min(1).max(255),
   email: z.string().email(),
-  schoolId: z.string().uuid()
-});
+  schoolId: z.string().uuid(),
+})
 
 // 2. Type-safe server action
 export async function createItem(formData: FormData) {
   // Authentication check
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.schoolId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized")
   }
 
   // Parse and validate
-  const raw = Object.fromEntries(formData);
-  const validated = createSchema.parse(raw);
+  const raw = Object.fromEntries(formData)
+  const validated = createSchema.parse(raw)
 
   // Multi-tenant scope
   const data = {
     ...validated,
-    schoolId: session.user.schoolId // Always include
-  };
+    schoolId: session.user.schoolId, // Always include
+  }
 
   try {
     // Database operation
-    const result = await db.item.create({ data });
+    const result = await db.item.create({ data })
 
     // Revalidate cache
-    revalidatePath('/items');
+    revalidatePath("/items")
 
     // Return success
-    return { success: true, data: result };
+    return { success: true, data: result }
   } catch (error) {
     // Error handling
     return {
       success: false,
-      error: 'Failed to create item'
-    };
+      error: "Failed to create item",
+    }
   }
 }
 ```
@@ -64,6 +66,7 @@ export async function createItem(formData: FormData) {
 #### Server Action Patterns
 
 **CRUD Operations**
+
 ```typescript
 // CREATE
 export async function createStudent(formData: FormData) {
@@ -86,7 +89,10 @@ export async function deleteStudent(id: string) {
 }
 
 // BULK
-export async function bulkUpdateStudents(ids: string[], data: Partial<Student>) {
+export async function bulkUpdateStudents(
+  ids: string[],
+  data: Partial<Student>
+) {
   // Validate → Transaction → Revalidate → Return
 }
 ```
@@ -94,33 +100,32 @@ export async function bulkUpdateStudents(ids: string[], data: Partial<Student>) 
 ### 2. API Route Design (App Router)
 
 #### Route Structure
+
 ```typescript
 // app/api/students/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { auth } from '@/auth';
-import { db } from '@/lib/db';
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 
 // GET /api/students
 export async function GET(request: NextRequest) {
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.schoolId) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '10');
+  const { searchParams } = new URL(request.url)
+  const page = parseInt(searchParams.get("page") || "1")
+  const limit = parseInt(searchParams.get("limit") || "10")
 
   const students = await db.student.findMany({
     where: { schoolId: session.user.schoolId },
     skip: (page - 1) * limit,
     take: limit,
-    orderBy: { createdAt: 'desc' }
-  });
+    orderBy: { createdAt: "desc" },
+  })
 
   return NextResponse.json({
     data: students,
@@ -128,57 +133,51 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       total: await db.student.count({
-        where: { schoolId: session.user.schoolId }
-      })
-    }
-  });
+        where: { schoolId: session.user.schoolId },
+      }),
+    },
+  })
 }
 
 // POST /api/students
 export async function POST(request: NextRequest) {
-  const session = await auth();
+  const session = await auth()
   if (!session?.user?.schoolId) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const body = await request.json();
+  const body = await request.json()
 
   // Validate request body
   const schema = z.object({
     name: z.string().min(1),
     email: z.string().email(),
-    yearLevel: z.number().min(1).max(12)
-  });
+    yearLevel: z.number().min(1).max(12),
+  })
 
   try {
-    const validated = schema.parse(body);
+    const validated = schema.parse(body)
 
     const student = await db.student.create({
       data: {
         ...validated,
-        schoolId: session.user.schoolId
-      }
-    });
+        schoolId: session.user.schoolId,
+      },
+    })
 
-    return NextResponse.json(
-      { data: student },
-      { status: 201 }
-    );
+    return NextResponse.json({ data: student }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: "Validation failed", details: error.errors },
         { status: 400 }
-      );
+      )
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }
 ```
@@ -186,19 +185,23 @@ export async function POST(request: NextRequest) {
 ### 3. RESTful Design Patterns
 
 #### Resource Naming
+
 ```typescript
 // Good: Plural nouns, kebab-case
-/api/students
-/api/student-grades
-/api/attendance-records
-
-// Bad: Verbs, camelCase, singular
-/api/getStudent      // ❌ Verb
-/api/studentGrades   // ❌ camelCase
-/api/student         // ❌ Singular
+;/api/denssttu / api / student -
+  grades / api / attendance -
+  records /
+    // Bad: Verbs, camelCase, singular
+    api /
+    getStudent / // ❌ Verb
+    api /
+    studentGrades / // ❌ camelCase
+    api /
+    student // ❌ Singular
 ```
 
 #### HTTP Methods
+
 ```typescript
 // GET: Read operations
 GET /api/students          // List
@@ -216,6 +219,7 @@ DELETE /api/students/:id   // Delete
 ```
 
 #### Status Codes
+
 ```typescript
 // Success
 200 OK                     // GET, PUT, PATCH success
@@ -238,11 +242,12 @@ DELETE /api/students/:id   // Delete
 ### 4. Validation Patterns
 
 #### Zod Schema Composition
+
 ```typescript
 // Base schemas
-const idSchema = z.string().uuid();
-const emailSchema = z.string().email().toLowerCase();
-const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/);
+const idSchema = z.string().uuid()
+const emailSchema = z.string().email().toLowerCase()
+const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/)
 
 // Composed schemas
 const createStudentSchema = z.object({
@@ -250,34 +255,35 @@ const createStudentSchema = z.object({
   email: emailSchema,
   phone: phoneSchema.optional(),
   yearLevel: z.number().int().min(1).max(12),
-  guardianIds: z.array(idSchema).min(1).max(2)
-});
+  guardianIds: z.array(idSchema).min(1).max(2),
+})
 
-const updateStudentSchema = createStudentSchema.partial();
+const updateStudentSchema = createStudentSchema.partial()
 
 const querySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
-  sortBy: z.enum(['name', 'email', 'createdAt']).default('createdAt'),
-  order: z.enum(['asc', 'desc']).default('desc')
-});
+  sortBy: z.enum(["name", "email", "createdAt"]).default("createdAt"),
+  order: z.enum(["asc", "desc"]).default("desc"),
+})
 ```
 
 #### Validation Helpers
+
 ```typescript
 // Validate with error handling
 export function validateRequest<T>(
   data: unknown,
   schema: z.ZodSchema<T>
 ): { success: true; data: T } | { success: false; errors: z.ZodError } {
-  const result = schema.safeParse(data);
+  const result = schema.safeParse(data)
 
   if (result.success) {
-    return { success: true, data: result.data };
+    return { success: true, data: result.data }
   }
 
-  return { success: false, errors: result.error };
+  return { success: false, errors: result.error }
 }
 
 // Type-safe params
@@ -285,21 +291,22 @@ export function parseSearchParams<T>(
   searchParams: URLSearchParams,
   schema: z.ZodSchema<T>
 ): T {
-  const params = Object.fromEntries(searchParams);
-  return schema.parse(params);
+  const params = Object.fromEntries(searchParams)
+  return schema.parse(params)
 }
 ```
 
 ### 5. Error Handling
 
 #### Consistent Error Response
+
 ```typescript
 interface ApiError {
-  error: string;
-  message: string;
-  details?: any;
-  timestamp: string;
-  path: string;
+  error: string
+  message: string
+  details?: any
+  timestamp: string
+  path: string
 }
 
 export function createErrorResponse(
@@ -316,11 +323,12 @@ export function createErrorResponse(
       timestamp: new Date().toISOString(),
     },
     { status }
-  );
+  )
 }
 ```
 
 #### Error Classes
+
 ```typescript
 export class ApiError extends Error {
   constructor(
@@ -328,19 +336,19 @@ export class ApiError extends Error {
     public message: string,
     public details?: any
   ) {
-    super(message);
+    super(message)
   }
 }
 
 export class ValidationError extends ApiError {
   constructor(errors: z.ZodError) {
-    super(400, 'Validation failed', errors.flatten());
+    super(400, "Validation failed", errors.flatten())
   }
 }
 
 export class AuthorizationError extends ApiError {
   constructor(resource?: string) {
-    super(403, `Not authorized to access ${resource || 'resource'}`);
+    super(403, `Not authorized to access ${resource || "resource"}`)
   }
 }
 ```
@@ -349,43 +357,43 @@ export class AuthorizationError extends ApiError {
 
 ```typescript
 interface PaginationParams {
-  page: number;
-  limit: number;
-  cursor?: string;
+  page: number
+  limit: number
+  cursor?: string
 }
 
 interface PaginatedResponse<T> {
-  data: T[];
+  data: T[]
   meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
   links?: {
-    self: string;
-    next?: string;
-    prev?: string;
-    first: string;
-    last: string;
-  };
+    self: string
+    next?: string
+    prev?: string
+    first: string
+    last: string
+  }
 }
 
 export async function paginate<T>(
   query: any,
   params: PaginationParams
 ): Promise<PaginatedResponse<T>> {
-  const { page, limit } = params;
-  const skip = (page - 1) * limit;
+  const { page, limit } = params
+  const skip = (page - 1) * limit
 
   const [data, total] = await Promise.all([
     query.skip(skip).take(limit),
-    query.count()
-  ]);
+    query.count(),
+  ])
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / limit)
 
   return {
     data,
@@ -395,9 +403,9 @@ export async function paginate<T>(
       total,
       totalPages,
       hasNext: page < totalPages,
-      hasPrev: page > 1
-    }
-  };
+      hasPrev: page > 1,
+    },
+  }
 }
 ```
 
@@ -408,72 +416,69 @@ export async function paginate<T>(
 export async function withTenant<T>(
   handler: (schoolId: string) => Promise<T>
 ): Promise<T> {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user?.schoolId) {
-    throw new AuthorizationError('School context required');
+    throw new AuthorizationError("School context required")
   }
 
-  return handler(session.user.schoolId);
+  return handler(session.user.schoolId)
 }
 
 // Usage
 export async function GET(request: NextRequest) {
   return withTenant(async (schoolId) => {
     const data = await db.student.findMany({
-      where: { schoolId }
-    });
-    return NextResponse.json(data);
-  });
+      where: { schoolId },
+    })
+    return NextResponse.json(data)
+  })
 }
 ```
 
 ### 8. Caching Strategies
 
 ```typescript
+// Revalidation
+import { unstable_cache } from "next/cache"
+
 // Cache headers
 export async function GET(request: NextRequest) {
-  const data = await fetchData();
+  const data = await fetchData()
 
   return NextResponse.json(data, {
     headers: {
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30'
-    }
-  });
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+    },
+  })
 }
-
-// Revalidation
-import { unstable_cache } from 'next/cache';
 
 const getCachedStudents = unstable_cache(
   async (schoolId: string) => {
-    return db.student.findMany({ where: { schoolId } });
+    return db.student.findMany({ where: { schoolId } })
   },
-  ['students'],
+  ["students"],
   { revalidate: 60 } // 60 seconds
-);
+)
 ```
 
 ### 9. Rate Limiting
 
 ```typescript
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
 
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '10 s')
-});
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+})
 
 export async function POST(request: NextRequest) {
-  const ip = request.ip ?? '127.0.0.1';
-  const { success } = await ratelimit.limit(ip);
+  const ip = request.ip ?? "127.0.0.1"
+  const { success } = await ratelimit.limit(ip)
 
   if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 })
   }
 
   // Process request
@@ -517,6 +522,7 @@ export async function POST(request: NextRequest) {
 ## Hogwarts-Specific Patterns
 
 ### School API Endpoints
+
 ```typescript
 // Multi-tenant aware endpoints
 /api/schools/:subdomain/students
@@ -530,32 +536,34 @@ export async function POST(request: NextRequest) {
 ```
 
 ### Webhook Handling
+
 ```typescript
 // app/api/webhooks/stripe/route.ts
 export async function POST(request: NextRequest) {
-  const signature = request.headers.get('stripe-signature');
+  const signature = request.headers.get("stripe-signature")
 
   // Verify webhook signature
   const event = stripe.webhooks.constructEvent(
     await request.text(),
     signature,
     process.env.STRIPE_WEBHOOK_SECRET
-  );
+  )
 
   // Process event
   switch (event.type) {
-    case 'payment_intent.succeeded':
-      await handlePaymentSuccess(event.data);
-      break;
+    case "payment_intent.succeeded":
+      await handlePaymentSuccess(event.data)
+      break
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true })
 }
 ```
 
 ## Usage Examples
 
 ### When to Apply
+
 - Designing new API endpoints
 - Refactoring existing APIs
 - Adding server actions
@@ -563,6 +571,7 @@ export async function POST(request: NextRequest) {
 - Setting up authentication
 
 ### Example Commands
+
 ```bash
 "Design API for student enrollment using api-designer"
 "Apply RESTful patterns to exam module"
@@ -571,6 +580,7 @@ export async function POST(request: NextRequest) {
 ```
 
 ## References
+
 - [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/api-routes)
 - [Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions)
 - [REST API Design](https://restfulapi.net/)

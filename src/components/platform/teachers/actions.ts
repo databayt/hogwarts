@@ -62,14 +62,19 @@
  * - Implement absence/leave management
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { teacherCreateSchema, teacherUpdateSchema, getTeachersSchema } from "@/components/platform/teachers/validation";
-import { arrayToCSV } from "@/components/file";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { arrayToCSV } from "@/components/file"
+import {
+  getTeachersSchema,
+  teacherCreateSchema,
+  teacherUpdateSchema,
+} from "@/components/platform/teachers/validation"
 
 // ============================================================================
 // Types
@@ -77,13 +82,13 @@ import { arrayToCSV } from "@/components/file";
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const TEACHERS_PATH = "/teachers";
+const TEACHERS_PATH = "/teachers"
 
 // ============================================================================
 // Mutations
@@ -99,13 +104,13 @@ export async function createTeacher(
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = teacherCreateSchema.parse(input);
+    const parsed = teacherCreateSchema.parse(input)
 
     // Use transaction to ensure all related data is created atomically
     const result = await (db as any).$transaction(async (tx: any) => {
@@ -125,7 +130,7 @@ export async function createTeacher(
           contractStartDate: parsed.contractStartDate,
           contractEndDate: parsed.contractEndDate,
         },
-      });
+      })
 
       // Create phone numbers if provided
       if (parsed.phoneNumbers && parsed.phoneNumbers.length > 0) {
@@ -137,7 +142,7 @@ export async function createTeacher(
             phoneType: phone.phoneType,
             isPrimary: phone.isPrimary,
           })),
-        });
+        })
       }
 
       // Create qualifications if provided
@@ -155,7 +160,7 @@ export async function createTeacher(
             licenseNumber: qual.licenseNumber,
             documentUrl: qual.documentUrl,
           })),
-        });
+        })
       }
 
       // Create experiences if provided
@@ -171,7 +176,7 @@ export async function createTeacher(
             isCurrent: exp.isCurrent,
             description: exp.description,
           })),
-        });
+        })
       }
 
       // Create subject expertise if provided
@@ -183,33 +188,34 @@ export async function createTeacher(
             subjectId: expertise.subjectId,
             expertiseLevel: expertise.expertiseLevel,
           })),
-        });
+        })
       }
 
-      return teacher;
-    });
+      return teacher
+    })
 
     // Revalidate cache
-    revalidatePath(TEACHERS_PATH);
+    revalidatePath(TEACHERS_PATH)
 
-    return { success: true, data: { id: result.id as string } };
+    return { success: true, data: { id: result.id as string } }
   } catch (error) {
     console.error("[createTeacher] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create teacher"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to create teacher",
+    }
   }
 }
 
@@ -223,37 +229,47 @@ export async function updateTeacher(
 ): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = teacherUpdateSchema.parse(input);
-    const { id, qualifications, experiences, subjectExpertise, ...rest } = parsed;
+    const parsed = teacherUpdateSchema.parse(input)
+    const { id, qualifications, experiences, subjectExpertise, ...rest } =
+      parsed
 
     // Build update data object for teacher
-    const data: Record<string, unknown> = {};
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName;
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname;
-    if (typeof rest.gender !== "undefined") data.gender = rest.gender;
-    if (typeof rest.emailAddress !== "undefined") data.emailAddress = rest.emailAddress;
-    if (typeof rest.birthDate !== "undefined") data.birthDate = rest.birthDate;
-    if (typeof rest.employeeId !== "undefined") data.employeeId = rest.employeeId;
-    if (typeof rest.joiningDate !== "undefined") data.joiningDate = rest.joiningDate;
-    if (typeof rest.employmentStatus !== "undefined") data.employmentStatus = rest.employmentStatus;
-    if (typeof rest.employmentType !== "undefined") data.employmentType = rest.employmentType;
-    if (typeof rest.contractStartDate !== "undefined") data.contractStartDate = rest.contractStartDate;
-    if (typeof rest.contractEndDate !== "undefined") data.contractEndDate = rest.contractEndDate;
+    const data: Record<string, unknown> = {}
+    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
+    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.gender !== "undefined") data.gender = rest.gender
+    if (typeof rest.emailAddress !== "undefined")
+      data.emailAddress = rest.emailAddress
+    if (typeof rest.birthDate !== "undefined") data.birthDate = rest.birthDate
+    if (typeof rest.employeeId !== "undefined")
+      data.employeeId = rest.employeeId
+    if (typeof rest.joiningDate !== "undefined")
+      data.joiningDate = rest.joiningDate
+    if (typeof rest.employmentStatus !== "undefined")
+      data.employmentStatus = rest.employmentStatus
+    if (typeof rest.employmentType !== "undefined")
+      data.employmentType = rest.employmentType
+    if (typeof rest.contractStartDate !== "undefined")
+      data.contractStartDate = rest.contractStartDate
+    if (typeof rest.contractEndDate !== "undefined")
+      data.contractEndDate = rest.contractEndDate
 
     // Use transaction for atomic updates
     await (db as any).$transaction(async (tx: any) => {
       // Update teacher basic info
-      await tx.teacher.updateMany({ where: { id, schoolId }, data });
+      await tx.teacher.updateMany({ where: { id, schoolId }, data })
 
       // Update qualifications if provided (delete and recreate for simplicity)
       if (qualifications !== undefined) {
-        await tx.teacherQualification.deleteMany({ where: { teacherId: id, schoolId } });
+        await tx.teacherQualification.deleteMany({
+          where: { teacherId: id, schoolId },
+        })
         if (qualifications.length > 0) {
           await tx.teacherQualification.createMany({
             data: qualifications.map((qual) => ({
@@ -268,13 +284,15 @@ export async function updateTeacher(
               licenseNumber: qual.licenseNumber,
               documentUrl: qual.documentUrl,
             })),
-          });
+          })
         }
       }
 
       // Update experiences if provided
       if (experiences !== undefined) {
-        await tx.teacherExperience.deleteMany({ where: { teacherId: id, schoolId } });
+        await tx.teacherExperience.deleteMany({
+          where: { teacherId: id, schoolId },
+        })
         if (experiences.length > 0) {
           await tx.teacherExperience.createMany({
             data: experiences.map((exp) => ({
@@ -287,13 +305,15 @@ export async function updateTeacher(
               isCurrent: exp.isCurrent,
               description: exp.description,
             })),
-          });
+          })
         }
       }
 
       // Update subject expertise if provided
       if (subjectExpertise !== undefined) {
-        await tx.teacherSubjectExpertise.deleteMany({ where: { teacherId: id, schoolId } });
+        await tx.teacherSubjectExpertise.deleteMany({
+          where: { teacherId: id, schoolId },
+        })
         if (subjectExpertise.length > 0) {
           await tx.teacherSubjectExpertise.createMany({
             data: subjectExpertise.map((expertise) => ({
@@ -302,32 +322,33 @@ export async function updateTeacher(
               subjectId: expertise.subjectId,
               expertiseLevel: expertise.expertiseLevel,
             })),
-          });
+          })
         }
       }
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(TEACHERS_PATH);
+    revalidatePath(TEACHERS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateTeacher] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update teacher"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to update teacher",
+    }
   }
 }
 
@@ -336,43 +357,44 @@ export async function updateTeacher(
  * @param input - Teacher ID
  * @returns Action response
  */
-export async function deleteTeacher(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteTeacher(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete teacher (using deleteMany for tenant safety)
-    await (db as any).teacher.deleteMany({ where: { id, schoolId } });
+    await (db as any).teacher.deleteMany({ where: { id, schoolId } })
 
     // Revalidate cache
-    revalidatePath(TEACHERS_PATH);
+    revalidatePath(TEACHERS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteTeacher] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete teacher"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to delete teacher",
+    }
   }
 }
 
@@ -385,22 +407,22 @@ export async function deleteTeacher(
  * @param input - Teacher ID
  * @returns Action response with teacher data
  */
-export async function getTeacher(
-  input: { id: string }
-): Promise<ActionResponse<Record<string, unknown> | null>> {
+export async function getTeacher(input: {
+  id: string
+}): Promise<ActionResponse<Record<string, unknown> | null>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Check if teacher model exists
     if (!(db as any).teacher) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     // Fetch teacher with all related data
@@ -485,26 +507,26 @@ export async function getTeacher(
           },
         },
       },
-    });
+    })
 
-    return { success: true, data: teacher as null | Record<string, unknown> };
+    return { success: true, data: teacher as null | Record<string, unknown> }
   } catch (error) {
     console.error("[getTeacher] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch teacher"
-    };
+      error: error instanceof Error ? error.message : "Failed to fetch teacher",
+    }
   }
 }
 
@@ -513,62 +535,66 @@ export async function getTeacher(
  * @param input - Teacher ID and optional term filter
  * @returns Action response with workload data
  */
-export async function getTeacherWorkload(
-  input: { teacherId: string; termId?: string }
-): Promise<ActionResponse<{
-  totalPeriods: number;
-  classCount: number;
-  subjectCount: number;
-  schedule: Array<{
-    day: number;
-    period: number;
-    subject: string;
-    className: string;
-  }>;
-  workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD";
-}>> {
+export async function getTeacherWorkload(input: {
+  teacherId: string
+  termId?: string
+}): Promise<
+  ActionResponse<{
+    totalPeriods: number
+    classCount: number
+    subjectCount: number
+    schedule: Array<{
+      day: number
+      period: number
+      subject: string
+      className: string
+    }>
+    workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
+  }>
+> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const { teacherId, termId } = input;
+    const { teacherId, termId } = input
 
     // Get teacher's timetable slots
-    const timetableSlots = await (db as any).timetableSlot?.findMany?.({
-      where: {
-        schoolId,
-        teacherId,
-        ...(termId ? { timetable: { termId } } : {}),
-      },
-      include: {
-        subject: { select: { subjectName: true } },
-        class: { select: { className: true } },
-        period: { select: { periodNumber: true, dayOfWeek: true } },
-      },
-    }) || [];
+    const timetableSlots =
+      (await (db as any).timetableSlot?.findMany?.({
+        where: {
+          schoolId,
+          teacherId,
+          ...(termId ? { timetable: { termId } } : {}),
+        },
+        include: {
+          subject: { select: { subjectName: true } },
+          class: { select: { className: true } },
+          period: { select: { periodNumber: true, dayOfWeek: true } },
+        },
+      })) || []
 
     // Get workload config for school
-    const workloadConfig = await (db as any).workloadConfig?.findUnique?.({
+    const workloadConfig = (await (db as any).workloadConfig?.findUnique?.({
       where: { schoolId },
-    }) || {
+    })) || {
       minPeriodsPerWeek: 15,
       normalPeriodsPerWeek: 20,
       maxPeriodsPerWeek: 25,
       overloadThreshold: 25,
-    };
+    }
 
-    const totalPeriods = timetableSlots.length;
-    const uniqueClasses = new Set(timetableSlots.map((s: any) => s.classId));
-    const uniqueSubjects = new Set(timetableSlots.map((s: any) => s.subjectId));
+    const totalPeriods = timetableSlots.length
+    const uniqueClasses = new Set(timetableSlots.map((s: any) => s.classId))
+    const uniqueSubjects = new Set(timetableSlots.map((s: any) => s.subjectId))
 
     // Determine workload status
-    let workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD" = "NORMAL";
+    let workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD" = "NORMAL"
     if (totalPeriods < workloadConfig.minPeriodsPerWeek) {
-      workloadStatus = "UNDERUTILIZED";
+      workloadStatus = "UNDERUTILIZED"
     } else if (totalPeriods > workloadConfig.overloadThreshold) {
-      workloadStatus = "OVERLOAD";
+      workloadStatus = "OVERLOAD"
     }
 
     const schedule = timetableSlots.map((slot: any) => ({
@@ -576,7 +602,7 @@ export async function getTeacherWorkload(
       period: slot.period?.periodNumber || 0,
       subject: slot.subject?.subjectName || "Unknown",
       className: slot.class?.className || "Unknown",
-    }));
+    }))
 
     return {
       success: true,
@@ -587,13 +613,14 @@ export async function getTeacherWorkload(
         schedule,
         workloadStatus,
       },
-    };
+    }
   } catch (error) {
-    console.error("[getTeacherWorkload] Error:", error);
+    console.error("[getTeacherWorkload] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch workload",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch workload",
+    }
   }
 }
 
@@ -604,20 +631,31 @@ export async function getTeacherWorkload(
  */
 export async function getTeachers(
   input: Partial<z.infer<typeof getTeachersSchema>>
-): Promise<ActionResponse<{ rows: Array<{ id: string; name: string; emailAddress: string; status: string; createdAt: string }>; total: number }>> {
+): Promise<
+  ActionResponse<{
+    rows: Array<{
+      id: string
+      name: string
+      emailAddress: string
+      status: string
+      createdAt: string
+    }>
+    total: number
+  }>
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getTeachersSchema.parse(input ?? {});
+    const sp = getTeachersSchema.parse(input ?? {})
 
     // Check if teacher model exists
     if (!(db as any).teacher) {
-      return { success: true, data: { rows: [], total: 0 } };
+      return { success: true, data: { rows: [], total: 0 } }
     }
 
     // Build where clause
@@ -640,23 +678,24 @@ export async function getTeachers(
           : sp.status === "inactive"
             ? { userId: null }
             : {}
-          : {}),
-    };
+        : {}),
+    }
 
     // Build pagination
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
 
     // Build order by clause
-    const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-      : [{ createdAt: "desc" }];
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
       (db as any).teacher.findMany({ where, orderBy, skip, take }),
       (db as any).teacher.count({ where }),
-    ]);
+    ])
 
     // Map results
     const mapped = (rows as Array<any>).map((t) => ({
@@ -666,26 +705,27 @@ export async function getTeachers(
       emailAddress: t.emailAddress || "-",
       status: t.userId ? "active" : "inactive",
       createdAt: (t.createdAt as Date).toISOString(),
-    }));
+    }))
 
-    return { success: true, data: { rows: mapped, total: count as number } };
+    return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {
     console.error("[getTeachers] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch teachers"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch teachers",
+    }
   }
 }
 
@@ -699,17 +739,17 @@ export async function getTeachersCSV(
 ): Promise<ActionResponse<string>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getTeachersSchema.parse(input ?? {});
+    const sp = getTeachersSchema.parse(input ?? {})
 
     // Check if teacher model exists
     if (!(db as any).teacher) {
-      return { success: true, data: "" };
+      return { success: true, data: "" }
     }
 
     // Build where clause with filters
@@ -732,8 +772,8 @@ export async function getTeachersCSV(
           : sp.status === "inactive"
             ? { userId: null }
             : {}
-          : {}),
-    };
+        : {}),
+    }
 
     // Fetch ALL teachers matching filters (no pagination for export)
     const teachers = await (db as any).teacher.findMany({
@@ -765,7 +805,7 @@ export async function getTeachersCSV(
         },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
-    });
+    })
 
     // Transform data for CSV export
     const exportData = teachers.map((teacher: any) => ({
@@ -787,7 +827,7 @@ export async function getTeachersCSV(
           : "",
       status: teacher.userId ? "Active" : "Inactive",
       createdAt: new Date(teacher.createdAt).toISOString().split("T")[0],
-    }));
+    }))
 
     // Define CSV columns
     const columns = [
@@ -803,27 +843,28 @@ export async function getTeachersCSV(
       { key: "department", label: "Department" },
       { key: "status", label: "Status" },
       { key: "createdAt", label: "Created Date" },
-    ];
+    ]
 
-    const csv = arrayToCSV(exportData, { columns });
-    return { success: true, data: csv };
+    const csv = arrayToCSV(exportData, { columns })
+    return { success: true, data: csv }
   } catch (error) {
     console.error("[getTeachersCSV] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export teachers"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to export teachers",
+    }
   }
 }
 
@@ -832,31 +873,36 @@ export async function getTeachersCSV(
  * Groups subjects by department for better organization
  * @returns Action response with subjects grouped by department
  */
-export async function getSubjectsForExpertise(): Promise<ActionResponse<{
-  subjects: Array<{
-    id: string;
-    name: string;
-    nameAr: string | null;
-    departmentId: string;
-    departmentName: string;
-    departmentNameAr: string | null;
-  }>;
-  byDepartment: Record<string, Array<{
-    id: string;
-    name: string;
-    nameAr: string | null;
-  }>>;
-}>> {
+export async function getSubjectsForExpertise(): Promise<
+  ActionResponse<{
+    subjects: Array<{
+      id: string
+      name: string
+      nameAr: string | null
+      departmentId: string
+      departmentName: string
+      departmentNameAr: string | null
+    }>
+    byDepartment: Record<
+      string,
+      Array<{
+        id: string
+        name: string
+        nameAr: string | null
+      }>
+    >
+  }>
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Check if subject model exists
     if (!(db as any).subject) {
-      return { success: true, data: { subjects: [], byDepartment: {} } };
+      return { success: true, data: { subjects: [], byDepartment: {} } }
     }
 
     // Fetch all subjects with their departments
@@ -875,7 +921,7 @@ export async function getSubjectsForExpertise(): Promise<ActionResponse<{
         { department: { departmentName: "asc" } },
         { subjectName: "asc" },
       ],
-    });
+    })
 
     // Map subjects to a flat list
     const mappedSubjects = subjects.map((s: any) => ({
@@ -885,20 +931,23 @@ export async function getSubjectsForExpertise(): Promise<ActionResponse<{
       departmentId: s.departmentId,
       departmentName: s.department?.departmentName || "Unknown",
       departmentNameAr: s.department?.departmentNameAr || null,
-    }));
+    }))
 
     // Group subjects by department name
-    const byDepartment: Record<string, Array<{ id: string; name: string; nameAr: string | null }>> = {};
+    const byDepartment: Record<
+      string,
+      Array<{ id: string; name: string; nameAr: string | null }>
+    > = {}
     for (const subject of mappedSubjects) {
-      const deptName = subject.departmentName;
+      const deptName = subject.departmentName
       if (!byDepartment[deptName]) {
-        byDepartment[deptName] = [];
+        byDepartment[deptName] = []
       }
       byDepartment[deptName].push({
         id: subject.id,
         name: subject.name,
         nameAr: subject.nameAr,
-      });
+      })
     }
 
     return {
@@ -907,13 +956,14 @@ export async function getSubjectsForExpertise(): Promise<ActionResponse<{
         subjects: mappedSubjects,
         byDepartment,
       },
-    };
+    }
   } catch (error) {
-    console.error("[getSubjectsForExpertise] Error:", error);
+    console.error("[getSubjectsForExpertise] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch subjects",
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch subjects",
+    }
   }
 }
 
@@ -925,36 +975,40 @@ export async function getSubjectsForExpertise(): Promise<ActionResponse<{
  */
 export async function getTeachersExportData(
   input?: Partial<z.infer<typeof getTeachersSchema>>
-): Promise<ActionResponse<Array<{
-  id: string;
-  employeeId: string | null;
-  givenName: string;
-  surname: string;
-  fullName: string;
-  gender: string;
-  email: string | null;
-  userEmail: string | null;
-  phone: string | null;
-  department: string | null;
-  qualification: string | null;
-  specialization: string | null;
-  hireDate: Date | null;
-  status: string;
-  createdAt: Date;
-}>>> {
+): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      employeeId: string | null
+      givenName: string
+      surname: string
+      fullName: string
+      gender: string
+      email: string | null
+      userEmail: string | null
+      phone: string | null
+      department: string | null
+      qualification: string | null
+      specialization: string | null
+      hireDate: Date | null
+      status: string
+      createdAt: Date
+    }>
+  >
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getTeachersSchema.parse(input ?? {});
+    const sp = getTeachersSchema.parse(input ?? {})
 
     // Check if teacher model exists
     if (!(db as any).teacher) {
-      return { success: true, data: [] };
+      return { success: true, data: [] }
     }
 
     // Build where clause with filters
@@ -977,8 +1031,8 @@ export async function getTeachersExportData(
           : sp.status === "inactive"
             ? { userId: null }
             : {}
-          : {}),
-    };
+        : {}),
+    }
 
     // Fetch ALL teachers matching filters (no pagination for export)
     const teachers = await (db as any).teacher.findMany({
@@ -1010,7 +1064,7 @@ export async function getTeachersExportData(
         },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
-    });
+    })
 
     // Transform data for export
     const exportData = teachers.map((teacher: any) => ({
@@ -1035,25 +1089,26 @@ export async function getTeachersExportData(
       hireDate: teacher.hireDate ? new Date(teacher.hireDate) : null,
       status: teacher.userId ? "Active" : "Inactive",
       createdAt: new Date(teacher.createdAt),
-    }));
+    }))
 
-    return { success: true, data: exportData };
+    return { success: true, data: exportData }
   } catch (error) {
     console.error("[getTeachersExportData] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch export data"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch export data",
+    }
   }
 }

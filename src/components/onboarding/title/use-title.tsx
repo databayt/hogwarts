@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { getSchoolTitle } from './actions'
-import { type TitleFormData } from './validation'
+import { useEffect, useState } from "react"
+
+import { getSchoolTitle } from "./actions"
+import { type TitleFormData } from "./validation"
 
 interface UseTitleReturn {
   data: TitleFormData | null
@@ -18,20 +19,20 @@ export function useTitle(schoolId: string): UseTitleReturn {
 
   const fetchTitle = async () => {
     if (!schoolId) return
-    
+
     try {
       setLoading(true)
       setError(null)
       const result = await getSchoolTitle(schoolId)
-      
+
       if (result.success) {
         setData(result.data)
       } else {
-        setError(result.error || 'Failed to fetch title')
+        setError(result.error || "Failed to fetch title")
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-      console.error('Error fetching title:', err)
+      setError("An unexpected error occurred")
+      console.error("Error fetching title:", err)
     } finally {
       setLoading(false)
     }
@@ -49,6 +50,6 @@ export function useTitle(schoolId: string): UseTitleReturn {
     data,
     loading,
     error,
-    refresh
+    refresh,
   }
-} 
+}

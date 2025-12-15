@@ -1,8 +1,9 @@
-'use client'
+"use client"
 
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { AlertTriangle } from 'lucide-react'
+import { useEffect } from "react"
+import { AlertTriangle } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 export default function AdmissionError({
   error,
@@ -12,18 +13,20 @@ export default function AdmissionError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[Admission Error]', error)
+    console.error("[Admission Error]", error)
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-      <AlertTriangle className="h-12 w-12 text-destructive" />
+    <div className="flex min-h-[400px] flex-col items-center justify-center space-y-4">
+      <AlertTriangle className="text-destructive h-12 w-12" />
       <h2 className="text-xl font-semibold">Something went wrong</h2>
-      <p className="text-muted-foreground text-center max-w-md">
+      <p className="text-muted-foreground max-w-md text-center">
         An error occurred while loading admission data. Please try again.
       </p>
       {error.digest && (
-        <p className="text-xs text-muted-foreground">Error ID: {error.digest}</p>
+        <p className="text-muted-foreground text-xs">
+          Error ID: {error.digest}
+        </p>
       )}
       <Button onClick={reset}>Try again</Button>
     </div>

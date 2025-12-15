@@ -24,6 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Hogwarts** is a school automation platform built with Next.js 15, React 19, Prisma, and NextAuth v5.
 
 ### First Time Setup
+
 ```bash
 pnpm install              # Install dependencies
 pnpm prisma generate      # Generate Prisma client
@@ -32,6 +33,7 @@ pnpm dev                 # Start development server
 ```
 
 ### Critical Rules
+
 1. **Always use pnpm** (required for Vercel deployments)
 2. **Always include schoolId** in database queries (multi-tenant isolation)
 3. **Follow mirror pattern** - routes mirror component folders
@@ -74,41 +76,48 @@ pnpm tsc --noEmit           # Check TypeScript (CRITICAL before builds)
 ## Tech Stack
 
 ### Core Framework
+
 - **Next.js 15.4.4** - App Router with Turbopack (dev + production)
 - **React 19.1.0** - Server Components, concurrent features
 - **TypeScript 5.x** - Strict mode enabled
 - **Prisma 6.14.0** - PostgreSQL ORM with Neon database
 
 ### UI & Styling
+
 - **Tailwind CSS 4** - Utility-first styling with RTL/LTR support
 - **shadcn/ui** - Radix UI primitives (New York style)
 - **Framer Motion** - Animations
 - **Recharts** - Data visualization
 
 ### Authentication & Security
+
 - **NextAuth v5** - JWT strategy, 8 user roles
 - **bcryptjs** - Password hashing
 - **Zod 4.0.14** - Schema validation
 - **Multi-tenant isolation** - schoolId scoping
 
 ### Forms & Data
+
 - **react-hook-form 7.61.1** - Form management
 - **@tanstack/react-table 8.21.3** - Data tables
 - **SWR** - Client-side data fetching
 - **Server Actions** - Mutations with "use server"
 
 ### Internationalization
+
 - **Arabic (RTL, default) & English (LTR)**
 - **800+ translation keys**
 - **Fonts**: Tajawal (Arabic), Inter (English)
 
 ### Testing & Monitoring
+
 - **Vitest 2.0.6** - Unit testing
 - **Playwright 1.55.0** - E2E testing
 - **Sentry 10.12.0** - Error monitoring
 - **Vercel Analytics** - Performance tracking
 
 ### Package Manager
+
 - **pnpm 9.x** - Required (lockfile must be up-to-date for Vercel)
 
 ---
@@ -151,9 +160,11 @@ src/
 // actions.ts
 "use server"
 
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
 import { itemSchema } from "./validation"
 
 export async function createItem(data: FormData) {
@@ -168,7 +179,7 @@ export async function createItem(data: FormData) {
 
   // 3. Execute with schoolId scope (CRITICAL for multi-tenant safety)
   const item = await db.item.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   // 4. Revalidate or redirect (never return without this)
@@ -179,6 +190,7 @@ export async function createItem(data: FormData) {
 ```
 
 **Requirements:**
+
 - Start with `"use server"` directive
 - Include `schoolId` from session in ALL queries
 - Validate with Zod on both client (UX) and server (security)
@@ -191,7 +203,11 @@ Co-locate validation with forms:
 
 ```typescript
 // validation.ts
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
+
+import { itemSchema } from "./validation"
 
 export const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -201,11 +217,7 @@ export const itemSchema = z.object({
 export type ItemFormData = z.infer<typeof itemSchema>
 
 // form.tsx - client component
-"use client"
-
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { itemSchema } from "./validation"
+;("use client")
 
 export function ItemForm() {
   const form = useForm({
@@ -259,26 +271,27 @@ import { typography } from "@/lib/typography"
 
 **Typography constants** in `src/lib/typography.ts`:
 
-| Key | Classes |
-|-----|---------|
-| `h1` | `scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl` |
-| `h2` | `scroll-m-20 text-3xl font-semibold tracking-tight border-b pb-2` |
-| `h3` | `scroll-m-20 text-2xl font-semibold tracking-tight` |
-| `h4` | `scroll-m-20 text-xl font-semibold tracking-tight` |
-| `p` | `leading-7 [&:not(:first-child)]:mt-6` |
-| `lead` | `text-xl text-muted-foreground` |
-| `muted` | `text-sm text-muted-foreground` |
-| `small` | `text-sm font-medium leading-none` |
+| Key     | Classes                                                           |
+| ------- | ----------------------------------------------------------------- |
+| `h1`    | `scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl`  |
+| `h2`    | `scroll-m-20 text-3xl font-semibold tracking-tight border-b pb-2` |
+| `h3`    | `scroll-m-20 text-2xl font-semibold tracking-tight`               |
+| `h4`    | `scroll-m-20 text-xl font-semibold tracking-tight`                |
+| `p`     | `leading-7 [&:not(:first-child)]:mt-6`                            |
+| `lead`  | `text-xl text-muted-foreground`                                   |
+| `muted` | `text-sm text-muted-foreground`                                   |
+| `small` | `text-sm font-medium leading-none`                                |
 
 **Utility classes** (`.lead`, `.muted`) remain in `src/styles/typography.css`.
 
 ### Import Aliases
 
 ```typescript
-import { Button } from "@/components/ui/button"
-import { db } from "@/lib/db"
 import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import { useFeature } from "@/hooks/use-feature"
+import { Button } from "@/components/ui/button"
 ```
 
 ---
@@ -315,22 +328,23 @@ const schoolId = session?.user?.schoolId
 ```typescript
 // ✅ CORRECT - includes schoolId
 await db.student.findMany({
-  where: { schoolId, yearLevel: "10" }
+  where: { schoolId, yearLevel: "10" },
 })
 
 await db.class.create({
-  data: { name: "Math 101", schoolId }
+  data: { name: "Math 101", schoolId },
 })
 
 // ❌ WRONG - missing schoolId (breaks tenant isolation)
 await db.student.findMany({
-  where: { yearLevel: "10" }
+  where: { yearLevel: "10" },
 })
 ```
 
 ### Prisma Models
 
 All business models include:
+
 - Required `schoolId` field
 - `@@unique` constraints scoped by `schoolId`
 - `@@index` on `schoolId` for performance
@@ -351,12 +365,14 @@ model Student {
 ### User Roles & Scoping
 
 8 roles with different scopes:
+
 - **DEVELOPER**: Platform admin (no schoolId, access all schools)
 - **ADMIN**: School administrator
 - **TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF**: School-scoped
 - **USER**: Default role
 
 Session includes extended user data:
+
 ```typescript
 session.user.schoolId
 session.user.role
@@ -391,6 +407,7 @@ Preview URL ready
 ### Auto-Deploy Hook
 
 Located at `.claude/hooks/deploy.sh` - triggers after every Edit/Write with:
+
 - **Debounce**: 60s between deploys (won't spam)
 - **Lock**: Prevents concurrent deploys
 - **Validation**: tsc + lint + build before commit
@@ -398,13 +415,13 @@ Located at `.claude/hooks/deploy.sh` - triggers after every Edit/Write with:
 
 ### Manual Commands (When Needed)
 
-| Command | Use Case | Time |
-|---------|----------|------|
-| `/quick` | Tiny changes (lint + commit) | ~10s |
-| `/dev` | Small changes with tests | ~30s |
-| `/deploy` | Force deploy now | ~30s |
-| `/validate` | Full agent validation | ~2min |
-| `/ship production` | Production release | ~5min |
+| Command            | Use Case                     | Time  |
+| ------------------ | ---------------------------- | ----- |
+| `/quick`           | Tiny changes (lint + commit) | ~10s  |
+| `/dev`             | Small changes with tests     | ~30s  |
+| `/deploy`          | Force deploy now             | ~30s  |
+| `/validate`        | Full agent validation        | ~2min |
+| `/ship production` | Production release           | ~5min |
 
 ### For Complex Features
 
@@ -416,6 +433,7 @@ Located at `.claude/hooks/deploy.sh` - triggers after every Edit/Write with:
 ### Pre-Commit Hooks (Manual Commits Only)
 
 When you manually run `git commit`, these checks run:
+
 - TypeScript compilation
 - Prisma client sync
 - ESLint validation
@@ -427,7 +445,7 @@ When you manually run `git commit`, these checks run:
 
 ## Automation & Agents
 
-### 33 Specialized Agents
+### 34 Specialized Agents
 
 **Core**: orchestrate (master coordinator)
 
@@ -437,7 +455,7 @@ When you manually run `git commit`, these checks run:
 
 **Workflow (5)**: git-github, workflow, api, multi-tenant, database-optimizer
 
-**DevTools (10)**: build, deps, dx, cli, tooling, docs, docs-manager, refactor, legacy, mcp
+**DevTools (11)**: build, deps, dx, cli, tooling, docs, docs-manager, refactor, legacy, mcp, prettier
 
 **Special (2)**: debug, react-reviewer
 
@@ -478,20 +496,21 @@ When you manually run `git commit`, these checks run:
 
 ### Agent Best Practices
 
-| Task | Agent/Command | Why |
-|------|---------------|-----|
-| New page/route | `/agents/next` | App Router + build expertise |
-| Component optimization | `/agents/react` | Performance patterns |
-| UI component | `/agents/shadcn` | Component library expert |
-| Database query | `/agents/prisma` | ORM expertise |
-| Type errors | `/agents/typescript` | Type system expert |
-| Styling | `/agents/tailwind` | CSS utility expert |
-| Translation | `/agents/i18n` | RTL/LTR expert |
-| Architecture | `/agents/architecture` | Design + patterns |
-| Testing | `/agents/test` | TDD expert |
-| Security | `/agents/security` | OWASP expert |
-| Build issues | `/agents/build` | Turbopack, pnpm |
-| Complex feature | `/agents/orchestrate` | Multi-agent coordination |
+| Task                   | Agent/Command          | Why                          |
+| ---------------------- | ---------------------- | ---------------------------- |
+| New page/route         | `/agents/next`         | App Router + build expertise |
+| Component optimization | `/agents/react`        | Performance patterns         |
+| UI component           | `/agents/shadcn`       | Component library expert     |
+| Database query         | `/agents/prisma`       | ORM expertise                |
+| Type errors            | `/agents/typescript`   | Type system expert           |
+| Styling                | `/agents/tailwind`     | CSS utility expert           |
+| Translation            | `/agents/i18n`         | RTL/LTR expert               |
+| Architecture           | `/agents/architecture` | Design + patterns            |
+| Testing                | `/agents/test`         | TDD expert                   |
+| Security               | `/agents/security`     | OWASP expert                 |
+| Build issues           | `/agents/build`        | Turbopack, pnpm              |
+| Code formatting        | `/agents/prettier`     | shadcn/ui patterns           |
+| Complex feature        | `/agents/orchestrate`  | Multi-agent coordination     |
 
 ### 7 Reusable Skills
 
@@ -516,6 +535,7 @@ PostgreSQL, GitHub, Vercel, Sentry, Figma, Linear, Browser (Playwright), Stripe,
 ### Natural Language Triggers
 
 When the user says any of these, invoke the Block Rebound workflow:
+
 - "rebound {block}" (e.g., "rebound finance")
 - "rebound the {block} block"
 - "optimize {block} for production"
@@ -557,6 +577,7 @@ rebound the attendance block
 Reports saved to: `.claude/workflows/rebound-outputs/{block}/rebound-{date}.md`
 
 Contains:
+
 - Competitor analysis and feature benchmarks
 - Technical assessment with gap analysis
 - Prioritized checklist (Critical → High → Medium → Low)
@@ -565,6 +586,7 @@ Contains:
 ### Integration
 
 Reuses existing agents:
+
 - `/agents/security` - Security deep-dive
 - `/agents/multi-tenant` - Tenant isolation
 - `/agents/performance` - Performance analysis
@@ -586,13 +608,13 @@ pnpm build --profile         # Build profiling
 
 ### Performance Targets
 
-| Metric | Target | Status |
-|--------|--------|--------|
-| Cold Build | <30s | ✅ 28s |
-| Incremental Build | <5s | ✅ 4s |
-| HMR | <100ms | ✅ 85ms |
+| Metric                  | Target | Status  |
+| ----------------------- | ------ | ------- |
+| Cold Build              | <30s   | ✅ 28s  |
+| Incremental Build       | <5s    | ✅ 4s   |
+| HMR                     | <100ms | ✅ 85ms |
 | Bundle Size (per route) | <100KB | ✅ 92KB |
-| Cache Hit Rate | >90% | ✅ 93% |
+| Cache Hit Rate          | >90%   | ✅ 93%  |
 
 ### Enhanced /build Command (4 Phases)
 
@@ -622,16 +644,17 @@ pnpm build --profile         # Build profiling
 
 **204+ Error Patterns Caught:**
 
-| Category | Patterns | Auto-Fix | Time Saved |
-|----------|----------|----------|------------|
-| Dictionary Properties | 173+ | 100% | 3h → 7s |
-| Prisma Field Types | 13+ | 100% | 1h → 2s |
-| Enum Completeness | 2+ | 100% | 30m → 1s |
-| **Total** | **204+** | **95%+** | **99.9%** |
+| Category              | Patterns | Auto-Fix | Time Saved |
+| --------------------- | -------- | -------- | ---------- |
+| Dictionary Properties | 173+     | 100%     | 3h → 7s    |
+| Prisma Field Types    | 13+      | 100%     | 1h → 2s    |
+| Enum Completeness     | 2+       | 100%     | 30m → 1s   |
+| **Total**             | **204+** | **95%+** | **99.9%**  |
 
 ### Common Build Issues
 
 **Build hangs at "Environments: .env"**
+
 ```bash
 # Cause: TypeScript errors (silent failure)
 # Fix:
@@ -640,11 +663,13 @@ pnpm tsc --noEmit           # Check for errors
 ```
 
 **Prisma Client Out of Sync**
+
 ```bash
 pnpm prisma generate        # Regenerate client
 ```
 
 **Memory Exhaustion**
+
 ```bash
 # Windows
 $env:NODE_OPTIONS="--max-old-space-size=8192"
@@ -656,12 +681,14 @@ NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 ### Historical Lessons
 
 **Build Hang - November 4, 2025:**
+
 - **Issue**: Build hung after Prisma schema changes
 - **Root Cause**: 20 TypeScript errors (silent failure)
 - **Lesson**: ALWAYS check TypeScript errors BEFORE running build
 - **Prevention**: Automated via `/scan-errors` and pre-commit hooks
 
 **Finance Module - October 29, 2025:**
+
 - **Issue**: 31+ TypeScript errors during deployment
 - **Time Lost**: 3 hours, 30 commits
 - **Solution**: `/scan-errors` + `/fix-build` (7s vs 3 hours)
@@ -808,6 +835,7 @@ Models split across 27 files in `prisma/models/*.prisma`:
 **System**: branding, legal, domain, audit, stream
 
 All business models include:
+
 - Required `schoolId` field
 - `@@index([schoolId])` for performance
 - `@@unique` constraints scoped by `schoolId`
@@ -828,6 +856,7 @@ All business models include:
 ## Middleware Features
 
 `src/middleware.ts` handles:
+
 - **i18n Locale Detection**: Arabic or English based on cookie/headers
 - **Subdomain Rewriting**: Maps subdomains to tenant-scoped routes
 - **Auth Protection**: Enforces authentication on private routes
@@ -858,6 +887,7 @@ All business models include:
 ## Authentication Flow
 
 NextAuth v5 configuration:
+
 - JWT strategy with 24-hour sessions
 - Extended session: `schoolId`, `role`, `isPlatformAdmin`
 - Callbacks in `src/auth.config.ts`
@@ -883,11 +913,13 @@ NextAuth v5 configuration:
 Comprehensive icon management following Anthropic design guidelines.
 
 **Commands:**
+
 - `/icon-add` - Add new icon
 - `/icon-generate` - Generate icon with AI
 - `/icon-validate [scope]` - Validate icons
 
 **Design Requirements:**
+
 - ViewBox: `0 0 1000 1000` or `0 0 1680 1260`
 - Colors: Only `#FAF9F5` (light) and `#141413` (dark)
 - Structure: Root `<svg fill="none">`, paths with explicit `fill`
@@ -896,10 +928,11 @@ Comprehensive icon management following Anthropic design guidelines.
 **Registry:** `src/components/icons/registry.ts` (51 icons)
 
 **Usage:**
-```tsx
-import { IconWrapper } from '@/components/icons/icon-wrapper'
 
-<IconWrapper name="hands-gesture-01" size={24} />
+```tsx
+import { IconWrapper } from "@/components/icons/icon-wrapper"
+
+;<IconWrapper name="hands-gesture-01" size={24} />
 ```
 
 ---
@@ -909,6 +942,7 @@ import { IconWrapper } from '@/components/icons/icon-wrapper'
 **AI-Powered Component Generation** following shadcn/ui patterns with full automation.
 
 > 📚 **Complete Documentation**: See [UI_FACTORY.md](./UI_FACTORY.md) for comprehensive guide including:
+>
 > - Installation & Setup
 > - All Commands (`/ui-add`, `/ui-generate`, `/ui-validate`, `/ui-copy-showcase`)
 > - Quality Standards & Validation System
@@ -919,6 +953,7 @@ import { IconWrapper } from '@/components/icons/icon-wrapper'
 ### Philosophy
 
 The UI Factory follows shadcn/ui's **copy-paste architecture**:
+
 - Components are copied to your codebase (not installed as dependencies)
 - Full control over source code and styling
 - No hidden dependencies or version lock-in
@@ -964,6 +999,7 @@ src/components/
 The shadcn MCP server enables natural language component installation:
 
 **Configuration** (`.mcp.json`):
+
 ```json
 {
   "mcpServers": {
@@ -976,6 +1012,7 @@ The shadcn MCP server enables natural language component installation:
 ```
 
 **Usage Examples:**
+
 - "Show me all available components"
 - "Add a login form"
 - "Install @shadcn/pricing-card"
@@ -984,6 +1021,7 @@ The shadcn MCP server enables natural language component installation:
 ### Commands
 
 #### `/ui-add <component>`
+
 Adds a component from the shadcn registry.
 
 ```bash
@@ -993,6 +1031,7 @@ Adds a component from the shadcn registry.
 ```
 
 #### `/ui-generate <prompt>`
+
 AI-powered component generation following all quality standards.
 
 ```bash
@@ -1002,6 +1041,7 @@ AI-powered component generation following all quality standards.
 ```
 
 **Automatic Quality Checks:**
+
 - ✅ Semantic HTML compliance
 - ✅ Semantic token usage (95%+)
 - ✅ TypeScript strict mode
@@ -1011,6 +1051,7 @@ AI-powered component generation following all quality standards.
 - ✅ Test coverage
 
 #### `/ui-validate [file]`
+
 Validates UI components against quality standards.
 
 ```bash
@@ -1020,6 +1061,7 @@ Validates UI components against quality standards.
 ```
 
 **Checks:**
+
 - Semantic token violations
 - Typography violations
 - Accessibility issues
@@ -1028,14 +1070,17 @@ Validates UI components against quality standards.
 - Component composition patterns
 
 #### `/ui-copy-showcase`
+
 Copies all shadcn showcase components to `src/components/atom/lab/`.
 
 ### Agents
 
 #### `ui-factory`
+
 Master agent for UI development and component generation.
 
 **Capabilities:**
+
 - Component design and architecture
 - shadcn/ui pattern implementation
 - Accessibility compliance
@@ -1043,6 +1088,7 @@ Master agent for UI development and component generation.
 - Test generation
 
 **Usage:**
+
 ```bash
 # Generate complex UI
 /agents/ui-factory "build a file upload component with drag-and-drop, progress bars, and preview"
@@ -1052,9 +1098,11 @@ Master agent for UI development and component generation.
 ```
 
 #### `shadcn-expert`
+
 Specialized agent for shadcn/ui best practices.
 
 **Focus Areas:**
+
 - Radix UI primitive usage
 - Component composition
 - Tailwind patterns
@@ -1064,9 +1112,11 @@ Specialized agent for shadcn/ui best practices.
 ### Skills
 
 #### `component-generator`
+
 Generates production-ready components.
 
 **Process:**
+
 1. Analyze requirements
 2. Select appropriate Radix primitives
 3. Design component API
@@ -1076,6 +1126,7 @@ Generates production-ready components.
 7. Create documentation
 
 **Template:**
+
 ```tsx
 "use client"
 
@@ -1094,9 +1145,11 @@ export function Component({ ...props }: ComponentProps) {
 ```
 
 #### `ui-validator`
+
 Validates components against quality standards.
 
 **Validation Rules:**
+
 1. **Semantic Tokens** - No hardcoded colors
 2. **Typography** - Semantic HTML only
 3. **Accessibility** - ARIA attributes, keyboard nav
@@ -1117,6 +1170,7 @@ Validates components against quality standards.
 ```
 
 **Token Categories:**
+
 - **Backgrounds**: `bg-background`, `bg-card`, `bg-muted`, `bg-accent`
 - **Text**: `text-foreground`, `text-muted-foreground`
 - **Borders**: `border-border`, `border-input`
@@ -1152,12 +1206,12 @@ const handleKeyDown = (e: React.KeyboardEvent) => {
 #### 4. Internationalization
 
 ```tsx
-import { useDictionary } from '@/components/internationalization/use-dictionary'
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 export function Component() {
   const { dictionary } = useDictionary()
 
-  return <button>{dictionary?.ui?.save || 'Save'}</button>
+  return <button>{dictionary?.ui?.save || "Save"}</button>
 }
 ```
 
@@ -1166,7 +1220,7 @@ export function Component() {
 ```tsx
 // Mobile-first approach
 <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12">
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {/* Content */}
   </div>
 </div>
@@ -1175,6 +1229,7 @@ export function Component() {
 ### Radix UI Primitives
 
 **Available Primitives:**
+
 - **Dialog** - Modals, alerts, confirmations
 - **Dropdown Menu** - Context menus, action menus
 - **Popover** - Tooltips, popovers, dropdowns
@@ -1188,16 +1243,17 @@ export function Component() {
 - **Toast** - Notifications
 
 **Pattern:**
+
 ```tsx
 import * as Dialog from "@radix-ui/react-dialog"
 
-<Dialog.Root>
+;<Dialog.Root>
   <Dialog.Trigger asChild>
     <button>Open</button>
   </Dialog.Trigger>
   <Dialog.Portal>
     <Dialog.Overlay className="bg-background/80 backdrop-blur-sm" />
-    <Dialog.Content className="bg-card border border-border">
+    <Dialog.Content className="bg-card border-border border">
       <Dialog.Title>Title</Dialog.Title>
       <Dialog.Description>Description</Dialog.Description>
     </Dialog.Content>
@@ -1213,11 +1269,11 @@ Automatic validation before commits:
 {
   "hooks": {
     "pre-commit": [
-      "ui-token-check",     // Validate semantic tokens
-      "ui-html-check",      // Validate semantic HTML
-      "ui-a11y-check",      // Accessibility audit
-      "ui-i18n-check",      // Internationalization check
-      "ui-test-check"       // Component test coverage
+      "ui-token-check", // Validate semantic tokens
+      "ui-html-check", // Validate semantic HTML
+      "ui-a11y-check", // Accessibility audit
+      "ui-i18n-check", // Internationalization check
+      "ui-test-check" // Component test coverage
     ]
   }
 }
@@ -1226,6 +1282,7 @@ Automatic validation before commits:
 ### Registry Configuration
 
 **components.json:**
+
 ```json
 {
   "$schema": "https://ui.shadcn.com/schema.json",
@@ -1269,22 +1326,23 @@ Automatic validation before commits:
 ### Performance Patterns
 
 ```tsx
+// 3. Virtualization for long lists
+import { useVirtualizer } from "@tanstack/react-virtual"
+
+// 4. Debounced search
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+
 // 1. Lazy loading
-const HeavyComponent = lazy(() => import('./heavy-component'))
+const HeavyComponent = lazy(() => import("./heavy-component"))
 
 // 2. Memoization
 const MemoizedComponent = memo(Component)
-
-// 3. Virtualization for long lists
-import { useVirtualizer } from '@tanstack/react-virtual'
-
-// 4. Debounced search
-import { useDebouncedValue } from '@/hooks/use-debounced-value'
 ```
 
 ### Anti-Patterns to Avoid
 
 ❌ **Don't:**
+
 - Modify shadcn/ui components directly (copy and customize)
 - Use hardcoded colors or `dark:` classes
 - Nest components too deeply (max 3 levels)
@@ -1294,6 +1352,7 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 - Use `div` for text content
 
 ✅ **Do:**
+
 - Copy components and customize locally
 - Use semantic tokens for all colors
 - Favor composition over deep nesting
@@ -1355,15 +1414,15 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value'
 - **License**: MIT
 - **Test Coverage**: ~15 test files (target: 50+)
 - **MVP Status**: ~75% functional (4 critical blockers remaining)
-- **AI Automation**: 33 agents, 22 commands, 7 skills
+- **AI Automation**: 34 agents, 22 commands, 7 skills
 
 ### Critical Blockers (MVP)
 
-| Blocker | Status | Impact |
-|---------|--------|--------|
-| Password Reset | BUG | Cannot reset passwords |
-| Guardian Linking | NOT FUNCTIONAL | Cannot link parents to students |
-| Academic Year Setup | 15% complete | Cannot configure school calendar |
-| Subject Teacher Assignment | INCOMPLETE | Only homeroom teachers, not subject teachers |
+| Blocker                    | Status         | Impact                                       |
+| -------------------------- | -------------- | -------------------------------------------- |
+| Password Reset             | BUG            | Cannot reset passwords                       |
+| Guardian Linking           | NOT FUNCTIONAL | Cannot link parents to students              |
+| Academic Year Setup        | 15% complete   | Cannot configure school calendar             |
+| Subject Teacher Assignment | INCOMPLETE     | Only homeroom teachers, not subject teachers |
 
-See [roadmap.mdx](/content/docs/(root)/roadmap.mdx) for detailed URL-by-URL readiness assessment.
+See [roadmap.mdx](</content/docs/(root)/roadmap.mdx>) for detailed URL-by-URL readiness assessment.

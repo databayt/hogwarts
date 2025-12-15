@@ -5,14 +5,16 @@ This document outlines advanced configuration features and recommendations for o
 ## Model Selection Strategy
 
 ### Recommended Model Defaults
+
 ```yaml
 modelDefaults:
-  orchestrator: claude-opus-4-1-20250805      # Deep reasoning for complex coordination
-  technical: claude-sonnet-4-5-20250929       # Optimal for coding tasks
-  lightweight: claude-haiku-4-5               # Cost-effective for simple tasks
+  orchestrator: claude-opus-4-1-20250805 # Deep reasoning for complex coordination
+  technical: claude-sonnet-4-5-20250929 # Optimal for coding tasks
+  lightweight: claude-haiku-4-5 # Cost-effective for simple tasks
 ```
 
 ### Agent-Specific Models
+
 - **Opus**: orchestrator, architecture agents (complex reasoning)
 - **Sonnet**: All technical agents (coding, testing, security)
 - **Haiku**: formatter, spellcheck, simple-refactor (mechanical tasks)
@@ -20,6 +22,7 @@ modelDefaults:
 ## Observability & Metrics
 
 ### Performance Tracking
+
 ```yaml
 observability:
   enabled: true
@@ -36,6 +39,7 @@ observability:
 ```
 
 ### Metrics to Track
+
 1. **Token Usage**: Input/output tokens per agent
 2. **Response Time**: Agent execution duration
 3. **Success Rate**: Task completion percentage
@@ -45,6 +49,7 @@ observability:
 ## @Mention Routing (Future Feature)
 
 ### Direct Agent Invocation
+
 Instead of going through orchestrator, directly invoke agents:
 
 ```bash
@@ -58,12 +63,14 @@ Instead of going through orchestrator, directly invoke agents:
 ```
 
 ### Benefits
+
 - 30% faster execution (no orchestration overhead)
 - Lower token usage
 - Direct expert access
 - Parallel agent execution
 
 ### Routing Configuration
+
 ```yaml
 agentConfiguration:
   enableMentions: true
@@ -77,25 +84,27 @@ agentConfiguration:
     "@sec": agents/security
     "@perf": agents/performance
     "@i18n": agents/i18n
-    "@fmt": agents/formatter        # Haiku
-    "@spell": agents/spellcheck     # Haiku
+    "@fmt": agents/formatter # Haiku
+    "@spell": agents/spellcheck # Haiku
     "@refactor": agents/simple-refactor # Haiku
 ```
 
 ## Advanced Features
 
 ### Feature Flags
+
 ```yaml
 features:
-  mentionRouting: true        # Direct agent invocation
-  compactMode: true          # Reduced output verbosity
-  parallelExecution: true    # Run independent agents simultaneously
-  autoRetry: true           # Retry failed operations
-  smartCaching: true        # Cache agent responses
+  mentionRouting: true # Direct agent invocation
+  compactMode: true # Reduced output verbosity
+  parallelExecution: true # Run independent agents simultaneously
+  autoRetry: true # Retry failed operations
+  smartCaching: true # Cache agent responses
   progressiveDisclosure: true # Show details on demand
 ```
 
 ### Parallel Execution Strategy
+
 ```yaml
 parallelization:
   maxConcurrentAgents: 5
@@ -113,6 +122,7 @@ parallelization:
 ## Cost Optimization
 
 ### Token Budget Management
+
 ```yaml
 budgets:
   daily:
@@ -128,7 +138,9 @@ budgets:
 ```
 
 ### Haiku Agent Usage
+
 Target 40% of operations for Haiku agents:
+
 - Formatting: 15%
 - Spell checking: 10%
 - Simple refactoring: 10%
@@ -139,11 +151,12 @@ Expected savings: $60-90/month (40% reduction)
 ## Session Optimization
 
 ### Context Management
+
 ```yaml
 context:
   maxContextWindow: 200000
   compressionEnabled: true
-  pruningStrategy: lru       # Least recently used
+  pruningStrategy: lru # Least recently used
   persistentContext:
     - CLAUDE.md
     - .env.example
@@ -151,7 +164,9 @@ context:
 ```
 
 ### Memory Bank Integration
+
 When available, configure persistent memory:
+
 ```yaml
 memoryBank:
   enabled: true
@@ -166,34 +181,36 @@ memoryBank:
 ## Monitoring Dashboard
 
 ### Key Metrics Display
+
 ```typescript
 // .claude/scripts/lab.js
 const metrics = {
   today: {
     tokensUsed: 245000,
-    costIncurred: '$3.45',
+    costIncurred: "$3.45",
     tasksCompleted: 47,
     errorsEncountered: 2,
-    averageResponseTime: '3.2s'
+    averageResponseTime: "3.2s",
   },
 
   byAgent: {
-    typescript: { calls: 23, tokens: 45000, avgTime: '2.1s' },
-    react: { calls: 18, tokens: 38000, avgTime: '2.8s' },
-    formatter: { calls: 89, tokens: 12000, avgTime: '0.8s' }
+    typescript: { calls: 23, tokens: 45000, avgTime: "2.1s" },
+    react: { calls: 18, tokens: 38000, avgTime: "2.8s" },
+    formatter: { calls: 89, tokens: 12000, avgTime: "0.8s" },
   },
 
   trends: {
-    tokenUsage: '+15% vs yesterday',
-    costSavings: '$2.30 from Haiku usage',
-    productivity: '+22% tasks/hour'
-  }
-};
+    tokenUsage: "+15% vs yesterday",
+    costSavings: "$2.30 from Haiku usage",
+    productivity: "+22% tasks/hour",
+  },
+}
 ```
 
 ## Team Collaboration
 
 ### Shared Configuration
+
 ```yaml
 teamSettings:
   sharedAgents: true
@@ -203,7 +220,7 @@ teamSettings:
 
   notifications:
     slack:
-      channel: '#claude-code'
+      channel: "#claude-code"
       events:
         - deployment
         - errors
@@ -213,6 +230,7 @@ teamSettings:
 ## Security & Compliance
 
 ### Audit Configuration
+
 ```yaml
 audit:
   enabled: true
@@ -230,6 +248,7 @@ audit:
 ## Implementation Roadmap
 
 ### Phase 1: Immediate (Implemented)
+
 ✅ Skills activation
 ✅ MCP server additions
 ✅ Haiku agents
@@ -237,12 +256,14 @@ audit:
 ✅ Hook enhancements
 
 ### Phase 2: Short-term (To Do)
+
 ⏳ Create monitoring scripts
 ⏳ Implement cost tracking
 ⏳ Add remaining agents
 ⏳ Create advanced skills
 
 ### Phase 3: Future
+
 🔮 @Mention routing (when available)
 🔮 Memory Bank integration
 🔮 Advanced observability
@@ -251,6 +272,7 @@ audit:
 ## Usage Examples
 
 ### Cost-Optimized Workflow
+
 ```bash
 # Use Haiku for simple tasks
 /agents/formatter -p "Format all TypeScript files"        # Haiku (cheap)
@@ -265,6 +287,7 @@ audit:
 ```
 
 ### Parallel Execution
+
 ```bash
 # Run multiple agents simultaneously
 /agents/orchestrate -p "In parallel:
@@ -277,6 +300,7 @@ audit:
 ## Monitoring Commands
 
 ### Check Usage
+
 ```bash
 # View token usage
 cat .claude/metrics/token-usage.json
@@ -303,6 +327,7 @@ node .claude/scripts/agent-metrics.js
 This configuration represents optimal Claude Code usage patterns discovered through research and analysis. As Claude Code evolves, these features may become directly configurable in settings.json.
 
 For now, use this document as a guide for:
+
 - Agent selection strategies
 - Cost optimization techniques
 - Performance monitoring approaches

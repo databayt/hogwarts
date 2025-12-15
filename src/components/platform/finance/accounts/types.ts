@@ -3,9 +3,14 @@
  * Core accounting system types for chart of accounts, journal entries, and ledger
  */
 
-import type { AccountType } from '@prisma/client'
-import type { accountSchema, journalEntrySchema, ledgerEntrySchema } from './validation'
-import type { z } from 'zod'
+import type { AccountType } from "@prisma/client"
+import type { z } from "zod"
+
+import type {
+  accountSchema,
+  journalEntrySchema,
+  ledgerEntrySchema,
+} from "./validation"
 
 // Inferred types from Zod schemas
 export type AccountInput = z.infer<typeof accountSchema>

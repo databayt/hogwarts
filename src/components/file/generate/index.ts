@@ -21,12 +21,12 @@ export type {
   GenerateResult,
   GenerateProgress,
   UseGenerateReturn,
-} from "./types";
+} from "./types"
 
 // Templates
-export { InvoiceTemplate, createStyles as createInvoiceStyles } from "./invoice";
-export { CertificateTemplate, createCertificateStyles } from "./certificate";
-export { ReportCardTemplate, createReportCardStyles } from "./report-card";
+export { InvoiceTemplate, createStyles as createInvoiceStyles } from "./invoice"
+export { CertificateTemplate, createCertificateStyles } from "./certificate"
+export { ReportCardTemplate, createReportCardStyles } from "./report-card"
 
 // Hook
-export { useGenerate } from "./use-generate";
+export { useGenerate } from "./use-generate"

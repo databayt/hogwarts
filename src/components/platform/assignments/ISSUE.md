@@ -10,6 +10,7 @@ Track production readiness and enhancements for the Assignments feature.
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] CRUD operations with Zod validation
 - [x] Multi-step form (information → details & settings)
 - [x] Assignment types (HOMEWORK, QUIZ, TEST, MIDTERM, FINAL, PROJECT, LAB_REPORT, ESSAY, PRESENTATION)
@@ -27,6 +28,7 @@ Track production readiness and enhancements for the Assignments feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Create assignments with multi-step form
 - [x] Set assignment type
 - [x] Assign to class
@@ -43,6 +45,7 @@ Track production readiness and enhancements for the Assignments feature.
 - [ ] View assignment analytics
 
 ### Role-Based Access
+
 - [x] Admin can create/edit/delete all assignments
 - [ ] Teacher can create assignments for their classes only
 - [ ] Teacher can grade submissions for their assignments
@@ -52,6 +55,7 @@ Track production readiness and enhancements for the Assignments feature.
 - [ ] Parent can view child's grades
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Validation on all inputs (client + server)
 - [x] Referential integrity (foreign keys to Class)
@@ -67,6 +71,7 @@ Track production readiness and enhancements for the Assignments feature.
 ### Critical Issues (Priority 1) 🔴
 
 **Submission Tracking System**
+
 - [ ] Create AssignmentSubmission model
 - [ ] Student submission portal (file upload)
 - [ ] Track submission date/time
@@ -76,6 +81,7 @@ Track production readiness and enhancements for the Assignments feature.
 - [ ] Submission history per student
 
 **AssignmentSubmission Model:**
+
 ```prisma
 model AssignmentSubmission {
   id                String   @id @default(cuid())
@@ -113,6 +119,7 @@ enum SubmissionStatus {
 ```
 
 **Grading Interface**
+
 - [ ] Grading UI with student roster
 - [ ] Points input field per student
 - [ ] Feedback textarea per student
@@ -123,6 +130,7 @@ enum SubmissionStatus {
 - [ ] Auto-calculate percentage
 
 **File Attachments**
+
 - [ ] File upload for assignment instructions (PDF, DOCX)
 - [ ] File upload for student submissions
 - [ ] Cloud storage integration (S3 or Vercel Blob)
@@ -132,6 +140,7 @@ enum SubmissionStatus {
 - [ ] Allowed file types configuration
 
 **Late Submission Policies**
+
 - [ ] Configure late penalty (e.g., -10% per day)
 - [ ] Set late submission cutoff date
 - [ ] Automatic penalty calculation
@@ -140,6 +149,7 @@ enum SubmissionStatus {
 - [ ] Late submission reports
 
 **Rubrics and Marking Guides**
+
 - [ ] Create rubric model (criteria + points)
 - [ ] Attach rubric to assignment
 - [ ] Rubric-based grading interface
@@ -148,6 +158,7 @@ enum SubmissionStatus {
 - [ ] Rubric sharing across teachers
 
 ### Assignment Analytics Dashboard
+
 - [ ] Calculate class average
 - [ ] Track submission rate (% submitted)
 - [ ] Identify missing assignments
@@ -157,6 +168,7 @@ enum SubmissionStatus {
 - [ ] Student completion rate per assignment type
 
 ### Bulk Operations
+
 - [ ] Bulk assignment creation (same assignment for multiple classes)
 - [ ] Clone assignment to another class
 - [ ] Recurring assignments (weekly homework)
@@ -165,6 +177,7 @@ enum SubmissionStatus {
 - [ ] Bulk publish/unpublish
 
 ### Student Submission Portal
+
 - [ ] Student dashboard showing upcoming assignments
 - [ ] Assignment detail view for students
 - [ ] File upload interface
@@ -175,6 +188,7 @@ enum SubmissionStatus {
 - [ ] View grade and feedback
 
 ### Parent Portal Integration
+
 - [ ] View child's assignments
 - [ ] View upcoming due dates
 - [ ] View submission status
@@ -183,6 +197,7 @@ enum SubmissionStatus {
 - [ ] Email notifications for grades
 
 ### Peer Review Functionality
+
 - [ ] Enable peer review flag per assignment
 - [ ] Assign students to review peers' work
 - [ ] Anonymous peer review option
@@ -191,6 +206,7 @@ enum SubmissionStatus {
 - [ ] Peer review grade contribution
 
 ### Plagiarism Detection (Advanced)
+
 - [ ] Integration with plagiarism detection API (Turnitin, Copyscape)
 - [ ] Similarity score per submission
 - [ ] Highlight matching content
@@ -199,6 +215,7 @@ enum SubmissionStatus {
 - [ ] Academic integrity tracking
 
 ### Performance Issues
+
 - [ ] Add indexes for due date queries
 - [ ] Optimize assignment list with class joins
 - [ ] Cache submission statistics
@@ -206,6 +223,7 @@ enum SubmissionStatus {
 - [ ] Lazy loading for assignment details
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for assignment list
 - [ ] Keyboard navigation for multi-step form
 - [ ] ARIA labels for date picker
@@ -213,6 +231,7 @@ enum SubmissionStatus {
 - [ ] High contrast mode
 
 ### UX Polish
+
 - [ ] Loading skeletons for table
 - [ ] Empty state with helpful guidance
 - [ ] Error handling with user-friendly messages
@@ -223,6 +242,7 @@ enum SubmissionStatus {
 - [ ] Due date countdown badges
 
 ### Export/Import Enhancement
+
 - [ ] Export assignment list to CSV
 - [ ] Export grades to CSV
 - [ ] Import grades from CSV (bulk grading)
@@ -231,6 +251,7 @@ enum SubmissionStatus {
 - [ ] Scheduled exports (end of term)
 
 ### Search & Filter Enhancement
+
 - [ ] Advanced search (multiple fields)
 - [ ] Due date range filter
 - [ ] Subject filter (if assignments linked to subjects)
@@ -239,6 +260,7 @@ enum SubmissionStatus {
 - [ ] Saved filter presets
 
 ### Integration Enhancements
+
 - [ ] Link to gradebook (Results feature)
 - [ ] Link to student performance dashboard
 - [ ] Link to calendar (due dates as events)
@@ -251,6 +273,7 @@ enum SubmissionStatus {
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Assignment {
   id           String         @id @default(cuid())
@@ -293,6 +316,7 @@ enum AssignmentStatus {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `subjectId` field (String? with relation to Subject)
 - [ ] Add `createdBy` field (String? userId of teacher)
 - [ ] Add `attachmentUrl` field (String? for instruction files)
@@ -313,6 +337,7 @@ enum AssignmentStatus {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createAssignment(input)` - Create new assignment
 - [x] `updateAssignment(input)` - Update existing assignment
 - [x] `deleteAssignment(input)` - Delete assignment
@@ -320,6 +345,7 @@ enum AssignmentStatus {
 - [x] `getAssignments(input)` - Fetch assignment list with filters/pagination
 
 ### Actions to Implement
+
 - [ ] `submitAssignment(assignmentId, studentId, fileUrl?, content?)` - Student submits
 - [ ] `gradeSubmission(submissionId, pointsEarned, feedback)` - Teacher grades
 - [ ] `getSubmissions(assignmentId)` - Fetch all submissions for assignment
@@ -336,6 +362,7 @@ enum AssignmentStatus {
 - [ ] `getMissingAssignments(classId)` - Students with missing work
 
 ### Action Enhancements
+
 - [ ] Add typed return values
 - [ ] Add request ID logging
 - [ ] Add proper error handling
@@ -348,6 +375,7 @@ enum AssignmentStatus {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with assignment list
 - [x] `table.tsx` - Client data table
 - [x] `columns.tsx` - Column definitions
@@ -359,6 +387,7 @@ enum AssignmentStatus {
 - [x] `validation.ts` - Zod schemas
 
 ### Components to Create
+
 - [ ] `submission-portal.tsx` - Student submission interface
 - [ ] `grading-interface.tsx` - Teacher grading UI
 - [ ] `submission-list.tsx` - List of all submissions for assignment
@@ -370,6 +399,7 @@ enum AssignmentStatus {
 - [ ] `clone-assignment-dialog.tsx` - Clone to another class
 
 ### Component Enhancements
+
 - [ ] Add loading states
 - [ ] Add empty states
 - [ ] Add error boundaries
@@ -382,6 +412,7 @@ enum AssignmentStatus {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions
 - [ ] Test multi-tenant scoping
@@ -390,6 +421,7 @@ enum AssignmentStatus {
 - [ ] Test weight percentage validation
 
 ### Integration Tests
+
 - [ ] Test assignment creation workflow
 - [ ] Test submission workflow
 - [ ] Test grading workflow
@@ -397,6 +429,7 @@ enum AssignmentStatus {
 - [ ] Test late submission penalties
 
 ### E2E Tests (Playwright)
+
 - [ ] Test assignment creation multi-step form
 - [ ] Test student submission
 - [ ] Test teacher grading
@@ -424,6 +457,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -431,6 +465,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -438,18 +473,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -457,9 +495,10 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 
 For detailed version requirements and architecture patterns, see [Platform Technology Stack](../ISSUE.md#technology-stack--version-requirements).
 
-------
+---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

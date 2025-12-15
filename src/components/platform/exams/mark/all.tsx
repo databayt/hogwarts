@@ -1,10 +1,19 @@
 "use client"
 
 // All Questions List View with Advanced Filtering
+import { useMemo, useState } from "react"
+import Link from "next/link"
+import type {
+  BloomLevel,
+  DifficultyLevel,
+  QuestionType,
+  Rubric,
+} from "@prisma/client"
+import { ListFilter, Plus, Search, X } from "lucide-react"
 
-import { useState, useMemo } from "react"
-import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -12,12 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { QuestionCard } from "./card"
-import { Search, ListFilter, X, Plus } from "lucide-react";
-import Link from "next/link"
-import type { QuestionType, DifficultyLevel, BloomLevel, Rubric } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { QuestionCard } from "./card"
 
 interface Question {
   id: string
@@ -41,11 +47,17 @@ interface AllQuestionsProps {
   locale: string
 }
 
-export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProps) {
+export function AllQuestions({
+  questions,
+  dictionary,
+  locale,
+}: AllQuestionsProps) {
   const dict = dictionary.marking
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<QuestionType | "ALL">("ALL")
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyLevel | "ALL">("ALL")
+  const [difficultyFilter, setDifficultyFilter] = useState<
+    DifficultyLevel | "ALL"
+  >("ALL")
   const [bloomFilter, setBloomFilter] = useState<BloomLevel | "ALL">("ALL")
   const [subjectFilter, setSubjectFilter] = useState<string>("ALL")
   const [showFilters, setShowFilters] = useState(false)
@@ -89,7 +101,14 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
 
       return true
     })
-  }, [questions, searchQuery, typeFilter, difficultyFilter, bloomFilter, subjectFilter])
+  }, [
+    questions,
+    searchQuery,
+    typeFilter,
+    difficultyFilter,
+    bloomFilter,
+    subjectFilter,
+  ])
 
   const clearFilters = () => {
     setSearchQuery("")
@@ -111,13 +130,13 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">{dict.questionBank.title}</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {filteredQuestions.length} of {questions.length} questions
           </p>
         </div>
         <Button asChild>
           <Link href={`/${locale}/exams/mark/questions/create`}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             {dict.buttons.newQuestion}
           </Link>
         </Button>
@@ -128,7 +147,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
         <div className="flex gap-2">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={dict.table.search}
               value={searchQuery}
@@ -143,7 +162,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
             onClick={() => setShowFilters(!showFilters)}
             className="relative"
           >
-            <ListFilter className="h-4 w-4 mr-2" />
+            <ListFilter className="mr-2 h-4 w-4" />
             Filters
             {activeFiltersCount > 0 && (
               <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
@@ -155,7 +174,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
           {/* Clear Filters */}
           {activeFiltersCount > 0 && (
             <Button variant="ghost" onClick={clearFilters}>
-              <X className="h-4 w-4 mr-2" />
+              <X className="mr-2 h-4 w-4" />
               Clear
             </Button>
           )}
@@ -163,15 +182,17 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
 
         {/* ListFilter Controls */}
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-muted/50">
+          <div className="bg-muted/50 grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-4">
             {/* Type ListFilter */}
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label className="mb-2 block text-sm font-medium">
                 {dict.questionForm.questionType}
               </label>
               <Select
                 value={typeFilter}
-                onValueChange={(value) => setTypeFilter(value as QuestionType | "ALL")}
+                onValueChange={(value) =>
+                  setTypeFilter(value as QuestionType | "ALL")
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -189,7 +210,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
 
             {/* Difficulty ListFilter */}
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label className="mb-2 block text-sm font-medium">
                 {dict.questionForm.difficulty}
               </label>
               <Select
@@ -214,12 +235,14 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
 
             {/* Bloom's Level ListFilter */}
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label className="mb-2 block text-sm font-medium">
                 {dict.questionForm.bloomLevel}
               </label>
               <Select
                 value={bloomFilter}
-                onValueChange={(value) => setBloomFilter(value as BloomLevel | "ALL")}
+                onValueChange={(value) =>
+                  setBloomFilter(value as BloomLevel | "ALL")
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -237,7 +260,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
 
             {/* Subject ListFilter */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Subject</label>
+              <label className="mb-2 block text-sm font-medium">Subject</label>
               <Select value={subjectFilter} onValueChange={setSubjectFilter}>
                 <SelectTrigger>
                   <SelectValue />
@@ -278,11 +301,13 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">{dict.questionBank.noQuestions}</p>
+        <div className="py-12 text-center">
+          <p className="text-muted-foreground">
+            {dict.questionBank.noQuestions}
+          </p>
           <Button variant="outline" className="mt-4" asChild>
             <Link href={`/${locale}/exams/mark/questions/create`}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               {dict.questionBank.createFirst}
             </Link>
           </Button>

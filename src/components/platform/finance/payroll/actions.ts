@@ -6,22 +6,23 @@
  * Multi-tenant safe server actions for payroll processing
  * Includes: payroll runs, salary slips, approval workflow, and disbursement
  */
-
-import { auth } from "@/auth"
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
 import {
-  payrollRunSchema,
-  salarySlipSchema,
-  payrollProcessingSchema,
   payrollApprovalSchema,
   payrollDisbursementSchema,
-  type PayrollRunInput,
-  type SalarySlipInput,
-  type PayrollProcessingInput,
+  payrollProcessingSchema,
+  payrollRunSchema,
+  salarySlipSchema,
   type PayrollApprovalInput,
   type PayrollDisbursementInput,
+  type PayrollProcessingInput,
+  type PayrollRunInput,
+  type SalarySlipInput,
 } from "./validation"
 
 type ActionResult<T = void> = {
@@ -71,9 +72,7 @@ export async function getPayrollRuns(
 /**
  * Get a specific payroll run with all salary slips
  */
-export async function getPayrollRun(
-  runId: string
-): Promise<ActionResult<any>> {
+export async function getPayrollRun(runId: string): Promise<ActionResult<any>> {
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()
@@ -128,7 +127,8 @@ export async function createPayrollRun(
     const formData = Object.fromEntries(data)
 
     // Generate unique run number
-    const runNumber = `PR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`.toUpperCase()
+    const runNumber =
+      `PR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`.toUpperCase()
 
     const payrollRun = await db.payrollRun.create({
       data: {
@@ -183,7 +183,10 @@ export async function generateSalarySlips(
     }
 
     if (payrollRun.status !== "DRAFT" && payrollRun.status !== "PROCESSING") {
-      return { success: false, error: "Payroll run is not in a valid state for generation" }
+      return {
+        success: false,
+        error: "Payroll run is not in a valid state for generation",
+      }
     }
 
     // Update status to PROCESSING
@@ -242,7 +245,10 @@ export async function generateSalarySlips(
         amount: Number(a.amount),
         isTaxable: a.isTaxable,
       }))
-      const totalAllowances = allowances.reduce((sum: number, a: any) => sum + a.amount, 0)
+      const totalAllowances = allowances.reduce(
+        (sum: number, a: any) => sum + a.amount,
+        0
+      )
 
       // Calculate deductions
       const deductions = activeSalaryStructure.deductions.map((d: any) => ({
@@ -250,7 +256,10 @@ export async function generateSalarySlips(
         amount: Number(d.amount),
         type: d.type,
       }))
-      const totalDeductionsAmount = deductions.reduce((sum: number, d: any) => sum + d.amount, 0)
+      const totalDeductionsAmount = deductions.reduce(
+        (sum: number, d: any) => sum + d.amount,
+        0
+      )
 
       // Calculate gross, tax, and net
       const baseSalary = Number(activeSalaryStructure.baseSalary)
@@ -259,7 +268,8 @@ export async function generateSalarySlips(
       const netSalary = grossSalary - taxAmount - totalDeductionsAmount
 
       // Generate slip number
-      const slipNumber = `SS-${payrollRun.runNumber}-${teacher.id.substring(0, 8)}`.toUpperCase()
+      const slipNumber =
+        `SS-${payrollRun.runNumber}-${teacher.id.substring(0, 8)}`.toUpperCase()
 
       // Create salary slip
       await db.salarySlip.create({
@@ -457,7 +467,10 @@ export async function processPayments(
     }
 
     if (payrollRun.status !== "APPROVED") {
-      return { success: false, error: "Payroll run must be approved before processing payments" }
+      return {
+        success: false,
+        error: "Payroll run must be approved before processing payments",
+      }
     }
 
     // Update all salary slips to PAID status
@@ -591,16 +604,19 @@ export async function getPayrollSummary(): Promise<ActionResult<any>> {
       return { success: false, error: "Not authenticated" }
     }
 
-    const [totalRuns, pendingApproval, approvedRuns, paidRuns, totalPayments] = await Promise.all([
-      db.payrollRun.count({ where: { schoolId } }),
-      db.payrollRun.count({ where: { schoolId, status: "PENDING_APPROVAL" } }),
-      db.payrollRun.count({ where: { schoolId, status: "APPROVED" } }),
-      db.payrollRun.count({ where: { schoolId, status: "PAID" } }),
-      db.payrollRun.aggregate({
-        where: { schoolId, status: "PAID" },
-        _sum: { totalNet: true },
-      }),
-    ])
+    const [totalRuns, pendingApproval, approvedRuns, paidRuns, totalPayments] =
+      await Promise.all([
+        db.payrollRun.count({ where: { schoolId } }),
+        db.payrollRun.count({
+          where: { schoolId, status: "PENDING_APPROVAL" },
+        }),
+        db.payrollRun.count({ where: { schoolId, status: "APPROVED" } }),
+        db.payrollRun.count({ where: { schoolId, status: "PAID" } }),
+        db.payrollRun.aggregate({
+          where: { schoolId, status: "PAID" },
+          _sum: { totalNet: true },
+        }),
+      ])
 
     return {
       success: true,
@@ -621,9 +637,7 @@ export async function getPayrollSummary(): Promise<ActionResult<any>> {
 /**
  * Delete a payroll run (only if in DRAFT status)
  */
-export async function deletePayrollRun(
-  runId: string
-): Promise<ActionResult> {
+export async function deletePayrollRun(runId: string): Promise<ActionResult> {
   try {
     const session = await auth()
     const { schoolId } = await getTenantContext()

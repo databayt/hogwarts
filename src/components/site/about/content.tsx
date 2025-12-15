@@ -1,12 +1,13 @@
-import { StickyScroll } from "@/components/atom/sticky-scroll";
-import type { School } from '../types';
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import { StickyScroll } from "@/components/atom/sticky-scroll"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { School } from "../types"
 
 interface Props {
-  school: School;
-  dictionary: Dictionary;
-  lang: Locale;
+  school: School
+  dictionary: Dictionary
+  lang: Locale
 }
 
 export default function AboutContent({ school, dictionary, lang }: Props) {
@@ -16,10 +17,8 @@ export default function AboutContent({ school, dictionary, lang }: Props) {
     <div>
       <StickyScroll content={aboutContent} />
     </div>
-  );
+  )
 }
-
-
 
 const aboutContent = [
   {
@@ -59,7 +58,7 @@ const aboutContent = [
     description:
       "Home to the brave and daring, Gryffindor House values courage, chivalry, and determination. Founded by Godric Gryffindor, this house has produced some of the most famous witches and wizards, including Harry Potter himself.",
     content: (
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-destructive to-primary">
+      <div className="from-destructive to-primary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
         <img
           src="/site/a.jpeg"
           width={400}
@@ -75,7 +74,7 @@ const aboutContent = [
     description:
       "From Herbology in the greenhouses to Defense Against the Dark Arts, Hogwarts offers a comprehensive magical education. Students learn to brew potions, cast spells, and understand the mysteries of the magical world under expert guidance.",
     content: (
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-secondary to-muted">
+      <div className="from-secondary to-muted flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
         <img
           src="/site/b.jpeg"
           width={400}
@@ -91,7 +90,7 @@ const aboutContent = [
     description:
       "At Hogwarts, friendships are forged that last a lifetime. Through shared adventures, challenges, and magical discoveries, students form unbreakable bonds that support them through their darkest hours and greatest triumphs.",
     content: (
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-accent">
+      <div className="from-primary to-accent flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
         <img
           src="/contribute/h.jpeg"
           width={400}
@@ -107,7 +106,7 @@ const aboutContent = [
     description:
       "The magical sport of Quidditch brings excitement and house rivalry to new heights. Our pitch has witnessed legendary matches and continues to be where young witches and wizards discover their passion for flying and the thrill of chasing the Golden Snitch.",
     content: (
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-accent to-secondary">
+      <div className="from-accent to-secondary flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br">
         <img
           src="/ball.png"
           width={400}
@@ -118,5 +117,4 @@ const aboutContent = [
       </div>
     ),
   },
-];
-
+]

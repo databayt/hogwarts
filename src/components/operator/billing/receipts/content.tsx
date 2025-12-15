@@ -1,30 +1,38 @@
-import { Shell as PageContainer } from "@/components/table/shell";
-import { ReceiptsTable } from "./table";
-import { getReceiptColumns, type ReceiptRow } from "./columns";
-import { EmptyState } from "@/components/operator/common/empty-state";
-import { db } from "@/lib/db";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileUploader } from "@/components/operator/file-uploader";
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
-import type { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+import { Upload } from "lucide-react"
+
+import { db } from "@/lib/db"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+import { EmptyState } from "@/components/operator/common/empty-state"
+import { FileUploader } from "@/components/operator/file-uploader"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+import { getReceiptColumns, type ReceiptRow } from "./columns"
+import { ReceiptsTable } from "./table"
 
 interface Props {
-  dictionary: any;
-  lang: Locale;
+  dictionary: any
+  lang: Locale
   searchParams?: {
-    page?: string;
-    limit?: string;
-    status?: string;
-    search?: string;
-  };
+    page?: string
+    limit?: string
+    status?: string
+    search?: string
+  }
 }
 
 async function getReceiptsData(searchParams: Props["searchParams"]) {
-  const page = Number(searchParams?.page) || 1;
-  const limit = Number(searchParams?.limit) || 10;
-  const offset = (page - 1) * limit;
+  const page = Number(searchParams?.page) || 1
+  const limit = Number(searchParams?.limit) || 10
+  const offset = (page - 1) * limit
 
   const where = {
     ...(searchParams?.status && searchParams.status !== "all"
@@ -33,12 +41,28 @@ async function getReceiptsData(searchParams: Props["searchParams"]) {
     ...(searchParams?.search
       ? {
           OR: [
-            { invoice: { stripeInvoiceId: { contains: searchParams.search, mode: "insensitive" as const } } },
-            { invoice: { school: { name: { contains: searchParams.search, mode: "insensitive" as const } } } },
-          ]
+            {
+              invoice: {
+                stripeInvoiceId: {
+                  contains: searchParams.search,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+            {
+              invoice: {
+                school: {
+                  name: {
+                    contains: searchParams.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            },
+          ],
         }
-      : {})
-  };
+      : {}),
+  }
 
   const [receipts, total] = await Promise.all([
     db.receipt.findMany({
@@ -61,7 +85,7 @@ async function getReceiptsData(searchParams: Props["searchParams"]) {
       take: limit,
     }),
     db.receipt.count({ where }),
-  ]);
+  ])
 
   const rows: ReceiptRow[] = receipts.map((receipt) => ({
     id: receipt.id,
@@ -74,14 +98,14 @@ async function getReceiptsData(searchParams: Props["searchParams"]) {
     uploadedAt: receipt.createdAt.toISOString(),
     reviewedAt: receipt.reviewedAt?.toISOString() || null,
     notes: receipt.notes,
-  }));
+  }))
 
   return {
     rows,
     total,
     limit,
     pageCount: Math.ceil(total / limit),
-  };
+  }
 }
 
 async function getReceiptStats() {
@@ -90,7 +114,7 @@ async function getReceiptStats() {
     db.receipt.count({ where: { status: "pending" } }),
     db.receipt.count({ where: { status: "approved" } }),
     db.receipt.count({ where: { status: "rejected" } }),
-  ]);
+  ])
 
   return {
     total,
@@ -98,14 +122,18 @@ async function getReceiptStats() {
     approved,
     rejected,
     approvalRate: total > 0 ? Math.round((approved / total) * 100) : 0,
-  };
+  }
 }
 
-export async function ReceiptsContent({ dictionary, lang, searchParams }: Props) {
+export async function ReceiptsContent({
+  dictionary,
+  lang,
+  searchParams,
+}: Props) {
   const [receiptData, stats] = await Promise.all([
     getReceiptsData(searchParams),
     getReceiptStats(),
-  ]);
+  ])
 
   return (
     <PageContainer>
@@ -113,7 +141,10 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
         <div className="flex items-center justify-between">
           <div>
             <h2>{dictionary?.title || "Payment Receipts"}</h2>
-            <p className="muted">{dictionary?.description || "Review and approve manual payment receipts"}</p>
+            <p className="muted">
+              {dictionary?.description ||
+                "Review and approve manual payment receipts"}
+            </p>
           </div>
           <Button>
             <Upload className="me-2 h-4 w-4" />
@@ -125,21 +156,25 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Receipts</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Receipts
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
+              <p className="text-muted-foreground text-xs">All time</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pending Review
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pending}</div>
-              <p className="text-xs text-muted-foreground">Awaiting approval</p>
+              <p className="text-muted-foreground text-xs">Awaiting approval</p>
             </CardContent>
           </Card>
 
@@ -149,17 +184,19 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.approved}</div>
-              <p className="text-xs text-muted-foreground">Processed</p>
+              <p className="text-muted-foreground text-xs">Processed</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Approval Rate
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.approvalRate}%</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {stats.approved} of {stats.total}
               </p>
             </CardContent>
@@ -184,5 +221,5 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
         </div>
       </div>
     </PageContainer>
-  );
+  )
 }

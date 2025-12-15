@@ -3,34 +3,41 @@
  * Simple button trigger for file upload
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useRef, useCallback, useState } from "react";
-import { cn } from "@/lib/utils";
-import { Upload, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { Button, type ButtonProps } from "@/components/ui/button";
-import type { FileCategory, FileType, StorageProvider, StorageTier } from "../types";
-import { useUpload, type UploadResult } from "./use-upload";
+import * as React from "react"
+import { useCallback, useRef, useState } from "react"
+import { AlertCircle, CheckCircle, Loader2, Upload } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button, type ButtonProps } from "@/components/ui/button"
+
+import type {
+  FileCategory,
+  FileType,
+  StorageProvider,
+  StorageTier,
+} from "../types"
+import { useUpload, type UploadResult } from "./use-upload"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface UploadButtonProps extends Omit<ButtonProps, "onClick" | "type"> {
-  category: FileCategory;
-  fileType?: FileType;
-  folder?: string;
-  provider?: StorageProvider;
-  tier?: StorageTier;
-  maxSize?: number;
-  allowedTypes?: string[];
-  accept?: string;
-  multiple?: boolean;
-  onUploadStart?: () => void;
-  onUploadComplete?: (results: UploadResult[]) => void;
-  onUploadError?: (error: string) => void;
-  children?: React.ReactNode;
+  category: FileCategory
+  fileType?: FileType
+  folder?: string
+  provider?: StorageProvider
+  tier?: StorageTier
+  maxSize?: number
+  allowedTypes?: string[]
+  accept?: string
+  multiple?: boolean
+  onUploadStart?: () => void
+  onUploadComplete?: (results: UploadResult[]) => void
+  onUploadError?: (error: string) => void
+  children?: React.ReactNode
 }
 
 // ============================================================================
@@ -55,15 +62,12 @@ export function UploadButton({
   disabled,
   ...buttonProps
 }: UploadButtonProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [status, setStatus] = useState<
+    "idle" | "uploading" | "success" | "error"
+  >("idle")
 
-  const {
-    isUploading,
-    error,
-    upload,
-    uploadMultiple,
-  } = useUpload({
+  const { isUploading, error, upload, uploadMultiple } = useUpload({
     category,
     type: fileType,
     folder,
@@ -72,53 +76,53 @@ export function UploadButton({
     maxSize,
     allowedTypes,
     onSuccess: () => {
-      setStatus("success");
-      setTimeout(() => setStatus("idle"), 2000);
+      setStatus("success")
+      setTimeout(() => setStatus("idle"), 2000)
     },
     onError: (err) => {
-      setStatus("error");
-      onUploadError?.(err);
-      setTimeout(() => setStatus("idle"), 3000);
+      setStatus("error")
+      onUploadError?.(err)
+      setTimeout(() => setStatus("idle"), 3000)
     },
-  });
+  })
 
   const handleClick = useCallback(() => {
-    inputRef.current?.click();
-  }, []);
+    inputRef.current?.click()
+  }, [])
 
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (!files || files.length === 0) return;
+      const files = event.target.files
+      if (!files || files.length === 0) return
 
-      setStatus("uploading");
-      onUploadStart?.();
+      setStatus("uploading")
+      onUploadStart?.()
 
-      const fileArray = Array.from(files);
+      const fileArray = Array.from(files)
 
       if (multiple) {
-        const results = await uploadMultiple(fileArray);
+        const results = await uploadMultiple(fileArray)
         if (results.length > 0) {
-          onUploadComplete?.(results);
+          onUploadComplete?.(results)
         }
       } else {
-        const result = await upload(fileArray[0]);
+        const result = await upload(fileArray[0])
         if (result) {
-          onUploadComplete?.([result]);
+          onUploadComplete?.([result])
         }
       }
 
       // Reset input
       if (inputRef.current) {
-        inputRef.current.value = "";
+        inputRef.current.value = ""
       }
     },
     [multiple, upload, uploadMultiple, onUploadStart, onUploadComplete]
-  );
+  )
 
   // Generate accept string from category if not provided
   const getAcceptString = (): string => {
-    if (accept) return accept;
+    if (accept) return accept
 
     const categoryAccepts: Record<FileCategory, string> = {
       image: "image/*",
@@ -127,23 +131,23 @@ export function UploadButton({
       document: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv",
       archive: ".zip,.rar,.7z,.gz",
       other: "*/*",
-    };
+    }
 
-    return categoryAccepts[category];
-  };
+    return categoryAccepts[category]
+  }
 
   const renderIcon = () => {
     switch (status) {
       case "uploading":
-        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
+        return <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       case "success":
-        return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />;
+        return <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
       case "error":
-        return <AlertCircle className="mr-2 h-4 w-4 text-destructive" />;
+        return <AlertCircle className="text-destructive mr-2 h-4 w-4" />
       default:
-        return <Upload className="mr-2 h-4 w-4" />;
+        return <Upload className="mr-2 h-4 w-4" />
     }
-  };
+  }
 
   return (
     <>
@@ -167,7 +171,7 @@ export function UploadButton({
         {children || (isUploading ? "Uploading..." : "Upload")}
       </Button>
     </>
-  );
+  )
 }
 
-export type { UploadButtonProps };
+export type { UploadButtonProps }

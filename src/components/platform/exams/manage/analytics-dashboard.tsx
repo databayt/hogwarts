@@ -1,33 +1,44 @@
-import { getExamAnalytics } from "./actions";
+import {
+  Award,
+  BarChart3,
+  TrendingDown,
+  TrendingUp,
+  UserCheck,
+  Users,
+  UserX,
+} from "lucide-react"
+
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Users, UserCheck, UserX, TrendingUp, TrendingDown, Award } from "lucide-react"
-import { BarChart3 } from "lucide-react";
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+
+import { getExamAnalytics } from "./actions"
 
 interface Props {
-  examId: string;
+  examId: string
 }
 
 export async function ExamAnalyticsDashboard({ examId }: Props) {
-  const response = await getExamAnalytics({ examId });
+  const response = await getExamAnalytics({ examId })
 
   if (!response.success || !response.data) {
     return (
       <Card>
         <CardContent className="py-12">
-          <p className="text-center text-muted-foreground">Analytics not available</p>
+          <p className="text-muted-foreground text-center">
+            Analytics not available
+          </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
-  const analytics = response.data;
+  const analytics = response.data
   const {
     examTitle,
     totalMarks,
@@ -43,7 +54,7 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
     highestMarks,
     lowestMarks,
     gradeDistribution,
-  } = analytics;
+  } = analytics
 
   return (
     <div className="space-y-6">
@@ -58,12 +69,14 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              Total Students
+            </CardTitle>
+            <Users className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {presentStudents} present • {absentStudents} absent
             </p>
           </CardContent>
@@ -79,7 +92,9 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{passPercentage.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">
+              {passPercentage.toFixed(1)}%
+            </div>
             <Progress value={passPercentage} className="mt-2" />
           </CardContent>
         </Card>
@@ -90,8 +105,10 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{passedStudents}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-green-600">
+              {passedStudents}
+            </div>
+            <p className="text-muted-foreground text-xs">
               {presentStudents > 0
                 ? ((passedStudents / presentStudents) * 100).toFixed(1)
                 : 0}
@@ -106,8 +123,10 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{failedStudents}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-red-600">
+              {failedStudents}
+            </div>
+            <p className="text-muted-foreground text-xs">
               {presentStudents > 0
                 ? ((failedStudents / presentStudents) * 100).toFixed(1)
                 : 0}
@@ -122,11 +141,11 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Marks</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <BarChart3 className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{averageMarks}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {averagePercentage.toFixed(2)}% average percentage
             </p>
           </CardContent>
@@ -138,8 +157,10 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
             <Award className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{highestMarks}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-yellow-600">
+              {highestMarks}
+            </div>
+            <p className="text-muted-foreground text-xs">
               {((highestMarks / totalMarks) * 100).toFixed(2)}%
             </p>
           </CardContent>
@@ -148,11 +169,11 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lowest Marks</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <TrendingDown className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{lowestMarks}</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {((lowestMarks / totalMarks) * 100).toFixed(2)}%
             </p>
           </CardContent>
@@ -173,24 +194,27 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
               {Object.entries(gradeDistribution)
                 .sort(([a], [b]) => b.localeCompare(a))
                 .map(([grade, count]) => {
-                  const countNum = typeof count === 'number' ? count : 0;
-                  const percentage = presentStudents > 0 ? (countNum / presentStudents) * 100 : 0;
+                  const countNum = typeof count === "number" ? count : 0
+                  const percentage =
+                    presentStudents > 0 ? (countNum / presentStudents) * 100 : 0
                   return (
                     <div key={grade} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Grade {grade}</span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm font-medium">
+                          Grade {grade}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
                           {countNum} students ({percentage.toFixed(1)}%)
                         </span>
                       </div>
                       <Progress value={percentage} />
                     </div>
-                  );
+                  )
                 })}
             </div>
           </CardContent>
         </Card>
       )}
     </div>
-  );
+  )
 }

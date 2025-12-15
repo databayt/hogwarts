@@ -23,22 +23,23 @@
  * - Download uses DOM methods - won't work with CORS-protected files
  */
 
-"use client";
+"use client"
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react"
+
+import type { FileCategory } from "../types"
+import { deleteFiles, getFiles } from "../upload/actions"
 import type {
-  FileItem,
-  FolderItem,
-  BrowserState,
   BrowserActions,
   BrowserConfig,
+  BrowserState,
+  FileItem,
+  FolderItem,
+  SortDirection,
+  SortField,
   UseBrowserReturn,
   ViewMode,
-  SortField,
-  SortDirection,
-} from "./types";
-import type { FileCategory } from "../types";
-import { getFiles, deleteFiles } from "../upload/actions";
+} from "./types"
 
 // ============================================================================
 // Default Configuration
@@ -57,23 +58,23 @@ const defaultConfig: BrowserConfig = {
     field: "date",
     direction: "desc",
   },
-};
+}
 
 // ============================================================================
 // Hook Implementation
 // ============================================================================
 
 export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
-  const mergedConfig = { ...defaultConfig, ...config };
+  const mergedConfig = { ...defaultConfig, ...config }
 
   // ============================================================================
   // State
   // ============================================================================
 
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [folders, setFolders] = useState<FolderItem[]>([]);
-  const [totalFiles, setTotalFiles] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [files, setFiles] = useState<FileItem[]>([])
+  const [folders, setFolders] = useState<FolderItem[]>([])
+  const [totalFiles, setTotalFiles] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const [state, setState] = useState<BrowserState>({
     currentPath: mergedConfig.initialFolder || mergedConfig.rootFolder || "",
@@ -86,19 +87,19 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
     isLoading: false,
     isDeleting: false,
     error: null,
-  });
+  })
 
   // Navigation history for back/forward support (like browser navigation)
   // history[historyIndex] = current path, history[historyIndex+1] = forward available
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [history, setHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
 
   // ============================================================================
   // Data Fetching
   // ============================================================================
 
   const fetchFiles = useCallback(async () => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
     try {
       const result = await getFiles({
@@ -106,9 +107,14 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
         category: state.categoryFilter,
         limit: mergedConfig.pageSize,
         offset: (currentPage - 1) * (mergedConfig.pageSize || 24),
-        orderBy: state.sortField === "date" ? "uploadedAt" : state.sortField === "name" ? "name" : "size",
+        orderBy:
+          state.sortField === "date"
+            ? "uploadedAt"
+            : state.sortField === "name"
+              ? "name"
+              : "size",
         order: state.sortDirection,
-      });
+      })
 
       // Transform to FileItem
       const fileItems: FileItem[] = result.files.map((f) => ({
@@ -123,20 +129,22 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
         folder: state.currentPath,
         uploadedAt: f.uploadedAt,
         uploadedBy: f.uploadedBy,
-      }));
+      }))
 
-      setFiles(fileItems);
-      setTotalFiles(result.total);
+      setFiles(fileItems)
+      setTotalFiles(result.total)
 
       // Extract unique folders from current path files
       // This is a simplified approach - in production you'd have a separate folders endpoint
-      const uniqueFolders = new Set<string>();
+      const uniqueFolders = new Set<string>()
       fileItems.forEach((f) => {
         if (f.folder && f.folder !== state.currentPath) {
-          const relativePath = f.folder.replace(state.currentPath, "").split("/")[1];
-          if (relativePath) uniqueFolders.add(relativePath);
+          const relativePath = f.folder
+            .replace(state.currentPath, "")
+            .split("/")[1]
+          if (relativePath) uniqueFolders.add(relativePath)
         }
-      });
+      })
 
       setFolders(
         Array.from(uniqueFolders).map((name) => ({
@@ -145,206 +153,232 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
           fileCount: 0,
           totalSize: 0,
         }))
-      );
+      )
 
-      setState((prev) => ({ ...prev, isLoading: false }));
+      setState((prev) => ({ ...prev, isLoading: false }))
     } catch (err) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
         error: err instanceof Error ? err.message : "Failed to load files",
-      }));
+      }))
     }
-  }, [state.currentPath, state.categoryFilter, state.sortField, state.sortDirection, currentPage, mergedConfig.pageSize]);
+  }, [
+    state.currentPath,
+    state.categoryFilter,
+    state.sortField,
+    state.sortDirection,
+    currentPage,
+    mergedConfig.pageSize,
+  ])
 
   // Initial fetch and refetch on dependencies change
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    fetchFiles()
+  }, [fetchFiles])
 
   // ============================================================================
   // Filtered & Sorted Files
   // ============================================================================
 
   const filteredFiles = useMemo(() => {
-    if (!state.searchQuery) return files;
+    if (!state.searchQuery) return files
 
-    const query = state.searchQuery.toLowerCase();
+    const query = state.searchQuery.toLowerCase()
     return files.filter(
       (f) =>
         f.originalName.toLowerCase().includes(query) ||
         f.filename.toLowerCase().includes(query)
-    );
-  }, [files, state.searchQuery]);
+    )
+  }, [files, state.searchQuery])
 
   // ============================================================================
   // Breadcrumbs
   // ============================================================================
 
   const breadcrumbs = useMemo(() => {
-    const parts = state.currentPath.split("/").filter(Boolean);
-    const crumbs = [{ name: "Files", path: "" }];
+    const parts = state.currentPath.split("/").filter(Boolean)
+    const crumbs = [{ name: "Files", path: "" }]
 
-    let currentPath = "";
+    let currentPath = ""
     for (const part of parts) {
-      currentPath += `/${part}`;
-      crumbs.push({ name: part, path: currentPath });
+      currentPath += `/${part}`
+      crumbs.push({ name: part, path: currentPath })
     }
 
-    return crumbs;
-  }, [state.currentPath]);
+    return crumbs
+  }, [state.currentPath])
 
   // ============================================================================
   // Navigation Actions
   // ============================================================================
 
-  const navigateTo = useCallback((path: string) => {
-    // Check root boundary
-    if (mergedConfig.rootFolder && !path.startsWith(mergedConfig.rootFolder)) {
-      return;
-    }
+  const navigateTo = useCallback(
+    (path: string) => {
+      // Check root boundary
+      if (
+        mergedConfig.rootFolder &&
+        !path.startsWith(mergedConfig.rootFolder)
+      ) {
+        return
+      }
 
-    setHistory((prev) => [...prev.slice(0, historyIndex + 1), path]);
-    setHistoryIndex((prev) => prev + 1);
-    setState((prev) => ({
-      ...prev,
-      currentPath: path,
-      selectedIds: new Set(),
-    }));
-    setCurrentPage(1);
-  }, [mergedConfig.rootFolder, historyIndex]);
+      setHistory((prev) => [...prev.slice(0, historyIndex + 1), path])
+      setHistoryIndex((prev) => prev + 1)
+      setState((prev) => ({
+        ...prev,
+        currentPath: path,
+        selectedIds: new Set(),
+      }))
+      setCurrentPage(1)
+    },
+    [mergedConfig.rootFolder, historyIndex]
+  )
 
   const goUp = useCallback(() => {
-    const parentPath = state.currentPath.split("/").slice(0, -1).join("/");
-    if (mergedConfig.rootFolder && !parentPath.startsWith(mergedConfig.rootFolder)) {
-      navigateTo(mergedConfig.rootFolder);
+    const parentPath = state.currentPath.split("/").slice(0, -1).join("/")
+    if (
+      mergedConfig.rootFolder &&
+      !parentPath.startsWith(mergedConfig.rootFolder)
+    ) {
+      navigateTo(mergedConfig.rootFolder)
     } else {
-      navigateTo(parentPath);
+      navigateTo(parentPath)
     }
-  }, [state.currentPath, mergedConfig.rootFolder, navigateTo]);
+  }, [state.currentPath, mergedConfig.rootFolder, navigateTo])
 
   const goBack = useCallback(() => {
     if (historyIndex > 0) {
-      setHistoryIndex((prev) => prev - 1);
+      setHistoryIndex((prev) => prev - 1)
       setState((prev) => ({
         ...prev,
         currentPath: history[historyIndex - 1],
         selectedIds: new Set(),
-      }));
-      setCurrentPage(1);
+      }))
+      setCurrentPage(1)
     }
-  }, [history, historyIndex]);
+  }, [history, historyIndex])
 
   // ============================================================================
   // Selection Actions
   // ============================================================================
 
-  const selectFile = useCallback((id: string) => {
-    if (!mergedConfig.selectable) return;
+  const selectFile = useCallback(
+    (id: string) => {
+      if (!mergedConfig.selectable) return
 
-    if (mergedConfig.multiSelect) {
-      setState((prev) => ({
-        ...prev,
-        selectedIds: new Set([...prev.selectedIds, id]),
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        selectedIds: new Set([id]),
-      }));
-    }
-  }, [mergedConfig.selectable, mergedConfig.multiSelect]);
-
-  const toggleSelection = useCallback((id: string) => {
-    if (!mergedConfig.selectable) return;
-
-    setState((prev) => {
-      const newSet = new Set(prev.selectedIds);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+      if (mergedConfig.multiSelect) {
+        setState((prev) => ({
+          ...prev,
+          selectedIds: new Set([...prev.selectedIds, id]),
+        }))
       } else {
-        if (!mergedConfig.multiSelect) {
-          newSet.clear();
-        }
-        newSet.add(id);
+        setState((prev) => ({
+          ...prev,
+          selectedIds: new Set([id]),
+        }))
       }
-      return { ...prev, selectedIds: newSet };
-    });
-  }, [mergedConfig.selectable, mergedConfig.multiSelect]);
+    },
+    [mergedConfig.selectable, mergedConfig.multiSelect]
+  )
+
+  const toggleSelection = useCallback(
+    (id: string) => {
+      if (!mergedConfig.selectable) return
+
+      setState((prev) => {
+        const newSet = new Set(prev.selectedIds)
+        if (newSet.has(id)) {
+          newSet.delete(id)
+        } else {
+          if (!mergedConfig.multiSelect) {
+            newSet.clear()
+          }
+          newSet.add(id)
+        }
+        return { ...prev, selectedIds: newSet }
+      })
+    },
+    [mergedConfig.selectable, mergedConfig.multiSelect]
+  )
 
   const selectAll = useCallback(() => {
-    if (!mergedConfig.selectable || !mergedConfig.multiSelect) return;
+    if (!mergedConfig.selectable || !mergedConfig.multiSelect) return
     setState((prev) => ({
       ...prev,
       selectedIds: new Set(filteredFiles.map((f) => f.id)),
-    }));
-  }, [mergedConfig.selectable, mergedConfig.multiSelect, filteredFiles]);
+    }))
+  }, [mergedConfig.selectable, mergedConfig.multiSelect, filteredFiles])
 
   const deselectAll = useCallback(() => {
-    setState((prev) => ({ ...prev, selectedIds: new Set() }));
-  }, []);
+    setState((prev) => ({ ...prev, selectedIds: new Set() }))
+  }, [])
 
   // ============================================================================
   // View Actions
   // ============================================================================
 
   const setViewMode = useCallback((mode: ViewMode) => {
-    setState((prev) => ({ ...prev, viewMode: mode }));
-  }, []);
+    setState((prev) => ({ ...prev, viewMode: mode }))
+  }, [])
 
   const setSort = useCallback((field: SortField, direction?: SortDirection) => {
     setState((prev) => ({
       ...prev,
       sortField: field,
-      sortDirection: direction || (prev.sortField === field && prev.sortDirection === "asc" ? "desc" : "asc"),
-    }));
-  }, []);
+      sortDirection:
+        direction ||
+        (prev.sortField === field && prev.sortDirection === "asc"
+          ? "desc"
+          : "asc"),
+    }))
+  }, [])
 
   const setSearch = useCallback((query: string) => {
-    setState((prev) => ({ ...prev, searchQuery: query }));
-  }, []);
+    setState((prev) => ({ ...prev, searchQuery: query }))
+  }, [])
 
   const setCategoryFilter = useCallback((category?: FileCategory) => {
-    setState((prev) => ({ ...prev, categoryFilter: category }));
-    setCurrentPage(1);
-  }, []);
+    setState((prev) => ({ ...prev, categoryFilter: category }))
+    setCurrentPage(1)
+  }, [])
 
   // ============================================================================
   // File Actions
   // ============================================================================
 
   const deleteSelected = useCallback(async () => {
-    if (!mergedConfig.deletable || state.selectedIds.size === 0) return;
+    if (!mergedConfig.deletable || state.selectedIds.size === 0) return
 
-    setState((prev) => ({ ...prev, isDeleting: true }));
+    setState((prev) => ({ ...prev, isDeleting: true }))
 
     try {
-      const result = await deleteFiles(Array.from(state.selectedIds));
+      const result = await deleteFiles(Array.from(state.selectedIds))
 
       if (result.succeeded > 0) {
         // Refetch files
-        fetchFiles();
-        deselectAll();
+        fetchFiles()
+        deselectAll()
       }
 
       if (result.failed > 0) {
         setState((prev) => ({
           ...prev,
           error: `Failed to delete ${result.failed} file(s)`,
-        }));
+        }))
       }
     } catch (err) {
       setState((prev) => ({
         ...prev,
         error: err instanceof Error ? err.message : "Delete failed",
-      }));
+      }))
     } finally {
-      setState((prev) => ({ ...prev, isDeleting: false }));
+      setState((prev) => ({ ...prev, isDeleting: false }))
     }
-  }, [mergedConfig.deletable, state.selectedIds, fetchFiles, deselectAll]);
+  }, [mergedConfig.deletable, state.selectedIds, fetchFiles, deselectAll])
 
   const downloadSelected = useCallback(() => {
-    if (!mergedConfig.downloadable) return;
+    if (!mergedConfig.downloadable) return
 
     // Download each selected file via DOM anchor element
     // Browser triggers download if Content-Disposition: attachment header is set
@@ -352,34 +386,37 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
     filteredFiles
       .filter((f) => state.selectedIds.has(f.id))
       .forEach((f) => {
-        const link = document.createElement("a");
-        link.href = f.url;
-        link.download = f.originalName;  // Triggers download if allowed by CORS
-        link.target = "_blank";  // Fallback: open in new tab
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      });
-  }, [mergedConfig.downloadable, filteredFiles, state.selectedIds]);
+        const link = document.createElement("a")
+        link.href = f.url
+        link.download = f.originalName // Triggers download if allowed by CORS
+        link.target = "_blank" // Fallback: open in new tab
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      })
+  }, [mergedConfig.downloadable, filteredFiles, state.selectedIds])
 
   const moveSelected = useCallback(async (targetFolder: string) => {
     // This would require a move endpoint
-    console.warn("Move not implemented - requires backend support");
-  }, []);
+    console.warn("Move not implemented - requires backend support")
+  }, [])
 
   const refresh = useCallback(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    fetchFiles()
+  }, [fetchFiles])
 
   // ============================================================================
   // Pagination
   // ============================================================================
 
-  const totalPages = Math.ceil(totalFiles / (mergedConfig.pageSize || 24));
+  const totalPages = Math.ceil(totalFiles / (mergedConfig.pageSize || 24))
 
-  const setPage = useCallback((page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  }, [totalPages]);
+  const setPage = useCallback(
+    (page: number) => {
+      setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+    },
+    [totalPages]
+  )
 
   // ============================================================================
   // Return
@@ -401,7 +438,7 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
     downloadSelected,
     moveSelected,
     refresh,
-  };
+  }
 
   return {
     files: filteredFiles,
@@ -413,5 +450,5 @@ export function useBrowser(config: BrowserConfig = {}): UseBrowserReturn {
     totalPages,
     totalFiles,
     setPage,
-  };
+  }
 }

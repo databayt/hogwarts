@@ -24,7 +24,7 @@ export interface Period {
   endTime: string
   order: number
   isBreak?: boolean
-  type?: 'regular' | 'lunch' | 'break' | 'assembly'
+  type?: "regular" | "lunch" | "break" | "assembly"
 }
 
 export interface ClassInfo {
@@ -71,30 +71,30 @@ export interface ClassroomInfo {
   building?: string
   floor?: string
   capacity: number
-  type: 'regular' | 'lab' | 'gym' | 'library' | 'computer' | 'music' | 'art'
+  type: "regular" | "lab" | "gym" | "library" | "computer" | "music" | "art"
   facilities?: string[]
   isAvailable: boolean
 }
 
 export interface TimetableConflict {
   id: string
-  type: 'teacher' | 'classroom' | 'class'
+  type: "teacher" | "classroom" | "class"
   slot1: TimetableSlot
   slot2: TimetableSlot
-  severity: 'error' | 'warning'
+  severity: "error" | "warning"
   message: string
   suggestion?: ConflictSuggestion
 }
 
 export interface ConflictSuggestion {
-  type: 'reschedule' | 'substitute' | 'room_change'
+  type: "reschedule" | "substitute" | "room_change"
   alternativeSlots?: TimetableSlot[]
   alternativeTeachers?: TeacherInfo[]
   alternativeRooms?: ClassroomInfo[]
 }
 
 export interface TimetableView {
-  type: 'class' | 'teacher' | 'room' | 'student'
+  type: "class" | "teacher" | "room" | "student"
   id: string
   name: string
   slots: TimetableSlot[]
@@ -102,17 +102,17 @@ export interface TimetableView {
 }
 
 export interface TimetableExportOptions {
-  format: 'pdf' | 'excel' | 'csv' | 'image' | 'ical'
-  viewType: TimetableView['type']
+  format: "pdf" | "excel" | "csv" | "image" | "ical"
+  viewType: TimetableView["type"]
   weekOffset: number
   includeSubstitutes: boolean
   includeNotes: boolean
-  paperSize?: 'A4' | 'Letter'
-  orientation?: 'portrait' | 'landscape'
+  paperSize?: "A4" | "Letter"
+  orientation?: "portrait" | "landscape"
 }
 
 export interface TimetableImportData {
-  format: 'excel' | 'csv' | 'json'
+  format: "excel" | "csv" | "json"
   file: File
   mapping?: {
     [key: string]: string // Field mapping
@@ -126,7 +126,7 @@ export interface TimetableImportData {
 
 export interface TimetableNotification {
   id: string
-  type: 'change' | 'conflict' | 'substitute' | 'cancellation'
+  type: "change" | "conflict" | "substitute" | "cancellation"
   recipients: string[] // User IDs
   title: string
   message: string
@@ -172,8 +172,8 @@ export interface TimetableSettings {
   allowConflicts: boolean
   autoResolveConflicts: boolean
   notifyOnChanges: boolean
-  colorScheme: 'subject' | 'teacher' | 'room' | 'custom'
-  viewPreference: TimetableView['type']
+  colorScheme: "subject" | "teacher" | "room" | "custom"
+  viewPreference: TimetableView["type"]
 }
 
 export interface DragDropEvent {
@@ -185,7 +185,7 @@ export interface DragDropEvent {
     position: { day: number; period: number }
     classId?: string
   }
-  type: 'move' | 'copy' | 'swap'
+  type: "move" | "copy" | "swap"
 }
 
 export interface FilterOptions {
@@ -200,7 +200,7 @@ export interface FilterOptions {
 }
 
 export interface AccessLevel {
-  role: 'admin' | 'principal' | 'teacher' | 'student' | 'parent'
+  role: "admin" | "principal" | "teacher" | "student" | "parent"
   permissions: {
     view: boolean
     edit: boolean

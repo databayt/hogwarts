@@ -12,28 +12,33 @@ This directory contains the complete school management platform that empowers sc
 ## What Admins Can Manage
 
 ### 1. People Management
+
 - **Students** (`students/`) - Enrollment, records, class assignments, guardians
 - **Teachers** (`teachers/`) - Profiles, departments, subject assignments, schedules
 - **Parents** (`parents/`) - Guardian accounts, student relationships, access control
 - **Admin Settings** (`admin/`) - User roles, invitations, school configuration
 
 ### 2. Academic Structure
+
 - **Subjects** (`subjects/`) - Curriculum, subject catalog, prerequisites
 - **Classes** (`classes/`) - Grade sections (1A, 1B), teacher assignments, capacity
 - **Lessons** (`lessons/`) - Lesson plans, content management, resources
 - **Timetable** (`timetable/`) - Weekly schedules, conflict resolution, printing
 
 ### 3. Assessment & Evaluation
+
 - **Assignments** (`assignments/`) - Create, distribute, collect, grade
 - **Exams** (`exams/`) - Scheduling, marks entry, grade boundaries
 - **Results** (`results/`) - Gradebook, report cards, transcripts, GPA
 
 ### 4. Daily Operations
+
 - **Attendance** (`attendance/`) - Daily/period tracking, reports, analytics
 - **Announcements** (`announcements/`) - School-wide broadcasts, targeted messaging
 - **Events** (`events/`) - School calendar, assemblies, sports day, RSVP
 
 ### 5. Access & Configuration
+
 - **Dashboard** (`dashboard/`) - Role-based overview, quick stats, widgets
 - **Settings** (`settings/`) - School profile, locale, timezone, domains
 - **Profile** (`profile/`) - User account management
@@ -45,6 +50,7 @@ This directory contains the complete school management platform that empowers sc
 ## Admin Workflows
 
 ### Initial School Setup
+
 1. Configure school settings (name, logo, academic year structure)
 2. Set up subjects and grade levels
 3. Create classes (Grade 1A, 1B, 2A, etc.)
@@ -56,6 +62,7 @@ This directory contains the complete school management platform that empowers sc
 9. Configure attendance and grading policies
 
 ### Daily Operations
+
 1. Review dashboard for pending tasks
 2. Mark attendance (or delegate to teachers)
 3. Post announcements
@@ -65,6 +72,7 @@ This directory contains the complete school management platform that empowers sc
 7. Generate reports
 
 ### End of Term
+
 1. Close assignment and exam submissions
 2. Finalize grades and results
 3. Generate report cards
@@ -121,6 +129,7 @@ This directory contains the complete school management platform that empowers sc
 ## Role-Based Access
 
 ### ADMIN (Full Access)
+
 - ✅ Create, read, update, delete all entities
 - ✅ Configure school settings
 - ✅ Manage user roles
@@ -129,6 +138,7 @@ This directory contains the complete school management platform that empowers sc
 - ✅ Access billing and subscription
 
 ### TEACHER (Delegated Access)
+
 - ✅ View assigned classes and students
 - ✅ Mark attendance for their classes
 - ✅ Create and grade assignments
@@ -139,6 +149,7 @@ This directory contains the complete school management platform that empowers sc
 - ❌ Cannot manage other teachers
 
 ### STUDENT (Read-Mostly)
+
 - ✅ View personal timetable
 - ✅ View assignments and submit work
 - ✅ View grades and attendance
@@ -147,6 +158,7 @@ This directory contains the complete school management platform that empowers sc
 - ❌ Cannot modify records
 
 ### GUARDIAN (Parent View)
+
 - ✅ View linked children's data
 - ✅ View attendance and grades
 - ✅ Read school announcements
@@ -155,12 +167,14 @@ This directory contains the complete school management platform that empowers sc
 - ❌ Limited to read-only
 
 ### STAFF (Limited Admin)
+
 - ✅ View school data
 - ✅ Basic CRUD on assigned entities
 - ❌ Cannot access billing
 - ❌ Cannot modify system settings
 
 ### ACCOUNTANT (Finance Focus)
+
 - ✅ Access billing and invoices
 - ✅ View student/parent accounts
 - ❌ No access to academic data
@@ -171,6 +185,7 @@ This directory contains the complete school management platform that empowers sc
 ## Data Flow & Relationships
 
 ### Core Entities
+
 ```typescript
 School (tenant root)
   └─ SchoolYear
@@ -199,9 +214,11 @@ School (tenant root)
 ```
 
 ### Multi-Tenant Safety
+
 **CRITICAL:** Every database query MUST include `schoolId` from `getTenantContext()`.
 
 All business tables have:
+
 - `schoolId` field (required)
 - Unique constraints scoped by `schoolId`
 - Row-level isolation enforced
@@ -211,6 +228,7 @@ All business tables have:
 ## Technical Architecture
 
 ### Stack
+
 - **Framework:** Next.js 15.4.4 (App Router) + React 19
 - **Database:** PostgreSQL (Neon) + Prisma ORM 6.14.0
 - **Auth:** NextAuth v5 (JWT sessions with schoolId)
@@ -227,6 +245,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Core Framework & Runtime
 
 **Next.js 15.4** ([Official Docs](https://nextjs.org/docs))
+
 - **App Router**: File-system based routing with server components
 - **Turbopack**: Next-generation bundler for development and production (100% integration test compatibility)
 - **React Server Components**: Default server rendering with selective client hydration
@@ -237,6 +256,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **Release Notes**: [Next.js 15.4 Release](https://nextjs.org/blog/next-15-4)
 
 **React 19** ([Official Docs](https://react.dev))
+
 - **Actions**: First-class support for async transitions and form submissions
 - **Server Components**: Zero-bundle server-side rendering
 - **New Hooks**: `useActionState`, `useFormStatus`, `useOptimistic`, `use` for promises
@@ -249,6 +269,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Database & ORM
 
 **Neon PostgreSQL** ([Official Docs](https://neon.tech/docs/introduction))
+
 - **Serverless Postgres**: Autoscaling, scale-to-zero, instant provisioning
 - **Database Branching**: Git-like branches for development and testing
 - **Connection Pooling**: Built-in Pgbouncer for connection management
@@ -258,6 +279,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **Features**: Read replicas, IP allowlist, query insights
 
 **Prisma ORM 6.14+** ([Official Docs](https://www.prisma.io/docs))
+
 - **Type-Safe Queries**: Auto-generated TypeScript types from schema
 - **Migration System**: Declarative schema migrations with history
 - **Multi-Schema Support**: 19 separate model files for organization
@@ -270,6 +292,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### UI & Styling
 
 **shadcn/ui** ([Official Docs](https://ui.shadcn.com/docs))
+
 - **Component Library**: Copy-paste components built on Radix UI primitives
 - **Accessibility**: ARIA compliant, keyboard navigation, screen reader support
 - **Customizable**: Full control over component code and styling
@@ -279,6 +302,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **New York Style**: Selected design variant for this project
 
 **Tailwind CSS 4** ([Official Docs](https://tailwindcss.com/docs))
+
 - **Utility-First**: Rapid UI development with utility classes
 - **OKLCH Colors**: Modern color space for better color perception
 - **CSS-First Configuration**: Native CSS variables and @theme directive
@@ -290,6 +314,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Authentication & Authorization
 
 **NextAuth.js v5** ([Official Docs](https://authjs.dev))
+
 - **JWT Strategy**: Stateless authentication with signed tokens
 - **Multi-Provider**: Google, Facebook, and Credentials (bcrypt)
 - **Session Management**: Automatic session refresh and expiration
@@ -302,6 +327,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Form Management & Validation
 
 **React Hook Form 7.61+** ([Official Docs](https://react-hook-form.com))
+
 - **Performance**: Minimized re-renders with uncontrolled components
 - **TypeScript Support**: Full type inference from schema
 - **Validation**: Integrates with Zod for schema validation
@@ -310,6 +336,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **DevTools**: Browser extension for debugging forms
 
 **Zod 4.0+** ([Official Docs](https://zod.dev))
+
 - **Type Inference**: Generate TypeScript types from schemas
 - **Runtime Validation**: Client and server-side validation
 - **Error Messages**: Customizable error messages with i18n support
@@ -320,6 +347,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Data Tables & UI Components
 
 **TanStack Table 8.21+** ([Official Docs](https://tanstack.com/table))
+
 - **Headless UI**: Full control over rendering and styling
 - **Sorting**: Multi-column sorting with custom comparators
 - **Filtering**: Column filters, global search, faceted filters
@@ -329,6 +357,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **TypeScript**: Full type safety for row data
 
 **Additional UI Libraries**:
+
 - **Radix UI**: Unstyled, accessible component primitives
 - **Recharts 2.15+**: Composable charting library for analytics
 - **date-fns 4.1+**: Modern date utility library (lighter than moment.js)
@@ -338,18 +367,21 @@ This platform is built with modern, production-grade technologies and follows be
 #### Development Tools
 
 **TypeScript 5.x** ([Official Docs](https://www.typescriptlang.org/docs))
+
 - **Strict Mode**: Full type safety with `strict: true`
 - **Type Inference**: Automatic type detection from Prisma and Zod
 - **Path Mapping**: `@/` alias for clean imports
 - **JSX**: React 19 with new JSX transform
 
 **Testing Stack**:
+
 - **Vitest 2.0+**: Fast unit testing with Vite integration
 - **React Testing Library**: Component testing with user-centric queries
 - **Playwright 1.55+**: End-to-end testing across browsers
 - **MSW**: API mocking for integration tests
 
 **Build & Development**:
+
 - **pnpm 9.x**: Fast, disk-efficient package manager (required for Vercel)
 - **ESLint**: Code linting with Next.js recommended config
 - **Prettier**: Code formatting (via ESLint integration)
@@ -377,6 +409,7 @@ This platform is built with modern, production-grade technologies and follows be
 #### Code Quality & Patterns
 
 **Architectural Patterns**:
+
 - **Server Actions**: "use server" directive for type-safe mutations
 - **Mirror Pattern**: Routes in `app/` mirror components in `components/`
 - **Component Hierarchy**: UI → Atoms → Templates → Blocks → Micro → Apps
@@ -384,6 +417,7 @@ This platform is built with modern, production-grade technologies and follows be
 - **Role-Based Access Control**: 8 roles (DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER)
 
 **Best Practices**:
+
 - **Type Safety**: No `any` types, strict TypeScript
 - **Validation**: Double validation (client UX + server security)
 - **Error Handling**: Graceful degradation with user-friendly messages
@@ -402,6 +436,7 @@ This platform is built with modern, production-grade technologies and follows be
 ---
 
 ### Directory Structure (Mirror Pattern)
+
 ```
 src/
 ├── app/[lang]/s/[subdomain]/(platform)/
@@ -427,6 +462,7 @@ src/
 ```
 
 ### Server Actions Pattern
+
 ```typescript
 // actions.ts
 "use server"
@@ -441,20 +477,21 @@ export async function createStudent(input: FormData) {
 
   // 3. Execute with schoolId scope
   const student = await db.student.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   // 4. Revalidate cache
-  revalidatePath('/students')
+  revalidatePath("/students")
 
   return { success: true, id: student.id }
 }
 ```
 
 ### Validation Pattern
+
 ```typescript
 // validation.ts
-import { z } from 'zod'
+import { z } from "zod"
 
 export const studentCreateSchema = z.object({
   givenName: z.string().min(1, "First name required"),
@@ -472,6 +509,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 ## Common Admin Tasks
 
 ### 1. Add a New Student
+
 1. Navigate to `/students`
 2. Click "Add Student"
 3. Fill form: name, date of birth, gender, enrollment date
@@ -479,6 +517,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 5. Optionally: assign to classes, link guardian
 
 ### 2. Create a Weekly Timetable
+
 1. Navigate to `/timetable`
 2. Select term and grade/class
 3. Configure working days (e.g., Sun-Thu for Arabic schools)
@@ -489,6 +528,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 8. Print A4-ready schedule
 
 ### 3. Mark Daily Attendance
+
 1. Navigate to `/attendance`
 2. Select class and date
 3. View student roster
@@ -497,6 +537,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 6. Export attendance reports as CSV
 
 ### 4. Create and Assign Homework
+
 1. Navigate to `/assignments`
 2. Click "New Assignment"
 3. Fill form: title, description, due date, total points
@@ -507,6 +548,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 8. Grade and provide feedback
 
 ### 5. Post School Announcement
+
 1. Navigate to `/announcements`
 2. Click "New Announcement"
 3. Write title and message
@@ -516,6 +558,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 7. Monitor read receipts (future)
 
 ### 6. Schedule an Exam
+
 1. Navigate to `/exams`
 2. Click "New Exam"
 3. Fill: subject, class, date, duration
@@ -526,6 +569,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 8. Results auto-calculate to report cards
 
 ### 7. Generate Report Cards
+
 1. Navigate to `/results`
 2. Select term and class
 3. Review all exam and assignment scores
@@ -535,6 +579,7 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 7. Bulk download or email to parents
 
 ### 8. Bulk Import Students from CSV
+
 1. Navigate to `/import`
 2. Download CSV template
 3. Fill with student data (name, DOB, gender, etc.)
@@ -549,60 +594,79 @@ export type StudentCreate = z.infer<typeof studentCreateSchema>
 ## Feature Summaries
 
 ### 📚 Students (`students/`)
+
 Comprehensive student information system with enrollment, class assignments, guardian relationships, and academic history tracking. Supports bulk CSV import and individual management.
 
 ### 👨‍🏫 Teachers (`teachers/`)
+
 Teacher profiles, qualifications, department assignments, and teaching load management. Track which classes and subjects each teacher handles.
 
 ### 🏛️ Classes (`classes/`)
+
 Create and manage grade sections (e.g., Grade 1A, 1B), assign teachers, set capacity limits, and enroll students. Links to timetable and attendance systems.
 
 ### 📅 Timetable (`timetable/`)
+
 Visual weekly schedule builder with flexible working days, lunch break configuration, conflict detection (teacher/room/class), and A4 print-ready output. Supports both class view and teacher view.
 
 ### ✅ Attendance (`attendance/`)
+
 Daily or period-by-period attendance tracking with Present/Absent/Late status codes. Generate reports, export to CSV, and track attendance percentages over time.
 
 ### 📝 Assignments (`assignments/`)
+
 Create homework and projects, set due dates, collect submissions, grade student work, and provide feedback. Integrates with results system for GPA calculation.
 
 ### 📖 Exams (`exams/`)
+
 Schedule exams, define marking schemes, set grade boundaries, allow teacher marks entry, and auto-calculate results. Supports midterms, finals, and quizzes.
 
 ### 🎯 Results (`results/`)
+
 Centralized gradebook combining assignment scores and exam marks. Calculate GPA, apply grading scales, generate report cards, and track academic progress.
 
 ### 📢 Announcements (`announcements/`)
+
 Broadcast messages to entire school or target specific classes, grades, or roles. Set priority levels, expiration dates, and track read status.
 
 ### 🎉 Events (`events/`)
+
 School calendar for assemblies, sports days, parent meetings, and holidays. Manage RSVPs, assign locations, and send email reminders.
 
 ### 📖 Lessons (`lessons/`)
+
 Lesson planning and content management system. Teachers create lesson plans, attach resources, and link to timetable slots.
 
 ### 👨‍👩‍👧 Parents (`parents/`)
+
 Guardian account management with student relationships. Parents can log in to view their children's attendance, grades, and announcements via the parent portal.
 
 ### 🏠 Parent Portal (`parent-portal/`)
+
 Read-only interface for parents to monitor their children's academic progress, view announcements, check timetables, and download reports.
 
 ### 📊 Dashboard (`dashboard/`)
+
 Role-based landing page with quick stats, pending tasks, and shortcuts. Different views for admins, teachers, students, and parents.
 
 ### ⚙️ Settings (`settings/`)
+
 School configuration including profile (name, logo), academic year structure, locale (Arabic/English), timezone, subdomain management, and custom domain requests.
 
 ### 🔧 Admin (`admin/`)
+
 User and role management, invitation system, billing overview, and school-wide configuration controls. Restricted to ADMIN role only.
 
 ### 📤 Import/Export (`import/`)
+
 Bulk data operations via CSV. Import students and teachers with validation. Export data for backup or integration with other systems.
 
 ### 📚 Subjects (`subjects/`)
+
 Subject catalog and curriculum management. Define subjects, set prerequisites, and assign to classes and teachers.
 
 ### 👤 Profile (`profile/`)
+
 User account settings for updating personal information, changing password, notification preferences, and profile picture.
 
 ---
@@ -624,6 +688,7 @@ Admins can export data from any feature:
 ## Internationalization (i18n)
 
 Platform supports **Arabic (default)** and **English**:
+
 - RTL (Right-to-Left) for Arabic UI
 - LTR (Left-to-Right) for English UI
 - 800+ translation keys covering all features
@@ -636,6 +701,7 @@ Platform supports **Arabic (default)** and **English**:
 ## Multi-Tenant Architecture
 
 ### How It Works
+
 1. Each school has a unique `schoolId` (UUID)
 2. User session includes `schoolId` from JWT
 3. Every database query filters by `schoolId`
@@ -643,6 +709,7 @@ Platform supports **Arabic (default)** and **English**:
 5. Subdomain routing: `school.databayt.org` → `/s/school/...`
 
 ### Tenant Isolation Guarantees
+
 - ✅ No cross-tenant data leakage
 - ✅ Users can only access their school's data
 - ✅ Queries automatically scoped by middleware
@@ -664,6 +731,7 @@ Platform supports **Arabic (default)** and **English**:
 ## Future Enhancements
 
 ### Planned Features
+
 - 📧 Messaging system (teacher-parent, admin-teacher communication)
 - 🔔 Push notifications for mobile devices
 - 📚 Library management (books, borrowing, overdue tracking)
@@ -676,6 +744,7 @@ Platform supports **Arabic (default)** and **English**:
 - 🔗 Integration with learning management systems (LMS)
 
 ### Quality Improvements
+
 - Comprehensive E2E testing for all workflows
 - Performance monitoring and alerting
 - Accessibility audit (WCAG 2.1 AA compliance)
@@ -729,6 +798,7 @@ pnpm db:seed              # Seed database with test data
 ## Contributing
 
 When adding new features:
+
 1. Follow the mirror pattern (route matches component folder)
 2. Include `README.md` documenting admin capabilities
 3. Include `ISSUE.md` tracking production readiness

@@ -1,15 +1,19 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
+
+import { db } from "@/lib/db"
 
 /**
  * Fetches individual course with full details
  * Multi-tenant: Scoped by schoolId
  */
-export async function getIndividualCourse(slug: string, schoolId: string | null) {
+export async function getIndividualCourse(
+  slug: string,
+  schoolId: string | null
+) {
   if (!schoolId) {
-    notFound();
+    notFound()
   }
 
   const course = await db.streamCourse.findFirst({
@@ -48,13 +52,15 @@ export async function getIndividualCourse(slug: string, schoolId: string | null)
         },
       },
     },
-  });
+  })
 
   if (!course) {
-    notFound();
+    notFound()
   }
 
-  return course;
+  return course
 }
 
-export type IndividualCourseType = Awaited<ReturnType<typeof getIndividualCourse>>;
+export type IndividualCourseType = Awaited<
+  ReturnType<typeof getIndividualCourse>
+>

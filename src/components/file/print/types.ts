@@ -7,46 +7,46 @@
 // Print Configuration Types
 // ============================================================================
 
-export type PageSize = "A4" | "A3" | "A5" | "Letter" | "Legal";
-export type PageOrientation = "portrait" | "landscape";
+export type PageSize = "A4" | "A3" | "A5" | "Letter" | "Legal"
+export type PageOrientation = "portrait" | "landscape"
 
 export interface PageMargins {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
+  top: number
+  right: number
+  bottom: number
+  left: number
 }
 
 export interface PrintConfig {
   /** Page size */
-  pageSize?: PageSize;
+  pageSize?: PageSize
 
   /** Page orientation */
-  orientation?: PageOrientation;
+  orientation?: PageOrientation
 
   /** Page margins in mm */
-  margins?: PageMargins;
+  margins?: PageMargins
 
   /** Print in color or grayscale */
-  color?: boolean;
+  color?: boolean
 
   /** Include background graphics */
-  printBackground?: boolean;
+  printBackground?: boolean
 
   /** Scale factor (0.1 to 2.0) */
-  scale?: number;
+  scale?: number
 
   /** Header template (HTML) */
-  headerTemplate?: string;
+  headerTemplate?: string
 
   /** Footer template (HTML) */
-  footerTemplate?: string;
+  footerTemplate?: string
 
   /** Display header and footer */
-  displayHeaderFooter?: boolean;
+  displayHeaderFooter?: boolean
 
   /** Prefer CSS page size */
-  preferCSSPageSize?: boolean;
+  preferCSSPageSize?: boolean
 }
 
 // ============================================================================
@@ -54,8 +54,8 @@ export interface PrintConfig {
 // ============================================================================
 
 export interface PrintResult {
-  success: boolean;
-  error?: string;
+  success: boolean
+  error?: string
 }
 
 // ============================================================================
@@ -63,9 +63,9 @@ export interface PrintResult {
 // ============================================================================
 
 export interface PrintProgress {
-  status: "idle" | "preparing" | "printing" | "completed" | "error";
-  message?: string;
-  error?: string;
+  status: "idle" | "preparing" | "printing" | "completed" | "error"
+  message?: string
+  error?: string
 }
 
 // ============================================================================
@@ -74,17 +74,20 @@ export interface PrintProgress {
 
 export interface UsePrintReturn {
   /** Print state */
-  isPrinting: boolean;
-  progress: PrintProgress;
-  error: string | null;
+  isPrinting: boolean
+  progress: PrintProgress
+  error: string | null
 
   /** Actions */
-  print: (element?: HTMLElement | null, config?: PrintConfig) => Promise<PrintResult>;
-  printById: (elementId: string, config?: PrintConfig) => Promise<PrintResult>;
-  printHtml: (html: string, config?: PrintConfig) => Promise<PrintResult>;
+  print: (
+    element?: HTMLElement | null,
+    config?: PrintConfig
+  ) => Promise<PrintResult>
+  printById: (elementId: string, config?: PrintConfig) => Promise<PrintResult>
+  printHtml: (html: string, config?: PrintConfig) => Promise<PrintResult>
 
   /** Reset */
-  reset: () => void;
+  reset: () => void
 }
 
 // ============================================================================
@@ -97,11 +100,11 @@ export const PAGE_SIZES: Record<PageSize, { width: number; height: number }> = {
   A5: { width: 148, height: 210 },
   Letter: { width: 216, height: 279 },
   Legal: { width: 216, height: 356 },
-};
+}
 
 export const DEFAULT_MARGINS: PageMargins = {
   top: 20,
   right: 20,
   bottom: 20,
   left: 20,
-};
+}

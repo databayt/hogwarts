@@ -1,6 +1,6 @@
-import PricingContent from "@/components/marketing/pricing/content";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import PricingContent from "@/components/marketing/pricing/content"
 
 export const metadata = {
   title: "Pricing",
@@ -11,8 +11,8 @@ interface Props {
 }
 
 export default async function Pricing({ params }: Props) {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
 
-  return <PricingContent dictionary={dictionary} lang={lang} />;
+  return <PricingContent dictionary={dictionary} lang={lang} />
 }

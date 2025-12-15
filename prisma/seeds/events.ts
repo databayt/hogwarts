@@ -14,24 +14,28 @@
  * - Grade-specific activities
  */
 
-import { EventType, EventStatus } from "@prisma/client";
-import type { SeedPrisma } from "./types";
+import { EventStatus, EventType } from "@prisma/client"
 
-export async function seedEvents(prisma: SeedPrisma, schoolId: string): Promise<void> {
-  console.log("🎉 Creating school events (50+ events, Bilingual AR/EN)...");
+import type { SeedPrisma } from "./types"
+
+export async function seedEvents(
+  prisma: SeedPrisma,
+  schoolId: string
+): Promise<void> {
+  console.log("🎉 Creating school events (50+ events, Bilingual AR/EN)...")
 
   // Helper to create dates relative to today
-  const today = new Date();
+  const today = new Date()
   const daysFromNow = (days: number): Date => {
-    const date = new Date(today);
-    date.setDate(date.getDate() + days);
-    return date;
-  };
+    const date = new Date(today)
+    date.setDate(date.getDate() + days)
+    return date
+  }
   const daysAgo = (days: number): Date => {
-    const date = new Date(today);
-    date.setDate(date.getDate() - days);
-    return date;
-  };
+    const date = new Date(today)
+    date.setDate(date.getDate() - days)
+    return date
+  }
 
   const events = [
     // ============================================================
@@ -80,7 +84,8 @@ Annual Science & Technology Fair showcasing student projects and innovations.
       endTime: "15:00",
       location: "القاعة الرئيسية والمعامل | Main Hall & Labs",
       organizer: "قسم العلوم | Science Department",
-      targetAudience: "الطلاب، أولياء الأمور، العامة | Students, Parents, Public",
+      targetAudience:
+        "الطلاب، أولياء الأمور، العامة | Students, Parents, Public",
       maxAttendees: 300,
       isPublic: true,
       registrationRequired: true,
@@ -246,7 +251,8 @@ Annual inter-school football championship.
       endTime: "18:00",
       location: "ملعب كرة القدم الرئيسي | Main Football Field",
       organizer: "اللجنة الرياضية | Sports Committee",
-      targetAudience: "الطلاب، أولياء الأمور، العامة | Students, Parents, Public",
+      targetAudience:
+        "الطلاب، أولياء الأمور، العامة | Students, Parents, Public",
       maxAttendees: 500,
       isPublic: true,
       registrationRequired: false,
@@ -883,7 +889,8 @@ Celebrating the legacy and founding of our school.
       endTime: "14:00",
       location: "القاعة الرئيسية | Main Assembly Hall",
       organizer: "إدارة المدرسة | School Administration",
-      targetAudience: "الطلاب، أولياء الأمور، الخريجون | Students, Parents, Alumni",
+      targetAudience:
+        "الطلاب، أولياء الأمور، الخريجون | Students, Parents, Alumni",
       maxAttendees: 500,
       isPublic: true,
       registrationRequired: false,
@@ -906,7 +913,8 @@ Annual graduation ceremony for Grade 12 students.
       endTime: "20:00",
       location: "القاعة الرئيسية | Main Hall",
       organizer: "إدارة المدرسة | School Administration",
-      targetAudience: "طلاب الصف 12، أولياء الأمور، الموظفون | Grade 12, Parents, Staff",
+      targetAudience:
+        "طلاب الصف 12، أولياء الأمور، الموظفون | Grade 12, Parents, Staff",
       maxAttendees: 300,
       isPublic: false,
       registrationRequired: true,
@@ -1072,7 +1080,8 @@ Special welcome day for new KG students and their parents.
       endTime: "11:00",
       location: "قسم الروضة | KG Section",
       organizer: "قسم الروضة | KG Section",
-      targetAudience: "طلاب الروضة الجدد وأولياء أمورهم | New KG Students & Parents",
+      targetAudience:
+        "طلاب الروضة الجدد وأولياء أمورهم | New KG Students & Parents",
       maxAttendees: 60,
       isPublic: false,
       registrationRequired: true,
@@ -1230,41 +1239,47 @@ Educational field trip to the Sudan National Museum has been postponed. New date
       isPublic: false,
       registrationRequired: true,
       status: EventStatus.POSTPONED,
-      notes: "تم إعادة الجدولة للشهر القادم بسبب مشاكل النقل | Rescheduled to next month due to transportation issues.",
+      notes:
+        "تم إعادة الجدولة للشهر القادم بسبب مشاكل النقل | Rescheduled to next month due to transportation issues.",
     },
-  ];
+  ]
 
-  let createdCount = 0;
-  let skippedCount = 0;
+  let createdCount = 0
+  let skippedCount = 0
 
   for (const event of events) {
     // Check if event already exists (by title + schoolId)
     const existing = await prisma.event.findFirst({
       where: { schoolId, title: event.title },
-    });
+    })
 
     if (!existing) {
       await prisma.event.create({
         data: { schoolId, ...event },
-      });
-      createdCount++;
+      })
+      createdCount++
     } else {
-      skippedCount++;
+      skippedCount++
     }
   }
 
   // Count by type
-  const typeCount = events.reduce((acc, e) => {
-    acc[e.eventType] = (acc[e.eventType] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const typeCount = events.reduce(
+    (acc, e) => {
+      acc[e.eventType] = (acc[e.eventType] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
 
-  console.log(`   ✅ Events: ${createdCount} new, ${skippedCount} already existed`);
-  console.log(`      - Total events: ${events.length}`);
-  console.log(`      - Academic: ${typeCount.ACADEMIC || 0}`);
-  console.log(`      - Sports: ${typeCount.SPORTS || 0}`);
-  console.log(`      - Cultural: ${typeCount.CULTURAL || 0}`);
-  console.log(`      - Celebrations: ${typeCount.CELEBRATION || 0}`);
-  console.log(`      - Workshops: ${typeCount.WORKSHOP || 0}`);
-  console.log(`      - Parent Meetings: ${typeCount.PARENT_MEETING || 0}\n`);
+  console.log(
+    `   ✅ Events: ${createdCount} new, ${skippedCount} already existed`
+  )
+  console.log(`      - Total events: ${events.length}`)
+  console.log(`      - Academic: ${typeCount.ACADEMIC || 0}`)
+  console.log(`      - Sports: ${typeCount.SPORTS || 0}`)
+  console.log(`      - Cultural: ${typeCount.CULTURAL || 0}`)
+  console.log(`      - Celebrations: ${typeCount.CELEBRATION || 0}`)
+  console.log(`      - Workshops: ${typeCount.WORKSHOP || 0}`)
+  console.log(`      - Parent Meetings: ${typeCount.PARENT_MEETING || 0}\n`)
 }

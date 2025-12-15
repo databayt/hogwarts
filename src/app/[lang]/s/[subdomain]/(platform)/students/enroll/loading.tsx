@@ -1,5 +1,5 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function StudentsEnrollLoading() {
   return (
@@ -22,7 +22,7 @@ export default function StudentsEnrollLoading() {
               </div>
             ))}
           </div>
-          <Skeleton className="h-9 w-32 mt-4" />
+          <Skeleton className="mt-4 h-9 w-32" />
         </CardContent>
       </Card>
     </div>

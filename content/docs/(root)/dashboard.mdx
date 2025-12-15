@@ -9,14 +9,14 @@ The Platform Dashboard provides **role-based personalized views** for 8 differen
 
 ## Unified Section Order (All Dashboards)
 
-| # | Section | Component | Description |
-|---|---------|-----------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Role-specific flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | User-specific counts (no title) |
-| 3 | **Quick Actions** | `QuickActionsSection` | 4 focused actions per role |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Role-specific metrics |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Role-relevant invoices |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Role-relevant financial data + charts |
+| #   | Section                | Component                  | Description                           |
+| --- | ---------------------- | -------------------------- | ------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Role-specific flip card with weather  |
+| 2   | **Quick Look**         | `QuickLookSection`         | User-specific counts (no title)       |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | 4 focused actions per role            |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Role-specific metrics                 |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Role-relevant invoices                |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Role-relevant financial data + charts |
 
 ---
 
@@ -144,22 +144,30 @@ The dashboard uses a **switch-case routing pattern** in `content.tsx`:
 ```tsx
 switch (userRole) {
   case "STUDENT":
-    return <StudentDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return (
+      <StudentDashboard user={user} dictionary={safeDict} locale={locale} />
+    )
   case "TEACHER":
-    return <TeacherDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return (
+      <TeacherDashboard user={user} dictionary={safeDict} locale={locale} />
+    )
   case "GUARDIAN":
-    return <ParentDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return <ParentDashboard user={user} dictionary={safeDict} locale={locale} />
   case "STAFF":
-    return <StaffDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return <StaffDashboard user={user} dictionary={safeDict} locale={locale} />
   case "ADMIN":
   case "DEVELOPER":
-    return <AdminDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return <AdminDashboard user={user} dictionary={safeDict} locale={locale} />
   case "PRINCIPAL":
-    return <PrincipalDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return (
+      <PrincipalDashboard user={user} dictionary={safeDict} locale={locale} />
+    )
   case "ACCOUNTANT":
-    return <AccountantDashboard user={user} dictionary={safeDict} locale={locale} />;
+    return (
+      <AccountantDashboard user={user} dictionary={safeDict} locale={locale} />
+    )
   default:
-    return <DefaultDashboard user={user} dictionary={safeDict} />;
+    return <DefaultDashboard user={user} dictionary={safeDict} />
 }
 ```
 
@@ -186,19 +194,20 @@ interface SectionHeadingProps {
 
 Role-specific critical info with 3D flip animation:
 
-| Role | Primary Content | Secondary Content |
-|------|-----------------|-------------------|
-| **Student** | Assignments due (with overdue warnings) | Next class info |
-| **Teacher** | Next class details | Pending grading, attendance due |
-| **Parent** | Children's pending/overdue items | Upcoming events for kids |
-| **Staff** | Urgent tasks, pending requests | Today's priorities |
-| **Accountant** | Pending payments, overdue invoices | Financial deadlines |
-| **Principal** | Critical alerts | Today's priorities, strategic deadlines |
-| **Admin** | System alerts, pending approvals | Urgent notifications |
+| Role           | Primary Content                         | Secondary Content                       |
+| -------------- | --------------------------------------- | --------------------------------------- |
+| **Student**    | Assignments due (with overdue warnings) | Next class info                         |
+| **Teacher**    | Next class details                      | Pending grading, attendance due         |
+| **Parent**     | Children's pending/overdue items        | Upcoming events for kids                |
+| **Staff**      | Urgent tasks, pending requests          | Today's priorities                      |
+| **Accountant** | Pending payments, overdue invoices      | Financial deadlines                     |
+| **Principal**  | Critical alerts                         | Today's priorities, strategic deadlines |
+| **Admin**      | System alerts, pending approvals        | Urgent notifications                    |
 
 ### Weather
 
 Functional weather component with:
+
 - Current conditions (temp, humidity, wind, rain chance)
 - 6-day forecast strip
 - Refresh button
@@ -208,58 +217,58 @@ Functional weather component with:
 
 Role-specific usage metrics (4 metrics per role):
 
-| Role | Metrics |
-|------|---------|
-| **Student** | Assignment Completion, Attendance Rate, Grade Average, Library Books |
-| **Teacher** | Classes Taught, Students Count, Pending Grading, Assignments Created |
-| **Parent** | Children Enrolled, Attendance Avg, Pending Tasks, Upcoming Events |
-| **Staff** | Tasks Completed, Requests Processed, Approvals Pending, Efficiency |
-| **Accountant** | Collection Rate, Invoices Processed, Outstanding, Payments Today |
-| **Principal** | School Capacity, Staff Utilization, Budget Usage, Satisfaction |
-| **Admin** | System Usage, Storage, Active Users, API Calls |
+| Role           | Metrics                                                              |
+| -------------- | -------------------------------------------------------------------- |
+| **Student**    | Assignment Completion, Attendance Rate, Grade Average, Library Books |
+| **Teacher**    | Classes Taught, Students Count, Pending Grading, Assignments Created |
+| **Parent**     | Children Enrolled, Attendance Avg, Pending Tasks, Upcoming Events    |
+| **Staff**      | Tasks Completed, Requests Processed, Approvals Pending, Efficiency   |
+| **Accountant** | Collection Rate, Invoices Processed, Outstanding, Payments Today     |
+| **Principal**  | School Capacity, Staff Utilization, Budget Usage, Satisfaction       |
+| **Admin**      | System Usage, Storage, Active Users, API Calls                       |
 
 ### InvoiceHistorySection
 
 Role-based invoice visibility:
 
-| Role | Title | Shows |
-|------|-------|-------|
-| **Student** | Fee History | Own fee invoices |
-| **Teacher** | Expense Claims | Expense claims, reimbursements |
-| **Parent** | Children's Fees | Fee invoices for all children |
-| **Staff** | Expense Reports | Expense reports, reimbursements |
-| **Accountant** | Invoice Management | All school invoices |
-| **Principal** | Budget Invoices | Budget-related invoices |
-| **Admin** | System Invoices | All platform invoices |
+| Role           | Title              | Shows                           |
+| -------------- | ------------------ | ------------------------------- |
+| **Student**    | Fee History        | Own fee invoices                |
+| **Teacher**    | Expense Claims     | Expense claims, reimbursements  |
+| **Parent**     | Children's Fees    | Fee invoices for all children   |
+| **Staff**      | Expense Reports    | Expense reports, reimbursements |
+| **Accountant** | Invoice Management | All school invoices             |
+| **Principal**  | Budget Invoices    | Budget-related invoices         |
+| **Admin**      | System Invoices    | All platform invoices           |
 
 ### FinancialOverviewSection
 
 Role-relevant financial metrics with optional charts:
 
-| Role | Financial View | Chart |
-|------|----------------|-------|
-| **Student** | Personal fee status, payment due | No |
-| **Teacher** | Department budget (if applicable) | No |
-| **Parent** | Combined children's fee status | No |
-| **Staff** | Department budget status | No |
+| Role           | Financial View                       | Chart                    |
+| -------------- | ------------------------------------ | ------------------------ |
+| **Student**    | Personal fee status, payment due     | No                       |
+| **Teacher**    | Department budget (if applicable)    | No                       |
+| **Parent**     | Combined children's fee status       | No                       |
+| **Staff**      | Department budget status             | No                       |
 | **Accountant** | Full dashboard (revenue, collection) | Yes (Revenue Collection) |
-| **Principal** | School budget overview | Yes (Monthly Budget) |
-| **Admin** | Platform financial metrics | Yes (Platform Revenue) |
+| **Principal**  | School budget overview               | Yes (Monthly Budget)     |
+| **Admin**      | Platform financial metrics           | Yes (Platform Revenue)   |
 
 ---
 
 ## Quick Actions by Role (4 Actions Each)
 
-| Role | Actions |
-|------|---------|
-| **ADMIN** | Users, Settings, Reports, Analytics |
-| **DEVELOPER** | Users, Settings, Reports, Analytics |
-| **PRINCIPAL** | Reports, Staff, Performance, Analytics |
-| **TEACHER** | Attendance, Grades, Assignments, Timetable |
-| **STUDENT** | Assignments, Grades, Timetable, Messages |
-| **GUARDIAN** | Children, Grades, Attendance, Messages |
-| **ACCOUNTANT** | Invoices, Fees, Reports, Receipts |
-| **STAFF** | Tasks, Requests, Schedule, Directory |
+| Role           | Actions                                    |
+| -------------- | ------------------------------------------ |
+| **ADMIN**      | Users, Settings, Reports, Analytics        |
+| **DEVELOPER**  | Users, Settings, Reports, Analytics        |
+| **PRINCIPAL**  | Reports, Staff, Performance, Analytics     |
+| **TEACHER**    | Attendance, Grades, Assignments, Timetable |
+| **STUDENT**    | Assignments, Grades, Timetable, Messages   |
+| **GUARDIAN**   | Children, Grades, Attendance, Messages     |
+| **ACCOUNTANT** | Invoices, Fees, Reports, Receipts          |
+| **STAFF**      | Tasks, Requests, Schedule, Directory       |
 
 ---
 
@@ -267,114 +276,114 @@ Role-relevant financial metrics with optional charts:
 
 ### Admin Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | System alerts flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Users, Settings, Reports, Analytics |
-| 4 | **Resource Usage** | `ResourceUsageSection` | System Usage, Storage, Active Users, API Calls |
-| 5 | **Invoice History** | `InvoiceHistorySection` | All platform invoices |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Platform metrics with revenue chart |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | System alerts flip card with weather           |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Users, Settings, Reports, Analytics            |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | System Usage, Storage, Active Users, API Calls |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | All platform invoices                          |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Platform metrics with revenue chart            |
 
 ---
 
 ### Student Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Assignments due flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Assignments, Grades, Timetable, Messages |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Assignment Completion, Attendance, Grades, Library |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Fee History - own invoices |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Personal fee status |
+| #   | Section                | Components Used            | Description                                        |
+| --- | ---------------------- | -------------------------- | -------------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Assignments due flip card with weather             |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages     |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Assignments, Grades, Timetable, Messages           |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Assignment Completion, Attendance, Grades, Library |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Fee History - own invoices                         |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Personal fee status                                |
 
 ---
 
 ### Teacher Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Next class flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Attendance, Grades, Assignments, Timetable |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Classes, Students, Grading, Assignments |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Expense Claims - reimbursements |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Department budget |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Next class flip card with weather              |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Attendance, Grades, Assignments, Timetable     |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Classes, Students, Grading, Assignments        |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Expense Claims - reimbursements                |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Department budget                              |
 
 ---
 
 ### Principal Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Critical alerts flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Reports, Staff, Performance, Analytics |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Capacity, Staff, Budget, Satisfaction |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Budget Invoices |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | School budget with chart |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Critical alerts flip card with weather         |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Reports, Staff, Performance, Analytics         |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Capacity, Staff, Budget, Satisfaction          |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Budget Invoices                                |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | School budget with chart                       |
 
 ---
 
 ### Parent Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Children overview flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Children, Grades, Attendance, Messages |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Children, Attendance, Tasks, Events |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Children's Fees |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Combined fee status |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Children overview flip card with weather       |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Children, Grades, Attendance, Messages         |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Children, Attendance, Tasks, Events            |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Children's Fees                                |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Combined fee status                            |
 
 ---
 
 ### Accountant Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Financial status flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Invoices, Fees, Reports, Receipts |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Collection, Invoices, Outstanding, Payments |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Invoice Management |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Full dashboard with revenue chart |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Financial status flip card with weather        |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Invoices, Fees, Reports, Receipts              |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Collection, Invoices, Outstanding, Payments    |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Invoice Management                             |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Full dashboard with revenue chart              |
 
 ---
 
 ### Staff Dashboard
 
-| # | Section | Components Used | Description |
-|---|---------|-----------------|-------------|
-| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Tasks flip card with weather |
-| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
-| 3 | **Quick Actions** | `QuickActionsSection` | Tasks, Requests, Schedule, Directory |
-| 4 | **Resource Usage** | `ResourceUsageSection` | Tasks, Requests, Approvals, Efficiency |
-| 5 | **Invoice History** | `InvoiceHistorySection` | Expense Reports |
-| 6 | **Financial Overview** | `FinancialOverviewSection` | Department budget |
+| #   | Section                | Components Used            | Description                                    |
+| --- | ---------------------- | -------------------------- | ---------------------------------------------- |
+| 1   | **Upcoming + Weather** | `Upcoming` + `Weather`     | Tasks flip card with weather                   |
+| 2   | **Quick Look**         | `QuickLookSection`         | Announcements, Events, Notifications, Messages |
+| 3   | **Quick Actions**      | `QuickActionsSection`      | Tasks, Requests, Schedule, Directory           |
+| 4   | **Resource Usage**     | `ResourceUsageSection`     | Tasks, Requests, Approvals, Efficiency         |
+| 5   | **Invoice History**    | `InvoiceHistorySection`    | Expense Reports                                |
+| 6   | **Financial Overview** | `FinancialOverviewSection` | Department budget                              |
 
 ---
 
 ## Shared Widgets Reference
 
-| Widget | File | Props | Description |
-|--------|------|-------|-------------|
-| `SectionHeading` | `section-heading.tsx` | `title`, `icon?`, `badge?`, `action?`, `description?` | Unified section title styling |
-| `Upcoming` | `upcoming.tsx` | `role`, `data?`, `locale`, `subdomain` | Role-specific flip card with 3D animation |
-| `Weather` | `weather.tsx` | `current?`, `forecast?`, `onRefresh?`, `isLoading?` | Functional weather component |
-| `MetricCard` | `metric-card.tsx` | `title`, `value`, `iconName`, `iconColor`, `change`, `changeType`, `href`, `description` | Key stat with icon, optional trend, and drill-down link |
-| `ActivityRings` | `activity-rings.tsx` | `activities[]`, `title` | Apple-style concentric progress rings |
-| `ScheduleItem` | `schedule-item.tsx` | `time`, `title`, `subtitle`, `badge`, `badgeVariant`, `isActive` | Timetable entry with status indicator |
-| `ProgressCard` | `progress-card.tsx` | `title`, `current`, `total`, `unit`, `iconName`, `showPercentage` | Goal tracking with progress bar |
-| `AnnouncementCard` | `announcement-card.tsx` | `title`, `content`, `date`, `priority` | School announcement with priority styling |
-| `QuickActions` | `quick-actions.tsx` | `actions[]`, `locale` | Role-specific shortcut buttons |
-| `EmptyState` | `empty-state.tsx` | `iconName`, `title`, `description` | No data placeholder |
-| `ChartCard` | `chart-card.tsx` | `title`, `children` | Chart container wrapper |
-| `PerformanceGauge` | `performance-gauge.tsx` | `value`, `label`, `description`, `maxValue`, `color` | Radial gauge for single metric |
-| `WeeklyActivityChart` | `weekly-chart.tsx` | `data[]`, `title`, `label`, `color` | Weekly bar chart |
-| `ComparisonLineChart` | `comparison-chart.tsx` | `data[]`, `title`, `description`, `currentLabel`, `previousLabel` | Period comparison line chart |
-| `RevenueChart` | `revenue-chart.tsx` | `data[]`, `title`, `description`, `currency` | Revenue vs expenses area chart |
+| Widget                | File                    | Props                                                                                    | Description                                             |
+| --------------------- | ----------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `SectionHeading`      | `section-heading.tsx`   | `title`, `icon?`, `badge?`, `action?`, `description?`                                    | Unified section title styling                           |
+| `Upcoming`            | `upcoming.tsx`          | `role`, `data?`, `locale`, `subdomain`                                                   | Role-specific flip card with 3D animation               |
+| `Weather`             | `weather.tsx`           | `current?`, `forecast?`, `onRefresh?`, `isLoading?`                                      | Functional weather component                            |
+| `MetricCard`          | `metric-card.tsx`       | `title`, `value`, `iconName`, `iconColor`, `change`, `changeType`, `href`, `description` | Key stat with icon, optional trend, and drill-down link |
+| `ActivityRings`       | `activity-rings.tsx`    | `activities[]`, `title`                                                                  | Apple-style concentric progress rings                   |
+| `ScheduleItem`        | `schedule-item.tsx`     | `time`, `title`, `subtitle`, `badge`, `badgeVariant`, `isActive`                         | Timetable entry with status indicator                   |
+| `ProgressCard`        | `progress-card.tsx`     | `title`, `current`, `total`, `unit`, `iconName`, `showPercentage`                        | Goal tracking with progress bar                         |
+| `AnnouncementCard`    | `announcement-card.tsx` | `title`, `content`, `date`, `priority`                                                   | School announcement with priority styling               |
+| `QuickActions`        | `quick-actions.tsx`     | `actions[]`, `locale`                                                                    | Role-specific shortcut buttons                          |
+| `EmptyState`          | `empty-state.tsx`       | `iconName`, `title`, `description`                                                       | No data placeholder                                     |
+| `ChartCard`           | `chart-card.tsx`        | `title`, `children`                                                                      | Chart container wrapper                                 |
+| `PerformanceGauge`    | `performance-gauge.tsx` | `value`, `label`, `description`, `maxValue`, `color`                                     | Radial gauge for single metric                          |
+| `WeeklyActivityChart` | `weekly-chart.tsx`      | `data[]`, `title`, `label`, `color`                                                      | Weekly bar chart                                        |
+| `ComparisonLineChart` | `comparison-chart.tsx`  | `data[]`, `title`, `description`, `currentLabel`, `previousLabel`                        | Period comparison line chart                            |
+| `RevenueChart`        | `revenue-chart.tsx`     | `data[]`, `title`, `description`, `currency`                                             | Revenue vs expenses area chart                          |
 
 ---
 
@@ -382,25 +391,25 @@ Role-relevant financial metrics with optional charts:
 
 Dashboard data is fetched via server actions in `actions.ts`:
 
-| Action | Returns | Used By |
-|--------|---------|---------|
-| `getDashboardSummary()` | All metrics aggregated | Admin |
-| `getEnrollmentMetrics()` | Student counts | Admin, Principal |
-| `getAttendanceMetrics()` | Attendance rates | Admin, Principal, Teacher |
-| `getStaffMetrics()` | Teacher counts | Admin, Principal |
-| `getAcademicPerformanceMetrics()` | GPA, exams, assignments | Principal, Teacher |
-| `getAnnouncementsMetrics()` | Announcement counts | All roles |
-| `getClassesMetrics()` | Class counts, ratios | Admin, Principal |
-| `getRecentActivities()` | Activity feed | Admin |
-| `getQuickActionsByRole()` | Role-specific actions | All roles |
-| `getUpcomingDataByRole()` | Role-specific upcoming | All roles |
-| `getResourceUsageByRole()` | Role-specific metrics | All roles |
-| `getInvoicesByRole()` | Role-specific invoices | All roles |
-| `getFinancialOverviewByRole()` | Role-specific financials | All roles |
-| `getTeacherDashboardData()` | Teacher-specific data | Teacher |
-| `getStudentDashboardData()` | Student-specific data | Student |
-| `getParentDashboardData()` | Parent-specific data | Parent |
-| `getPrincipalDashboardData()` | Principal-specific data | Principal |
+| Action                            | Returns                  | Used By                   |
+| --------------------------------- | ------------------------ | ------------------------- |
+| `getDashboardSummary()`           | All metrics aggregated   | Admin                     |
+| `getEnrollmentMetrics()`          | Student counts           | Admin, Principal          |
+| `getAttendanceMetrics()`          | Attendance rates         | Admin, Principal, Teacher |
+| `getStaffMetrics()`               | Teacher counts           | Admin, Principal          |
+| `getAcademicPerformanceMetrics()` | GPA, exams, assignments  | Principal, Teacher        |
+| `getAnnouncementsMetrics()`       | Announcement counts      | All roles                 |
+| `getClassesMetrics()`             | Class counts, ratios     | Admin, Principal          |
+| `getRecentActivities()`           | Activity feed            | Admin                     |
+| `getQuickActionsByRole()`         | Role-specific actions    | All roles                 |
+| `getUpcomingDataByRole()`         | Role-specific upcoming   | All roles                 |
+| `getResourceUsageByRole()`        | Role-specific metrics    | All roles                 |
+| `getInvoicesByRole()`             | Role-specific invoices   | All roles                 |
+| `getFinancialOverviewByRole()`    | Role-specific financials | All roles                 |
+| `getTeacherDashboardData()`       | Teacher-specific data    | Teacher                   |
+| `getStudentDashboardData()`       | Student-specific data    | Student                   |
+| `getParentDashboardData()`        | Parent-specific data     | Parent                    |
+| `getPrincipalDashboardData()`     | Principal-specific data  | Principal                 |
 
 ---
 
@@ -412,9 +421,9 @@ Each role-based dashboard follows the unified section structure:
 export async function RoleDashboard({ user, dictionary, locale }: Props) {
   try {
     // 1. Get tenant context
-    const { schoolId } = await getTenantContext();
-    const school = await db.school.findUnique({ where: { id: schoolId } });
-    const subdomain = school?.domain || "";
+    const { schoolId } = await getTenantContext()
+    const school = await db.school.findUnique({ where: { id: schoolId } })
+    const subdomain = school?.domain || ""
 
     // 2. Render unified sections
     return (
@@ -430,7 +439,11 @@ export async function RoleDashboard({ user, dictionary, locale }: Props) {
 
         {/* Section 3: Quick Actions */}
         <SectionHeading title="Quick Actions" icon={Zap} />
-        <QuickActionsSection role="ROLE" locale={locale} subdomain={subdomain} />
+        <QuickActionsSection
+          role="ROLE"
+          locale={locale}
+          subdomain={subdomain}
+        />
 
         {/* Section 4: Resource Usage */}
         <ResourceUsageSection role="ROLE" />
@@ -441,9 +454,9 @@ export async function RoleDashboard({ user, dictionary, locale }: Props) {
         {/* Section 6: Financial Overview */}
         <FinancialOverviewSection role="ROLE" />
       </div>
-    );
+    )
   } catch (error) {
-    return <ErrorCard message={error.message} />;
+    return <ErrorCard message={error.message} />
   }
 }
 ```

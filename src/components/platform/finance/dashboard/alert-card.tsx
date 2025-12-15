@@ -1,9 +1,11 @@
 "use client"
 
+import Link from "next/link"
+import { CircleAlert, CircleCheck, CircleX, Info } from "lucide-react"
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { CircleAlert, CircleCheck, Info, CircleX } from "lucide-react"
+
 import type { FinancialAlert } from "./types"
 
 interface AlertCardProps {
@@ -14,13 +16,13 @@ interface AlertCardProps {
 export function AlertCard({ alert, onDismiss }: AlertCardProps) {
   const getIcon = () => {
     switch (alert.type) {
-      case 'error':
+      case "error":
         return <CircleX className="h-4 w-4" />
-      case 'warning':
+      case "warning":
         return <CircleAlert className="h-4 w-4" />
-      case 'success':
+      case "success":
         return <CircleCheck className="h-4 w-4" />
-      case 'info':
+      case "info":
       default:
         return <Info className="h-4 w-4" />
     }
@@ -28,16 +30,16 @@ export function AlertCard({ alert, onDismiss }: AlertCardProps) {
 
   const getVariant = () => {
     switch (alert.type) {
-      case 'error':
-        return 'destructive' as const
-      case 'warning':
-        return 'default' as const
-      case 'success':
-        return 'default' as const
-      case 'info':
-        return 'default' as const
+      case "error":
+        return "destructive" as const
+      case "warning":
+        return "default" as const
+      case "success":
+        return "default" as const
+      case "info":
+        return "default" as const
       default:
-        return 'default' as const
+        return "default" as const
     }
   }
 

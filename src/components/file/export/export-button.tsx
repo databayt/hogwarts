@@ -3,29 +3,24 @@
  * Dropdown button for multi-format exports
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { useCallback, useState } from "react"
 import {
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
   Download,
+  FileJson,
   FileSpreadsheet,
   FileText,
-  FileJson,
-  ChevronDown,
   Loader2,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -33,12 +28,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import type { ExportColumn, ExportConfig, ExportFormat, ExportResult } from "./types";
-import { useExport } from "./use-export";
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+
+import type {
+  ExportColumn,
+  ExportConfig,
+  ExportFormat,
+  ExportResult,
+} from "./types"
+import { useExport } from "./use-export"
 
 // ============================================================================
 // Types
@@ -46,54 +53,54 @@ import { useExport } from "./use-export";
 
 interface ExportButtonProps<T> {
   /** Export configuration */
-  config: Omit<ExportConfig<T>, "data">;
+  config: Omit<ExportConfig<T>, "data">
 
   /** Data to export (can also be passed via config) */
-  data: T[];
+  data: T[]
 
   /** Enabled export formats */
-  formats?: ExportFormat[];
+  formats?: ExportFormat[]
 
   /** Button variant */
-  variant?: "default" | "outline" | "ghost" | "secondary";
+  variant?: "default" | "outline" | "ghost" | "secondary"
 
   /** Button size */
-  size?: "default" | "sm" | "lg" | "icon";
+  size?: "default" | "sm" | "lg" | "icon"
 
   /** Custom button text */
-  label?: string;
+  label?: string
 
   /** Show column selector dialog */
-  showColumnSelector?: boolean;
+  showColumnSelector?: boolean
 
   /** Disabled state */
-  disabled?: boolean;
+  disabled?: boolean
 
   /** Custom class name */
-  className?: string;
+  className?: string
 
   /** Callback on export complete */
-  onExportComplete?: (result: ExportResult) => void;
+  onExportComplete?: (result: ExportResult) => void
 
   /** Callback on export error */
-  onExportError?: (error: string) => void;
+  onExportError?: (error: string) => void
 
   /** Dictionary for i18n */
   dictionary?: {
-    export?: string;
-    exportAs?: string;
-    csv?: string;
-    excel?: string;
-    pdf?: string;
-    json?: string;
-    selectColumns?: string;
-    selectAll?: string;
-    deselectAll?: string;
-    cancel?: string;
-    exporting?: string;
-    complete?: string;
-    error?: string;
-  };
+    export?: string
+    exportAs?: string
+    csv?: string
+    excel?: string
+    pdf?: string
+    json?: string
+    selectColumns?: string
+    selectAll?: string
+    deselectAll?: string
+    cancel?: string
+    exporting?: string
+    complete?: string
+    error?: string
+  }
 }
 
 // ============================================================================
@@ -105,14 +112,14 @@ const formatIcons: Record<ExportFormat, React.ReactNode> = {
   excel: <FileSpreadsheet className="mr-2 h-4 w-4" />,
   pdf: <FileText className="mr-2 h-4 w-4 text-red-500" />,
   json: <FileJson className="mr-2 h-4 w-4" />,
-};
+}
 
 const formatLabels: Record<ExportFormat, string> = {
   csv: "CSV",
   excel: "Excel",
   pdf: "PDF",
   json: "JSON",
-};
+}
 
 // ============================================================================
 // Component
@@ -132,66 +139,77 @@ export function ExportButton<T>({
   onExportError,
   dictionary,
 }: ExportButtonProps<T>) {
-  const [showDialog, setShowDialog] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
+  const [showDialog, setShowDialog] = useState(false)
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(
+    null
+  )
   const [selectedColumns, setSelectedColumns] = useState<string[]>(
     config.columns.filter((col) => !col.hidden).map((col) => col.key)
-  );
+  )
 
-  const { isExporting, progress, error, exportTo, reset } = useExport(config);
+  const { isExporting, progress, error, exportTo, reset } = useExport(config)
 
   // Handle export
   const handleExport = useCallback(
     async (format: ExportFormat) => {
       if (showColumnSelector) {
-        setSelectedFormat(format);
-        setShowDialog(true);
-        return;
+        setSelectedFormat(format)
+        setShowDialog(true)
+        return
       }
 
-      const result = await exportTo(format, data);
+      const result = await exportTo(format, data)
 
       if (result.success) {
-        onExportComplete?.(result);
+        onExportComplete?.(result)
       } else {
-        onExportError?.(result.error || "Export failed");
+        onExportError?.(result.error || "Export failed")
       }
     },
     [showColumnSelector, exportTo, data, onExportComplete, onExportError]
-  );
+  )
 
   // Handle dialog export
   const handleDialogExport = useCallback(async () => {
-    if (!selectedFormat) return;
+    if (!selectedFormat) return
 
-    const result = await exportTo(selectedFormat, data, { selectedColumns });
+    const result = await exportTo(selectedFormat, data, { selectedColumns })
 
     if (result.success) {
-      onExportComplete?.(result);
-      setShowDialog(false);
+      onExportComplete?.(result)
+      setShowDialog(false)
     } else {
-      onExportError?.(result.error || "Export failed");
+      onExportError?.(result.error || "Export failed")
     }
-  }, [selectedFormat, exportTo, data, selectedColumns, onExportComplete, onExportError]);
+  }, [
+    selectedFormat,
+    exportTo,
+    data,
+    selectedColumns,
+    onExportComplete,
+    onExportError,
+  ])
 
   // Toggle column selection
   const toggleColumn = useCallback((key: string) => {
     setSelectedColumns((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
-  }, []);
+    )
+  }, [])
 
   // Select/deselect all
   const toggleAll = useCallback(
     (select: boolean) => {
       if (select) {
-        setSelectedColumns(config.columns.filter((col) => !col.hidden).map((col) => col.key));
+        setSelectedColumns(
+          config.columns.filter((col) => !col.hidden).map((col) => col.key)
+        )
       } else {
-        setSelectedColumns([]);
+        setSelectedColumns([])
       }
     },
     [config.columns]
-  );
+  )
 
   // Get button content
   const getButtonContent = () => {
@@ -201,7 +219,7 @@ export function ExportButton<T>({
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           {dictionary?.exporting || "Exporting..."}
         </>
-      );
+      )
     }
 
     return (
@@ -210,8 +228,8 @@ export function ExportButton<T>({
         {label || dictionary?.export || "Export"}
         <ChevronDown className="ml-2 h-4 w-4" />
       </>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -227,7 +245,7 @@ export function ExportButton<T>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+          <div className="text-muted-foreground px-2 py-1.5 text-sm font-semibold">
             {dictionary?.exportAs || "Export as"}
           </div>
           <DropdownMenuSeparator />
@@ -252,7 +270,8 @@ export function ExportButton<T>({
               {dictionary?.selectColumns || "Select Columns to Export"}
             </DialogTitle>
             <DialogDescription>
-              Choose which columns to include in your {selectedFormat?.toUpperCase()} export.
+              Choose which columns to include in your{" "}
+              {selectedFormat?.toUpperCase()} export.
             </DialogDescription>
           </DialogHeader>
 
@@ -276,7 +295,7 @@ export function ExportButton<T>({
             </div>
 
             {/* Column List */}
-            <div className="max-h-64 overflow-y-auto space-y-2">
+            <div className="max-h-64 space-y-2 overflow-y-auto">
               {config.columns
                 .filter((col) => !col.hidden)
                 .map((column) => (
@@ -299,13 +318,15 @@ export function ExportButton<T>({
             {isExporting && (
               <div className="space-y-2">
                 <Progress value={progress.progress} />
-                <p className="text-sm text-muted-foreground">{progress.message}</p>
+                <p className="text-muted-foreground text-sm">
+                  {progress.message}
+                </p>
               </div>
             )}
 
             {/* Error */}
             {error && (
-              <div className="flex items-center gap-2 text-sm text-destructive">
+              <div className="text-destructive flex items-center gap-2 text-sm">
                 <AlertCircle className="h-4 w-4" />
                 {error}
               </div>
@@ -328,7 +349,8 @@ export function ExportButton<T>({
               ) : (
                 <>
                   <Download className="mr-2 h-4 w-4" />
-                  {dictionary?.export || "Export"} {selectedFormat?.toUpperCase()}
+                  {dictionary?.export || "Export"}{" "}
+                  {selectedFormat?.toUpperCase()}
                 </>
               )}
             </Button>
@@ -336,7 +358,7 @@ export function ExportButton<T>({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 // ============================================================================
@@ -344,16 +366,16 @@ export function ExportButton<T>({
 // ============================================================================
 
 interface SimpleExportButtonProps<T> {
-  config: Omit<ExportConfig<T>, "data">;
-  data: T[];
-  format: ExportFormat;
-  variant?: "default" | "outline" | "ghost" | "secondary";
-  size?: "default" | "sm" | "lg" | "icon";
-  label?: string;
-  disabled?: boolean;
-  className?: string;
-  onExportComplete?: (result: ExportResult) => void;
-  onExportError?: (error: string) => void;
+  config: Omit<ExportConfig<T>, "data">
+  data: T[]
+  format: ExportFormat
+  variant?: "default" | "outline" | "ghost" | "secondary"
+  size?: "default" | "sm" | "lg" | "icon"
+  label?: string
+  disabled?: boolean
+  className?: string
+  onExportComplete?: (result: ExportResult) => void
+  onExportError?: (error: string) => void
 }
 
 export function SimpleExportButton<T>({
@@ -368,17 +390,17 @@ export function SimpleExportButton<T>({
   onExportComplete,
   onExportError,
 }: SimpleExportButtonProps<T>) {
-  const { isExporting, exportTo } = useExport(config);
+  const { isExporting, exportTo } = useExport(config)
 
   const handleClick = useCallback(async () => {
-    const result = await exportTo(format, data);
+    const result = await exportTo(format, data)
 
     if (result.success) {
-      onExportComplete?.(result);
+      onExportComplete?.(result)
     } else {
-      onExportError?.(result.error || "Export failed");
+      onExportError?.(result.error || "Export failed")
     }
-  }, [format, exportTo, data, onExportComplete, onExportError]);
+  }, [format, exportTo, data, onExportComplete, onExportError])
 
   return (
     <Button
@@ -395,7 +417,7 @@ export function SimpleExportButton<T>({
       )}
       {label || `Export ${formatLabels[format]}`}
     </Button>
-  );
+  )
 }
 
-export type { ExportButtonProps, SimpleExportButtonProps };
+export type { ExportButtonProps, SimpleExportButtonProps }

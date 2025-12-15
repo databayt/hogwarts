@@ -60,16 +60,52 @@
           "prompt": "Which primitive are you adding?",
           "description": "Components from shadcn/ui registry",
           "options": [
-            {"value": "button", "label": "Button", "description": "Interactive button with variants"},
-            {"value": "card", "label": "Card", "description": "Container for content"},
-            {"value": "input", "label": "Input", "description": "Form input field"},
-            {"value": "select", "label": "Select", "description": "Dropdown selection"},
-            {"value": "dialog", "label": "Dialog", "description": "Modal dialog"},
-            {"value": "form", "label": "Form", "description": "Form with validation"},
-            {"value": "table", "label": "Table", "description": "Data table"},
-            {"value": "tabs", "label": "Tabs", "description": "Tabbed interface"},
-            {"value": "tooltip", "label": "Tooltip", "description": "Hover tooltip"},
-            {"value": "dropdown-menu", "label": "Dropdown Menu", "description": "Action menu"}
+            {
+              "value": "button",
+              "label": "Button",
+              "description": "Interactive button with variants"
+            },
+            {
+              "value": "card",
+              "label": "Card",
+              "description": "Container for content"
+            },
+            {
+              "value": "input",
+              "label": "Input",
+              "description": "Form input field"
+            },
+            {
+              "value": "select",
+              "label": "Select",
+              "description": "Dropdown selection"
+            },
+            {
+              "value": "dialog",
+              "label": "Dialog",
+              "description": "Modal dialog"
+            },
+            {
+              "value": "form",
+              "label": "Form",
+              "description": "Form with validation"
+            },
+            { "value": "table", "label": "Table", "description": "Data table" },
+            {
+              "value": "tabs",
+              "label": "Tabs",
+              "description": "Tabbed interface"
+            },
+            {
+              "value": "tooltip",
+              "label": "Tooltip",
+              "description": "Hover tooltip"
+            },
+            {
+              "value": "dropdown-menu",
+              "label": "Dropdown Menu",
+              "description": "Action menu"
+            }
           ],
           "next": "primitive-install",
           "validation": {
@@ -173,14 +209,38 @@
           },
           "prompt": "Select component requirements (optional):",
           "options": [
-            {"value": "form-validation", "label": "Form Validation (Zod)", "implies": ["zod-schema"]},
-            {"value": "server-actions", "label": "Server Actions", "implies": ["multi-tenant-safety"]},
-            {"value": "data-table", "label": "Data Table (@tanstack/react-table)", "implies": ["columns"]},
-            {"value": "file-upload", "label": "File Upload", "implies": []},
-            {"value": "multi-step", "label": "Multi-step Navigation", "implies": ["state-management"]},
-            {"value": "real-time", "label": "Real-time Updates (SWR)", "implies": []},
-            {"value": "animations", "label": "Animations (Framer Motion)", "implies": []},
-            {"value": "charts", "label": "Charts (Recharts)", "implies": []}
+            {
+              "value": "form-validation",
+              "label": "Form Validation (Zod)",
+              "implies": ["zod-schema"]
+            },
+            {
+              "value": "server-actions",
+              "label": "Server Actions",
+              "implies": ["multi-tenant-safety"]
+            },
+            {
+              "value": "data-table",
+              "label": "Data Table (@tanstack/react-table)",
+              "implies": ["columns"]
+            },
+            { "value": "file-upload", "label": "File Upload", "implies": [] },
+            {
+              "value": "multi-step",
+              "label": "Multi-step Navigation",
+              "implies": ["state-management"]
+            },
+            {
+              "value": "real-time",
+              "label": "Real-time Updates (SWR)",
+              "implies": []
+            },
+            {
+              "value": "animations",
+              "label": "Animations (Framer Motion)",
+              "implies": []
+            },
+            { "value": "charts", "label": "Charts (Recharts)", "implies": [] }
           ],
           "next": "radix-selection"
         },
@@ -198,17 +258,61 @@
           "prompt": "Select Radix UI primitives needed (optional):",
           "description": "Select interactive primitives for accessibility",
           "options": [
-            {"value": "dialog", "label": "Dialog", "description": "Modals, alerts"},
-            {"value": "dropdown-menu", "label": "Dropdown Menu", "description": "Action menus"},
-            {"value": "popover", "label": "Popover", "description": "Contextual content"},
-            {"value": "select", "label": "Select", "description": "Custom select inputs"},
-            {"value": "tabs", "label": "Tabs", "description": "Navigation tabs"},
-            {"value": "accordion", "label": "Accordion", "description": "Collapsible sections"},
-            {"value": "checkbox", "label": "Checkbox", "description": "Toggle states"},
-            {"value": "radio-group", "label": "Radio Group", "description": "Single selection"},
-            {"value": "switch", "label": "Switch", "description": "Boolean toggles"},
-            {"value": "slider", "label": "Slider", "description": "Range inputs"},
-            {"value": "toast", "label": "Toast", "description": "Notifications"}
+            {
+              "value": "dialog",
+              "label": "Dialog",
+              "description": "Modals, alerts"
+            },
+            {
+              "value": "dropdown-menu",
+              "label": "Dropdown Menu",
+              "description": "Action menus"
+            },
+            {
+              "value": "popover",
+              "label": "Popover",
+              "description": "Contextual content"
+            },
+            {
+              "value": "select",
+              "label": "Select",
+              "description": "Custom select inputs"
+            },
+            {
+              "value": "tabs",
+              "label": "Tabs",
+              "description": "Navigation tabs"
+            },
+            {
+              "value": "accordion",
+              "label": "Accordion",
+              "description": "Collapsible sections"
+            },
+            {
+              "value": "checkbox",
+              "label": "Checkbox",
+              "description": "Toggle states"
+            },
+            {
+              "value": "radio-group",
+              "label": "Radio Group",
+              "description": "Single selection"
+            },
+            {
+              "value": "switch",
+              "label": "Switch",
+              "description": "Boolean toggles"
+            },
+            {
+              "value": "slider",
+              "label": "Slider",
+              "description": "Range inputs"
+            },
+            {
+              "value": "toast",
+              "label": "Toast",
+              "description": "Notifications"
+            }
           ],
           "next": "accessibility-checklist"
         },
@@ -321,12 +425,18 @@
           "description": "Invoking agents for component generation",
           "action": "generate-component",
           "agentSequence": [
-            {"agent": "shadcn", "step": "Select base primitives and patterns"},
-            {"agent": "react", "step": "Implement component logic and hooks"},
-            {"agent": "typescript", "step": "Generate strict TypeScript types"},
-            {"agent": "tailwind", "step": "Apply semantic token styling"},
-            {"agent": "i18n", "step": "Integrate dictionary keys"},
-            {"agent": "ui-factory", "step": "Finalize and validate structure"}
+            {
+              "agent": "shadcn",
+              "step": "Select base primitives and patterns"
+            },
+            { "agent": "react", "step": "Implement component logic and hooks" },
+            {
+              "agent": "typescript",
+              "step": "Generate strict TypeScript types"
+            },
+            { "agent": "tailwind", "step": "Apply semantic token styling" },
+            { "agent": "i18n", "step": "Integrate dictionary keys" },
+            { "agent": "ui-factory", "step": "Finalize and validate structure" }
           ],
           "next": "validation-gates"
         },
@@ -443,8 +553,19 @@
       "metadata": {
         "estimatedDuration": "3-5 minutes",
         "requiredSkills": ["ui-validator", "component-generator"],
-        "requiredAgents": ["ui-factory", "shadcn", "react", "typescript", "tailwind", "i18n"],
-        "blockingSteps": ["accessibility-checklist", "i18n-setup", "validation-gates"],
+        "requiredAgents": [
+          "ui-factory",
+          "shadcn",
+          "react",
+          "typescript",
+          "tailwind",
+          "i18n"
+        ],
+        "blockingSteps": [
+          "accessibility-checklist",
+          "i18n-setup",
+          "validation-gates"
+        ],
         "tddEnforced": true
       }
     }

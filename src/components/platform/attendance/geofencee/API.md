@@ -30,7 +30,7 @@ interface Session {
     id: string
     email: string
     schoolId: string
-    role: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'GUARDIAN'
+    role: "ADMIN" | "TEACHER" | "STUDENT" | "GUARDIAN"
     isPlatformAdmin: boolean
   }
   expires: string
@@ -39,12 +39,12 @@ interface Session {
 
 ### Authorization Rules
 
-| Endpoint | Student | Teacher | Admin | Platform Admin |
-|----------|---------|---------|-------|----------------|
-| `POST /api/geo/location` | ✅ Own | ❌ | ❌ | ✅ All |
-| `createGeofence()` | ❌ | ❌ | ✅ | ✅ |
-| `getLiveStudentLocations()` | ❌ | ❌ | ✅ | ✅ |
-| `getLocationHistory()` | ✅ Own | ❌ | ✅ All | ✅ All |
+| Endpoint                    | Student | Teacher | Admin  | Platform Admin |
+| --------------------------- | ------- | ------- | ------ | -------------- |
+| `POST /api/geo/location`    | ✅ Own  | ❌      | ❌     | ✅ All         |
+| `createGeofence()`          | ❌      | ❌      | ✅     | ✅             |
+| `getLiveStudentLocations()` | ❌      | ❌      | ✅     | ✅             |
+| `getLocationHistory()`      | ✅ Own  | ❌      | ✅ All | ✅ All         |
 
 ---
 
@@ -88,6 +88,7 @@ Cookie: session-token=eyJhbGc...
 #### Response
 
 **Success (200 OK)**:
+
 ```json
 {
   "success": true,
@@ -96,6 +97,7 @@ Cookie: session-token=eyJhbGc...
 ```
 
 **Validation Error (400 Bad Request)**:
+
 ```json
 {
   "error": "Invalid coordinates",
@@ -106,6 +108,7 @@ Cookie: session-token=eyJhbGc...
 ```
 
 **Unauthorized (401 Unauthorized)**:
+
 ```json
 {
   "error": "Unauthorized"
@@ -113,6 +116,7 @@ Cookie: session-token=eyJhbGc...
 ```
 
 **Rate Limit Exceeded (429 Too Many Requests)**:
+
 ```json
 {
   "error": "Too many requests",
@@ -121,6 +125,7 @@ Cookie: session-token=eyJhbGc...
 ```
 
 **Headers**:
+
 ```
 Retry-After: 10
 ```
@@ -149,23 +154,23 @@ curl -X POST https://ed.databayt.org/api/geo/location \
 #### Example (JavaScript)
 
 ```javascript
-const response = await fetch('/api/geo/location', {
-  method: 'POST',
+const response = await fetch("/api/geo/location", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    studentId: 'student_cm5a1b2c3d4e5f6g7h8i9',
+    studentId: "student_cm5a1b2c3d4e5f6g7h8i9",
     lat: position.coords.latitude,
     lon: position.coords.longitude,
     accuracy: position.coords.accuracy,
     battery: await getBatteryLevel(),
-  })
+  }),
 })
 
 const result = await response.json()
 if (result.success) {
-  console.log('Location submitted:', result.timestamp)
+  console.log("Location submitted:", result.timestamp)
 }
 ```
 
@@ -180,23 +185,28 @@ Server actions are called from React Server Components using the `"use server"` 
 Submit student location (same as POST /api/geo/location but for server components).
 
 ```typescript
-import { submitLocation } from '@/components/platform/attendance/geofence/actions'
+import { submitLocation } from "@/components/platform/attendance/geofence/actions"
 
 const result = await submitLocation({
-  studentId: 'student_cm5a1b2c3d4e5f6g7h8i9',
+  studentId: "student_cm5a1b2c3d4e5f6g7h8i9",
   lat: 24.7136,
   lon: 46.6753,
   accuracy: 15.2,
-  battery: 85
+  battery: 85,
 })
 ```
 
 **Return Type**:
+
 ```typescript
-{ success: true; timestamp: string }
+{
+  success: true
+  timestamp: string
+}
 ```
 
 **Throws**:
+
 - `Error('Unauthorized')` if no session
 - `Error('Missing school context')` if no schoolId
 - `ZodError` if validation fails
@@ -208,20 +218,21 @@ const result = await submitLocation({
 Create a new geofence for the school.
 
 ```typescript
-import { createGeofence } from '@/components/platform/attendance/geofence/actions'
+import { createGeofence } from "@/components/platform/attendance/geofence/actions"
 
 const result = await createGeofence({
-  name: 'Main Campus',
-  type: 'SCHOOL_GROUNDS',
-  description: 'Primary school boundary',
+  name: "Main Campus",
+  type: "SCHOOL_GROUNDS",
+  description: "Primary school boundary",
   centerLat: 24.7136,
   centerLon: 46.6753,
   radiusMeters: 500,
-  color: '#3b82f6'
+  color: "#3b82f6",
 })
 ```
 
 **Input Schema**:
+
 ```typescript
 {
   name: string                      // Required: 1-100 chars
@@ -241,44 +252,51 @@ const result = await createGeofence({
 ```
 
 **Validation Rules**:
+
 - Must provide EITHER circular (centerLat, centerLon, radiusMeters) OR polygon (polygonGeoJSON)
 - Cannot provide both circular and polygon
 
 **Return Type**:
+
 ```typescript
-{ success: true; geofenceId: string }
+{
+  success: true
+  geofenceId: string
+}
 ```
 
 **Example (Circular)**:
+
 ```typescript
 await createGeofence({
-  name: 'School Grounds',
-  type: 'SCHOOL_GROUNDS',
+  name: "School Grounds",
+  type: "SCHOOL_GROUNDS",
   centerLat: 24.7136,
   centerLon: 46.6753,
   radiusMeters: 500,
-  color: '#3b82f6'
+  color: "#3b82f6",
 })
 ```
 
 **Example (Polygon)**:
+
 ```typescript
 await createGeofence({
-  name: 'Irregular Campus Boundary',
-  type: 'SCHOOL_GROUNDS',
+  name: "Irregular Campus Boundary",
+  type: "SCHOOL_GROUNDS",
   polygonGeoJSON: JSON.stringify({
-    type: 'Polygon',
+    type: "Polygon",
     coordinates: [
       [
-        [46.6750, 24.7130],
-        [46.6760, 24.7130],
-        [46.6760, 24.7140],
-        [46.6750, 24.7140],
-        [46.6750, 24.7130]
-      ]
-    ]
+        [46.675, 24.713],
+        [46.676, 24.713],
+        [46.676, 24.714],
+        [46.675, 24.714],
+        [46.675, 24.713],
+      ],
+    ],
   }),
-  color: '#10b981'
+  color: "#10b981",
 })
 ```
 
@@ -289,21 +307,25 @@ await createGeofence({
 Update an existing geofence.
 
 ```typescript
-import { updateGeofence } from '@/components/platform/attendance/geofence/actions'
+import { updateGeofence } from "@/components/platform/attendance/geofence/actions"
 
-await updateGeofence('geofence_cm5a1b2c3d4e5f6g7h8i9', {
+await updateGeofence("geofence_cm5a1b2c3d4e5f6g7h8i9", {
   radiusMeters: 600,
-  isActive: true
+  isActive: true,
 })
 ```
 
 **Parameters**:
+
 - `geofenceId: string` - CUID of geofence
 - `input: Partial<GeofenceInput>` - Fields to update
 
 **Return Type**:
+
 ```typescript
-{ success: true }
+{
+  success: true
+}
 ```
 
 ---
@@ -313,17 +335,21 @@ await updateGeofence('geofence_cm5a1b2c3d4e5f6g7h8i9', {
 Delete (soft delete) a geofence.
 
 ```typescript
-import { deleteGeofence } from '@/components/platform/attendance/geofence/actions'
+import { deleteGeofence } from "@/components/platform/attendance/geofence/actions"
 
-await deleteGeofence('geofence_cm5a1b2c3d4e5f6g7h8i9')
+await deleteGeofence("geofence_cm5a1b2c3d4e5f6g7h8i9")
 ```
 
 **Parameters**:
+
 - `geofenceId: string` - CUID of geofence
 
 **Return Type**:
+
 ```typescript
-{ success: true }
+{
+  success: true
+}
 ```
 
 **Note**: This is a hard delete, not soft delete. All related events are cascade deleted.
@@ -335,12 +361,13 @@ await deleteGeofence('geofence_cm5a1b2c3d4e5f6g7h8i9')
 Get all active geofences for the current school.
 
 ```typescript
-import { getGeofences } from '@/components/platform/attendance/geofence/actions'
+import { getGeofences } from "@/components/platform/attendance/geofence/actions"
 
 const { geofences } = await getGeofences()
 ```
 
 **Return Type**:
+
 ```typescript
 {
   geofences: Array<{
@@ -362,12 +389,15 @@ const { geofences } = await getGeofences()
 ```
 
 **Example**:
+
 ```typescript
 const { geofences } = await getGeofences()
 console.log(`Found ${geofences.length} geofences`)
 
-geofences.forEach(fence => {
-  console.log(`${fence.name} (${fence.type}): ${fence.isActive ? 'Active' : 'Inactive'}`)
+geofences.forEach((fence) => {
+  console.log(
+    `${fence.name} (${fence.type}): ${fence.isActive ? "Active" : "Inactive"}`
+  )
 })
 ```
 
@@ -378,12 +408,13 @@ geofences.forEach(fence => {
 Get all students with location updates in the last 5 minutes.
 
 ```typescript
-import { getLiveStudentLocations } from '@/components/platform/attendance/geofence/actions'
+import { getLiveStudentLocations } from "@/components/platform/attendance/geofence/actions"
 
 const { students } = await getLiveStudentLocations()
 ```
 
 **Return Type**:
+
 ```typescript
 {
   students: Array<{
@@ -399,15 +430,17 @@ const { students } = await getLiveStudentLocations()
 ```
 
 **Performance**:
+
 - Uses PostgreSQL `DISTINCT ON` for efficiency
 - Returns students with updates in last 5 minutes only
 - Sorted by latest update first
 
 **Example**:
+
 ```typescript
 const { students } = await getLiveStudentLocations()
 
-students.forEach(student => {
+students.forEach((student) => {
   console.log(`${student.name}: (${student.lat}, ${student.lon})`)
   console.log(`  Battery: ${student.battery}%`)
   console.log(`  Accuracy: ±${student.accuracy}m`)
@@ -422,16 +455,17 @@ students.forEach(student => {
 Get geofence entry/exit event history.
 
 ```typescript
-import { getGeofenceEvents } from '@/components/platform/attendance/geofence/actions'
+import { getGeofenceEvents } from "@/components/platform/attendance/geofence/actions"
 
 const { events } = await getGeofenceEvents({
-  studentId: 'student_cm5a1b2c3d4e5f6g7h8i9',
-  startDate: new Date('2025-01-01'),
-  endDate: new Date('2025-01-31')
+  studentId: "student_cm5a1b2c3d4e5f6g7h8i9",
+  startDate: new Date("2025-01-01"),
+  endDate: new Date("2025-01-31"),
 })
 ```
 
 **Parameters** (all optional):
+
 ```typescript
 {
   studentId?: string
@@ -442,6 +476,7 @@ const { events } = await getGeofenceEvents({
 ```
 
 **Return Type**:
+
 ```typescript
 {
   events: Array<{
@@ -449,7 +484,7 @@ const { events } = await getGeofenceEvents({
     schoolId: string
     studentId: string
     geofenceId: string
-    eventType: 'ENTER' | 'EXIT' | 'INSIDE'
+    eventType: "ENTER" | "EXIT" | "INSIDE"
     lat: Decimal
     lon: Decimal
     accuracy: number | null
@@ -468,20 +503,24 @@ const { events } = await getGeofenceEvents({
 ```
 
 **Limits**:
+
 - Returns max 100 events (most recent first)
 - Results are ordered by `timestamp DESC`
 
 **Example (Student Timeline)**:
+
 ```typescript
 const { events } = await getGeofenceEvents({
-  studentId: 'student_cm5a1b2c3d4e5f6g7h8i9',
-  startDate: new Date('2025-01-19T00:00:00Z'),
-  endDate: new Date('2025-01-19T23:59:59Z')
+  studentId: "student_cm5a1b2c3d4e5f6g7h8i9",
+  startDate: new Date("2025-01-19T00:00:00Z"),
+  endDate: new Date("2025-01-19T23:59:59Z"),
 })
 
-events.forEach(event => {
+events.forEach((event) => {
   const student = `${event.student.givenName} ${event.student.surname}`
-  console.log(`${event.timestamp.toLocaleTimeString()}: ${student} ${event.eventType} ${event.geofence.name}`)
+  console.log(
+    `${event.timestamp.toLocaleTimeString()}: ${student} ${event.eventType} ${event.geofence.name}`
+  )
 })
 
 // Output:
@@ -498,24 +537,24 @@ events.forEach(event => {
 ### Connection
 
 ```javascript
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
 const ws = new WebSocket(`${protocol}//${window.location.host}/api/geo/ws`)
 
 ws.onopen = () => {
-  console.log('WebSocket connected')
+  console.log("WebSocket connected")
 }
 
 ws.onmessage = (event) => {
   const message = JSON.parse(event.data)
-  console.log('Received:', message)
+  console.log("Received:", message)
 }
 
 ws.onerror = (error) => {
-  console.error('WebSocket error:', error)
+  console.error("WebSocket error:", error)
 }
 
 ws.onclose = () => {
-  console.log('WebSocket disconnected')
+  console.log("WebSocket disconnected")
 }
 ```
 
@@ -560,29 +599,29 @@ interface GeofenceEvent {
   schoolId: string
   studentId: string
   geofenceId: string
-  eventType: 'ENTER' | 'EXIT' | 'INSIDE'
+  eventType: "ENTER" | "EXIT" | "INSIDE"
   lat: string
   lon: string
   timestamp: string
 }
 
-const ws = new WebSocket('wss://ed.databayt.org/api/geo/ws')
+const ws = new WebSocket("wss://ed.databayt.org/api/geo/ws")
 
 ws.onmessage = (event) => {
   const message = JSON.parse(event.data)
 
-  if (message.type === 'geofence_event') {
+  if (message.type === "geofence_event") {
     const data: GeofenceEvent = message.data
 
     // Update live map marker
     updateStudentMarker(data.studentId, {
       lat: parseFloat(data.lat),
       lon: parseFloat(data.lon),
-      lastUpdate: new Date(data.timestamp)
+      lastUpdate: new Date(data.timestamp),
     })
 
     // Show notification
-    if (data.eventType === 'ENTER') {
+    if (data.eventType === "ENTER") {
       showNotification(`Student entered ${data.geofenceId}`)
     }
   }
@@ -597,15 +636,15 @@ let reconnectAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 5
 
 function connect() {
-  ws = new WebSocket('wss://ed.databayt.org/api/geo/ws')
+  ws = new WebSocket("wss://ed.databayt.org/api/geo/ws")
 
   ws.onopen = () => {
-    console.log('WebSocket connected')
+    console.log("WebSocket connected")
     reconnectAttempts = 0
   }
 
   ws.onclose = () => {
-    console.log('WebSocket disconnected')
+    console.log("WebSocket disconnected")
 
     if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       reconnectAttempts++
@@ -613,7 +652,9 @@ function connect() {
       console.log(`Reconnecting in ${delay}ms...`)
       setTimeout(connect, delay)
     } else {
-      console.error('Max reconnection attempts reached. Falling back to polling.')
+      console.error(
+        "Max reconnection attempts reached. Falling back to polling."
+      )
       startPolling()
     }
   }
@@ -631,13 +672,13 @@ function startPolling() {
 
 ## Error Codes
 
-| Code | Error | Cause | Solution |
-|------|-------|-------|----------|
-| **400** | Bad Request | Invalid input (Zod validation failed) | Check request body schema |
-| **401** | Unauthorized | No session or invalid session | Login via `/api/auth/signin` |
-| **403** | Forbidden | Insufficient permissions | Check user role (e.g., student cannot view live map) |
-| **429** | Too Many Requests | Rate limit exceeded (20 req/10s) | Wait for `Retry-After` seconds |
-| **500** | Internal Server Error | Database error or service failure | Check logs, retry request |
+| Code    | Error                 | Cause                                 | Solution                                             |
+| ------- | --------------------- | ------------------------------------- | ---------------------------------------------------- |
+| **400** | Bad Request           | Invalid input (Zod validation failed) | Check request body schema                            |
+| **401** | Unauthorized          | No session or invalid session         | Login via `/api/auth/signin`                         |
+| **403** | Forbidden             | Insufficient permissions              | Check user role (e.g., student cannot view live map) |
+| **429** | Too Many Requests     | Rate limit exceeded (20 req/10s)      | Wait for `Retry-After` seconds                       |
+| **500** | Internal Server Error | Database error or service failure     | Check logs, retry request                            |
 
 ### Error Response Format
 
@@ -655,12 +696,12 @@ function startPolling() {
 try {
   const result = await submitLocation(locationData)
 } catch (error) {
-  if (error.message === 'Too many requests') {
+  if (error.message === "Too many requests") {
     // Rate limited - queue for retry
     await queueLocationForRetry(locationData)
-  } else if (error.message === 'Unauthorized') {
+  } else if (error.message === "Unauthorized") {
     // Redirect to login
-    window.location.href = '/auth/signin'
+    window.location.href = "/auth/signin"
   } else {
     // Show error to user
     toast.error(error.message)
@@ -674,13 +715,14 @@ try {
 
 ### Limits
 
-| Endpoint | Window | Max Requests | Scope |
-|----------|--------|--------------|-------|
-| `POST /api/geo/location` | 10 seconds | 20 | Per student |
+| Endpoint                 | Window     | Max Requests | Scope       |
+| ------------------------ | ---------- | ------------ | ----------- |
+| `POST /api/geo/location` | 10 seconds | 20           | Per student |
 
 ### Rate Limit Headers
 
 **Response Headers**:
+
 ```
 X-RateLimit-Limit: 20
 X-RateLimit-Remaining: 15
@@ -688,6 +730,7 @@ X-RateLimit-Reset: 1642598400
 ```
 
 **When Exceeded**:
+
 ```
 HTTP 429 Too Many Requests
 Retry-After: 10
@@ -712,7 +755,7 @@ export function checkRateLimit(key: string, limit: number, windowMs: number) {
     return {
       allowed: false,
       remaining: 0,
-      retryAfter: Math.ceil((entry.resetAt - now) / 1000)
+      retryAfter: Math.ceil((entry.resetAt - now) / 1000),
     }
   }
 
@@ -730,7 +773,7 @@ export function checkRateLimit(key: string, limit: number, windowMs: number) {
 ```typescript
 // 1. Check if geolocation is supported
 if (!navigator.geolocation) {
-  alert('Geolocation not supported')
+  alert("Geolocation not supported")
   return
 }
 
@@ -742,16 +785,16 @@ const watchId = navigator.geolocation.watchPosition(
 
     // 4. Submit location
     try {
-      const result = await fetch('/api/geo/location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const result = await fetch("/api/geo/location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentId: 'student_cm5a1b2c3d4e5f6g7h8i9',
+          studentId: "student_cm5a1b2c3d4e5f6g7h8i9",
           lat: position.coords.latitude,
           lon: position.coords.longitude,
           accuracy: position.coords.accuracy,
-          battery
-        })
+          battery,
+        }),
       })
 
       if (!result.ok) {
@@ -763,20 +806,20 @@ const watchId = navigator.geolocation.watchPosition(
         }
       } else {
         const data = await result.json()
-        console.log('Location submitted:', data.timestamp)
+        console.log("Location submitted:", data.timestamp)
       }
     } catch (error) {
-      console.error('Failed to submit location:', error)
+      console.error("Failed to submit location:", error)
       await queueLocationInIndexedDB(position)
     }
   },
   (error) => {
-    console.error('Geolocation error:', error)
+    console.error("Geolocation error:", error)
   },
   {
     enableHighAccuracy: true,
     maximumAge: 10000,
-    timeout: 5000
+    timeout: 5000,
   }
 )
 
@@ -787,7 +830,7 @@ function cleanup() {
 
 // Helper function
 async function getBatteryLevel(): Promise<number | undefined> {
-  if ('getBattery' in navigator) {
+  if ("getBattery" in navigator) {
     const battery = await (navigator as any).getBattery()
     return Math.round(battery.level * 100)
   }
@@ -795,12 +838,12 @@ async function getBatteryLevel(): Promise<number | undefined> {
 }
 
 async function queueLocationInIndexedDB(position: GeolocationPosition) {
-  const db = await openDB('geo-queue', 1)
-  await db.add('pending', {
+  const db = await openDB("geo-queue", 1)
+  await db.add("pending", {
     lat: position.coords.latitude,
     lon: position.coords.longitude,
     accuracy: position.coords.accuracy,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 ```
@@ -881,18 +924,18 @@ export function AdminLiveMap() {
 ```typescript
 // Enums
 export enum GeoFenceType {
-  SCHOOL_GROUNDS = 'SCHOOL_GROUNDS',
-  CLASSROOM = 'CLASSROOM',
-  BUS_ROUTE = 'BUS_ROUTE',
-  PLAYGROUND = 'PLAYGROUND',
-  CAFETERIA = 'CAFETERIA',
-  LIBRARY = 'LIBRARY'
+  SCHOOL_GROUNDS = "SCHOOL_GROUNDS",
+  CLASSROOM = "CLASSROOM",
+  BUS_ROUTE = "BUS_ROUTE",
+  PLAYGROUND = "PLAYGROUND",
+  CAFETERIA = "CAFETERIA",
+  LIBRARY = "LIBRARY",
 }
 
 export enum GeoEventType {
-  ENTER = 'ENTER',
-  EXIT = 'EXIT',
-  INSIDE = 'INSIDE'
+  ENTER = "ENTER",
+  EXIT = "EXIT",
+  INSIDE = "INSIDE",
 }
 
 // Location Types

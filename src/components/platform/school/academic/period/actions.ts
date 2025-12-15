@@ -1,17 +1,19 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { PeriodDetail, PeriodRow } from "./types"
 import {
+  getPeriodsSchema,
   periodCreateSchema,
   periodUpdateSchema,
-  getPeriodsSchema,
   type PeriodCreateInput,
   type PeriodUpdateInput,
 } from "./validation"
-import type { PeriodRow, PeriodDetail } from "./types"
 
 // ============================================================================
 // Types
@@ -68,7 +70,10 @@ export async function createPeriod(
     })
 
     if (existing) {
-      return { success: false, error: `Period "${parsed.name}" already exists for this academic year` }
+      return {
+        success: false,
+        error: `Period "${parsed.name}" already exists for this academic year`,
+      }
     }
 
     const row = await db.period.create({
@@ -131,15 +136,20 @@ export async function updatePeriod(
       })
 
       if (duplicate) {
-        return { success: false, error: `Period "${rest.name}" already exists for this academic year` }
+        return {
+          success: false,
+          error: `Period "${rest.name}" already exists for this academic year`,
+        }
       }
     }
 
     const data: Record<string, unknown> = {}
     if (typeof rest.yearId !== "undefined") data.yearId = rest.yearId
     if (typeof rest.name !== "undefined") data.name = rest.name
-    if (typeof rest.startTime !== "undefined") data.startTime = timeStringToDate(rest.startTime)
-    if (typeof rest.endTime !== "undefined") data.endTime = timeStringToDate(rest.endTime)
+    if (typeof rest.startTime !== "undefined")
+      data.startTime = timeStringToDate(rest.startTime)
+    if (typeof rest.endTime !== "undefined")
+      data.endTime = timeStringToDate(rest.endTime)
 
     await db.period.updateMany({ where: { id, schoolId }, data })
 
@@ -162,9 +172,9 @@ export async function updatePeriod(
   }
 }
 
-export async function deletePeriod(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deletePeriod(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -208,9 +218,9 @@ export async function deletePeriod(
 // Queries
 // ============================================================================
 
-export async function getPeriod(
-  input: { id: string }
-): Promise<ActionResponse<PeriodDetail | null>> {
+export async function getPeriod(input: {
+  id: string
+}): Promise<ActionResponse<PeriodDetail | null>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -356,7 +366,10 @@ export async function getPeriodOptions(): Promise<
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch period options",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch period options",
     }
   }
 }

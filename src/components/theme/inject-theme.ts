@@ -5,8 +5,9 @@
  * Uses flat structure following tweakcn pattern.
  */
 
-import type { ThemeStyleProps } from '@/types/theme-editor'
-import { getCSSVariableName } from './config'
+import type { ThemeStyleProps } from "@/types/theme-editor"
+
+import { getCSSVariableName } from "./config"
 
 /**
  * Inject CSS variables into a DOM element
@@ -23,7 +24,10 @@ export function injectCSSVariables(
 /**
  * Remove CSS variables from a DOM element
  */
-export function removeCSSVariables(element: HTMLElement, variableNames: string[]): void {
+export function removeCSSVariables(
+  element: HTMLElement,
+  variableNames: string[]
+): void {
   variableNames.forEach((property) => {
     element.style.removeProperty(property)
   })
@@ -34,7 +38,7 @@ export function removeCSSVariables(element: HTMLElement, variableNames: string[]
  */
 export function applyThemeToDocument(
   styles: Partial<ThemeStyleProps>,
-  mode: 'light' | 'dark'
+  mode: "light" | "dark"
 ): void {
   const root = document.documentElement
 
@@ -54,18 +58,20 @@ export function applyThemeToDocument(
 /**
  * Get current theme mode from document
  */
-export function getCurrentThemeMode(): 'light' | 'dark' {
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+export function getCurrentThemeMode(): "light" | "dark" {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light"
 }
 
 /**
  * Store theme styles in localStorage for persistence
  */
-export function storeThemeInLocalStorage(styles: Partial<ThemeStyleProps>): void {
+export function storeThemeInLocalStorage(
+  styles: Partial<ThemeStyleProps>
+): void {
   try {
-    localStorage.setItem('user-theme-styles', JSON.stringify(styles))
+    localStorage.setItem("user-theme-styles", JSON.stringify(styles))
   } catch (error) {
-    console.error('Failed to store theme in localStorage:', error)
+    console.error("Failed to store theme in localStorage:", error)
   }
 }
 
@@ -74,11 +80,11 @@ export function storeThemeInLocalStorage(styles: Partial<ThemeStyleProps>): void
  */
 export function getThemeFromLocalStorage(): Partial<ThemeStyleProps> | null {
   try {
-    const stored = localStorage.getItem('user-theme-styles')
+    const stored = localStorage.getItem("user-theme-styles")
     if (!stored) return null
     return JSON.parse(stored) as Partial<ThemeStyleProps>
   } catch (error) {
-    console.error('Failed to retrieve theme from localStorage:', error)
+    console.error("Failed to retrieve theme from localStorage:", error)
     return null
   }
 }
@@ -88,20 +94,22 @@ export function getThemeFromLocalStorage(): Partial<ThemeStyleProps> | null {
  */
 export function clearThemeFromLocalStorage(): void {
   try {
-    localStorage.removeItem('user-theme-styles')
+    localStorage.removeItem("user-theme-styles")
   } catch (error) {
-    console.error('Failed to clear theme from localStorage:', error)
+    console.error("Failed to clear theme from localStorage:", error)
   }
 }
 
 /**
  * Generate CSS variable preview for theme styles
  */
-export function generateThemePreviewCSS(styles: Partial<ThemeStyleProps>): string {
+export function generateThemePreviewCSS(
+  styles: Partial<ThemeStyleProps>
+): string {
   const cssLines = Object.entries(styles).map(([key, value]) => {
     const varName = getCSSVariableName(key)
     return `  --${varName}: ${value};`
   })
 
-  return `:root {\n${cssLines.join('\n')}\n}`
+  return `:root {\n${cssLines.join("\n")}\n}`
 }

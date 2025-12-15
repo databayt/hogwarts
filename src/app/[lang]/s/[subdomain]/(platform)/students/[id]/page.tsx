@@ -1,23 +1,24 @@
-import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/operator/lib/tenant";
-import { StudentProfile } from "@/components/platform/students/profile/student-profile";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { notFound } from "next/navigation"
+
+import { db } from "@/lib/db"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getTenantContext } from "@/components/operator/lib/tenant"
+import { StudentProfile } from "@/components/platform/students/profile/student-profile"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function StudentDetail({ params }: Props) {
-  const { lang, id } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
-  if (!schoolId || !(db as any).student) return notFound();
+  const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
+  if (!schoolId || !(db as any).student) return notFound()
 
   // Calculate date range for attendance (last 60 days)
-  const sixtyDaysAgo = new Date();
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const sixtyDaysAgo = new Date()
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
   const student = await (db as any).student.findFirst({
     where: { id, schoolId },
@@ -28,83 +29,81 @@ export default async function StudentDetail({ params }: Props) {
           class: {
             include: {
               subject: true,
-              teacher: { select: { id: true, givenName: true, surname: true } }
-            }
-          }
-        }
+              teacher: { select: { id: true, givenName: true, surname: true } },
+            },
+          },
+        },
       },
       // Exam Results
       examResults: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 20,
         include: {
           exam: true,
-          subject: true
-        }
+          subject: true,
+        },
       },
       // Assignment Submissions
       submissions: {
-        orderBy: { submittedAt: 'desc' },
+        orderBy: { submittedAt: "desc" },
         take: 20,
         include: {
-          assignment: true
-        }
+          assignment: true,
+        },
       },
       // Guardians with contact info
       studentGuardians: {
         include: {
           guardian: {
-            include: { phoneNumbers: true }
+            include: { phoneNumbers: true },
           },
-          guardianType: true
-        }
+          guardianType: true,
+        },
       },
       // Documents
       documents: {
-        orderBy: { uploadedAt: 'desc' }
+        orderBy: { uploadedAt: "desc" },
       },
       // Health Records
       healthRecords: {
-        orderBy: { recordDate: 'desc' }
+        orderBy: { recordDate: "desc" },
       },
       // Achievements
       achievements: {
-        orderBy: { achievementDate: 'desc' }
+        orderBy: { achievementDate: "desc" },
       },
       // Disciplinary Records
       disciplinaryRecords: {
-        orderBy: { incidentDate: 'desc' }
+        orderBy: { incidentDate: "desc" },
       },
       // Fee Records
       feeRecords: {
-        orderBy: { dueDate: 'desc' }
+        orderBy: { dueDate: "desc" },
       },
       // Attendance (last 60 days)
       attendances: {
         where: {
-          date: { gte: sixtyDaysAgo }
+          date: { gte: sixtyDaysAgo },
         },
-        orderBy: { date: 'desc' }
+        orderBy: { date: "desc" },
       },
       // Year Levels for academic history
       studentYearLevels: {
         include: {
           yearLevel: true,
-          schoolYear: true
-        }
-      }
-    }
-  });
+          schoolYear: true,
+        },
+      },
+    },
+  })
 
-  if (!student) return notFound();
+  if (!student) return notFound()
 
   return (
     <div className="container py-6">
       <StudentProfile student={student} dictionary={dictionary} />
     </div>
-  );
+  )
 }
 
-export const metadata = { title: "Student Profile" };
-
-
+export const metadata = { title: "Student Profile" }

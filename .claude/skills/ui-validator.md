@@ -5,6 +5,7 @@
 ## Validation Philosophy
 
 Every component must pass **all 7 quality gates** before deployment:
+
 1. ✅ **Semantic Tokens** (95%+ adoption) - No hardcoded colors
 2. ✅ **Semantic HTML** (100%) - No typography utilities
 3. ✅ **Accessibility** (WCAG 2.1 AA) - Full compliance
@@ -36,7 +37,7 @@ Every component must pass **all 7 quality gates** before deployment:
 interface ComponentAnalysis {
   path: string
   name: string
-  type: 'client' | 'server'
+  type: "client" | "server"
   imports: string[]
   exports: string[]
   props: PropDefinition[]
@@ -71,31 +72,31 @@ bg-blue-\d+|bg-red-\d+|bg-green-\d+|bg-yellow-\d+
 
 ```tsx
 // ✅ Semantic tokens
-bg-background
-bg-card
-bg-muted
-bg-accent
-bg-primary
-bg-secondary
-bg-destructive
-bg-chart-1
-bg-chart-2
-bg-chart-3
-text-foreground
-text-muted-foreground
-text-primary-foreground
-border-border
-border-input
-ring-ring
+bg - background
+bg - card
+bg - muted
+bg - accent
+bg - primary
+bg - secondary
+bg - destructive
+bg - chart - 1
+bg - chart - 2
+bg - chart - 3
+text - foreground
+text - muted - foreground
+text - primary - foreground
+border - border
+border - input
+ring - ring
 
 // ✅ Contribution graph colors (GitHub-inspired exception)
 // These CSS custom properties are allowed for data visualization
 // Defined in globals.css as --contribution-level-{0-4}
-bg-[--contribution-level-0]
-bg-[--contribution-level-1]
-bg-[--contribution-level-2]
-bg-[--contribution-level-3]
-bg-[--contribution-level-4]
+bg - [--contribution - level - 0]
+bg - [--contribution - level - 1]
+bg - [--contribution - level - 2]
+bg - [--contribution - level - 3]
+bg - [--contribution - level - 4]
 ```
 
 ### Exceptions
@@ -115,18 +116,30 @@ function validateSemanticTokens(content: string): Violation[] {
   const violations: Violation[] = []
 
   const hardcodedPatterns = [
-    { pattern: /bg-white|bg-black|bg-gray-\d+/g, message: "Hardcoded background color" },
-    { pattern: /text-white|text-black|text-gray-\d+/g, message: "Hardcoded text color" },
-    { pattern: /border-white|border-black|border-gray-\d+/g, message: "Hardcoded border color" },
-    { pattern: /dark:bg-|dark:text-|dark:border-/g, message: "Dark mode class (use semantic tokens)" },
+    {
+      pattern: /bg-white|bg-black|bg-gray-\d+/g,
+      message: "Hardcoded background color",
+    },
+    {
+      pattern: /text-white|text-black|text-gray-\d+/g,
+      message: "Hardcoded text color",
+    },
+    {
+      pattern: /border-white|border-black|border-gray-\d+/g,
+      message: "Hardcoded border color",
+    },
+    {
+      pattern: /dark:bg-|dark:text-|dark:border-/g,
+      message: "Dark mode class (use semantic tokens)",
+    },
   ]
 
   for (const { pattern, message } of hardcodedPatterns) {
     const matches = content.matchAll(pattern)
     for (const match of matches) {
       violations.push({
-        gate: 'semantic-tokens',
-        severity: 'critical',
+        gate: "semantic-tokens",
+        severity: "critical",
         message,
         line: getLineNumber(content, match.index!),
         suggestion: getSuggestion(match[0]),
@@ -139,18 +152,18 @@ function validateSemanticTokens(content: string): Violation[] {
 
 function getSuggestion(hardcoded: string): string {
   const suggestions: Record<string, string> = {
-    'bg-white': 'bg-background',
-    'bg-gray-50': 'bg-muted',
-    'bg-gray-100': 'bg-accent',
-    'bg-gray-900': 'bg-card (in dark mode)',
-    'text-black': 'text-foreground',
-    'text-gray-600': 'text-muted-foreground',
-    'border-gray-200': 'border-border',
-    'bg-blue-500': 'bg-primary',
-    'bg-red-500': 'bg-destructive',
-    'bg-green-500': 'bg-chart-2',
+    "bg-white": "bg-background",
+    "bg-gray-50": "bg-muted",
+    "bg-gray-100": "bg-accent",
+    "bg-gray-900": "bg-card (in dark mode)",
+    "text-black": "text-foreground",
+    "text-gray-600": "text-muted-foreground",
+    "border-gray-200": "border-border",
+    "bg-blue-500": "bg-primary",
+    "bg-red-500": "bg-destructive",
+    "bg-green-500": "bg-chart-2",
   }
-  return suggestions[hardcoded] || 'Use semantic token'
+  return suggestions[hardcoded] || "Use semantic token"
 }
 ```
 
@@ -190,16 +203,17 @@ function validateSemanticHTML(content: string): Violation[] {
   const violations: Violation[] = []
 
   // Detect div with typography utilities
-  const typographyPattern = /<div className="[^"]*(?:text-(?:xs|sm|base|lg|xl|2xl|3xl)|font-(?:bold|semibold|medium))/g
+  const typographyPattern =
+    /<div className="[^"]*(?:text-(?:xs|sm|base|lg|xl|2xl|3xl)|font-(?:bold|semibold|medium))/g
   const matches = content.matchAll(typographyPattern)
 
   for (const match of matches) {
     violations.push({
-      gate: 'semantic-html',
-      severity: 'critical',
-      message: 'Typography utilities on <div>',
+      gate: "semantic-html",
+      severity: "critical",
+      message: "Typography utilities on <div>",
       line: getLineNumber(content, match.index!),
-      suggestion: 'Use semantic HTML: <h1>-<h6>, <p>, <small>',
+      suggestion: "Use semantic HTML: <h1>-<h6>, <p>, <small>",
     })
   }
 
@@ -213,12 +227,12 @@ function validateSemanticHTML(content: string): Violation[] {
 
 ```typescript
 interface AccessibilityCheck {
-  ariaLabels: boolean        // All interactive elements labeled
-  keyboardNav: boolean        // Keyboard navigation implemented
-  focusManagement: boolean    // Focus indicators visible
-  colorContrast: boolean      // 4.5:1 for text, 3:1 for UI
-  screenReader: boolean       // Screen reader compatible
-  touchTargets: boolean       // ≥ 44x44px for touch
+  ariaLabels: boolean // All interactive elements labeled
+  keyboardNav: boolean // Keyboard navigation implemented
+  focusManagement: boolean // Focus indicators visible
+  colorContrast: boolean // 4.5:1 for text, 3:1 for UI
+  screenReader: boolean // Screen reader compatible
+  touchTargets: boolean // ≥ 44x44px for touch
 }
 ```
 
@@ -263,14 +277,15 @@ function validateAccessibility(content: string): Violation[] {
   const violations: Violation[] = []
 
   // Check for buttons without aria-label
-  const buttonPattern = /<button(?![^>]*aria-label)[^>]*>\s*<[^>]+\/>\s*<\/button>/g
+  const buttonPattern =
+    /<button(?![^>]*aria-label)[^>]*>\s*<[^>]+\/>\s*<\/button>/g
   const buttonMatches = content.matchAll(buttonPattern)
 
   for (const match of buttonMatches) {
     violations.push({
-      gate: 'accessibility',
-      severity: 'high',
-      message: 'Icon button missing aria-label',
+      gate: "accessibility",
+      severity: "high",
+      message: "Icon button missing aria-label",
       line: getLineNumber(content, match.index!),
       suggestion: 'Add aria-label="Action description"',
     })
@@ -285,10 +300,10 @@ function validateAccessibility(content: string): Violation[] {
 
   if (clickCount > 0 && keyCount === 0) {
     violations.push({
-      gate: 'accessibility',
-      severity: 'high',
-      message: 'Click handlers without keyboard support',
-      suggestion: 'Add onKeyDown handler for Enter and Space keys',
+      gate: "accessibility",
+      severity: "high",
+      message: "Click handlers without keyboard support",
+      suggestion: "Add onKeyDown handler for Enter and Space keys",
     })
   }
 
@@ -333,16 +348,16 @@ function validateInternationalization(content: string): Violation[] {
   const violations: Violation[] = []
 
   // Check for useDictionary import in client components
-  if (content.includes('"use client"') && !content.includes('useDictionary')) {
+  if (content.includes('"use client"') && !content.includes("useDictionary")) {
     // Check for hardcoded English text
     const textPattern = />[A-Z][a-z]+\s+[a-z]+</g
     const matches = content.matchAll(textPattern)
 
     for (const match of matches) {
       violations.push({
-        gate: 'internationalization',
-        severity: 'high',
-        message: 'Hardcoded text detected',
+        gate: "internationalization",
+        severity: "high",
+        message: "Hardcoded text detected",
         line: getLineNumber(content, match.index!),
         suggestion: 'Use dictionary: {dictionary?.section?.key || "Fallback"}',
       })
@@ -376,21 +391,21 @@ function validateInternationalization(content: string): Violation[] {
 
 ```typescript
 // ❌ Violations
-const data: any = await fetch(url)  // No 'any' types
-function Component(props) { }  // Props must be typed
-let value  // Implicit any
+const data: any = await fetch(url) // No 'any' types
+function Component(props) {} // Props must be typed
+let value // Implicit any
 
 // ✅ Correct
 interface Data {
   id: string
   name: string
 }
-const data: Data = await fetch(url).then(r => r.json())
+const data: Data = await fetch(url).then((r) => r.json())
 
 interface ComponentProps {
   name: string
 }
-function Component({ name }: ComponentProps) { }
+function Component({ name }: ComponentProps) {}
 ```
 
 ### Validation Code
@@ -405,11 +420,12 @@ function validateTypeScript(filePath: string): Violation[] {
 
   const diagnostics = ts.getPreEmitDiagnostics(program)
 
-  return diagnostics.map(diagnostic => ({
-    gate: 'typescript',
-    severity: 'medium',
+  return diagnostics.map((diagnostic) => ({
+    gate: "typescript",
+    severity: "medium",
     message: diagnostic.messageText.toString(),
-    line: diagnostic.file?.getLineAndCharacterOfPosition(diagnostic.start!).line,
+    line: diagnostic.file?.getLineAndCharacterOfPosition(diagnostic.start!)
+      .line,
   }))
 }
 ```
@@ -421,41 +437,41 @@ function validateTypeScript(filePath: string): Violation[] {
 ```typescript
 // Minimum 95% coverage across:
 interface CoverageRequirements {
-  statements: 95,  // All code paths
-  branches: 95,    // All if/else paths
-  functions: 95,   // All functions
-  lines: 95        // All lines
+  statements: 95 // All code paths
+  branches: 95 // All if/else paths
+  functions: 95 // All functions
+  lines: 95 // All lines
 }
 ```
 
 ### Test Categories Required
 
 ```tsx
-describe('ComponentName', () => {
+describe("ComponentName", () => {
   // 1. Rendering tests
-  describe('Rendering', () => {
-    it('renders with default props')
-    it('renders all variants')
-    it('handles empty/null data')
+  describe("Rendering", () => {
+    it("renders with default props")
+    it("renders all variants")
+    it("handles empty/null data")
   })
 
   // 2. Interaction tests
-  describe('Interactions', () => {
-    it('handles user events')
-    it('prevents events when disabled')
+  describe("Interactions", () => {
+    it("handles user events")
+    it("prevents events when disabled")
   })
 
   // 3. Accessibility tests
-  describe('Accessibility', () => {
-    it('has proper ARIA attributes')
-    it('supports keyboard navigation')
-    it('manages focus correctly')
+  describe("Accessibility", () => {
+    it("has proper ARIA attributes")
+    it("supports keyboard navigation")
+    it("manages focus correctly")
   })
 
   // 4. Edge cases
-  describe('Edge Cases', () => {
-    it('handles errors gracefully')
-    it('validates input')
+  describe("Edge Cases", () => {
+    it("handles errors gracefully")
+    it("validates input")
   })
 })
 ```
@@ -478,7 +494,7 @@ pnpm test "${component}" --coverage
 
 ### Required Documentation
 
-```tsx
+````tsx
 /**
  * ComponentName - Brief one-line description
  *
@@ -503,7 +519,7 @@ pnpm test "${component}" --coverage
  * </ComponentName>
  * ```
  */
-```
+````
 
 ## Validation Report Format
 
@@ -511,7 +527,7 @@ pnpm test "${component}" --coverage
 interface ValidationReport {
   component: string
   passed: boolean
-  score: number  // 0-100
+  score: number // 0-100
   gates: {
     semanticTokens: GateResult
     semanticHTML: GateResult
@@ -531,7 +547,7 @@ interface GateResult {
 
 interface Violation {
   gate: string
-  severity: 'critical' | 'high' | 'medium' | 'low'
+  severity: "critical" | "high" | "medium" | "low"
   message: string
   line?: number
   column?: number
@@ -571,9 +587,9 @@ interface AutoFix {
 
 // Example auto-fixes
 const autoFixes = {
-  'bg-white': 'bg-background',
-  'text-gray-600': 'text-muted-foreground',
-  '<div className="text-xl font-bold">': '<h2>',
+  "bg-white": "bg-background",
+  "text-gray-600": "text-muted-foreground",
+  '<div className="text-xl font-bold">': "<h2>",
 }
 ```
 
@@ -602,6 +618,7 @@ jobs:
 ## Success Criteria
 
 A component passes validation when:
+
 - ✅ All 7 quality gates pass (100% on critical gates)
 - ✅ Overall score ≥ 95/100
 - ✅ Zero critical violations

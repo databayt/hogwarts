@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import { Minus, Plus } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 
 /**
  * ShadcnAppearanceSettings - Compute environment configuration
@@ -22,7 +23,9 @@ export function ShadcnAppearanceSettings() {
   const [gpuCount, setGpuCount] = useState(8)
 
   const handleGpuAdjustment = useCallback((adjustment: number) => {
-    setGpuCount((prevCount) => Math.max(1, Math.min(99, prevCount + adjustment)))
+    setGpuCount((prevCount) =>
+      Math.max(1, Math.min(99, prevCount + adjustment))
+    )
   }, [])
 
   const handleGpuInputChange = useCallback(
@@ -39,19 +42,20 @@ export function ShadcnAppearanceSettings() {
     <div className="w-full max-w-2xl space-y-6">
       <fieldset className="space-y-4">
         <legend className="text-sm font-medium">Compute Environment</legend>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Select the compute environment for your cluster.
         </p>
 
         <RadioGroup defaultValue="kubernetes" className="space-y-3">
           <label
             htmlFor="kubernetes"
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 hover:bg-accent"
+            className="border-border hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-4"
           >
             <div className="flex-1">
               <div className="font-medium">Kubernetes</div>
-              <p className="text-sm text-muted-foreground">
-                Run GPU workloads on a K8s configured cluster. This is the default.
+              <p className="text-muted-foreground text-sm">
+                Run GPU workloads on a K8s configured cluster. This is the
+                default.
               </p>
             </div>
             <RadioGroupItem value="kubernetes" id="kubernetes" />
@@ -59,11 +63,11 @@ export function ShadcnAppearanceSettings() {
 
           <label
             htmlFor="vm"
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 hover:bg-accent"
+            className="border-border hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-4"
           >
             <div className="flex-1">
               <div className="font-medium">Virtual Machine</div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Access a VM configured cluster to run workloads. (Coming soon)
               </p>
             </div>
@@ -79,14 +83,16 @@ export function ShadcnAppearanceSettings() {
           <label htmlFor="number-of-gpus" className="text-sm font-medium">
             Number of GPUs
           </label>
-          <p className="text-sm text-muted-foreground">You can add more later.</p>
+          <p className="text-muted-foreground text-sm">
+            You can add more later.
+          </p>
         </div>
         <div className="flex items-center gap-1">
           <Input
             id="number-of-gpus"
             value={gpuCount}
             onChange={handleGpuInputChange}
-            className="h-8 w-14 font-mono text-center"
+            className="h-8 w-14 text-center font-mono"
             maxLength={3}
           />
           <Button
@@ -121,7 +127,7 @@ export function ShadcnAppearanceSettings() {
           <label htmlFor="tinting" className="text-sm font-medium">
             Wallpaper Tinting
           </label>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Allow the wallpaper to be tinted.
           </p>
         </div>

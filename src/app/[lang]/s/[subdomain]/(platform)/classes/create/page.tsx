@@ -1,8 +1,8 @@
-import CreateClassContent from '@/components/platform/classes/create/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import CreateClassContent from "@/components/platform/classes/create/content"
 
-export const metadata = { title: 'Dashboard: Create Class' }
+export const metadata = { title: "Dashboard: Create Class" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

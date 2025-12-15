@@ -1,12 +1,17 @@
 /** @type {import('prettier').Config} */
 module.exports = {
+  // shadcn/ui official patterns
+  semi: false,
+  singleQuote: false,
+  trailingComma: "es5",
+
+  // Standard settings
+  tabWidth: 2,
+  printWidth: 80,
   bracketSpacing: true,
   endOfLine: "lf",
-  semi: true,
-  singleQuote: false,
-  tabWidth: 2,
-  trailingComma: "all",
-  printWidth: 80,
+
+  // Import ordering (shadcn/ui pattern)
   importOrder: [
     "^(react/(.*)$)|^(react$)",
     "^(next/(.*)$)|^(next$)",
@@ -25,11 +30,11 @@ module.exports = {
     "",
     "^[./]",
   ],
-  importOrderSeparation: false,
-  importOrderSortSpecifiers: true,
-  importOrderBuiltinModulesToTop: true,
   importOrderParserPlugins: ["typescript", "jsx", "decorators-legacy"],
-  importOrderMergeDuplicateImports: true,
-  importOrderCombineTypeAndValueImports: true,
-  plugins: ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
-};
+
+  // Plugins (order matters: tailwind must be last)
+  plugins: [
+    "@ianvs/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss",
+  ],
+}

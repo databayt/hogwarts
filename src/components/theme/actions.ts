@@ -4,19 +4,21 @@
  * Server-side operations for theme management.
  */
 
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
-import { themePresets, getPresetById } from './presets'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { getPresetById, themePresets } from "./presets"
 import {
-  saveThemeSchema,
   activateThemeSchema,
-  deleteThemeSchema,
   applyPresetSchema,
+  deleteThemeSchema,
+  saveThemeSchema,
   type ThemeConfigInput,
-} from './validation'
+} from "./validation"
 
 /**
  * Get the current user's active theme
@@ -25,7 +27,7 @@ export async function getUserTheme() {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     const theme = await db.userTheme.findFirst({
@@ -41,8 +43,8 @@ export async function getUserTheme() {
 
     return { theme }
   } catch (error) {
-    console.error('Error fetching user theme:', error)
-    return { error: 'Failed to fetch theme' }
+    console.error("Error fetching user theme:", error)
+    return { error: "Failed to fetch theme" }
   }
 }
 
@@ -53,7 +55,7 @@ export async function getUserThemes() {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     const themes = await db.userTheme.findMany({
@@ -61,14 +63,14 @@ export async function getUserThemes() {
         userId: session.user.id,
       },
       orderBy: {
-        updatedAt: 'desc',
+        updatedAt: "desc",
       },
     })
 
     return { themes }
   } catch (error) {
-    console.error('Error fetching user themes:', error)
-    return { error: 'Failed to fetch themes' }
+    console.error("Error fetching user themes:", error)
+    return { error: "Failed to fetch themes" }
   }
 }
 
@@ -79,13 +81,13 @@ export async function saveUserTheme(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     // Parse form data
     const rawData = {
-      name: formData.get('name'),
-      themeConfig: JSON.parse(formData.get('themeConfig') as string),
+      name: formData.get("name"),
+      themeConfig: JSON.parse(formData.get("themeConfig") as string),
     }
 
     // Validate
@@ -102,14 +104,14 @@ export async function saveUserTheme(formData: FormData) {
       },
     })
 
-    revalidatePath('/settings')
+    revalidatePath("/settings")
     return { success: true, theme }
   } catch (error) {
-    console.error('Error saving theme:', error)
+    console.error("Error saving theme:", error)
     if (error instanceof Error) {
       return { error: error.message }
     }
-    return { error: 'Failed to save theme' }
+    return { error: "Failed to save theme" }
   }
 }
 
@@ -120,7 +122,7 @@ export async function updateUserTheme(themeId: string, formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     // Check ownership
@@ -129,18 +131,18 @@ export async function updateUserTheme(themeId: string, formData: FormData) {
     })
 
     if (!existingTheme || existingTheme.userId !== session.user.id) {
-      return { error: 'Theme not found or unauthorized' }
+      return { error: "Theme not found or unauthorized" }
     }
 
     // Don't allow updating preset themes
     if (existingTheme.isPreset) {
-      return { error: 'Cannot update preset themes' }
+      return { error: "Cannot update preset themes" }
     }
 
     // Parse form data
     const rawData = {
-      name: formData.get('name'),
-      themeConfig: JSON.parse(formData.get('themeConfig') as string),
+      name: formData.get("name"),
+      themeConfig: JSON.parse(formData.get("themeConfig") as string),
     }
 
     // Validate
@@ -155,14 +157,14 @@ export async function updateUserTheme(themeId: string, formData: FormData) {
       },
     })
 
-    revalidatePath('/settings')
+    revalidatePath("/settings")
     return { success: true, theme }
   } catch (error) {
-    console.error('Error updating theme:', error)
+    console.error("Error updating theme:", error)
     if (error instanceof Error) {
       return { error: error.message }
     }
-    return { error: 'Failed to update theme' }
+    return { error: "Failed to update theme" }
   }
 }
 
@@ -173,11 +175,11 @@ export async function activateUserTheme(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     const rawData = {
-      themeId: formData.get('themeId') as string,
+      themeId: formData.get("themeId") as string,
     }
 
     // Validate
@@ -189,7 +191,7 @@ export async function activateUserTheme(formData: FormData) {
     })
 
     if (!theme || theme.userId !== session.user.id) {
-      return { error: 'Theme not found or unauthorized' }
+      return { error: "Theme not found or unauthorized" }
     }
 
     // Deactivate all other themes and activate this one
@@ -211,14 +213,14 @@ export async function activateUserTheme(formData: FormData) {
       }),
     ])
 
-    revalidatePath('/settings')
+    revalidatePath("/settings")
     return { success: true }
   } catch (error) {
-    console.error('Error activating theme:', error)
+    console.error("Error activating theme:", error)
     if (error instanceof Error) {
       return { error: error.message }
     }
-    return { error: 'Failed to activate theme' }
+    return { error: "Failed to activate theme" }
   }
 }
 
@@ -229,11 +231,11 @@ export async function deleteUserTheme(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     const rawData = {
-      themeId: formData.get('themeId') as string,
+      themeId: formData.get("themeId") as string,
     }
 
     // Validate
@@ -245,17 +247,19 @@ export async function deleteUserTheme(formData: FormData) {
     })
 
     if (!theme || theme.userId !== session.user.id) {
-      return { error: 'Theme not found or unauthorized' }
+      return { error: "Theme not found or unauthorized" }
     }
 
     // Don't allow deleting preset themes
     if (theme.isPreset) {
-      return { error: 'Cannot delete preset themes' }
+      return { error: "Cannot delete preset themes" }
     }
 
     // Don't allow deleting active theme
     if (theme.isActive) {
-      return { error: 'Cannot delete active theme. Activate another theme first.' }
+      return {
+        error: "Cannot delete active theme. Activate another theme first.",
+      }
     }
 
     // Delete theme
@@ -263,14 +267,14 @@ export async function deleteUserTheme(formData: FormData) {
       where: { id: validated.themeId },
     })
 
-    revalidatePath('/settings')
+    revalidatePath("/settings")
     return { success: true }
   } catch (error) {
-    console.error('Error deleting theme:', error)
+    console.error("Error deleting theme:", error)
     if (error instanceof Error) {
       return { error: error.message }
     }
-    return { error: 'Failed to delete theme' }
+    return { error: "Failed to delete theme" }
   }
 }
 
@@ -282,11 +286,11 @@ export async function applyPresetTheme(formData: FormData) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { error: 'Unauthorized' }
+      return { error: "Unauthorized" }
     }
 
     const rawData = {
-      presetId: formData.get('presetId') as string,
+      presetId: formData.get("presetId") as string,
     }
 
     // Validate
@@ -295,7 +299,7 @@ export async function applyPresetTheme(formData: FormData) {
     // Get preset
     const preset = getPresetById(validated.presetId)
     if (!preset) {
-      return { error: 'Preset not found' }
+      return { error: "Preset not found" }
     }
 
     // Check if user already has this preset
@@ -345,14 +349,14 @@ export async function applyPresetTheme(formData: FormData) {
       }),
     ])
 
-    revalidatePath('/settings')
+    revalidatePath("/settings")
     return { success: true, themeId }
   } catch (error) {
-    console.error('Error applying preset theme:', error)
+    console.error("Error applying preset theme:", error)
     if (error instanceof Error) {
       return { error: error.message }
     }
-    return { error: 'Failed to apply preset theme' }
+    return { error: "Failed to apply preset theme" }
   }
 }
 

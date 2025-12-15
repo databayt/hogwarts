@@ -5,6 +5,7 @@
 ## Trigger Recognition
 
 Activate this skill when the user says:
+
 - "rebound {block}"
 - "rebound the {block} block"
 - "optimize {block} for production"
@@ -14,21 +15,27 @@ Activate this skill when the user says:
 ## Valid Blocks
 
 ### Core (4)
+
 dashboard, profile, settings, admin
 
 ### People (4)
+
 students, teachers, parents, staff
 
 ### Academic (5)
+
 subjects, classes, lessons, timetable, attendance
 
 ### Assessment (3)
+
 exams, assignments, grades
 
 ### Finance (12)
+
 finance, fees, billing, invoice, receipt, banking, salary, expenses, payroll, budget, wallet, accounts
 
 ### Operations (5)
+
 announcements, messaging, notifications, events, library
 
 ---
@@ -40,6 +47,7 @@ announcements, messaging, notifications, events, library
 ### Search Strategy by Block Type
 
 #### Finance Blocks
+
 ```
 Search: "best school fee management software 2025"
 Search: "school billing system features"
@@ -50,6 +58,7 @@ Competitors: Blackbaud, FACTS Management, PaySchools, Ravenna
 ```
 
 #### Attendance Blocks
+
 ```
 Search: "modern attendance tracking software features"
 Search: "school attendance management best practices"
@@ -60,6 +69,7 @@ Competitors: PowerSchool, Alma SIS, SchoolMint, Boardingware
 ```
 
 #### Student/Teacher Management
+
 ```
 Search: "student information system features 2025"
 Search: "best SIS for K-12 schools"
@@ -69,6 +79,7 @@ Competitors: PowerSchool, Infinite Campus, Skyward, Gradelink
 ```
 
 #### Timetable/Scheduling
+
 ```
 Search: "automated school timetable generation"
 Search: "class scheduling software features"
@@ -78,6 +89,7 @@ Competitors: Untis, aSc TimeTables, Lantiv Timetabler, Prime Timetable
 ```
 
 #### Announcements/Communication
+
 ```
 Search: "school communication platform features"
 Search: "parent notification system best practices"
@@ -92,24 +104,29 @@ Competitors: ClassDojo, Remind, Bloomz, ParentSquare
 ## Competitor Analysis: {Block}
 
 ### Top 5 Solutions
+
 1. **{Name}** - {pricing}, {key differentiator}
 2. **{Name}** - {pricing}, {key differentiator}
-...
+   ...
 
 ### Feature Matrix
+
 | Feature | Hogwarts | Comp 1 | Comp 2 | Comp 3 |
-|---------|----------|--------|--------|--------|
+| ------- | -------- | ------ | ------ | ------ |
 | {feat}  | Yes/No   | ...    | ...    | ...    |
 
 ### Must-Have Features (Industry Standard)
+
 1. {feature} - Every competitor has this
 2. {feature} - Required for basic functionality
 
 ### Differentiating Features (Competitive Advantage)
+
 1. {feature} - Only top 2 competitors have this
 2. {feature} - Could set us apart
 
 ### Innovation Opportunities
+
 1. {feature} - No competitor does this well
 2. {feature} - Emerging trend we could pioneer
 ```
@@ -147,6 +164,7 @@ prisma/models/{related}.prisma
 ### Assessment Checklist
 
 #### Architecture Compliance
+
 - [ ] Mirror pattern followed (route mirrors component)
 - [ ] Server/client component boundaries correct
 - [ ] Component hierarchy (UI → Atoms → Features)
@@ -154,6 +172,7 @@ prisma/models/{related}.prisma
 - [ ] No oversized files (>500 lines)
 
 #### Multi-Tenant Safety
+
 - [ ] schoolId in ALL database queries
 - [ ] schoolId in unique constraints
 - [ ] Session verification before operations
@@ -161,6 +180,7 @@ prisma/models/{related}.prisma
 - [ ] Proper scoping in aggregations
 
 #### Security
+
 - [ ] Input validation on all forms (Zod)
 - [ ] Server-side validation in actions
 - [ ] SQL injection prevention (Prisma parameterization)
@@ -169,6 +189,7 @@ prisma/models/{related}.prisma
 - [ ] Rate limiting on sensitive operations
 
 #### Performance
+
 - [ ] No N+1 queries
 - [ ] Proper use of useMemo/useCallback
 - [ ] Efficient data fetching (pagination, filtering)
@@ -176,6 +197,7 @@ prisma/models/{related}.prisma
 - [ ] Optimized bundle size
 
 #### UX
+
 - [ ] Loading states on all async operations
 - [ ] Error handling with user-friendly messages
 - [ ] Empty states for no-data scenarios
@@ -185,6 +207,7 @@ prisma/models/{related}.prisma
 - [ ] Accessible (ARIA labels)
 
 #### Code Quality
+
 - [ ] TypeScript strict mode compliance
 - [ ] No `any` types
 - [ ] Comprehensive error handling
@@ -193,6 +216,7 @@ prisma/models/{related}.prisma
 - [ ] Consistent naming patterns
 
 #### i18n Coverage
+
 - [ ] All user-facing strings translated
 - [ ] Arabic translations complete
 - [ ] RTL layout works correctly
@@ -204,48 +228,57 @@ prisma/models/{related}.prisma
 ## Technical Assessment: {Block}
 
 ### Files Analyzed
+
 - Component files: {count}
 - Route files: {count}
 - Prisma models: {list}
 
 ### Architecture Score: {X}/10
+
 - Mirror pattern: ✅/❌
 - Server/client boundaries: ✅/❌
 - Component hierarchy: ✅/❌
 
 ### Multi-Tenant Safety: {X}/10
+
 - Issues found: {count}
 - {issue 1}: {file}:{line}
 - {issue 2}: {file}:{line}
 
 ### Security: {X}/10
+
 - Issues found: {count}
 - {issue 1}: {severity}
 - {issue 2}: {severity}
 
 ### Performance: {X}/10
+
 - N+1 queries: {count}
 - Bundle size: {KB}
 - Issues: {list}
 
 ### UX: {X}/10
+
 - Loading states: {%}
 - Error handling: {%}
 - Accessibility: {score}
 
 ### i18n Coverage: {X}%
+
 - Missing keys: {count}
 - RTL issues: {count}
 
 ### Test Coverage: {X}%
+
 - Current: {files covered}/{total files}
 - Missing: {list}
 
 ### Gap Analysis vs Competitors
-| Feature | Us | Competitors | Gap |
-|---------|-----|-------------|-----|
-| {feat}  | No  | Yes (4/5)   | High |
-| {feat}  | Partial | Yes (3/5) | Medium |
+
+| Feature | Us      | Competitors | Gap    |
+| ------- | ------- | ----------- | ------ |
+| {feat}  | No      | Yes (4/5)   | High   |
+| {feat}  | Partial | Yes (3/5)   | Medium |
 ```
 
 ---
@@ -257,24 +290,28 @@ prisma/models/{related}.prisma
 ### Priority Levels
 
 #### Critical (Must fix before production)
+
 - Security vulnerabilities
 - Multi-tenant isolation issues
 - Data integrity problems
 - Crashes or major bugs
 
 #### High Priority (Should fix soon)
+
 - Missing core features
 - Performance issues (>500ms response)
 - Major UX problems
 - Important missing validations
 
 #### Medium Priority (Plan for near-term)
+
 - Feature enhancements
 - i18n gaps
 - Accessibility improvements
 - Code quality issues
 
 #### Low Priority (Backlog)
+
 - Nice-to-have features
 - Polish and refinement
 - Documentation gaps
@@ -292,40 +329,50 @@ Estimated Effort: {hours} hours
 ## Critical ({count} items, {hours}h)
 
 ### Security
+
 - [ ] {issue} - Est: {hours}h - File: {path}
 - [ ] {issue} - Est: {hours}h - File: {path}
 
 ### Multi-Tenant
+
 - [ ] {issue} - Est: {hours}h - File: {path}
 
 ### Data Integrity
+
 - [ ] {issue} - Est: {hours}h - File: {path}
 
 ## High Priority ({count} items, {hours}h)
 
 ### Missing Features
+
 - [ ] {feature} - Est: {hours}h
 
 ### Performance
+
 - [ ] {issue} - Est: {hours}h - File: {path}
 
 ### UX
+
 - [ ] {issue} - Est: {hours}h
 
 ## Medium Priority ({count} items, {hours}h)
 
 ### Enhancements
+
 - [ ] {feature} - Est: {hours}h
 
 ### i18n
+
 - [ ] {issue} - Est: {hours}h
 
 ### Accessibility
+
 - [ ] {issue} - Est: {hours}h
 
 ## Low Priority ({count} items, {hours}h)
 
 ### Nice-to-Have
+
 - [ ] {feature} - Est: {hours}h
 ```
 
@@ -356,6 +403,7 @@ HIGH IMPACT
 ## Recommendations: {Block}
 
 ### Quick Wins (Do This Week)
+
 High impact, low effort - start here
 
 1. **{task}** - {30 min}
@@ -369,32 +417,41 @@ High impact, low effort - start here
 ### Implementation Phases
 
 #### Phase 1: Foundation ({X} hours, Week 1)
+
 Focus: Security and stability
+
 - {task 1}
 - {task 2}
 - {task 3}
 
 #### Phase 2: Core Features ({X} hours, Week 2-3)
+
 Focus: Feature parity with competitors
+
 - {task 1}
 - {task 2}
 
 #### Phase 3: Polish ({X} hours, Week 4)
+
 Focus: UX and completeness
+
 - {task 1}
 - {task 2}
 
 #### Phase 4: Enhancement (Future)
+
 Focus: Differentiation
+
 - {task 1}
 - {task 2}
 
 ### Dependencies
-
 ```
+
 [Task A] → [Task B] → [Task C]
-    ↓
+↓
 [Task D]
+
 ```
 
 ### Success Metrics
@@ -444,12 +501,14 @@ skill: react-performance
 ## Output Location
 
 All reports saved to:
+
 ```
 .claude/workflows/rebound-outputs/{block}/
 └── rebound-{YYYY-MM-DD}.md
 ```
 
 Combined single file containing:
+
 1. Research findings
 2. Technical assessment
 3. Production checklist

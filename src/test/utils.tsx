@@ -7,9 +7,10 @@
  * @see https://testing-library.com/docs/react-testing-library/setup
  */
 
-import { render, RenderOptions } from '@testing-library/react'
-import { ReactElement, ReactNode } from 'react'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import { ReactElement, ReactNode } from "react"
+import { render, RenderOptions } from "@testing-library/react"
+
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 /**
  * Mock dictionary for testing
@@ -17,41 +18,41 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
  */
 export const mockDictionary = {
   common: {
-    save: 'Save',
-    cancel: 'Cancel',
-    delete: 'Delete',
-    edit: 'Edit',
-    add: 'Add',
-    search: 'Search',
-    filter: 'Filter',
-    export: 'Export',
-    import: 'Import',
-    submit: 'Submit',
-    loading: 'Loading...',
-    error: 'An error occurred',
-    success: 'Success',
-    confirm: 'Confirm',
-    back: 'Back',
-    next: 'Next',
-    previous: 'Previous',
-    close: 'Close',
-    yes: 'Yes',
-    no: 'No',
-    actions: 'Actions',
-    name: 'Name',
-    description: 'Description',
-    createdAt: 'Created At',
-    updatedAt: 'Updated At',
-    status: 'Status',
-    active: 'Active',
-    inactive: 'Inactive',
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    add: "Add",
+    search: "Search",
+    filter: "Filter",
+    export: "Export",
+    import: "Import",
+    submit: "Submit",
+    loading: "Loading...",
+    error: "An error occurred",
+    success: "Success",
+    confirm: "Confirm",
+    back: "Back",
+    next: "Next",
+    previous: "Previous",
+    close: "Close",
+    yes: "Yes",
+    no: "No",
+    actions: "Actions",
+    name: "Name",
+    description: "Description",
+    createdAt: "Created At",
+    updatedAt: "Updated At",
+    status: "Status",
+    active: "Active",
+    inactive: "Inactive",
   },
 } as any as Dictionary
 
 /**
  * Custom render options
  */
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   /**
    * Dictionary for i18n testing
    * Defaults to mockDictionary
@@ -62,7 +63,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
    * Language for testing (ar or en)
    * Defaults to 'en'
    */
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
 
   /**
    * Initial route for testing
@@ -77,16 +78,20 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 function TestWrapper({
   children,
   dictionary = mockDictionary,
-  lang = 'en',
+  lang = "en",
 }: {
   children: ReactNode
   dictionary?: Partial<Dictionary>
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
 }) {
   // Add provider wrappers here as needed
   // Example: ThemeProvider, I18nProvider, etc.
 
-  return <div lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'}>{children}</div>
+  return (
+    <div lang={lang} dir={lang === "ar" ? "rtl" : "ltr"}>
+      {children}
+    </div>
+  )
 }
 
 /**
@@ -104,10 +109,7 @@ function TestWrapper({
  * expect(screen.getByText('Save')).toBeInTheDocument()
  * ```
  */
-export function customRender(
-  ui: ReactElement,
-  options?: CustomRenderOptions
-) {
+export function customRender(ui: ReactElement, options?: CustomRenderOptions) {
   const { dictionary, lang, ...renderOptions } = options ?? {}
 
   return render(ui, {
@@ -123,7 +125,7 @@ export function customRender(
 /**
  * Re-export everything from React Testing Library
  */
-export * from '@testing-library/react'
+export * from "@testing-library/react"
 
 /**
  * Export custom render as default render

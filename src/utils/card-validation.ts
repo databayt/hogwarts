@@ -1,14 +1,41 @@
 export const detectCardType = (
   cardNumber: string
-): "visa" | "mastercard" | "amex" | "rupay" | "diners" | "discover" | "unknown" => {
+):
+  | "visa"
+  | "mastercard"
+  | "amex"
+  | "rupay"
+  | "diners"
+  | "discover"
+  | "unknown" => {
   const number = cardNumber.replace(/\s/g, "")
 
   if (/^4/.test(number)) return "visa"
   if (/^3[47]/.test(number)) return "amex"
   if (/^3(?:0[0-5]|09|095|6|8)/.test(number)) return "diners"
-  if (/^5[1-5]/.test(number) || /^222[1-9]/.test(number) || /^22[3-9]\d/.test(number) || /^2[3-6]\d{2}/.test(number) || /^27[0-1]\d/.test(number) || /^2720/.test(number)) return "mastercard"
-  if (/^6011/.test(number) || /^65/.test(number) || /^64[4-9]/.test(number) || /^622(?:12[6-9]|1[3-9]\d|[2-8]\d{2}|9[0-1]\d|92[0-5])/.test(number)) return "discover"
-  if (/^60/.test(number) || /^81/.test(number) || /^82/.test(number) || /^508/.test(number)) return "rupay"
+  if (
+    /^5[1-5]/.test(number) ||
+    /^222[1-9]/.test(number) ||
+    /^22[3-9]\d/.test(number) ||
+    /^2[3-6]\d{2}/.test(number) ||
+    /^27[0-1]\d/.test(number) ||
+    /^2720/.test(number)
+  )
+    return "mastercard"
+  if (
+    /^6011/.test(number) ||
+    /^65/.test(number) ||
+    /^64[4-9]/.test(number) ||
+    /^622(?:12[6-9]|1[3-9]\d|[2-8]\d{2}|9[0-1]\d|92[0-5])/.test(number)
+  )
+    return "discover"
+  if (
+    /^60/.test(number) ||
+    /^81/.test(number) ||
+    /^82/.test(number) ||
+    /^508/.test(number)
+  )
+    return "rupay"
 
   return "unknown"
 }
@@ -34,8 +61,6 @@ export const validateLuhn = (cardNumber: string): true | string => {
   return sum % 10 === 0 ? true : "Invalid card number"
 }
 
-
-
 /**
  * Formats a card number by adding spaces every 4 digits
  * @param value - The raw card number input
@@ -58,13 +83,12 @@ export const formatCardNumber = (value: string): string => {
   }
 }
 
-
 /**
  * Formats an expiry date of the card
  * @param value - The raw card expiry input
  * @returns The formatted expiry date with / in between
  */
-export const formatExpiryDate = (value ?: string): string => {
+export const formatExpiryDate = (value?: string): string => {
   if (!value) return ""
   const number = value.replace(/\D/g, "")
   if (number.length >= 2) {
@@ -72,4 +96,3 @@ export const formatExpiryDate = (value ?: string): string => {
   }
   return number
 }
-

@@ -1,36 +1,38 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { BookOpen, Users, DollarSign, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react"
+import { BookOpen, DollarSign, TrendingUp, Users } from "lucide-react"
 import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { getStreamAnalytics, AnalyticsData } from "./actions";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "recharts"
+
+import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+
+import { AnalyticsData, getStreamAnalytics } from "./actions"
 
 export function StreamAnalyticsContent() {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchAnalytics = async () => {
-      const data = await getStreamAnalytics();
-      setAnalytics(data);
-      setIsLoading(false);
-    };
+      const data = await getStreamAnalytics()
+      setAnalytics(data)
+      setIsLoading(false)
+    }
 
-    fetchAnalytics();
-  }, []);
+    fetchAnalytics()
+  }, [])
 
   if (isLoading) {
     return (
@@ -43,17 +45,15 @@ export function StreamAnalyticsContent() {
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
       </div>
-    );
+    )
   }
 
   if (!analytics) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">
-          Failed to load analytics data
-        </p>
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground">Failed to load analytics data</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -63,14 +63,14 @@ export function StreamAnalyticsContent() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Total Courses
               </p>
-              <h3 className="text-2xl font-bold mt-2">
+              <h3 className="mt-2 text-2xl font-bold">
                 {analytics.totalCourses}
               </h3>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
+            <div className="rounded-full bg-blue-100 p-3">
               <BookOpen className="h-6 w-6 text-blue-600" />
             </div>
           </div>
@@ -79,14 +79,14 @@ export function StreamAnalyticsContent() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Total Enrollments
               </p>
-              <h3 className="text-2xl font-bold mt-2">
+              <h3 className="mt-2 text-2xl font-bold">
                 {analytics.totalEnrollments}
               </h3>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
+            <div className="rounded-full bg-green-100 p-3">
               <Users className="h-6 w-6 text-green-600" />
             </div>
           </div>
@@ -95,14 +95,14 @@ export function StreamAnalyticsContent() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Total Revenue
               </p>
-              <h3 className="text-2xl font-bold mt-2">
+              <h3 className="mt-2 text-2xl font-bold">
                 ${analytics.totalRevenue.toFixed(2)}
               </h3>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
+            <div className="rounded-full bg-yellow-100 p-3">
               <DollarSign className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
@@ -111,14 +111,14 @@ export function StreamAnalyticsContent() {
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 Active Students
               </p>
-              <h3 className="text-2xl font-bold mt-2">
+              <h3 className="mt-2 text-2xl font-bold">
                 {analytics.activeStudents}
               </h3>
             </div>
-            <div className="p-3 bg-purple-100 rounded-full">
+            <div className="rounded-full bg-purple-100 p-3">
               <TrendingUp className="h-6 w-6 text-purple-600" />
             </div>
           </div>
@@ -127,7 +127,7 @@ export function StreamAnalyticsContent() {
 
       {/* Enrollment Trend Chart */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">
+        <h3 className="mb-4 text-lg font-semibold">
           Enrollment Trend (Last 7 Days)
         </h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -136,8 +136,8 @@ export function StreamAnalyticsContent() {
             <XAxis
               dataKey="date"
               tickFormatter={(value) => {
-                const date = new Date(value);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
+                const date = new Date(value)
+                return `${date.getMonth() + 1}/${date.getDate()}`
               }}
             />
             <YAxis />
@@ -157,19 +157,22 @@ export function StreamAnalyticsContent() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Top Courses */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="mb-4 text-lg font-semibold">
             Top Courses by Enrollment
           </h3>
           <div className="space-y-4">
             {analytics.topCourses.map((course, index) => (
-              <div key={course.id} className="flex items-center justify-between">
+              <div
+                key={course.id}
+                className="flex items-center justify-between"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                  <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold">
                     {index + 1}
                   </div>
                   <div>
                     <p className="font-medium">{course.title}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {course.enrollments} students
                     </p>
                   </div>
@@ -184,7 +187,7 @@ export function StreamAnalyticsContent() {
 
         {/* Revenue by Month */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="mb-4 text-lg font-semibold">
             Revenue Trend (Last 6 Months)
           </h3>
           <ResponsiveContainer width="100%" height={250}>
@@ -200,5 +203,5 @@ export function StreamAnalyticsContent() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

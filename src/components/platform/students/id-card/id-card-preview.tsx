@@ -1,23 +1,25 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, Printer, RotateCw, Maximize2 } from "lucide-react";
-import { IDCardTemplateComponent } from "./id-card-template";
-import type { IDCardData, IDCardTemplate } from "./types";
-import { useState } from "react";
+import { useState } from "react"
+import { Download, Maximize2, Printer, RotateCw } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
+
+import { IDCardTemplateComponent } from "./id-card-template"
+import type { IDCardData, IDCardTemplate } from "./types"
 
 interface IDCardPreviewProps {
-  data: IDCardData;
-  template: IDCardTemplate;
-  onPrint?: () => void;
-  onDownload?: (format: "pdf" | "image") => void;
+  data: IDCardData
+  template: IDCardTemplate
+  onPrint?: () => void
+  onDownload?: (format: "pdf" | "image") => void
 }
 
 export function IDCardPreview({
@@ -26,8 +28,8 @@ export function IDCardPreview({
   onPrint,
   onDownload,
 }: IDCardPreviewProps) {
-  const [showBack, setShowBack] = useState(false);
-  const [showFullscreen, setShowFullscreen] = useState(false);
+  const [showBack, setShowBack] = useState(false)
+  const [showFullscreen, setShowFullscreen] = useState(false)
 
   return (
     <>
@@ -41,7 +43,7 @@ export function IDCardPreview({
                 size="sm"
                 onClick={() => setShowBack(!showBack)}
               >
-                <RotateCw className="h-4 w-4 mr-2" />
+                <RotateCw className="mr-2 h-4 w-4" />
                 {showBack ? "Show Front" : "Show Back"}
               </Button>
               <Button
@@ -49,7 +51,7 @@ export function IDCardPreview({
                 size="sm"
                 onClick={() => setShowFullscreen(true)}
               >
-                <Maximize2 className="h-4 w-4 mr-2" />
+                <Maximize2 className="mr-2 h-4 w-4" />
                 Fullscreen
               </Button>
             </div>
@@ -60,7 +62,7 @@ export function IDCardPreview({
           <div className="flex flex-col items-center space-y-4">
             {/* Card Preview */}
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 bg-gray-50"
+              className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8"
               style={{
                 transform: "scale(1.2)",
                 transformOrigin: "center",
@@ -75,13 +77,13 @@ export function IDCardPreview({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 w-full max-w-md">
+            <div className="flex w-full max-w-md gap-3">
               <Button
                 variant="outline"
                 className="flex-1"
                 onClick={() => onDownload?.("pdf")}
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
               <Button
@@ -89,27 +91,33 @@ export function IDCardPreview({
                 className="flex-1"
                 onClick={() => onDownload?.("image")}
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Download Image
               </Button>
-              <Button
-                variant="default"
-                className="flex-1"
-                onClick={onPrint}
-              >
-                <Printer className="h-4 w-4 mr-2" />
+              <Button variant="default" className="flex-1" onClick={onPrint}>
+                <Printer className="mr-2 h-4 w-4" />
                 Print Card
               </Button>
             </div>
 
             {/* Template Info */}
-            <div className="text-sm text-muted-foreground text-center space-y-1">
-              <p>Template: {template.name} ({template.orientation})</p>
-              <p>Size: {template.size.width}x{template.size.height}{template.size.unit}</p>
-              <p>Features: {[
-                template.includeBarcode && "Barcode",
-                template.includeQRCode && "QR Code",
-              ].filter(Boolean).join(", ") || "None"}</p>
+            <div className="text-muted-foreground space-y-1 text-center text-sm">
+              <p>
+                Template: {template.name} ({template.orientation})
+              </p>
+              <p>
+                Size: {template.size.width}x{template.size.height}
+                {template.size.unit}
+              </p>
+              <p>
+                Features:{" "}
+                {[
+                  template.includeBarcode && "Barcode",
+                  template.includeQRCode && "QR Code",
+                ]
+                  .filter(Boolean)
+                  .join(", ") || "None"}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -121,12 +129,12 @@ export function IDCardPreview({
           <DialogHeader>
             <DialogTitle>ID Card Preview - {data.studentName}</DialogTitle>
           </DialogHeader>
-          <div className="flex justify-center items-center gap-8 py-8">
+          <div className="flex items-center justify-center gap-8 py-8">
             {/* Front Side */}
             <div className="text-center">
-              <h4 className="text-sm font-medium mb-4">Front</h4>
+              <h4 className="mb-4 text-sm font-medium">Front</h4>
               <div
-                className="border-2 border-gray-300 rounded-lg p-4 bg-white shadow-lg"
+                className="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-lg"
                 style={{
                   transform: "scale(1.5)",
                   transformOrigin: "center",
@@ -143,9 +151,9 @@ export function IDCardPreview({
 
             {/* Back Side */}
             <div className="text-center">
-              <h4 className="text-sm font-medium mb-4">Back</h4>
+              <h4 className="mb-4 text-sm font-medium">Back</h4>
               <div
-                className="border-2 border-gray-300 rounded-lg p-4 bg-white shadow-lg"
+                className="rounded-lg border-2 border-gray-300 bg-white p-4 shadow-lg"
                 style={{
                   transform: "scale(1.5)",
                   transformOrigin: "center",
@@ -163,5 +171,5 @@ export function IDCardPreview({
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }

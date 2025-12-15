@@ -96,17 +96,17 @@ The Attendance module provides a comprehensive, production-ready system for trac
 
 ### Key Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Manual Attendance | **Production** | Mark attendance for classes with student lists |
-| QR Code Sessions | **Production** | Generate QR codes for students to scan |
-| Barcode Scanning | **Production** | Use student ID barcodes for check-in |
-| Bulk Upload | **Production** | Import attendance records from CSV files |
-| Period-by-Period | **Production** | Track attendance per timetable period |
-| Parent Notifications | **Production** | Real-time alerts for absences (Email + SMS) |
-| Parent Excuse Submission | **Production** | Parents can submit excuses for absences |
-| Early Warning System | **Production** | Detect chronic absenteeism and track interventions |
-| Reports Export | **Production** | CSV, Excel, and PDF export options |
+| Feature                  | Status         | Description                                        |
+| ------------------------ | -------------- | -------------------------------------------------- |
+| Manual Attendance        | **Production** | Mark attendance for classes with student lists     |
+| QR Code Sessions         | **Production** | Generate QR codes for students to scan             |
+| Barcode Scanning         | **Production** | Use student ID barcodes for check-in               |
+| Bulk Upload              | **Production** | Import attendance records from CSV files           |
+| Period-by-Period         | **Production** | Track attendance per timetable period              |
+| Parent Notifications     | **Production** | Real-time alerts for absences (Email + SMS)        |
+| Parent Excuse Submission | **Production** | Parents can submit excuses for absences            |
+| Early Warning System     | **Production** | Detect chronic absenteeism and track interventions |
+| Reports Export           | **Production** | CSV, Excel, and PDF export options                 |
 
 ### File Structure
 
@@ -178,6 +178,7 @@ Navigate to **Attendance** in the platform sidebar to access the module.
 ### Overview Dashboard
 
 The overview page displays:
+
 - **Quick Stats** - Total records, present, absent, late counts, and overall attendance rate
 - **At-Risk Students** - Students with attendance below 90%
 - **Quick Actions** - Shortcuts to common tasks
@@ -216,6 +217,7 @@ For period-based schools, select the specific period. The system auto-detects th
 **05. Mark status for each student**
 
 Use the toggle buttons to mark each student as:
+
 - **Present** (green)
 - **Absent** (red)
 - **Late** (yellow)
@@ -317,6 +319,7 @@ Get the CSV template with required columns
 **03. Fill in data**
 
 Add attendance records following the format:
+
 ```csv
 studentId,date,status,checkInTime,checkOutTime,notes
 student_123,2024-01-15,PRESENT,08:00,15:00,
@@ -342,17 +345,20 @@ Check the import summary for successful and failed records
 When a student is marked absent, the system automatically notifies guardians:
 
 **Notification Channels:**
+
 - **In-app notification** - Visible in parent portal
 - **Email** - Detailed notification via Resend
 - **SMS** - Immediate text alert via Twilio
 
 **Notification Content:**
+
 - Student name
 - Class name
 - Date and time
 - Link to submit excuse
 
 **Multi-language Support:**
+
 - Arabic and English templates
 - Automatically uses parent's preferred language
 
@@ -375,6 +381,7 @@ Opens the excuse submission form
 **03. Select Reason**
 
 Choose from:
+
 - Medical
 - Family Emergency
 - Religious Observance
@@ -396,6 +403,7 @@ Add description and upload supporting documents (medical notes, etc.)
 Excuse goes to teacher/admin for review
 
 **Excuse Status:**
+
 - **Pending** - Awaiting review
 - **Approved** - Attendance updated to EXCUSED
 - **Rejected** - Remains as unexcused absence
@@ -418,14 +426,15 @@ The system automatically monitors student attendance and identifies at-risk stud
 
 **Risk Levels (US DoE Guidelines):**
 
-| Risk Level | Attendance Rate | Absence Rate |
-|------------|-----------------|--------------|
-| Satisfactory | ≥95% | Less than 5% |
-| At-Risk | 90-94.9% | 5-9.9% |
-| Moderately Chronic | 80-89.9% | 10-19.9% |
-| Severely Chronic | Less than 80% | ≥20% |
+| Risk Level         | Attendance Rate | Absence Rate |
+| ------------------ | --------------- | ------------ |
+| Satisfactory       | ≥95%            | Less than 5% |
+| At-Risk            | 90-94.9%        | 5-9.9%       |
+| Moderately Chronic | 80-89.9%        | 10-19.9%     |
+| Severely Chronic   | Less than 80%   | ≥20%         |
 
 **Dashboard Features:**
+
 - Students grouped by risk level
 - Trend analysis (improving/declining)
 - Class-level and school-level views
@@ -436,6 +445,7 @@ The system automatically monitors student attendance and identifies at-risk stud
 Track and manage interventions for at-risk students:
 
 **Intervention Types:**
+
 - Parent phone call
 - Parent email
 - Parent meeting
@@ -546,23 +556,23 @@ Configure attendance module behavior:
 
 ### Server Actions Quick Reference
 
-| Action | Purpose | Key Parameters |
-|--------|---------|----------------|
-| `markAttendance()` | Mark daily attendance | classId, date, records[] |
-| `markPeriodAttendance()` | Mark period-specific | classId, date, periodId, records[] |
-| `getPeriodsForClass()` | Get timetable periods | classId, date |
-| `getCurrentPeriod()` | Auto-detect current period | classId (optional) |
-| `getStudentsAtRisk()` | Get at-risk students | classId?, riskLevel?, limit? |
-| `createIntervention()` | Create intervention record | studentId, type, title, description |
-| `updateIntervention()` | Update intervention status | interventionId, status, outcome? |
-| `escalateIntervention()` | Escalate to higher level | interventionId, newType, notes |
-| `submitExcuse()` | Parent submits excuse | attendanceId, reason, attachments? |
-| `reviewExcuse()` | Teacher reviews excuse | excuseId, status, reviewNotes? |
-| `triggerAbsenceNotification()` | Send absence alerts | studentId, classId, date |
-| `getAttendanceReport()` | Fetch filtered records | filters, limit, offset |
-| `getAttendanceStats()` | Get statistics summary | classId?, dateRange? |
-| `getPeriodAttendanceAnalytics()` | Period-level analytics | classId?, dateRange? |
-| `getStudentDayAttendance()` | Full day for student | studentId, date |
+| Action                           | Purpose                    | Key Parameters                      |
+| -------------------------------- | -------------------------- | ----------------------------------- |
+| `markAttendance()`               | Mark daily attendance      | classId, date, records[]            |
+| `markPeriodAttendance()`         | Mark period-specific       | classId, date, periodId, records[]  |
+| `getPeriodsForClass()`           | Get timetable periods      | classId, date                       |
+| `getCurrentPeriod()`             | Auto-detect current period | classId (optional)                  |
+| `getStudentsAtRisk()`            | Get at-risk students       | classId?, riskLevel?, limit?        |
+| `createIntervention()`           | Create intervention record | studentId, type, title, description |
+| `updateIntervention()`           | Update intervention status | interventionId, status, outcome?    |
+| `escalateIntervention()`         | Escalate to higher level   | interventionId, newType, notes      |
+| `submitExcuse()`                 | Parent submits excuse      | attendanceId, reason, attachments?  |
+| `reviewExcuse()`                 | Teacher reviews excuse     | excuseId, status, reviewNotes?      |
+| `triggerAbsenceNotification()`   | Send absence alerts        | studentId, classId, date            |
+| `getAttendanceReport()`          | Fetch filtered records     | filters, limit, offset              |
+| `getAttendanceStats()`           | Get statistics summary     | classId?, dateRange?                |
+| `getPeriodAttendanceAnalytics()` | Period-level analytics     | classId?, dateRange?                |
+| `getStudentDayAttendance()`      | Full day for student       | studentId, date                     |
 
 ### Server Actions Details
 
@@ -646,58 +656,58 @@ reviewExcuse(input: {
 
 ```typescript
 type AttendanceStatus =
-  | 'PRESENT'
-  | 'ABSENT'
-  | 'LATE'
-  | 'EXCUSED'
-  | 'SICK'
-  | 'HOLIDAY'
+  | "PRESENT"
+  | "ABSENT"
+  | "LATE"
+  | "EXCUSED"
+  | "SICK"
+  | "HOLIDAY"
 
 type AttendanceMethod =
-  | 'MANUAL'
-  | 'QR_CODE'
-  | 'BARCODE'
-  | 'BULK_UPLOAD'
-  | 'GEOFENCE'
-  | 'RFID'
-  | 'FINGERPRINT'
-  | 'FACE_RECOGNITION'
-  | 'NFC'
-  | 'BLUETOOTH'
+  | "MANUAL"
+  | "QR_CODE"
+  | "BARCODE"
+  | "BULK_UPLOAD"
+  | "GEOFENCE"
+  | "RFID"
+  | "FINGERPRINT"
+  | "FACE_RECOGNITION"
+  | "NFC"
+  | "BLUETOOTH"
 
 type InterventionType =
-  | 'PARENT_PHONE_CALL'
-  | 'PARENT_EMAIL'
-  | 'PARENT_MEETING'
-  | 'HOME_VISIT'
-  | 'COUNSELOR_REFERRAL'
-  | 'SOCIAL_WORKER_REFERRAL'
-  | 'ADMINISTRATOR_MEETING'
-  | 'ATTENDANCE_CONTRACT'
-  | 'TRUANCY_REFERRAL'
-  | 'COMMUNITY_RESOURCE'
-  | 'ACADEMIC_SUPPORT'
-  | 'MENTORSHIP_ASSIGNMENT'
-  | 'INCENTIVE_PROGRAM'
-  | 'OTHER'
+  | "PARENT_PHONE_CALL"
+  | "PARENT_EMAIL"
+  | "PARENT_MEETING"
+  | "HOME_VISIT"
+  | "COUNSELOR_REFERRAL"
+  | "SOCIAL_WORKER_REFERRAL"
+  | "ADMINISTRATOR_MEETING"
+  | "ATTENDANCE_CONTRACT"
+  | "TRUANCY_REFERRAL"
+  | "COMMUNITY_RESOURCE"
+  | "ACADEMIC_SUPPORT"
+  | "MENTORSHIP_ASSIGNMENT"
+  | "INCENTIVE_PROGRAM"
+  | "OTHER"
 
 type InterventionStatus =
-  | 'SCHEDULED'
-  | 'IN_PROGRESS'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'ESCALATED'
+  | "SCHEDULED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "ESCALATED"
 
 type ExcuseReason =
-  | 'MEDICAL'
-  | 'FAMILY_EMERGENCY'
-  | 'RELIGIOUS'
-  | 'SCHOOL_ACTIVITY'
-  | 'TRANSPORTATION'
-  | 'WEATHER'
-  | 'OTHER'
+  | "MEDICAL"
+  | "FAMILY_EMERGENCY"
+  | "RELIGIOUS"
+  | "SCHOOL_ACTIVITY"
+  | "TRANSPORTATION"
+  | "WEATHER"
+  | "OTHER"
 
-type ExcuseStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+type ExcuseStatus = "PENDING" | "APPROVED" | "REJECTED"
 ```
 
 ## Database Schema
@@ -794,6 +804,7 @@ The attendance seed creates realistic test data:
 - Sample interventions at different stages
 
 Run seed:
+
 ```bash
 pnpm db:seed
 ```

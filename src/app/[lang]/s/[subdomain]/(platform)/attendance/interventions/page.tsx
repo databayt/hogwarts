@@ -1,8 +1,8 @@
-import { InterventionsContent } from '@/components/platform/attendance/interventions/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { InterventionsContent } from "@/components/platform/attendance/interventions/content"
 
-export const metadata = { title: 'Dashboard: Interventions' }
+export const metadata = { title: "Dashboard: Interventions" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

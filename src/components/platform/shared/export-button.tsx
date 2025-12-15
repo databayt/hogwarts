@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Legacy Export Button - DEPRECATED
@@ -23,41 +23,45 @@
  *
  * @deprecated Use ExportButton from @/components/file instead
  */
+import * as React from "react"
+import { Download, FileSpreadsheet, FileText } from "lucide-react"
 
-import * as React from "react";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { generateExportFilename, downloadBlob, generateCsvContent } from "@/components/file";
+} from "@/components/ui/dropdown-menu"
+import {
+  downloadBlob,
+  generateCsvContent,
+  generateExportFilename,
+} from "@/components/file"
 
-export type ExportFormat = "csv" | "excel" | "pdf";
+export type ExportFormat = "csv" | "excel" | "pdf"
 
 interface ExportButtonProps {
   /** Function to get CSV data */
-  getCSV: (filters?: Record<string, unknown>) => Promise<string>;
+  getCSV: (filters?: Record<string, unknown>) => Promise<string>
   /** Current filters to apply to export */
-  filters?: Record<string, unknown>;
+  filters?: Record<string, unknown>
   /** Entity name for filename (e.g., "students", "teachers") */
-  entityName: string;
+  entityName: string
   /** Available export formats */
-  formats?: ExportFormat[];
+  formats?: ExportFormat[]
   /** Button variant */
-  variant?: "default" | "outline" | "ghost";
+  variant?: "default" | "outline" | "ghost"
   /** Button size */
-  size?: "default" | "sm" | "lg" | "icon";
+  size?: "default" | "sm" | "lg" | "icon"
   /** i18n translations */
   translations?: {
-    export?: string;
-    exportCSV?: string;
-    exportExcel?: string;
-    exportPDF?: string;
-    exporting?: string;
-  };
+    export?: string
+    exportCSV?: string
+    exportExcel?: string
+    exportPDF?: string
+    exporting?: string
+  }
 }
 
 /**
@@ -72,7 +76,7 @@ export function ExportButton({
   size = "sm",
   translations = {},
 }: ExportButtonProps) {
-  const [isExporting, setIsExporting] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false)
 
   const t = {
     export: translations.export || "Export",
@@ -80,26 +84,26 @@ export function ExportButton({
     exportExcel: translations.exportExcel || "Export Excel",
     exportPDF: translations.exportPDF || "Export PDF",
     exporting: translations.exporting || "Exporting...",
-  };
+  }
 
   const handleExport = async (format: ExportFormat = "csv") => {
-    setIsExporting(true);
+    setIsExporting(true)
     try {
       if (format === "csv") {
-        const csv = await getCSV(filters);
+        const csv = await getCSV(filters)
 
         // Create blob and download using File module utilities
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const filename = generateExportFilename(entityName, "csv");
-        downloadBlob(blob, filename);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+        const filename = generateExportFilename(entityName, "csv")
+        downloadBlob(blob, filename)
       }
       // TODO: Add Excel and PDF export support via File module
     } catch (error) {
-      console.error("Export failed:", error);
+      console.error("Export failed:", error)
     } finally {
-      setIsExporting(false);
+      setIsExporting(false)
     }
-  };
+  }
 
   // Single format - show simple button
   if (formats.length === 1) {
@@ -116,12 +120,12 @@ export function ExportButton({
           <Download className="h-4 w-4" />
         ) : (
           <>
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             {isExporting ? t.exporting : t.export}
           </>
         )}
       </Button>
-    );
+    )
   }
 
   // Multiple formats - show dropdown
@@ -139,7 +143,7 @@ export function ExportButton({
             <Download className="h-4 w-4" />
           ) : (
             <>
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               {isExporting ? t.exporting : t.export}
             </>
           )}
@@ -148,28 +152,31 @@ export function ExportButton({
       <DropdownMenuContent align="end">
         {formats.includes("csv") && (
           <DropdownMenuItem onClick={() => handleExport("csv")}>
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             {t.exportCSV}
           </DropdownMenuItem>
         )}
         {formats.includes("excel") && (
           <DropdownMenuItem onClick={() => handleExport("excel")}>
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
             {t.exportExcel}
           </DropdownMenuItem>
         )}
         {formats.includes("pdf") && (
           <DropdownMenuItem onClick={() => handleExport("pdf")}>
-            <FileText className="h-4 w-4 mr-2" />
+            <FileText className="mr-2 h-4 w-4" />
             {t.exportPDF}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
 
 /**
  * Re-export the new ExportButton from File module for migration
  */
-export { ExportButton as NewExportButton, SimpleExportButton } from "@/components/file";
+export {
+  ExportButton as NewExportButton,
+  SimpleExportButton,
+} from "@/components/file"

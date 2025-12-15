@@ -1,5 +1,6 @@
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { siteConfig } from "./config"
-import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface SiteFooterProps {
   dictionary?: Dictionary
@@ -9,8 +10,8 @@ export function SiteFooter({ dictionary }: SiteFooterProps) {
   return (
     <footer className="border-grid border-t py-6 md:py-0">
       <div className="w-full">
-        <div className="py-4 px-0 mx-0">
-          <div className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left rtl:md:text-right px-0 mx-0">
+        <div className="mx-0 px-0 py-4">
+          <div className="text-muted-foreground mx-0 px-0 text-center text-sm leading-loose text-balance md:text-left rtl:md:text-right">
             Inspired by{" "}
             <a
               href="https://ui.shadcn.com"

@@ -75,25 +75,31 @@
  * - Add announcement search across school
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath, revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { auth } from "@/auth";
+import { revalidatePath, revalidateTag } from "next/cache"
+import { auth } from "@/auth"
+import { Prisma } from "@prisma/client"
+import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/client"
+import { z } from "zod"
+
+import { withAutoTranslation } from "@/lib/auto-translate"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 import {
+  assertAnnouncementPermission,
+  getAuthContext,
+  validateAnnouncementScope,
+} from "@/components/platform/announcements/authorization"
+// ============================================================================
+// Announcement Config Actions
+// ============================================================================
+import {
+  announcementConfigSchema,
   announcementCreateSchema,
   announcementUpdateSchema,
-  getAnnouncementsSchema
-} from "@/components/platform/announcements/validation";
-import {
-  getAuthContext,
-  assertAnnouncementPermission,
-  validateAnnouncementScope
-} from "@/components/platform/announcements/authorization";
-import { Prisma } from "@prisma/client";
-import { withAutoTranslation } from "@/lib/auto-translate";
+  getAnnouncementsSchema,
+} from "@/components/platform/announcements/validation"
 
 // ============================================================================
 // Types
@@ -101,43 +107,43 @@ import { withAutoTranslation } from "@/lib/auto-translate";
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 type AnnouncementSelectResult = {
-  id: string;
-  schoolId: string;
-  titleEn: string | null;
-  titleAr: string | null;
-  bodyEn: string | null;
-  bodyAr: string | null;
-  scope: string;
-  priority: string;
-  classId: string | null;
-  role: string | null;
-  published: boolean;
-  createdBy: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  schoolId: string
+  titleEn: string | null
+  titleAr: string | null
+  bodyEn: string | null
+  bodyAr: string | null
+  scope: string
+  priority: string
+  classId: string | null
+  role: string | null
+  published: boolean
+  createdBy: string | null
+  createdAt: Date
+  updatedAt: Date
+}
 
 type AnnouncementListResult = {
-  id: string;
-  titleEn: string | null;
-  titleAr: string | null;
-  scope: string;
-  published: boolean;
-  priority: string;
-  pinned: boolean;
-  featured: boolean;
-  createdAt: string;
-  createdBy: string | null;
-};
+  id: string
+  titleEn: string | null
+  titleAr: string | null
+  scope: string
+  published: boolean
+  priority: string
+  pinned: boolean
+  featured: boolean
+  createdAt: string
+  createdBy: string | null
+}
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const ANNOUNCEMENTS_PATH = "/announcements"; // Remove hardcoded lab prefix
+const ANNOUNCEMENTS_PATH = "/announcements" // Remove hardcoded lab prefix
 
 // ============================================================================
 // Mutations
@@ -153,39 +159,47 @@ export async function createAnnouncement(
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = announcementCreateSchema.parse(input);
+    const parsed = announcementCreateSchema.parse(input)
 
     // Validate scope permissions
     try {
-      validateAnnouncementScope(authContext, parsed.scope);
+      validateAnnouncementScope(authContext, parsed.scope)
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Invalid scope for your role"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Invalid scope for your role",
+      }
     }
 
     // Check create permission
     try {
-      assertAnnouncementPermission(authContext, 'create', { scope: parsed.scope });
+      assertAnnouncementPermission(authContext, "create", {
+        scope: parsed.scope,
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to create announcements"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to create announcements",
+      }
     }
 
     // Create announcement with audit trail - bilingual fields
@@ -201,7 +215,9 @@ export async function createAnnouncement(
         role: (parsed.role as any) || null,
         published: parsed.published,
         priority: parsed.priority || "normal",
-        scheduledFor: parsed.scheduledFor ? new Date(parsed.scheduledFor) : null,
+        scheduledFor: parsed.scheduledFor
+          ? new Date(parsed.scheduledFor)
+          : null,
         expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null,
         pinned: parsed.pinned || false,
         featured: parsed.featured || false,
@@ -210,30 +226,33 @@ export async function createAnnouncement(
         // publishedAt: If published immediately, set publishedAt
         publishedAt: parsed.published ? new Date() : null,
       },
-    });
+    })
 
     // Revalidate cache - both path and tags
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: { id: row.id } };
+    return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createAnnouncement] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create announcement"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create announcement",
+    }
   }
 }
 
@@ -243,54 +262,60 @@ export async function createAnnouncement(
  * @param input - Announcement data with source language
  * @returns Action response with announcement ID
  */
-export async function createAnnouncementWithTranslation(
-  input: {
-    title: string;
-    body: string;
-    sourceLanguage: "en" | "ar";
-    scope: "school" | "class" | "role";
-    classId?: string | null;
-    role?: string | null;
-    published?: boolean;
-    priority?: "low" | "normal" | "high" | "urgent";
-    scheduledFor?: string | null;
-    expiresAt?: string | null;
-    pinned?: boolean;
-    featured?: boolean;
-  }
-): Promise<ActionResponse<{ id: string }>> {
+export async function createAnnouncementWithTranslation(input: {
+  title: string
+  body: string
+  sourceLanguage: "en" | "ar"
+  scope: "school" | "class" | "role"
+  classId?: string | null
+  role?: string | null
+  published?: boolean
+  priority?: "low" | "normal" | "high" | "urgent"
+  scheduledFor?: string | null
+  expiresAt?: string | null
+  pinned?: boolean
+  featured?: boolean
+}): Promise<ActionResponse<{ id: string }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Validate scope permissions
     try {
-      validateAnnouncementScope(authContext, input.scope);
+      validateAnnouncementScope(authContext, input.scope)
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Invalid scope for your role"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Invalid scope for your role",
+      }
     }
 
     // Check create permission
     try {
-      assertAnnouncementPermission(authContext, 'create', { scope: input.scope });
+      assertAnnouncementPermission(authContext, "create", {
+        scope: input.scope,
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to create announcements"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to create announcements",
+      }
     }
 
     // Auto-translate content
@@ -298,7 +323,7 @@ export async function createAnnouncementWithTranslation(
       { title: input.title, body: input.body },
       ["title", "body"],
       input.sourceLanguage
-    );
+    )
 
     // Create announcement with bilingual content
     const row = await db.announcement.create({
@@ -319,29 +344,32 @@ export async function createAnnouncementWithTranslation(
         featured: input.featured || false,
         publishedAt: input.published ? new Date() : null,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
     return {
       success: true,
       data: {
         id: row.id,
         ...(translatedData.translatedFields ? { translated: true } : {}),
-      } as { id: string }
-    };
+      } as { id: string },
+    }
   } catch (error) {
     console.error("[createAnnouncementWithTranslation] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create announcement"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create announcement",
+    }
   }
 }
 
@@ -355,104 +383,118 @@ export async function updateAnnouncement(
 ): Promise<ActionResponse<void>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = announcementUpdateSchema.parse(input);
-    const { id, ...rest } = parsed;
+    const parsed = announcementUpdateSchema.parse(input)
+    const { id, ...rest } = parsed
 
     // Fetch existing announcement to check ownership
     const existing = await db.announcement.findFirst({
       where: { id, schoolId },
-      select: { id: true, createdBy: true, schoolId: true, scope: true, published: true },
-    });
+      select: {
+        id: true,
+        createdBy: true,
+        schoolId: true,
+        scope: true,
+        published: true,
+      },
+    })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" };
+      return { success: false, error: "Announcement not found" }
     }
 
     // Check update permission
     try {
-      assertAnnouncementPermission(authContext, 'update', {
+      assertAnnouncementPermission(authContext, "update", {
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as 'school' | 'class' | 'role',
-      });
+        scope: existing.scope as "school" | "class" | "role",
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to update this announcement"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to update this announcement",
+      }
     }
 
     // Build update data object - bilingual fields
-    const data: any = {};
-    if (typeof rest.titleEn !== "undefined") data.titleEn = rest.titleEn;
-    if (typeof rest.titleAr !== "undefined") data.titleAr = rest.titleAr;
-    if (typeof rest.bodyEn !== "undefined") data.bodyEn = rest.bodyEn;
-    if (typeof rest.bodyAr !== "undefined") data.bodyAr = rest.bodyAr;
-    if (typeof rest.scope !== "undefined") data.scope = rest.scope;
+    const data: any = {}
+    if (typeof rest.titleEn !== "undefined") data.titleEn = rest.titleEn
+    if (typeof rest.titleAr !== "undefined") data.titleAr = rest.titleAr
+    if (typeof rest.bodyEn !== "undefined") data.bodyEn = rest.bodyEn
+    if (typeof rest.bodyAr !== "undefined") data.bodyAr = rest.bodyAr
+    if (typeof rest.scope !== "undefined") data.scope = rest.scope
     if (typeof rest.classId !== "undefined") {
       // Use Prisma relation API instead of foreign key
-      data.class = rest.classId ? { connect: { id: rest.classId } } : { disconnect: true };
+      data.class = rest.classId
+        ? { connect: { id: rest.classId } }
+        : { disconnect: true }
     }
-    if (typeof rest.role !== "undefined") data.role = rest.role || null;
+    if (typeof rest.role !== "undefined") data.role = rest.role || null
     if (typeof rest.published !== "undefined") {
-      data.published = rest.published;
+      data.published = rest.published
       // Set publishedAt when publishing
       if (rest.published && !existing.published) {
-        data.publishedAt = new Date();
+        data.publishedAt = new Date()
       }
     }
-    if (typeof rest.priority !== "undefined") data.priority = rest.priority;
+    if (typeof rest.priority !== "undefined") data.priority = rest.priority
     if (typeof rest.scheduledFor !== "undefined") {
-      data.scheduledFor = rest.scheduledFor ? new Date(rest.scheduledFor) : null;
+      data.scheduledFor = rest.scheduledFor ? new Date(rest.scheduledFor) : null
     }
     if (typeof rest.expiresAt !== "undefined") {
-      data.expiresAt = rest.expiresAt ? new Date(rest.expiresAt) : null;
+      data.expiresAt = rest.expiresAt ? new Date(rest.expiresAt) : null
     }
-    if (typeof rest.pinned !== "undefined") data.pinned = rest.pinned;
-    if (typeof rest.featured !== "undefined") data.featured = rest.featured;
+    if (typeof rest.pinned !== "undefined") data.pinned = rest.pinned
+    if (typeof rest.featured !== "undefined") data.featured = rest.featured
 
     // Update announcement (using updateMany for tenant safety)
     await db.announcement.updateMany({
       where: { id, schoolId },
-      data
-    });
+      data,
+    })
 
     // Revalidate cache - both path and tags
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateAnnouncement] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update announcement"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update announcement",
+    }
   }
 }
 
@@ -461,76 +503,88 @@ export async function updateAnnouncement(
  * @param input - Announcement ID
  * @returns Action response
  */
-export async function deleteAnnouncement(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteAnnouncement(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Fetch existing announcement to check ownership
     const existing = await db.announcement.findFirst({
       where: { id, schoolId },
-      select: { id: true, createdBy: true, schoolId: true, scope: true, published: true },
-    });
+      select: {
+        id: true,
+        createdBy: true,
+        schoolId: true,
+        scope: true,
+        published: true,
+      },
+    })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" };
+      return { success: false, error: "Announcement not found" }
     }
 
     // Check delete permission
     try {
-      assertAnnouncementPermission(authContext, 'delete', {
+      assertAnnouncementPermission(authContext, "delete", {
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as 'school' | 'class' | 'role',
-      });
+        scope: existing.scope as "school" | "class" | "role",
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to delete this announcement"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to delete this announcement",
+      }
     }
 
     // Delete announcement (using deleteMany for tenant safety)
-    await db.announcement.deleteMany({ where: { id, schoolId } });
+    await db.announcement.deleteMany({ where: { id, schoolId } })
 
     // Revalidate cache - both path and tags
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteAnnouncement] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete announcement"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete announcement",
+    }
   }
 }
 
@@ -539,51 +593,61 @@ export async function deleteAnnouncement(
  * @param input - Announcement ID and publish flag
  * @returns Action response
  */
-export async function toggleAnnouncementPublish(
-  input: { id: string; publish: boolean }
-): Promise<ActionResponse<void>> {
+export async function toggleAnnouncementPublish(input: {
+  id: string
+  publish: boolean
+}): Promise<ActionResponse<void>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
     const { id, publish } = z
       .object({ id: z.string().min(1), publish: z.boolean() })
-      .parse(input);
+      .parse(input)
 
     // Fetch existing announcement to check ownership
     const existing = await db.announcement.findFirst({
       where: { id, schoolId },
-      select: { id: true, createdBy: true, schoolId: true, scope: true, published: true },
-    });
+      select: {
+        id: true,
+        createdBy: true,
+        schoolId: true,
+        scope: true,
+        published: true,
+      },
+    })
 
     if (!existing) {
-      return { success: false, error: "Announcement not found" };
+      return { success: false, error: "Announcement not found" }
     }
 
     // Check publish permission
     try {
-      assertAnnouncementPermission(authContext, 'publish', {
+      assertAnnouncementPermission(authContext, "publish", {
         id: existing.id,
         createdBy: existing.createdBy,
         schoolId: existing.schoolId,
-        scope: existing.scope as 'school' | 'class' | 'role',
-      });
+        scope: existing.scope as "school" | "class" | "role",
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to publish this announcement"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to publish this announcement",
+      }
     }
 
     // Update publish status
@@ -593,31 +657,34 @@ export async function toggleAnnouncementPublish(
         published: publish,
         // Will add publishedAt after schema migration
         // publishedAt: publish ? new Date() : null
-      }
-    });
+      },
+    })
 
     // Revalidate cache - both path and tags
-    revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`, "max");
+    revalidatePath(ANNOUNCEMENTS_PATH)
+    revalidateTag(`announcements-${schoolId}`, "max")
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[toggleAnnouncementPublish] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to toggle publish status"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle publish status",
+    }
   }
 }
 
@@ -630,25 +697,25 @@ export async function toggleAnnouncementPublish(
  * @param input - Announcement ID
  * @returns Action response with announcement data
  */
-export async function getAnnouncement(
-  input: { id: string }
-): Promise<ActionResponse<AnnouncementSelectResult | null>> {
+export async function getAnnouncement(input: {
+  id: string
+}): Promise<ActionResponse<AnnouncementSelectResult | null>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Fetch announcement with proper select - bilingual fields
     const announcement = await db.announcement.findFirst({
@@ -669,43 +736,47 @@ export async function getAnnouncement(
         createdAt: true,
         updatedAt: true,
       },
-    });
+    })
 
     if (!announcement) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     // Check read permission
     try {
-      assertAnnouncementPermission(authContext, 'read', {
+      assertAnnouncementPermission(authContext, "read", {
         id: announcement.id,
         schoolId: announcement.schoolId,
-      });
+      })
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unauthorized to read this announcement"
-      };
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unauthorized to read this announcement",
+      }
     }
 
-    return { success: true, data: announcement };
+    return { success: true, data: announcement }
   } catch (error) {
     console.error("[getAnnouncement] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch announcement"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch announcement",
+    }
   }
 }
 
@@ -719,20 +790,20 @@ export async function getAnnouncements(
 ): Promise<ActionResponse<{ rows: AnnouncementListResult[]; total: number }>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getAnnouncementsSchema.parse(input ?? {});
+    const sp = getAnnouncementsSchema.parse(input ?? {})
 
     // Build where clause with proper types
     // Search in both titleEn and titleAr
@@ -740,17 +811,17 @@ export async function getAnnouncements(
       schoolId,
       ...(sp.title && {
         OR: [
-          { titleEn: { contains: sp.title, mode: 'insensitive' } },
-          { titleAr: { contains: sp.title, mode: 'insensitive' } },
+          { titleEn: { contains: sp.title, mode: "insensitive" } },
+          { titleAr: { contains: sp.title, mode: "insensitive" } },
         ],
       }),
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
-    };
+    }
 
     // Build pagination
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
 
     // Build order by clause
     const orderBy: Prisma.AnnouncementOrderByWithRelationInput[] =
@@ -758,7 +829,7 @@ export async function getAnnouncements(
         ? sp.sort.map((s) => ({
             [s.id]: s.desc ? Prisma.SortOrder.desc : Prisma.SortOrder.asc,
           }))
-        : [{ createdAt: Prisma.SortOrder.desc }];
+        : [{ createdAt: Prisma.SortOrder.desc }]
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
@@ -781,7 +852,7 @@ export async function getAnnouncements(
         },
       }),
       db.announcement.count({ where }),
-    ]);
+    ])
 
     // Map results with proper types - bilingual fields
     const mapped: AnnouncementListResult[] = rows.map((a) => ({
@@ -795,26 +866,29 @@ export async function getAnnouncements(
       featured: a.featured,
       createdAt: a.createdAt.toISOString(),
       createdBy: a.createdBy,
-    }));
+    }))
 
-    return { success: true, data: { rows: mapped, total: count } };
+    return { success: true, data: { rows: mapped, total: count } }
   } catch (error) {
     console.error("[getAnnouncements] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch announcements"
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch announcements",
+    }
   }
 }
 
@@ -822,31 +896,35 @@ export async function getAnnouncements(
  * Get previous announcements for autocomplete suggestions
  * Returns recent announcements with titles and bodies
  */
-export async function getPreviousAnnouncements(): Promise<ActionResponse<Array<{
-  id: string;
-  titleEn: string | null;
-  titleAr: string | null;
-  bodyEn: string | null;
-  bodyAr: string | null;
-}>>> {
+export async function getPreviousAnnouncements(): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      titleEn: string | null
+      titleAr: string | null
+      bodyEn: string | null
+      bodyAr: string | null
+    }>
+  >
+> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Fetch recent announcements for suggestions (limit to 20 most recent)
     const announcements = await db.announcement.findMany({
       where: { schoolId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 20,
       select: {
         id: true,
@@ -855,68 +933,64 @@ export async function getPreviousAnnouncements(): Promise<ActionResponse<Array<{
         bodyEn: true,
         bodyAr: true,
       },
-    });
+    })
 
-    return { success: true, data: announcements };
+    return { success: true, data: announcements }
   } catch (error) {
-    console.error("[getPreviousAnnouncements] Error:", error);
+    console.error("[getPreviousAnnouncements] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch suggestions"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch suggestions",
+    }
   }
 }
 
-// ============================================================================
-// Announcement Config Actions
-// ============================================================================
-
-import { announcementConfigSchema } from "@/components/platform/announcements/validation";
-import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/client";
-
 export type AnnouncementConfigData = {
-  id: string;
-  schoolId: string;
-  defaultScope: string;
-  defaultPriority: string;
-  autoPublish: boolean;
-  defaultExpiryDays: number;
-  emailOnPublish: boolean;
-  pushNotifications: boolean;
-  quietHoursStart: string | null;
-  quietHoursEnd: string | null;
-  digestFrequency: string;
-  defaultTemplateId: string | null;
-  allowCustomTemplates: boolean;
-  readTracking: boolean;
-  retentionDays: number;
-  autoArchive: boolean;
-  archiveAfterDays: number;
-};
+  id: string
+  schoolId: string
+  defaultScope: string
+  defaultPriority: string
+  autoPublish: boolean
+  defaultExpiryDays: number
+  emailOnPublish: boolean
+  pushNotifications: boolean
+  quietHoursStart: string | null
+  quietHoursEnd: string | null
+  digestFrequency: string
+  defaultTemplateId: string | null
+  allowCustomTemplates: boolean
+  readTracking: boolean
+  retentionDays: number
+  autoArchive: boolean
+  archiveAfterDays: number
+}
 
 /**
  * Get announcement config for the current school
  * Creates default config if none exists
  */
-export async function getAnnouncementConfig(): Promise<ActionResponse<AnnouncementConfigData>> {
+export async function getAnnouncementConfig(): Promise<
+  ActionResponse<AnnouncementConfigData>
+> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Try to find existing config
     let config = await db.announcementConfig.findUnique({
       where: { schoolId },
-    });
+    })
 
     // Create default config if none exists
     if (!config) {
@@ -925,7 +999,7 @@ export async function getAnnouncementConfig(): Promise<ActionResponse<Announceme
           schoolId,
           // All defaults are set in the Prisma schema
         },
-      });
+      })
     }
 
     return {
@@ -949,13 +1023,13 @@ export async function getAnnouncementConfig(): Promise<ActionResponse<Announceme
         autoArchive: config.autoArchive,
         archiveAfterDays: config.archiveAfterDays,
       },
-    };
+    }
   } catch (error) {
-    console.error("[getAnnouncementConfig] Error:", error);
+    console.error("[getAnnouncementConfig] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch config"
-    };
+      error: error instanceof Error ? error.message : "Failed to fetch config",
+    }
   }
 }
 
@@ -967,25 +1041,28 @@ export async function updateAnnouncementConfig(
 ): Promise<ActionResponse<AnnouncementConfigData>> {
   try {
     // Get authentication context
-    const session = await auth();
-    const authContext = getAuthContext(session);
+    const session = await auth()
+    const authContext = getAuthContext(session)
     if (!authContext) {
-      return { success: false, error: "Not authenticated" };
+      return { success: false, error: "Not authenticated" }
     }
 
     // Only admins can update config
     if (!["ADMIN", "DEVELOPER"].includes(authContext.role)) {
-      return { success: false, error: "Only admins can update announcement settings" };
+      return {
+        success: false,
+        error: "Only admins can update announcement settings",
+      }
     }
 
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = announcementConfigSchema.parse(input);
+    const parsed = announcementConfigSchema.parse(input)
 
     // Upsert config
     const config = await db.announcementConfig.upsert({
@@ -995,10 +1072,10 @@ export async function updateAnnouncementConfig(
         ...parsed,
       },
       update: parsed,
-    });
+    })
 
     // Revalidate config page
-    revalidatePath("/announcements/config");
+    revalidatePath("/announcements/config")
 
     return {
       success: true,
@@ -1021,29 +1098,33 @@ export async function updateAnnouncementConfig(
         autoArchive: config.autoArchive,
         archiveAfterDays: config.archiveAfterDays,
       },
-    };
+    }
   } catch (error) {
-    console.error("[updateAnnouncementConfig] Error:", error);
+    console.error("[updateAnnouncementConfig] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update config"
-    };
+      error: error instanceof Error ? error.message : "Failed to update config",
+    }
   }
 }
 
 /**
  * Get announcement templates for the current school (for config dropdown)
  */
-export async function getAnnouncementTemplates(): Promise<ActionResponse<Array<{
-  id: string;
-  name: string;
-  type: string;
-}>>> {
+export async function getAnnouncementTemplates(): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      name: string
+      type: string
+    }>
+  >
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     const templates = await db.announcementTemplate.findMany({
@@ -1053,15 +1134,16 @@ export async function getAnnouncementTemplates(): Promise<ActionResponse<Array<{
         name: true,
         type: true,
       },
-      orderBy: { name: 'asc' },
-    });
+      orderBy: { name: "asc" },
+    })
 
-    return { success: true, data: templates };
+    return { success: true, data: templates }
   } catch (error) {
-    console.error("[getAnnouncementTemplates] Error:", error);
+    console.error("[getAnnouncementTemplates] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch templates"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch templates",
+    }
   }
 }

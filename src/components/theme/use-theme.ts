@@ -30,21 +30,23 @@
  * - applyThemeToDocument modifies DOM styles (side-effect in hook)
  */
 
-'use client'
+"use client"
 
-import { useState, useCallback, useTransition } from 'react'
-import { useTheme as useNextTheme } from 'next-themes'
-import { useEditorStore } from '@/store/theme-editor-store'
-import { applyThemeToDocument, storeThemeInLocalStorage } from './inject-theme'
+import { useCallback, useState, useTransition } from "react"
+import { useEditorStore } from "@/store/theme-editor-store"
+import { useTheme as useNextTheme } from "next-themes"
+import { toast } from "sonner"
+
+import type { ThemeEditorState } from "@/types/theme-editor"
+
 import {
+  activateUserTheme,
+  deleteUserTheme,
   getUserTheme,
   getUserThemes,
   saveUserTheme,
-  activateUserTheme,
-  deleteUserTheme,
-} from './actions'
-import type { ThemeEditorState } from '@/types/theme-editor'
-import { toast } from 'sonner'
+} from "./actions"
+import { applyThemeToDocument, storeThemeInLocalStorage } from "./inject-theme"
 
 /**
  * Hook to access theme editor state
@@ -64,7 +66,7 @@ export function useThemeOperations() {
 
   const applyTheme = useCallback(
     (newThemeState: ThemeEditorState) => {
-      const mode = resolvedTheme === 'dark' ? 'dark' : 'light'
+      const mode = resolvedTheme === "dark" ? "dark" : "light"
       const currentStyles = newThemeState.styles[mode]
       applyThemeToDocument(currentStyles, mode)
       storeThemeInLocalStorage(currentStyles)
@@ -77,8 +79,8 @@ export function useThemeOperations() {
     async (name: string) => {
       startTransition(async () => {
         const formData = new FormData()
-        formData.append('name', name)
-        formData.append('themeConfig', JSON.stringify(themeState))
+        formData.append("name", name)
+        formData.append("themeConfig", JSON.stringify(themeState))
 
         const result = await saveUserTheme(formData)
 
@@ -87,7 +89,7 @@ export function useThemeOperations() {
           return
         }
 
-        toast.success('Theme saved successfully')
+        toast.success("Theme saved successfully")
       })
     },
     [themeState]
@@ -96,7 +98,7 @@ export function useThemeOperations() {
   const activateTheme = useCallback(async (themeId: string) => {
     startTransition(async () => {
       const formData = new FormData()
-      formData.append('themeId', themeId)
+      formData.append("themeId", themeId)
 
       const result = await activateUserTheme(formData)
 
@@ -105,14 +107,14 @@ export function useThemeOperations() {
         return
       }
 
-      toast.success('Theme activated')
+      toast.success("Theme activated")
     })
   }, [])
 
   const deleteTheme = useCallback(async (themeId: string) => {
     startTransition(async () => {
       const formData = new FormData()
-      formData.append('themeId', themeId)
+      formData.append("themeId", themeId)
 
       const result = await deleteUserTheme(formData)
 
@@ -121,7 +123,7 @@ export function useThemeOperations() {
         return
       }
 
-      toast.success('Theme deleted')
+      toast.success("Theme deleted")
     })
   }, [])
 
@@ -170,13 +172,17 @@ export function useUserThemes() {
  * Hook for building custom themes
  */
 export function useThemeBuilder() {
-  const [activeTab, setActiveTab] = useState<'colors' | 'typography' | 'spacing' | 'advanced'>(
-    'colors'
+  const [activeTab, setActiveTab] = useState<
+    "colors" | "typography" | "spacing" | "advanced"
+  >("colors")
+  const [previewMode, setPreviewMode] = useState<"component" | "page">(
+    "component"
   )
-  const [previewMode, setPreviewMode] = useState<'component' | 'page'>('component')
   const { resolvedTheme } = useNextTheme()
 
-  const currentMode = (resolvedTheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark'
+  const currentMode = (resolvedTheme === "dark" ? "dark" : "light") as
+    | "light"
+    | "dark"
 
   return {
     activeTab,
@@ -194,7 +200,7 @@ export function useThemeImportExport() {
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
 
-  const exportTheme = useCallback(async (themeName: string = 'theme') => {
+  const exportTheme = useCallback(async (themeName: string = "theme") => {
     setIsExporting(true)
     try {
       // Get current theme state from store
@@ -203,45 +209,53 @@ export function useThemeImportExport() {
       const dataStr = JSON.stringify(themeState, null, 2)
       // Create data URI for browser download
       // encodeURIComponent prevents issues with special characters
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      const dataUri =
+        "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
       const exportFileDefaultName = `${themeName}-${Date.now()}.json`
 
       // Trigger browser download via anchor click
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
+      const linkElement = document.createElement("a")
+      linkElement.setAttribute("href", dataUri)
+      linkElement.setAttribute("download", exportFileDefaultName)
       linkElement.click()
 
-      toast.success('Theme exported successfully')
+      toast.success("Theme exported successfully")
     } catch (error) {
-      toast.error('Failed to export theme')
+      toast.error("Failed to export theme")
       console.error(error)
     } finally {
       setIsExporting(false)
     }
   }, [])
 
-  const importTheme = useCallback(async (file: File): Promise<ThemeEditorState | null> => {
-    setIsImporting(true)
-    try {
-      const text = await file.text()
-      const themeState = JSON.parse(text) as ThemeEditorState
+  const importTheme = useCallback(
+    async (file: File): Promise<ThemeEditorState | null> => {
+      setIsImporting(true)
+      try {
+        const text = await file.text()
+        const themeState = JSON.parse(text) as ThemeEditorState
 
-      // Validate basic structure
-      if (!themeState.styles || !themeState.styles.light || !themeState.styles.dark) {
-        throw new Error('Invalid theme file format')
+        // Validate basic structure
+        if (
+          !themeState.styles ||
+          !themeState.styles.light ||
+          !themeState.styles.dark
+        ) {
+          throw new Error("Invalid theme file format")
+        }
+
+        toast.success("Theme imported successfully")
+        return themeState
+      } catch (error) {
+        toast.error("Failed to import theme")
+        console.error(error)
+        return null
+      } finally {
+        setIsImporting(false)
       }
-
-      toast.success('Theme imported successfully')
-      return themeState
-    } catch (error) {
-      toast.error('Failed to import theme')
-      console.error(error)
-      return null
-    } finally {
-      setIsImporting(false)
-    }
-  }, [])
+    },
+    []
+  )
 
   return {
     exportTheme,
@@ -255,7 +269,7 @@ export function useThemeImportExport() {
  * Hook for accessing preset store
  */
 export function usePresetStore() {
-  const { useThemePresetStore } = require('@/store/theme-preset-store')
+  const { useThemePresetStore } = require("@/store/theme-preset-store")
   return useThemePresetStore()
 }
 
@@ -268,7 +282,7 @@ export function usePresetStore() {
 export function usePresetThemes() {
   const [presets, setPresets] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const { useThemePresetStore } = require('@/store/theme-preset-store')
+  const { useThemePresetStore } = require("@/store/theme-preset-store")
   const presetStore = useThemePresetStore()
 
   const fetchPresets = useCallback(async () => {
@@ -281,14 +295,14 @@ export function usePresetThemes() {
       // If store is empty, wait briefly for theme-provider initialization (race condition)
       // Most of the time presets are ready immediately
       if (presetsArray.length === 0) {
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise((resolve) => setTimeout(resolve, 100))
         const retryPresets = Object.values(presetStore.getAllPresets())
         setPresets(retryPresets)
       } else {
         setPresets(presetsArray)
       }
     } catch (error) {
-      console.error('Failed to load presets:', error)
+      console.error("Failed to load presets:", error)
     } finally {
       setIsLoading(false)
     }

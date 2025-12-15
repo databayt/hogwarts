@@ -1,4 +1,4 @@
-import { DocsConfig } from "@/components/marketing/pricing/types";
+import { DocsConfig } from "@/components/marketing/pricing/types"
 
 export const docsConfig: DocsConfig = {
   mainNav: [
@@ -67,4 +67,4 @@ export const docsConfig: DocsConfig = {
       ],
     },
   ],
-};
+}

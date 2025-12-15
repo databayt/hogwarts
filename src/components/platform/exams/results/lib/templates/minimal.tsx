@@ -1,18 +1,13 @@
 // Minimal PDF Template - Clean and Simple Text-Based
 
-import React from "react";
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-} from "@react-pdf/renderer";
-import type { PDFResultData } from "../../types";
-import { formatPDFDate, formatPDFNumber } from "../pdf-generator";
+import React from "react"
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
+
+import type { PDFResultData } from "../../types"
+import { formatPDFDate, formatPDFNumber } from "../pdf-generator"
 
 interface MinimalTemplateProps {
-  data: PDFResultData;
+  data: PDFResultData
 }
 
 // Clean, minimalist styles
@@ -193,11 +188,11 @@ const styles = StyleSheet.create({
     color: "#333333",
     lineHeight: 1.5,
   },
-});
+})
 
 export function MinimalTemplate({ data }: MinimalTemplateProps) {
-  const { student, exam, school, analytics, metadata } = data;
-  const isPassing = student.marksObtained >= exam.passingMarks;
+  const { student, exam, school, analytics, metadata } = data
+  const isPassing = student.marksObtained >= exam.passingMarks
 
   return (
     <Document>
@@ -423,10 +418,11 @@ export function MinimalTemplate({ data }: MinimalTemplateProps) {
             Year: {metadata.academicYear}
           </Text>
           <Text style={styles.footerText}>
-            This is a system-generated document and does not require a signature.
+            This is a system-generated document and does not require a
+            signature.
           </Text>
         </View>
       </Page>
     </Document>
-  );
+  )
 }

@@ -1,20 +1,22 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Check, Trash2, Loader2 } from "lucide-react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
-import type { NotificationDTO } from "./types"
-import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
-import { markNotificationAsRead, deleteNotification } from "./actions"
-import { useRouter } from "next/navigation"
+import { Check, Loader2, Trash2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { deleteNotification, markNotificationAsRead } from "./actions"
+import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
+import type { NotificationDTO } from "./types"
 
 interface NotificationCardProps {
   notification: NotificationDTO
@@ -116,11 +118,13 @@ export function NotificationCard({
     >
       <Card
         className={cn(
-          "relative cursor-pointer transition-all duration-200 hover:bg-accent/50 hover:shadow-sm",
-          !notification.read && "bg-accent/30 border-l-4 border-l-primary",
-          notification.priority === "urgent" && !notification.read && "border-l-destructive",
+          "hover:bg-accent/50 relative cursor-pointer transition-all duration-200 hover:shadow-sm",
+          !notification.read && "bg-accent/30 border-l-primary border-l-4",
+          notification.priority === "urgent" &&
+            !notification.read &&
+            "border-l-destructive",
           compact ? "p-3" : "p-4",
-          isDeleting && "opacity-50 pointer-events-none scale-95"
+          isDeleting && "pointer-events-none scale-95 opacity-50"
         )}
         onClick={handleClick}
       >
@@ -145,16 +149,16 @@ export function NotificationCard({
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {/* Header */}
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <div className="flex-1 min-w-0">
+            <div className="mb-1 flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
                 <p
                   className={cn(
-                    "text-sm truncate",
+                    "truncate text-sm",
                     notification.read
-                      ? "font-medium text-muted-foreground"
-                      : "font-semibold text-foreground"
+                      ? "text-muted-foreground font-medium"
+                      : "text-foreground font-semibold"
                   )}
                 >
                   {notification.title}
@@ -163,8 +167,13 @@ export function NotificationCard({
 
               {/* Priority Badge */}
               {notification.priority !== "normal" && !compact && (
-                <Badge variant={priorityConfig.badgeVariant} className="shrink-0">
-                  <span className="text-xs">{dictionary.priorities.badge[notification.priority]}</span>
+                <Badge
+                  variant={priorityConfig.badgeVariant}
+                  className="shrink-0"
+                >
+                  <span className="text-xs">
+                    {dictionary.priorities.badge[notification.priority]}
+                  </span>
                 </Badge>
               )}
             </div>
@@ -172,7 +181,7 @@ export function NotificationCard({
             {/* Body */}
             <p
               className={cn(
-                "text-sm text-muted-foreground",
+                "text-muted-foreground text-sm",
                 compact ? "line-clamp-1" : "line-clamp-2"
               )}
             >
@@ -180,27 +189,26 @@ export function NotificationCard({
             </p>
 
             {/* Footer */}
-            <div className="flex items-center justify-between mt-2">
+            <div className="mt-2 flex items-center justify-between">
               {/* Actor & Time */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {notification.actor && (
                     <>
-                      <span className="truncate max-w-[120px] inline-block align-bottom">
-                        {notification.actor.username || notification.actor.email}
+                      <span className="inline-block max-w-[120px] truncate align-bottom">
+                        {notification.actor.username ||
+                          notification.actor.email}
                       </span>
                       <span className="mx-1">•</span>
                     </>
                   )}
-                  <time dateTime={notification.createdAt}>
-                    {timeAgo}
-                  </time>
+                  <time dateTime={notification.createdAt}>{timeAgo}</time>
                 </span>
               </div>
 
               {/* Actions */}
               {!compact && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   {!notification.read && (
                     <Button
                       variant="ghost"
@@ -215,13 +223,15 @@ export function NotificationCard({
                       ) : (
                         <Check className="h-3.5 w-3.5" />
                       )}
-                      <span className="sr-only">{dictionary.actions.markAsRead}</span>
+                      <span className="sr-only">
+                        {dictionary.actions.markAsRead}
+                      </span>
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2"
                     onClick={handleDelete}
                     disabled={isDeleting}
                     aria-label={dictionary.accessibility.deleteButton}
@@ -241,7 +251,7 @@ export function NotificationCard({
           {/* Unread Indicator */}
           {!notification.read && compact && (
             <div className="flex-shrink-0 self-center">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <div className="bg-primary h-2 w-2 animate-pulse rounded-full" />
             </div>
           )}
         </div>

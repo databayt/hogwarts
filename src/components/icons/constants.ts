@@ -121,7 +121,8 @@ export const CATEGORY_INFO: Record<
 > = {
   [IconCategory.SYSTEM]: {
     label: "System",
-    description: "Core UI icons for buttons, navigation, and interface elements",
+    description:
+      "Core UI icons for buttons, navigation, and interface elements",
     examples: [
       "close",
       "menu",
@@ -441,9 +442,11 @@ export const RATE_LIMITS = {
  */
 export const ERROR_MESSAGES = {
   INVALID_VIEWBOX: "Icon must use viewBox '0 0 1000 1000' (Anthropic standard)",
-  INVALID_COLORS: "Icon must use only light (#FAF9F5) and dark (#141413) colors",
+  INVALID_COLORS:
+    "Icon must use only light (#FAF9F5) and dark (#141413) colors",
   FILE_TOO_LARGE: "Icon file size must be under 25KB",
-  FORBIDDEN_ELEMENT: "Icon contains forbidden elements (gradients, scripts, etc.)",
+  FORBIDDEN_ELEMENT:
+    "Icon contains forbidden elements (gradients, scripts, etc.)",
   INVALID_NAME: "Icon name must be kebab-case (e.g., 'attendance-present')",
   DUPLICATE_NAME: "An icon with this name already exists",
   RATE_LIMIT_EXCEEDED: "SVG Maker rate limit exceeded. Try again later.",

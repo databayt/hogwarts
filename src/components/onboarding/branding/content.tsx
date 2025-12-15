@@ -1,92 +1,98 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
-import { useListing } from '@/components/onboarding/use-listing';
-import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { Button } from "@/components/ui/button";
-import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file";
-import { Upload, X } from 'lucide-react';
+import React, { useEffect, useState } from "react"
+import Image from "next/image"
+import { useParams, useRouter } from "next/navigation"
+import { Upload, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  ACCEPT_IMAGES,
+  FileUploader,
+  type UploadedFileResult,
+} from "@/components/file"
+import { useHostValidation } from "@/components/onboarding/host-validation-context"
+import { useListing } from "@/components/onboarding/use-listing"
 
 interface Props {
-  dictionary?: any;
+  dictionary?: any
 }
 
 export default function BrandingContent({ dictionary }: Props) {
-  const dict = dictionary?.onboarding || {};
-  const router = useRouter();
-  const params = useParams();
-  const { setCustomNavigation, enableNext } = useHostValidation();
-  const { listing, updateListingData } = useListing();
-  const [logo, setLogo] = useState<string>();
-  const [showUploader, setShowUploader] = useState(false);
+  const dict = dictionary?.onboarding || {}
+  const router = useRouter()
+  const params = useParams()
+  const { setCustomNavigation, enableNext } = useHostValidation()
+  const { listing, updateListingData } = useListing()
+  const [logo, setLogo] = useState<string>()
+  const [showUploader, setShowUploader] = useState(false)
 
-  const id = params?.id as string;
+  const id = params?.id as string
 
   // Load existing logo from listing
   useEffect(() => {
     if (listing?.logoUrl) {
-      setLogo(listing.logoUrl);
+      setLogo(listing.logoUrl)
     }
-  }, [listing]);
+  }, [listing])
 
   // Always enable next (logo is optional)
   useEffect(() => {
-    enableNext();
-  }, [enableNext]);
+    enableNext()
+  }, [enableNext])
 
   const handleNext = async () => {
     try {
       if (logo) {
-        updateListingData({ logoUrl: logo });
+        updateListingData({ logoUrl: logo })
       }
-      router.push(`/onboarding/${id}/import`);
+      router.push(`/onboarding/${id}/import`)
     } catch (error) {
-      console.error('Error updating branding:', error);
+      console.error("Error updating branding:", error)
     }
-  };
+  }
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
     if (files.length > 0) {
-      const uploadedFile = files[0];
-      const logoUrl = uploadedFile.cdnUrl || uploadedFile.url;
-      setLogo(logoUrl);
-      setShowUploader(false);
-      updateListingData({ logoUrl });
+      const uploadedFile = files[0]
+      const logoUrl = uploadedFile.cdnUrl || uploadedFile.url
+      setLogo(logoUrl)
+      setShowUploader(false)
+      updateListingData({ logoUrl })
     }
-  };
+  }
 
   const handleUploadError = (error: string) => {
-    console.error('Upload error:', error);
-  };
+    console.error("Upload error:", error)
+  }
 
   const handleRemoveLogo = () => {
-    setLogo(undefined);
-    updateListingData({ logoUrl: undefined });
-  };
+    setLogo(undefined)
+    updateListingData({ logoUrl: undefined })
+  }
 
   // Set custom navigation
   useEffect(() => {
     setCustomNavigation({
-      onNext: handleNext
-    });
+      onNext: handleNext,
+    })
 
     return () => {
-      setCustomNavigation(undefined);
-    };
-  }, [logo]);
+      setCustomNavigation(undefined)
+    }
+  }, [logo])
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+      <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
         {/* Left side - Text content */}
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-3xl font-bold">
             {dict.schoolBranding || "Upload your school logo"}
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            {dict.brandingDescription || "Add your school's logo to personalize your platform. This is optional - you can always add it later."}
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {dict.brandingDescription ||
+              "Add your school's logo to personalize your platform. This is optional - you can always add it later."}
           </p>
         </div>
 
@@ -95,19 +101,19 @@ export default function BrandingContent({ dictionary }: Props) {
           {!logo && !showUploader ? (
             <div
               onClick={() => setShowUploader(true)}
-              className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-[250px] w-[400px] flex flex-col items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
+              className="border-muted-foreground/30 hover:border-muted-foreground/50 flex h-[250px] w-[400px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors"
             >
-              <Upload className="h-10 w-10 text-muted-foreground mb-4" />
+              <Upload className="text-muted-foreground mb-4 h-10 w-10" />
               <p className="font-medium">{dict.uploadLogo || "Upload logo"}</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {dict.logoFileTypes || "SVG, PNG, JPG"}
               </p>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-xs">
                 {dict.optional || "(Optional)"}
               </p>
             </div>
           ) : showUploader ? (
-            <div className="space-y-4 w-[400px]">
+            <div className="w-[400px] space-y-4">
               <FileUploader
                 category="IMAGE"
                 folder="school-logos"
@@ -128,7 +134,7 @@ export default function BrandingContent({ dictionary }: Props) {
               </Button>
             </div>
           ) : (
-            <div className="relative h-[250px] w-[400px] border rounded-lg overflow-hidden">
+            <div className="relative h-[250px] w-[400px] overflow-hidden rounded-lg border">
               {logo && (
                 <Image
                   src={logo}
@@ -150,5 +156,5 @@ export default function BrandingContent({ dictionary }: Props) {
         </div>
       </div>
     </div>
-  );
+  )
 }

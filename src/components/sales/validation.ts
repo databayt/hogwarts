@@ -34,56 +34,52 @@
  * - Compliance: GDPR audit (can prove consent/no-contact requests)
  */
 
-import { z } from 'zod';
-import {
-  LEAD_STATUS,
-  LEAD_SOURCE,
-  LEAD_PRIORITY,
-  LEAD_TYPE,
-} from './constants';
+import { z } from "zod"
+
+import { LEAD_PRIORITY, LEAD_SOURCE, LEAD_STATUS, LEAD_TYPE } from "./constants"
 
 // Lead creation schema
 export const createLeadSchema = z.object({
   name: z
     .string()
-    .min(1, 'Name is required')
-    .max(100, 'Name must be less than 100 characters')
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters")
     .trim(),
 
   email: z
     .string()
-    .email('Invalid email address')
+    .email("Invalid email address")
     .transform((val) => val?.toLowerCase())
     .optional()
-    .or(z.literal('')),
+    .or(z.literal("")),
 
-  phone: z.string().optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal("")),
 
-  alternatePhone: z.string().optional().or(z.literal('')),
+  alternatePhone: z.string().optional().or(z.literal("")),
 
   company: z
     .string()
-    .max(100, 'Company name must be less than 100 characters')
+    .max(100, "Company name must be less than 100 characters")
     .trim()
     .optional(),
 
   title: z
     .string()
-    .max(100, 'Title must be less than 100 characters')
+    .max(100, "Title must be less than 100 characters")
     .trim()
     .optional(),
 
-  website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  website: z.string().url("Invalid URL").optional().or(z.literal("")),
 
-  linkedinUrl: z.string().optional().or(z.literal('')),
+  linkedinUrl: z.string().optional().or(z.literal("")),
 
   leadType: z
     .enum(Object.keys(LEAD_TYPE) as [string, ...string[]])
-    .default('SCHOOL'),
+    .default("SCHOOL"),
 
   industry: z
     .string()
-    .max(50, 'Industry must be less than 50 characters')
+    .max(50, "Industry must be less than 50 characters")
     .optional(),
 
   location: z.string().max(100).optional(),
@@ -92,20 +88,20 @@ export const createLeadSchema = z.object({
 
   status: z
     .enum(Object.keys(LEAD_STATUS) as [string, ...string[]])
-    .default('NEW'),
+    .default("NEW"),
 
   source: z
     .enum(Object.keys(LEAD_SOURCE) as [string, ...string[]])
-    .default('MANUAL'),
+    .default("MANUAL"),
 
   priority: z
     .enum(Object.keys(LEAD_PRIORITY) as [string, ...string[]])
-    .default('MEDIUM'),
+    .default("MEDIUM"),
 
   score: z
     .number()
-    .min(0, 'Score must be between 0 and 100')
-    .max(100, 'Score must be between 0 and 100')
+    .min(0, "Score must be between 0 and 100")
+    .max(100, "Score must be between 0 and 100")
     .default(50),
 
   verified: z.boolean().default(false),
@@ -118,24 +114,24 @@ export const createLeadSchema = z.object({
 
   notes: z
     .string()
-    .max(5000, 'Notes must be less than 5000 characters')
+    .max(5000, "Notes must be less than 5000 characters")
     .optional(),
 
   tags: z
     .array(z.string().max(30))
-    .max(10, 'Maximum 10 tags allowed')
+    .max(10, "Maximum 10 tags allowed")
     .default([]),
-});
+})
 
 // Lead update schema (all fields optional)
-export const updateLeadSchema = createLeadSchema.partial();
+export const updateLeadSchema = createLeadSchema.partial()
 
 // Bulk update schema
 export const bulkUpdateSchema = z.object({
   leadIds: z
     .array(z.string())
-    .min(1, 'At least one lead must be selected')
-    .max(100, 'Maximum 100 leads can be updated at once'),
+    .min(1, "At least one lead must be selected")
+    .max(100, "Maximum 100 leads can be updated at once"),
 
   updates: z
     .object({
@@ -152,9 +148,9 @@ export const bulkUpdateSchema = z.object({
       removeTags: z.array(z.string()).optional(),
     })
     .refine((data) => Object.keys(data).length > 0, {
-      message: 'At least one field must be updated',
+      message: "At least one field must be updated",
     }),
-});
+})
 
 // Lead filter schema
 export const leadFilterSchema = z
@@ -169,7 +165,9 @@ export const leadFilterSchema = z
     priority: z
       .enum(Object.keys(LEAD_PRIORITY) as [string, ...string[]])
       .optional(),
-    leadType: z.enum(Object.keys(LEAD_TYPE) as [string, ...string[]]).optional(),
+    leadType: z
+      .enum(Object.keys(LEAD_TYPE) as [string, ...string[]])
+      .optional(),
     scoreMin: z.number().min(0).max(100).optional(),
     scoreMax: z.number().min(0).max(100).optional(),
     dateFrom: z.coerce.date().optional(),
@@ -185,69 +183,59 @@ export const leadFilterSchema = z
     // Why: If user filters 70-50, meaningless (no leads with score in range)
     (data) => {
       if (data.scoreMin !== undefined && data.scoreMax !== undefined) {
-        return data.scoreMin <= data.scoreMax;
+        return data.scoreMin <= data.scoreMax
       }
-      return true;
+      return true
     },
     {
-      message: 'Minimum score must be less than or equal to maximum score',
-      path: ['scoreMin'],
+      message: "Minimum score must be less than or equal to maximum score",
+      path: ["scoreMin"],
     }
-  );
+  )
 
 // Lead activity schema
 export const leadActivitySchema = z.object({
   leadId: z.string(),
 
-  type: z.enum([
-    'email_sent',
-    'call',
-    'meeting',
-    'note',
-    'status_change',
-  ]),
+  type: z.enum(["email_sent", "call", "meeting", "note", "status_change"]),
 
   description: z
     .string()
-    .min(1, 'Description is required')
-    .max(500, 'Description must be less than 500 characters'),
+    .min(1, "Description is required")
+    .max(500, "Description must be less than 500 characters"),
 
   metadata: z.record(z.string(), z.unknown()).optional(),
-});
+})
 
 // Export configuration schema
 export const exportConfigSchema = z.object({
-  format: z.enum(['csv', 'json', 'xlsx']),
+  format: z.enum(["csv", "json", "xlsx"]),
 
   fields: z
     .array(z.string())
-    .min(1, 'At least one field must be selected for export'),
+    .min(1, "At least one field must be selected for export"),
 
   filters: leadFilterSchema.optional(),
 
   options: z
     .object({
       includeHeaders: z.boolean().default(true),
-      dateFormat: z.enum(['iso', 'us', 'eu']).default('iso'),
-      delimiter: z.enum([',', ';', '\t']).default(','),
+      dateFormat: z.enum(["iso", "us", "eu"]).default("iso"),
+      delimiter: z.enum([",", ";", "\t"]).default(","),
     })
     .optional(),
-});
+})
 
 // AI extraction schema
 export const aiExtractionInputSchema = z.object({
   rawText: z
     .string()
-    .min(10, 'Text must be at least 10 characters')
-    .max(50000, 'Text must be less than 50,000 characters'),
+    .min(10, "Text must be at least 10 characters")
+    .max(50000, "Text must be less than 50,000 characters"),
 
-  source: z
-    .enum(['manual', 'web', 'file', 'api'])
-    .default('manual'),
+  source: z.enum(["manual", "web", "file", "api"]).default("manual"),
 
-  model: z
-    .enum(['groq', 'claude', 'openai'])
-    .default('groq'),
+  model: z.enum(["groq", "claude", "openai"]).default("groq"),
 
   options: z
     .object({
@@ -256,13 +244,13 @@ export const aiExtractionInputSchema = z.object({
       enrichWithAI: z.boolean().default(false),
     })
     .optional(),
-});
+})
 
 // Type exports from schemas
-export type CreateLeadInput = z.infer<typeof createLeadSchema>;
-export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
-export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>;
-export type LeadFilterInput = z.infer<typeof leadFilterSchema>;
-export type LeadActivityInput = z.infer<typeof leadActivitySchema>;
-export type ExportConfigInput = z.infer<typeof exportConfigSchema>;
-export type AIExtractionInput = z.infer<typeof aiExtractionInputSchema>;
+export type CreateLeadInput = z.infer<typeof createLeadSchema>
+export type UpdateLeadInput = z.infer<typeof updateLeadSchema>
+export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>
+export type LeadFilterInput = z.infer<typeof leadFilterSchema>
+export type LeadActivityInput = z.infer<typeof leadActivitySchema>
+export type ExportConfigInput = z.infer<typeof exportConfigSchema>
+export type AIExtractionInput = z.infer<typeof aiExtractionInputSchema>

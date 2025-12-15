@@ -1,18 +1,26 @@
-"use client";
+"use client"
 
-import { FormControl, FormField, FormItem, FormMessage, FormLabel, FormDescription } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { EvaluationTypeSelector } from "./evaluation-type-selector";
-import { PrerequisiteSelector } from "./prerequisite-selector";
-import { ClassFormStepProps } from "./types";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
+import { EvaluationTypeSelector } from "./evaluation-type-selector"
+import { PrerequisiteSelector } from "./prerequisite-selector"
+import { ClassFormStepProps } from "./types"
 
 export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
   // Note: 'id' field only exists in update schema, not in create schema
   // PrerequisiteSelector handles undefined currentClassId gracefully
-  const currentClassId = undefined;
+  const currentClassId = undefined
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
@@ -82,9 +90,7 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>
-                Minimum enrollment
-              </FormDescription>
+              <FormDescription>Minimum enrollment</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -106,9 +112,7 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>
-                Maximum enrollment
-              </FormDescription>
+              <FormDescription>Maximum enrollment</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -130,16 +134,18 @@ export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
                   value={field.value || ""}
                 />
               </FormControl>
-              <FormDescription>
-                Course length
-              </FormDescription>
+              <FormDescription>Course length</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
 
-      <PrerequisiteSelector form={form} disabled={isView} currentClassId={currentClassId} />
+      <PrerequisiteSelector
+        form={form}
+        disabled={isView}
+        currentClassId={currentClassId}
+      />
     </div>
-  );
+  )
 }

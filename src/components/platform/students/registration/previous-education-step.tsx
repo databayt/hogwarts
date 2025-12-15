@@ -1,25 +1,40 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, School } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { format } from "date-fns"
+import { Calendar as CalendarIcon, School } from "lucide-react"
+import { UseFormReturn } from "react-hook-form"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Textarea } from "@/components/ui/textarea"
 
 interface PreviousEducationStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
-export function PreviousEducationStep({ form, dictionary }: PreviousEducationStepProps) {
-  const studentType = form.watch("studentType");
-  const isTransferStudent = studentType === "TRANSFER" || studentType === "INTERNATIONAL";
+export function PreviousEducationStep({
+  form,
+  dictionary,
+}: PreviousEducationStepProps) {
+  const studentType = form.watch("studentType")
+  const isTransferStudent =
+    studentType === "TRANSFER" || studentType === "INTERNATIONAL"
 
   return (
     <div className="grid gap-6">
@@ -27,7 +42,8 @@ export function PreviousEducationStep({ form, dictionary }: PreviousEducationSte
         <Alert>
           <School className="h-4 w-4" />
           <AlertDescription>
-            As a transfer student, please provide details about your previous education to help us place you in the appropriate grade level.
+            As a transfer student, please provide details about your previous
+            education to help us place you in the appropriate grade level.
           </AlertDescription>
         </Alert>
       )}
@@ -142,7 +158,10 @@ export function PreviousEducationStep({ form, dictionary }: PreviousEducationSte
               <FormItem>
                 <FormLabel>Reason for Transfer</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Family relocation, Better academics" {...field} />
+                  <Input
+                    placeholder="e.g., Family relocation, Better academics"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -169,12 +188,13 @@ export function PreviousEducationStep({ form, dictionary }: PreviousEducationSte
       </div>
 
       {!isTransferStudent && (
-        <div className="rounded-lg bg-muted p-4">
-          <p className="text-sm text-muted-foreground">
-            Previous education information is optional for regular students but helps us understand the student's academic background better.
+        <div className="bg-muted rounded-lg p-4">
+          <p className="text-muted-foreground text-sm">
+            Previous education information is optional for regular students but
+            helps us understand the student's academic background better.
           </p>
         </div>
       )}
     </div>
-  );
+  )
 }

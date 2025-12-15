@@ -1,37 +1,59 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Settings, RefreshCw, TriangleAlert, Calendar, Clock, Save, Check } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { useEffect, useState, useTransition } from "react"
 import {
-  getTermsForSelection,
-  getScheduleConfig,
+  Calendar,
+  Check,
+  Clock,
+  RefreshCw,
+  Save,
+  Settings,
+  TriangleAlert,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
   getPeriodsForTerm,
-  upsertSchoolWeekConfig
-} from '../actions'
+  getScheduleConfig,
+  getTermsForSelection,
+  upsertSchoolWeekConfig,
+} from "../actions"
 
 const DAY_LABELS = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
 ]
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
@@ -53,7 +75,7 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
   const [success, setSuccess] = useState<string | null>(null)
 
   const [terms, setTerms] = useState<{ id: string; label: string }[]>([])
-  const [selectedTerm, setSelectedTerm] = useState<string>('')
+  const [selectedTerm, setSelectedTerm] = useState<string>("")
 
   const [workingDays, setWorkingDays] = useState<number[]>([0, 1, 2, 3, 4])
   const [lunchAfterPeriod, setLunchAfterPeriod] = useState<number | null>(null)
@@ -79,7 +101,7 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError('Failed to load terms')
+      setError("Failed to load terms")
     }
   }
 
@@ -90,22 +112,22 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
       try {
         const [configResult, periodsResult] = await Promise.all([
           getScheduleConfig({ termId: selectedTerm }),
-          getPeriodsForTerm({ termId: selectedTerm })
+          getPeriodsForTerm({ termId: selectedTerm }),
         ])
 
         setWorkingDays(configResult.config.workingDays)
         setLunchAfterPeriod(configResult.config.defaultLunchAfterPeriod ?? null)
         setPeriods(periodsResult.periods as PeriodData[])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load settings')
+        setError(err instanceof Error ? err.message : "Failed to load settings")
       }
     })
   }
 
   const toggleDay = (day: number) => {
-    setWorkingDays(prev => {
+    setWorkingDays((prev) => {
       if (prev.includes(day)) {
-        return prev.filter(d => d !== day)
+        return prev.filter((d) => d !== day)
       }
       return [...prev, day].sort((a, b) => a - b)
     })
@@ -120,11 +142,11 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
       await upsertSchoolWeekConfig({
         termId: selectedTerm,
         workingDays,
-        defaultLunchAfterPeriod: lunchAfterPeriod
+        defaultLunchAfterPeriod: lunchAfterPeriod,
       })
-      setSuccess('Settings saved successfully')
+      setSuccess("Settings saved successfully")
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings')
+      setError(err instanceof Error ? err.message : "Failed to save settings")
     } finally {
       setIsSaving(false)
     }
@@ -132,10 +154,10 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
 
   const formatTime = (date: Date) => {
     const d = new Date(date)
-    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`
+    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
   }
 
-  const teachingPeriods = periods.filter(p => !p.isBreak)
+  const teachingPeriods = periods.filter((p) => !p.isBreak)
 
   return (
     <div className="space-y-6">
@@ -144,10 +166,11 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            {d?.settings?.title || 'Timetable Settings'}
+            {d?.settings?.title || "Timetable Settings"}
           </CardTitle>
           <CardDescription>
-            {d?.settings?.description || 'Configure periods, working days, and scheduling constraints'}
+            {d?.settings?.description ||
+              "Configure periods, working days, and scheduling constraints"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,7 +182,7 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
                   <SelectValue placeholder="Select term" />
                 </SelectTrigger>
                 <SelectContent>
-                  {terms.map(term => (
+                  {terms.map((term) => (
                     <SelectItem key={term.id} value={term.id}>
                       {term.label}
                     </SelectItem>
@@ -169,8 +192,15 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
             </div>
 
             <div className="flex items-end gap-2">
-              <Button variant="outline" size="sm" onClick={loadConfig} disabled={isPending || !selectedTerm}>
-                <RefreshCw className={cn("h-4 w-4 me-2", isPending && "animate-spin")} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadConfig}
+                disabled={isPending || !selectedTerm}
+              >
+                <RefreshCw
+                  className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
+                />
                 Refresh
               </Button>
             </div>
@@ -187,9 +217,11 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
       )}
 
       {success && (
-        <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800">
+        <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20">
           <Check className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800 dark:text-green-200">{success}</AlertDescription>
+          <AlertDescription className="text-green-800 dark:text-green-200">
+            {success}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -217,12 +249,15 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                {DAY_LABELS.map(day => (
+                {DAY_LABELS.map((day) => (
                   <div
                     key={day.value}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    className="bg-muted flex items-center justify-between rounded-lg p-3"
                   >
-                    <Label htmlFor={`day-${day.value}`} className="cursor-pointer">
+                    <Label
+                      htmlFor={`day-${day.value}`}
+                      className="cursor-pointer"
+                    >
                       {day.label}
                     </Label>
                     <Switch
@@ -234,12 +269,19 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
                 ))}
               </div>
 
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Active:</strong>{' '}
+              <div className="border-t pt-4">
+                <p className="text-muted-foreground text-sm">
+                  <strong>Active:</strong>{" "}
                   {workingDays.length > 0
-                    ? workingDays.map(d => DAY_LABELS.find(l => l.value === d)?.label.slice(0, 3)).join(', ')
-                    : 'No days selected'}
+                    ? workingDays
+                        .map((d) =>
+                          DAY_LABELS.find((l) => l.value === d)?.label.slice(
+                            0,
+                            3
+                          )
+                        )
+                        .join(", ")
+                    : "No days selected"}
                 </p>
               </div>
             </CardContent>
@@ -260,8 +302,10 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
               <div className="space-y-3">
                 <Label>Lunch After Period</Label>
                 <Select
-                  value={lunchAfterPeriod?.toString() || 'none'}
-                  onValueChange={(val) => setLunchAfterPeriod(val === 'none' ? null : parseInt(val))}
+                  value={lunchAfterPeriod?.toString() || "none"}
+                  onValueChange={(val) =>
+                    setLunchAfterPeriod(val === "none" ? null : parseInt(val))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select period" />
@@ -275,8 +319,9 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-muted-foreground">
-                  The lunch break will appear after the selected period in the timetable grid
+                <p className="text-muted-foreground text-sm">
+                  The lunch break will appear after the selected period in the
+                  timetable grid
                 </p>
               </div>
             </CardContent>
@@ -295,27 +340,32 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
             </CardHeader>
             <CardContent>
               {periods.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
+                <p className="text-muted-foreground py-8 text-center">
                   No periods configured for this term
                 </p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {periods.map(period => (
+                  {periods.map((period) => (
                     <div
                       key={period.id}
                       className={cn(
-                        "p-4 rounded-lg border",
-                        period.isBreak ? "bg-muted/50 border-dashed" : "bg-muted"
+                        "rounded-lg border p-4",
+                        period.isBreak
+                          ? "bg-muted/50 border-dashed"
+                          : "bg-muted"
                       )}
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="mb-2 flex items-center justify-between">
                         <span className="font-medium">{period.name}</span>
                         {period.isBreak && (
-                          <Badge variant="secondary" className="text-xs">Break</Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            Break
+                          </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatTime(period.startTime)} - {formatTime(period.endTime)}
+                      <p className="text-muted-foreground text-sm">
+                        {formatTime(period.startTime)} -{" "}
+                        {formatTime(period.endTime)}
                       </p>
                     </div>
                   ))}
@@ -332,12 +382,12 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
               <>
-                <RefreshCw className="h-4 w-4 me-2 animate-spin" />
+                <RefreshCw className="me-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 me-2" />
+                <Save className="me-2 h-4 w-4" />
                 Save Settings
               </>
             )}
@@ -347,8 +397,8 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
 
       {/* No Term Selected */}
       {!selectedTerm && !isPending && (
-        <div className="text-center py-12 text-muted-foreground">
-          <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <div className="text-muted-foreground py-12 text-center">
+          <Settings className="mx-auto mb-4 h-12 w-12 opacity-50" />
           <p>Select a term to configure settings</p>
         </div>
       )}

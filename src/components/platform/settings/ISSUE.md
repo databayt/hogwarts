@@ -10,13 +10,14 @@
 
 ### Academic Year Setup (15% COMPLETE)
 
-| Property | Value |
-|----------|-------|
-| **URL** | `/[lang]/s/[subdomain]/(platform)/school/academic` |
-| **Current State** | Models exist, CRUD UI/actions incomplete |
-| **Impact** | Cannot set active academic year for timetable, exams, grades |
+| Property          | Value                                                        |
+| ----------------- | ------------------------------------------------------------ |
+| **URL**           | `/[lang]/s/[subdomain]/(platform)/school/academic`           |
+| **Current State** | Models exist, CRUD UI/actions incomplete                     |
+| **Impact**        | Cannot set active academic year for timetable, exams, grades |
 
 **Missing Implementation:**
+
 - `createAcademicYear(data)` server action - partial
 - `updateAcademicYear(id, data)` server action - missing
 - `deleteAcademicYear(id)` server action - missing
@@ -28,6 +29,7 @@
 - Period definitions CRUD - missing
 
 **Prisma Models (Exist ✅):**
+
 ```prisma
 model SchoolYear {
   id        String   @id @default(cuid())
@@ -49,6 +51,7 @@ model Term {
 ```
 
 **Files to Create/Modify:**
+
 - `src/components/platform/settings/academic-year/actions.ts` - Complete CRUD
 - `src/components/platform/settings/academic-year/form.tsx` - Year form
 - `src/components/platform/settings/academic-year/term-form.tsx` - Term form
@@ -59,6 +62,7 @@ model Term {
 ## Current Status
 
 **Completed Features ✅**
+
 - [x] School profile
 - [x] Locale selection
 - [x] Timezone configuration
@@ -66,11 +70,13 @@ model Term {
 - [x] Branding/logo configuration
 
 **Blocked 🔴**
+
 - [ ] **Academic year configuration** ← MVP BLOCKER
 - [ ] Term management within years
 - [ ] Period definitions
 
 **Planned ⏸️**
+
 - [ ] Grading scale configuration
 - [ ] Email templates
 - [ ] Notification preferences
@@ -84,6 +90,7 @@ model Term {
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -91,6 +98,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -98,18 +106,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -120,6 +131,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

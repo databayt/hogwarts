@@ -1,20 +1,35 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  Check,
+  Clock,
+  Globe,
+  Loader2,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  X,
+} from "lucide-react"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { MapPin, Mail, Phone, Globe, Pencil, Check, X, Loader2, Clock } from "lucide-react"
-import { updateSchoolIdentity } from "./actions"
 import type { Locale } from "@/components/internationalization/config"
+
+import { updateSchoolIdentity } from "./actions"
 
 const schoolIdentitySchema = z.object({
   name: z.string().min(2, "School name must be at least 2 characters"),
-  domain: z.string().min(2, "Subdomain must be at least 2 characters").regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  domain: z
+    .string()
+    .min(2, "Subdomain must be at least 2 characters")
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
@@ -70,29 +85,39 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-4 flex-1">
+          <div className="flex-1 space-y-4">
             {/* School Name Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-xs text-muted-foreground">School Name</Label>
+                <Label className="text-muted-foreground text-xs">
+                  School Name
+                </Label>
                 <p className="font-medium">{initialData.name || "Not set"}</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Timezone</Label>
+                <Label className="text-muted-foreground text-xs">
+                  Timezone
+                </Label>
                 <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <p className="font-medium">{initialData.timezone || "Africa/Khartoum"}</p>
+                  <Clock className="text-muted-foreground h-4 w-4" />
+                  <p className="font-medium">
+                    {initialData.timezone || "Africa/Khartoum"}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Subdomain */}
             <div>
-              <Label className="text-xs text-muted-foreground">School URL</Label>
+              <Label className="text-muted-foreground text-xs">
+                School URL
+              </Label>
               <div className="flex items-center gap-1">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <p className="font-medium font-mono text-sm">
-                  {initialData.domain ? `${initialData.domain}.databayt.org` : "Not set"}
+                <Globe className="text-muted-foreground h-4 w-4" />
+                <p className="font-mono text-sm font-medium">
+                  {initialData.domain
+                    ? `${initialData.domain}.databayt.org`
+                    : "Not set"}
                 </p>
               </div>
             </div>
@@ -100,39 +125,50 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
             <Separator />
 
             {/* Contact Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <Label className="text-xs text-muted-foreground">Email</Label>
+                <Label className="text-muted-foreground text-xs">Email</Label>
                 <div className="flex items-center gap-1">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <p className="font-medium">{initialData.email || "Not set"}</p>
+                  <Mail className="text-muted-foreground h-4 w-4" />
+                  <p className="font-medium">
+                    {initialData.email || "Not set"}
+                  </p>
                 </div>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Phone</Label>
+                <Label className="text-muted-foreground text-xs">Phone</Label>
                 <div className="flex items-center gap-1">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <p className="font-medium">{initialData.phoneNumber || "Not set"}</p>
+                  <Phone className="text-muted-foreground h-4 w-4" />
+                  <p className="font-medium">
+                    {initialData.phoneNumber || "Not set"}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Location */}
             <div>
-              <Label className="text-xs text-muted-foreground">Address</Label>
+              <Label className="text-muted-foreground text-xs">Address</Label>
               <div className="flex items-start gap-1">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <p className="font-medium">{initialData.address || "Not set"}</p>
+                <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
+                <p className="font-medium">
+                  {initialData.address || "Not set"}
+                </p>
               </div>
             </div>
 
             {/* Website */}
             {initialData.website && (
               <div>
-                <Label className="text-xs text-muted-foreground">Website</Label>
+                <Label className="text-muted-foreground text-xs">Website</Label>
                 <div className="flex items-center gap-1">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <a href={initialData.website} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+                  <Globe className="text-muted-foreground h-4 w-4" />
+                  <a
+                    href={initialData.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary font-medium hover:underline"
+                  >
                     {initialData.website}
                   </a>
                 </div>
@@ -158,13 +194,13 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+        <div className="text-destructive bg-destructive/10 rounded-md p-3 text-sm">
           {error}
         </div>
       )}
 
       {/* School Name & Timezone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">School Name</Label>
           <Input
@@ -174,7 +210,9 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
             disabled={isPending}
           />
           {form.formState.errors.name && (
-            <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+            <p className="text-destructive text-xs">
+              {form.formState.errors.name.message}
+            </p>
           )}
         </div>
         <div className="space-y-2">
@@ -199,19 +237,21 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
             className="rounded-r-none"
             disabled={isPending}
           />
-          <span className="px-3 py-2 bg-muted text-muted-foreground border border-l-0 rounded-r-md text-sm">
+          <span className="bg-muted text-muted-foreground rounded-r-md border border-l-0 px-3 py-2 text-sm">
             .databayt.org
           </span>
         </div>
         {form.formState.errors.domain && (
-          <p className="text-xs text-destructive">{form.formState.errors.domain.message}</p>
+          <p className="text-destructive text-xs">
+            {form.formState.errors.domain.message}
+          </p>
         )}
       </div>
 
       <Separator />
 
       {/* Contact Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -260,18 +300,23 @@ export function SchoolIdentityForm({ schoolId, initialData, lang }: Props) {
         <Button onClick={handleSave} disabled={isPending} size="sm">
           {isPending ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Check className="h-4 w-4 mr-1" />
+              <Check className="mr-1 h-4 w-4" />
               Save Changes
             </>
           )}
         </Button>
-        <Button variant="ghost" onClick={handleCancel} disabled={isPending} size="sm">
-          <X className="h-4 w-4 mr-1" />
+        <Button
+          variant="ghost"
+          onClick={handleCancel}
+          disabled={isPending}
+          size="sm"
+        >
+          <X className="mr-1 h-4 w-4" />
           Cancel
         </Button>
       </div>

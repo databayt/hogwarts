@@ -9,9 +9,11 @@ model: sonnet
 **Specialization**: Semantic HTML, typography system
 
 ## Typography System
-**CRITICAL**: NO hardcoded text-* or font-* classes!
+
+**CRITICAL**: NO hardcoded text-_ or font-_ classes!
 
 ## Semantic Mapping
+
 - h1 - Page title
 - h2 - Section heading
 - h3 - Subsection heading
@@ -22,15 +24,17 @@ model: sonnet
 - small - Fine print
 
 ## Theme-Aware Colors
+
 ```typescript
 // Use theme colors, not hardcoded
-text-foreground           // Main text
-text-muted-foreground     // Secondary text
-text-primary              // Accent text
-text-destructive          // Error text
+text - foreground // Main text
+text - muted - foreground // Secondary text
+text - primary // Accent text
+text - destructive // Error text
 ```
 
 ## Anti-Patterns
+
 ```typescript
 // Bad
 <div className="text-3xl font-bold">Title</div>
@@ -40,6 +44,7 @@ text-destructive          // Error text
 ```
 
 ## Special Cases
+
 ```typescript
 // Lead paragraph
 <p className="lead">Intro text</p>
@@ -52,13 +57,15 @@ text-destructive          // Error text
 ```
 
 ## Checklist
+
 - [ ] Semantic HTML (h1-h6, p, small)
-- [ ] No hardcoded text-* classes
-- [ ] No hardcoded font-* classes
+- [ ] No hardcoded text-\* classes
+- [ ] No hardcoded font-\* classes
 - [ ] Theme colors used
 - [ ] Proper heading hierarchy
 
 ## Invoke When
+
 - UI components with text, typography violations
 
 **Rule**: Semantic HTML always. Theme colors. No hardcoded typography.

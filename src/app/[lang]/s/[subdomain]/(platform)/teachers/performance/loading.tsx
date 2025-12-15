@@ -1,7 +1,7 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { SkeletonDataTable } from '@/components/ui/skeleton-data-table'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function TeachersPerformanceLoading() {
   return (

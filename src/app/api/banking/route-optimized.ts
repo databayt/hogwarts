@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { z } from "zod"
 
 // API Route handlers for banking operations
 
 // Schema validation
 const AccountsQuerySchema = z.object({
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
-  offset: z.string().optional().transform(val => val ? parseInt(val) : 0),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 10)),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 0)),
   accountType: z.string().optional(),
 })
 
@@ -18,12 +24,12 @@ export async function GET(request: NextRequest) {
     const session = await auth()
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: "Unauthorized" },
         {
           status: 401,
           headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-          }
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+          },
         }
       )
     }
@@ -33,17 +39,18 @@ export async function GET(request: NextRequest) {
     const query = AccountsQuerySchema.parse(Object.fromEntries(searchParams))
 
     // Import action server-side
-    const { getAccounts } = await import('@/components/platform/finance/banking/actions/bank.actions')
+    const { getAccounts } =
+      await import("@/components/platform/finance/banking/actions/bank.actions")
 
     // Fetch accounts
     const accounts = await getAccounts({
       userId: session.user.id,
-      ...query
+      ...query,
     })
 
     if (!accounts) {
       return NextResponse.json(
-        { error: 'Failed to fetch accounts' },
+        { error: "Failed to fetch accounts" },
         { status: 500 }
       )
     }
@@ -51,15 +58,15 @@ export async function GET(request: NextRequest) {
     // Return with appropriate cache headers
     return NextResponse.json(accounts, {
       headers: {
-        'Cache-Control': 'private, max-age=60, stale-while-revalidate=30',
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
-      }
+        "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+      },
     })
   } catch (error) {
-    console.error('API Error:', error)
+    console.error("API Error:", error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }
@@ -71,10 +78,7 @@ export async function POST(request: NextRequest) {
     // Auth check
     const session = await auth()
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Parse request body
@@ -83,13 +87,14 @@ export async function POST(request: NextRequest) {
 
     if (!accountId) {
       return NextResponse.json(
-        { error: 'Account ID required' },
+        { error: "Account ID required" },
         { status: 400 }
       )
     }
 
     // Import and execute sync
-    const { syncTransactions } = await import('@/components/platform/finance/banking/actions/bank.actions')
+    const { syncTransactions } =
+      await import("@/components/platform/finance/banking/actions/bank.actions")
     const result = await syncTransactions({ accountId })
 
     // Return result
@@ -97,8 +102,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Sync failed',
-          error: result.error
+          message: "Sync failed",
+          error: result.error,
         },
         { status: 400 }
       )
@@ -108,19 +113,16 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: `Synced ${result.count} transactions`,
-        count: result.count
+        count: result.count,
       },
       {
         headers: {
-          'Cache-Control': 'no-store',
-        }
+          "Cache-Control": "no-store",
+        },
       }
     )
   } catch (error) {
-    console.error('Sync Error:', error)
-    return NextResponse.json(
-      { error: 'Sync failed' },
-      { status: 500 }
-    )
+    console.error("Sync Error:", error)
+    return NextResponse.json({ error: "Sync failed" }, { status: 500 })
   }
 }

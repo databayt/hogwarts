@@ -44,25 +44,28 @@ Diagnose and fix Next.js server-side exceptions ("Application error: a server-si
 ## SSE Error Patterns Detected
 
 ### Critical (Definite SSE)
-| Pattern | Example | Auto-Fix |
-|---------|---------|----------|
-| Browser API in server | `window.location.reload()` | Yes |
-| Hook in server component | `useState()` in async func | Yes |
-| Column hooks from server | `getColumns()` with hooks | Manual |
+
+| Pattern                  | Example                    | Auto-Fix |
+| ------------------------ | -------------------------- | -------- |
+| Browser API in server    | `window.location.reload()` | Yes      |
+| Hook in server component | `useState()` in async func | Yes      |
+| Column hooks from server | `getColumns()` with hooks  | Manual   |
 
 ### High (Likely SSE)
-| Pattern | Example | Auto-Fix |
-|---------|---------|----------|
-| Missing error.tsx | Route without boundary | Yes |
-| Unhandled external API | `stripe.subscriptions.retrieve()` | Yes |
-| Null property access | `user.email.toLowerCase()` | Yes |
+
+| Pattern                | Example                           | Auto-Fix |
+| ---------------------- | --------------------------------- | -------- |
+| Missing error.tsx      | Route without boundary            | Yes      |
+| Unhandled external API | `stripe.subscriptions.retrieve()` | Yes      |
+| Null property access   | `user.email.toLowerCase()`        | Yes      |
 
 ### Medium (Edge Case SSE)
-| Pattern | Example | Auto-Fix |
-|---------|---------|----------|
-| Deep dictionary access | `dict.a.b.c.d` | Yes |
-| Arithmetic on undefined | `x?.value + 100` | Yes |
-| Missing "use client" | Hooks without directive | Yes |
+
+| Pattern                 | Example                 | Auto-Fix |
+| ----------------------- | ----------------------- | -------- |
+| Deep dictionary access  | `dict.a.b.c.d`          | Yes      |
+| Arithmetic on undefined | `x?.value + 100`        | Yes      |
+| Missing "use client"    | Hooks without directive | Yes      |
 
 ---
 
@@ -136,17 +139,18 @@ pnpm tsc --noEmit        # Final check
 
 ## URL Resolution
 
-| URL | Resolves To |
-|-----|-------------|
+| URL              | Resolves To                                                      |
+| ---------------- | ---------------------------------------------------------------- |
 | `/admin/billing` | `src/app/[lang]/s/[subdomain]/(platform)/admin/billing/page.tsx` |
-| `/en/students` | `src/app/[lang]/s/[subdomain]/(platform)/students/page.tsx` |
-| `/pricing` | `src/app/[lang]/(marketing)/pricing/page.tsx` |
+| `/en/students`   | `src/app/[lang]/s/[subdomain]/(platform)/students/page.tsx`      |
+| `/pricing`       | `src/app/[lang]/(marketing)/pricing/page.tsx`                    |
 
 ---
 
 ## Prevention
 
 Add to pre-commit:
+
 ```json
 {
   "hooks": {

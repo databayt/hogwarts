@@ -13,6 +13,7 @@ model: sonnet
 ## Git Workflow
 
 ### Conventional Commit Format
+
 ```
 type(scope): subject
 
@@ -22,6 +23,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Commit Types
+
 - **feat**: New feature
 - **fix**: Bug fix
 - **docs**: Documentation changes
@@ -31,6 +33,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - **chore**: Maintenance tasks (dependencies, build, etc.)
 
 ### Commit Example
+
 ```bash
 git add .
 git commit -m "feat(students): Add bulk attendance marking
@@ -43,6 +46,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
 ### Basic Workflow
+
 ```bash
 # Update local repository
 git fetch
@@ -63,6 +67,7 @@ git push origin <branch>
 ```
 
 ### Branch Strategy
+
 - **main** - Production-ready code
 - **develop** - Development/staging code
 - **feature/\*** - New features (e.g., feature/attendance-tracking)
@@ -72,12 +77,14 @@ git push origin <branch>
 ### Common Operations
 
 #### Create Feature Branch
+
 ```bash
 git checkout -b feature/new-feature
 git push -u origin feature/new-feature
 ```
 
 #### Update Branch from Main
+
 ```bash
 git checkout main
 git pull
@@ -86,6 +93,7 @@ git rebase main
 ```
 
 #### Merge Conflict Resolution
+
 ```bash
 # During rebase or merge
 git status  # See conflicted files
@@ -103,6 +111,7 @@ git merge --continue
 ### GitHub CLI (gh) Commands
 
 #### Pull Requests
+
 ```bash
 # Create PR
 gh pr create --title "feat: Add attendance feature" --body "Description"
@@ -139,6 +148,7 @@ gh pr merge 123 --squash
 ```
 
 #### Issues
+
 ```bash
 # Create issue
 gh issue create --title "Bug: Login fails" --body "Description"
@@ -175,6 +185,7 @@ gh issue close 456
 ```
 
 #### Repository Operations
+
 ```bash
 # Clone repository
 gh repo clone owner/repo
@@ -191,7 +202,9 @@ gh repo create my-new-repo --public
 ## PR Best Practices
 
 ### PR Checklist
+
 Before creating a PR:
+
 - [ ] Code follows project conventions
 - [ ] All tests pass locally
 - [ ] Commit messages are clear and conventional
@@ -201,6 +214,7 @@ Before creating a PR:
 - [ ] Changelog updated (if applicable)
 
 ### PR Title Format
+
 ```
 type(scope): Brief description
 
@@ -211,32 +225,40 @@ docs(api): Update server actions documentation
 ```
 
 ### PR Description Template
+
 ```markdown
 ## Summary
+
 Brief overview of what this PR does
 
 ## Changes
+
 - Specific change 1
 - Specific change 2
 - Specific change 3
 
 ## Related Issues
+
 Closes #123
 Relates to #456
 
 ## Testing
+
 - [x] Unit tests added/updated
 - [x] Integration tests pass
 - [x] Manual testing completed
 - [ ] E2E tests updated (if applicable)
 
 ## Screenshots/Videos
+
 (if UI changes)
 
 ## Breaking Changes
+
 (if any)
 
 ## Checklist
+
 - [x] Code follows style guidelines
 - [x] Self-reviewed code
 - [x] Commented complex areas
@@ -249,36 +271,46 @@ Relates to #456
 ## Issue Management
 
 ### Issue Template
+
 ```markdown
 ## Description
+
 Clear description of the issue
 
 ## Steps to Reproduce
+
 1. Go to '...'
 2. Click on '...'
 3. Scroll down to '...'
 4. See error
 
 ## Expected Behavior
+
 What should happen
 
 ## Actual Behavior
+
 What actually happens
 
 ## Environment
+
 - Browser: [e.g., Chrome 120]
 - OS: [e.g., Windows 11]
 - Version: [e.g., 1.2.3]
 
 ## Additional Context
+
 Any other relevant information
 
 ## Possible Solution
+
 (optional) Suggestions for fixing
 ```
 
 ### Issue Labels
+
 Common labels to use:
+
 - `bug` - Something isn't working
 - `enhancement` - New feature or request
 - `documentation` - Documentation improvements
@@ -293,6 +325,7 @@ Common labels to use:
 ## Common Workflows
 
 ### Creating a Feature PR
+
 ```bash
 # 1. Create feature branch
 git checkout -b feature/attendance-tracking
@@ -309,6 +342,7 @@ gh pr create --title "feat: Add attendance tracking" --body "Implements student 
 ```
 
 ### Fixing a Bug
+
 ```bash
 # 1. Create fix branch
 git checkout -b fix/login-timeout
@@ -327,6 +361,7 @@ gh pr create --title "fix: Resolve session timeout" --body "Fixes #123"
 ```
 
 ### Updating PR After Review
+
 ```bash
 # Make requested changes
 git add .

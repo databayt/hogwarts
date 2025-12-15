@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { useRouter } from "next/navigation"
+import { ColumnDef } from "@tanstack/react-table"
+import { Ellipsis } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,73 +13,82 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useRouter } from "next/navigation";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+} from "@/components/ui/dropdown-menu"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type ApplicationRow = {
-  id: string;
-  applicationNumber: string;
-  applicantName: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  applyingForClass: string;
-  status: string;
-  meritScore: string | null;
-  meritRank: number | null;
-  campaignName: string;
-  campaignId: string;
-  submittedAt: string | null;
-  createdAt: string;
-};
+  id: string
+  applicationNumber: string
+  applicantName: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  applyingForClass: string
+  status: string
+  meritScore: string | null
+  meritRank: number | null
+  campaignName: string
+  campaignId: string
+  submittedAt: string | null
+  createdAt: string
+}
 
 const getStatusVariant = (status: string) => {
   switch (status) {
     case "SUBMITTED":
     case "UNDER_REVIEW":
-      return "outline";
+      return "outline"
     case "SHORTLISTED":
     case "ENTRANCE_SCHEDULED":
     case "INTERVIEW_SCHEDULED":
-      return "secondary";
+      return "secondary"
     case "SELECTED":
     case "ADMITTED":
-      return "default";
+      return "default"
     case "WAITLISTED":
-      return "outline";
+      return "outline"
     case "REJECTED":
     case "WITHDRAWN":
-      return "destructive";
+      return "destructive"
     default:
-      return "outline";
+      return "outline"
   }
-};
+}
 
 export const getApplicationColumns = (
   dictionary: Dictionary["school"]["admission"],
   locale: Locale
 ): ColumnDef<ApplicationRow>[] => {
-  const t = dictionary;
+  const t = dictionary
 
   return [
     {
       accessorKey: "applicationNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.applicationNumber || "Application #"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.applicationNumber || "Application #"}
+        />
       ),
       cell: ({ getValue }) => (
         <span className="font-mono text-sm">{getValue<string>()}</span>
       ),
-      meta: { label: t?.columns?.applicationNumber || "Application #", variant: "text" },
+      meta: {
+        label: t?.columns?.applicationNumber || "Application #",
+        variant: "text",
+      },
       enableColumnFilter: true,
     },
     {
       accessorKey: "applicantName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.applicant || "Applicant"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.applicant || "Applicant"}
+        />
       ),
       meta: { label: t?.columns?.applicant || "Applicant", variant: "text" },
       enableColumnFilter: true,
@@ -86,29 +96,40 @@ export const getApplicationColumns = (
     {
       accessorKey: "campaignName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.campaign || "Campaign"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.campaign || "Campaign"}
+        />
       ),
       cell: ({ getValue }) => (
-        <span className="text-sm text-muted-foreground">{getValue<string>()}</span>
+        <span className="text-muted-foreground text-sm">
+          {getValue<string>()}
+        </span>
       ),
       meta: { label: t?.columns?.campaign || "Campaign", variant: "text" },
     },
     {
       accessorKey: "applyingForClass",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.class || "Class"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.class || "Class"}
+        />
       ),
       meta: { label: t?.columns?.class || "Class", variant: "text" },
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.status || "Status"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.status || "Status"}
+        />
       ),
       cell: ({ getValue }) => {
-        const status = getValue<string>();
-        const label = t?.status?.[status as keyof typeof t.status] || status;
-        return <Badge variant={getStatusVariant(status)}>{label}</Badge>;
+        const status = getValue<string>()
+        const label = t?.status?.[status as keyof typeof t.status] || status
+        return <Badge variant={getStatusVariant(status)}>{label}</Badge>
       },
       meta: {
         label: t?.columns?.status || "Status",
@@ -116,8 +137,14 @@ export const getApplicationColumns = (
         options: [
           { label: t?.status?.DRAFT || "Draft", value: "DRAFT" },
           { label: t?.status?.SUBMITTED || "Submitted", value: "SUBMITTED" },
-          { label: t?.status?.UNDER_REVIEW || "Under Review", value: "UNDER_REVIEW" },
-          { label: t?.status?.SHORTLISTED || "Shortlisted", value: "SHORTLISTED" },
+          {
+            label: t?.status?.UNDER_REVIEW || "Under Review",
+            value: "UNDER_REVIEW",
+          },
+          {
+            label: t?.status?.SHORTLISTED || "Shortlisted",
+            value: "SHORTLISTED",
+          },
           { label: t?.status?.SELECTED || "Selected", value: "SELECTED" },
           { label: t?.status?.WAITLISTED || "Waitlisted", value: "WAITLISTED" },
           { label: t?.status?.REJECTED || "Rejected", value: "REJECTED" },
@@ -130,43 +157,51 @@ export const getApplicationColumns = (
     {
       accessorKey: "meritRank",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.meritRank || "Merit Rank"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.meritRank || "Merit Rank"}
+        />
       ),
       cell: ({ getValue }) => {
-        const rank = getValue<number | null>();
+        const rank = getValue<number | null>()
         return rank ? (
-          <span className="text-sm tabular-nums font-medium">#{rank}</span>
+          <span className="text-sm font-medium tabular-nums">#{rank}</span>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
     },
     {
       accessorKey: "submittedAt",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t?.columns?.submitted || "Submitted"} />
+        <DataTableColumnHeader
+          column={column}
+          title={t?.columns?.submitted || "Submitted"}
+        />
       ),
       cell: ({ getValue }) => {
-        const date = getValue<string | null>();
+        const date = getValue<string | null>()
         return date ? (
-          <span className="text-xs tabular-nums text-muted-foreground">
+          <span className="text-muted-foreground text-xs tabular-nums">
             {new Date(date).toLocaleDateString()}
           </span>
         ) : (
           <span className="text-muted-foreground">-</span>
-        );
+        )
       },
     },
     {
       id: "actions",
-      header: () => <span className="sr-only">{t?.columns?.actions || "Actions"}</span>,
+      header: () => (
+        <span className="sr-only">{t?.columns?.actions || "Actions"}</span>
+      ),
       cell: ({ row }) => {
-        const application = row.original;
-        const router = useRouter();
+        const application = row.original
+        const router = useRouter()
 
         const onView = () => {
-          router.push(`/admission/applications/${application.id}`);
-        };
+          router.push(`/admission/applications/${application.id}`)
+        }
 
         return (
           <DropdownMenu>
@@ -177,7 +212,9 @@ export const getApplicationColumns = (
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t?.columns?.actions || "Actions"}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {t?.columns?.actions || "Actions"}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onView}>
                 {t?.applications?.viewDetails || "View Details"}
@@ -190,10 +227,10 @@ export const getApplicationColumns = (
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        );
+        )
       },
       enableSorting: false,
       enableColumnFilter: false,
     },
-  ];
-};
+  ]
+}

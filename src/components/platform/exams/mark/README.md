@@ -12,6 +12,7 @@ A comprehensive automated exam marking system with AI-powered grading, OCR suppo
 ## Features Implemented
 
 ### ✅ Core Features
+
 - **Question Bank Management** - Reusable question library with 6 question types
 - **Multiple Question Types:**
   - Multiple Choice (MCQ) - Auto-gradable
@@ -73,6 +74,7 @@ A comprehensive automated exam marking system with AI-powered grading, OCR suppo
 ### 🗄️ Database Schema
 
 **Models Created:**
+
 - `QuestionBank` - Questions with metadata (difficulty, Bloom's level)
 - `ExamQuestion` - Links exams to questions
 - `Rubric` & `RubricCriterion` - Grading rubrics
@@ -81,6 +83,7 @@ A comprehensive automated exam marking system with AI-powered grading, OCR suppo
 - `GradeOverride` - Manual adjustments with reasons
 
 **Enums:**
+
 - `QuestionType` - 6 question types
 - `DifficultyLevel` - Easy, Medium, Hard
 - `BloomLevel` - 6 levels of Bloom's Taxonomy
@@ -217,7 +220,7 @@ await manualGrade(studentAnswerId, pointsAwarded, feedback)
 await overrideGrade({
   markingResultId,
   newScore,
-  reason: "Partial credit for showing work"
+  reason: "Partial credit for showing work",
 })
 ```
 
@@ -228,7 +231,7 @@ await overrideGrade({
 ```tsx
 import { QuestionCard } from "./card"
 
-<QuestionCard
+;<QuestionCard
   id="question-123"
   questionText="What is the capital of France?"
   questionType="MULTIPLE_CHOICE"
@@ -253,7 +256,7 @@ import { QuestionCard } from "./card"
 ```tsx
 import { QuestionForm } from "./form"
 
-<QuestionForm
+;<QuestionForm
   dictionary={dictionary}
   locale="en"
   subjectId="subject-123"
@@ -269,7 +272,8 @@ import { QuestionForm } from "./form"
 import { QuestionDetail } from "./detail"
 
 // In page.tsx (server component)
-<QuestionDetail
+
+;<QuestionDetail
   questionId={params.id}
   dictionary={dictionary}
   locale={params.lang}
@@ -281,11 +285,7 @@ import { QuestionDetail } from "./detail"
 ```tsx
 import { AllQuestions } from "./all"
 
-<AllQuestions
-  questions={questions}
-  dictionary={dictionary}
-  locale="en"
-/>
+;<AllQuestions questions={questions} dictionary={dictionary} locale="en" />
 // Includes: search, type/difficulty/bloom/subject filters
 ```
 
@@ -294,11 +294,7 @@ import { AllQuestions } from "./all"
 ```tsx
 import { FeaturedQuestions } from "./featured"
 
-<FeaturedQuestions
-  questions={questions}
-  dictionary={dictionary}
-  locale="en"
-/>
+;<FeaturedQuestions questions={questions} dictionary={dictionary} locale="en" />
 // Displays: Most Used, Highest Rated, Trending sections
 ```
 
@@ -408,6 +404,7 @@ const customLimiter = new AIRateLimiter({
 ## Server Actions (`actions.ts`)
 
 All actions follow the pattern:
+
 1. Start with `"use server"`
 2. Validate session and schoolId
 3. Parse and validate input with Zod
@@ -416,6 +413,7 @@ All actions follow the pattern:
 6. Return typed result
 
 **Available Actions:**
+
 - `createQuestion(data)` - Create new question
 - `updateQuestion(id, data)` - Update question
 - `deleteQuestion(id)` - Delete question
@@ -447,17 +445,17 @@ QUESTION_TYPES = {
 
 ```typescript
 OCR_CONFIDENCE = {
-  HIGH: 0.9,    // >90% - auto-accept
-  MEDIUM: 0.7,  // 70-90% - suggest review
-  LOW: 0.5,     // 50-70% - require review
-  POOR: 0.0,    // <50% - manual entry
+  HIGH: 0.9, // >90% - auto-accept
+  MEDIUM: 0.7, // 70-90% - suggest review
+  LOW: 0.5, // 50-70% - require review
+  POOR: 0.0, // <50% - manual entry
 }
 
 AI_CONFIDENCE = {
-  HIGH: 0.85,   // >85% - auto-accept
+  HIGH: 0.85, // >85% - auto-accept
   MEDIUM: 0.65, // 65-85% - suggest review
-  LOW: 0.4,     // 40-65% - require review
-  POOR: 0.0,    // <40% - manual grading
+  LOW: 0.4, // 40-65% - require review
+  POOR: 0.0, // <40% - manual grading
 }
 ```
 
@@ -493,11 +491,11 @@ const exam = await db.exam.findFirst({
     generatedExam: {
       include: {
         questions: {
-          include: { question: true }
-        }
-      }
-    }
-  }
+          include: { question: true },
+        },
+      },
+    },
+  },
 })
 ```
 
@@ -547,6 +545,7 @@ await db.result.create({
 **Optimized in v2.0:** 6 new compound indexes for faster queries:
 
 **StudentAnswer Model:**
+
 - `@@index([schoolId, examId])`
 - `@@index([schoolId, studentId])`
 - `@@index([schoolId, questionId])`
@@ -554,6 +553,7 @@ await db.result.create({
 - `@@index([schoolId, submissionType])` ⭐ NEW - Filter by type
 
 **MarkingResult Model:**
+
 - `@@index([schoolId, examId])`
 - `@@index([schoolId, studentId])`
 - `@@index([schoolId, status])`
@@ -564,6 +564,7 @@ await db.result.create({
 - `@@index([schoolId, status, needsReview])` ⭐ NEW - Combined filters
 
 **Performance Impact:**
+
 - 70% faster query execution
 - Reduced database load
 - Better scalability for large datasets
@@ -577,6 +578,7 @@ await db.result.create({
 ## Future Enhancements
 
 Potential additions:
+
 - [ ] Question difficulty calibration based on student performance
 - [ ] Advanced analytics dashboard
 - [ ] Question bank import/export (CSV, QTI format)
@@ -591,27 +593,32 @@ Potential additions:
 ### Common Issues
 
 **1. OpenAI API Errors**
+
 - Check API key in `.env.local`
 - Verify API credit balance
 - Check rate limits
 
 **2. OCR Low Confidence**
+
 - Ensure high-quality scans (300+ DPI)
 - Good lighting and contrast
 - Clear, legible handwriting
 
 **3. AI Grading Inconsistency**
+
 - Review and refine rubrics
 - Provide sample answers
 - Lower confidence threshold if needed
 
 **4. Database Errors**
+
 - Run `pnpm prisma generate`
 - Check `schoolId` is included in all queries
 
 ## Credits
 
 **Built with:**
+
 - OpenAI GPT-4 & GPT-4 Vision
 - Prisma ORM
 - Next.js 15
@@ -620,6 +627,7 @@ Potential additions:
 - Zod validation
 
 **Inspired by:**
+
 - Gradescope
 - Canvas LMS
 - Moodle

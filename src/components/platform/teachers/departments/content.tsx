@@ -18,23 +18,23 @@
  */
 "use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
+import { useEffect, useState, useTransition } from "react"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  AlertCircle,
+  BookOpen,
+  Building,
+  ChevronRight,
+  Edit,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,30 +44,38 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  Building,
-  Users,
-  BookOpen,
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  Loader2,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
-  getDepartments,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
   createDepartment,
-  updateDepartment,
   deleteDepartment,
-} from './actions'
+  getDepartments,
+  updateDepartment,
+} from "./actions"
 
 // ============================================================================
 // Types
@@ -97,7 +105,7 @@ interface Department {
 }
 
 interface Props {
-  dictionary?: Dictionary['school']
+  dictionary?: Dictionary["school"]
   lang: Locale
 }
 
@@ -113,29 +121,30 @@ function getInitials(givenName: string, surname: string): string {
 // Component
 // ============================================================================
 
-export function DepartmentsContent({
-  dictionary,
-  lang,
-}: Props) {
+export function DepartmentsContent({ dictionary, lang }: Props) {
   // Data states
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // UI states
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null)
-  const [newDepartmentName, setNewDepartmentName] = useState('')
-  const [newDepartmentNameAr, setNewDepartmentNameAr] = useState('')
-  const [expandedDepartment, setExpandedDepartment] = useState<string | null>(null)
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(
+    null
+  )
+  const [newDepartmentName, setNewDepartmentName] = useState("")
+  const [newDepartmentNameAr, setNewDepartmentNameAr] = useState("")
+  const [expandedDepartment, setExpandedDepartment] = useState<string | null>(
+    null
+  )
 
   // Delete confirmation state
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean
     id: string
     name: string
-  }>({ open: false, id: '', name: '' })
+  }>({ open: false, id: "", name: "" })
 
   // Action states
   const [isPending, startTransition] = useTransition()
@@ -153,11 +162,12 @@ export function DepartmentsContent({
       if (result.success && result.data?.departments) {
         setDepartments(result.data.departments as unknown as Department[])
       } else if (!result.success) {
-        setError(result.message || 'Failed to load departments')
+        setError(result.message || "Failed to load departments")
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load departments'
-      console.error('Failed to fetch departments:', err)
+      const message =
+        err instanceof Error ? err.message : "Failed to load departments"
+      console.error("Failed to fetch departments:", err)
       setError(message)
     } finally {
       setIsLoading(false)
@@ -165,33 +175,40 @@ export function DepartmentsContent({
   }
 
   const t = {
-    title: lang === 'ar' ? 'إدارة الأقسام' : 'Department Management',
-    subtitle: lang === 'ar' ? 'إدارة أقسام المدرسة وتعيين المعلمين' : 'Manage school departments and teacher assignments',
-    search: lang === 'ar' ? 'البحث في الأقسام...' : 'Search departments...',
-    addDepartment: lang === 'ar' ? 'إضافة قسم' : 'Add Department',
-    editDepartment: lang === 'ar' ? 'تعديل القسم' : 'Edit Department',
-    deleteDepartment: lang === 'ar' ? 'حذف القسم' : 'Delete Department',
-    department: lang === 'ar' ? 'القسم' : 'Department',
-    departmentName: lang === 'ar' ? 'اسم القسم' : 'Department Name',
-    departmentNameAr: lang === 'ar' ? 'اسم القسم (عربي)' : 'Department Name (Arabic)',
-    teachers: lang === 'ar' ? 'المعلمون' : 'Teachers',
-    subjects: lang === 'ar' ? 'المواد' : 'Subjects',
-    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
-    save: lang === 'ar' ? 'حفظ' : 'Save',
-    cancel: lang === 'ar' ? 'إلغاء' : 'Cancel',
-    primary: lang === 'ar' ? 'أساسي' : 'Primary',
-    noDepartments: lang === 'ar' ? 'لا توجد أقسام' : 'No departments found',
-    noTeachers: lang === 'ar' ? 'لا يوجد معلمون' : 'No teachers assigned',
-    noSubjects: lang === 'ar' ? 'لا توجد مواد' : 'No subjects assigned',
-    totalDepartments: lang === 'ar' ? 'إجمالي الأقسام' : 'Total Departments',
-    totalTeachers: lang === 'ar' ? 'إجمالي المعلمين' : 'Total Teachers',
-    totalSubjects: lang === 'ar' ? 'إجمالي المواد' : 'Total Subjects',
-    viewDetails: lang === 'ar' ? 'عرض التفاصيل' : 'View Details',
+    title: lang === "ar" ? "إدارة الأقسام" : "Department Management",
+    subtitle:
+      lang === "ar"
+        ? "إدارة أقسام المدرسة وتعيين المعلمين"
+        : "Manage school departments and teacher assignments",
+    search: lang === "ar" ? "البحث في الأقسام..." : "Search departments...",
+    addDepartment: lang === "ar" ? "إضافة قسم" : "Add Department",
+    editDepartment: lang === "ar" ? "تعديل القسم" : "Edit Department",
+    deleteDepartment: lang === "ar" ? "حذف القسم" : "Delete Department",
+    department: lang === "ar" ? "القسم" : "Department",
+    departmentName: lang === "ar" ? "اسم القسم" : "Department Name",
+    departmentNameAr:
+      lang === "ar" ? "اسم القسم (عربي)" : "Department Name (Arabic)",
+    teachers: lang === "ar" ? "المعلمون" : "Teachers",
+    subjects: lang === "ar" ? "المواد" : "Subjects",
+    actions: lang === "ar" ? "إجراءات" : "Actions",
+    save: lang === "ar" ? "حفظ" : "Save",
+    cancel: lang === "ar" ? "إلغاء" : "Cancel",
+    primary: lang === "ar" ? "أساسي" : "Primary",
+    noDepartments: lang === "ar" ? "لا توجد أقسام" : "No departments found",
+    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers assigned",
+    noSubjects: lang === "ar" ? "لا توجد مواد" : "No subjects assigned",
+    totalDepartments: lang === "ar" ? "إجمالي الأقسام" : "Total Departments",
+    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
+    totalSubjects: lang === "ar" ? "إجمالي المواد" : "Total Subjects",
+    viewDetails: lang === "ar" ? "عرض التفاصيل" : "View Details",
   }
 
   // Filter departments
-  const filteredDepartments = departments.filter(dept => {
-    const name = lang === 'ar' ? (dept.departmentNameAr || dept.departmentName) : dept.departmentName
+  const filteredDepartments = departments.filter((dept) => {
+    const name =
+      lang === "ar"
+        ? dept.departmentNameAr || dept.departmentName
+        : dept.departmentName
     return name.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
@@ -200,9 +217,13 @@ export function DepartmentsContent({
   const stats = {
     totalDepartments: departments.length,
     // Deduplicate teachers across all departments (a teacher may have multiple roles)
-    totalTeachers: new Set(departments.flatMap(d => d.teachers.map(t => t.id))).size,
+    totalTeachers: new Set(
+      departments.flatMap((d) => d.teachers.map((t) => t.id))
+    ).size,
     // Deduplicate subjects across all departments (a subject may be taught across multiple depts)
-    totalSubjects: new Set(departments.flatMap(d => d.subjects.map(s => s.id))).size,
+    totalSubjects: new Set(
+      departments.flatMap((d) => d.subjects.map((s) => s.id))
+    ).size,
   }
 
   const handleCreateDepartment = async () => {
@@ -210,20 +231,20 @@ export function DepartmentsContent({
 
     startTransition(async () => {
       const formData = new FormData()
-      formData.append('departmentName', newDepartmentName)
+      formData.append("departmentName", newDepartmentName)
       if (newDepartmentNameAr) {
-        formData.append('departmentNameAr', newDepartmentNameAr)
+        formData.append("departmentNameAr", newDepartmentNameAr)
       }
 
       const result = await createDepartment(formData)
       if (result.success) {
-        toast.success(result.message || 'Department created successfully')
-        setNewDepartmentName('')
-        setNewDepartmentNameAr('')
+        toast.success(result.message || "Department created successfully")
+        setNewDepartmentName("")
+        setNewDepartmentNameAr("")
         setIsCreateDialogOpen(false)
         fetchDepartments()
       } else {
-        toast.error(result.message || 'Failed to create department')
+        toast.error(result.message || "Failed to create department")
       }
     })
   }
@@ -233,19 +254,19 @@ export function DepartmentsContent({
 
     startTransition(async () => {
       const formData = new FormData()
-      formData.append('id', editingDepartment.id)
-      formData.append('departmentName', newDepartmentName)
-      formData.append('departmentNameAr', newDepartmentNameAr || '')
+      formData.append("id", editingDepartment.id)
+      formData.append("departmentName", newDepartmentName)
+      formData.append("departmentNameAr", newDepartmentNameAr || "")
 
       const result = await updateDepartment(formData)
       if (result.success) {
-        toast.success(result.message || 'Department updated successfully')
+        toast.success(result.message || "Department updated successfully")
         setEditingDepartment(null)
-        setNewDepartmentName('')
-        setNewDepartmentNameAr('')
+        setNewDepartmentName("")
+        setNewDepartmentNameAr("")
         fetchDepartments()
       } else {
-        toast.error(result.message || 'Failed to update department')
+        toast.error(result.message || "Failed to update department")
       }
     })
   }
@@ -253,14 +274,14 @@ export function DepartmentsContent({
   const handleDeleteDepartment = async () => {
     startTransition(async () => {
       const formData = new FormData()
-      formData.append('id', deleteDialog.id)
+      formData.append("id", deleteDialog.id)
 
       const result = await deleteDepartment(formData)
       if (result.success) {
-        toast.success(result.message || 'Department deleted successfully')
+        toast.success(result.message || "Department deleted successfully")
         fetchDepartments()
       } else {
-        toast.error(result.message || 'Failed to delete department')
+        toast.error(result.message || "Failed to delete department")
       }
       setDeleteDialog({ ...deleteDialog, open: false })
     })
@@ -269,11 +290,14 @@ export function DepartmentsContent({
   const openEditDialog = (dept: Department) => {
     setEditingDepartment(dept)
     setNewDepartmentName(dept.departmentName)
-    setNewDepartmentNameAr(dept.departmentNameAr || '')
+    setNewDepartmentNameAr(dept.departmentNameAr || "")
   }
 
   const openDeleteDialog = (dept: Department) => {
-    const name = lang === 'ar' ? (dept.departmentNameAr || dept.departmentName) : dept.departmentName
+    const name =
+      lang === "ar"
+        ? dept.departmentNameAr || dept.departmentName
+        : dept.departmentName
     setDeleteDialog({ open: true, id: dept.id, name })
   }
 
@@ -282,7 +306,7 @@ export function DepartmentsContent({
     return (
       <div className="space-y-6" role="status" aria-label="Loading departments">
         {/* Header skeleton */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-64" />
@@ -290,7 +314,7 @@ export function DepartmentsContent({
           <Skeleton className="h-10 w-32" />
         </div>
         {/* Stats skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {[...Array(3)].map((_, i) => (
             <Card key={i}>
               <CardContent className="pt-6">
@@ -306,7 +330,7 @@ export function DepartmentsContent({
           ))}
         </div>
         {/* List skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -343,15 +367,15 @@ export function DepartmentsContent({
               onClick={fetchDepartments}
               className="ms-4"
             >
-              <RefreshCw className="h-4 w-4 me-2" aria-hidden="true" />
-              {lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}
+              <RefreshCw className="me-2 h-4 w-4" aria-hidden="true" />
+              {lang === "ar" ? "إعادة المحاولة" : "Retry"}
             </Button>
           </AlertDescription>
         </Alert>
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t.title}</h1>
           <p className="text-muted-foreground">{t.subtitle}</p>
@@ -367,7 +391,9 @@ export function DepartmentsContent({
             <DialogHeader>
               <DialogTitle>{t.addDepartment}</DialogTitle>
               <DialogDescription>
-                {lang === 'ar' ? 'أضف قسم جديد للمدرسة' : 'Add a new department to the school'}
+                {lang === "ar"
+                  ? "أضف قسم جديد للمدرسة"
+                  : "Add a new department to the school"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -377,7 +403,11 @@ export function DepartmentsContent({
                   id="name"
                   value={newDepartmentName}
                   onChange={(e) => setNewDepartmentName(e.target.value)}
-                  placeholder={lang === 'ar' ? 'مثال: قسم العلوم' : 'e.g., Science Department'}
+                  placeholder={
+                    lang === "ar"
+                      ? "مثال: قسم العلوم"
+                      : "e.g., Science Department"
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -392,11 +422,23 @@ export function DepartmentsContent({
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isPending}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateDialogOpen(false)}
+                disabled={isPending}
+              >
                 {t.cancel}
               </Button>
-              <Button onClick={handleCreateDepartment} disabled={!newDepartmentName || isPending}>
-                {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
+              <Button
+                onClick={handleCreateDepartment}
+                disabled={!newDepartmentName || isPending}
+              >
+                {isPending && (
+                  <Loader2
+                    className="me-2 h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                )}
                 {t.save}
               </Button>
             </DialogFooter>
@@ -405,15 +447,17 @@ export function DepartmentsContent({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.totalDepartments}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.totalDepartments}
+                </p>
                 <p className="text-2xl font-bold">{stats.totalDepartments}</p>
               </div>
-              <Building className="h-8 w-8 text-muted-foreground" />
+              <Building className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -421,10 +465,12 @@ export function DepartmentsContent({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.totalTeachers}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.totalTeachers}
+                </p>
                 <p className="text-2xl font-bold">{stats.totalTeachers}</p>
               </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
+              <Users className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -432,10 +478,12 @@ export function DepartmentsContent({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.totalSubjects}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.totalSubjects}
+                </p>
                 <p className="text-2xl font-bold">{stats.totalSubjects}</p>
               </div>
-              <BookOpen className="h-8 w-8 text-muted-foreground" />
+              <BookOpen className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -445,7 +493,7 @@ export function DepartmentsContent({
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder={t.search}
               value={searchTerm}
@@ -458,21 +506,25 @@ export function DepartmentsContent({
 
       {/* Departments Grid */}
       {filteredDepartments.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {filteredDepartments.map((dept) => (
             <Card key={dept.id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="rounded-lg bg-primary/10 p-2">
-                      <Building className="h-5 w-5 text-primary" />
+                    <div className="bg-primary/10 rounded-lg p-2">
+                      <Building className="text-primary h-5 w-5" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {lang === 'ar' ? (dept.departmentNameAr || dept.departmentName) : dept.departmentName}
+                        {lang === "ar"
+                          ? dept.departmentNameAr || dept.departmentName
+                          : dept.departmentName}
                       </CardTitle>
-                      {dept.departmentNameAr && lang !== 'ar' && (
-                        <CardDescription>{dept.departmentNameAr}</CardDescription>
+                      {dept.departmentNameAr && lang !== "ar" && (
+                        <CardDescription>
+                          {dept.departmentNameAr}
+                        </CardDescription>
                       )}
                     </div>
                   </div>
@@ -489,7 +541,7 @@ export function DepartmentsContent({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive h-8 w-8"
                       onClick={() => openDeleteDialog(dept)}
                       aria-label={`${t.deleteDepartment} ${dept.departmentName}`}
                     >
@@ -502,12 +554,16 @@ export function DepartmentsContent({
                 {/* Stats */}
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{dept.teachers.length} {t.teachers}</span>
+                    <Users className="text-muted-foreground h-4 w-4" />
+                    <span>
+                      {dept.teachers.length} {t.teachers}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <span>{dept.subjects.length} {t.subjects}</span>
+                    <BookOpen className="text-muted-foreground h-4 w-4" />
+                    <span>
+                      {dept.subjects.length} {t.subjects}
+                    </span>
                   </div>
                 </div>
 
@@ -517,15 +573,20 @@ export function DepartmentsContent({
                     <p className="text-sm font-medium">{t.teachers}</p>
                     <div className="flex -space-x-2">
                       {dept.teachers.slice(0, 5).map((teacher) => (
-                        <Avatar key={teacher.id} className="h-8 w-8 border-2 border-background">
-                          <AvatarImage src={teacher.profilePhotoUrl || undefined} />
+                        <Avatar
+                          key={teacher.id}
+                          className="border-background h-8 w-8 border-2"
+                        >
+                          <AvatarImage
+                            src={teacher.profilePhotoUrl || undefined}
+                          />
                           <AvatarFallback className="text-xs">
                             {getInitials(teacher.givenName, teacher.surname)}
                           </AvatarFallback>
                         </Avatar>
                       ))}
                       {dept.teachers.length > 5 && (
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-background">
+                        <div className="bg-muted border-background flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-medium">
                           +{dept.teachers.length - 5}
                         </div>
                       )}
@@ -539,8 +600,14 @@ export function DepartmentsContent({
                     <p className="text-sm font-medium">{t.subjects}</p>
                     <div className="flex flex-wrap gap-1">
                       {dept.subjects.slice(0, 4).map((subject) => (
-                        <Badge key={subject.id} variant="secondary" className="text-xs">
-                          {lang === 'ar' ? (subject.subjectNameAr || subject.subjectName) : subject.subjectName}
+                        <Badge
+                          key={subject.id}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {lang === "ar"
+                            ? subject.subjectNameAr || subject.subjectName
+                            : subject.subjectName}
                         </Badge>
                       ))}
                       {dept.subjects.length > 4 && (
@@ -556,57 +623,83 @@ export function DepartmentsContent({
                 <Button
                   variant="ghost"
                   className="w-full justify-between"
-                  onClick={() => setExpandedDepartment(expandedDepartment === dept.id ? null : dept.id)}
+                  onClick={() =>
+                    setExpandedDepartment(
+                      expandedDepartment === dept.id ? null : dept.id
+                    )
+                  }
                 >
                   {t.viewDetails}
-                  <ChevronRight className={`h-4 w-4 transition-transform ${expandedDepartment === dept.id ? 'rotate-90' : ''}`} />
+                  <ChevronRight
+                    className={`h-4 w-4 transition-transform ${expandedDepartment === dept.id ? "rotate-90" : ""}`}
+                  />
                 </Button>
 
                 {/* Expanded Content */}
                 {expandedDepartment === dept.id && (
-                  <div className="space-y-4 pt-2 border-t">
+                  <div className="space-y-4 border-t pt-2">
                     {/* Teachers Table */}
                     {dept.teachers.length > 0 ? (
                       <div>
-                        <p className="text-sm font-medium mb-2">{t.teachers}</p>
+                        <p className="mb-2 text-sm font-medium">{t.teachers}</p>
                         <div className="space-y-2">
                           {dept.teachers.map((teacher) => (
-                            <div key={teacher.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                            <div
+                              key={teacher.id}
+                              className="bg-muted/50 flex items-center gap-3 rounded-lg p-2"
+                            >
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={teacher.profilePhotoUrl || undefined} />
+                                <AvatarImage
+                                  src={teacher.profilePhotoUrl || undefined}
+                                />
                                 <AvatarFallback className="text-xs">
-                                  {getInitials(teacher.givenName, teacher.surname)}
+                                  {getInitials(
+                                    teacher.givenName,
+                                    teacher.surname
+                                  )}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
-                                <p className="text-sm font-medium">{teacher.givenName} {teacher.surname}</p>
-                                <p className="text-xs text-muted-foreground">{teacher.emailAddress}</p>
+                                <p className="text-sm font-medium">
+                                  {teacher.givenName} {teacher.surname}
+                                </p>
+                                <p className="text-muted-foreground text-xs">
+                                  {teacher.emailAddress}
+                                </p>
                               </div>
                               {teacher.isPrimary && (
-                                <Badge variant="default" className="text-xs">{t.primary}</Badge>
+                                <Badge variant="default" className="text-xs">
+                                  {t.primary}
+                                </Badge>
                               )}
                             </div>
                           ))}
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">{t.noTeachers}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {t.noTeachers}
+                      </p>
                     )}
 
                     {/* All Subjects */}
                     {dept.subjects.length > 0 ? (
                       <div>
-                        <p className="text-sm font-medium mb-2">{t.subjects}</p>
+                        <p className="mb-2 text-sm font-medium">{t.subjects}</p>
                         <div className="flex flex-wrap gap-2">
                           {dept.subjects.map((subject) => (
                             <Badge key={subject.id} variant="outline">
-                              {lang === 'ar' ? (subject.subjectNameAr || subject.subjectName) : subject.subjectName}
+                              {lang === "ar"
+                                ? subject.subjectNameAr || subject.subjectName
+                                : subject.subjectName}
                             </Badge>
                           ))}
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">{t.noSubjects}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {t.noSubjects}
+                      </p>
                     )}
                   </div>
                 )}
@@ -616,11 +709,14 @@ export function DepartmentsContent({
         </div>
       ) : (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Building className="h-12 w-12 mx-auto mb-2 opacity-50" />
+          <CardContent className="text-muted-foreground py-12 text-center">
+            <Building className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>{t.noDepartments}</p>
-            <Button className="mt-4" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 me-2" />
+            <Button
+              className="mt-4"
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
+              <Plus className="me-2 h-4 w-4" />
               {t.addDepartment}
             </Button>
           </CardContent>
@@ -628,7 +724,10 @@ export function DepartmentsContent({
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingDepartment} onOpenChange={(open) => !open && setEditingDepartment(null)}>
+      <Dialog
+        open={!!editingDepartment}
+        onOpenChange={(open) => !open && setEditingDepartment(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.editDepartment}</DialogTitle>
@@ -653,11 +752,23 @@ export function DepartmentsContent({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingDepartment(null)} disabled={isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setEditingDepartment(null)}
+              disabled={isPending}
+            >
               {t.cancel}
             </Button>
-            <Button onClick={handleUpdateDepartment} disabled={!newDepartmentName || isPending}>
-              {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
+            <Button
+              onClick={handleUpdateDepartment}
+              disabled={!newDepartmentName || isPending}
+            >
+              {isPending && (
+                <Loader2
+                  className="me-2 h-4 w-4 animate-spin"
+                  aria-hidden="true"
+                />
+              )}
               {t.save}
             </Button>
           </DialogFooter>
@@ -672,11 +783,11 @@ export function DepartmentsContent({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <AlertCircle className="text-destructive h-5 w-5" />
               {t.deleteDepartment}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {lang === 'ar'
+              {lang === "ar"
                 ? `هل أنت متأكد أنك تريد حذف "${deleteDialog.name}"؟ هذا الإجراء لا يمكن التراجع عنه.`
                 : `Are you sure you want to delete "${deleteDialog.name}"? This action cannot be undone.`}
             </AlertDialogDescription>
@@ -690,8 +801,13 @@ export function DepartmentsContent({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={isPending}
             >
-              {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" aria-hidden="true" />}
-              {lang === 'ar' ? 'حذف' : 'Delete'}
+              {isPending && (
+                <Loader2
+                  className="me-2 h-4 w-4 animate-spin"
+                  aria-hidden="true"
+                />
+              )}
+              {lang === "ar" ? "حذف" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

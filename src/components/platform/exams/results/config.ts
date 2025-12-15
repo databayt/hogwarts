@@ -21,7 +21,7 @@ export const PDF_TEMPLATES = {
     description: "Clean and simple text-based layout",
     preview: "/templates/minimal-preview.png",
   },
-} as const;
+} as const
 
 // ========== Grade Colors ==========
 
@@ -34,7 +34,7 @@ export const GRADE_COLORS: Record<string, string> = {
   C: "#F59E0B", // amber-500
   D: "#F97316", // orange-500
   F: "#EF4444", // red-500
-};
+}
 
 // ========== Performance Ranges ==========
 
@@ -46,7 +46,7 @@ export const PERFORMANCE_RANGES = [
   { min: 50, max: 59, label: "50-59 (Pass)", color: "#F59E0B" },
   { min: 40, max: 49, label: "40-49 (Marginal)", color: "#F97316" },
   { min: 0, max: 39, label: "0-39 (Fail)", color: "#EF4444" },
-];
+]
 
 // ========== PDF Page Sizes (in points, 1 point = 1/72 inch) ==========
 
@@ -59,7 +59,7 @@ export const PAGE_SIZES = {
     width: 612, // 8.5 inches
     height: 792, // 11 inches
   },
-} as const;
+} as const
 
 // ========== PDF Margins ==========
 
@@ -67,7 +67,7 @@ export const PDF_MARGINS = {
   default: 40,
   header: 60,
   footer: 40,
-} as const;
+} as const
 
 // ========== Font Families ==========
 
@@ -76,7 +76,7 @@ export const FONT_FAMILIES = {
   Tajawal: "Tajawal",
   Roboto: "Roboto",
   Arial: "Helvetica", // Fallback to Helvetica in PDF
-} as const;
+} as const
 
 // ========== Font Sizes ==========
 
@@ -88,7 +88,7 @@ export const FONT_SIZES = {
   body: 10,
   small: 8,
   caption: 7,
-} as const;
+} as const
 
 // ========== Export Formats ==========
 
@@ -104,7 +104,8 @@ export const EXPORT_FORMATS = {
     id: "excel",
     name: "Excel",
     icon: "FileSpreadsheet",
-    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     extension: ".xlsx",
   },
   csv: {
@@ -114,7 +115,7 @@ export const EXPORT_FORMATS = {
     mimeType: "text/csv",
     extension: ".csv",
   },
-} as const;
+} as const
 
 // ========== Sort Options ==========
 
@@ -122,7 +123,7 @@ export const SORT_OPTIONS = [
   { value: "rank", label: "Rank" },
   { value: "name", label: "Student Name" },
   { value: "marks", label: "Marks Obtained" },
-] as const;
+] as const
 
 // ========== Group By Options ==========
 
@@ -130,7 +131,7 @@ export const GROUP_BY_OPTIONS = [
   { value: "none", label: "No Grouping" },
   { value: "grade", label: "Group by Grade" },
   { value: "status", label: "Group by Pass/Fail" },
-] as const;
+] as const
 
 // ========== Result Status ==========
 
@@ -150,7 +151,7 @@ export const RESULT_STATUS = {
     color: "gray",
     icon: "MinusCircle",
   },
-} as const;
+} as const
 
 // ========== Analytics Thresholds ==========
 
@@ -159,7 +160,7 @@ export const ANALYTICS_THRESHOLDS = {
   needsAttention: 5, // Bottom N students
   highPerformance: 85, // % threshold for high performance
   lowPerformance: 50, // % threshold for needs attention
-} as const;
+} as const
 
 // ========== Watermark Settings ==========
 
@@ -168,7 +169,7 @@ export const WATERMARK_SETTINGS = {
   rotation: -45,
   fontSize: 48,
   defaultText: "CONFIDENTIAL",
-} as const;
+} as const
 
 // ========== Default PDF Options ==========
 
@@ -181,7 +182,7 @@ export const DEFAULT_PDF_OPTIONS = {
   orientation: "portrait" as const,
   pageSize: "A4" as const,
   language: "en" as const,
-};
+}
 
 // ========== Chart Colors ==========
 
@@ -194,7 +195,7 @@ export const CHART_COLORS = [
   "#EC4899", // pink-500
   "#14B8A6", // teal-500
   "#F97316", // orange-500
-];
+]
 
 // ========== Question Type Icons ==========
 
@@ -204,4 +205,4 @@ export const QUESTION_TYPE_ICONS: Record<string, string> = {
   SHORT_ANSWER: "MessageSquare",
   ESSAY: "FileText",
   FILL_BLANK: "PenLine",
-};
+}

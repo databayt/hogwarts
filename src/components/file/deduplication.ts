@@ -3,16 +3,16 @@
  * Provides SHA-256 hashing for file deduplication
  */
 
-import { createHash } from "crypto";
+import { createHash } from "crypto"
 
 /**
  * Generate SHA-256 hash from file buffer
  * Used for deduplication - identical files will have identical hashes
  */
 export async function generateFileHash(buffer: Buffer): Promise<string> {
-  const hash = createHash("sha256");
-  hash.update(buffer);
-  return hash.digest("hex");
+  const hash = createHash("sha256")
+  hash.update(buffer)
+  return hash.digest("hex")
 }
 
 /**
@@ -22,18 +22,18 @@ export async function generateFileHash(buffer: Buffer): Promise<string> {
 export async function generateFileHashFromStream(
   stream: ReadableStream<Uint8Array>
 ): Promise<string> {
-  const hash = createHash("sha256");
-  const reader = stream.getReader();
+  const hash = createHash("sha256")
+  const reader = stream.getReader()
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      hash.update(Buffer.from(value));
+      const { done, value } = await reader.read()
+      if (done) break
+      hash.update(Buffer.from(value))
     }
-    return hash.digest("hex");
+    return hash.digest("hex")
   } finally {
-    reader.releaseLock();
+    reader.releaseLock()
   }
 }
 
@@ -46,43 +46,43 @@ export async function generateFileHashFromFile(
   chunkSize = 1024 * 1024 // 1MB chunks
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const hash = createHash("sha256");
-    const reader = new FileReader();
-    let offset = 0;
+    const hash = createHash("sha256")
+    const reader = new FileReader()
+    let offset = 0
 
     reader.onload = (e) => {
       if (e.target?.result) {
-        const chunk = Buffer.from(e.target.result as ArrayBuffer);
-        hash.update(chunk);
+        const chunk = Buffer.from(e.target.result as ArrayBuffer)
+        hash.update(chunk)
 
-        offset += chunk.length;
+        offset += chunk.length
 
         if (offset < file.size) {
-          readNextChunk();
+          readNextChunk()
         } else {
-          resolve(hash.digest("hex"));
+          resolve(hash.digest("hex"))
         }
       }
-    };
+    }
 
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = () => reject(reader.error)
 
     const readNextChunk = () => {
-      const slice = file.slice(offset, offset + chunkSize);
-      reader.readAsArrayBuffer(slice);
-    };
+      const slice = file.slice(offset, offset + chunkSize)
+      reader.readAsArrayBuffer(slice)
+    }
 
-    readNextChunk();
-  });
+    readNextChunk()
+  })
 }
 
 /**
  * Generate SHA-256 hash for a chunk (used in chunked uploads)
  */
 export function generateChunkHash(chunkBuffer: Buffer): string {
-  const hash = createHash("sha256");
-  hash.update(chunkBuffer);
-  return hash.digest("hex");
+  const hash = createHash("sha256")
+  hash.update(chunkBuffer)
+  return hash.digest("hex")
 }
 
 /**
@@ -92,8 +92,8 @@ export async function verifyFileHash(
   buffer: Buffer,
   expectedHash: string
 ): Promise<boolean> {
-  const actualHash = await generateFileHash(buffer);
-  return actualHash === expectedHash;
+  const actualHash = await generateFileHash(buffer)
+  return actualHash === expectedHash
 }
 
 /**
@@ -101,7 +101,7 @@ export async function verifyFileHash(
  * Combines file hash with timestamp for uniqueness
  */
 export function generateUploadId(fileHash: string): string {
-  const timestamp = Date.now();
-  const randomSuffix = Math.random().toString(36).substring(2, 8);
-  return `${fileHash.substring(0, 16)}-${timestamp}-${randomSuffix}`;
+  const timestamp = Date.now()
+  const randomSuffix = Math.random().toString(36).substring(2, 8)
+  return `${fileHash.substring(0, 16)}-${timestamp}-${randomSuffix}`
 }

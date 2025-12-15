@@ -10,6 +10,7 @@
 Scans the entire codebase for common error patterns that cause TypeScript build failures. Combines multiple validation skills to detect all error types from `docs/build-fixes-2025-10-29.md`.
 
 **Detects**:
+
 - Dictionary property errors (173+ patterns)
 - Prisma field type errors (13+ patterns)
 - Enum completeness issues (2+ patterns)
@@ -48,6 +49,7 @@ Scans the entire codebase for common error patterns that cause TypeScript build 
 ## Error Pattern Categories
 
 ### 1. Dictionary Errors (Pattern: d?.stats, d?.blocks)
+
 ```typescript
 // Detects: 173+ invalid property accesses
 ❌ d?.stats?.totalBudget
@@ -60,6 +62,7 @@ Scans the entire codebase for common error patterns that cause TypeScript build 
 **Skill Used**: `dictionary-validator`
 
 ### 2. Prisma Field Errors (Pattern: connect on ID fields)
+
 ```typescript
 // Detects: 13+ field type issues
 ❌ submittedBy: { connect: { id: userId } }
@@ -70,6 +73,7 @@ Scans the entire codebase for common error patterns that cause TypeScript build 
 **Skill Used**: `prisma-optimizer`
 
 ### 3. Enum Completeness (Pattern: Record<Enum, T>)
+
 ```typescript
 // Detects: 2+ incomplete enum mappings
 ❌ ExpenseStatusLabels missing CANCELLED
@@ -79,6 +83,7 @@ Scans the entire codebase for common error patterns that cause TypeScript build 
 **Agent Used**: `type-safety`
 
 ### 4. Multi-Tenant Safety (Pattern: missing schoolId)
+
 ```typescript
 // Detects: schoolId violations
 ❌ db.student.findMany({ where: { yearLevel: 'GRADE_10' } })
@@ -337,6 +342,7 @@ Apply fix? [Y/n]
 ## Bulk Auto-Fix Process
 
 ### Phase 1: Analysis
+
 ```
 🔍 Analyzing codebase...
   ✅ Dictionary patterns
@@ -349,6 +355,7 @@ Found 204 fixable issues
 ```
 
 ### Phase 2: Backup
+
 ```
 💾 Creating backups...
   ✅ finance/content.tsx → content.tsx.backup
@@ -360,6 +367,7 @@ Found 204 fixable issues
 ```
 
 ### Phase 3: Apply Fixes
+
 ```
 🔧 Applying fixes...
 
@@ -380,6 +388,7 @@ Enum errors (2 fixes):
 ```
 
 ### Phase 4: Verification
+
 ```
 ✅ Running TypeScript check...
   pnpm tsc --noEmit
@@ -414,6 +423,7 @@ Report includes:
 # Error Scan Report - 2025-10-29
 
 ## Summary
+
 - **Total Issues**: 204
 - **Critical**: 204
 - **Warnings**: 3
@@ -421,16 +431,19 @@ Report includes:
 - **Scan Duration**: 12.3s
 
 ## Breakdown
+
 1. Dictionary Errors: 189 (92.6%)
 2. Prisma Field Errors: 13 (6.4%)
 3. Enum Completeness: 2 (1.0%)
 
 ## Top Issues
+
 1. finance/content.tsx - 102 dictionary errors
 2. fees/content.tsx - 42 dictionary errors
 3. expenses/content.tsx - 29 dictionary errors
 
 ## Prevention
+
 - Add pre-commit hook with /pre-commit-full
 - Use dictionary-validator skill proactively
 - Enable type-safety agent for enum checks
@@ -441,6 +454,7 @@ Report includes:
 ## Integration
 
 ### Pre-Commit Hook
+
 ```bash
 # .husky/pre-commit
 #!/usr/bin/env sh
@@ -448,6 +462,7 @@ Report includes:
 ```
 
 ### CI/CD Pipeline
+
 ```yaml
 # .github/workflows/ci.yml
 - name: Scan for error patterns
@@ -455,6 +470,7 @@ Report includes:
 ```
 
 ### Weekly Audit
+
 ```bash
 # Run weekly to catch new patterns
 /scan-errors --report=weekly-scan.md
@@ -474,6 +490,7 @@ Report includes:
 ## Success Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **204 errors** would be detected in single scan
 - **100% detection rate** for known patterns
 - **~20 seconds** vs **3 hours** (debugging time)

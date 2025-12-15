@@ -1,7 +1,11 @@
 "use client"
 
-import { MobileNav, type NavItem, type NavSection } from "@/components/template/mobile-nav"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  MobileNav,
+  type NavItem,
+  type NavSection,
+} from "@/components/template/mobile-nav"
 
 interface MarketingMobileNavProps {
   items: NavItem[]
@@ -10,7 +14,12 @@ interface MarketingMobileNavProps {
   locale: string
 }
 
-export function MarketingMobileNav({ items, sections, dictionary, locale }: MarketingMobileNavProps) {
+export function MarketingMobileNav({
+  items,
+  sections,
+  dictionary,
+  locale,
+}: MarketingMobileNavProps) {
   return (
     <MobileNav
       items={items}

@@ -1,16 +1,17 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { 
-  requireSchoolOwnership,
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { z } from "zod"
+
+import {
   createActionResponse,
-  type ActionResponse 
-} from "@/lib/auth-security";
+  requireSchoolOwnership,
+  type ActionResponse,
+} from "@/lib/auth-security"
+import { db } from "@/lib/db"
 
-import { descriptionSchema, type DescriptionFormData } from "./validation";
+import { descriptionSchema, type DescriptionFormData } from "./validation"
 
 export async function updateSchoolDescription(
   schoolId: string,
@@ -19,15 +20,15 @@ export async function updateSchoolDescription(
   console.log("🎯 [UPDATE SCHOOL DESCRIPTION] Starting", {
     schoolId,
     data,
-    timestamp: new Date().toISOString()
-  });
-  
+    timestamp: new Date().toISOString(),
+  })
+
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
-    const validatedData = descriptionSchema.parse(data);
-    console.log("✅ [UPDATE SCHOOL DESCRIPTION] Data validated", validatedData);
+    const validatedData = descriptionSchema.parse(data)
+    console.log("✅ [UPDATE SCHOOL DESCRIPTION] Data validated", validatedData)
 
     // Update school description in database
     // Note: schoolType is not in current schema
@@ -38,34 +39,36 @@ export async function updateSchoolDescription(
         planType: validatedData.schoolType, // Temporary storage until proper fields are added
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath(`/onboarding/${schoolId}/description`);
-    
+    revalidatePath(`/onboarding/${schoolId}/description`)
+
     console.log("🎉 [UPDATE SCHOOL DESCRIPTION] Success", {
       schoolId: updatedSchool.id,
       planType: updatedSchool.planType,
-      timestamp: new Date().toISOString()
-    });
-    
-    return createActionResponse(updatedSchool);
+      timestamp: new Date().toISOString(),
+    })
+
+    return createActionResponse(updatedSchool)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {
         message: "Validation failed",
         name: "ValidationError",
-        issues: error.issues
-      });
+        issues: error.issues,
+      })
     }
-    
-    return createActionResponse(undefined, error);
+
+    return createActionResponse(undefined, error)
   }
 }
 
-export async function getSchoolDescription(schoolId: string): Promise<ActionResponse> {
+export async function getSchoolDescription(
+  schoolId: string
+): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -73,43 +76,49 @@ export async function getSchoolDescription(schoolId: string): Promise<ActionResp
         id: true,
         planType: true, // Temporary field for school info
       },
-    });
+    })
 
     if (!school) {
-      throw new Error("School not found");
+      throw new Error("School not found")
     }
 
     // Parse stored school type from planType field
-    const schoolType = school.planType;
+    const schoolType = school.planType
 
     return createActionResponse({
-      schoolType: schoolType as 'private' | 'public' | 'international' | 'technical' | 'special' | null,
-    });
+      schoolType: schoolType as
+        | "private"
+        | "public"
+        | "international"
+        | "technical"
+        | "special"
+        | null,
+    })
   } catch (error) {
-    return createActionResponse(undefined, error);
+    return createActionResponse(undefined, error)
   }
 }
 
 export async function proceedToLocation(schoolId: string) {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId);
+    await requireSchoolOwnership(schoolId)
 
     // Validate that description data exists
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: { planType: true },
-    });
+    })
 
     if (!school?.planType) {
-      throw new Error("Please select school type before proceeding");
+      throw new Error("Please select school type before proceeding")
     }
 
-    revalidatePath(`/onboarding/${schoolId}`);
+    revalidatePath(`/onboarding/${schoolId}`)
   } catch (error) {
-    console.error("Error proceeding to location:", error);
-    throw error;
+    console.error("Error proceeding to location:", error)
+    throw error
   }
 
-  redirect(`/onboarding/${schoolId}/location`);
+  redirect(`/onboarding/${schoolId}/location`)
 }

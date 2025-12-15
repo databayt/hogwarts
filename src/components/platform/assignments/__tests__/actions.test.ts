@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+
 import {
   createAssignment,
-  updateAssignment,
   deleteAssignment,
   getAssignments,
+  updateAssignment,
 } from "../actions"
 
 vi.mock("@/lib/db", () => ({
@@ -15,13 +19,15 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      assignment: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-        deleteMany: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        assignment: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+          deleteMany: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -32,9 +38,6 @@ vi.mock("@/lib/tenant-context", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
 
 describe("Assignment Actions", () => {
   const mockSchoolId = "school-123"
@@ -139,7 +142,9 @@ describe("Assignment Actions", () => {
         { id: "2", title: "Assignment 2", schoolId: mockSchoolId },
       ]
 
-      vi.mocked(db.assignment.findMany).mockResolvedValue(mockAssignments as any)
+      vi.mocked(db.assignment.findMany).mockResolvedValue(
+        mockAssignments as any
+      )
       vi.mocked(db.assignment.count).mockResolvedValue(2)
 
       const result = await getAssignments({})

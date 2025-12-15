@@ -1,14 +1,10 @@
-'use client';
+"use client"
 
-import { useState, useTransition } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { EllipsisVertical, LoaderCircle, RefreshCw, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,47 +14,57 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { EllipsisVertical, RefreshCw, Trash2, LoaderCircle } from "lucide-react";
-import { removeBank, syncBankData } from './actions';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import { removeBank, syncBankData } from "./actions"
 
 interface Props {
-  accountId: string;
-  accountName: string;
-  dictionary: any;
+  accountId: string
+  accountName: string
+  dictionary: any
 }
 
 export default function BankActions(props: Props) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const handleSync = () => {
     startTransition(async () => {
-      const result = await syncBankData({ accountId: props.accountId });
+      const result = await syncBankData({ accountId: props.accountId })
       if (result.success) {
-        toast.success(props.dictionary.syncSuccess || 'Bank data synced successfully');
-        router.refresh();
+        toast.success(
+          props.dictionary.syncSuccess || "Bank data synced successfully"
+        )
+        router.refresh()
       } else {
-        toast.error(result.error?.message || 'Failed to sync bank data');
+        toast.error(result.error?.message || "Failed to sync bank data")
       }
-    });
-  };
+    })
+  }
 
   const handleDelete = () => {
     startTransition(async () => {
-      const result = await removeBank({ accountId: props.accountId });
+      const result = await removeBank({ accountId: props.accountId })
       if (result.success) {
-        toast.success(props.dictionary.removeSuccess || 'Bank account removed successfully');
-        router.refresh();
+        toast.success(
+          props.dictionary.removeSuccess || "Bank account removed successfully"
+        )
+        router.refresh()
       } else {
-        toast.error(result.error?.message || 'Failed to remove bank account');
+        toast.error(result.error?.message || "Failed to remove bank account")
       }
-      setShowDeleteDialog(false);
-    });
-  };
+      setShowDeleteDialog(false)
+    })
+  }
 
   return (
     <>
@@ -75,7 +81,7 @@ export default function BankActions(props: Props) {
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleSync} disabled={isPending}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            {props.dictionary.syncData || 'Sync Data'}
+            {props.dictionary.syncData || "Sync Data"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -84,7 +90,7 @@ export default function BankActions(props: Props) {
             className="text-destructive"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            {props.dictionary.remove || 'Remove'}
+            {props.dictionary.remove || "Remove"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -92,23 +98,27 @@ export default function BankActions(props: Props) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{props.dictionary.confirmRemove || 'Remove Bank Account?'}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {props.dictionary.confirmRemove || "Remove Bank Account?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {props.dictionary.removeDescription ||
                 `Are you sure you want to remove ${props.accountName}? This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{props.dictionary.cancel || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel>
+              {props.dictionary.cancel || "Cancel"}
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
               {isPending ? (
                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {props.dictionary.remove || 'Remove'}
+              {props.dictionary.remove || "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

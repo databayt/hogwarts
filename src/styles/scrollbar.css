@@ -10,7 +10,9 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border)); /* Color of the scrollbar thumb using CSS variables */
+  background: hsl(
+    var(--border)
+  ); /* Color of the scrollbar thumb using CSS variables */
   border-radius: 5px; /* Rounded corners for the scrollbar thumb */
 }
 
@@ -52,4 +54,4 @@ body {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
-} 
+}

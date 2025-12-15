@@ -1,9 +1,12 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { LoaderCircle } from "lucide-react"
+import { useForm } from "react-hook-form"
+import type { z } from "zod"
+
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -12,34 +15,37 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { LoaderCircle } from "lucide-react";
-import { createTemplate } from "./actions";
-import { examTemplateSchema } from "./validation";
-import { SuccessToast, ErrorToast } from "@/components/atom/toast";
-import { useModal } from "@/components/atom/modal/context";
-import type { ExamTemplateDTO, TemplateDistribution, BloomDistribution } from "./types";
-import { DistributionEditor } from "./distribution-editor";
-import { calculateTotalQuestions } from "./utils";
-import type { z } from "zod";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { createTemplate } from "./actions"
+import { DistributionEditor } from "./distribution-editor"
+import type {
+  BloomDistribution,
+  ExamTemplateDTO,
+  TemplateDistribution,
+} from "./types"
+import { calculateTotalQuestions } from "./utils"
+import { examTemplateSchema } from "./validation"
 
 interface ExamTemplateFormProps {
-  initialData?: ExamTemplateDTO;
-  subjectId?: string;
-  isView?: boolean;
-  dictionary?: Dictionary;
+  initialData?: ExamTemplateDTO
+  subjectId?: string
+  isView?: boolean
+  dictionary?: Dictionary
   /** Callback fired on successful create/update - use for optimistic refresh */
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 export function ExamTemplateForm({
@@ -49,8 +55,8 @@ export function ExamTemplateForm({
   dictionary,
   onSuccess,
 }: ExamTemplateFormProps) {
-  const { closeModal } = useModal();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { closeModal } = useModal()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(examTemplateSchema),
@@ -59,59 +65,65 @@ export function ExamTemplateForm({
       description: initialData?.description || "",
       subjectId: initialData?.subjectId || subjectId || "",
       duration: initialData?.duration || 60,
-      totalMarks: initialData?.totalMarks ? Number(initialData.totalMarks) : 100,
+      totalMarks: initialData?.totalMarks
+        ? Number(initialData.totalMarks)
+        : 100,
       distribution: (initialData?.distribution as TemplateDistribution) || {},
-      bloomDistribution: (initialData?.bloomDistribution as BloomDistribution) || undefined,
+      bloomDistribution:
+        (initialData?.bloomDistribution as BloomDistribution) || undefined,
     },
-  });
+  })
 
-  const distribution = form.watch("distribution") as TemplateDistribution;
-  const totalQuestions = calculateTotalQuestions(distribution);
+  const distribution = form.watch("distribution") as TemplateDistribution
+  const totalQuestions = calculateTotalQuestions(distribution)
 
   const onSubmit = async (values: z.infer<typeof examTemplateSchema>) => {
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
-      const formData = new FormData();
+      const formData = new FormData()
 
       // Append all fields
       Object.entries(values).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (typeof value === "object") {
-            formData.append(key, JSON.stringify(value));
+            formData.append(key, JSON.stringify(value))
           } else {
-            formData.append(key, value.toString());
+            formData.append(key, value.toString())
           }
         }
-      });
+      })
 
       if (initialData?.id) {
-        formData.append("id", initialData.id);
+        formData.append("id", initialData.id)
       }
 
-      const result = await createTemplate(formData);
+      const result = await createTemplate(formData)
 
       if (result.success) {
         SuccessToast(
           initialData?.id
-            ? (dictionary?.generate?.form?.templateUpdated || "Template updated!")
-            : (dictionary?.generate?.form?.templateCreated || "Template created!")
-        );
-        closeModal();
+            ? dictionary?.generate?.form?.templateUpdated || "Template updated!"
+            : dictionary?.generate?.form?.templateCreated || "Template created!"
+        )
+        closeModal()
         // Use callback for optimistic update instead of page reload
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         }
       } else {
-        ErrorToast(result.error);
+        ErrorToast(result.error)
       }
     } catch (error) {
       ErrorToast(
-        error instanceof Error ? error.message : (dictionary?.generate?.form?.failedToSave || "Failed to save template")
-      );
+        error instanceof Error
+          ? error.message
+          : dictionary?.generate?.form?.failedToSave ||
+              "Failed to save template"
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Form {...form}>
@@ -119,8 +131,9 @@ export function ExamTemplateForm({
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
             {initialData?.id
-              ? (dictionary?.generate?.form?.editTemplate || "Pencil Template")
-              : (dictionary?.generate?.form?.createTemplate || "Create Exam Template")}
+              ? dictionary?.generate?.form?.editTemplate || "Pencil Template"
+              : dictionary?.generate?.form?.createTemplate ||
+                "Create Exam Template"}
           </h2>
 
           {/* Template Name */}
@@ -129,10 +142,15 @@ export function ExamTemplateForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dictionary?.generate?.form?.templateName || "Template Name"}</FormLabel>
+                <FormLabel>
+                  {dictionary?.generate?.form?.templateName || "Template Name"}
+                </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={dictionary?.generate?.form?.templateNamePlaceholder || "e.g., Midterm Template - Mathematics"}
+                    placeholder={
+                      dictionary?.generate?.form?.templateNamePlaceholder ||
+                      "e.g., Midterm Template - Mathematics"
+                    }
                     disabled={isView}
                     {...field}
                   />
@@ -148,10 +166,16 @@ export function ExamTemplateForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dictionary?.generate?.form?.description || "Description (Optional)"}</FormLabel>
+                <FormLabel>
+                  {dictionary?.generate?.form?.description ||
+                    "Description (Optional)"}
+                </FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={dictionary?.generate?.form?.descriptionPlaceholder || "Describe this template..."}
+                    placeholder={
+                      dictionary?.generate?.form?.descriptionPlaceholder ||
+                      "Describe this template..."
+                    }
                     disabled={isView}
                     {...field}
                   />
@@ -167,7 +191,9 @@ export function ExamTemplateForm({
             name="subjectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dictionary?.generate?.form?.subject || "Subject"}</FormLabel>
+                <FormLabel>
+                  {dictionary?.generate?.form?.subject || "Subject"}
+                </FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -175,7 +201,12 @@ export function ExamTemplateForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={dictionary?.generate?.form?.selectSubject || "Select subject"} />
+                      <SelectValue
+                        placeholder={
+                          dictionary?.generate?.form?.selectSubject ||
+                          "Select subject"
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -197,7 +228,10 @@ export function ExamTemplateForm({
               name="duration"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.generate?.form?.duration || "Duration (minutes)"}</FormLabel>
+                  <FormLabel>
+                    {dictionary?.generate?.form?.duration ||
+                      "Duration (minutes)"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -219,7 +253,9 @@ export function ExamTemplateForm({
               name="totalMarks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.generate?.form?.totalMarks || "Total Marks"}</FormLabel>
+                  <FormLabel>
+                    {dictionary?.generate?.form?.totalMarks || "Total Marks"}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -245,7 +281,10 @@ export function ExamTemplateForm({
             name="distribution"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dictionary?.generate?.form?.questionDistribution || "Question Distribution"}</FormLabel>
+                <FormLabel>
+                  {dictionary?.generate?.form?.questionDistribution ||
+                    "Question Distribution"}
+                </FormLabel>
                 <FormControl>
                   <DistributionEditor
                     distribution={field.value as TemplateDistribution}
@@ -255,7 +294,9 @@ export function ExamTemplateForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  {dictionary?.generate?.form?.totalQuestions || "Total Questions"}: {totalQuestions}
+                  {dictionary?.generate?.form?.totalQuestions ||
+                    "Total Questions"}
+                  : {totalQuestions}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -275,14 +316,16 @@ export function ExamTemplateForm({
               {dictionary?.generate?.form?.cancel || "Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {initialData?.id
-                ? (dictionary?.generate?.form?.update || "Update")
-                : (dictionary?.generate?.form?.create || "Create")}
+                ? dictionary?.generate?.form?.update || "Update"
+                : dictionary?.generate?.form?.create || "Create"}
             </Button>
           </div>
         )}
       </form>
     </Form>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonPageNav } from '@/components/ui/skeleton-page-nav'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function AttendanceConfigLoading() {
   return (
@@ -14,7 +14,10 @@ export default function AttendanceConfigLoading() {
         </CardHeader>
         <CardContent className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b">
+            <div
+              key={i}
+              className="flex items-center justify-between border-b py-2"
+            >
               <div className="space-y-1">
                 <Skeleton className="h-5 w-32" />
                 <Skeleton className="h-4 w-48" />
@@ -22,7 +25,7 @@ export default function AttendanceConfigLoading() {
               <Skeleton className="h-6 w-12" />
             </div>
           ))}
-          <Skeleton className="h-9 w-24 mt-4" />
+          <Skeleton className="mt-4 h-9 w-24" />
         </CardContent>
       </Card>
     </div>

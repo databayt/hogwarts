@@ -1,7 +1,8 @@
 "use client"
 
-import { PageActions } from "./page-actions"
 import { ArrowRight, Book } from "lucide-react"
+
+import { PageActions } from "./page-actions"
 
 export function PageActionsPreview() {
   return (

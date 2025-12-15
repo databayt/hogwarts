@@ -1,32 +1,39 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useCallback, useState, useMemo } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Command as CommandPrimitive } from "cmdk";
-import { cn } from "@/lib/utils";
-import { useDebounce } from "@/hooks/use-debounce";
+import * as React from "react"
+import { useCallback, useMemo, useState } from "react"
+import { Command as CommandPrimitive } from "cmdk"
+
+import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 
 interface AutocompleteOption {
-  id: string;
-  value: string;
-  label?: string;
+  id: string
+  value: string
+  label?: string
 }
 
 interface AnnouncementAutocompleteProps {
-  value: string;
-  onValueChange: (value: string) => void;
-  options: AutocompleteOption[];
-  placeholder?: string;
-  disabled?: boolean;
-  dir?: "ltr" | "rtl";
-  emptyMessage?: string;
-  groupHeading?: string;
-  className?: string;
-  inputClassName?: string;
-  autoFocus?: boolean;
-  isTextarea?: boolean;
-  rows?: number;
+  value: string
+  onValueChange: (value: string) => void
+  options: AutocompleteOption[]
+  placeholder?: string
+  disabled?: boolean
+  dir?: "ltr" | "rtl"
+  emptyMessage?: string
+  groupHeading?: string
+  className?: string
+  inputClassName?: string
+  autoFocus?: boolean
+  isTextarea?: boolean
+  rows?: number
 }
 
 export function AnnouncementAutocomplete({
@@ -44,46 +51,46 @@ export function AnnouncementAutocomplete({
   isTextarea = false,
   rows = 6,
 }: AnnouncementAutocompleteProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const open = useCallback(() => setIsOpen(true), []);
-  const close = useCallback(() => setIsOpen(false), []);
+  const [isOpen, setIsOpen] = useState(false)
+  const open = useCallback(() => setIsOpen(true), [])
+  const close = useCallback(() => setIsOpen(false), [])
 
-  const debouncedValue = useDebounce(value, 300);
+  const debouncedValue = useDebounce(value, 300)
 
   // Filter options based on debounced input
   const filteredOptions = useMemo(() => {
-    if (!debouncedValue) return options.slice(0, 5);
+    if (!debouncedValue) return options.slice(0, 5)
     return options
       .filter(
         (opt) =>
           opt.value.toLowerCase().includes(debouncedValue.toLowerCase()) &&
           opt.value !== value
       )
-      .slice(0, 5);
-  }, [options, debouncedValue, value]);
+      .slice(0, 5)
+  }, [options, debouncedValue, value])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (e.key === "Escape") {
-        close();
+        close()
       }
     },
     [close]
-  );
+  )
 
   const handleSelect = useCallback(
     (selectedValue: string) => {
-      onValueChange(selectedValue);
-      close();
+      onValueChange(selectedValue)
+      close()
     },
     [onValueChange, close]
-  );
+  )
 
   const inputStyles = cn(
     "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
     isTextarea ? "min-h-[160px]" : "h-10",
     inputClassName
-  );
+  )
 
   return (
     <Command shouldFilter={false} className={cn("overflow-visible", className)}>
@@ -122,9 +129,9 @@ export function AnnouncementAutocomplete({
         )}
       </div>
       {isOpen && filteredOptions.length > 0 && (
-        <div className="relative animate-in fade-in-0 zoom-in-95">
+        <div className="animate-in fade-in-0 zoom-in-95 relative">
           <CommandList>
-            <div className="absolute top-1.5 z-50 w-full rounded-md border bg-popover shadow-md">
+            <div className="bg-popover absolute top-1.5 z-50 w-full rounded-md border shadow-md">
               <CommandEmpty>{emptyMessage}</CommandEmpty>
               <CommandGroup heading={groupHeading}>
                 {filteredOptions.map((option) => (
@@ -136,7 +143,9 @@ export function AnnouncementAutocomplete({
                     className="cursor-pointer"
                   >
                     <span
-                      className={isTextarea ? "line-clamp-2 text-sm" : "truncate"}
+                      className={
+                        isTextarea ? "line-clamp-2 text-sm" : "truncate"
+                      }
                     >
                       {option.label || option.value}
                     </span>
@@ -148,5 +157,5 @@ export function AnnouncementAutocomplete({
         </div>
       )}
     </Command>
-  );
+  )
 }

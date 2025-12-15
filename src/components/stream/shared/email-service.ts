@@ -1,26 +1,28 @@
-import { Resend } from "resend";
-import { env } from "@/env.mjs";
-import { EnrollmentEmail } from "../emails/enrollment-email";
-import { CompletionEmail } from "../emails/completion-email";
-import { logger } from "@/lib/logger";
+import { Resend } from "resend"
 
-const resend = new Resend(env.RESEND_API_KEY);
+import { env } from "@/env.mjs"
+import { logger } from "@/lib/logger"
+
+import { CompletionEmail } from "../emails/completion-email"
+import { EnrollmentEmail } from "../emails/enrollment-email"
+
+const resend = new Resend(env.RESEND_API_KEY)
 
 interface SendEnrollmentEmailParams {
-  to: string;
-  studentName: string;
-  courseTitle: string;
-  courseUrl: string;
-  schoolName: string;
+  to: string
+  studentName: string
+  courseTitle: string
+  courseUrl: string
+  schoolName: string
 }
 
 interface SendCompletionEmailParams {
-  to: string;
-  studentName: string;
-  courseTitle: string;
-  certificateUrl: string;
-  schoolName: string;
-  completionDate: string;
+  to: string
+  studentName: string
+  courseTitle: string
+  certificateUrl: string
+  schoolName: string
+  completionDate: string
 }
 
 /**
@@ -47,10 +49,10 @@ export async function sendEnrollmentEmail({
       headers: {
         "X-Entity-Ref-ID": new Date().getTime() + "",
       },
-    });
+    })
 
     if (error || !data) {
-      throw new Error(error?.message || "Failed to send email");
+      throw new Error(error?.message || "Failed to send email")
     }
 
     logger.info("Enrollment email sent", {
@@ -58,9 +60,9 @@ export async function sendEnrollmentEmail({
       to,
       courseTitle,
       emailId: data.id,
-    });
+    })
 
-    return { success: true, emailId: data.id };
+    return { success: true, emailId: data.id }
   } catch (error) {
     logger.error(
       "Failed to send enrollment email",
@@ -70,8 +72,8 @@ export async function sendEnrollmentEmail({
         to,
         courseTitle,
       }
-    );
-    return { success: false, error };
+    )
+    return { success: false, error }
   }
 }
 
@@ -101,10 +103,10 @@ export async function sendCompletionEmail({
       headers: {
         "X-Entity-Ref-ID": new Date().getTime() + "",
       },
-    });
+    })
 
     if (error || !data) {
-      throw new Error(error?.message || "Failed to send email");
+      throw new Error(error?.message || "Failed to send email")
     }
 
     logger.info("Completion email sent", {
@@ -112,9 +114,9 @@ export async function sendCompletionEmail({
       to,
       courseTitle,
       emailId: data.id,
-    });
+    })
 
-    return { success: true, emailId: data.id };
+    return { success: true, emailId: data.id }
   } catch (error) {
     logger.error(
       "Failed to send completion email",
@@ -124,7 +126,7 @@ export async function sendCompletionEmail({
         to,
         courseTitle,
       }
-    );
-    return { success: false, error };
+    )
+    return { success: false, error }
   }
 }

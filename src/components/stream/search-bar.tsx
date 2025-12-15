@@ -3,8 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search as SearchIcon, X, ChevronDown } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
+import { ChevronDown, Search as SearchIcon, X } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AnthropicIcons } from "@/components/icons/anthropic"
@@ -50,15 +51,17 @@ const popularSearches = [
 const recentCourse = {
   title: "Introduction to AI",
   category: "Technology",
-  image: "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/f4/6b2dde582549308d4a217c0686e215/Professional_Certificate_Image_1200x1200.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-  rating: 4.8
+  image:
+    "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/f4/6b2dde582549308d4a217c0686e215/Professional_Certificate_Image_1200x1200.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+  rating: 4.8,
 }
 
 const recommendedCourse = {
   title: "Business Analytics",
   category: "Business",
-  image: "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/72/c2e795cd584b74accb5937ae2ac8c0/GwG_Career_Certs_Coursera_PME_Overall_Course_1x1.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
-  rating: 4.9
+  image:
+    "https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://d15cw65ipctsrr.cloudfront.net/72/c2e795cd584b74accb5937ae2ac8c0/GwG_Career_Certs_Coursera_PME_Overall_Course_1x1.jpg?auto=format%2C%20compress%2C%20enhance&dpr=1&w=320&h=180&fit=crop&q=50",
+  rating: 4.9,
 }
 
 export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
@@ -109,7 +112,9 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
     e.preventDefault()
     if (query.trim()) {
       setIsDropdownOpen(false)
-      router.push(`/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`)
+      router.push(
+        `/${lang}/stream/courses?search=${encodeURIComponent(query.trim())}`
+      )
     }
   }
 
@@ -137,7 +142,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/95 backdrop-blur-md z-40"
+            className="fixed inset-0 z-40 bg-black/95 backdrop-blur-md"
             onClick={() => setIsDropdownOpen(false)}
           />
         )}
@@ -154,14 +159,16 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
           stiffness: 300,
           damping: 30,
         }}
-        className={cn("relative w-full max-w-2xl mx-auto z-50", className)}
+        className={cn("relative z-50 mx-auto w-full max-w-2xl", className)}
       >
         <form onSubmit={handleSubmit}>
           <motion.div
             layout
             className={cn(
-              "flex items-center w-full rounded-full border transition-colors",
-              isFocused || isDropdownOpen ? "border-foreground" : "border-input",
+              "flex w-full items-center rounded-full border transition-colors",
+              isFocused || isDropdownOpen
+                ? "border-foreground"
+                : "border-input",
               "bg-background"
             )}
           >
@@ -171,13 +178,13 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
               type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className={cn(
-                "flex items-center gap-1 h-11 px-4 rounded-none transition-colors shrink-0",
-                "bg-transparent hover:bg-muted",
+                "flex h-11 shrink-0 items-center gap-1 rounded-none px-4 transition-colors",
+                "hover:bg-muted bg-transparent",
                 isDropdownOpen && "bg-muted",
-                isRTL ? "rounded-r-full order-last" : "rounded-l-full"
+                isRTL ? "order-last rounded-r-full" : "rounded-l-full"
               )}
             >
-              <motion.span layout className="font-medium text-sm">
+              <motion.span layout className="text-sm font-medium">
                 {dictionary?.explore?.title || "Explore"}
               </motion.span>
               <motion.div
@@ -189,16 +196,17 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
             </motion.button>
 
             {/* Vertical Separator */}
-            <div className={cn(
-              "w-px bg-border self-stretch",
-              isRTL && "order-2"
-            )} />
+            <div
+              className={cn("bg-border w-px self-stretch", isRTL && "order-2")}
+            />
 
             {/* Search Input */}
-            <div className={cn(
-              "relative flex-1 flex items-center",
-              isRTL && "order-1"
-            )}>
+            <div
+              className={cn(
+                "relative flex flex-1 items-center",
+                isRTL && "order-1"
+              )}
+            >
               <input
                 ref={inputRef}
                 type="search"
@@ -206,11 +214,14 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={dictionary?.search?.placeholder || "What do you want to learn?"}
+                placeholder={
+                  dictionary?.search?.placeholder ||
+                  "What do you want to learn?"
+                }
                 className={cn(
-                  "w-full h-11 bg-transparent border-0 outline-none text-sm",
+                  "h-11 w-full border-0 bg-transparent text-sm outline-none",
                   "placeholder:text-muted-foreground",
-                  isRTL ? "pr-4 pl-12 text-right" : "pl-4 pr-12"
+                  isRTL ? "pr-4 pl-12 text-right" : "pr-12 pl-4"
                 )}
                 aria-label={dictionary?.search?.ariaLabel || "Search courses"}
               />
@@ -221,12 +232,12 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                   type="button"
                   onClick={handleClear}
                   className={cn(
-                    "absolute flex items-center justify-center size-6 rounded-full hover:bg-muted transition-colors",
+                    "hover:bg-muted absolute flex size-6 items-center justify-center rounded-full transition-colors",
                     isRTL ? "left-12" : "right-12"
                   )}
                   aria-label={dictionary?.search?.clear || "Clear search"}
                 >
-                  <X className="size-4 text-muted-foreground" />
+                  <X className="text-muted-foreground size-4" />
                 </button>
               )}
             </div>
@@ -236,8 +247,8 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
               type="submit"
               size="icon"
               className={cn(
-                "size-9 rounded-full bg-primary hover:bg-primary/90 shrink-0",
-                isRTL ? "ml-1 order-first" : "mr-1"
+                "bg-primary hover:bg-primary/90 size-9 shrink-0 rounded-full",
+                isRTL ? "order-first ml-1" : "mr-1"
               )}
               aria-label={dictionary?.search?.submit || "Search"}
             >
@@ -261,7 +272,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                   stiffness: 300,
                   damping: 30,
                   delay: 0.1,
-                }
+                },
               }}
               exit={{
                 opacity: 0,
@@ -269,12 +280,12 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 y: -10,
                 transition: {
                   duration: 0.15,
-                }
+                },
               }}
               className="mt-4"
             >
               <motion.div
-                className="relative w-full rounded-2xl border border-border/50 bg-background shadow-2xl overflow-hidden"
+                className="border-border/50 bg-background relative w-full overflow-hidden rounded-2xl border shadow-2xl"
                 layout
               >
                 {/* Close Button - positioned relative to this card container */}
@@ -283,7 +294,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, transition: { duration: 0.05 } }}
                   onClick={() => setIsDropdownOpen(false)}
-                  className="absolute top-4 right-4 z-10 flex items-center justify-center size-8 rounded-full bg-muted hover:bg-muted/80 transition-colors"
+                  className="bg-muted hover:bg-muted/80 absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full transition-colors"
                 >
                   <X className="size-4" />
                 </motion.button>
@@ -299,7 +310,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                     <div className="grid grid-cols-2 gap-6">
                       {/* Recently Viewed */}
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                        <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
                           {dictionary?.explore?.recent || "Recently viewed"}
                         </p>
                         <motion.div
@@ -310,10 +321,10 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                           <Link
                             href={`/${lang}/stream/courses`}
                             onClick={handleLinkClick}
-                            className="group flex gap-3 p-2 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                            className="group hover:bg-muted/50 flex gap-3 rounded-xl p-2 transition-all duration-200"
                           >
                             <motion.div
-                              className="size-16 rounded-lg overflow-hidden shrink-0 bg-muted"
+                              className="bg-muted size-16 shrink-0 overflow-hidden rounded-lg"
                               whileHover={{ scale: 1.05 }}
                               transition={{ duration: 0.2 }}
                             >
@@ -321,19 +332,21 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                               <img
                                 src={recentCourse.image}
                                 alt={recentCourse.title}
-                                className="w-full h-full object-cover"
+                                className="h-full w-full object-cover"
                               />
                             </motion.div>
-                            <div className="flex flex-col justify-center min-w-0 gap-1">
-                              <p className="text-sm font-medium truncate group-hover:text-foreground transition-colors duration-200">
+                            <div className="flex min-w-0 flex-col justify-center gap-1">
+                              <p className="group-hover:text-foreground truncate text-sm font-medium transition-colors duration-200">
                                 {recentCourse.title}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 {recentCourse.category}
                               </p>
                               <div className="flex items-center gap-1">
-                                <AnthropicIcons.Sparkle className="size-3 fill-current text-foreground" />
-                                <span className="text-xs font-medium">{recentCourse.rating}</span>
+                                <AnthropicIcons.Sparkle className="text-foreground size-3 fill-current" />
+                                <span className="text-xs font-medium">
+                                  {recentCourse.rating}
+                                </span>
                               </div>
                             </div>
                           </Link>
@@ -342,7 +355,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
 
                       {/* Recommended */}
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                        <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
                           {dictionary?.explore?.recommended || "Recommended"}
                         </p>
                         <motion.div
@@ -353,10 +366,10 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                           <Link
                             href={`/${lang}/stream/courses`}
                             onClick={handleLinkClick}
-                            className="group flex gap-3 p-2 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                            className="group hover:bg-muted/50 flex gap-3 rounded-xl p-2 transition-all duration-200"
                           >
                             <motion.div
-                              className="size-16 rounded-lg overflow-hidden shrink-0 bg-muted"
+                              className="bg-muted size-16 shrink-0 overflow-hidden rounded-lg"
                               whileHover={{ scale: 1.05 }}
                               transition={{ duration: 0.2 }}
                             >
@@ -364,19 +377,21 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                               <img
                                 src={recommendedCourse.image}
                                 alt={recommendedCourse.title}
-                                className="w-full h-full object-cover"
+                                className="h-full w-full object-cover"
                               />
                             </motion.div>
-                            <div className="flex flex-col justify-center min-w-0 gap-1">
-                              <p className="text-sm font-medium truncate group-hover:text-foreground transition-colors duration-200">
+                            <div className="flex min-w-0 flex-col justify-center gap-1">
+                              <p className="group-hover:text-foreground truncate text-sm font-medium transition-colors duration-200">
                                 {recommendedCourse.title}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 {recommendedCourse.category}
                               </p>
                               <div className="flex items-center gap-1">
-                                <AnthropicIcons.Sparkle className="size-3 fill-current text-foreground" />
-                                <span className="text-xs font-medium">{recommendedCourse.rating}</span>
+                                <AnthropicIcons.Sparkle className="text-foreground size-3 fill-current" />
+                                <span className="text-xs font-medium">
+                                  {recommendedCourse.rating}
+                                </span>
                               </div>
                             </div>
                           </Link>
@@ -390,7 +405,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.3, duration: 0.3 }}
-                    className="h-px bg-border/50 mb-6 origin-left"
+                    className="bg-border/50 mb-6 h-px origin-left"
                   />
 
                   {/* Categories - Anthropic Icons with staggered animation */}
@@ -411,22 +426,22 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                             duration: 0.3,
                             type: "spring",
                             stiffness: 200,
-                            damping: 20
+                            damping: 20,
                           }}
                         >
                           <Link
                             href={`/${lang}/stream${link.href}`}
                             onClick={handleLinkClick}
-                            className="group flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-muted/50 transition-all duration-200"
+                            className="group hover:bg-muted/50 flex flex-col items-center gap-3 rounded-xl p-4 transition-all duration-200"
                           >
                             <motion.div
-                              className="size-12 rounded-xl bg-muted/50 group-hover:bg-muted flex items-center justify-center transition-colors duration-200"
+                              className="bg-muted/50 group-hover:bg-muted flex size-12 items-center justify-center rounded-xl transition-colors duration-200"
                               whileHover={{ scale: 1.1, rotate: 5 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <link.icon className="size-5 text-foreground/70 group-hover:text-foreground transition-colors duration-200" />
+                              <link.icon className="text-foreground/70 group-hover:text-foreground size-5 transition-colors duration-200" />
                             </motion.div>
-                            <span className="text-xs font-medium text-foreground/70 group-hover:text-foreground transition-colors duration-200 text-center leading-tight">
+                            <span className="text-foreground/70 group-hover:text-foreground text-center text-xs leading-tight font-medium transition-colors duration-200">
                               {link.title}
                             </span>
                           </Link>
@@ -440,7 +455,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.55, duration: 0.3 }}
-                    className="h-px bg-border/50 mb-6 origin-right"
+                    className="bg-border/50 mb-6 h-px origin-right"
                   />
 
                   {/* Popular Searches with staggered pill animation */}
@@ -449,7 +464,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.3 }}
                   >
-                    <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                    <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wider uppercase">
                       {dictionary?.explore?.popular || "Popular"}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -463,13 +478,13 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                             duration: 0.2,
                             type: "spring",
                             stiffness: 300,
-                            damping: 20
+                            damping: 20,
                           }}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           type="button"
                           onClick={() => handleQuickSearch(term)}
-                          className="px-3 py-1.5 text-sm font-medium text-foreground/70 bg-muted/50 rounded-full hover:bg-muted hover:text-foreground transition-all duration-200"
+                          className="text-foreground/70 bg-muted/50 hover:bg-muted hover:text-foreground rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200"
                         >
                           {term}
                         </motion.button>

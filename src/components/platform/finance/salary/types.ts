@@ -4,7 +4,11 @@
  * Feature-based sub-block for staff salary management
  */
 
-import type { SalaryStructure, SalaryAllowance, SalaryDeduction } from '@prisma/client'
+import type {
+  SalaryAllowance,
+  SalaryDeduction,
+  SalaryStructure,
+} from "@prisma/client"
 
 // Extended types with relations
 export type SalaryStructureWithRelations = SalaryStructure & {

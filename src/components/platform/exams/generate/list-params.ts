@@ -1,10 +1,10 @@
 import {
   createSearchParamsCache,
-  parseAsInteger,
-  parseAsString,
   parseAsArrayOf,
   parseAsBoolean,
-} from "nuqs/server";
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
 
 export const templateSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -14,4 +14,4 @@ export const templateSearchParams = createSearchParamsCache({
   subjectId: parseAsString.withDefault(""),
   isActive: parseAsBoolean,
   search: parseAsString.withDefault(""),
-});
+})

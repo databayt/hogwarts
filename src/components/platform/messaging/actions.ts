@@ -71,49 +71,54 @@
 
 "use server"
 
-import { auth } from "@/auth"
-import { getTenantContext } from "@/lib/tenant-context"
-import { db } from "@/lib/db"
 import { revalidatePath, revalidateTag } from "next/cache"
+import { auth } from "@/auth"
 import { z } from "zod"
-import { checkMessageSendRateLimit, createRateLimitErrorMessage } from "@/lib/rate-limit"
+
+import { db } from "@/lib/db"
 import {
-  createConversationSchema,
-  updateConversationSchema,
-  archiveConversationSchema,
-  createMessageSchema,
-  updateMessageSchema,
-  deleteMessageSchema,
-  markMessageAsReadSchema,
-  markConversationAsReadSchema,
+  checkMessageSendRateLimit,
+  createRateLimitErrorMessage,
+} from "@/lib/rate-limit"
+import { getTenantContext } from "@/lib/tenant-context"
+
+import {
+  assertMessagingPermission,
+  canManageParticipants,
+  canSendMessage,
+  getAuthContext,
+  validateConversationType,
+} from "./authorization"
+import { DEFAULT_SETTINGS, MESSAGES_PATH } from "./config"
+import {
+  getConversation,
+  getConversationParticipant,
+  getMessage,
+  isConversationParticipant,
+} from "./queries"
+import {
   addParticipantSchema,
-  removeParticipantSchema,
-  updateParticipantSchema,
   addReactionSchema,
-  removeReactionSchema,
-  pinMessageSchema,
-  unpinMessageSchema,
+  archiveConversationSchema,
   createConversationInviteSchema,
+  createConversationSchema,
+  createMessageSchema,
+  deleteDraftSchema,
+  deleteMessageSchema,
+  markConversationAsReadSchema,
+  markMessageAsReadSchema,
+  muteConversationSchema,
+  pinMessageSchema,
+  removeParticipantSchema,
+  removeReactionSchema,
   respondToInviteSchema,
   saveDraftSchema,
-  deleteDraftSchema,
-  muteConversationSchema,
   unmuteConversationSchema,
+  unpinMessageSchema,
+  updateConversationSchema,
+  updateMessageSchema,
+  updateParticipantSchema,
 } from "./validation"
-import {
-  getAuthContext,
-  assertMessagingPermission,
-  validateConversationType,
-  canSendMessage,
-  canManageParticipants,
-} from "./authorization"
-import {
-  getConversationParticipant,
-  isConversationParticipant,
-  getConversation,
-  getMessage,
-} from "./queries"
-import { MESSAGES_PATH, DEFAULT_SETTINGS } from "./config"
 
 // Action response type
 export type ActionResponse<T = void> =
@@ -209,7 +214,10 @@ export async function createConversation(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create conversation",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create conversation",
     }
   }
 }
@@ -296,7 +304,10 @@ export async function updateConversation(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update conversation",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update conversation",
     }
   }
 }
@@ -347,7 +358,10 @@ export async function archiveConversation(
     console.error("[archiveConversation] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to archive conversation",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to archive conversation",
     }
   }
 }
@@ -382,7 +396,7 @@ export async function sendMessage(
     if (!rateLimitResult.allowed) {
       return {
         success: false,
-        error: createRateLimitErrorMessage(rateLimitResult)
+        error: createRateLimitErrorMessage(rateLimitResult),
       }
     }
 
@@ -658,7 +672,8 @@ export async function deleteMessage(
     console.error("[deleteMessage] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete message",
+      error:
+        error instanceof Error ? error.message : "Failed to delete message",
     }
   }
 }
@@ -714,7 +729,10 @@ export async function markMessageAsRead(
     console.error("[markMessageAsRead] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to mark message as read",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to mark message as read",
     }
   }
 }
@@ -753,7 +771,9 @@ export async function markConversationAsRead(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to mark conversation as read",
+        error instanceof Error
+          ? error.message
+          : "Failed to mark conversation as read",
     }
   }
 }
@@ -816,7 +836,8 @@ export async function addParticipant(
     console.error("[addParticipant] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add participant",
+      error:
+        error instanceof Error ? error.message : "Failed to add participant",
     }
   }
 }
@@ -867,7 +888,8 @@ export async function removeParticipant(
     console.error("[removeParticipant] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to remove participant",
+      error:
+        error instanceof Error ? error.message : "Failed to remove participant",
     }
   }
 }
@@ -964,7 +986,8 @@ export async function removeReaction(
     console.error("[removeReaction] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to remove reaction",
+      error:
+        error instanceof Error ? error.message : "Failed to remove reaction",
     }
   }
 }
@@ -986,13 +1009,15 @@ export async function loadMoreMessages(input: {
   conversationId: string
   cursor?: string
   take?: number
-  direction?: 'before' | 'after'
-}): Promise<ActionResponse<{
-  items: any[]
-  hasMore: boolean
-  nextCursor: string | null
-  prevCursor: string | null
-}>> {
+  direction?: "before" | "after"
+}): Promise<
+  ActionResponse<{
+    items: any[]
+    hasMore: boolean
+    nextCursor: string | null
+    prevCursor: string | null
+  }>
+> {
   try {
     const session = await auth()
     const authContext = getAuthContext(session)
@@ -1018,7 +1043,7 @@ export async function loadMoreMessages(input: {
     const result = await getMessagesWithCursor(input.conversationId, {
       cursor: input.cursor,
       take: input.take ?? 50,
-      direction: input.direction ?? 'before',
+      direction: input.direction ?? "before",
     })
 
     // Serialize dates for client components
@@ -1067,7 +1092,8 @@ export async function pinConversation(input: {
     console.error("[pinConversation] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update pin status",
+      error:
+        error instanceof Error ? error.message : "Failed to update pin status",
     }
   }
 }
@@ -1104,7 +1130,8 @@ export async function muteConversation(input: {
     console.error("[muteConversation] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to mute conversation",
+      error:
+        error instanceof Error ? error.message : "Failed to mute conversation",
     }
   }
 }
@@ -1141,7 +1168,10 @@ export async function unmuteConversation(input: {
     console.error("[unmuteConversation] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to unmute conversation",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to unmute conversation",
     }
   }
 }
@@ -1202,7 +1232,8 @@ export async function leaveConversation(input: {
     console.error("[leaveConversation] Error:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to leave conversation",
+      error:
+        error instanceof Error ? error.message : "Failed to leave conversation",
     }
   }
 }

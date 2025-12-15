@@ -55,33 +55,39 @@ Launch orchestrated development loop to implement all stories in an epic continu
 ### Story Implementation Phases
 
 #### Phase 1: Setup
+
 - Create directory structure
 - Initialize files
 - Configure routes
 
 #### Phase 2: Test First (TDD)
+
 - Generate comprehensive test suite
 - Unit tests for components
 - Integration tests for APIs
 - Tests should fail initially
 
 #### Phase 3: Implementation
+
 - Create components
 - Implement server actions
 - Add validation
 - Wire up UI
 
 #### Phase 4: Test Validation
+
 - All tests should pass
 - Coverage ≥ 95%
 - No regressions
 
 #### Phase 5: Refactoring
+
 - Improve code quality
 - Remove duplication
 - Optimize performance
 
 #### Phase 6: Quality Checks
+
 - TypeScript compilation
 - ESLint validation
 - Prettier formatting
@@ -89,6 +95,7 @@ Launch orchestrated development loop to implement all stories in an epic continu
 - Multi-tenant verification
 
 #### Phase 7: Commit
+
 - Conventional commit message
 - Reference story ID
 - Update changelog
@@ -96,6 +103,7 @@ Launch orchestrated development loop to implement all stories in an epic continu
 ## Progress Tracking
 
 Real-time display:
+
 ```
 ═══════════════════════════════════════
 🔄 CYCLE PROGRESS: EPIC-001
@@ -111,6 +119,7 @@ ETA: 1h 30m remaining
 ## Stop Conditions
 
 Cycle stops when:
+
 - All stories completed ✓
 - Critical error encountered ✗
 - User interruption (Ctrl+C)
@@ -120,11 +129,13 @@ Cycle stops when:
 ## Checkpoint System
 
 Automatic checkpoints after each story:
+
 - Save current state
 - Allow resume after interruption
 - Preserve completed work
 
 Resume interrupted cycle:
+
 ```bash
 /cycle EPIC-001 --resume
 ```
@@ -132,6 +143,7 @@ Resume interrupted cycle:
 ## Quality Gates
 
 Each story must pass:
+
 - ✅ All tests passing
 - ✅ 95%+ code coverage
 - ✅ No TypeScript errors
@@ -144,10 +156,10 @@ Each story must pass:
 
 ```typescript
 // Invokes conductor and loop agents
-await invokeAgent('/agents/core/conductor', {
-  task: 'orchestrate-epic',
+await invokeAgent("/agents/core/conductor", {
+  task: "orchestrate-epic",
   epic: epicId,
-  workflow: 'tdd-cycle'
+  workflow: "tdd-cycle",
 })
 
 // Conductor coordinates:
@@ -161,12 +173,14 @@ await invokeAgent('/agents/core/conductor', {
 ## Metrics Tracked
 
 ### Velocity Metrics
+
 - Stories completed per hour
 - Story points delivered
 - Average time per story
 - Blocker frequency
 
 ### Quality Metrics
+
 - Test coverage trend
 - Bug introduction rate
 - Code complexity
@@ -175,18 +189,21 @@ await invokeAgent('/agents/core/conductor', {
 ## Error Handling
 
 ### On Test Failure
+
 1. Analyze failure
 2. Fix implementation
 3. Re-run tests
 4. Continue cycle
 
 ### On Build Failure
+
 1. Identify error
 2. Fix issue
 3. Rebuild
 4. Continue cycle
 
 ### On Critical Error
+
 1. Save checkpoint
 2. Log error details
 3. Pause cycle
@@ -195,6 +212,7 @@ await invokeAgent('/agents/core/conductor', {
 ## Workflow Integration
 
 Works with:
+
 - `/plan` - Uses planning documents
 - `/story` - Executes generated stories
 - `/loop` - Continuous execution engine

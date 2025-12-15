@@ -6,15 +6,15 @@
 
 ## 📋 **Quick Reference**
 
-| Category | Scripts | Purpose |
-|----------|---------|---------|
-| **Tenant Operations** | 4 scripts | School provisioning, isolation, cloning, data migration |
-| **Database Intelligence** | 4 scripts | Query analysis, indexing, backups, anomaly detection |
-| **Developer Productivity** | 3 scripts | Component generation, CRUD scaffolding, i18n sync |
-| **Security** | 2 scripts | Vulnerability scanning, permission auditing |
-| **Performance** | 2 scripts | Bundle analysis, Lighthouse audits |
-| **Analytics** | 1 script | Usage reporting, engagement metrics |
-| **Deployment** | 2 scripts | Pre-flight checks, health monitoring |
+| Category                   | Scripts   | Purpose                                                 |
+| -------------------------- | --------- | ------------------------------------------------------- |
+| **Tenant Operations**      | 4 scripts | School provisioning, isolation, cloning, data migration |
+| **Database Intelligence**  | 4 scripts | Query analysis, indexing, backups, anomaly detection    |
+| **Developer Productivity** | 3 scripts | Component generation, CRUD scaffolding, i18n sync       |
+| **Security**               | 2 scripts | Vulnerability scanning, permission auditing             |
+| **Performance**            | 2 scripts | Bundle analysis, Lighthouse audits                      |
+| **Analytics**              | 1 script  | Usage reporting, engagement metrics                     |
+| **Deployment**             | 2 scripts | Pre-flight checks, health monitoring                    |
 
 **Total: 18 production-ready scripts**
 
@@ -36,6 +36,7 @@ npx tsx scripts/tenant-provision.ts \
 ```
 
 **Creates:**
+
 - ✅ School record with domain
 - ✅ Default school year (current year)
 - ✅ 3 Terms (Term 1, Term 2, Term 3)
@@ -57,6 +58,7 @@ npx tsx scripts/tenant-verify.ts --fix    # Auto-fix (coming soon)
 ```
 
 **Detects:**
+
 - ❌ Missing `schoolId` in WHERE clauses
 - ❌ Unscoped raw SQL queries
 - ❌ Cross-tenant data leaks
@@ -78,6 +80,7 @@ npx tsx scripts/tenant-clone.ts \
 ```
 
 **Clones:**
+
 - Year levels
 - School years & terms
 - Departments
@@ -101,6 +104,7 @@ npx tsx scripts/tenant-migrate-data.ts \
 ```
 
 **Supports:**
+
 - CSV and JSON formats
 - Student/teacher imports
 - Validation before import
@@ -123,6 +127,7 @@ npx tsx scripts/db-analyze.ts --sample         # Run sample queries
 ```
 
 **Identifies:**
+
 - N+1 query patterns
 - Slow queries (> threshold)
 - Missing eager loading
@@ -143,6 +148,7 @@ npx tsx scripts/db-indexes.ts --analyze   # Show existing indexes
 ```
 
 **Recommendations:**
+
 - Foreign key indexes
 - Composite indexes for common queries
 - Text search indexes
@@ -163,6 +169,7 @@ npx tsx scripts/db-backup.ts --compress          # Gzip compression
 ```
 
 **Backup includes:**
+
 - School data
 - Students & teachers
 - Classes & year levels
@@ -184,6 +191,7 @@ npx tsx scripts/db-anomalies.ts --type orphans  # Specific check
 ```
 
 **Detects:**
+
 - Orphaned student classes
 - Orphaned attendance records
 - Duplicate students
@@ -209,6 +217,7 @@ npx tsx scripts/dev-component.ts \
 ```
 
 **Generates:**
+
 - `content.tsx` - Main component
 - `types.ts` - TypeScript types
 - `validation.ts` - Zod schemas
@@ -233,6 +242,7 @@ npx tsx scripts/dev-crud.ts \
 ```
 
 **Generates:**
+
 - Prisma model template
 - Server actions (create, read, update, delete)
 - Validation schemas
@@ -257,6 +267,7 @@ npx tsx scripts/dev-i18n-sync.ts --verify # Verify only
 ```
 
 **Features:**
+
 - Detects missing keys in either language
 - Auto-adds placeholder translations
 - Reports files only in one language
@@ -279,6 +290,7 @@ npx tsx scripts/security-scan.ts --severity high  # High+ only
 ```
 
 **Scans for:**
+
 - Dependency vulnerabilities (via pnpm audit)
 - eval() usage (code injection)
 - dangerouslySetInnerHTML (XSS)
@@ -299,6 +311,7 @@ npx tsx scripts/security-permissions.ts --role TEACHER  # Specific role
 ```
 
 **Permission matrix:**
+
 - DEVELOPER - Full access
 - ADMIN - School management
 - TEACHER - Limited to assigned classes
@@ -324,6 +337,7 @@ npx tsx scripts/perf-lighthouse.ts \
 ```
 
 **Targets:**
+
 - Performance: > 90
 - Accessibility: > 95
 - Best Practices: > 90
@@ -342,6 +356,7 @@ npx tsx scripts/perf-bundle.ts
 ```
 
 **Provides:**
+
 - Total bundle size
 - Per-route breakdown
 - Optimization recommendations
@@ -364,6 +379,7 @@ npx tsx scripts/analytics-usage.ts --period week  # All schools
 ```
 
 **Metrics:**
+
 - Total students, teachers, classes
 - Active users (period-based)
 - Attendance records
@@ -386,6 +402,7 @@ npx tsx scripts/deploy-preflight.ts --env staging --skip-tests
 ```
 
 **Checks:**
+
 1. ✅ TypeScript compilation (`tsc --noEmit`)
 2. ✅ ESLint validation
 3. ✅ Test execution
@@ -406,6 +423,7 @@ npx tsx scripts/deploy-health.ts
 ```
 
 **Monitors:**
+
 - Database connectivity
 - Build integrity
 - Environment configuration
@@ -496,6 +514,7 @@ pnpm add -D \
 ```
 
 All scripts use these dependencies for:
+
 - **commander** - CLI argument parsing
 - **chalk** - Colored terminal output
 - **ora** - Spinners and progress indicators
@@ -508,31 +527,30 @@ All scripts use these dependencies for:
 Every script follows this pattern:
 
 ```typescript
-import { Command } from 'commander'
-import chalk from 'chalk'
-import ora from 'ora'
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 // CLI arguments
 const program = new Command()
-program
-  .option('-f, --flag <value>', 'Description')
-  .parse()
+program.option("-f, --flag <value>", "Description").parse()
 
 // Progress indication
-const spinner = ora('Processing...').start()
+const spinner = ora("Processing...").start()
 
 // Error handling
 try {
   // Operation
-  spinner.succeed('Success!')
+  spinner.succeed("Success!")
 } catch (error) {
-  spinner.fail('Failed')
+  spinner.fail("Failed")
   console.error(chalk.red(error))
   process.exit(1)
 }
 ```
 
 **Features:**
+
 - ✅ CLI argument parsing
 - ✅ Progress indicators
 - ✅ Colored output
@@ -544,14 +562,14 @@ try {
 
 ## 🚀 **Expected Impact**
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| School onboarding | 2 hours | 30 seconds | **99.3% faster** |
-| Component creation | 30 minutes | 30 seconds | **99% faster** |
-| CRUD scaffolding | 2 hours | 1 minute | **99.2% faster** |
-| Data import | 1 hour/100 records | 10 seconds | **99.7% faster** |
-| Security audits | 4 hours | 2 minutes | **99.2% faster** |
-| Tenant isolation bugs | Production | Pre-commit | **100% prevented** |
+| Metric                | Before             | After      | Improvement        |
+| --------------------- | ------------------ | ---------- | ------------------ |
+| School onboarding     | 2 hours            | 30 seconds | **99.3% faster**   |
+| Component creation    | 30 minutes         | 30 seconds | **99% faster**     |
+| CRUD scaffolding      | 2 hours            | 1 minute   | **99.2% faster**   |
+| Data import           | 1 hour/100 records | 10 seconds | **99.7% faster**   |
+| Security audits       | 4 hours            | 2 minutes  | **99.2% faster**   |
+| Tenant isolation bugs | Production         | Pre-commit | **100% prevented** |
 
 **Overall productivity gain**: **10-100x** across all operations
 
@@ -560,11 +578,13 @@ try {
 ## 🔧 **Next Steps**
 
 1. **Install dependencies**:
+
    ```bash
    pnpm add -D commander chalk ora csv-parse
    ```
 
 2. **Try first script**:
+
    ```bash
    npx tsx scripts/tenant-verify.ts
    ```

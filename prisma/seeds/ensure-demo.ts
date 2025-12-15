@@ -17,26 +17,27 @@
  *   pnpm build → prisma generate → ensure-demo.ts → next build
  */
 
-import { PrismaClient } from "@prisma/client";
-import { DEMO_SCHOOL, DEMO_PASSWORD } from "./constants";
-import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client"
+import bcrypt from "bcryptjs"
 
-const prisma = new PrismaClient();
+import { DEMO_PASSWORD, DEMO_SCHOOL } from "./constants"
+
+const prisma = new PrismaClient()
 
 async function ensureDemoSchool() {
-  console.log("🔍 Checking demo school...");
+  console.log("🔍 Checking demo school...")
 
   const existing = await prisma.school.findUnique({
     where: { domain: "demo" },
     select: { id: true, name: true, domain: true },
-  });
+  })
 
   if (existing) {
-    console.log(`✅ Demo school exists: ${existing.name} (${existing.id})`);
-    return existing;
+    console.log(`✅ Demo school exists: ${existing.name} (${existing.id})`)
+    return existing
   }
 
-  console.log("⚠️ Demo school missing, creating...");
+  console.log("⚠️ Demo school missing, creating...")
 
   // Create the demo school with only existing schema fields
   const school = await prisma.school.create({
@@ -56,14 +57,14 @@ async function ensureDemoSchool() {
       latitude: 15.5007,
       longitude: 32.5599,
     },
-  });
+  })
 
-  console.log(`✅ Demo school created: ${school.name} (${school.id})`);
-  return school;
+  console.log(`✅ Demo school created: ${school.name} (${school.id})`)
+  return school
 }
 
 async function ensureAdminUser(schoolId: string) {
-  console.log("🔍 Checking admin user...");
+  console.log("🔍 Checking admin user...")
 
   const existingAdmin = await prisma.user.findFirst({
     where: {
@@ -71,16 +72,16 @@ async function ensureAdminUser(schoolId: string) {
       schoolId,
     },
     select: { id: true, email: true },
-  });
+  })
 
   if (existingAdmin) {
-    console.log(`✅ Admin user exists: ${existingAdmin.email}`);
-    return existingAdmin;
+    console.log(`✅ Admin user exists: ${existingAdmin.email}`)
+    return existingAdmin
   }
 
-  console.log("⚠️ Admin user missing, creating...");
+  console.log("⚠️ Admin user missing, creating...")
 
-  const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10)
 
   const admin = await prisma.user.upsert({
     where: {
@@ -97,37 +98,37 @@ async function ensureAdminUser(schoolId: string) {
       emailVerified: new Date(),
       schoolId,
     },
-  });
+  })
 
-  console.log(`✅ Admin user created: ${admin.email}`);
-  return admin;
+  console.log(`✅ Admin user created: ${admin.email}`)
+  return admin
 }
 
 async function main() {
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("🌱 ENSURE DEMO - Auto-Recovery Seed");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+  console.log("🌱 ENSURE DEMO - Auto-Recovery Seed")
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   try {
     // Ensure demo school exists
-    const school = await ensureDemoSchool();
+    const school = await ensureDemoSchool()
 
     // Ensure admin user exists
-    await ensureAdminUser(school.id);
+    await ensureAdminUser(school.id)
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("✅ Demo environment verified");
-    console.log(`🌐 URL: https://demo.databayt.org`);
-    console.log(`📧 Admin: admin@demo.databayt.org`);
-    console.log(`🔑 Password: ${DEMO_PASSWORD}`);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("✅ Demo environment verified")
+    console.log(`🌐 URL: https://demo.databayt.org`)
+    console.log(`📧 Admin: admin@demo.databayt.org`)
+    console.log(`🔑 Password: ${DEMO_PASSWORD}`)
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   } catch (error) {
-    console.error("❌ Ensure demo error:", error);
+    console.error("❌ Ensure demo error:", error)
     // Don't exit with error code - build should continue
     // The app can still work, just demo might not be available
   } finally {
-    await prisma.$disconnect();
+    await prisma.$disconnect()
   }
 }
 
-main();
+main()

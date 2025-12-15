@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link, { LinkProps } from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -45,8 +46,8 @@ export function MobileNav({
   const pathname = usePathname()
 
   // Determine contextual section based on route
-  const currentSection = sections?.find(s =>
-    s.items.some(item => pathname?.includes(item.href))
+  const currentSection = sections?.find((s) =>
+    s.items.some((item) => pathname?.includes(item.href))
   )
 
   return (
@@ -75,7 +76,9 @@ export function MobileNav({
                 )}
               />
             </div>
-            <span className="sr-only">{dictionary?.navigation?.toggleMenu || "Toggle Menu"}</span>
+            <span className="sr-only">
+              {dictionary?.navigation?.toggleMenu || "Toggle Menu"}
+            </span>
           </div>
           <span className="flex h-8 items-center text-lg leading-none font-medium">
             {dictionary?.navigation?.menu || "Menu"}
@@ -96,7 +99,11 @@ export function MobileNav({
               {dictionary?.navigation?.menu || "Menu"}
             </div>
             <div className="flex flex-col gap-3">
-              <MobileLink href={homeHref} onOpenChange={setOpen} locale={locale}>
+              <MobileLink
+                href={homeHref}
+                onOpenChange={setOpen}
+                locale={locale}
+              >
                 {dictionary?.common?.home || "Home"}
               </MobileLink>
               {items.map((item, index) => (
@@ -160,7 +167,12 @@ function MobileLink({
 
   if (disabled) {
     return (
-      <span className={cn("text-2xl font-medium text-muted-foreground cursor-not-allowed", className)}>
+      <span
+        className={cn(
+          "text-muted-foreground cursor-not-allowed text-2xl font-medium",
+          className
+        )}
+      >
         {children}
       </span>
     )

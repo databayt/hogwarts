@@ -11,12 +11,14 @@ model: opus
 ## Core Responsibilities
 
 ### 1. Competitive Intelligence
+
 - Research market-leading solutions for the block's domain
 - Identify feature gaps vs competitors
 - Benchmark against industry standards
 - Find innovation opportunities
 
 ### 2. Technical Assessment
+
 - Code quality and architecture analysis
 - Multi-tenant safety verification
 - Security audit (OWASP patterns)
@@ -25,6 +27,7 @@ model: opus
 - Test coverage analysis
 
 ### 3. Strategic Planning
+
 - Prioritize improvements by impact/effort
 - Estimate effort for each task
 - Plan implementation phases
@@ -33,6 +36,7 @@ model: opus
 ## Assessment Framework
 
 ### Architecture Checklist
+
 - [ ] Mirror pattern followed (route mirrors component)
 - [ ] Server/client boundaries correct
 - [ ] Component hierarchy (UI → Atoms → Features)
@@ -40,6 +44,7 @@ model: opus
 - [ ] Proper Server Actions usage
 
 ### Multi-Tenant Checklist
+
 - [ ] schoolId in ALL database queries
 - [ ] schoolId in unique constraints
 - [ ] Session verification before operations
@@ -47,6 +52,7 @@ model: opus
 - [ ] Proper scoping in aggregations
 
 ### Security Checklist
+
 - [ ] Input validation on all forms (Zod)
 - [ ] Server-side validation in actions
 - [ ] SQL injection prevention (Prisma)
@@ -55,6 +61,7 @@ model: opus
 - [ ] Rate limiting on sensitive ops
 
 ### Performance Checklist
+
 - [ ] No N+1 queries
 - [ ] Proper useMemo/useCallback
 - [ ] Efficient pagination/filtering
@@ -62,6 +69,7 @@ model: opus
 - [ ] Optimized bundle size (<100KB per route)
 
 ### UX Checklist
+
 - [ ] Loading states on async operations
 - [ ] Error handling with friendly messages
 - [ ] Empty states for no-data scenarios
@@ -71,6 +79,7 @@ model: opus
 - [ ] ARIA labels for accessibility
 
 ### Code Quality Checklist
+
 - [ ] TypeScript strict mode compliance
 - [ ] No `any` types
 - [ ] Comprehensive error handling
@@ -80,6 +89,7 @@ model: opus
 ## Search Strategies
 
 ### Finance Blocks
+
 ```
 "best school fee management software 2025"
 "school billing system features"
@@ -88,6 +98,7 @@ Competitors: Blackbaud, FACTS, PaySchools
 ```
 
 ### Academic Blocks
+
 ```
 "student information system features 2025"
 "school attendance management best practices"
@@ -96,6 +107,7 @@ Competitors: PowerSchool, Infinite Campus, Skyward
 ```
 
 ### Communication Blocks
+
 ```
 "school communication platform features"
 "parent notification system best practices"
@@ -121,6 +133,7 @@ Invoke during assessment:
 ```
 
 Reuse skills:
+
 ```
 skill: multi-tenant-validator
 skill: security-scanner
@@ -134,6 +147,7 @@ Generate single combined report at:
 `.claude/workflows/rebound-outputs/{block}/rebound-{date}.md`
 
 Sections:
+
 1. **Research**: Competitor analysis, feature matrix, gaps
 2. **Assessment**: Technical scores, issues found
 3. **Checklist**: Prioritized tasks with effort estimates
@@ -142,27 +156,32 @@ Sections:
 ## Priority Levels
 
 ### Critical (Must fix)
+
 - Security vulnerabilities
 - Multi-tenant isolation issues
 - Data integrity problems
 
 ### High Priority (Should fix)
+
 - Missing core features
 - Performance issues (>500ms)
 - Major UX problems
 
 ### Medium Priority (Plan for)
+
 - Feature enhancements
 - i18n gaps
 - Accessibility improvements
 
 ### Low Priority (Backlog)
+
 - Nice-to-have features
 - Polish and refinement
 
 ## Success Criteria
 
 Block is **production-ready** when:
+
 - Zero critical issues
 - Zero high-priority security issues
 - 95%+ test coverage

@@ -1,30 +1,32 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath, revalidateTag } from "next/cache"
+import { auth } from "@/auth"
+import { NotificationChannel, NotificationType } from "@prisma/client"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { auth } from "@/auth"
+
 import {
-  createNotificationSchema,
-  updateNotificationSchema,
-  markNotificationReadSchema,
-  markAllNotificationsReadSchema,
-  deleteNotificationSchema,
-  createNotificationBatchSchema,
-  notificationPreferenceSchema,
-  updateNotificationPreferencesSchema,
-  getNotificationsSchema,
-  notificationSubscriptionSchema,
-  updateNotificationSubscriptionSchema,
-} from "./validation"
-import {
-  getAuthContext,
   assertNotificationPermission,
+  getAuthContext,
   validateNotificationType,
 } from "./authorization"
-import { NotificationType, NotificationChannel } from "@prisma/client"
 import { NOTIFICATION_EXPIRATION } from "./config"
+import {
+  createNotificationBatchSchema,
+  createNotificationSchema,
+  deleteNotificationSchema,
+  getNotificationsSchema,
+  markAllNotificationsReadSchema,
+  markNotificationReadSchema,
+  notificationPreferenceSchema,
+  notificationSubscriptionSchema,
+  updateNotificationPreferencesSchema,
+  updateNotificationSchema,
+  updateNotificationSubscriptionSchema,
+} from "./validation"
 
 // ============================================================================
 // Types
@@ -101,7 +103,8 @@ export async function createNotification(
       ? new Date(parsed.expiresAt)
       : NOTIFICATION_EXPIRATION[parsed.type]
         ? new Date(
-            Date.now() + NOTIFICATION_EXPIRATION[parsed.type]! * 24 * 60 * 60 * 1000
+            Date.now() +
+              NOTIFICATION_EXPIRATION[parsed.type]! * 24 * 60 * 60 * 1000
           )
         : null
 
@@ -143,7 +146,9 @@ export async function createNotification(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to create notification",
+        error instanceof Error
+          ? error.message
+          : "Failed to create notification",
     }
   }
 }
@@ -380,7 +385,9 @@ export async function deleteNotification(
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to delete notification",
+        error instanceof Error
+          ? error.message
+          : "Failed to delete notification",
     }
   }
 }
@@ -621,9 +628,7 @@ export async function subscribeToEntityNotifications(
       return {
         success: false,
         error:
-          error instanceof Error
-            ? error.message
-            : "Unauthorized to subscribe",
+          error instanceof Error ? error.message : "Unauthorized to subscribe",
       }
     }
 
@@ -667,8 +672,7 @@ export async function subscribeToEntityNotifications(
 
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to subscribe",
+      error: error instanceof Error ? error.message : "Failed to subscribe",
     }
   }
 }
@@ -719,8 +723,7 @@ export async function unsubscribeFromEntityNotifications(
 
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to unsubscribe",
+      error: error instanceof Error ? error.message : "Failed to unsubscribe",
     }
   }
 }

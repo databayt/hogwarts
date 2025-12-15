@@ -3,7 +3,7 @@
  * Follows Hogwarts pattern conventions
  */
 
-export type ReceiptStatus = 'pending' | 'processing' | 'processed' | 'error'
+export type ReceiptStatus = "pending" | "processing" | "processed" | "error"
 
 export interface ReceiptItem {
   name: string

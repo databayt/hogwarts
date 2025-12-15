@@ -1,19 +1,26 @@
 "use client"
 
 // Marking Dashboard Data Table
-
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
+import type {
+  MarkingResult,
+  QuestionBank,
+  Student,
+  StudentAnswer,
+} from "@prisma/client"
 import {
-  useReactTable,
+  flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
+  useReactTable,
   type ColumnFiltersState,
   type SortingState,
 } from "@tanstack/react-table"
-import { useState } from "react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -22,11 +29,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { getColumns } from "./columns"
-import type { StudentAnswer, MarkingResult, Student, QuestionBank } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getColumns } from "./columns"
 
 type MarkingQueueItem = StudentAnswer & {
   student: Student
@@ -122,9 +127,9 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {dict.table.showing} {table.getFilteredRowModel().rows.length} {dict.table.of} {data.length}{" "}
-          {dict.table.submissions}
+        <div className="text-muted-foreground text-sm">
+          {dict.table.showing} {table.getFilteredRowModel().rows.length}{" "}
+          {dict.table.of} {data.length} {dict.table.submissions}
         </div>
         <div className="flex items-center space-x-2">
           <Button

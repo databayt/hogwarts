@@ -41,114 +41,123 @@
  * @see /lib/backup-service.ts for implementation
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+
 import {
   createBackup,
   getBackupHistory,
+  restoreFromBackup,
   verifyBackup,
-  restoreFromBackup
-} from '@/lib/backup-service';
+} from "@/lib/backup-service"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await auth()
 
     // Only DEVELOPER role can access backup management
-    if (!session?.user || session.user.role !== 'DEVELOPER') {
+    if (!session?.user || session.user.role !== "DEVELOPER") {
       return NextResponse.json(
-        { error: 'Unauthorized. Developer role required.' },
+        { error: "Unauthorized. Developer role required." },
         { status: 403 }
-      );
+      )
     }
 
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-    const backupId = searchParams.get('backupId');
+    const { searchParams } = new URL(request.url)
+    const action = searchParams.get("action")
+    const backupId = searchParams.get("backupId")
 
     switch (action) {
-      case 'history':
-        const limit = parseInt(searchParams.get('limit') || '10');
-        const history = await getBackupHistory(limit);
-        return NextResponse.json({ history });
+      case "history":
+        const limit = parseInt(searchParams.get("limit") || "10")
+        const history = await getBackupHistory(limit)
+        return NextResponse.json({ history })
 
-      case 'verify':
+      case "verify":
         if (!backupId) {
           return NextResponse.json(
-            { error: 'backupId parameter required' },
+            { error: "backupId parameter required" },
             { status: 400 }
-          );
+          )
         }
-        const isValid = await verifyBackup(backupId);
-        return NextResponse.json({ backupId, isValid });
+        const isValid = await verifyBackup(backupId)
+        return NextResponse.json({ backupId, isValid })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use: history, verify' },
+          { error: "Invalid action. Use: history, verify" },
           { status: 400 }
-        );
+        )
     }
   } catch (error) {
-    logger.error('Backup API error', error instanceof Error ? error : new Error('Unknown error'), {
-      action: 'backup_api_error',
-    });
+    logger.error(
+      "Backup API error",
+      error instanceof Error ? error : new Error("Unknown error"),
+      {
+        action: "backup_api_error",
+      }
+    )
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await auth()
 
     // Only DEVELOPER role can create backups
-    if (!session?.user || session.user.role !== 'DEVELOPER') {
+    if (!session?.user || session.user.role !== "DEVELOPER") {
       return NextResponse.json(
-        { error: 'Unauthorized. Developer role required.' },
+        { error: "Unauthorized. Developer role required." },
         { status: 403 }
-      );
+      )
     }
 
-    const body = await request.json();
-    const { action, backupId } = body;
+    const body = await request.json()
+    const { action, backupId } = body
 
     switch (action) {
-      case 'create':
-        const metadata = await createBackup('manual');
+      case "create":
+        const metadata = await createBackup("manual")
         return NextResponse.json({
           success: true,
-          backup: metadata
-        });
+          backup: metadata,
+        })
 
-      case 'restore':
+      case "restore":
         if (!backupId) {
           return NextResponse.json(
-            { error: 'backupId required for restore' },
+            { error: "backupId required for restore" },
             { status: 400 }
-          );
+          )
         }
-        await restoreFromBackup(backupId);
+        await restoreFromBackup(backupId)
         return NextResponse.json({
           success: true,
-          message: `Restored from backup ${backupId}`
-        });
+          message: `Restored from backup ${backupId}`,
+        })
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use: create, restore' },
+          { error: "Invalid action. Use: create, restore" },
           { status: 400 }
-        );
+        )
     }
   } catch (error) {
-    logger.error('Backup API error', error instanceof Error ? error : new Error('Unknown error'), {
-      action: 'backup_api_error',
-    });
+    logger.error(
+      "Backup API error",
+      error instanceof Error ? error : new Error("Unknown error"),
+      {
+        action: "backup_api_error",
+      }
+    )
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
-    );
+    )
   }
 }

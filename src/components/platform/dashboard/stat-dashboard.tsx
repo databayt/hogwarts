@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { Box, Pencil } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Box, Pencil } from "lucide-react"
 
 interface MetricCardProps {
   title: string
@@ -55,7 +55,7 @@ function MetricCard({
       const readsPercentage = (reads / total) * 100
 
       return (
-        <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted">
+        <div className="bg-muted relative h-1 w-full overflow-hidden rounded-full">
           <div
             className="absolute left-0 h-full bg-emerald-500 transition-all duration-300"
             style={{ width: `${writesPercentage}%` }}
@@ -72,7 +72,7 @@ function MetricCard({
     }
 
     return (
-      <div className="relative h-1 w-full overflow-hidden rounded-full bg-muted">
+      <div className="bg-muted relative h-1 w-full overflow-hidden rounded-full">
         <div
           className={`h-full transition-all duration-300 ${progressColor}`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -82,17 +82,19 @@ function MetricCard({
   }
 
   return (
-    <Card className="relative overflow-hidden max-w-[280px]">
+    <Card className="relative max-w-[280px] overflow-hidden">
       <CardContent className="p-4 py-0">
-        <p className="text-xs font-normal leading-none tracking-wide text-muted-foreground dark:text-foreground/80 uppercase">
+        <p className="text-muted-foreground dark:text-foreground/80 text-xs leading-none font-normal tracking-wide uppercase">
           {title}
         </p>
 
         <div className="mt-2 flex items-baseline gap-1">
-          <span className="text-[1.2rem] font-medium leading-none text-foreground tabular-nums">
+          <span className="text-foreground text-[1.2rem] leading-none font-medium tabular-nums">
             {value}
           </span>
-          <span className="text-xs leading-none text-muted-foreground">/ {limit}</span>
+          <span className="text-muted-foreground text-xs leading-none">
+            / {limit}
+          </span>
         </div>
 
         <div className="mt-3">
@@ -104,11 +106,13 @@ function MetricCard({
                 {details.map((detail, index) => (
                   <div
                     key={index}
-                    className="flex w-full items-center text-xs leading-none text-muted-foreground dark:text-foreground/70"
+                    className="text-muted-foreground dark:text-foreground/70 flex w-full items-center text-xs leading-none"
                   >
-                    <div className={`mr-[6px] h-2 w-2 rounded-full ${detail.color}`} />
+                    <div
+                      className={`mr-[6px] h-2 w-2 rounded-full ${detail.color}`}
+                    />
                     <span className="mr-1">{detail.label}</span>
-                    <span className="h-[9px] flex-1 border-b-2 border-dotted border-border" />
+                    <span className="border-border h-[9px] flex-1 border-b-2 border-dotted" />
                     <span className="ml-1 tabular-nums">{detail.value}</span>
                   </div>
                 ))}
@@ -124,15 +128,17 @@ function MetricCard({
 
           {warningMessage && (
             <div className="pt-2">
-              <span className="text-sm text-amber-700 dark:text-amber-400">{warningMessage}</span>
+              <span className="text-sm text-amber-700 dark:text-amber-400">
+                {warningMessage}
+              </span>
             </div>
           )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute right-0 bottom-0 left-0">
           <Button
             variant="ghost"
-            className="h-8 w-full rounded-none text-blue-500 gap-0 justify-start hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 bg-muted/50"
+            className="bg-muted/50 h-8 w-full justify-start gap-0 rounded-none text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
             onClick={onActionClick}
           >
             {actionIcon}
@@ -163,8 +169,9 @@ function BudgetDialog({
         <DialogHeader>
           <DialogTitle>Update budget</DialogTitle>
           <DialogDescription>
-            When your monthly cost reaches the max budget, we send an email and throttle your
-            database. You will not be charged beyond your set budget for this database.
+            When your monthly cost reaches the max budget, we send an email and
+            throttle your database. You will not be charged beyond your set
+            budget for this database.
           </DialogDescription>
         </DialogHeader>
 
@@ -245,7 +252,10 @@ export default function StatsDashboard() {
         />
       </div>
 
-      <BudgetDialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen} />
+      <BudgetDialog
+        open={budgetDialogOpen}
+        onOpenChange={setBudgetDialogOpen}
+      />
     </>
   )
 }

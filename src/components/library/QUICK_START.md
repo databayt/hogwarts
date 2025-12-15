@@ -51,18 +51,21 @@ Open these files and replace `"placeholder-school-id"` with your tenant context:
 6. `src/components/library/admin/books/book-form.tsx` (line 60)
 
 **Replace this:**
+
 ```typescript
-const schoolId = "placeholder-school-id";
+const schoolId = "placeholder-school-id"
 ```
 
 **With this (example - adjust to your implementation):**
+
 ```typescript
-const schoolId = session?.user?.schoolId as string;
+const schoolId = session?.user?.schoolId as string
 ```
 
 ## ✅ That's It!
 
 Your library is now integrated. Visit:
+
 - `/library` - Browse books
 - `/library/my-profile` - View borrowed books
 - `/library/admin` - Manage library (admin only)
@@ -70,6 +73,7 @@ Your library is now integrated. Visit:
 ## 📖 Full Documentation
 
 For detailed setup including:
+
 - i18n configuration
 - File upload implementation
 - Middleware setup

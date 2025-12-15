@@ -1,20 +1,21 @@
-import { type Locale } from "@/components/internationalization/config";
-import { type getDictionary } from "@/components/internationalization/dictionaries";
-import { SubscriptionManagementDemo } from "./subscription-management-demo";
-import { UpdatePlanCardDemo } from "./update-plan-card-demo";
-import { TrialExpiryCardDemo } from "./trial-expiry-card-demo";
-import { UsageBasedPricingDemo } from "./usage-based-pricing-demo";
-import { DetailedUsageTableDemo } from "./detailed-usage-table-demo";
-import { UpcomingChargesDemo } from "./upcoming-charges-demo";
-import { InvoiceHistoryDemo } from "./invoice-history-demo";
-import { PaymentMethodSelectorDemo } from "./payment-method-selector-demo";
-import { PaymentCardDemo } from "./payment-card-demo";
-import { BillingSettingsDemo } from "./billing-settings-demo";
-import { BillingSettings2Demo } from "./billing-settings-2-demo";
+import { type Locale } from "@/components/internationalization/config"
+import { type getDictionary } from "@/components/internationalization/dictionaries"
+
+import { BillingSettings2Demo } from "./billing-settings-2-demo"
+import { BillingSettingsDemo } from "./billing-settings-demo"
+import { DetailedUsageTableDemo } from "./detailed-usage-table-demo"
+import { InvoiceHistoryDemo } from "./invoice-history-demo"
+import { PaymentCardDemo } from "./payment-card-demo"
+import { PaymentMethodSelectorDemo } from "./payment-method-selector-demo"
+import { SubscriptionManagementDemo } from "./subscription-management-demo"
+import { TrialExpiryCardDemo } from "./trial-expiry-card-demo"
+import { UpcomingChargesDemo } from "./upcoming-charges-demo"
+import { UpdatePlanCardDemo } from "./update-plan-card-demo"
+import { UsageBasedPricingDemo } from "./usage-based-pricing-demo"
 
 interface BillingContentProps {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  lang: Locale;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  lang: Locale
 }
 
 export default function BillingContent(_props: BillingContentProps) {
@@ -59,5 +60,5 @@ export default function BillingContent(_props: BillingContentProps) {
         <BillingSettings2Demo />
       </section>
     </div>
-  );
+  )
 }

@@ -1,21 +1,30 @@
 # Component: {{name}}
 
 ## Overview
+
 {{description}}
 
 ## Import
+
 ```typescript
 import { {{name}} } from '{{importPath}}'
 ```
 
 ## Props Interface
+
 ```typescript
-{{propsInterface}}
+{
+  {
+    propsInterface
+  }
+}
 ```
 
 ## Props Documentation
+
 | Prop | Type | Default | Required | Description |
-|------|------|---------|----------|-------------|
+| ---- | ---- | ------- | -------- | ----------- |
+
 {{#props}}
 | {{name}} | `{{type}}` | {{default}} | {{required}} | {{description}} |
 {{/props}}
@@ -23,21 +32,37 @@ import { {{name}} } from '{{importPath}}'
 ## Usage Examples
 
 ### Basic Usage
+
 ```tsx
-{{basicExample}}
+{
+  {
+    basicExample
+  }
+}
 ```
 
 ### With All Props
+
 ```tsx
-{{fullExample}}
+{
+  {
+    fullExample
+  }
+}
 ```
 
 ### Advanced Usage
+
 ```tsx
-{{advancedExample}}
+{
+  {
+    advancedExample
+  }
+}
 ```
 
 ## Component Hierarchy
+
 ```
 {{parentComponent}}
   └── {{name}}
@@ -47,42 +72,61 @@ import { {{name}} } from '{{importPath}}'
 ```
 
 ## State Management
+
 {{#hasState}}
+
 ### Internal State
+
 ```typescript
-{{stateDefinition}}
+{
+  {
+    stateDefinition
+  }
+}
 ```
 
 ### State Flow
+
 {{stateDescription}}
 {{/hasState}}
 
 {{#usesContext}}
+
 ### Context Usage
+
 - **Contexts**: {{contexts}}
 - **Purpose**: {{contextPurpose}}
-{{/usesContext}}
+  {{/usesContext}}
 
 ## Styling
 
 ### Tailwind Classes
+
 ```typescript
-{{tailwindClasses}}
+{
+  {
+    tailwindClasses
+  }
+}
 ```
 
 ### Theme Variables
+
 ```css
 {{themeVariables}}
 ```
 
 ### Responsive Behavior
+
 | Breakpoint | Behavior |
-|------------|----------|
+| ---------- | -------- |
+
 {{#responsive}}
 | {{breakpoint}} | {{behavior}} |
 {{/responsive}}
 
 ## Accessibility
+
 - **ARIA Roles**: {{ariaRoles}}
 - **Keyboard Navigation**: {{keyboardNav}}
 - **Screen Reader Support**: {{screenReader}}
@@ -91,102 +135,150 @@ import { {{name}} } from '{{importPath}}'
 ## Performance
 
 ### Optimizations
+
 {{#optimizations}}
+
 - {{optimization}}
-{{/optimizations}}
+  {{/optimizations}}
 
 ### Bundle Size
+
 - **Minified**: {{minSize}}
 - **Gzipped**: {{gzipSize}}
 
 ### Render Performance
+
 - **Initial Render**: {{initialRender}}ms
 - **Re-render**: {{reRender}}ms
 
 ## Dependencies
+
 ### External
+
 {{#externalDeps}}
+
 - `{{package}}`: {{version}}
-{{/externalDeps}}
+  {{/externalDeps}}
 
 ### Internal
+
 {{#internalDeps}}
+
 - `{{component}}`: {{purpose}}
-{{/internalDeps}}
+  {{/internalDeps}}
 
 ## Testing
 
 ### Test Coverage
+
 ```
 File            | % Stmts | % Branch | % Funcs | % Lines |
 {{name}}.tsx    | {{stmts}} | {{branch}} | {{funcs}} | {{lines}} |
 ```
 
 ### Test Examples
+
 ```typescript
-{{testExample}}
+{
+  {
+    testExample
+  }
+}
 ```
 
 ## API Integration
+
 {{#hasServerAction}}
+
 ### Server Actions
+
 ```typescript
-{{serverActions}}
+{
+  {
+    serverActions
+  }
+}
 ```
+
 {{/hasServerAction}}
 
 {{#hasApiCalls}}
+
 ### API Endpoints
+
 - `{{method}} {{endpoint}}`: {{purpose}}
-{{/hasApiCalls}}
+  {{/hasApiCalls}}
 
 ## i18n Support
+
 - **Languages**: Arabic (RTL), English (LTR)
 - **Translation Keys**: {{translationKeys}}
 - **RTL Handling**: {{rtlHandling}}
 
 ## Multi-Tenant Considerations
+
 {{#isMultiTenant}}
+
 - Component respects `schoolId` context
 - Data filtered by tenant
 - Styles may vary by school branding
-{{/isMultiTenant}}
+  {{/isMultiTenant}}
 
 ## Migration Guide
+
 {{#hasMigration}}
+
 ### From v{{previousVersion}}
+
 ```typescript
 // Before
-{{migrationBefore}}
+{
+  {
+    migrationBefore
+  }
+}
 
 // After
-{{migrationAfter}}
+{
+  {
+    migrationAfter
+  }
+}
 ```
+
 {{/hasMigration}}
 
 ## Known Issues
+
 {{#issues}}
+
 - **#{{issueNumber}}**: {{issueDescription}}
-{{/issues}}
+  {{/issues}}
 
 ## Related Components
+
 {{#related}}
+
 - [{{component}}](./{{component}}.md): {{relationship}}
-{{/related}}
+  {{/related}}
 
 ## Storybook
+
 {{#hasStorybook}}
 View in Storybook: [{{name}} Stories]({{storybookUrl}})
 {{/hasStorybook}}
 
 ## Changelog
+
 | Date | Version | Changes |
-|------|---------|---------|
+| ---- | ------- | ------- |
+
 {{#changelog}}
 | {{date}} | {{version}} | {{changes}} |
 {{/changelog}}
 
 ---
-*Generated: {{timestamp}}*
-*Source: {{sourceFile}}*
-*Last Modified: {{lastModified}}*
+
+_Generated: {{timestamp}}_
+_Source: {{sourceFile}}_
+_Last Modified: {{lastModified}}_

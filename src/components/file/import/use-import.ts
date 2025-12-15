@@ -21,41 +21,44 @@
  * - Validation errors are per-row; import still continues if errors exist
  */
 
-"use client";
+"use client"
 
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react"
+
+import { autoMatchColumns, parseFile } from "./parsers"
 import type {
   ImportColumn,
   ImportConfig,
-  ImportProgress,
-  ImportPreview,
-  ImportResult,
   ImportOptions,
+  ImportPreview,
+  ImportProgress,
+  ImportResult,
   UseImportReturn,
-} from "./types";
-import { parseFile, autoMatchColumns } from "./parsers";
-import { validateRows } from "./validators";
+} from "./types"
+import { validateRows } from "./validators"
 
 // ============================================================================
 // Hook Implementation
 // ============================================================================
 
 export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
-  const [isImporting, setIsImporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false)
   const [progress, setProgress] = useState<ImportProgress>({
     status: "idle",
     progress: 0,
-  });
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<ImportPreview<T> | null>(null);
-  const [result, setResult] = useState<ImportResult<T> | null>(null);
+  })
+  const [error, setError] = useState<string | null>(null)
+  const [preview, setPreview] = useState<ImportPreview<T> | null>(null)
+  const [result, setResult] = useState<ImportResult<T> | null>(null)
 
   // Store parsed data for validation/import - large data stored in Ref to avoid re-renders
   // Raw rows from file parser: [{"name": "John", "email": "john@example.com"}, ...]
-  const parsedDataRef = useRef<Array<Record<string, string>>>([]);
+  const parsedDataRef = useRef<Array<Record<string, string>>>([])
   // Maps file columns to schema columns: {"name" → ImportColumn, "email" → ImportColumn}
   // Null means unmapped column (ignored during import)
-  const columnMappingRef = useRef<Map<string, ImportColumn<T> | null>>(new Map());
+  const columnMappingRef = useRef<Map<string, ImportColumn<T> | null>>(
+    new Map()
+  )
 
   // ============================================================================
   // Parse File
@@ -63,30 +66,38 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
 
   const parseFileFn = useCallback(
     async (file: File): Promise<ImportPreview<T> | null> => {
-      setIsImporting(true);
-      setError(null);
-      setResult(null);
-      setProgress({ status: "reading", progress: 10, message: "Reading file..." });
+      setIsImporting(true)
+      setError(null)
+      setResult(null)
+      setProgress({
+        status: "reading",
+        progress: 10,
+        message: "Reading file...",
+      })
 
       try {
         // Parse file
-        const { format, headers, rows, totalRows } = await parseFile(file);
+        const { format, headers, rows, totalRows } = await parseFile(file)
 
-        setProgress({ status: "parsing", progress: 50, message: "Parsing data..." });
+        setProgress({
+          status: "parsing",
+          progress: 50,
+          message: "Parsing data...",
+        })
 
         // Store parsed data
-        parsedDataRef.current = rows;
+        parsedDataRef.current = rows
 
         // Auto-match columns
-        const mappedColumns = autoMatchColumns(headers, config.columns);
+        const mappedColumns = autoMatchColumns(headers, config.columns)
 
         // Update column mapping
         columnMappingRef.current = new Map(
           mappedColumns.map((mc) => [mc.header, mc.mappedTo || null])
-        );
+        )
 
         // Get sample rows
-        const sampleRows = rows.slice(0, 5);
+        const sampleRows = rows.slice(0, 5)
 
         const previewData: ImportPreview<T> = {
           headers,
@@ -94,23 +105,28 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
           sampleRows,
           totalRows,
           format,
-        };
+        }
 
-        setPreview(previewData);
-        setProgress({ status: "idle", progress: 100, message: "File parsed successfully" });
+        setPreview(previewData)
+        setProgress({
+          status: "idle",
+          progress: 100,
+          message: "File parsed successfully",
+        })
 
-        return previewData;
+        return previewData
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to parse file";
-        setError(errorMessage);
-        setProgress({ status: "error", progress: 0, error: errorMessage });
-        return null;
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to parse file"
+        setError(errorMessage)
+        setProgress({ status: "error", progress: 0, error: errorMessage })
+        return null
       } finally {
-        setIsImporting(false);
+        setIsImporting(false)
       }
     },
     [config.columns]
-  );
+  )
 
   // ============================================================================
   // Update Column Mapping
@@ -118,7 +134,7 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
 
   const updateMapping = useCallback(
     (header: string, column: ImportColumn<T> | null) => {
-      columnMappingRef.current.set(header, column);
+      columnMappingRef.current.set(header, column)
 
       // Update preview
       if (preview) {
@@ -129,23 +145,27 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
               ? { ...mc, mappedTo: column || undefined, autoMatched: false }
               : mc
           ),
-        });
+        })
       }
     },
     [preview]
-  );
+  )
 
   // ============================================================================
   // Validate Data
   // ============================================================================
 
   const validateData = useCallback(async (): Promise<ImportResult<T>> => {
-    setIsImporting(true);
-    setError(null);
-    setProgress({ status: "validating", progress: 30, message: "Validating data..." });
+    setIsImporting(true)
+    setError(null)
+    setProgress({
+      status: "validating",
+      progress: 30,
+      message: "Validating data...",
+    })
 
     try {
-      const rows = parsedDataRef.current;
+      const rows = parsedDataRef.current
 
       if (rows.length === 0) {
         const emptyResult: ImportResult<T> = {
@@ -155,26 +175,28 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
           invalidRows: 0,
           skippedRows: 0,
           data: [],
-          errors: [{ row: 0, message: "No data to import", type: "validation" }],
+          errors: [
+            { row: 0, message: "No data to import", type: "validation" },
+          ],
           duplicates: 0,
           warnings: [],
-        };
-        setResult(emptyResult);
-        return emptyResult;
+        }
+        setResult(emptyResult)
+        return emptyResult
       }
 
       // Build column list from mapping
-      const mappedColumns: ImportColumn<T>[] = [];
+      const mappedColumns: ImportColumn<T>[] = []
       columnMappingRef.current.forEach((column, header) => {
         if (column) {
-          mappedColumns.push({ ...column, header });
+          mappedColumns.push({ ...column, header })
         }
-      });
+      })
 
       // Check required columns
       const missingRequired = config.columns
         .filter((col) => col.required)
-        .filter((col) => !mappedColumns.find((mc) => mc.key === col.key));
+        .filter((col) => !mappedColumns.find((mc) => mc.key === col.key))
 
       if (missingRequired.length > 0) {
         const errorResult: ImportResult<T> = {
@@ -192,9 +214,9 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
           })),
           duplicates: 0,
           warnings: [],
-        };
-        setResult(errorResult);
-        return errorResult;
+        }
+        setResult(errorResult)
+        return errorResult
       }
 
       // Validate rows
@@ -203,24 +225,25 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
         progress: 50,
         message: `Validating ${rows.length} rows...`,
         totalRows: rows.length,
-      });
+      })
 
-      const validationResult = validateRows(rows, mappedColumns, config);
+      const validationResult = validateRows(rows, mappedColumns, config)
 
-      setResult(validationResult);
+      setResult(validationResult)
       setProgress({
         status: validationResult.success ? "completed" : "error",
         progress: 100,
         message: validationResult.success
           ? `Validated ${validationResult.validRows} rows`
           : `${validationResult.errors.length} validation errors`,
-      });
+      })
 
-      return validationResult;
+      return validationResult
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Validation failed";
-      setError(errorMessage);
-      setProgress({ status: "error", progress: 0, error: errorMessage });
+      const errorMessage =
+        err instanceof Error ? err.message : "Validation failed"
+      setError(errorMessage)
+      setProgress({ status: "error", progress: 0, error: errorMessage })
 
       const errorResult: ImportResult<T> = {
         success: false,
@@ -232,12 +255,12 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
         errors: [{ row: 0, message: errorMessage, type: "validation" }],
         duplicates: 0,
         warnings: [],
-      };
-      return errorResult;
+      }
+      return errorResult
     } finally {
-      setIsImporting(false);
+      setIsImporting(false)
     }
-  }, [config]);
+  }, [config])
 
   // ============================================================================
   // Import Data
@@ -245,15 +268,19 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
 
   const importData = useCallback(
     async (onSave: (data: T[]) => Promise<void>): Promise<ImportResult<T>> => {
-      setIsImporting(true);
-      setError(null);
-      setProgress({ status: "processing", progress: 10, message: "Starting import..." });
+      setIsImporting(true)
+      setError(null)
+      setProgress({
+        status: "processing",
+        progress: 10,
+        message: "Starting import...",
+      })
 
       try {
         // Validate first if not already validated
-        let importResult = result;
+        let importResult = result
         if (!importResult || importResult.data.length === 0) {
-          importResult = await validateData();
+          importResult = await validateData()
         }
 
         if (!importResult.success || importResult.data.length === 0) {
@@ -261,43 +288,44 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
             status: "error",
             progress: 0,
             error: "No valid data to import",
-          });
-          return importResult;
+          })
+          return importResult
         }
 
         // Process in batches - prevents request timeout and reduces memory pressure
         // Default 50 rows/batch chosen to stay well below typical request size limits (1MB+)
-        const batchSize = config.batchSize || 50;
-        const totalBatches = Math.ceil(importResult.data.length / batchSize);
+        const batchSize = config.batchSize || 50
+        const totalBatches = Math.ceil(importResult.data.length / batchSize)
 
         for (let i = 0; i < totalBatches; i++) {
-          const start = i * batchSize;
-          const end = Math.min(start + batchSize, importResult.data.length);
-          const batch = importResult.data.slice(start, end);
+          const start = i * batchSize
+          const end = Math.min(start + batchSize, importResult.data.length)
+          const batch = importResult.data.slice(start, end)
 
           setProgress({
             status: "processing",
-            progress: 20 + Math.floor((i / totalBatches) * 70),  // Spreads 20-90% across batches
+            progress: 20 + Math.floor((i / totalBatches) * 70), // Spreads 20-90% across batches
             message: `Importing batch ${i + 1} of ${totalBatches}...`,
             currentRow: end,
             totalRows: importResult.data.length,
-          });
+          })
 
           // onSave is parent's server action - responsible for database insert and deduplication
-          await onSave(batch);
+          await onSave(batch)
         }
 
         setProgress({
           status: "completed",
           progress: 100,
           message: `Successfully imported ${importResult.validRows} records`,
-        });
+        })
 
-        return importResult;
+        return importResult
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Import failed";
-        setError(errorMessage);
-        setProgress({ status: "error", progress: 0, error: errorMessage });
+        const errorMessage =
+          err instanceof Error ? err.message : "Import failed"
+        setError(errorMessage)
+        setProgress({ status: "error", progress: 0, error: errorMessage })
 
         return {
           success: false,
@@ -309,32 +337,32 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
           errors: [{ row: 0, message: errorMessage, type: "validation" }],
           duplicates: 0,
           warnings: [],
-        };
+        }
       } finally {
-        setIsImporting(false);
+        setIsImporting(false)
       }
     },
     [config.batchSize, result, validateData]
-  );
+  )
 
   // ============================================================================
   // Control Functions
   // ============================================================================
 
   const reset = useCallback(() => {
-    setIsImporting(false);
-    setProgress({ status: "idle", progress: 0 });
-    setError(null);
-    setPreview(null);
-    setResult(null);
-    parsedDataRef.current = [];
-    columnMappingRef.current.clear();
-  }, []);
+    setIsImporting(false)
+    setProgress({ status: "idle", progress: 0 })
+    setError(null)
+    setPreview(null)
+    setResult(null)
+    parsedDataRef.current = []
+    columnMappingRef.current.clear()
+  }, [])
 
   const cancel = useCallback(() => {
-    setIsImporting(false);
-    setProgress({ status: "idle", progress: 0 });
-  }, []);
+    setIsImporting(false)
+    setProgress({ status: "idle", progress: 0 })
+  }, [])
 
   return {
     isImporting,
@@ -348,5 +376,5 @@ export function useImport<T>(config: ImportConfig<T>): UseImportReturn<T> {
     importData,
     reset,
     cancel,
-  };
+  }
 }

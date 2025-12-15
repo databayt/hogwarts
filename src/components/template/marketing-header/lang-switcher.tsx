@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { usePathname, useRouter } from "next/navigation"
 import { Languages } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +17,12 @@ export function LangSwitcher() {
   const pathname = usePathname()
 
   const switchLanguage = (lang: string) => {
-    const segments = pathname.split('/')
+    const segments = pathname.split("/")
     segments[1] = lang
-    router.push(segments.join('/'))
+    router.push(segments.join("/"))
   }
 
-  const currentLang = pathname.split('/')[1] || 'en'
+  const currentLang = pathname.split("/")[1] || "en"
 
   return (
     <DropdownMenu>
@@ -33,14 +34,14 @@ export function LangSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => switchLanguage('en')}
-          className={currentLang === 'en' ? 'font-semibold' : ''}
+          onClick={() => switchLanguage("en")}
+          className={currentLang === "en" ? "font-semibold" : ""}
         >
           English
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => switchLanguage('ar')}
-          className={currentLang === 'ar' ? 'font-semibold' : ''}
+          onClick={() => switchLanguage("ar")}
+          className={currentLang === "ar" ? "font-semibold" : ""}
         >
           العربية
         </DropdownMenuItem>

@@ -1,17 +1,33 @@
-import { auth } from "@/auth"
-import { getTenantContext } from "@/lib/tenant-context"
+import Link from "next/link"
 import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+import {
+  Bell,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Inbox,
+  Settings,
+  TrendingUp,
+} from "lucide-react"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import type { Locale } from "@/components/internationalization/config"
+import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+
+import { NotificationCenterClient } from "./notification-center-client"
 import { getNotificationsList, getNotificationStats } from "./queries"
 import type { NotificationListFilters } from "./queries"
 import type { NotificationDTO } from "./types"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { NotificationCenterClient } from "./notification-center-client"
-import { Bell, Calendar, TrendingUp, Inbox, Settings, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
-import type { Locale } from "@/components/internationalization/config"
 
 // Helper function to safely serialize dates
 function safeSerializeDate(date: Date | null | undefined): string {
@@ -89,7 +105,10 @@ export async function NotificationCenterContent({
     totalCount = notificationsResult.count
     stats = statsResult
   } catch (error) {
-    console.error("[NotificationCenterContent] Error fetching notifications:", error)
+    console.error(
+      "[NotificationCenterContent] Error fetching notifications:",
+      error
+    )
   }
 
   const totalPages = Math.ceil(totalCount / perPage)
@@ -97,7 +116,7 @@ export async function NotificationCenterContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
             {dict.notifications.title}
@@ -109,7 +128,7 @@ export async function NotificationCenterContent({
 
         <Button variant="outline" size="sm" asChild>
           <Link href={`/${locale}/notifications/preferences`}>
-            <Settings className="h-4 w-4 me-2" />
+            <Settings className="me-2 h-4 w-4" />
             {dict.notifications.preferences.title}
           </Link>
         </Button>
@@ -122,13 +141,13 @@ export async function NotificationCenterContent({
             <CardTitle className="text-sm font-medium">
               {dict.notifications.statistics.totalReceived}
             </CardTitle>
-            <div className="rounded-full bg-muted p-2">
-              <Inbox className="h-4 w-4 text-muted-foreground" />
+            <div className="bg-muted rounded-full p-2">
+              <Inbox className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               {dict.notifications.tabs.all}
             </p>
           </CardContent>
@@ -139,13 +158,13 @@ export async function NotificationCenterContent({
             <CardTitle className="text-sm font-medium">
               {dict.notifications.tabs.unread}
             </CardTitle>
-            <div className="rounded-full bg-destructive/10 p-2">
-              <Bell className="h-4 w-4 text-destructive" />
+            <div className="bg-destructive/10 rounded-full p-2">
+              <Bell className="text-destructive h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.unread}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               {dict.notifications.statistics.totalUnread}
             </p>
           </CardContent>
@@ -156,13 +175,13 @@ export async function NotificationCenterContent({
             <CardTitle className="text-sm font-medium">
               {dict.notifications.grouping.today}
             </CardTitle>
-            <div className="rounded-full bg-muted p-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+            <div className="bg-muted rounded-full p-2">
+              <Calendar className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.today}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               {dict.notifications.grouping.today}
             </p>
           </CardContent>
@@ -173,13 +192,13 @@ export async function NotificationCenterContent({
             <CardTitle className="text-sm font-medium">
               {dict.notifications.statistics.thisWeek}
             </CardTitle>
-            <div className="rounded-full bg-muted p-2">
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div className="bg-muted rounded-full p-2">
+              <TrendingUp className="text-muted-foreground h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.thisWeek}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               {dict.notifications.grouping.thisWeek}
             </p>
           </CardContent>
@@ -189,7 +208,7 @@ export async function NotificationCenterContent({
       {/* Notification List with Client-side Updates */}
       <Card>
         <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
             <div>
               <CardTitle>{dict.notifications.tabs.all}</CardTitle>
               <CardDescription className="mt-1">
@@ -202,14 +221,19 @@ export async function NotificationCenterContent({
         </CardHeader>
         <CardContent className="pt-0">
           <NotificationCenterClient
-            initialNotifications={(notifications ?? []).map((n) => ({
-              ...n,
-              createdAt: safeSerializeDate(n?.createdAt),
-              updatedAt: safeSerializeDate(n?.updatedAt),
-              readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
-              emailSentAt: n?.emailSentAt ? safeSerializeDate(n.emailSentAt) : null,
-              metadata: (n?.metadata as Record<string, unknown> | null) ?? null,
-            })) as NotificationDTO[]}
+            initialNotifications={
+              (notifications ?? []).map((n) => ({
+                ...n,
+                createdAt: safeSerializeDate(n?.createdAt),
+                updatedAt: safeSerializeDate(n?.updatedAt),
+                readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
+                emailSentAt: n?.emailSentAt
+                  ? safeSerializeDate(n.emailSentAt)
+                  : null,
+                metadata:
+                  (n?.metadata as Record<string, unknown> | null) ?? null,
+              })) as NotificationDTO[]
+            }
             locale={locale}
             dictionary={dict.notifications}
             showFilters={true}
@@ -337,7 +361,7 @@ export function NotificationCenterSkeleton() {
               <Skeleton className="h-4 w-4 rounded-full" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-12 mb-2" />
+              <Skeleton className="mb-2 h-8 w-12" />
               <Skeleton className="h-3 w-24" />
             </CardContent>
           </Card>
@@ -352,7 +376,7 @@ export function NotificationCenterSkeleton() {
         </CardHeader>
         <CardContent className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-4 p-4 border rounded-lg">
+            <div key={i} className="flex gap-4 rounded-lg border p-4">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />

@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client'
+import { UserRole } from "@prisma/client"
 
 /**
  * Banking Module Permission Matrix
@@ -14,11 +14,7 @@ export const BANKING_PERMISSIONS: Record<string, UserRole[]> = {
     UserRole.TEACHER,
     UserRole.STAFF,
   ],
-  VIEW_ALL_ACCOUNTS: [
-    UserRole.DEVELOPER,
-    UserRole.ADMIN,
-    UserRole.ACCOUNTANT,
-  ],
+  VIEW_ALL_ACCOUNTS: [UserRole.DEVELOPER, UserRole.ADMIN, UserRole.ACCOUNTANT],
 
   // Account management
   CONNECT_BANK_ACCOUNT: [
@@ -45,18 +41,10 @@ export const BANKING_PERMISSIONS: Record<string, UserRole[]> = {
     UserRole.ADMIN,
     UserRole.ACCOUNTANT,
   ],
-  SYNC_TRANSACTIONS: [
-    UserRole.DEVELOPER,
-    UserRole.ADMIN,
-    UserRole.ACCOUNTANT,
-  ],
+  SYNC_TRANSACTIONS: [UserRole.DEVELOPER, UserRole.ADMIN, UserRole.ACCOUNTANT],
 
   // Transfer permissions
-  CREATE_TRANSFER: [
-    UserRole.DEVELOPER,
-    UserRole.ADMIN,
-    UserRole.ACCOUNTANT,
-  ],
+  CREATE_TRANSFER: [UserRole.DEVELOPER, UserRole.ADMIN, UserRole.ACCOUNTANT],
   VIEW_TRANSFER_HISTORY: [
     UserRole.DEVELOPER,
     UserRole.ADMIN,
@@ -64,10 +52,7 @@ export const BANKING_PERMISSIONS: Record<string, UserRole[]> = {
     UserRole.TEACHER,
     UserRole.STAFF,
   ],
-  APPROVE_TRANSFER: [
-    UserRole.DEVELOPER,
-    UserRole.ADMIN,
-  ],
+  APPROVE_TRANSFER: [UserRole.DEVELOPER, UserRole.ADMIN],
 
   // Export permissions
   EXPORT_TRANSACTIONS: [
@@ -75,11 +60,7 @@ export const BANKING_PERMISSIONS: Record<string, UserRole[]> = {
     UserRole.ADMIN,
     UserRole.ACCOUNTANT,
   ],
-  EXPORT_REPORTS: [
-    UserRole.DEVELOPER,
-    UserRole.ADMIN,
-    UserRole.ACCOUNTANT,
-  ],
+  EXPORT_REPORTS: [UserRole.DEVELOPER, UserRole.ADMIN, UserRole.ACCOUNTANT],
 }
 
 export type BankingPermission = keyof typeof BANKING_PERMISSIONS
@@ -115,12 +96,12 @@ export function canViewAccount(
   if (!userRole) return false
 
   // Admins and accountants can view all accounts
-  if (hasPermission(userRole, 'VIEW_ALL_ACCOUNTS')) {
+  if (hasPermission(userRole, "VIEW_ALL_ACCOUNTS")) {
     return true
   }
 
   // Other roles can only view their own accounts
-  if (hasPermission(userRole, 'VIEW_OWN_ACCOUNTS')) {
+  if (hasPermission(userRole, "VIEW_OWN_ACCOUNTS")) {
     return accountUserId === currentUserId
   }
 
@@ -138,7 +119,7 @@ export function canPerformTransfer(
   if (!userRole) return false
 
   // Check if user has transfer permission
-  if (!hasPermission(userRole, 'CREATE_TRANSFER')) {
+  if (!hasPermission(userRole, "CREATE_TRANSFER")) {
     return false
   }
 
@@ -159,8 +140,10 @@ export function canPerformTransfer(
 /**
  * Check if user can manage bank connections
  */
-export function canManageBankConnections(userRole: UserRole | undefined): boolean {
-  return hasPermission(userRole, 'CONNECT_BANK_ACCOUNT')
+export function canManageBankConnections(
+  userRole: UserRole | undefined
+): boolean {
+  return hasPermission(userRole, "CONNECT_BANK_ACCOUNT")
 }
 
 /**

@@ -1,24 +1,26 @@
-"use client";
+"use client"
 
-import type { Table } from "@tanstack/react-table";
-import { Loader, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import * as React from "react"
+import type { Table } from "@tanstack/react-table"
+import { AnimatePresence, motion } from "framer-motion"
+import { Loader, X } from "lucide-react"
+import * as ReactDOM from "react-dom"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/tooltip"
 
-interface DataTableActionBarProps<TData>
-  extends React.ComponentProps<typeof motion.div> {
-  table: Table<TData>;
-  visible?: boolean;
-  container?: Element | DocumentFragment | null;
+interface DataTableActionBarProps<TData> extends React.ComponentProps<
+  typeof motion.div
+> {
+  table: Table<TData>
+  visible?: boolean
+  container?: Element | DocumentFragment | null
 }
 
 function DataTableActionBar<TData>({
@@ -29,30 +31,30 @@ function DataTableActionBar<TData>({
   className,
   ...props
 }: DataTableActionBarProps<TData>) {
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false)
 
   React.useLayoutEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        table.toggleAllRowsSelected(false);
+        table.toggleAllRowsSelected(false)
       }
     }
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [table]);
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [table])
 
   const container =
-    containerProp ?? (mounted ? globalThis.document?.body : null);
+    containerProp ?? (mounted ? globalThis.document?.body : null)
 
-  if (!container) return null;
+  if (!container) return null
 
   const visible =
-    visibleProp ?? table.getFilteredSelectedRowModel().rows.length > 0;
+    visibleProp ?? table.getFilteredSelectedRowModel().rows.length > 0
 
   return ReactDOM.createPortal(
     <AnimatePresence>
@@ -65,8 +67,8 @@ function DataTableActionBar<TData>({
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.2, ease: "easeInOut" }}
           className={cn(
-            "fixed inset-x-0 bottom-6 z-50 mx-auto flex w-fit flex-wrap items-center justify-center gap-2 rounded-md border bg-background p-2 text-foreground shadow-sm",
-            className,
+            "bg-background text-foreground fixed inset-x-0 bottom-6 z-50 mx-auto flex w-fit flex-wrap items-center justify-center gap-2 rounded-md border p-2 shadow-sm",
+            className
           )}
           {...props}
         >
@@ -74,14 +76,15 @@ function DataTableActionBar<TData>({
         </motion.div>
       )}
     </AnimatePresence>,
-    container,
-  );
+    container
+  )
 }
 
-interface DataTableActionBarActionProps
-  extends React.ComponentProps<typeof Button> {
-  tooltip?: string;
-  isPending?: boolean;
+interface DataTableActionBarActionProps extends React.ComponentProps<
+  typeof Button
+> {
+  tooltip?: string
+  isPending?: boolean
 }
 
 function DataTableActionBarAction({
@@ -98,46 +101,46 @@ function DataTableActionBarAction({
       variant="secondary"
       size={size}
       className={cn(
-        "gap-1.5 border border-secondary bg-secondary/50 hover:bg-secondary/70 [&>svg]:size-3.5",
+        "border-secondary bg-secondary/50 hover:bg-secondary/70 gap-1.5 border [&>svg]:size-3.5",
         size === "icon" ? "size-7" : "h-7",
-        className,
+        className
       )}
       disabled={disabled || isPending}
       {...props}
     >
       {isPending ? <Loader className="animate-spin" /> : children}
     </Button>
-  );
+  )
 
-  if (!tooltip) return trigger;
+  if (!tooltip) return trigger
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>{trigger}</TooltipTrigger>
       <TooltipContent
         sideOffset={6}
-        className="border bg-accent font-semibold text-foreground dark:bg-zinc-900 [&>span]:hidden"
+        className="bg-accent text-foreground border font-semibold dark:bg-zinc-900 [&>span]:hidden"
       >
         <p>{tooltip}</p>
       </TooltipContent>
     </Tooltip>
-  );
+  )
 }
 
 interface DataTableActionBarSelectionProps<TData> {
-  table: Table<TData>;
+  table: Table<TData>
 }
 
 function DataTableActionBarSelection<TData>({
   table,
 }: DataTableActionBarSelectionProps<TData>) {
   const onClearSelection = React.useCallback(() => {
-    table.toggleAllRowsSelected(false);
-  }, [table]);
+    table.toggleAllRowsSelected(false)
+  }, [table])
 
   return (
     <div className="flex h-7 items-center rounded-md border pr-1 pl-2.5">
-      <span className="whitespace-nowrap text-xs">
+      <span className="text-xs whitespace-nowrap">
         {table.getFilteredSelectedRowModel().rows.length} selected
       </span>
       <Separator
@@ -157,10 +160,10 @@ function DataTableActionBarSelection<TData>({
         </TooltipTrigger>
         <TooltipContent
           sideOffset={10}
-          className="flex items-center gap-2 border bg-accent px-2 py-1 font-semibold text-foreground dark:bg-zinc-900 [&>span]:hidden"
+          className="bg-accent text-foreground flex items-center gap-2 border px-2 py-1 font-semibold dark:bg-zinc-900 [&>span]:hidden"
         >
           <p>Clear selection</p>
-          <kbd className="select-none rounded border bg-background px-1.5 py-px font-mono font-normal text-[0.7rem] text-foreground shadow-xs">
+          <kbd className="bg-background text-foreground rounded border px-1.5 py-px font-mono text-[0.7rem] font-normal shadow-xs select-none">
             <abbr title="Escape" className="no-underline">
               Esc
             </abbr>
@@ -168,11 +171,11 @@ function DataTableActionBarSelection<TData>({
         </TooltipContent>
       </Tooltip>
     </div>
-  );
+  )
 }
 
 export {
   DataTableActionBar,
   DataTableActionBarAction,
   DataTableActionBarSelection,
-};
+}

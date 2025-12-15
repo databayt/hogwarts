@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import {
   Sortable,
   SortableContent,
@@ -30,7 +31,7 @@ export function SortablePreview() {
             key={item.id}
             value={item.id}
             asHandle
-            className="flex items-center gap-2 rounded-md border bg-background p-3"
+            className="bg-background flex items-center gap-2 rounded-md border p-3"
           >
             <span className="text-sm">{item.title}</span>
           </SortableItem>
@@ -40,7 +41,7 @@ export function SortablePreview() {
         {({ value }) => {
           const item = items.find((i) => i.id === value)
           return item ? (
-            <div className="flex items-center gap-2 rounded-md border bg-background p-3 shadow-lg">
+            <div className="bg-background flex items-center gap-2 rounded-md border p-3 shadow-lg">
               <span className="text-sm">{item.title}</span>
             </div>
           ) : null

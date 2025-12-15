@@ -10,7 +10,7 @@ export default function Loading() {
       </div>
 
       {/* Configuration sections skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-4">
           <Skeleton className="h-6 w-40" />
           <Skeleton className="h-48 w-full rounded-lg" />

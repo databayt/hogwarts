@@ -1,18 +1,25 @@
-"use client";
+"use client"
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useRouter, useSearchParams } from "next/navigation"
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function PeriodSwitcher() {
-  const sp = useSearchParams();
-  const router = useRouter();
-  const period = sp.get("period") ?? "7d";
+  const sp = useSearchParams()
+  const router = useRouter()
+  const period = sp.get("period") ?? "7d"
 
   const onChange = (value: string) => {
-    const params = new URLSearchParams(sp.toString());
-    params.set("period", value);
-    router.replace(`?${params.toString()}`);
-  };
+    const params = new URLSearchParams(sp.toString())
+    params.set("period", value)
+    router.replace(`?${params.toString()}`)
+  }
 
   return (
     <Select value={period} onValueChange={onChange}>
@@ -25,14 +32,5 @@ export function PeriodSwitcher() {
         <SelectItem value="90d">Last 90d</SelectItem>
       </SelectContent>
     </Select>
-  );
+  )
 }
-
-
-
-
-
-
-
-
-

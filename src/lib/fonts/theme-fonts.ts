@@ -5,72 +5,73 @@
  * Based on tweakcn's theme-fonts.ts pattern.
  */
 
-import type { ThemeEditorState } from '@/types/theme-editor'
-import { SYSTEM_FONTS } from './index'
+import type { ThemeEditorState } from "@/types/theme-editor"
+
+import { SYSTEM_FONTS } from "./index"
 
 const sansSerifFontNames = [
-  'Inter',
-  'Roboto',
-  'Open Sans',
-  'Poppins',
-  'Montserrat',
-  'Plus Jakarta Sans',
-  'DM Sans',
-  'Geist',
-  'Oxanium',
-  'Architects Daughter',
+  "Inter",
+  "Roboto",
+  "Open Sans",
+  "Poppins",
+  "Montserrat",
+  "Plus Jakarta Sans",
+  "DM Sans",
+  "Geist",
+  "Oxanium",
+  "Architects Daughter",
 ]
 
 const serifFontNames = [
-  'Merriweather',
-  'Lora',
-  'Source Serif 4',
-  'Source Serif Pro',
-  'Georgia',
-  'Times New Roman',
+  "Merriweather",
+  "Lora",
+  "Source Serif 4",
+  "Source Serif Pro",
+  "Georgia",
+  "Times New Roman",
 ]
 
 const monoFontNames = [
-  'JetBrains Mono',
-  'Fira Code',
-  'Source Code Pro',
-  'IBM Plex Mono',
-  'Roboto Mono',
-  'Geist Mono',
-  'Courier New',
-  'Menlo',
+  "JetBrains Mono",
+  "Fira Code",
+  "Source Code Pro",
+  "IBM Plex Mono",
+  "Roboto Mono",
+  "Geist Mono",
+  "Courier New",
+  "Menlo",
 ]
 
 export const fonts: Record<string, string> = {
   // Sans-serif fonts
-  Inter: 'Inter, sans-serif',
-  Roboto: 'Roboto, sans-serif',
-  'Open Sans': 'Open Sans, sans-serif',
-  Poppins: 'Poppins, sans-serif',
-  Montserrat: 'Montserrat, sans-serif',
-  'Plus Jakarta Sans': 'Plus Jakarta Sans, sans-serif',
-  'DM Sans': 'DM Sans, sans-serif',
-  Geist: 'Geist, sans-serif',
-  Oxanium: 'Oxanium, sans-serif',
-  'Architects Daughter': 'Architects Daughter, sans-serif',
+  Inter: "Inter, sans-serif",
+  Roboto: "Roboto, sans-serif",
+  "Open Sans": "Open Sans, sans-serif",
+  Poppins: "Poppins, sans-serif",
+  Montserrat: "Montserrat, sans-serif",
+  "Plus Jakarta Sans": "Plus Jakarta Sans, sans-serif",
+  "DM Sans": "DM Sans, sans-serif",
+  Geist: "Geist, sans-serif",
+  Oxanium: "Oxanium, sans-serif",
+  "Architects Daughter": "Architects Daughter, sans-serif",
 
   // Serif fonts
-  Merriweather: 'Merriweather, serif',
-  Lora: 'Lora, serif',
-  'Source Serif 4': 'Source Serif 4, serif',
-  'Source Serif Pro': 'Source Serif Pro, serif',
-  Georgia: 'Georgia, serif',
-  'Times New Roman': 'Times New Roman, serif',
+  Merriweather: "Merriweather, serif",
+  Lora: "Lora, serif",
+  "Source Serif 4": "Source Serif 4, serif",
+  "Source Serif Pro": "Source Serif Pro, serif",
+  Georgia: "Georgia, serif",
+  "Times New Roman": "Times New Roman, serif",
 
   // Monospace fonts
-  'JetBrains Mono': 'JetBrains Mono, monospace',
-  'Fira Code': 'Fira Code, monospace',
-  'Source Code Pro': 'Source Code Pro, monospace',
-  'IBM Plex Mono': 'IBM Plex Mono, monospace',
-  'Roboto Mono': 'Roboto Mono, monospace',
-  'Geist Mono': 'Geist Mono, monospace',
-  'Courier New': 'Courier New, monospace',
-  Menlo: 'Menlo, monospace',
+  "JetBrains Mono": "JetBrains Mono, monospace",
+  "Fira Code": "Fira Code, monospace",
+  "Source Code Pro": "Source Code Pro, monospace",
+  "IBM Plex Mono": "IBM Plex Mono, monospace",
+  "Roboto Mono": "Roboto Mono, monospace",
+  "Geist Mono": "Geist Mono, monospace",
+  "Courier New": "Courier New, monospace",
+  Menlo: "Menlo, monospace",
 }
 
 export const sansSerifFonts = Object.fromEntries(
@@ -93,7 +94,7 @@ export const monoFonts = Object.fromEntries(
  */
 export const getAppliedThemeFont = (
   state: ThemeEditorState,
-  fontKey: 'font-sans' | 'font-serif' | 'font-mono'
+  fontKey: "font-sans" | "font-serif" | "font-mono"
 ): string | null => {
   const currentStyles = state.styles[state.currentMode]
   const fontValue = currentStyles[fontKey]
@@ -102,8 +103,8 @@ export const getAppliedThemeFont = (
   if (!fontValue) return null
 
   // Handle both old format ("Outfit, sans-serif") and new format ("Outfit", ui-sans-serif, ...)
-  const firstFont = fontValue.split(',')[0].trim()
-  const cleanFont = firstFont.replace(/['"]/g, '')
+  const firstFont = fontValue.split(",")[0].trim()
+  const cleanFont = firstFont.replace(/['"]/g, "")
 
   // Skip system fonts
   if (SYSTEM_FONTS.includes(cleanFont.toLowerCase())) return null

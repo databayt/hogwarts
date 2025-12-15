@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface QuickAction {
@@ -119,17 +121,19 @@ export function QuickActionCard({
           {loading ? (
             <Skeleton className="h-5 w-32" />
           ) : (
-            <h5 className="font-medium text-foreground">{title}</h5>
+            <h5 className="text-foreground font-medium">{title}</h5>
           )}
         </CardHeader>
       )}
       <CardContent className={cn(sizeClasses[size], title && "pt-0")}>
         {loading ? (
           <div className={cn("grid gap-3", gridClasses[columns])}>
-            {Array.from({ length: columns === 4 ? 4 : columns === 3 ? 3 : 2 }).map((_, i) => (
+            {Array.from({
+              length: columns === 4 ? 4 : columns === 3 ? 3 : 2,
+            }).map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="h-10 w-10 rounded-lg mx-auto" />
-                <Skeleton className="h-4 w-16 mx-auto" />
+                <Skeleton className="mx-auto h-10 w-10 rounded-lg" />
+                <Skeleton className="mx-auto h-4 w-16" />
               </div>
             ))}
           </div>
@@ -147,7 +151,7 @@ export function QuickActionCard({
                 onClick={action.onClick}
                 disabled={action.disabled}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <div className="bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg transition-colors">
                   {action.icon}
                 </div>
                 <span className="text-sm font-medium">{action.label}</span>

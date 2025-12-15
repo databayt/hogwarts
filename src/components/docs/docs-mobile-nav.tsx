@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
 interface Neighbour {
@@ -18,31 +19,35 @@ interface DocsMobileNavProps {
 }
 
 export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
-  const isRTL = lang === 'ar'
+  const isRTL = lang === "ar"
 
   if (!neighbours.previous && !neighbours.next) {
     return null
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between border-t bg-background p-4 md:hidden">
+    <div className="bg-background fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between border-t p-4 md:hidden">
       {neighbours.previous ? (
         <Link
           href={`/${lang}${neighbours.previous.url}`}
           className={cn(
-            "inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground",
+            "text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium",
             isRTL && "flex-row-reverse"
           )}
         >
           {isRTL ? (
             <>
-              <span className="truncate max-w-[150px]">{neighbours.previous.name}</span>
+              <span className="max-w-[150px] truncate">
+                {neighbours.previous.name}
+              </span>
               <ChevronRight className="h-4 w-4 shrink-0" />
             </>
           ) : (
             <>
               <ChevronLeft className="h-4 w-4 shrink-0" />
-              <span className="truncate max-w-[150px]">{neighbours.previous.name}</span>
+              <span className="max-w-[150px] truncate">
+                {neighbours.previous.name}
+              </span>
             </>
           )}
         </Link>
@@ -54,18 +59,22 @@ export function DocsMobileNav({ neighbours, lang }: DocsMobileNavProps) {
         <Link
           href={`/${lang}${neighbours.next.url}`}
           className={cn(
-            "inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground",
+            "text-muted-foreground hover:text-foreground inline-flex items-center gap-2 text-sm font-medium",
             isRTL && "flex-row-reverse"
           )}
         >
           {isRTL ? (
             <>
               <ChevronLeft className="h-4 w-4 shrink-0" />
-              <span className="truncate max-w-[150px]">{neighbours.next.name}</span>
+              <span className="max-w-[150px] truncate">
+                {neighbours.next.name}
+              </span>
             </>
           ) : (
             <>
-              <span className="truncate max-w-[150px]">{neighbours.next.name}</span>
+              <span className="max-w-[150px] truncate">
+                {neighbours.next.name}
+              </span>
               <ChevronRight className="h-4 w-4 shrink-0" />
             </>
           )}

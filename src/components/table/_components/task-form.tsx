@@ -1,7 +1,8 @@
-"use client";
+"use client"
 
-import type * as React from "react";
-import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form";
+import type * as React from "react"
+import type { FieldPath, FieldValues, UseFormReturn } from "react-hook-form"
+
 import {
   Form,
   FormControl,
@@ -9,8 +10,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -18,15 +19,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
 // Removed unused import
 
-interface TaskFormProps<T extends FieldValues>
-  extends Omit<React.ComponentPropsWithRef<"form">, "onSubmit"> {
-  children: React.ReactNode;
-  form: UseFormReturn<T>;
-  onSubmit: (data: T) => void;
+interface TaskFormProps<T extends FieldValues> extends Omit<
+  React.ComponentPropsWithRef<"form">,
+  "onSubmit"
+> {
+  children: React.ReactNode
+  form: UseFormReturn<T>
+  onSubmit: (data: T) => void
 }
 
 export function TaskForm<T extends FieldValues>({
@@ -71,7 +75,14 @@ export function TaskForm<T extends FieldValues>({
                 </FormControl>
                 <SelectContent>
                   <SelectGroup>
-                    {(["bug", "feature", "enhancement", "documentation"] as const).map((item) => (
+                    {(
+                      [
+                        "bug",
+                        "feature",
+                        "enhancement",
+                        "documentation",
+                      ] as const
+                    ).map((item) => (
                       <SelectItem
                         key={item}
                         value={item}
@@ -101,15 +112,17 @@ export function TaskForm<T extends FieldValues>({
                 </FormControl>
                 <SelectContent>
                   <SelectGroup>
-                    {(["todo", "in_progress", "done", "canceled"] as const).map((item) => (
-                      <SelectItem
-                        key={item}
-                        value={item}
-                        className="capitalize"
-                      >
-                        {item}
-                      </SelectItem>
-                    ))}
+                    {(["todo", "in_progress", "done", "canceled"] as const).map(
+                      (item) => (
+                        <SelectItem
+                          key={item}
+                          value={item}
+                          className="capitalize"
+                        >
+                          {item}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -172,5 +185,5 @@ export function TaskForm<T extends FieldValues>({
         {children}
       </form>
     </Form>
-  );
+  )
 }

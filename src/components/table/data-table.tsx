@@ -1,9 +1,9 @@
-import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
-import type * as React from "react";
-import "@/components/table/types"; // Import type augmentation for ColumnMeta.align
+import type * as React from "react"
+import { flexRender, type Table as TanstackTable } from "@tanstack/react-table"
 
-import { DataTablePagination } from "@/components/table/data-table-pagination";
-import { DataTableLoadMore } from "@/components/table/data-table-load-more";
+import "@/components/table/types" // Import type augmentation for ColumnMeta.align
+
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -11,17 +11,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { getCommonPinningStyles } from "@/components/table/utils";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/table"
+import { DataTableLoadMore } from "@/components/table/data-table-load-more"
+import { DataTablePagination } from "@/components/table/data-table-pagination"
+import { getCommonPinningStyles } from "@/components/table/utils"
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
-  table: TanstackTable<TData>;
-  actionBar?: React.ReactNode;
-  paginationMode?: "pagination" | "load-more";
-  hasMore?: boolean;
-  isLoading?: boolean;
-  onLoadMore?: () => void;
+  table: TanstackTable<TData>
+  actionBar?: React.ReactNode
+  paginationMode?: "pagination" | "load-more"
+  hasMore?: boolean
+  isLoading?: boolean
+  onLoadMore?: () => void
 }
 
 export function DataTable<TData>({
@@ -36,10 +37,7 @@ export function DataTable<TData>({
   ...props
 }: DataTableProps<TData>) {
   return (
-    <div
-      className={cn("flex w-full flex-col gap-2.5", className)}
-      {...props}
-    >
+    <div className={cn("flex w-full flex-col gap-2.5", className)} {...props}>
       {children}
       <div className="overflow-x-auto rounded-md">
         <Table>
@@ -47,8 +45,15 @@ export function DataTable<TData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
-                  const meta = header.column.columnDef.meta as { align?: "start" | "center" | "end" } | undefined;
-                  const alignClass = meta?.align === "end" ? "text-end" : meta?.align === "center" ? "text-center" : "";
+                  const meta = header.column.columnDef.meta as
+                    | { align?: "start" | "center" | "end" }
+                    | undefined
+                  const alignClass =
+                    meta?.align === "end"
+                      ? "text-end"
+                      : meta?.align === "center"
+                        ? "text-center"
+                        : ""
                   return (
                     <TableHead
                       key={header.id}
@@ -61,11 +66,11 @@ export function DataTable<TData>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
-                  );
+                  )
                 })}
               </TableRow>
             ))}
@@ -78,8 +83,15 @@ export function DataTable<TData>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => {
-                    const meta = cell.column.columnDef.meta as { align?: "start" | "center" | "end" } | undefined;
-                    const alignClass = meta?.align === "end" ? "text-end" : meta?.align === "center" ? "text-center" : "";
+                    const meta = cell.column.columnDef.meta as
+                      | { align?: "start" | "center" | "end" }
+                      | undefined
+                    const alignClass =
+                      meta?.align === "end"
+                        ? "text-end"
+                        : meta?.align === "center"
+                          ? "text-center"
+                          : ""
                     return (
                       <TableCell
                         key={cell.id}
@@ -90,10 +102,10 @@ export function DataTable<TData>({
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext(),
+                          cell.getContext()
                         )}
                       </TableCell>
-                    );
+                    )
                   })}
                 </TableRow>
               ))
@@ -126,5 +138,5 @@ export function DataTable<TData>({
           actionBar}
       </div>
     </div>
-  );
+  )
 }

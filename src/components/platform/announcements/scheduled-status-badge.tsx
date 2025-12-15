@@ -1,20 +1,21 @@
-"use client";
+"use client"
 
-import { Badge } from "@/components/ui/badge";
-import { Clock, CircleCheck, Calendar, CircleX } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Calendar, CircleCheck, CircleX, Clock } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
 
 interface ScheduledStatusBadgeProps {
-  published: boolean;
-  scheduledFor?: Date | string | null;
-  expiresAt?: Date | string | null;
-  className?: string;
+  published: boolean
+  scheduledFor?: Date | string | null
+  expiresAt?: Date | string | null
+  className?: string
 }
 
 export function ScheduledStatusBadge({
@@ -23,45 +24,45 @@ export function ScheduledStatusBadge({
   expiresAt,
   className,
 }: ScheduledStatusBadgeProps) {
-  const now = new Date();
-  const scheduledDate = scheduledFor ? new Date(scheduledFor) : null;
-  const expiresDate = expiresAt ? new Date(expiresAt) : null;
+  const now = new Date()
+  const scheduledDate = scheduledFor ? new Date(scheduledFor) : null
+  const expiresDate = expiresAt ? new Date(expiresAt) : null
 
   // Determine status
-  let status: "published" | "scheduled" | "draft" | "expired";
-  let icon: React.ReactNode;
-  let label: string;
-  let variant: "default" | "secondary" | "destructive" | "outline";
-  let tooltipText: string;
+  let status: "published" | "scheduled" | "draft" | "expired"
+  let icon: React.ReactNode
+  let label: string
+  let variant: "default" | "secondary" | "destructive" | "outline"
+  let tooltipText: string
 
   if (expiresDate && expiresDate < now && published) {
     // Expired
-    status = "expired";
-    icon = <CircleX className="h-3 w-3" />;
-    label = "Expired";
-    variant = "destructive";
-    tooltipText = `Expired on ${expiresDate.toLocaleString()}`;
+    status = "expired"
+    icon = <CircleX className="h-3 w-3" />
+    label = "Expired"
+    variant = "destructive"
+    tooltipText = `Expired on ${expiresDate.toLocaleString()}`
   } else if (published) {
     // Published
-    status = "published";
-    icon = <CircleCheck className="h-3 w-3" />;
-    label = "Published";
-    variant = "default";
-    tooltipText = "Currently published";
+    status = "published"
+    icon = <CircleCheck className="h-3 w-3" />
+    label = "Published"
+    variant = "default"
+    tooltipText = "Currently published"
   } else if (scheduledDate && scheduledDate > now) {
     // Scheduled for future
-    status = "scheduled";
-    icon = <Calendar className="h-3 w-3" />;
-    label = "Scheduled";
-    variant = "secondary";
-    tooltipText = `Scheduled for ${scheduledDate.toLocaleString()}`;
+    status = "scheduled"
+    icon = <Calendar className="h-3 w-3" />
+    label = "Scheduled"
+    variant = "secondary"
+    tooltipText = `Scheduled for ${scheduledDate.toLocaleString()}`
   } else {
     // Draft
-    status = "draft";
-    icon = <Clock className="h-3 w-3" />;
-    label = "Draft";
-    variant = "outline";
-    tooltipText = "Not yet published";
+    status = "draft"
+    icon = <Clock className="h-3 w-3" />
+    label = "Draft"
+    variant = "outline"
+    tooltipText = "Not yet published"
   }
 
   return (
@@ -84,12 +85,12 @@ export function ScheduledStatusBadge({
         <TooltipContent side="top">
           <p>{tooltipText}</p>
           {expiresDate && status !== "expired" && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               Expires: {expiresDate.toLocaleString()}
             </p>
           )}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  );
+  )
 }

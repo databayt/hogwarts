@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { documentsSchema, type DocumentsSchemaType } from './validation';
+import { documentsSchema, type DocumentsSchemaType } from "./validation"
 
 export interface SaveDocumentsResult {
-  success: boolean;
-  data?: DocumentsSchemaType;
-  error?: string;
+  success: boolean
+  data?: DocumentsSchemaType
+  error?: string
 }
 
 export async function saveDocumentsStep(
@@ -13,22 +13,22 @@ export async function saveDocumentsStep(
 ): Promise<SaveDocumentsResult> {
   try {
     // Validate data
-    const validatedData = documentsSchema.parse(data);
+    const validatedData = documentsSchema.parse(data)
 
     return {
       success: true,
-      data: validatedData
-    };
+      data: validatedData,
+    }
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        error: error.message
-      };
+        error: error.message,
+      }
     }
     return {
       success: false,
-      error: 'Validation failed'
-    };
+      error: "Validation failed",
+    }
   }
 }

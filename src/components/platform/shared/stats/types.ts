@@ -8,7 +8,13 @@ export type TrendDirection = "up" | "down" | "neutral"
 /**
  * Visual variant for stat items
  */
-export type StatVariant = "default" | "primary" | "success" | "warning" | "danger" | "muted"
+export type StatVariant =
+  | "default"
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "muted"
 
 /**
  * Size variant for stat components

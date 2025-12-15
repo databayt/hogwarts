@@ -1,52 +1,59 @@
-"use server";
+"use server"
 
-import { auth } from '@/auth';
-import { db } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-import { barcodeScanSchema, studentIdentifierSchema } from '../shared/validation';
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+
+import {
+  barcodeScanSchema,
+  studentIdentifierSchema,
+} from "../shared/validation"
 
 /**
  * Process barcode scan for attendance
  */
-export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>) {
+export async function processBarcodeScan(
+  data: z.infer<typeof barcodeScanSchema>
+) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
-    const { barcode, classId, format, scannedAt, deviceId } = data;
-    const schoolId = session.user.schoolId;
+    const { barcode, classId, format, scannedAt, deviceId } = data
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
 
     // Validate that the class exists and belongs to the school
     const classExists = await db.class.findFirst({
       where: {
         id: classId,
-        schoolId
-      }
-    });
+        schoolId,
+      },
+    })
 
     if (!classExists) {
-      throw new Error('Invalid class ID or class not found');
+      throw new Error("Invalid class ID or class not found")
     }
 
     // Find student by barcode
     const studentIdentifier = await db.studentIdentifier.findFirst({
       where: {
         schoolId,
-        type: 'BARCODE',
+        type: "BARCODE",
         value: barcode,
-        isActive: true
+        isActive: true,
       },
       include: {
-        student: true
-      }
-    });
+        student: true,
+      },
+    })
 
     if (!studentIdentifier) {
       // Log failed scan
@@ -54,22 +61,25 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
         data: {
           schoolId,
           studentId: session.user.id, // Scanner user
-          eventType: 'SCAN_FAILURE',
-          method: 'BARCODE',
+          eventType: "SCAN_FAILURE",
+          method: "BARCODE",
           deviceId,
           success: false,
-          errorMessage: 'Barcode not found in system',
+          errorMessage: "Barcode not found in system",
           metadata: { barcode, format, classId },
-          timestamp: new Date(scannedAt)
-        }
-      });
+          timestamp: new Date(scannedAt),
+        },
+      })
 
-      throw new Error('Barcode not found in system');
+      throw new Error("Barcode not found in system")
     }
 
     // Check if expired
-    if (studentIdentifier.expiresAt && new Date(studentIdentifier.expiresAt) < new Date()) {
-      throw new Error('Card has expired');
+    if (
+      studentIdentifier.expiresAt &&
+      new Date(studentIdentifier.expiresAt) < new Date()
+    ) {
+      throw new Error("Card has expired")
     }
 
     // Check if attendance already marked
@@ -78,12 +88,12 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
         schoolId,
         studentId: studentIdentifier.studentId,
         classId,
-        date: new Date(new Date().toDateString()) // Today's date without time
-      }
-    });
+        date: new Date(new Date().toDateString()), // Today's date without time
+      },
+    })
 
     if (existingAttendance) {
-      throw new Error('Attendance already marked for this student today');
+      throw new Error("Attendance already marked for this student today")
     }
 
     // Mark attendance
@@ -93,100 +103,108 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
         studentId: studentIdentifier.studentId,
         classId,
         date: new Date(),
-        status: 'PRESENT',
+        status: "PRESENT",
         notes: `Scanned via BARCODE at ${new Date(scannedAt).toISOString()}`,
-        markedAt: new Date()
-      }
-    });
+        markedAt: new Date(),
+      },
+    })
 
     // Update identifier usage
     await db.studentIdentifier.update({
       where: { id: studentIdentifier.id },
       data: {
         lastUsedAt: new Date(),
-        usageCount: { increment: 1 }
-      }
-    });
+        usageCount: { increment: 1 },
+      },
+    })
 
     // Log successful scan
     await db.attendanceEvent.create({
       data: {
         schoolId,
         studentId: studentIdentifier.studentId,
-        eventType: 'SCAN_SUCCESS',
-        method: 'BARCODE',
+        eventType: "SCAN_SUCCESS",
+        method: "BARCODE",
         deviceId,
         success: true,
         metadata: {
           barcode,
           format,
-          attendanceId: attendance.id
+          attendanceId: attendance.id,
         },
-        timestamp: new Date(scannedAt)
-      }
-    });
+        timestamp: new Date(scannedAt),
+      },
+    })
 
-    revalidatePath('/attendance/barcode');
+    revalidatePath("/attendance/barcode")
 
     return {
       success: true,
       attendanceId: attendance.id,
       studentId: studentIdentifier.studentId,
-      studentName: studentIdentifier.student.givenName + ' ' + studentIdentifier.student.surname,
-      status: attendance.status
-    };
+      studentName:
+        studentIdentifier.student.givenName +
+        " " +
+        studentIdentifier.student.surname,
+      status: attendance.status,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to process barcode scan'
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to process barcode scan",
+    }
   }
 }
 
 /**
  * Assign barcode to student
  */
-export async function assignBarcodeToStudent(data: z.infer<typeof studentIdentifierSchema>) {
+export async function assignBarcodeToStudent(
+  data: z.infer<typeof studentIdentifierSchema>
+) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
     // Check permissions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      throw new Error('Insufficient permissions');
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
 
     // Check if barcode already exists
     const existing = await db.studentIdentifier.findFirst({
       where: {
         schoolId,
-        type: 'BARCODE',
-        value: data.value
-      }
-    });
+        type: "BARCODE",
+        value: data.value,
+      },
+    })
 
     if (existing) {
-      throw new Error('Barcode already assigned to another student');
+      throw new Error("Barcode already assigned to another student")
     }
 
     // Check if student exists
     const student = await db.student.findFirst({
       where: {
         id: data.studentId,
-        schoolId
-      }
-    });
+        schoolId,
+      },
+    })
 
     if (!student) {
-      throw new Error('Student not found');
+      throw new Error("Student not found")
     }
 
     // Create identifier
@@ -194,28 +212,29 @@ export async function assignBarcodeToStudent(data: z.infer<typeof studentIdentif
       data: {
         schoolId,
         studentId: data.studentId,
-        type: 'BARCODE',
+        type: "BARCODE",
         value: data.value,
         isActive: data.isActive ?? true,
         issuedBy: session.user.id,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
       },
       include: {
-        student: true
-      }
-    });
+        student: true,
+      },
+    })
 
-    revalidatePath('/attendance/barcode');
+    revalidatePath("/attendance/barcode")
 
     return {
       success: true,
-      data: identifier
-    };
+      data: identifier,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to assign barcode'
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to assign barcode",
+    }
   }
 }
 
@@ -224,22 +243,22 @@ export async function assignBarcodeToStudent(data: z.infer<typeof studentIdentif
  */
 export async function getStudentBarcodes(studentId?: string) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
 
     const barcodes = await db.studentIdentifier.findMany({
       where: {
         schoolId,
-        type: 'BARCODE',
-        ...(studentId && { studentId })
+        type: "BARCODE",
+        ...(studentId && { studentId }),
       },
       include: {
         student: {
@@ -247,24 +266,25 @@ export async function getStudentBarcodes(studentId?: string) {
             id: true,
             givenName: true,
             surname: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
-    });
+        createdAt: "desc",
+      },
+    })
 
     return {
       success: true,
-      data: barcodes
-    };
+      data: barcodes,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch barcodes'
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch barcodes",
+    }
   }
 }
 
@@ -276,50 +296,53 @@ export async function updateBarcodeStatus(
   isActive: boolean
 ) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
     // Check permissions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      throw new Error('Insufficient permissions');
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
 
     const identifier = await db.studentIdentifier.findFirst({
       where: {
         id: identifierId,
         schoolId,
-        type: 'BARCODE'
-      }
-    });
+        type: "BARCODE",
+      },
+    })
 
     if (!identifier) {
-      throw new Error('Barcode not found');
+      throw new Error("Barcode not found")
     }
 
     await db.studentIdentifier.update({
       where: { id: identifierId },
-      data: { isActive }
-    });
+      data: { isActive },
+    })
 
-    revalidatePath('/attendance/barcode');
+    revalidatePath("/attendance/barcode")
 
     return {
       success: true,
-      message: `Barcode ${isActive ? 'activated' : 'deactivated'} successfully`
-    };
+      message: `Barcode ${isActive ? "activated" : "deactivated"} successfully`,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update barcode status'
-    };
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update barcode status",
+    }
   }
 }
 
@@ -328,49 +351,50 @@ export async function updateBarcodeStatus(
  */
 export async function deleteBarcode(identifierId: string) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
     // Check permissions
-    if (session.user.role !== 'ADMIN') {
-      throw new Error('Only administrators can delete barcodes');
+    if (session.user.role !== "ADMIN") {
+      throw new Error("Only administrators can delete barcodes")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
 
     const identifier = await db.studentIdentifier.findFirst({
       where: {
         id: identifierId,
         schoolId,
-        type: 'BARCODE'
-      }
-    });
+        type: "BARCODE",
+      },
+    })
 
     if (!identifier) {
-      throw new Error('Barcode not found');
+      throw new Error("Barcode not found")
     }
 
     await db.studentIdentifier.delete({
-      where: { id: identifierId }
-    });
+      where: { id: identifierId },
+    })
 
-    revalidatePath('/attendance/barcode');
+    revalidatePath("/attendance/barcode")
 
     return {
       success: true,
-      message: 'Barcode deleted successfully'
-    };
+      message: "Barcode deleted successfully",
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete barcode'
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to delete barcode",
+    }
   }
 }
 
@@ -379,54 +403,56 @@ export async function deleteBarcode(identifierId: string) {
  */
 export async function bulkImportBarcodes(csvData: string) {
   try {
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized")
     }
 
     // Check permissions
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER') {
-      throw new Error('Insufficient permissions');
+    if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      throw new Error("Insufficient permissions")
     }
 
-    const schoolId = session.user.schoolId;
+    const schoolId = session.user.schoolId
 
     if (!schoolId) {
-      throw new Error('School ID is required');
+      throw new Error("School ID is required")
     }
-    const rows = csvData.split('\n').slice(1); // Skip header
+    const rows = csvData.split("\n").slice(1) // Skip header
     const results = {
       successful: 0,
       failed: 0,
-      errors: [] as string[]
-    };
+      errors: [] as string[],
+    }
 
     for (const row of rows) {
-      const [studentId, barcode, expiryDate] = row.split(',').map(s => s.trim());
+      const [studentId, barcode, expiryDate] = row
+        .split(",")
+        .map((s) => s.trim())
 
-      if (!studentId || !barcode) continue;
+      if (!studentId || !barcode) continue
 
       try {
         // Check if student exists
         const student = await db.student.findFirst({
-          where: { id: studentId, schoolId }
-        });
+          where: { id: studentId, schoolId },
+        })
 
         if (!student) {
-          results.failed++;
-          results.errors.push(`Student ${studentId} not found`);
-          continue;
+          results.failed++
+          results.errors.push(`Student ${studentId} not found`)
+          continue
         }
 
         // Check if barcode already exists
         const existing = await db.studentIdentifier.findFirst({
-          where: { schoolId, type: 'BARCODE', value: barcode }
-        });
+          where: { schoolId, type: "BARCODE", value: barcode },
+        })
 
         if (existing) {
-          results.failed++;
-          results.errors.push(`Barcode ${barcode} already exists`);
-          continue;
+          results.failed++
+          results.errors.push(`Barcode ${barcode} already exists`)
+          continue
         }
 
         // Create identifier
@@ -434,31 +460,32 @@ export async function bulkImportBarcodes(csvData: string) {
           data: {
             schoolId,
             studentId,
-            type: 'BARCODE',
+            type: "BARCODE",
             value: barcode,
             isActive: true,
             issuedBy: session.user.id,
-            expiresAt: expiryDate ? new Date(expiryDate) : undefined
-          }
-        });
+            expiresAt: expiryDate ? new Date(expiryDate) : undefined,
+          },
+        })
 
-        results.successful++;
+        results.successful++
       } catch (error) {
-        results.failed++;
-        results.errors.push(`Failed to import ${studentId}: ${error}`);
+        results.failed++
+        results.errors.push(`Failed to import ${studentId}: ${error}`)
       }
     }
 
-    revalidatePath('/attendance/barcode');
+    revalidatePath("/attendance/barcode")
 
     return {
       success: true,
-      data: results
-    };
+      data: results,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to import barcodes'
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to import barcodes",
+    }
   }
 }

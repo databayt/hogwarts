@@ -1,57 +1,86 @@
 "use client"
 
 import * as React from "react"
-import { Users, TrendingUp, DollarSign, Activity, Target, Award, Calendar, Clock, Bell, MessageSquare, ThumbsUp, Star, MapPin, Cloud, Sun, Moon, Zap, Heart, BookOpen, CircleCheckBig, CircleAlert, Info, Mail, Phone, Settings,  } from "lucide-react"
-import { Button } from "@/components/ui/button"
-
 import {
-  // Enhanced Cards (5)
-  StatCard,
-  ProgressCard,
-  ListCard,
-  MultiStatCard,
-  ChartCard,
-  // New Variants (7)
-  HeroStatCard,
+  Activity,
+  Award,
+  Bell,
+  BookOpen,
+  Calendar,
+  CircleAlert,
+  CircleCheckBig,
+  Clock,
+  Cloud,
+  DollarSign,
+  Heart,
+  Info,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Moon,
+  Phone,
+  Settings,
+  Star,
+  Sun,
+  Target,
+  ThumbsUp,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
   ActionCard,
-  ComparisonCard,
-  MediaCard,
-  CollapsibleCard,
-  EmptyStateCard,
-  SkeletonCard,
-  // Modern 2025 Patterns (12)
-  FlipCard,
-  MetricCard,
-  NotificationCard,
-  TimelineCard,
-  ProfileCard,
-  GoalCard,
-  WeatherCard,
-  CalendarCard,
-  QuickActionCard,
-  SocialCard,
-  GlanceCard,
-  IconStatCard,
-  // shadcn Dashboard Patterns (8)
-  RecentSalesCard,
   ActivityFeedCard,
-  TeamMembersCard,
-  TopPerformersCard,
-  TaskListCard,
-  DataTableCard,
-  StackedStatCard,
   BannerCard,
+  CalendarCard,
+  ChartCard,
+  CollapsibleCard,
+  ComparisonCard,
+  DashboardGrid,
+  DashboardSection,
   // Layout Components
   DashboardShell,
-  DashboardSection,
-  DashboardGrid,
+  DataTableCard,
+  EmptyStateCard,
+  // Modern 2025 Patterns (12)
+  FlipCard,
+  GlanceCard,
+  GoalCard,
+  // New Variants (7)
+  HeroStatCard,
+  IconStatCard,
+  ListCard,
+  MediaCard,
+  MetricCard,
+  MultiStatCard,
+  NotificationCard,
+  ProfileCard,
+  ProgressCard,
+  QuickActionCard,
+  // shadcn Dashboard Patterns (8)
+  RecentSalesCard,
+  SkeletonCard,
+  SocialCard,
+  StackedStatCard,
+  // Enhanced Cards (5)
+  StatCard,
+  TaskListCard,
+  TeamMembersCard,
+  TimelineCard,
+  TopPerformersCard,
+  WeatherCard,
 } from "@/components/atom/lab"
 
 export function DashboardCardsShowcase() {
   return (
     <DashboardShell>
       {/* Enhanced Cards Section (5 cards) */}
-      <DashboardSection title="Enhanced Cards" description="5 original cards with size, loading, and onClick features">
+      <DashboardSection
+        title="Enhanced Cards"
+        description="5 original cards with size, loading, and onClick features"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }}>
           <StatCard
             value="2,543"
@@ -71,31 +100,57 @@ export function DashboardCardsShowcase() {
           <ListCard
             title="Recent Activities"
             items={[
-              { icon: <Activity className="size-4" />, title: "Student enrolled", subtitle: "2 minutes ago" },
-              { icon: <CircleCheckBig className="size-4" />, title: "Assignment submitted", subtitle: "15 minutes ago" },
-              { icon: <Bell className="size-4" />, title: "New announcement", subtitle: "1 hour ago" },
+              {
+                icon: <Activity className="size-4" />,
+                title: "Student enrolled",
+                subtitle: "2 minutes ago",
+              },
+              {
+                icon: <CircleCheckBig className="size-4" />,
+                title: "Assignment submitted",
+                subtitle: "15 minutes ago",
+              },
+              {
+                icon: <Bell className="size-4" />,
+                title: "New announcement",
+                subtitle: "1 hour ago",
+              },
             ]}
           />
 
           <MultiStatCard
             stats={[
-              { value: "1,234", label: "Active Users", trend: { value: 5.2, direction: "up" } },
-              { value: "567", label: "New This Week", trend: { value: 8.1, direction: "up" } },
-              { value: "89%", label: "Satisfaction", trend: { value: 2.3, direction: "up" } },
+              {
+                value: "1,234",
+                label: "Active Users",
+                trend: { value: 5.2, direction: "up" },
+              },
+              {
+                value: "567",
+                label: "New This Week",
+                trend: { value: 8.1, direction: "up" },
+              },
+              {
+                value: "89%",
+                label: "Satisfaction",
+                trend: { value: 2.3, direction: "up" },
+              },
             ]}
           />
 
           <ChartCard
             title="Revenue Growth"
             chart={
-              <div className="h-48 flex items-end gap-1">
-                {[30, 40, 35, 50, 49, 60, 70, 91, 85, 95, 100, 110].map((value, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 bg-primary/20 rounded-t transition-all hover:bg-primary/40"
-                    style={{ height: `${value}%` }}
-                  />
-                ))}
+              <div className="flex h-48 items-end gap-1">
+                {[30, 40, 35, 50, 49, 60, 70, 91, 85, 95, 100, 110].map(
+                  (value, i) => (
+                    <div
+                      key={i}
+                      className="bg-primary/20 hover:bg-primary/40 flex-1 rounded-t transition-all"
+                      style={{ height: `${value}%` }}
+                    />
+                  )
+                )}
               </div>
             }
           />
@@ -103,7 +158,10 @@ export function DashboardCardsShowcase() {
       </DashboardSection>
 
       {/* New Variants Section (7 cards) */}
-      <DashboardSection title="New Variants" description="7 specialized card types">
+      <DashboardSection
+        title="New Variants"
+        description="7 specialized card types"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <HeroStatCard
             value="$45,231"
@@ -144,10 +202,7 @@ export function DashboardCardsShowcase() {
             trailing={<span className="font-semibold">$99</span>}
           />
 
-          <CollapsibleCard
-            title="Course Modules"
-            defaultOpen={true}
-          >
+          <CollapsibleCard title="Course Modules" defaultOpen={true}>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
                 <CircleCheckBig className="size-4 text-green-600" />
@@ -180,14 +235,19 @@ export function DashboardCardsShowcase() {
       </DashboardSection>
 
       {/* Modern 2025 Patterns Section (12 cards) */}
-      <DashboardSection title="Modern 2025 Patterns" description="12 interactive and engaging card designs">
+      <DashboardSection
+        title="Modern 2025 Patterns"
+        description="12 interactive and engaging card designs"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }}>
           <FlipCard
             front={
               <div className="flex h-full flex-col items-center justify-center gap-2">
-                <DollarSign className="size-8 text-primary" />
+                <DollarSign className="text-primary size-8" />
                 <div className="text-3xl font-bold">$45,231</div>
-                <div className="text-sm text-muted-foreground">Total Revenue</div>
+                <div className="text-muted-foreground text-sm">
+                  Total Revenue
+                </div>
               </div>
             }
             back={
@@ -243,7 +303,7 @@ export function DashboardCardsShowcase() {
             name="John Doe"
             role="Senior Teacher"
             avatar={
-              <div className="flex size-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+              <div className="bg-primary text-primary-foreground flex size-20 items-center justify-center rounded-full text-2xl font-bold">
                 JD
               </div>
             }
@@ -278,17 +338,37 @@ export function DashboardCardsShowcase() {
 
           <QuickActionCard
             actions={[
-              { icon: <Users className="size-4" />, label: "Add Student", onClick: () => {} },
-              { icon: <BookOpen className="size-4" />, label: "New Course", onClick: () => {} },
-              { icon: <Bell className="size-4" />, label: "Send Notice", onClick: () => {} },
-              { icon: <Settings className="size-4" />, label: "Settings", onClick: () => {} },
+              {
+                icon: <Users className="size-4" />,
+                label: "Add Student",
+                onClick: () => {},
+              },
+              {
+                icon: <BookOpen className="size-4" />,
+                label: "New Course",
+                onClick: () => {},
+              },
+              {
+                icon: <Bell className="size-4" />,
+                label: "Send Notice",
+                onClick: () => {},
+              },
+              {
+                icon: <Settings className="size-4" />,
+                label: "Settings",
+                onClick: () => {},
+              },
             ]}
           />
 
           <SocialCard
             title="Social Engagement"
             metrics={[
-              { type: "followers", value: "12.5K", trend: { value: 5.2, isPositive: true } },
+              {
+                type: "followers",
+                value: "12.5K",
+                trend: { value: 5.2, isPositive: true },
+              },
               { type: "likes", value: 1234 },
               { type: "shares", value: 567 },
               { type: "comments", value: 89 },
@@ -331,31 +411,80 @@ export function DashboardCardsShowcase() {
       </DashboardSection>
 
       {/* shadcn Dashboard Patterns Section (8 cards) */}
-      <DashboardSection title="shadcn Dashboard Patterns" description="8 advanced dashboard card patterns">
+      <DashboardSection
+        title="shadcn Dashboard Patterns"
+        description="8 advanced dashboard card patterns"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <RecentSalesCard
             sales={[
-              { name: "John Smith", email: "john@example.com", amount: "$1,999" },
-              { name: "Emma Wilson", email: "emma@example.com", amount: "$1,499" },
-              { name: "Michael Brown", email: "michael@example.com", amount: "$999" },
-              { name: "Sarah Davis", email: "sarah@example.com", amount: "$799" },
+              {
+                name: "John Smith",
+                email: "john@example.com",
+                amount: "$1,999",
+              },
+              {
+                name: "Emma Wilson",
+                email: "emma@example.com",
+                amount: "$1,499",
+              },
+              {
+                name: "Michael Brown",
+                email: "michael@example.com",
+                amount: "$999",
+              },
+              {
+                name: "Sarah Davis",
+                email: "sarah@example.com",
+                amount: "$799",
+              },
             ]}
           />
 
           <ActivityFeedCard
             title="Recent Activity"
             activities={[
-              { title: "John Doe", description: "Completed Math Assignment", timestamp: "2 min ago", type: "success" },
-              { title: "Jane Smith", description: "Enrolled in Physics Course", timestamp: "15 min ago", type: "default" },
-              { title: "Bob Johnson", description: "Submitted Final Project", timestamp: "1 hour ago", type: "default" },
+              {
+                title: "John Doe",
+                description: "Completed Math Assignment",
+                timestamp: "2 min ago",
+                type: "success",
+              },
+              {
+                title: "Jane Smith",
+                description: "Enrolled in Physics Course",
+                timestamp: "15 min ago",
+                type: "default",
+              },
+              {
+                title: "Bob Johnson",
+                description: "Submitted Final Project",
+                timestamp: "1 hour ago",
+                type: "default",
+              },
             ]}
           />
 
           <TeamMembersCard
             members={[
-              { name: "Alice Cooper", role: "Math Teacher", avatar: "/placeholder.jpg", status: "online" },
-              { name: "Bob Wilson", role: "Science Teacher", avatar: "/placeholder.jpg", status: "offline" },
-              { name: "Carol Martinez", role: "English Teacher", avatar: "/placeholder.jpg", status: "online" },
+              {
+                name: "Alice Cooper",
+                role: "Math Teacher",
+                avatar: "/placeholder.jpg",
+                status: "online",
+              },
+              {
+                name: "Bob Wilson",
+                role: "Science Teacher",
+                avatar: "/placeholder.jpg",
+                status: "offline",
+              },
+              {
+                name: "Carol Martinez",
+                role: "English Teacher",
+                avatar: "/placeholder.jpg",
+                status: "online",
+              },
             ]}
           />
 
@@ -369,9 +498,24 @@ export function DashboardCardsShowcase() {
 
           <TaskListCard
             tasks={[
-              { id: "1", title: "Review assignments", completed: true, dueDate: "Today" },
-              { id: "2", title: "Prepare lecture notes", completed: false, dueDate: "Tomorrow" },
-              { id: "3", title: "Grade exams", completed: false, dueDate: "Jan 25" },
+              {
+                id: "1",
+                title: "Review assignments",
+                completed: true,
+                dueDate: "Today",
+              },
+              {
+                id: "2",
+                title: "Prepare lecture notes",
+                completed: false,
+                dueDate: "Tomorrow",
+              },
+              {
+                id: "3",
+                title: "Grade exams",
+                completed: false,
+                dueDate: "Jan 25",
+              },
             ]}
             onToggle={(id) => console.log("Toggle task:", id)}
           />
@@ -393,10 +537,26 @@ export function DashboardCardsShowcase() {
           <StackedStatCard
             title="Overall Statistics"
             stats={[
-              { label: "Total Students", value: "2,543", icon: <Users className="size-4" /> },
-              { label: "Active Courses", value: "48", icon: <BookOpen className="size-4" /> },
-              { label: "Avg. Rating", value: "4.8", icon: <Star className="size-4" /> },
-              { label: "Completion", value: "87%", icon: <Target className="size-4" /> },
+              {
+                label: "Total Students",
+                value: "2,543",
+                icon: <Users className="size-4" />,
+              },
+              {
+                label: "Active Courses",
+                value: "48",
+                icon: <BookOpen className="size-4" />,
+              },
+              {
+                label: "Avg. Rating",
+                value: "4.8",
+                icon: <Star className="size-4" />,
+              },
+              {
+                label: "Completion",
+                value: "87%",
+                icon: <Target className="size-4" />,
+              },
             ]}
           />
 
@@ -410,7 +570,10 @@ export function DashboardCardsShowcase() {
       </DashboardSection>
 
       {/* Loading States Demo */}
-      <DashboardSection title="Loading States" description="Skeleton loading examples">
+      <DashboardSection
+        title="Loading States"
+        description="Skeleton loading examples"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
           <SkeletonCard layout="stat" />
           <SkeletonCard layout="list" />
@@ -420,7 +583,10 @@ export function DashboardCardsShowcase() {
       </DashboardSection>
 
       {/* Interactive States Demo */}
-      <DashboardSection title="Interactive States" description="Hoverable and clickable cards">
+      <DashboardSection
+        title="Interactive States"
+        description="Hoverable and clickable cards"
+      >
         <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <StatCard
             value="Click Me!"

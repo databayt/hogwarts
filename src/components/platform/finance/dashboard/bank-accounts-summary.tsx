@@ -1,11 +1,18 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Building, CreditCard, PiggyBank, Wallet } from "lucide-react"
 import Link from "next/link"
+import { Building, CreditCard, PiggyBank, Wallet } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 
 interface BankAccountsSummaryProps {
   accounts: {
@@ -16,17 +23,20 @@ interface BankAccountsSummaryProps {
   className?: string
 }
 
-export function BankAccountsSummary({ accounts, className }: BankAccountsSummaryProps) {
+export function BankAccountsSummary({
+  accounts,
+  className,
+}: BankAccountsSummaryProps) {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0)
 
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'checking':
-      case 'depository':
+      case "checking":
+      case "depository":
         return <Building className="h-4 w-4" />
-      case 'savings':
+      case "savings":
         return <PiggyBank className="h-4 w-4" />
-      case 'credit':
+      case "credit":
         return <CreditCard className="h-4 w-4" />
       default:
         return <Wallet className="h-4 w-4" />
@@ -35,15 +45,16 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
 
   const getTypeBadge = (type: string) => {
     const typeColors: Record<string, string> = {
-      checking: 'bg-blue-100 text-blue-800',
-      savings: 'bg-green-100 text-green-800',
-      credit: 'bg-purple-100 text-purple-800',
-      depository: 'bg-blue-100 text-blue-800',
-      loan: 'bg-red-100 text-red-800',
-      investment: 'bg-yellow-100 text-yellow-800'
+      checking: "bg-blue-100 text-blue-800",
+      savings: "bg-green-100 text-green-800",
+      credit: "bg-purple-100 text-purple-800",
+      depository: "bg-blue-100 text-blue-800",
+      loan: "bg-red-100 text-red-800",
+      investment: "bg-yellow-100 text-yellow-800",
     }
 
-    const colorClass = typeColors[type.toLowerCase()] || 'bg-gray-100 text-gray-800'
+    const colorClass =
+      typeColors[type.toLowerCase()] || "bg-gray-100 text-gray-800"
 
     return (
       <Badge variant="secondary" className={colorClass}>
@@ -53,11 +64,11 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
   }
 
   const formatBalance = (balance: number) => {
-    return new Intl.NumberFormat('en-SD', {
-      style: 'currency',
-      currency: 'SDG',
+    return new Intl.NumberFormat("en-SD", {
+      style: "currency",
+      currency: "SDG",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(balance)
   }
 
@@ -66,15 +77,11 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
       <Card className={className}>
         <CardHeader>
           <CardTitle>Bank Accounts</CardTitle>
-          <CardDescription>
-            No bank accounts connected
-          </CardDescription>
+          <CardDescription>No bank accounts connected</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/finance/banking/connect">
-            <Button className="w-full">
-              Connect Bank Account
-            </Button>
+            <Button className="w-full">Connect Bank Account</Button>
           </Link>
         </CardContent>
       </Card>
@@ -88,7 +95,8 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
           <div>
             <CardTitle>Bank Accounts</CardTitle>
             <CardDescription>
-              {accounts.length} active {accounts.length === 1 ? 'account' : 'accounts'}
+              {accounts.length} active{" "}
+              {accounts.length === 1 ? "account" : "accounts"}
             </CardDescription>
           </div>
           <Link href="/finance/banking">
@@ -101,19 +109,16 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
       <CardContent>
         <div className="space-y-4">
           {/* Total Balance */}
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Total Balance</p>
-            <p className="text-2xl font-bold">
-              {formatBalance(totalBalance)}
-            </p>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <p className="text-muted-foreground text-sm">Total Balance</p>
+            <p className="text-2xl font-bold">{formatBalance(totalBalance)}</p>
           </div>
 
           {/* Individual Accounts */}
           <div className="space-y-3">
             {accounts.map((account, index) => {
-              const percentage = totalBalance > 0
-                ? (account.balance / totalBalance) * 100
-                : 0
+              const percentage =
+                totalBalance > 0 ? (account.balance / totalBalance) * 100 : 0
 
               return (
                 <div key={index} className="space-y-2">
@@ -131,7 +136,7 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
                       <p className="text-sm font-semibold">
                         {formatBalance(account.balance)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {percentage.toFixed(1)}% of total
                       </p>
                     </div>
@@ -143,7 +148,7 @@ export function BankAccountsSummary({ accounts, className }: BankAccountsSummary
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-2 pt-4 border-t">
+          <div className="grid grid-cols-2 gap-2 border-t pt-4">
             <Link href="/finance/banking/transfer">
               <Button variant="outline" size="sm" className="w-full">
                 Transfer Funds

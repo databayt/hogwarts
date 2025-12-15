@@ -3,18 +3,24 @@
  * Main entry point for AI-powered document extraction
  */
 
-import { logger } from '@/lib/logger'
-import type { OnboardingStep, ExtractionResult, ExtractionOptions, ExtractedField } from './types'
-import { extractWithClaude } from './claude-extractor'
+import { logger } from "@/lib/logger"
+
+import { extractWithClaude } from "./claude-extractor"
 import {
   detectFileType,
-  validateFile,
+  handleImage,
   parseCSV,
   parseExcel,
   parsePDF,
   parseWord,
-  handleImage,
-} from './file-handlers'
+  validateFile,
+} from "./file-handlers"
+import type {
+  ExtractedField,
+  ExtractionOptions,
+  ExtractionResult,
+  OnboardingStep,
+} from "./types"
 
 /**
  * Extract structured data from document
@@ -31,8 +37,8 @@ export async function extractFromDocument(
   const startTime = Date.now()
 
   try {
-    logger.info('Starting document extraction', {
-      action: 'extract_document_start',
+    logger.info("Starting document extraction", {
+      action: "extract_document_start",
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
@@ -52,8 +58,8 @@ export async function extractFromDocument(
     // Detect file type
     const fileInfo = detectFileType(file.name, file.type)
 
-    logger.info('File type detected', {
-      action: 'file_type_detected',
+    logger.info("File type detected", {
+      action: "file_type_detected",
       fileType: fileInfo.type,
       mimeType: fileInfo.mimeType,
     })
@@ -63,7 +69,7 @@ export async function extractFromDocument(
     let rawText: string | undefined
 
     switch (fileInfo.type) {
-      case 'image': {
+      case "image": {
         // For images, convert to base64 and use Claude Vision directly
         const buffer = Buffer.from(await file.arrayBuffer())
         const imageResult = await handleImage(buffer, fileInfo.mimeType)
@@ -71,7 +77,7 @@ export async function extractFromDocument(
         if (!imageResult.success || !imageResult.base64) {
           return {
             success: false,
-            error: imageResult.error || 'Failed to process image',
+            error: imageResult.error || "Failed to process image",
             processingTime: Date.now() - startTime,
           }
         }
@@ -80,7 +86,7 @@ export async function extractFromDocument(
         break
       }
 
-      case 'pdf': {
+      case "pdf": {
         // Extract text from PDF, then use Claude to structure it
         const buffer = Buffer.from(await file.arrayBuffer())
         const pdfResult = await parsePDF(buffer)
@@ -88,7 +94,7 @@ export async function extractFromDocument(
         if (!pdfResult.success || !pdfResult.text) {
           return {
             success: false,
-            error: pdfResult.error || 'Failed to parse PDF',
+            error: pdfResult.error || "Failed to parse PDF",
             processingTime: Date.now() - startTime,
           }
         }
@@ -101,7 +107,7 @@ export async function extractFromDocument(
         break
       }
 
-      case 'word': {
+      case "word": {
         // Extract text from Word document
         const buffer = Buffer.from(await file.arrayBuffer())
         const wordResult = await parseWord(buffer)
@@ -109,7 +115,7 @@ export async function extractFromDocument(
         if (!wordResult.success || !wordResult.text) {
           return {
             success: false,
-            error: wordResult.error || 'Failed to parse Word document',
+            error: wordResult.error || "Failed to parse Word document",
             processingTime: Date.now() - startTime,
           }
         }
@@ -119,7 +125,7 @@ export async function extractFromDocument(
         break
       }
 
-      case 'excel': {
+      case "excel": {
         // Parse Excel to text
         const buffer = await file.arrayBuffer()
         const excelResult = await parseExcel(buffer)
@@ -127,7 +133,7 @@ export async function extractFromDocument(
         if (!excelResult.success || !excelResult.text) {
           return {
             success: false,
-            error: excelResult.error || 'Failed to parse Excel',
+            error: excelResult.error || "Failed to parse Excel",
             processingTime: Date.now() - startTime,
           }
         }
@@ -137,7 +143,7 @@ export async function extractFromDocument(
         break
       }
 
-      case 'csv': {
+      case "csv": {
         // Parse CSV to text
         const content = await file.text()
         const csvResult = await parseCSV(content)
@@ -145,7 +151,7 @@ export async function extractFromDocument(
         if (!csvResult.success || !csvResult.text) {
           return {
             success: false,
-            error: csvResult.error || 'Failed to parse CSV',
+            error: csvResult.error || "Failed to parse CSV",
             processingTime: Date.now() - startTime,
           }
         }
@@ -158,7 +164,7 @@ export async function extractFromDocument(
       default:
         return {
           success: false,
-          error: 'Unsupported file type',
+          error: "Unsupported file type",
           processingTime: Date.now() - startTime,
         }
     }
@@ -166,7 +172,7 @@ export async function extractFromDocument(
     if (!extractionInput) {
       return {
         success: false,
-        error: 'Failed to prepare extraction input',
+        error: "Failed to prepare extraction input",
         processingTime: Date.now() - startTime,
       }
     }
@@ -177,14 +183,16 @@ export async function extractFromDocument(
     if (!claudeResult.success || !claudeResult.data) {
       return {
         success: false,
-        error: claudeResult.error || 'Extraction failed',
+        error: claudeResult.error || "Extraction failed",
         processingTime: Date.now() - startTime,
       }
     }
 
     // Convert extracted data to ExtractedField format
     const fields: ExtractedField[] = Object.entries(claudeResult.data)
-      .filter(([, value]) => value !== null && value !== undefined && value !== '')
+      .filter(
+        ([, value]) => value !== null && value !== undefined && value !== ""
+      )
       .map(([key, value]) => ({
         key,
         value,
@@ -197,8 +205,8 @@ export async function extractFromDocument(
 
     const processingTime = Date.now() - startTime
 
-    logger.info('Document extraction completed', {
-      action: 'extract_document_success',
+    logger.info("Document extraction completed", {
+      action: "extract_document_success",
       stepId,
       fieldsExtracted: fields.length,
       confidence,
@@ -219,10 +227,10 @@ export async function extractFromDocument(
     const processingTime = Date.now() - startTime
 
     logger.error(
-      'Document extraction failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Document extraction failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'extract_document_error',
+        action: "extract_document_error",
         fileName: file.name,
         stepId,
         processingTime,
@@ -231,7 +239,7 @@ export async function extractFromDocument(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Extraction failed',
+      error: error instanceof Error ? error.message : "Extraction failed",
       processingTime,
     }
   }
@@ -245,36 +253,36 @@ export async function extractFromDocument(
 function determineConfidence(
   value: unknown,
   rawText?: string
-): 'high' | 'medium' | 'low' {
+): "high" | "medium" | "low" {
   // If we have raw text and can verify the value exists in it
-  if (rawText && typeof value === 'string') {
+  if (rawText && typeof value === "string") {
     if (rawText.includes(value)) {
-      return 'high'
+      return "high"
     }
-    return 'medium'
+    return "medium"
   }
 
   // For structured data (arrays, objects)
   if (Array.isArray(value) && value.length > 0) {
-    return 'high'
+    return "high"
   }
 
   // For numbers and booleans
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    return 'high'
+  if (typeof value === "number" || typeof value === "boolean") {
+    return "high"
   }
 
   // For short strings (likely extracted values)
-  if (typeof value === 'string' && value.length > 0 && value.length < 200) {
-    return 'high'
+  if (typeof value === "string" && value.length > 0 && value.length < 200) {
+    return "high"
   }
 
   // For longer text (descriptions, etc.)
-  if (typeof value === 'string' && value.length >= 200) {
-    return 'medium'
+  if (typeof value === "string" && value.length >= 200) {
+    return "medium"
   }
 
-  return 'low'
+  return "low"
 }
 
 /**
@@ -298,6 +306,6 @@ function calculateOverallConfidence(fields: ExtractedField[]): number {
 }
 
 // Re-export types and utilities
-export * from './types'
-export * from './schemas'
-export { validateFile, detectFileType } from './file-handlers'
+export * from "./types"
+export * from "./schemas"
+export { validateFile, detectFileType } from "./file-handlers"

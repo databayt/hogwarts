@@ -34,22 +34,27 @@
  * - Large uploads may timeout - use chunked upload for >100MB
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { getTenantContext } from "@/lib/tenant-context";
-import { put } from "@vercel/blob";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { logger } from "@/lib/logger";
-import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
-import { STORAGE_CONFIG, SIZE_LABELS } from "@/components/file";
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { put } from "@vercel/blob"
+
+import { logger } from "@/lib/logger"
+import { RATE_LIMITS, rateLimit } from "@/lib/rate-limit"
+import { getTenantContext } from "@/lib/tenant-context"
+import { SIZE_LABELS, STORAGE_CONFIG } from "@/components/file"
 
 // WHY LAZY INIT: S3 client only needed for large files
 // Avoids SDK initialization cost for most uploads
-let s3Client: S3Client | null = null;
+let s3Client: S3Client | null = null
 
 function getS3Client(): S3Client | null {
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_S3_BUCKET) {
-    return null;
+  if (
+    !process.env.AWS_ACCESS_KEY_ID ||
+    !process.env.AWS_SECRET_ACCESS_KEY ||
+    !process.env.AWS_S3_BUCKET
+  ) {
+    return null
   }
 
   if (!s3Client) {
@@ -59,14 +64,18 @@ function getS3Client(): S3Client | null {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       },
-    });
+    })
   }
-  return s3Client;
+  return s3Client
 }
 
 // Check if S3 is configured for large files
 function isS3Configured(): boolean {
-  return !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET);
+  return !!(
+    process.env.AWS_ACCESS_KEY_ID &&
+    process.env.AWS_SECRET_ACCESS_KEY &&
+    process.env.AWS_S3_BUCKET
+  )
 }
 
 /**
@@ -88,15 +97,10 @@ const MAX_FILE_SIZE = {
   video: STORAGE_CONFIG.getMaxSize("video"),
   material: STORAGE_CONFIG.getMaxSize("material"),
   image: STORAGE_CONFIG.getMaxSize("image"),
-};
+}
 
 const ALLOWED_TYPES = {
-  video: [
-    "video/mp4",
-    "video/webm",
-    "video/quicktime",
-    "video/x-msvideo",
-  ],
+  video: ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"],
   material: [
     "application/pdf",
     "application/msword",
@@ -115,30 +119,36 @@ const ALLOWED_TYPES = {
     "image/svg+xml",
     "image/webp",
   ],
-};
+}
 
-function getFileCategory(mimeType: string): "video" | "material" | "image" | null {
-  if (ALLOWED_TYPES.video.includes(mimeType)) return "video";
-  if (ALLOWED_TYPES.material.includes(mimeType)) return "material";
-  if (ALLOWED_TYPES.image.includes(mimeType)) return "image";
-  return null;
+function getFileCategory(
+  mimeType: string
+): "video" | "material" | "image" | null {
+  if (ALLOWED_TYPES.video.includes(mimeType)) return "video"
+  if (ALLOWED_TYPES.material.includes(mimeType)) return "material"
+  if (ALLOWED_TYPES.image.includes(mimeType)) return "image"
+  return null
 }
 
 export async function POST(request: NextRequest) {
   // Rate limiting
-  const rateLimitResult = await rateLimit(request, RATE_LIMITS.STREAM_UPLOAD, "stream-upload");
+  const rateLimitResult = await rateLimit(
+    request,
+    RATE_LIMITS.STREAM_UPLOAD,
+    "stream-upload"
+  )
   if (rateLimitResult) {
-    return rateLimitResult;
+    return rateLimitResult
   }
 
   try {
     // 1. Authentication
-    const session = await auth();
+    const session = await auth()
     if (!session?.user) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
-      );
+      )
     }
 
     // 2. Authorization - Only teachers and admins can upload
@@ -146,97 +156,99 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Insufficient permissions" },
         { status: 403 }
-      );
+      )
     }
 
     // 3. Multi-tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId && session.user.role !== "DEVELOPER") {
       return NextResponse.json(
         { error: "School context required" },
         { status: 400 }
-      );
+      )
     }
 
     // 4. Get file from form data
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
-    const fileType = formData.get("type") as string; // 'video' | 'material' | 'image'
+    const formData = await request.formData()
+    const file = formData.get("file") as File
+    const fileType = formData.get("type") as string // 'video' | 'material' | 'image'
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
     // 5. Validate file type
-    const category = getFileCategory(file.type);
+    const category = getFileCategory(file.type)
     if (!category) {
       return NextResponse.json(
         {
-          error: `Invalid file type: ${file.type}. Allowed types: videos (mp4, webm, mov, avi), materials (pdf, doc, ppt, xls, zip), images (jpg, png, gif, svg, webp)`
+          error: `Invalid file type: ${file.type}. Allowed types: videos (mp4, webm, mov, avi), materials (pdf, doc, ppt, xls, zip), images (jpg, png, gif, svg, webp)`,
         },
         { status: 400 }
-      );
+      )
     }
 
     // 6. Validate file size
-    const maxSize = MAX_FILE_SIZE[category];
+    const maxSize = MAX_FILE_SIZE[category]
     if (file.size > maxSize) {
-      const sizeLabel = SIZE_LABELS.getLabel(maxSize);
-      const fileSizeLabel = SIZE_LABELS.getLabel(file.size);
+      const sizeLabel = SIZE_LABELS.getLabel(maxSize)
+      const fileSizeLabel = SIZE_LABELS.getLabel(file.size)
 
       return NextResponse.json(
         {
           error: `File size (${fileSizeLabel}) exceeds limit. Maximum allowed: ${sizeLabel}`,
           maxSize: sizeLabel,
           fileSize: fileSizeLabel,
-          hint: category === "video" && file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video
-            ? "For videos larger than 500MB, please configure AWS S3 or Cloudflare R2 in your environment variables."
-            : undefined,
+          hint:
+            category === "video" &&
+            file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video
+              ? "For videos larger than 500MB, please configure AWS S3 or Cloudflare R2 in your environment variables."
+              : undefined,
         },
         { status: 400 }
-      );
+      )
     }
 
     // 7. Generate unique filename with school context
-    const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const key = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`;
+    const timestamp = Date.now()
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+    const key = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`
 
     // 8. Choose storage provider based on file size
-    const useS3 = category === "video" &&
-                  file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video &&
-                  isS3Configured();
+    const useS3 =
+      category === "video" &&
+      file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video &&
+      isS3Configured()
 
-    let uploadUrl: string;
-    let uploadPath: string;
-    let storageProvider: "vercel_blob" | "aws_s3";
+    let uploadUrl: string
+    let uploadPath: string
+    let storageProvider: "vercel_blob" | "aws_s3"
 
     if (useS3) {
       // Upload large videos to AWS S3
-      const client = getS3Client();
+      const client = getS3Client()
       if (!client) {
         return NextResponse.json(
           { error: "S3 not configured for large file uploads" },
           { status: 500 }
-        );
+        )
       }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
+      const buffer = Buffer.from(await file.arrayBuffer())
 
-      await client.send(new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET!,
-        Key: key,
-        Body: buffer,
-        ContentType: file.type,
-        ContentLength: file.size,
-      }));
+      await client.send(
+        new PutObjectCommand({
+          Bucket: process.env.AWS_S3_BUCKET!,
+          Key: key,
+          Body: buffer,
+          ContentType: file.type,
+          ContentLength: file.size,
+        })
+      )
 
-      uploadUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`;
-      uploadPath = key;
-      storageProvider = "aws_s3";
+      uploadUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`
+      uploadPath = key
+      storageProvider = "aws_s3"
 
       logger.info("S3 upload successful", {
         action: "s3_upload",
@@ -247,17 +259,17 @@ export async function POST(request: NextRequest) {
         type: file.type,
         category,
         url: uploadUrl,
-      });
+      })
     } else {
       // Upload to Vercel Blob (default for small files)
       const blob = await put(key, file, {
         access: "public",
         addRandomSuffix: true,
-      });
+      })
 
-      uploadUrl = blob.url;
-      uploadPath = blob.pathname;
-      storageProvider = "vercel_blob";
+      uploadUrl = blob.url
+      uploadPath = blob.pathname
+      storageProvider = "vercel_blob"
 
       logger.info("Blob upload successful", {
         action: "blob_upload",
@@ -268,7 +280,7 @@ export async function POST(request: NextRequest) {
         type: file.type,
         category,
         url: blob.url,
-      });
+      })
     }
 
     // 9. Return success response
@@ -284,7 +296,7 @@ export async function POST(request: NextRequest) {
         uploadedAt: new Date().toISOString(),
         uploadedBy: session.user.id,
       },
-    });
+    })
   } catch (error) {
     logger.error(
       "Blob upload failed",
@@ -292,12 +304,12 @@ export async function POST(request: NextRequest) {
       {
         action: "blob_upload_error",
       }
-    );
+    )
 
     return NextResponse.json(
       { error: "Failed to upload file. Please try again." },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -310,5 +322,5 @@ export async function OPTIONS(_request: NextRequest) {
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
-  });
+  })
 }

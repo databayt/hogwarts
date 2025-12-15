@@ -1,12 +1,11 @@
-"use client";
+"use client"
 
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
+import { signIn } from "next-auth/react"
 
-
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { Button } from "@/components/ui/button"
 
 // Function to clean Facebook URL hash
 const cleanUrlHash = () => {
@@ -15,36 +14,37 @@ const cleanUrlHash = () => {
     // Check if URL has the Facebook hash fragment
     if (window.location.hash === "#_=_") {
       // Clean the hash
-      const cleanUrl = window.location.href.replace(/#.*$/, "");
-      window.history.replaceState({}, document.title, cleanUrl);
+      const cleanUrl = window.location.href.replace(/#.*$/, "")
+      window.history.replaceState({}, document.title, cleanUrl)
     }
   }
-};
+}
 
 export const Social = () => {
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
-  const tenant = searchParams.get("tenant");
-  
-  console.log('🚀 Social component loaded on:', {
-    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
-    href: typeof window !== 'undefined' ? window.location.href : 'server'
-  });
-  
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl")
+  const tenant = searchParams.get("tenant")
+
+  console.log("🚀 Social component loaded on:", {
+    hostname:
+      typeof window !== "undefined" ? window.location.hostname : "server",
+    href: typeof window !== "undefined" ? window.location.href : "server",
+  })
+
   // Clean URL hash on component mount - this will handle Facebook redirects
   useEffect(() => {
-    cleanUrlHash();
-    
+    cleanUrlHash()
+
     // Debug: Log component mount
-    console.log('Social component mounted on:', {
+    console.log("Social component mounted on:", {
       hostname: window.location.hostname,
       pathname: window.location.pathname,
       href: window.location.href,
-      callbackUrl
-    });
-    
+      callbackUrl,
+    })
+
     // Additional debug info
-    console.log('Window location details:', {
+    console.log("Window location details:", {
       protocol: window.location.protocol,
       host: window.location.host,
       hostname: window.location.hostname,
@@ -52,237 +52,256 @@ export const Social = () => {
       pathname: window.location.pathname,
       search: window.location.search,
       hash: window.location.hash,
-      href: window.location.href
-    });
-    
+      href: window.location.href,
+    })
+
     // Test if we're in a subdomain context
-    const isSubdomain = window.location.hostname.includes('.localhost') && window.location.hostname !== 'localhost';
-    console.log('Subdomain detection:', {
+    const isSubdomain =
+      window.location.hostname.includes(".localhost") &&
+      window.location.hostname !== "localhost"
+    console.log("Subdomain detection:", {
       hostname: window.location.hostname,
       isSubdomain,
-      includesLocalhost: window.location.hostname.includes('.localhost'),
-      notLocalhost: window.location.hostname !== 'localhost'
-    });
-  }, []);
+      includesLocalhost: window.location.hostname.includes(".localhost"),
+      notLocalhost: window.location.hostname !== "localhost",
+    })
+  }, [])
 
   const onClick = async (provider: "google" | "facebook") => {
-    console.log('=====================================');
-    console.log(`🚀 OAuth ${provider.toUpperCase()} INITIATED`);
-    console.log('=====================================');
-    
+    console.log("=====================================")
+    console.log(`🚀 OAuth ${provider.toUpperCase()} INITIATED`)
+    console.log("=====================================")
+
     // Ensure we're on client side
-    if (typeof window === 'undefined') {
-      console.log('❌ onClick called on server side, aborting');
-      return;
+    if (typeof window === "undefined") {
+      console.log("❌ onClick called on server side, aborting")
+      return
     }
-    
+
     // Log current page state
-    console.log('📍 Current Page State:', {
+    console.log("📍 Current Page State:", {
       url: window.location.href,
       pathname: window.location.pathname,
       search: window.location.search,
-      searchParams: Object.fromEntries(new URLSearchParams(window.location.search).entries()),
+      searchParams: Object.fromEntries(
+        new URLSearchParams(window.location.search).entries()
+      ),
       callbackUrlFromParams: callbackUrl,
-      tenantFromParams: tenant
-    });
-    
+      tenantFromParams: tenant,
+    })
+
     // Check if we're on a subdomain
-    const currentHost = window.location.hostname;
-    const isProdSubdomain = currentHost.endsWith('.databayt.org') && currentHost !== 'ed.databayt.org';
-    const isDevSubdomain = currentHost.includes('.localhost') && currentHost !== 'localhost';
-    const isSubdomain = isProdSubdomain || isDevSubdomain;
-    
-    console.log('🔍 Host detection debug:', {
+    const currentHost = window.location.hostname
+    const isProdSubdomain =
+      currentHost.endsWith(".databayt.org") && currentHost !== "ed.databayt.org"
+    const isDevSubdomain =
+      currentHost.includes(".localhost") && currentHost !== "localhost"
+    const isSubdomain = isProdSubdomain || isDevSubdomain
+
+    console.log("🔍 Host detection debug:", {
       currentHost,
       isProdSubdomain,
       isDevSubdomain,
       isSubdomain,
-      endsWithDatabayt: currentHost.endsWith('.databayt.org'),
-      notEdDatabayt: currentHost !== 'ed.databayt.org'
-    });
-    
-    console.log('🚀 OAUTH FLOW INITIATED:', {
+      endsWithDatabayt: currentHost.endsWith(".databayt.org"),
+      notEdDatabayt: currentHost !== "ed.databayt.org",
+    })
+
+    console.log("🚀 OAUTH FLOW INITIATED:", {
       provider,
       currentHost,
       isSubdomain,
       callbackUrl,
       tenant,
-      currentUrl: window.location.href
-    });
-    
+      currentUrl: window.location.href,
+    })
+
     // Determine tenant - use subdomain detection or URL parameter
-    let tenantSubdomain = null;
-    
+    let tenantSubdomain = null
+
     if (isSubdomain) {
-      tenantSubdomain = currentHost.split('.')[0];
-      console.log('🎯 Tenant from subdomain detection:', tenantSubdomain);
+      tenantSubdomain = currentHost.split(".")[0]
+      console.log("🎯 Tenant from subdomain detection:", tenantSubdomain)
     } else if (tenant) {
-      tenantSubdomain = tenant;
-      console.log('🎯 Tenant from URL parameter:', tenantSubdomain);
+      tenantSubdomain = tenant
+      console.log("🎯 Tenant from URL parameter:", tenantSubdomain)
     }
-    
+
     // If we have a tenant (either from subdomain or parameter), use custom OAuth flow
     if (tenantSubdomain) {
       // Use appropriate URL based on environment
-      const dashboardUrl = process.env.NODE_ENV === 'production' 
-        ? `https://${tenantSubdomain}.databayt.org/dashboard`
-        : `http://${tenantSubdomain}.localhost:3000/dashboard`;
-      
-      console.log('🔗 TENANT OAUTH INITIATED:', { 
-        tenantSubdomain, 
+      const dashboardUrl =
+        process.env.NODE_ENV === "production"
+          ? `https://${tenantSubdomain}.databayt.org/dashboard`
+          : `http://${tenantSubdomain}.localhost:3000/dashboard`
+
+      console.log("🔗 TENANT OAUTH INITIATED:", {
+        tenantSubdomain,
         provider,
         dashboardUrl,
         currentHost,
         environment: process.env.NODE_ENV,
-        source: isSubdomain ? 'subdomain_detection' : 'url_parameter',
+        source: isSubdomain ? "subdomain_detection" : "url_parameter",
         isProdSubdomain,
-        isDevSubdomain
-      });
-      
+        isDevSubdomain,
+      })
+
       // Store tenant info for fallback
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        sessionStorage.setItem('oauth_tenant', tenantSubdomain);
-        sessionStorage.setItem('oauth_callback_url', dashboardUrl);
-        console.log('💾 Stored OAuth context:', { 
-          tenant: tenantSubdomain, 
-          callbackUrl: dashboardUrl 
-        });
+      if (typeof window !== "undefined" && window.sessionStorage) {
+        sessionStorage.setItem("oauth_tenant", tenantSubdomain)
+        sessionStorage.setItem("oauth_callback_url", dashboardUrl)
+        console.log("💾 Stored OAuth context:", {
+          tenant: tenantSubdomain,
+          callbackUrl: dashboardUrl,
+        })
       }
-      
+
       signIn(provider, {
         callbackUrl: `${dashboardUrl}?tenant=${tenantSubdomain}`,
-      });
-      return;
+      })
+      return
     }
-    
+
     // Default OAuth flow for main domain
     // IMPORTANT: Preserve the original callbackUrl from the login page
-    const finalCallbackUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT;
-    
-    console.log('\n🌐 MAIN DOMAIN OAUTH FLOW');
-    console.log('📊 OAuth Configuration:', {
+    const finalCallbackUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT
+
+    console.log("\n🌐 MAIN DOMAIN OAUTH FLOW")
+    console.log("📊 OAuth Configuration:", {
       provider,
       callbackUrl: finalCallbackUrl,
       originalCallbackUrl: callbackUrl,
       DEFAULT_LOGIN_REDIRECT,
       currentHost,
       searchParamsString: searchParams.toString(),
-      allSearchParams: Object.fromEntries(searchParams.entries())
-    });
-    
+      allSearchParams: Object.fromEntries(searchParams.entries()),
+    })
+
     // Store the callback URL server-side AND client-side
     if (callbackUrl) {
-      console.log('\n💾 STORING CALLBACK URL...');
-      
+      console.log("\n💾 STORING CALLBACK URL...")
+
       // Store server-side via API (most reliable)
       try {
-        console.log('📡 Calling store-callback API...');
-        const response = await fetch('/api/auth/store-callback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ callbackUrl })
-        });
-        
-        const responseData = await response.json();
-        console.log('📡 Store-callback API response:', {
+        console.log("📡 Calling store-callback API...")
+        const response = await fetch("/api/auth/store-callback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ callbackUrl }),
+        })
+
+        const responseData = await response.json()
+        console.log("📡 Store-callback API response:", {
           status: response.status,
           ok: response.ok,
           data: responseData,
           headers: {
-            'content-type': response.headers.get('content-type'),
-            'set-cookie': response.headers.get('set-cookie')
-          }
-        });
-        
+            "content-type": response.headers.get("content-type"),
+            "set-cookie": response.headers.get("set-cookie"),
+          },
+        })
+
         if (response.ok) {
-          console.log('✅ Callback URL stored server-side via API');
+          console.log("✅ Callback URL stored server-side via API")
         } else {
-          console.log('⚠️ Failed to store callback URL server-side:', responseData);
+          console.log(
+            "⚠️ Failed to store callback URL server-side:",
+            responseData
+          )
         }
       } catch (error) {
-        console.log('❌ Error calling store-callback API:', error);
-        console.log('Stack:', error instanceof Error ? error.stack : 'No stack');
+        console.log("❌ Error calling store-callback API:", error)
+        console.log("Stack:", error instanceof Error ? error.stack : "No stack")
       }
-      
+
       // Also store client-side as backup
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         // Store in session storage
         if (window.sessionStorage) {
-          sessionStorage.setItem('oauth_callback_intended', callbackUrl);
-          console.log('✅ Stored in session storage:', {
-            key: 'oauth_callback_intended',
+          sessionStorage.setItem("oauth_callback_intended", callbackUrl)
+          console.log("✅ Stored in session storage:", {
+            key: "oauth_callback_intended",
             value: callbackUrl,
-            verified: sessionStorage.getItem('oauth_callback_intended') === callbackUrl
-          });
+            verified:
+              sessionStorage.getItem("oauth_callback_intended") === callbackUrl,
+          })
         }
-        
+
         // Store as a cookie with proper domain settings
-        const cookieDomain = process.env.NODE_ENV === 'production' ? '.databayt.org' : '';
-        const cookieString = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax${cookieDomain ? `; Domain=${cookieDomain}` : ''}`;
-        document.cookie = cookieString;
-        console.log('🍪 Stored in client cookie:', {
-          key: 'oauth_callback_intended',
+        const cookieDomain =
+          process.env.NODE_ENV === "production" ? ".databayt.org" : ""
+        const cookieString = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax${cookieDomain ? `; Domain=${cookieDomain}` : ""}`
+        document.cookie = cookieString
+        console.log("🍪 Stored in client cookie:", {
+          key: "oauth_callback_intended",
           value: callbackUrl,
-          cookie: document.cookie.includes('oauth_callback_intended')
-        });
+          cookie: document.cookie.includes("oauth_callback_intended"),
+        })
       }
     } else {
-      console.log('⚠️ No callback URL to store');
+      console.log("⚠️ No callback URL to store")
     }
-    
-    console.log('\n🔐 CALLING NEXTAUTH SIGNIN...');
-    console.log('📋 Final configuration:', {
+
+    console.log("\n🔐 CALLING NEXTAUTH SIGNIN...")
+    console.log("📋 Final configuration:", {
       provider,
       callbackUrl: finalCallbackUrl,
       redirect: true,
-      timestamp: new Date().toISOString()
-    });
-    
+      timestamp: new Date().toISOString(),
+    })
+
     // Check all storage mechanisms right before redirect
-    console.log('🔍 Pre-redirect storage check:');
-    if (typeof window !== 'undefined') {
+    console.log("🔍 Pre-redirect storage check:")
+    if (typeof window !== "undefined") {
       // Check sessionStorage
-      console.log('  Session Storage:', {
-        oauth_callback_intended: sessionStorage.getItem('oauth_callback_intended'),
-        oauth_tenant: sessionStorage.getItem('oauth_tenant'),
-        oauth_callback_url: sessionStorage.getItem('oauth_callback_url')
-      });
-      
+      console.log("  Session Storage:", {
+        oauth_callback_intended: sessionStorage.getItem(
+          "oauth_callback_intended"
+        ),
+        oauth_tenant: sessionStorage.getItem("oauth_tenant"),
+        oauth_callback_url: sessionStorage.getItem("oauth_callback_url"),
+      })
+
       // Check cookies
-      console.log('  Document cookies:', document.cookie.split(';').filter(c => 
-        c.includes('oauth') || c.includes('callback')
-      ));
+      console.log(
+        "  Document cookies:",
+        document.cookie
+          .split(";")
+          .filter((c) => c.includes("oauth") || c.includes("callback"))
+      )
     }
-    
+
     // Try to ensure the callback URL is preserved
     // NextAuth might not properly pass callbackUrl through OAuth providers
     // So we'll try multiple approaches
-    
-    console.log('🚀 INITIATING OAUTH REDIRECT NOW...');
-    
+
+    console.log("🚀 INITIATING OAUTH REDIRECT NOW...")
+
     // Approach 1: Standard NextAuth way with explicit redirect parameter
     // Also try passing it as state for OAuth providers
     const signInOptions: any = {
       callbackUrl: finalCallbackUrl,
       redirect: true,
-    };
-    
-    // For OAuth providers, also try to use the state parameter
-    if (provider === 'google' || provider === 'facebook') {
-      // Add state parameter to preserve callback through OAuth flow
-      signInOptions.state = btoa(JSON.stringify({ 
-        callbackUrl: finalCallbackUrl,
-        timestamp: Date.now()
-      }));
-      console.log('📦 Added state parameter for OAuth:', signInOptions.state);
     }
-    
-    console.log('🎯 Final signIn options:', signInOptions);
-    
-    signIn(provider, signInOptions);
-    
-    console.log('✅ SignIn called - redirect should happen now');
-    
+
+    // For OAuth providers, also try to use the state parameter
+    if (provider === "google" || provider === "facebook") {
+      // Add state parameter to preserve callback through OAuth flow
+      signInOptions.state = btoa(
+        JSON.stringify({
+          callbackUrl: finalCallbackUrl,
+          timestamp: Date.now(),
+        })
+      )
+      console.log("📦 Added state parameter for OAuth:", signInOptions.state)
+    }
+
+    console.log("🎯 Final signIn options:", signInOptions)
+
+    signIn(provider, signInOptions)
+
+    console.log("✅ SignIn called - redirect should happen now")
+
     // Note: If the above doesn't work, we're also storing in cookie and sessionStorage
     // The redirect callback will check those as fallback
   }
@@ -302,8 +321,8 @@ export const Social = () => {
       >
         🐛 Debug Test Button
       </Button> */}
-      
-      <div className="grid md:gap-4 gap-3 grid-cols-2">
+
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
         <Button
           size="lg"
           className="w-full"
@@ -323,8 +342,8 @@ export const Social = () => {
           className="w-full"
           variant="outline"
           onClick={() => {
-            console.log('Facebook button clicked!');
-            onClick("facebook");
+            console.log("Facebook button clicked!")
+            onClick("facebook")
           }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -337,5 +356,5 @@ export const Social = () => {
         </Button>
       </div>
     </div>
-  );
-};
+  )
+}

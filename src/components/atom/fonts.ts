@@ -3,6 +3,7 @@ import {
   Geist as FontSans,
   Rubik,
 } from "next/font/google"
+
 import { cn } from "@/lib/utils"
 
 export const fontSans = FontSans({

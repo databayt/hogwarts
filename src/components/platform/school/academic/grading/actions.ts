@@ -1,18 +1,20 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { Decimal } from "@prisma/client/runtime/library"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
-import { Decimal } from "@prisma/client/runtime/library"
+
+import type { ScoreRangeDetail, ScoreRangeRow } from "./types"
 import {
+  getScoreRangesSchema,
   scoreRangeCreateSchema,
   scoreRangeUpdateSchema,
-  getScoreRangesSchema,
   type ScoreRangeCreateInput,
   type ScoreRangeUpdateInput,
 } from "./validation"
-import type { ScoreRangeRow, ScoreRangeDetail } from "./types"
 
 // ============================================================================
 // Types
@@ -46,7 +48,10 @@ export async function createScoreRange(
     })
 
     if (existingGrade) {
-      return { success: false, error: `Grade "${parsed.grade}" already exists in grading scale` }
+      return {
+        success: false,
+        error: `Grade "${parsed.grade}" already exists in grading scale`,
+      }
     }
 
     // Check for overlapping ranges
@@ -94,7 +99,8 @@ export async function createScoreRange(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create score range",
+      error:
+        error instanceof Error ? error.message : "Failed to create score range",
     }
   }
 }
@@ -129,7 +135,10 @@ export async function updateScoreRange(
       })
 
       if (duplicateGrade) {
-        return { success: false, error: `Grade "${rest.grade}" already exists in grading scale` }
+        return {
+          success: false,
+          error: `Grade "${rest.grade}" already exists in grading scale`,
+        }
       }
     }
 
@@ -158,8 +167,10 @@ export async function updateScoreRange(
     }
 
     const data: Record<string, unknown> = {}
-    if (typeof rest.minScore !== "undefined") data.minScore = new Decimal(rest.minScore)
-    if (typeof rest.maxScore !== "undefined") data.maxScore = new Decimal(rest.maxScore)
+    if (typeof rest.minScore !== "undefined")
+      data.minScore = new Decimal(rest.minScore)
+    if (typeof rest.maxScore !== "undefined")
+      data.maxScore = new Decimal(rest.maxScore)
     if (typeof rest.grade !== "undefined") data.grade = rest.grade
 
     await db.scoreRange.updateMany({ where: { id, schoolId }, data })
@@ -178,14 +189,15 @@ export async function updateScoreRange(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update score range",
+      error:
+        error instanceof Error ? error.message : "Failed to update score range",
     }
   }
 }
 
-export async function deleteScoreRange(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteScoreRange(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -220,7 +232,8 @@ export async function deleteScoreRange(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete score range",
+      error:
+        error instanceof Error ? error.message : "Failed to delete score range",
     }
   }
 }
@@ -229,9 +242,9 @@ export async function deleteScoreRange(
 // Queries
 // ============================================================================
 
-export async function getScoreRange(
-  input: { id: string }
-): Promise<ActionResponse<ScoreRangeDetail | null>> {
+export async function getScoreRange(input: {
+  id: string
+}): Promise<ActionResponse<ScoreRangeDetail | null>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -272,7 +285,8 @@ export async function getScoreRange(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch score range",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch score range",
     }
   }
 }
@@ -333,14 +347,17 @@ export async function getScoreRanges(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch score ranges",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch score ranges",
     }
   }
 }
 
 // Get all score ranges for dropdown/display
 export async function getScoreRangeOptions(): Promise<
-  ActionResponse<Array<{ id: string; minScore: number; maxScore: number; grade: string }>>
+  ActionResponse<
+    Array<{ id: string; minScore: number; maxScore: number; grade: string }>
+  >
 > {
   try {
     const { schoolId } = await getTenantContext()
@@ -373,7 +390,10 @@ export async function getScoreRangeOptions(): Promise<
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch score range options",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch score range options",
     }
   }
 }

@@ -1,9 +1,10 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { TriangleAlert, Check, ChevronRight, Eye } from "lucide-react"
 import Link from "next/link"
+import { Check, ChevronRight, Eye, TriangleAlert } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Card, CardContent } from "@/components/ui/card"
 
 const data = [
   {
@@ -31,13 +32,17 @@ const data = [
 
 export default function StatsStatus() {
   return (
-    <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
+    <dl className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {data.map((item) => (
-        <Card key={item.name} className="p-6 relative">
+        <Card key={item.name} className="relative p-6">
           <CardContent className="p-0">
-            <p className="text-sm font-medium text-muted-foreground">{item.name}</p>
-            <p className="text-3xl font-semibold text-foreground">{item.stat}</p>
-            <div className="group relative mt-6 flex items-center space-x-4 rounded-md bg-muted/60 p-2 hover:bg-muted">
+            <p className="text-muted-foreground text-sm font-medium">
+              {item.name}
+            </p>
+            <p className="text-foreground text-3xl font-semibold">
+              {item.stat}
+            </p>
+            <div className="group bg-muted/60 hover:bg-muted relative mt-6 flex items-center space-x-4 rounded-md p-2">
               <div className="flex w-full items-center justify-between truncate">
                 <div className="flex items-center space-x-3">
                   <span
@@ -55,11 +60,14 @@ export default function StatsStatus() {
                     ) : item.status === "observe" ? (
                       <Eye className="size-4 shrink-0" aria-hidden={true} />
                     ) : (
-                      <TriangleAlert className="size-4 shrink-0" aria-hidden={true} />
+                      <TriangleAlert
+                        className="size-4 shrink-0"
+                        aria-hidden={true}
+                      />
                     )}
                   </span>
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       <Link href={item.href} className="focus:outline-none">
                         <span className="absolute inset-0" aria-hidden={true} />
                         {item.goalsAchieved}/5 goals
@@ -80,7 +88,7 @@ export default function StatsStatus() {
                   </div>
                 </div>
                 <ChevronRight
-                  className="size-5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground"
+                  className="text-muted-foreground/60 group-hover:text-muted-foreground size-5 shrink-0"
                   aria-hidden={true}
                 />
               </div>

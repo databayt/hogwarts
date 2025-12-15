@@ -1,5 +1,6 @@
 "use client"
 
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 
 export interface UsageResource {
   name: string
@@ -42,14 +42,16 @@ export function DetailedUsageTable({
     else if (percentage >= 75) bgColor = "bg-orange-500"
 
     return (
-      <div className="flex items-center gap-2 min-w-[120px]">
-        <div className="h-2 flex-1 rounded-full bg-secondary">
+      <div className="flex min-w-[120px] items-center gap-2">
+        <div className="bg-secondary h-2 flex-1 rounded-full">
           <div
             className={cn("h-2 rounded-full transition-all", bgColor)}
             style={{ width: `${Math.max(0, Math.min(percentage, 100))}%` }}
           />
         </div>
-        <span className="text-xs font-medium tabular-nums w-10 text-end">{Math.round(percentage)}%</span>
+        <span className="w-10 text-end text-xs font-medium tabular-nums">
+          {Math.round(percentage)}%
+        </span>
       </div>
     )
   }
@@ -58,9 +60,11 @@ export function DetailedUsageTable({
     <div className={cn("w-full", className)}>
       <div className="mb-4">
         <h3 className="text-lg font-semibold">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="text-muted-foreground text-sm">{description}</p>
+        )}
       </div>
-      <div className="rounded-md border overflow-x-auto">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableCaption className="sr-only">
             Detailed usage of resources
@@ -68,9 +72,11 @@ export function DetailedUsageTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[180px] px-6">Resource</TableHead>
-              <TableHead className="text-end px-6">Used</TableHead>
-              <TableHead className="text-end px-6">Limit</TableHead>
-              <TableHead className="text-end min-w-[160px] px-6">Usage</TableHead>
+              <TableHead className="px-6 text-end">Used</TableHead>
+              <TableHead className="px-6 text-end">Limit</TableHead>
+              <TableHead className="min-w-[160px] px-6 text-end">
+                Usage
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -78,7 +84,7 @@ export function DetailedUsageTable({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="h-24 text-center text-muted-foreground"
+                  className="text-muted-foreground h-24 text-center"
                 >
                   No resources found
                 </TableCell>
@@ -95,18 +101,18 @@ export function DetailedUsageTable({
 
                 return (
                   <TableRow key={resource.name || index}>
-                    <TableCell className="font-medium px-6">
+                    <TableCell className="px-6 font-medium">
                       {resource.name}
                     </TableCell>
-                    <TableCell className="text-end tabular-nums px-6">
+                    <TableCell className="px-6 text-end tabular-nums">
                       {formatNumber(resource.used)}
                       {unit}
                     </TableCell>
-                    <TableCell className="text-end tabular-nums text-muted-foreground px-6">
+                    <TableCell className="text-muted-foreground px-6 text-end tabular-nums">
                       {formatNumber(resource.limit)}
                       {unit}
                     </TableCell>
-                    <TableCell className="text-end px-6">
+                    <TableCell className="px-6 text-end">
                       {getPercentageBar(percentage)}
                     </TableCell>
                   </TableRow>

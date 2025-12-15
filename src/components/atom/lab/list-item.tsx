@@ -1,7 +1,9 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import { IconWrapper } from "./icon-wrapper"
 import type { BaseComponentProps } from "./types"
 
@@ -56,7 +58,8 @@ export function ListItem({
     <div
       className={cn(
         "flex items-center gap-3 py-3",
-        isClickable && "cursor-pointer hover:bg-muted/50 -mx-3 px-3 rounded-lg transition-colors",
+        isClickable &&
+          "hover:bg-muted/50 -mx-3 cursor-pointer rounded-lg px-3 transition-colors",
         className
       )}
       onClick={onClick}
@@ -66,22 +69,14 @@ export function ListItem({
     >
       {icon && <IconWrapper icon={icon} size="sm" variant="muted" />}
 
-      <div className="flex-1 min-w-0 space-y-1">
-        <p className="text-sm font-medium leading-none truncate">
-          {title}
-        </p>
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="truncate text-sm leading-none font-medium">{title}</p>
         {subtitle && (
-          <p className="text-xs text-muted-foreground truncate">
-            {subtitle}
-          </p>
+          <p className="text-muted-foreground truncate text-xs">{subtitle}</p>
         )}
       </div>
 
-      {trailing && (
-        <div className="shrink-0">
-          {trailing}
-        </div>
-      )}
+      {trailing && <div className="shrink-0">{trailing}</div>}
     </div>
   )
 }

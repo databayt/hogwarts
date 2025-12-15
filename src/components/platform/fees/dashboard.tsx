@@ -1,23 +1,25 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
+  AlertCircle,
+  Clock,
+  GraduationCap,
   IndianRupee,
   Receipt,
-  Clock,
-  AlertCircle,
-  Users,
-  TrendingUp,
-  GraduationCap,
   RefreshCw,
-} from "lucide-react";
-import type { FeeStats } from "./types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+  TrendingUp,
+  Users,
+} from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { FeeStats } from "./types"
 
 interface Props {
-  stats: FeeStats;
-  dictionary?: Dictionary;
+  stats: FeeStats
+  dictionary?: Dictionary
 }
 
 export function FeeDashboard({ stats, dictionary }: Props) {
@@ -26,8 +28,8 @@ export function FeeDashboard({ stats, dictionary }: Props) {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
   const statsCards = [
     {
@@ -78,14 +80,14 @@ export function FeeDashboard({ stats, dictionary }: Props) {
       icon: RefreshCw,
       color: "text-cyan-500",
     },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => {
-          const Icon = stat.icon;
+          const Icon = stat.icon
           return (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -98,25 +100,24 @@ export function FeeDashboard({ stats, dictionary }: Props) {
                 <div className="text-2xl font-bold">{stat.value}</div>
               </CardContent>
             </Card>
-          );
+          )
         })}
       </div>
 
       {/* Collection Progress */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Collection Progress
-          </CardTitle>
+          <CardTitle>Collection Progress</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 Total Collected
               </span>
               <span className="text-sm font-medium">
-                {formatCurrency(stats.totalCollected)} / {formatCurrency(stats.totalDue)}
+                {formatCurrency(stats.totalCollected)} /{" "}
+                {formatCurrency(stats.totalDue)}
               </span>
             </div>
             <Progress value={stats.collectionRate} className="h-2" />
@@ -124,7 +125,7 @@ export function FeeDashboard({ stats, dictionary }: Props) {
 
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Fully Paid Students
               </p>
               <p className="text-2xl font-bold text-green-500">
@@ -132,9 +133,7 @@ export function FeeDashboard({ stats, dictionary }: Props) {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">
-                Current Month
-              </p>
+              <p className="text-muted-foreground text-sm">Current Month</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(stats.currentMonthCollection)}
               </p>
@@ -146,9 +145,7 @@ export function FeeDashboard({ stats, dictionary }: Props) {
       {/* Fee Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Fee Distribution
-          </CardTitle>
+          <CardTitle>Fee Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -169,29 +166,28 @@ export function FeeDashboard({ stats, dictionary }: Props) {
                 color: "bg-red-500",
               },
             ].map((item) => {
-              const percentage = stats.totalDue > 0
-                ? (item.value / stats.totalDue) * 100
-                : 0;
+              const percentage =
+                stats.totalDue > 0 ? (item.value / stats.totalDue) * 100 : 0
               return (
                 <div key={item.label} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{item.label}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       {formatCurrency(item.value)} ({percentage.toFixed(1)}%)
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
                       className={`h-full ${item.color} transition-all duration-300`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

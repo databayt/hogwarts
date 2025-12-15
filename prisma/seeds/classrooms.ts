@@ -16,8 +16,8 @@
  * - 4 Support Facilities (Clinic, Cafeteria, Meeting, Assembly)
  */
 
-import type { SeedPrisma, ClassroomRef } from "./types";
-import { CLASSROOMS } from "./constants";
+import { CLASSROOMS } from "./constants"
+import type { ClassroomRef, SeedPrisma } from "./types"
 
 // Bilingual classroom types - all types used in constants.ts
 const CLASSROOM_TYPES = [
@@ -46,16 +46,16 @@ const CLASSROOM_TYPES = [
   { en: "Clinic", ar: "عيادة" },
   { en: "Cafeteria", ar: "كافتيريا" },
   { en: "Assembly Hall", ar: "قاعة تجمعات" },
-];
+]
 
 export async function seedClassrooms(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<{ classrooms: ClassroomRef[] }> {
-  console.log("🏛️ Creating classrooms (55 rooms, Bilingual AR/EN)...");
+  console.log("🏛️ Creating classrooms (55 rooms, Bilingual AR/EN)...")
 
   // Upsert classroom types with bilingual names
-  const typeMap = new Map<string, string>();
+  const typeMap = new Map<string, string>()
 
   for (const type of CLASSROOM_TYPES) {
     const classroomType = await prisma.classroomType.upsert({
@@ -65,20 +65,20 @@ export async function seedClassrooms(
         schoolId,
         name: type.en,
       },
-    });
-    typeMap.set(type.en, classroomType.id);
+    })
+    typeMap.set(type.en, classroomType.id)
   }
 
-  console.log(`   ✅ Created: ${CLASSROOM_TYPES.length} classroom types`);
+  console.log(`   ✅ Created: ${CLASSROOM_TYPES.length} classroom types`)
 
   // Upsert classrooms from bilingual constants
-  const classrooms: ClassroomRef[] = [];
+  const classrooms: ClassroomRef[] = []
 
   for (const room of CLASSROOMS) {
-    const typeId = typeMap.get(room.typeEn);
+    const typeId = typeMap.get(room.typeEn)
     if (!typeId) {
-      console.warn(`   ⚠️ Type not found: ${room.typeEn}`);
-      continue;
+      console.warn(`   ⚠️ Type not found: ${room.typeEn}`)
+      continue
     }
 
     const classroom = await prisma.classroom.upsert({
@@ -93,29 +93,43 @@ export async function seedClassrooms(
         roomName: room.nameEn,
         capacity: room.capacity,
       },
-    });
-    classrooms.push({ id: classroom.id });
+    })
+    classrooms.push({ id: classroom.id })
   }
 
   // Count by type category
-  const kgCount = CLASSROOMS.filter(r => r.typeEn === "KG Classroom").length;
-  const standardCount = CLASSROOMS.filter(r => r.typeEn === "Standard Classroom").length;
-  const labCount = CLASSROOMS.filter(r => ["Laboratory", "Computer Lab"].includes(r.typeEn)).length;
-  const artsCount = CLASSROOMS.filter(r => ["Art Room", "Music Room", "Activity Hall"].includes(r.typeEn)).length;
-  const libraryCount = CLASSROOMS.filter(r => ["Library", "Reading Room", "Resource Room"].includes(r.typeEn)).length;
-  const sportsCount = CLASSROOMS.filter(r => ["Sports Hall", "Fitness Room", "Sports Field"].includes(r.typeEn)).length;
-  const adminCount = CLASSROOMS.filter(r => ["Administrative Office", "Staff Room", "Meeting Room"].includes(r.typeEn)).length;
-  const supportCount = CLASSROOMS.filter(r => ["Clinic", "Cafeteria", "Assembly Hall"].includes(r.typeEn)).length;
+  const kgCount = CLASSROOMS.filter((r) => r.typeEn === "KG Classroom").length
+  const standardCount = CLASSROOMS.filter(
+    (r) => r.typeEn === "Standard Classroom"
+  ).length
+  const labCount = CLASSROOMS.filter((r) =>
+    ["Laboratory", "Computer Lab"].includes(r.typeEn)
+  ).length
+  const artsCount = CLASSROOMS.filter((r) =>
+    ["Art Room", "Music Room", "Activity Hall"].includes(r.typeEn)
+  ).length
+  const libraryCount = CLASSROOMS.filter((r) =>
+    ["Library", "Reading Room", "Resource Room"].includes(r.typeEn)
+  ).length
+  const sportsCount = CLASSROOMS.filter((r) =>
+    ["Sports Hall", "Fitness Room", "Sports Field"].includes(r.typeEn)
+  ).length
+  const adminCount = CLASSROOMS.filter((r) =>
+    ["Administrative Office", "Staff Room", "Meeting Room"].includes(r.typeEn)
+  ).length
+  const supportCount = CLASSROOMS.filter((r) =>
+    ["Clinic", "Cafeteria", "Assembly Hall"].includes(r.typeEn)
+  ).length
 
-  console.log(`   ✅ Created: ${classrooms.length} classrooms`);
-  console.log(`      - KG Rooms: ${kgCount}`);
-  console.log(`      - Standard Classrooms: ${standardCount}`);
-  console.log(`      - Labs (Science + Computer): ${labCount}`);
-  console.log(`      - Arts & Activities: ${artsCount}`);
-  console.log(`      - Library & Resources: ${libraryCount}`);
-  console.log(`      - Sports Facilities: ${sportsCount}`);
-  console.log(`      - Admin & Staff: ${adminCount}`);
-  console.log(`      - Support Facilities: ${supportCount}\n`);
+  console.log(`   ✅ Created: ${classrooms.length} classrooms`)
+  console.log(`      - KG Rooms: ${kgCount}`)
+  console.log(`      - Standard Classrooms: ${standardCount}`)
+  console.log(`      - Labs (Science + Computer): ${labCount}`)
+  console.log(`      - Arts & Activities: ${artsCount}`)
+  console.log(`      - Library & Resources: ${libraryCount}`)
+  console.log(`      - Sports Facilities: ${sportsCount}`)
+  console.log(`      - Admin & Staff: ${adminCount}`)
+  console.log(`      - Support Facilities: ${supportCount}\n`)
 
-  return { classrooms };
+  return { classrooms }
 }

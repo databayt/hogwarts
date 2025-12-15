@@ -1,6 +1,6 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
+import { db } from "@/lib/db"
 
 /**
  * Fetches all published courses for a school filtered by language
@@ -8,9 +8,12 @@ import { db } from "@/lib/db";
  * @param schoolId - The school ID for multi-tenant filtering
  * @param lang - Language code ("en" or "ar") to filter courses by
  */
-export async function getAllCourses(schoolId: string | null, lang: string = "en") {
+export async function getAllCourses(
+  schoolId: string | null,
+  lang: string = "en"
+) {
   if (!schoolId) {
-    return [];
+    return []
   }
 
   const courses = await db.streamCourse.findMany({
@@ -46,9 +49,9 @@ export async function getAllCourses(schoolId: string | null, lang: string = "en"
         },
       },
     },
-  });
+  })
 
-  return courses;
+  return courses
 }
 
-export type PublicCourseType = Awaited<ReturnType<typeof getAllCourses>>[0];
+export type PublicCourseType = Awaited<ReturnType<typeof getAllCourses>>[0]

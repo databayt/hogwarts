@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonStats Component
@@ -45,7 +45,7 @@ export function SkeletonStats({
             <Skeleton className="h-4 w-4 rounded" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-7 w-32 mb-1" />
+            <Skeleton className="mb-1 h-7 w-32" />
             <Skeleton className="h-3 w-24" />
           </CardContent>
         </Card>

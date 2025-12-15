@@ -1,30 +1,43 @@
 "use client"
 
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
+  AlertCircle,
+  Beaker,
   BookOpen,
-  Star,
+  Calculator,
+  CheckCircle2,
+  Clock,
+  Dumbbell,
+  FileText,
+  Folder,
   GitFork,
-  Lock,
   Globe,
   GraduationCap,
+  Lock,
+  Music,
+  Palette,
+  Star,
   Trophy,
   Users,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Folder,
-  FileText,
-  Beaker,
-  Calculator,
-  Palette,
-  Music,
-  Dumbbell
 } from "lucide-react"
-import type { ProfileRole, PinnedItem } from "./types"
+
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import type { PinnedItem, ProfileRole } from "./types"
 
 interface PinnedItemsProps {
   role: ProfileRole
@@ -304,35 +317,40 @@ export default function PinnedItems({ role, data }: PinnedItemsProps) {
     <TooltipProvider>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Pinned</h2>
-          <button className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <h2 className="text-foreground text-base font-semibold">Pinned</h2>
+          <button className="text-muted-foreground hover:text-primary text-xs transition-colors">
             Customize your pins
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {items.map((item) => (
             <Card
               key={item.id}
-              className="group relative overflow-hidden border border-border bg-card hover:border-primary/50 transition-all duration-200 cursor-pointer"
+              className="group border-border bg-card hover:border-primary/50 relative cursor-pointer overflow-hidden border transition-all duration-200"
             >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`p-1.5 rounded-md border ${item.categoryColor}`}>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`rounded-md border p-1.5 ${item.categoryColor}`}
+                    >
                       {categoryIcons[item.category] || categoryIcons.default}
                     </span>
                     <div className="min-w-0">
-                      <CardTitle className="text-sm font-semibold text-primary hover:underline truncate">
+                      <CardTitle className="text-primary truncate text-sm font-semibold hover:underline">
                         {item.title}
                       </CardTitle>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex shrink-0 items-center gap-1">
                     {item.isPrivate ? (
                       <Tooltip>
                         <TooltipTrigger>
-                          <Badge variant="outline" className="h-5 px-1.5 text-[10px] gap-1">
+                          <Badge
+                            variant="outline"
+                            className="h-5 gap-1 px-1.5 text-[10px]"
+                          >
                             <Lock className="size-3" />
                             Private
                           </Badge>
@@ -342,7 +360,10 @@ export default function PinnedItems({ role, data }: PinnedItemsProps) {
                     ) : (
                       <Tooltip>
                         <TooltipTrigger>
-                          <Badge variant="secondary" className="h-5 px-1.5 text-[10px] gap-1">
+                          <Badge
+                            variant="secondary"
+                            className="h-5 gap-1 px-1.5 text-[10px]"
+                          >
                             <Globe className="size-3" />
                             Public
                           </Badge>
@@ -354,21 +375,23 @@ export default function PinnedItems({ role, data }: PinnedItemsProps) {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <CardDescription className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                <CardDescription className="text-muted-foreground mb-3 line-clamp-2 text-xs">
                   {item.description}
                 </CardDescription>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-4 text-xs">
                   {item.stats.map((stat, idx) => (
                     <div key={idx} className="flex items-center gap-1.5">
                       <span className="size-2 rounded-full bg-current opacity-60" />
                       <span>{stat.label}:</span>
-                      <span className="font-medium text-foreground">{stat.value}</span>
+                      <span className="text-foreground font-medium">
+                        {stat.value}
+                      </span>
                     </div>
                   ))}
                 </div>
               </CardContent>
               {/* Hover gradient effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="from-primary/0 via-primary/5 to-primary/0 pointer-events-none absolute inset-0 bg-gradient-to-r opacity-0 transition-opacity group-hover:opacity-100" />
             </Card>
           ))}
         </div>

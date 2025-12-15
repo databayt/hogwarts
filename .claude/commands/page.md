@@ -11,6 +11,7 @@ Create page at path: $1
 4. Invoke /agents/i18n to add translations
 
 Generate:
+
 - `app/[lang]/s/[subdomain]/(platform)/$1/page.tsx` - Page
 - `components/$1/content.tsx` - Component implementation
 

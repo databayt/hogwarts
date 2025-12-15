@@ -311,6 +311,7 @@ CREATE INDEX idx_geo_events_timestamp ON geo_attendance_events(timestamp DESC);
 **Purpose**: Fast distance calculation for circular geofences (< 1ms)
 
 **Formula**:
+
 ```
 a = sin²(Δφ/2) + cos φ₁ ⋅ cos φ₂ ⋅ sin²(Δλ/2)
 c = 2 ⋅ atan2(√a, √(1−a))
@@ -318,6 +319,7 @@ d = R ⋅ c
 ```
 
 Where:
+
 - φ = latitude in radians
 - λ = longitude in radians
 - R = Earth's radius (6,371 km)
@@ -342,6 +344,7 @@ for each active geofence:
 ```
 
 **Performance**:
+
 - Circular: < 1ms (JavaScript Haversine)
 - Polygon: 5-10ms (PostGIS with GiST index)
 - Total: < 50ms for 20 geofences
@@ -360,6 +363,7 @@ if event_type === 'ENTER'
 ```
 
 **Business Rules**:
+
 - **Window**: 7:00 AM - 9:00 AM only
 - **Cutoff**: 8:00 AM (PRESENT before, LATE after)
 - **Scope**: All classes student is enrolled in
@@ -371,32 +375,32 @@ if event_type === 'ENTER'
 
 ### Latency Targets
 
-| Operation | Target (p95) | Actual | Notes |
-|-----------|--------------|--------|-------|
-| Location submission | < 100ms | ~50ms | With spatial indexes |
-| Geofence check | < 50ms | ~30ms | For 20 geofences |
-| Live map load | < 2s | ~1.5s | 500 active students |
-| WebSocket latency | < 100ms | ~50ms | Event propagation |
-| Database query | < 20ms | ~10ms | With indexes |
+| Operation           | Target (p95) | Actual | Notes                |
+| ------------------- | ------------ | ------ | -------------------- |
+| Location submission | < 100ms      | ~50ms  | With spatial indexes |
+| Geofence check      | < 50ms       | ~30ms  | For 20 geofences     |
+| Live map load       | < 2s         | ~1.5s  | 500 active students  |
+| WebSocket latency   | < 100ms      | ~50ms  | Event propagation    |
+| Database query      | < 20ms       | ~10ms  | With indexes         |
 
 ### Scalability Limits
 
-| Metric | Limit | Notes |
-|--------|-------|-------|
-| **Concurrent students** | 10,000 | PostgreSQL connection pool (100 connections) |
-| **Location updates/sec** | 300 req/s | 10,000 students / 30s interval |
-| **Database queries/sec** | 600 queries/s | 2 queries per location update |
-| **WebSocket connections** | 1,000 | Vercel limitation (use polling fallback) |
-| **Storage growth** | 2 GB/month | 10,000 students × 1KB × 2,880 updates/day |
+| Metric                    | Limit         | Notes                                        |
+| ------------------------- | ------------- | -------------------------------------------- |
+| **Concurrent students**   | 10,000        | PostgreSQL connection pool (100 connections) |
+| **Location updates/sec**  | 300 req/s     | 10,000 students / 30s interval               |
+| **Database queries/sec**  | 600 queries/s | 2 queries per location update                |
+| **WebSocket connections** | 1,000         | Vercel limitation (use polling fallback)     |
+| **Storage growth**        | 2 GB/month    | 10,000 students × 1KB × 2,880 updates/day    |
 
 ### Index Size Comparison (10M rows)
 
-| Index Type | Size | Query Time |
-|------------|------|------------|
-| **No index** | 0 MB | 45 seconds |
-| **B-tree (timestamp)** | 500 MB | 250ms |
-| **BRIN (timestamp)** | 5 MB | 120ms |
-| **GiST (geometry)** | 200 MB | 8ms |
+| Index Type             | Size   | Query Time |
+| ---------------------- | ------ | ---------- |
+| **No index**           | 0 MB   | 45 seconds |
+| **B-tree (timestamp)** | 500 MB | 250ms      |
+| **BRIN (timestamp)**   | 5 MB   | 120ms      |
+| **GiST (geometry)**    | 200 MB | 8ms        |
 
 **Recommendation**: Use BRIN for timestamp queries (100x smaller than B-tree), GiST for spatial queries
 
@@ -417,12 +421,12 @@ if event_type === 'ENTER'
 
 ### Data Access Control
 
-| Role | Permissions |
-|------|-------------|
-| **STUDENT** | View own location history, enable/disable tracking |
-| **TEACHER** | View class attendance, cannot view live locations |
-| **ADMIN** | View live map, create geofences, view all events |
-| **DEVELOPER** | Full access to all schools (platform admin) |
+| Role          | Permissions                                        |
+| ------------- | -------------------------------------------------- |
+| **STUDENT**   | View own location history, enable/disable tracking |
+| **TEACHER**   | View class attendance, cannot view live locations  |
+| **ADMIN**     | View live map, create geofences, view all events   |
+| **DEVELOPER** | Full access to all schools (platform admin)        |
 
 ### Input Validation
 
@@ -432,7 +436,7 @@ const form = useForm({ resolver: zodResolver(locationSchema) })
 
 // Server-side (Security - NEVER trust client)
 const parsed = locationSchema.parse(input)
-if (parsed.lat < -90 || parsed.lat > 90) throw new Error('Invalid latitude')
+if (parsed.lat < -90 || parsed.lat > 90) throw new Error("Invalid latitude")
 ```
 
 **Defense in Depth**: Validate twice (client UX, server security)
@@ -460,11 +464,13 @@ Retry-After: 10
 ### Why PostgreSQL + PostGIS?
 
 **Alternatives Considered**:
+
 - ❌ MongoDB + GeoJSON: No spatial joins, limited query optimization
 - ❌ Redis + GeoHash: No persistence, limited spatial functions
 - ❌ Tile38: External dependency, overkill for simple geofencing
 
 **Decision**: PostgreSQL + PostGIS
+
 - ✅ Already using PostgreSQL (Neon)
 - ✅ PostGIS is industry standard for geospatial data
 - ✅ Spatial indexes (GiST) for fast queries
@@ -474,10 +480,12 @@ Retry-After: 10
 ### Why Haversine + PostGIS Hybrid?
 
 **Alternatives**:
+
 - ❌ PostGIS only: 10x slower for circular geofences
 - ❌ Haversine only: Cannot handle polygon geofences
 
 **Decision**: Hybrid approach
+
 - ✅ Haversine for circular (< 1ms, 99% of geofences)
 - ✅ PostGIS for polygon (5-10ms, complex shapes)
 - ✅ Best of both worlds
@@ -485,10 +493,12 @@ Retry-After: 10
 ### Why PWA vs. Native App?
 
 **Alternatives**:
+
 - ❌ React Native: 2x development cost, app store approval delays
 - ❌ iOS/Android native: 3x development cost
 
 **Decision**: PWA (browser-based)
+
 - ✅ Zero installation (just open URL)
 - ✅ Instant updates (no app store approval)
 - ✅ Single codebase for iOS/Android
@@ -497,10 +507,12 @@ Retry-After: 10
 ### Why Custom WebSocket vs. Pusher/Ably?
 
 **Alternatives**:
+
 - ❌ Pusher: $99/month for 10K concurrent connections
 - ❌ Ably: $79/month for 10K concurrent connections
 
 **Decision**: Custom WebSocket + Polling Fallback
+
 - ✅ PostgreSQL LISTEN/NOTIFY (zero cost)
 - ✅ Custom server.js (Node.js + ws library)
 - ✅ Polling fallback for Vercel (10s interval)
@@ -558,10 +570,10 @@ prisma/
 ```json
 {
   "dependencies": {
-    "ws": "^8.18.0",                  // WebSocket server
-    "pg": "^8.13.1",                  // PostgreSQL client (LISTEN/NOTIFY)
-    "leaflet": "^1.9.4",              // Mapping library
-    "react-leaflet": "^4.2.1"         // React wrapper for Leaflet
+    "ws": "^8.18.0", // WebSocket server
+    "pg": "^8.13.1", // PostgreSQL client (LISTEN/NOTIFY)
+    "leaflet": "^1.9.4", // Mapping library
+    "react-leaflet": "^4.2.1" // React wrapper for Leaflet
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",
@@ -578,20 +590,21 @@ prisma/
 
 ### Required APIs
 
-| API | Chrome | Safari | Firefox | Edge | Notes |
-|-----|--------|--------|---------|------|-------|
-| **Geolocation API** | 50+ | 10+ | 55+ | 79+ | Requires HTTPS |
-| **Battery API** | 38+ | ❌ | ❌ | 79+ | Optional fallback |
-| **IndexedDB** | 24+ | 10+ | 16+ | 79+ | For offline queue |
-| **WebSocket** | 43+ | 10+ | 48+ | 14+ | Polling fallback available |
-| **Service Worker** | 40+ | 11.1+ | 44+ | 17+ | For offline support |
+| API                 | Chrome | Safari | Firefox | Edge | Notes                      |
+| ------------------- | ------ | ------ | ------- | ---- | -------------------------- |
+| **Geolocation API** | 50+    | 10+    | 55+     | 79+  | Requires HTTPS             |
+| **Battery API**     | 38+    | ❌     | ❌      | 79+  | Optional fallback          |
+| **IndexedDB**       | 24+    | 10+    | 16+     | 79+  | For offline queue          |
+| **WebSocket**       | 43+    | 10+    | 48+     | 14+  | Polling fallback available |
+| **Service Worker**  | 40+    | 11.1+  | 44+     | 17+  | For offline support        |
 
 **Minimum Requirements**: Chrome 50+, Safari 11+, Firefox 55+, Edge 79+
 
 **Browser Detection**:
+
 ```typescript
 if (!navigator.geolocation) {
-  alert('Geolocation not supported. Please use Chrome/Safari/Firefox.')
+  alert("Geolocation not supported. Please use Chrome/Safari/Firefox.")
   return
 }
 ```
@@ -647,9 +660,9 @@ NODE_ENV=production
 
 ```typescript
 // Sentry custom metrics
-Sentry.metrics.increment('geo.location.submitted')
-Sentry.metrics.timing('geo.geofence.check.duration', duration)
-Sentry.metrics.gauge('geo.active_students', count)
+Sentry.metrics.increment("geo.location.submitted")
+Sentry.metrics.timing("geo.geofence.check.duration", duration)
+Sentry.metrics.gauge("geo.active_students", count)
 ```
 
 ### Error Tracking
@@ -681,13 +694,13 @@ ORDER BY mean_exec_time DESC;
 
 ### Alerts Configuration
 
-| Alert | Threshold | Action |
-|-------|-----------|--------|
-| **Error rate** | > 1% | PagerDuty → Engineering team |
-| **Latency (p95)** | > 200ms | Slack notification |
-| **Database CPU** | > 80% | Auto-scale Neon |
-| **Storage growth** | > 5 GB/day | Investigate data leak |
-| **WebSocket disconnects** | > 10/min | Check server health |
+| Alert                     | Threshold  | Action                       |
+| ------------------------- | ---------- | ---------------------------- |
+| **Error rate**            | > 1%       | PagerDuty → Engineering team |
+| **Latency (p95)**         | > 200ms    | Slack notification           |
+| **Database CPU**          | > 80%      | Auto-scale Neon              |
+| **Storage growth**        | > 5 GB/day | Investigate data leak        |
+| **WebSocket disconnects** | > 10/min   | Check server health          |
 
 ---
 

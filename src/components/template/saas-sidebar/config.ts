@@ -1,11 +1,11 @@
-type IconKey = keyof typeof import("./icons").Icons;
+type IconKey = keyof typeof import("./icons").Icons
 
 export type PlatformNavItem = {
-  title: string;
-  href: string;
-  icon: IconKey;
-  className?: string;
-};
+  title: string
+  href: string
+  icon: IconKey
+  className?: string
+}
 
 export const platformNav: PlatformNavItem[] = [
   // Operator navigation – accessible to all authenticated users
@@ -18,6 +18,4 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Observability", href: "/observability", icon: "barChart" },
   { title: "Tenants", href: "/tenants", icon: "envelope" },
   { title: "Profile", href: "/profile", icon: "cog" },
-];
-
-
+]

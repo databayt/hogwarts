@@ -3,10 +3,12 @@
 The Operator block provides platform-level SaaS management tools to manage schools (tenants), domains, billing, observability, and high-level product configuration across the multi-tenant system.
 
 **Architecture:** Operator (SaaS management) is separate from Platform (individual school management)
+
 - **Operator**: `src/components/operator/*` → `src/app/[lang]/(operator)/*` - Manages multiple schools
 - **Platform**: `src/components/platform/*` → `src/app/[lang]/s/[subdomain]/(platform)/*` - School-specific operations
 
 **Tech Stack:**
+
 - Next.js 15 App Router with React 19, TypeScript (strict mode)
 - Styling: Tailwind CSS 4 + shadcn/ui (New York style)
 - Database: PostgreSQL (Neon) with Prisma ORM
@@ -15,6 +17,7 @@ The Operator block provides platform-level SaaS management tools to manage schoo
 - Tables: @tanstack/react-table with server-side pagination
 
 **Security & Multi-Tenant:**
+
 - All queries scoped by tenant (no cross-tenant data leakage)
 - Operator role required for all routes
 - Audit logging for all operator actions
@@ -31,7 +34,9 @@ The Operator block provides platform-level SaaS management tools to manage schoo
 The operator dashboard leverages battle-tested components from the platform (school management) system:
 
 #### 1. **Data Tables** (`src/components/table/`)
+
 Generic, reusable table system with:
+
 - Server-side pagination, sorting, filtering
 - Column customization and pinning
 - Faceted filters and search
@@ -41,7 +46,9 @@ Generic, reusable table system with:
 **Used in:** Tenants, Invoices, Domains, Audit Logs, Receipts
 
 #### 2. **CSV Export** (`src/components/platform/*/export-button.tsx`)
+
 Standardized export pattern:
+
 - Server action generates CSV with applied filters
 - Browser-side download with auto-generated filename
 - Loading states and error handling
@@ -50,7 +57,9 @@ Standardized export pattern:
 **Pattern:** ExportButton → Server Action → CSV Generation → Download
 
 #### 3. **CSV Import** (`src/components/platform/import/csv-import.tsx`)
+
 Full bulk import workflow:
+
 - Drag-and-drop file upload
 - Template download for correct format
 - Row-by-row validation with detailed errors
@@ -60,7 +69,9 @@ Full bulk import workflow:
 **Ready to adapt for:** Bulk tenant operations, bulk plan changes
 
 #### 4. **File Upload** (`src/components/operator/file-uploader.tsx`)
+
 Production-ready file uploader:
+
 - Drag & drop with react-dropzone
 - Multiple file support
 - File preview (images)
@@ -70,7 +81,9 @@ Production-ready file uploader:
 **Used in:** Receipt uploads, document attachments
 
 #### 5. **Invoice System** (`src/components/invoice/`)
+
 Complete billing infrastructure:
+
 - Invoice table with filtering
 - Create/edit forms
 - Invoice dashboard with charts
@@ -92,6 +105,7 @@ Key primitives and compositions present:
 ### What “Operator” owns (from docs)
 
 Requirements and roadmap alignment extracted from:
+
 - `docs/requeriments/page.mdx`
 - `docs/roadmap/page.mdx`
 - `docs/arrangements/page.mdx`
@@ -107,6 +121,7 @@ Requirements and roadmap alignment extracted from:
 Status legend: [x] done, [~] in progress, [ ] todo
 
 ### ✅ What's Working Well
+
 - [x] Server Actions with proper "use server" directive
 - [x] Validation using Zod schemas
 - [x] Basic test coverage for critical features
@@ -117,6 +132,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ### Production-Ready Status ✅
 
 **✅ Core SaaS Features Implemented:**
+
 - [x] **Tenants Management** - Full CRUD with comprehensive stats (9 cards), plan distribution, growth tracking
 - [x] **Billing & Invoices** - Revenue tracking, payment rates, invoice management with stats (4 cards), CSV export
 - [x] **Receipts Management** - Full review workflow with approve/reject, stats dashboard (4 cards), server actions
@@ -132,12 +148,14 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [x] **CSV Exports** - Invoice exports with filter support, auto-generated filenames
 
 **✅ Recently Completed:**
+
 - [x] **Receipts Management** - Full table with approve/reject workflow, stats dashboard, route at `/operator/billing/receipts`
 - [x] **MRR Analytics** - Complete MRR calculation, 6-month trend chart, plan breakdown, route at `/operator/analytics`
 - [x] **Churn Analysis** - Churn rate calculation, at-risk school detection, dashboard cards with trend indicators
 - [x] **CSV Exports** - Invoice export with filter support, auto-generated filenames, 10k row limit
 
 **⚠️ Ready for Enhancement:**
+
 - [ ] **School Health Scoring** - Usage metrics available, needs health score algorithm
 - [ ] **Bulk Operations** - CSV import pattern ready, needs operator-specific workflows
 - [ ] **Notifications** - Toast system in place, needs real-time alert system
@@ -146,24 +164,26 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 ### Feature Implementation Matrix
 
-| Feature | Content | Table | Actions | Columns | Stats | API Routes | Status |
-|---------|---------|-------|---------|---------|-------|------------|--------|
-| **Tenants** | ✅ SSR | ✅ Paginated | ✅ Zod | ✅ Typed | ✅ 9 cards | ✅ 4 endpoints | 🟢 Production |
-| **Billing** | ✅ SSR | ✅ Invoices | ✅ Actions | ✅ Typed | ✅ 4 cards | ✅ CSV Export | 🟢 Production |
-| **Receipts** | ✅ SSR | ✅ Paginated | ✅ Review | ✅ Typed | ✅ 4 cards | ✅ Route | 🟢 Production |
-| **Analytics** | ✅ SSR | ✅ Tables | ✅ Metrics | ✅ Typed | ✅ 4 cards | ✅ MRR/Churn | 🟢 Production |
-| **Domains** | ✅ SSR | ✅ Paginated | ✅ Actions | ✅ Typed | ✅ 5 cards | N/A | 🟢 Production |
-| **Observability** | ✅ SSR | ✅ Logs | N/A | ✅ Typed | N/A | N/A | 🟢 Production |
-| **Dashboard** | ✅ SSR | N/A | ✅ Metrics | N/A | ✅ 7 cards | ✅ MRR/ARR/Churn | 🟢 Production |
-| **Profile** | ⚠️ Basic | N/A | ⚠️ Partial | N/A | N/A | N/A | 🔴 Demo |
-| **Kanban** | ⚠️ Demo | N/A | ⚠️ Client | N/A | N/A | N/A | 🔴 Demo |
+| Feature           | Content  | Table        | Actions    | Columns  | Stats      | API Routes       | Status        |
+| ----------------- | -------- | ------------ | ---------- | -------- | ---------- | ---------------- | ------------- |
+| **Tenants**       | ✅ SSR   | ✅ Paginated | ✅ Zod     | ✅ Typed | ✅ 9 cards | ✅ 4 endpoints   | 🟢 Production |
+| **Billing**       | ✅ SSR   | ✅ Invoices  | ✅ Actions | ✅ Typed | ✅ 4 cards | ✅ CSV Export    | 🟢 Production |
+| **Receipts**      | ✅ SSR   | ✅ Paginated | ✅ Review  | ✅ Typed | ✅ 4 cards | ✅ Route         | 🟢 Production |
+| **Analytics**     | ✅ SSR   | ✅ Tables    | ✅ Metrics | ✅ Typed | ✅ 4 cards | ✅ MRR/Churn     | 🟢 Production |
+| **Domains**       | ✅ SSR   | ✅ Paginated | ✅ Actions | ✅ Typed | ✅ 5 cards | N/A              | 🟢 Production |
+| **Observability** | ✅ SSR   | ✅ Logs      | N/A        | ✅ Typed | N/A        | N/A              | 🟢 Production |
+| **Dashboard**     | ✅ SSR   | N/A          | ✅ Metrics | N/A      | ✅ 7 cards | ✅ MRR/ARR/Churn | 🟢 Production |
+| **Profile**       | ⚠️ Basic | N/A          | ⚠️ Partial | N/A      | N/A        | N/A              | 🔴 Demo       |
+| **Kanban**        | ⚠️ Demo  | N/A          | ⚠️ Client  | N/A      | N/A        | N/A              | 🔴 Demo       |
 
 **Legend:**
+
 - 🟢 Production Ready
 - 🟡 Functional but needs enhancement
 - 🔴 Demo/incomplete
 
 **Architecture Notes:**
+
 - All data tables use server-side rendering (SSR) with pagination
 - Server actions follow "use server" directive with Zod validation
 - All queries respect tenant boundaries (no schoolId in operator context)
@@ -174,6 +194,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 The operator dashboard is production-ready for core tenant management. Next phases focus on advanced SaaS metrics and automation:
 
 ### ✅ Phase 1: Revenue & Financial Analytics 💰 [COMPLETED]
+
 - [x] MRR (Monthly Recurring Revenue) dashboard with 6-month trend chart
 - [x] MRR breakdown by plan tier (bar chart)
 - [x] Churn rate calculation and dashboard card
@@ -183,6 +204,7 @@ The operator dashboard is production-ready for core tenant management. Next phas
 - **Implementation:** `/operator/analytics` route, analytics/actions.ts with 5 server actions
 
 ### ✅ Phase 2: Complete Billing Features 📄 [MOSTLY COMPLETED]
+
 - [x] Receipts management with full table and review workflow
 - [x] Receipt approve/reject actions with audit logging
 - [x] CSV export for invoices with filter support
@@ -192,23 +214,27 @@ The operator dashboard is production-ready for core tenant management. Next phas
 - **Implementation:** `/operator/billing/receipts` route, receipts/actions.ts
 
 ### Phase 3: School Health & Engagement 📊
+
 - School health score calculation
 - Usage analytics per school
 - Engagement trends over time
 - **Reuses:** DataTable + StatsCards pattern
 
 ### Phase 4: Advanced Tenant Management 🔍
+
 - Growth tracking per school
 - Onboarding progress tracker
 - Bulk operations (CSV import for plan changes)
 - **Reuses:** CSV import workflow from platform
 
 ### Phase 5: Notifications & Alerts 🔔
+
 - Real-time alerts (trial expiring, payment failures)
 - Notification center with read/unread
 - **Reuses:** Toast + Badge components
 
 ### Phase 6: Reporting & Exports 📈
+
 - CSV export for all tables
 - Custom date range reports
 - Email delivery of reports
@@ -266,5 +292,3 @@ pnpm test
 - `src/app/(platform)/operator/actions/*` for server actions
 
 Refer to `ISSUE.md` for granular tasks and acceptance criteria.
-
-

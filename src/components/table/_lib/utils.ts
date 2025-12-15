@@ -1,4 +1,5 @@
-import { faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker"
+import type { Task, TaskLabel, TaskPriority, TaskStatus } from "@prisma/client"
 import {
   ArrowDownIcon,
   ArrowRightIcon,
@@ -8,26 +9,18 @@ import {
   CircleIcon,
   CircleX,
   Timer,
-} from "lucide-react";
-import { customAlphabet } from "nanoid";
-import type { Task, TaskStatus, TaskLabel, TaskPriority } from "@prisma/client";
-
-
+} from "lucide-react"
+import { customAlphabet } from "nanoid"
 
 export function generateRandomTask(): Omit<Task, "id"> {
-  const statusValues: TaskStatus[] = [
-    "todo",
-    "in_progress",
-    "done",
-    "canceled",
-  ];
+  const statusValues: TaskStatus[] = ["todo", "in_progress", "done", "canceled"]
   const labelValues: TaskLabel[] = [
     "bug",
     "feature",
     "enhancement",
     "documentation",
-  ];
-  const priorityValues: TaskPriority[] = ["low", "medium", "high"];
+  ]
+  const priorityValues: TaskPriority[] = ["low", "medium", "high"]
 
   return {
     code: `TASK-${customAlphabet("0123456789", 4)()}`,
@@ -42,7 +35,7 @@ export function generateRandomTask(): Omit<Task, "id"> {
     createdAt: new Date(),
     updatedAt: new Date(),
     schoolId: null,
-  };
+  }
 }
 
 export function getStatusIcon(status: Task["status"]) {
@@ -51,9 +44,9 @@ export function getStatusIcon(status: Task["status"]) {
     done: CheckCircle2,
     in_progress: Timer,
     todo: CircleHelp,
-  };
+  }
 
-  return statusIcons[status] || CircleIcon;
+  return statusIcons[status] || CircleIcon
 }
 
 export function getPriorityIcon(priority: Task["priority"]) {
@@ -61,7 +54,7 @@ export function getPriorityIcon(priority: Task["priority"]) {
     high: ArrowUpIcon,
     low: ArrowDownIcon,
     medium: ArrowRightIcon,
-  };
+  }
 
-  return priorityIcons[priority] || CircleIcon;
+  return priorityIcons[priority] || CircleIcon
 }

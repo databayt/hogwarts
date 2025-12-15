@@ -1,10 +1,17 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import { OAuthButton, type OAuthProvider } from "./oauth-button"
 
-const DEFAULT_PROVIDERS: OAuthProvider[] = ["github", "google", "apple", "paypal"]
+const DEFAULT_PROVIDERS: OAuthProvider[] = [
+  "github",
+  "google",
+  "apple",
+  "paypal",
+]
 
 export interface OAuthButtonGroupProps extends React.ComponentProps<"div"> {
   providers?: OAuthProvider[]

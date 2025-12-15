@@ -1,17 +1,22 @@
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import AnalyticsContent from '@/components/platform/attendance/analytics/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
+import { auth } from "@/auth"
 
-export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import AnalyticsContent from "@/components/platform/attendance/analytics/content"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: Locale }>
+}): Promise<Metadata> {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
-    title: dictionary?.school?.attendance?.analytics || 'Attendance Analytics',
-    description: 'View attendance trends, patterns, and insights',
+    title: dictionary?.school?.attendance?.analytics || "Attendance Analytics",
+    description: "View attendance trends, patterns, and insights",
   }
 }
 
@@ -28,9 +33,9 @@ export default async function Page({ params }: Props) {
   ])
 
   // Check permissions
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER') {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "TEACHER") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2>Access Denied</h2>
         <p className="text-muted-foreground">
           You do not have permission to access attendance analytics.

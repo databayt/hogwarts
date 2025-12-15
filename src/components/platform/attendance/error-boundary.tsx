@@ -1,64 +1,68 @@
-"use client";
+"use client"
 
-import React, { Component, ReactNode } from 'react';
-import { CircleAlert, RefreshCw } from "lucide-react";
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { Component, ReactNode } from "react"
+import { CircleAlert, RefreshCw } from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  children: ReactNode
+  fallback?: ReactNode
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
 
 interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+  hasError: boolean
+  error: Error | null
+  errorInfo: React.ErrorInfo | null
 }
 
-export class AttendanceErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class AttendanceErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
-    super(props);
+    super(props)
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
-    };
+      errorInfo: null,
+    }
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
       hasError: true,
       error,
-      errorInfo: null
-    };
+      errorInfo: null,
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Attendance Error Boundary caught error:', error, errorInfo);
+    console.error("Attendance Error Boundary caught error:", error, errorInfo)
 
     // Update state with error info
     this.setState({
       error,
-      errorInfo
-    });
+      errorInfo,
+    })
 
     // Call optional error handler
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      this.props.onError(error, errorInfo)
     }
 
     // Log to error tracking service (e.g., Sentry)
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
+    if (typeof window !== "undefined" && (window as any).Sentry) {
+      ;(window as any).Sentry.captureException(error, {
         contexts: {
           react: {
-            componentStack: errorInfo.componentStack
-          }
-        }
-      });
+            componentStack: errorInfo.componentStack,
+          },
+        },
+      })
     }
   }
 
@@ -66,24 +70,24 @@ export class AttendanceErrorBoundary extends Component<ErrorBoundaryProps, Error
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
-    });
-  };
+      errorInfo: null,
+    })
+  }
 
   render() {
     if (this.state.hasError) {
       // Use custom fallback if provided
       if (this.props.fallback) {
-        return <>{this.props.fallback}</>;
+        return <>{this.props.fallback}</>
       }
 
       // Default error UI
       return (
-        <div className="min-h-[400px] flex items-center justify-center">
+        <div className="flex min-h-[400px] items-center justify-center">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                <CircleAlert className="h-6 w-6 text-destructive" />
+              <div className="bg-destructive/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                <CircleAlert className="text-destructive h-6 w-6" />
               </div>
               <CardTitle className="text-xl">Something went wrong</CardTitle>
             </CardHeader>
@@ -92,21 +96,23 @@ export class AttendanceErrorBoundary extends Component<ErrorBoundaryProps, Error
                 <AlertTitle>Error Details</AlertTitle>
                 <AlertDescription className="mt-2">
                   <p className="font-mono text-xs">
-                    {this.state.error?.message || 'An unexpected error occurred'}
+                    {this.state.error?.message ||
+                      "An unexpected error occurred"}
                   </p>
                 </AlertDescription>
               </Alert>
 
-              {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                <details className="rounded-lg border p-3">
-                  <summary className="cursor-pointer text-sm font-medium">
-                    Component Stack (Development Only)
-                  </summary>
-                  <pre className="mt-2 overflow-x-auto text-xs">
-                    {this.state.errorInfo.componentStack}
-                  </pre>
-                </details>
-              )}
+              {process.env.NODE_ENV === "development" &&
+                this.state.errorInfo && (
+                  <details className="rounded-lg border p-3">
+                    <summary className="cursor-pointer text-sm font-medium">
+                      Component Stack (Development Only)
+                    </summary>
+                    <pre className="mt-2 overflow-x-auto text-xs">
+                      {this.state.errorInfo.componentStack}
+                    </pre>
+                  </details>
+                )}
 
               <div className="flex gap-3">
                 <Button
@@ -128,10 +134,10 @@ export class AttendanceErrorBoundary extends Component<ErrorBoundaryProps, Error
             </CardContent>
           </Card>
         </div>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
@@ -144,21 +150,21 @@ export function withAttendanceErrorBoundary<P extends object>(
     <AttendanceErrorBoundary fallback={fallback}>
       <Component {...props} />
     </AttendanceErrorBoundary>
-  );
+  )
 }
 
 // Hook for error handling (React 18+)
 export function useAttendanceErrorHandler() {
-  const [error, setError] = React.useState<Error | null>(null);
+  const [error, setError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
     if (error) {
-      throw error;
+      throw error
     }
-  }, [error]);
+  }, [error])
 
-  const resetError = () => setError(null);
-  const captureError = (error: Error) => setError(error);
+  const resetError = () => setError(null)
+  const captureError = (error: Error) => setError(error)
 
-  return { captureError, resetError };
+  return { captureError, resetError }
 }

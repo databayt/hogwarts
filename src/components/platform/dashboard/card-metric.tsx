@@ -65,12 +65,12 @@ export function CardsMetric() {
         <CardTitle className="text-base font-semibold">
           Exercise Minutes
         </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
+        <CardDescription className="text-muted-foreground text-sm">
           Your exercise minutes are ahead of where you normally are.
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
-        <ChartContainer config={chartConfig} className="w-full h-[200px]">
+        <ChartContainer config={chartConfig} className="h-[200px] w-full">
           <LineChart
             data={data}
             margin={{

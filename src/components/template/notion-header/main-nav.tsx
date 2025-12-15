@@ -1,14 +1,16 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
-import { MainNavItem } from "./types"
-import { siteConfig } from "./config"
+
 import { cn } from "@/lib/utils"
+
+import { siteConfig } from "./config"
 import { Icons } from "./icons"
 import { MobileNav } from "./mobile-nav"
-import Image from "next/image"
+import { MainNavItem } from "./types"
 
 interface MainNavProps {
   items?: MainNavItem[]
@@ -22,10 +24,14 @@ export function MainNav({ items, children }: MainNavProps) {
   return (
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center gap-2 md:flex">
-        <Image src="/logo.png" alt="Hogwarts Logo" width={20} height={20} className="dark:invert" />
-        <span className="hidden sm:inline-block  ">
-          {siteConfig.name}
-        </span>
+        <Image
+          src="/logo.png"
+          alt="Hogwarts Logo"
+          width={20}
+          height={20}
+          className="dark:invert"
+        />
+        <span className="hidden sm:inline-block">{siteConfig.name}</span>
       </Link>
       {items?.length ? (
         <nav className="hidden gap-6 md:flex">
@@ -34,7 +40,7 @@ export function MainNav({ items, children }: MainNavProps) {
               key={index}
               href={item.disabled ? "#" : item.href}
               className={cn(
-                "flex items-center transition-colors hover:text-foreground/80",
+                "hover:text-foreground/80 flex items-center transition-colors",
                 item.href.startsWith(`/${segment}`)
                   ? "text-foreground"
                   : "text-foreground/60",

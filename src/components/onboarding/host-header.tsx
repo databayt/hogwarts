@@ -1,11 +1,12 @@
-import React from 'react';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, Bookmark } from 'lucide-react';
+import React from "react"
+import Image from "next/image"
+import { Bookmark, HelpCircle } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 interface HostHeaderProps {
-  onHelp?: () => void;
-  onSave?: () => void;
+  onHelp?: () => void
+  onSave?: () => void
 }
 
 const HostHeader: React.FC<HostHeaderProps> = ({ onHelp, onSave }) => {
@@ -14,7 +15,7 @@ const HostHeader: React.FC<HostHeaderProps> = ({ onHelp, onSave }) => {
       <div className="flex items-center justify-between">
         {/* Left side - Tent icon */}
         <div className="flex items-center">
-          <div className="relative w-5 h-5">
+          <div className="relative h-5 w-5">
             <Image
               src="/site/tent.png"
               alt="Tent icon"
@@ -46,7 +47,7 @@ const HostHeader: React.FC<HostHeaderProps> = ({ onHelp, onSave }) => {
         </div>
       </div>
     </header>
-  );
-};
+  )
+}
 
-export default HostHeader;
+export default HostHeader

@@ -1,9 +1,10 @@
-"use client";
+"use client"
 
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Button } from "@/components/ui/button";
-import { Ellipsis, Eye } from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table"
+import { Ellipsis, Eye } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,102 +12,155 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useModal } from "@/components/atom/modal/context";
-import { Badge } from "@/components/ui/badge";
-import type { ExamTemplateRow } from "./types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/dropdown-menu"
+import { useModal } from "@/components/atom/modal/context"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
-export type { ExamTemplateRow };
+import type { ExamTemplateRow } from "./types"
 
-export const getTemplateColumns = (dictionary?: Dictionary): ColumnDef<ExamTemplateRow>[] => [
+export type { ExamTemplateRow }
+
+export const getTemplateColumns = (
+  dictionary?: Dictionary
+): ColumnDef<ExamTemplateRow>[] => [
   {
     accessorKey: "name",
     id: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.templateName || "Template Name"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.templateName || "Template Name"}
+      />
     ),
-    meta: { label: dictionary?.generate?.columns?.templateName || "Template Name", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.templateName || "Template Name",
+      variant: "text",
+    },
     enableColumnFilter: true,
   },
   {
     accessorKey: "subjectName",
     id: "subjectName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.subject || "Subject"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.subject || "Subject"}
+      />
     ),
-    meta: { label: dictionary?.generate?.columns?.subject || "Subject", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.subject || "Subject",
+      variant: "text",
+    },
     enableColumnFilter: true,
   },
   {
     accessorKey: "totalQuestions",
     id: "totalQuestions",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.questions || "Questions"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.questions || "Questions"}
+      />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums font-medium">
-        {getValue<number>()} {dictionary?.generate?.columns?.questionsUnit || "questions"}
+      <span className="text-xs font-medium tabular-nums">
+        {getValue<number>()}{" "}
+        {dictionary?.generate?.columns?.questionsUnit || "questions"}
       </span>
     ),
-    meta: { label: dictionary?.generate?.columns?.questions || "Questions", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.questions || "Questions",
+      variant: "text",
+    },
   },
   {
     accessorKey: "duration",
     id: "duration",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.duration || "Duration"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.duration || "Duration"}
+      />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums">{getValue<number>()} {dictionary?.generate?.columns?.durationUnit || "min"}</span>
+      <span className="text-xs tabular-nums">
+        {getValue<number>()}{" "}
+        {dictionary?.generate?.columns?.durationUnit || "min"}
+      </span>
     ),
-    meta: { label: dictionary?.generate?.columns?.duration || "Duration", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.duration || "Duration",
+      variant: "text",
+    },
   },
   {
     accessorKey: "totalMarks",
     id: "totalMarks",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.totalMarks || "Total Marks"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.totalMarks || "Total Marks"}
+      />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums font-medium">
+      <span className="text-xs font-medium tabular-nums">
         {getValue<number>()} {dictionary?.generate?.columns?.marksUnit || "pts"}
       </span>
     ),
-    meta: { label: dictionary?.generate?.columns?.totalMarks || "Total Marks", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.totalMarks || "Total Marks",
+      variant: "text",
+    },
   },
   {
     accessorKey: "timesUsed",
     id: "timesUsed",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.timesUsed || "Times Used"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.timesUsed || "Times Used"}
+      />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {getValue<number>()} {dictionary?.generate?.columns?.timesUnit || "times"}
+      <span className="text-muted-foreground text-xs tabular-nums">
+        {getValue<number>()}{" "}
+        {dictionary?.generate?.columns?.timesUnit || "times"}
       </span>
     ),
-    meta: { label: dictionary?.generate?.columns?.timesUsed || "Times Used", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.timesUsed || "Times Used",
+      variant: "text",
+    },
   },
   {
     accessorKey: "isActive",
     id: "isActive",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.status || "Status"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.status || "Status"}
+      />
     ),
     cell: ({ getValue }) => (
       <Badge variant={getValue<boolean>() ? "default" : "outline"}>
         {getValue<boolean>()
-          ? (dictionary?.generate?.columns?.active || "Active")
-          : (dictionary?.generate?.columns?.inactive || "Inactive")}
+          ? dictionary?.generate?.columns?.active || "Active"
+          : dictionary?.generate?.columns?.inactive || "Inactive"}
       </Badge>
     ),
     meta: {
       label: dictionary?.generate?.columns?.status || "Status",
       variant: "select",
       options: [
-        { label: dictionary?.generate?.columns?.active || "Active", value: "true" },
-        { label: dictionary?.generate?.columns?.inactive || "Inactive", value: "false" },
+        {
+          label: dictionary?.generate?.columns?.active || "Active",
+          value: "true",
+        },
+        {
+          label: dictionary?.generate?.columns?.inactive || "Inactive",
+          value: "false",
+        },
       ],
     },
     enableColumnFilter: true,
@@ -115,46 +169,60 @@ export const getTemplateColumns = (dictionary?: Dictionary): ColumnDef<ExamTempl
     accessorKey: "createdAt",
     id: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.created || "Created"} />
+      <DataTableColumnHeader
+        column={column}
+        title={dictionary?.generate?.columns?.created || "Created"}
+      />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground text-xs tabular-nums">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
-    meta: { label: dictionary?.generate?.columns?.created || "Created", variant: "text" },
+    meta: {
+      label: dictionary?.generate?.columns?.created || "Created",
+      variant: "text",
+    },
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">{dictionary?.generate?.columns?.actions || "Actions"}</span>,
+    header: () => (
+      <span className="sr-only">
+        {dictionary?.generate?.columns?.actions || "Actions"}
+      </span>
+    ),
     cell: ({ row }) => {
-      const template = row.original;
-      const { openModal } = useModal();
+      const template = row.original
+      const { openModal } = useModal()
 
       const onView = () => {
         const qs =
-          typeof window !== "undefined" ? window.location.search || "" : "";
-        window.location.href = `/generate/templates/${template.id}${qs}`;
-      };
+          typeof window !== "undefined" ? window.location.search || "" : ""
+        window.location.href = `/generate/templates/${template.id}${qs}`
+      }
 
-      const onEdit = () => openModal(template.id);
+      const onEdit = () => openModal(template.id)
 
       const onUseTemplate = () => {
         const qs =
-          typeof window !== "undefined" ? window.location.search || "" : "";
-        window.location.href = `/generate?templateId=${template.id}${qs}`;
-      };
+          typeof window !== "undefined" ? window.location.search || "" : ""
+        window.location.href = `/generate?templateId=${template.id}${qs}`
+      }
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <Ellipsis className="h-4 w-4" />
-              <span className="sr-only">{dictionary?.generate?.columns?.openMenu || "Open menu"}</span>
+              <span className="sr-only">
+                {dictionary?.generate?.columns?.openMenu || "Open menu"}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{dictionary?.generate?.columns?.actions || "Actions"}</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {dictionary?.generate?.columns?.actions || "Actions"}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>
               <Eye className="mr-2 h-4 w-4" />
@@ -168,9 +236,9 @@ export const getTemplateColumns = (dictionary?: Dictionary): ColumnDef<ExamTempl
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
     enableSorting: false,
     enableColumnFilter: false,
   },
-];
+]

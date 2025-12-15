@@ -2,8 +2,10 @@
 
 import * as React from "react"
 import { motion } from "motion/react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 import type { ActivityRingData, ActivityRingsProps } from "./types"
 
 function CircleProgress({
@@ -39,8 +41,14 @@ function CircleProgress({
         <title>{`${data.label} - ${data.value}%`}</title>
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: data.color, stopOpacity: 1 }} />
-            <stop offset="100%" style={{ stopColor: data.color, stopOpacity: 0.6 }} />
+            <stop
+              offset="0%"
+              style={{ stopColor: data.color, stopOpacity: 1 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: data.color, stopOpacity: 0.6 }}
+            />
           </linearGradient>
         </defs>
         <circle
@@ -71,7 +79,11 @@ function CircleProgress({
   )
 }
 
-export function ActivityRings({ activities, title, className }: ActivityRingsProps) {
+export function ActivityRings({
+  activities,
+  title,
+  className,
+}: ActivityRingsProps) {
   const sizes = [160, 130, 100]
 
   return (
@@ -102,12 +114,17 @@ export function ActivityRings({ activities, title, className }: ActivityRingsPro
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                   {activity.label}
                 </span>
-                <span className="text-lg font-semibold" style={{ color: activity.color }}>
+                <span
+                  className="text-lg font-semibold"
+                  style={{ color: activity.color }}
+                >
                   {activity.current}/{activity.target}
-                  <span className="ml-1 text-sm text-muted-foreground">{activity.unit}</span>
+                  <span className="text-muted-foreground ml-1 text-sm">
+                    {activity.unit}
+                  </span>
                 </span>
               </motion.div>
             ))}

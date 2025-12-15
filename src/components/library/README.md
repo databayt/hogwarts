@@ -45,6 +45,7 @@ cp database/library.prisma ../hogwarts/prisma/models/
 ```
 
 **Important Notes:**
+
 - The schema includes `Book` and `BorrowRecord` models with multi-tenant support via `schoolId`
 - It extends the `User` and `School` models with library relations
 - Review and adjust field names if your existing models differ
@@ -82,6 +83,7 @@ IMAGEKIT_URL_ENDPOINT=your_url_endpoint
 ## 🔗 Integration Checklist
 
 ### 1. Database Schema ✅
+
 - [ ] Copy `library.prisma` to `hogwarts/prisma/models/`
 - [ ] Review model relations with existing `User` and `School` models
 - [ ] Adjust `User` model extensions if fields already exist:
@@ -89,24 +91,22 @@ IMAGEKIT_URL_ENDPOINT=your_url_endpoint
 - [ ] Run `prisma generate && prisma db push`
 
 ### 2. Authentication Integration 🔐
+
 - [ ] Verify `@/auth` import works (uses your existing NextAuth setup)
 - [ ] Add role-based access control for admin routes
 - [ ] Update middleware to handle `/library/*` routes
 
 **Middleware Update** (`src/middleware.ts`):
+
 ```typescript
 // Add library routes to public or protected routes
-const libraryRoutes = [
-  '/library',
-  '/library/books/*',
-  '/library/my-profile',
-];
+const libraryRoutes = ["/library", "/library/books/*", "/library/my-profile"]
 
 const adminLibraryRoutes = [
-  '/library/admin',
-  '/library/admin/books',
-  '/library/admin/books/new',
-];
+  "/library/admin",
+  "/library/admin/books",
+  "/library/admin/books/new",
+]
 ```
 
 ### 3. Tenant Context Integration 🏫
@@ -114,6 +114,7 @@ const adminLibraryRoutes = [
 **Critical:** Replace all `"placeholder-school-id"` instances with actual tenant context.
 
 Files to update:
+
 - `components/library/content.tsx` (line 10)
 - `components/library/book-detail/content.tsx` (line 11)
 - `components/library/my-profile/content.tsx` (line 10)
@@ -122,17 +123,19 @@ Files to update:
 - `components/library/admin/books/book-form.tsx` (line 60)
 
 **Example using your tenant context:**
-```typescript
-// Before
-const schoolId = "placeholder-school-id";
 
+```typescript
 // After (adjust based on your implementation)
-import { getSchoolIdFromSession } from "@/lib/tenant-context";
-const schoolId = await getSchoolIdFromSession();
+import { getSchoolIdFromSession } from "@/lib/tenant-context"
+
+// Before
+const schoolId = "placeholder-school-id"
+
+const schoolId = await getSchoolIdFromSession()
 
 // Or if you have it in session
-const session = await auth();
-const schoolId = session?.user?.schoolId;
+const session = await auth()
+const schoolId = session?.user?.schoolId
 ```
 
 ### 4. File Upload Integration 📤
@@ -140,6 +143,7 @@ const schoolId = session?.user?.schoolId;
 The file upload component (`components/library/admin/books/file-upload.tsx`) is a **placeholder**.
 
 **Options:**
+
 1. **ImageKit** (current library uses this)
    - Create `/api/library/upload` endpoint
    - Use ImageKit SDK
@@ -152,15 +156,16 @@ The file upload component (`components/library/admin/books/file-upload.tsx`) is 
    - Implement your preferred service
 
 **Example API Route** (ImageKit):
+
 ```typescript
 // app/api/library/upload/route.ts
-import ImageKit from "imagekit";
+import ImageKit from "imagekit"
 
 const imagekit = new ImageKit({
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
-});
+})
 
 export async function POST(req: Request) {
   // Implementation here
@@ -172,6 +177,7 @@ export async function POST(req: Request) {
 Create dictionary files for library content:
 
 **`src/components/internationalization/dictionaries/en/library.json`:**
+
 ```json
 {
   "library": {
@@ -194,6 +200,7 @@ Create dictionary files for library content:
 ```
 
 **`src/components/internationalization/dictionaries/ar/library.json`:**
+
 ```json
 {
   "library": {
@@ -216,6 +223,7 @@ Create dictionary files for library content:
 ```
 
 **Update pages to use dictionaries:**
+
 ```typescript
 // app/[lang]/library/page.tsx
 import { getDictionary } from "@/components/internationalization/dictionaries";
@@ -245,6 +253,7 @@ export default async function Library({ params }: Props) {
 The library uses custom CSS classes. Add these to your stylesheets:
 
 **Option A:** Create `src/styles/library.css`:
+
 ```css
 /* Book Cards */
 .book-list {
@@ -276,19 +285,21 @@ The library uses custom CSS classes. Add these to your stylesheets:
   padding: 1.5rem;
   border-radius: 0.5rem;
   background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* More styles... */
 ```
 
 **Option B:** Use Tailwind utility classes (recommended)
+
 - Review components and replace custom classes with Tailwind utilities
 - Update the existing class names to match your design system
 
 ### 7. Fonts (Optional) 📝
 
 The original library uses custom fonts:
+
 - **IBM Plex Sans** (body text)
 - **Bebas Neue** (headings)
 
@@ -296,12 +307,12 @@ If you want to maintain the original look:
 
 ```typescript
 // app/layout.tsx or library layout
-import localFont from "next/font/local";
+import localFont from "next/font/local"
 
 const bebasNeue = localFont({
   src: "/fonts/BebasNeue-Regular.ttf",
   variable: "--font-bebas-neue",
-});
+})
 ```
 
 Or use your existing font setup - the library will adapt.
@@ -311,6 +322,7 @@ Or use your existing font setup - the library will adapt.
 Add library links to your navigation:
 
 **Main Navigation:**
+
 ```typescript
 const mainNavItems = [
   // ... existing items
@@ -319,10 +331,11 @@ const mainNavItems = [
     href: "/library",
     icon: BookOpen,
   },
-];
+]
 ```
 
 **User Menu:**
+
 ```typescript
 const userMenuItems = [
   // ... existing items
@@ -331,10 +344,11 @@ const userMenuItems = [
     href: "/library/my-profile",
     icon: BookMarked,
   },
-];
+]
 ```
 
 **Admin Sidebar:**
+
 ```typescript
 const adminMenuItems = [
   // ... existing items
@@ -347,7 +361,7 @@ const adminMenuItems = [
       { title: "Add Book", href: "/library/admin/books/new" },
     ],
   },
-];
+]
 ```
 
 ### 9. Permissions & Roles 🔒
@@ -361,24 +375,25 @@ export const LibraryPermissions = {
   BORROW_BOOKS: "library:borrow",
   ADMIN_BOOKS: "library:admin",
   MANAGE_BORROWS: "library:manage_borrows",
-};
+}
 
 // Protect admin routes
 export function canAccessLibraryAdmin(user: User) {
-  return user.role === "ADMIN" || user.role === "LIBRARIAN";
+  return user.role === "ADMIN" || user.role === "LIBRARIAN"
 }
 ```
 
 **Update admin pages:**
+
 ```typescript
 // app/[lang]/library/admin/page.tsx
-import { canAccessLibraryAdmin } from "@/lib/permissions";
+import { canAccessLibraryAdmin } from "@/lib/permissions"
 
 export default async function LibraryAdmin() {
-  const session = await auth();
+  const session = await auth()
 
   if (!session?.user || !canAccessLibraryAdmin(session.user)) {
-    redirect("/library");
+    redirect("/library")
   }
 
   // ... rest of component
@@ -403,23 +418,25 @@ export default async function LibraryAdmin() {
 ## 📚 Usage Examples
 
 ### Borrowing a Book
+
 ```typescript
-import { borrowBook } from "@/components/library/actions";
+import { borrowBook } from "@/components/library/actions"
 
 const result = await borrowBook({
   bookId: "book-id",
   userId: session.user.id,
   schoolId: schoolId,
-});
+})
 
 if (result.success) {
-  toast.success(result.message);
+  toast.success(result.message)
 }
 ```
 
 ### Creating a Book (Admin)
+
 ```typescript
-import { createBook } from "@/components/library/actions";
+import { createBook } from "@/components/library/actions"
 
 const result = await createBook({
   title: "The Great Gatsby",
@@ -432,7 +449,7 @@ const result = await createBook({
   totalCopies: 5,
   summary: "...",
   schoolId: schoolId,
-});
+})
 ```
 
 ## 🔄 Migration & Seeding
@@ -441,7 +458,7 @@ Create a seed file to populate initial books:
 
 ```typescript
 // prisma/generator/seed-library.ts
-import { db } from "@/lib/db";
+import { db } from "@/lib/db"
 
 export async function seedLibrary(schoolId: string) {
   const books = [
@@ -453,47 +470,54 @@ export async function seedLibrary(schoolId: string) {
       // ... more fields
     },
     // ... more books
-  ];
+  ]
 
   await db.book.createMany({
-    data: books.map(book => ({
+    data: books.map((book) => ({
       ...book,
       schoolId,
     })),
-  });
+  })
 }
 ```
 
 ## 🐛 Troubleshooting
 
 ### Issue: "Cannot find module '@/lib/db'"
+
 **Solution:** Ensure your `lib/db.ts` exports the Prisma client correctly:
+
 ```typescript
 // lib/db.ts
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
-export const db = globalForPrisma.prisma || new PrismaClient();
+export const db = globalForPrisma.prisma || new PrismaClient()
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db
 ```
 
 ### Issue: "Prisma model not found"
+
 **Solution:** Run `pnpm prisma generate` after adding library.prisma
 
 ### Issue: "schoolId is undefined"
+
 **Solution:** Implement tenant context properly. See Step 3 above.
 
 ### Issue: File upload not working
+
 **Solution:** Implement your file upload logic in `file-upload.tsx`. See Step 4.
 
 ### Issue: Styles not applying
+
 **Solution:** Add library styles to your global CSS or convert to Tailwind classes.
 
 ## 📞 Support
 
 For issues related to:
+
 - **Architecture questions**: Review `.claude/agents/architect.md`
 - **Prisma setup**: Check `hogwarts/prisma/README.md`
 - **i18n setup**: Check `hogwarts/src/components/internationalization/`
@@ -501,6 +525,7 @@ For issues related to:
 ## 🚀 Next Steps
 
 After integration:
+
 1. Test all library routes
 2. Add library-specific analytics
 3. Implement email notifications for overdue books

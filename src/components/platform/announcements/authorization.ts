@@ -3,9 +3,15 @@
  * Implements role-based access control (RBAC) for announcement operations
  */
 
-import { UserRole } from '@prisma/client'
+import { UserRole } from "@prisma/client"
 
-export type AnnouncementAction = 'create' | 'read' | 'update' | 'delete' | 'publish' | 'bulk_action'
+export type AnnouncementAction =
+  | "create"
+  | "read"
+  | "update"
+  | "delete"
+  | "publish"
+  | "bulk_action"
 
 export interface AuthContext {
   userId: string
@@ -17,7 +23,7 @@ export interface AnnouncementContext {
   id?: string
   createdBy?: string | null
   schoolId?: string
-  scope?: 'school' | 'class' | 'role'
+  scope?: "school" | "class" | "role"
 }
 
 /**
@@ -35,48 +41,50 @@ export function checkAnnouncementPermission(
   const { role, userId, schoolId } = auth
 
   // DEVELOPER role has full access
-  if (role === 'DEVELOPER') {
+  if (role === "DEVELOPER") {
     return true
   }
 
   // All authenticated users can read announcements in their school
-  if (action === 'read') {
+  if (action === "read") {
     if (!schoolId || !announcement?.schoolId) return false
     return schoolId === announcement.schoolId
   }
 
   // ADMIN has full access within their school
-  if (role === 'ADMIN') {
+  if (role === "ADMIN") {
     if (!schoolId || !announcement?.schoolId) return true // For create
     return schoolId === announcement.schoolId
   }
 
   // TEACHER can create and manage their own announcements
-  if (role === 'TEACHER') {
-    if (action === 'create') {
+  if (role === "TEACHER") {
+    if (action === "create") {
       // Teachers can only create CLASS-scoped announcements
-      return announcement?.scope === 'class'
+      return announcement?.scope === "class"
     }
 
-    if (action === 'update' || action === 'delete' || action === 'publish') {
+    if (action === "update" || action === "delete" || action === "publish") {
       // Teachers can only edit/delete their own announcements
       if (!announcement?.createdBy) return false
-      return announcement.createdBy === userId && schoolId === announcement.schoolId
+      return (
+        announcement.createdBy === userId && schoolId === announcement.schoolId
+      )
     }
 
     // Teachers cannot perform bulk actions
-    if (action === 'bulk_action') {
+    if (action === "bulk_action") {
       return false
     }
   }
 
   // ACCOUNTANT and STAFF can read (handled above) but not modify
-  if (role === 'ACCOUNTANT' || role === 'STAFF') {
+  if (role === "ACCOUNTANT" || role === "STAFF") {
     return false // Read already handled, deny all other actions
   }
 
   // STUDENT, GUARDIAN, and USER roles are read-only (handled above)
-  if (role === 'STUDENT' || role === 'GUARDIAN' || role === 'USER') {
+  if (role === "STUDENT" || role === "GUARDIAN" || role === "USER") {
     return false // Read already handled, deny all other actions
   }
 
@@ -99,7 +107,7 @@ export function assertAnnouncementPermission(
   if (!checkAnnouncementPermission(auth, action, announcement)) {
     throw new Error(
       `Unauthorized: ${auth.role} cannot perform ${action} on announcement${
-        announcement?.id ? ` ${announcement.id}` : ''
+        announcement?.id ? ` ${announcement.id}` : ""
       }`
     )
   }
@@ -126,7 +134,7 @@ export function getAuthContext(session: any): AuthContext | null {
  * @returns true if user can create school-wide announcements
  */
 export function canCreateSchoolAnnouncement(role: UserRole): boolean {
-  return role === 'DEVELOPER' || role === 'ADMIN'
+  return role === "DEVELOPER" || role === "ADMIN"
 }
 
 /**
@@ -135,7 +143,7 @@ export function canCreateSchoolAnnouncement(role: UserRole): boolean {
  * @returns true if user can create class-scoped announcements
  */
 export function canCreateClassAnnouncement(role: UserRole): boolean {
-  return role === 'DEVELOPER' || role === 'ADMIN' || role === 'TEACHER'
+  return role === "DEVELOPER" || role === "ADMIN" || role === "TEACHER"
 }
 
 /**
@@ -144,7 +152,7 @@ export function canCreateClassAnnouncement(role: UserRole): boolean {
  * @returns true if user can create role-scoped announcements
  */
 export function canCreateRoleAnnouncement(role: UserRole): boolean {
-  return role === 'DEVELOPER' || role === 'ADMIN'
+  return role === "DEVELOPER" || role === "ADMIN"
 }
 
 /**
@@ -152,13 +160,15 @@ export function canCreateRoleAnnouncement(role: UserRole): boolean {
  * @param role - User role
  * @returns Array of allowed announcement scopes
  */
-export function getAllowedScopes(role: UserRole): ('school' | 'class' | 'role')[] {
+export function getAllowedScopes(
+  role: UserRole
+): ("school" | "class" | "role")[] {
   switch (role) {
-    case 'DEVELOPER':
-    case 'ADMIN':
-      return ['school', 'class', 'role']
-    case 'TEACHER':
-      return ['class']
+    case "DEVELOPER":
+    case "ADMIN":
+      return ["school", "class", "role"]
+    case "TEACHER":
+      return ["class"]
     default:
       return []
   }
@@ -172,7 +182,7 @@ export function getAllowedScopes(role: UserRole): ('school' | 'class' | 'role')[
  */
 export function validateAnnouncementScope(
   auth: AuthContext,
-  scope: 'school' | 'class' | 'role'
+  scope: "school" | "class" | "role"
 ): void {
   const allowedScopes = getAllowedScopes(auth.role)
 

@@ -11,6 +11,7 @@ Track production readiness and enhancements for the Attendance feature.
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] Daily attendance marking (present/absent/late)
 - [x] Class roster view with attendance status
 - [x] Bulk marking for entire class
@@ -26,6 +27,7 @@ Track production readiness and enhancements for the Attendance feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Mark daily attendance for classes
 - [x] View class roster for attendance marking
 - [x] Update attendance status (upsert)
@@ -38,6 +40,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [x] Filter by status (present/absent/late)
 
 ### Role-Based Access
+
 - [x] Admin can mark and view all attendance
 - [x] Teacher can mark attendance for their classes
 - [x] Teacher can view attendance for their classes
@@ -46,6 +49,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Staff can view attendance reports (read-only)
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Unique constraint prevents duplicate records per day
 - [x] Validation on all inputs (client + server)
@@ -60,6 +64,7 @@ Track production readiness and enhancements for the Attendance feature.
 ### Critical Issues (Priority 1) 🔴
 
 **Absence Reason Codes**
+
 - [ ] Add `reason` field to Attendance model (enum or text)
 - [ ] Reason options: Medical, Family Emergency, School Activity, Religious, Unexcused
 - [ ] Differentiate excused vs. unexcused absences
@@ -68,6 +73,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Compliance reporting with absence types
 
 **Attendance Percentage Calculation**
+
 - [ ] Calculate attendance % per student (present days / total school days)
 - [ ] Calculate attendance % per class (average of all students)
 - [ ] Display on student profile
@@ -76,6 +82,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Year-to-date vs. term-based calculations
 
 **Period-by-Period Tracking**
+
 - [ ] Add `periodId` field to Attendance model
 - [ ] Integrate with Timetable to auto-select current period
 - [ ] Mark attendance per subject/period (secondary school use case)
@@ -83,6 +90,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] More granular tracking for compliance
 
 **Parent Notifications**
+
 - [ ] Automated absence notifications via email
 - [ ] SMS alerts for unexcused absences
 - [ ] Daily attendance summary to parents
@@ -90,6 +98,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Notification history tracking
 
 **Monthly Reports**
+
 - [ ] Generate monthly attendance summary
 - [ ] School-wide statistics
 - [ ] Class-level statistics
@@ -98,6 +107,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Perfect attendance awards list
 
 **Tardy Tracking Enhancement**
+
 - [ ] Add `arrivedAt` timestamp for late students
 - [ ] Track how late (minutes)
 - [ ] Tardy threshold configuration (e.g., < 15 min = late, > 15 min = absent)
@@ -105,6 +115,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Tardy patterns analysis
 
 ### Low Attendance Alerts
+
 - [ ] Configurable threshold (e.g., < 80% attendance)
 - [ ] Automated alerts to counselors/admin
 - [ ] Dashboard widget showing at-risk students
@@ -113,6 +124,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Predictive alerts (student trending toward low attendance)
 
 ### Bulk Operations Enhancement
+
 - [ ] "Mark All Present" button
 - [ ] "Mark All Absent" button
 - [ ] Import attendance from CSV (bulk historical data)
@@ -120,6 +132,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Undo last attendance marking
 
 ### Attendance Analytics Dashboard
+
 - [ ] School-wide attendance rate (today, this week, this month)
 - [ ] Attendance trends over time (line chart)
 - [ ] Absence patterns (day of week analysis)
@@ -128,6 +141,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Heatmap visualization (calendar view)
 
 ### Mobile-Friendly Attendance Marking
+
 - [ ] Touch-optimized attendance interface
 - [ ] Swipe gestures to mark status
 - [ ] Quick toggle buttons (tap to cycle present/absent/late)
@@ -135,6 +149,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Mobile app integration
 
 ### Performance Issues
+
 - [ ] Add indexes for date-based queries
 - [ ] Optimize class roster loading (avoid N+1)
 - [ ] Cache frequently accessed attendance data
@@ -143,6 +158,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Background job for monthly report generation
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for attendance marking interface
 - [ ] Keyboard shortcuts (P for present, A for absent, L for late)
 - [ ] ARIA labels for status radio buttons
@@ -150,6 +166,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] High contrast mode for status indicators
 
 ### UX Polish
+
 - [ ] Loading skeleton for class roster
 - [ ] Empty state when no students in class
 - [ ] Error handling with user-friendly messages
@@ -160,6 +177,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Auto-save draft attendance marks
 
 ### Export/Import Enhancement
+
 - [ ] Export template with example data
 - [ ] Import historical attendance from CSV
 - [ ] Export with student names (not just IDs)
@@ -169,6 +187,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Scheduled exports (daily email to admin)
 
 ### Search & Filter Enhancement
+
 - [ ] Date picker with calendar UI
 - [ ] Quick date filters (today, yesterday, last 7 days, last 30 days)
 - [ ] Multi-class selection
@@ -178,6 +197,7 @@ Track production readiness and enhancements for the Attendance feature.
 - [ ] Advanced query builder
 
 ### Integration Enhancements
+
 - [ ] Link to student profile from attendance list
 - [ ] Link to class detail from attendance report
 - [ ] Auto-populate today's date and current class (from timetable)
@@ -190,6 +210,7 @@ Track production readiness and enhancements for the Attendance feature.
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Attendance {
   id        String           @id @default(cuid())
@@ -218,6 +239,7 @@ enum AttendanceStatus {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `periodId` field (String? with relation to Period)
 - [ ] Add `reason` field (String? or enum: MEDICAL, FAMILY, SCHOOL_ACTIVITY, RELIGIOUS, UNEXCUSED, OTHER)
 - [ ] Add `excuseNote` field (String? for parent-submitted excuse)
@@ -234,12 +256,14 @@ enum AttendanceStatus {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `markAttendance(input)` - Mark attendance for students
 - [x] `getAttendanceList(input)` - Fetch class roster with attendance
 - [x] `getClassesForSelection()` - Fetch classes for dropdown
 - [x] `getAttendanceReportCsv(input)` - Export attendance to CSV
 
 ### Actions to Implement
+
 - [ ] `getAttendancePercentage(studentId, dateRange?)` - Calculate % for student
 - [ ] `getClassAttendanceStats(classId, dateRange?)` - Class statistics
 - [ ] `getLowAttendanceStudents(threshold, dateRange?)` - Identify at-risk students
@@ -254,6 +278,7 @@ enum AttendanceStatus {
 - [ ] `getAttendanceAlerts()` - Fetch students with low attendance
 
 ### Action Enhancements
+
 - [ ] Add typed return values for all actions
 - [ ] Add request ID logging for audit trail
 - [ ] Add proper error handling with user-friendly messages
@@ -266,6 +291,7 @@ enum AttendanceStatus {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with attendance interface
 - [x] `table.tsx` - Client table for attendance history
 - [x] `columns.tsx` - Column definitions for history table
@@ -273,6 +299,7 @@ enum AttendanceStatus {
 - [x] `validation.ts` - Zod schemas
 
 ### Components to Create
+
 - [ ] `attendance-marking-form.tsx` - Dedicated form for marking
 - [ ] `class-roster-view.tsx` - Student list with status toggles
 - [ ] `attendance-calendar.tsx` - Calendar view with color-coded days
@@ -284,6 +311,7 @@ enum AttendanceStatus {
 - [ ] `bulk-actions-toolbar.tsx` - Quick action buttons
 
 ### Component Enhancements
+
 - [ ] Add loading states to attendance form
 - [ ] Add empty state when no students in class
 - [ ] Add error boundary for graceful failures
@@ -297,6 +325,7 @@ enum AttendanceStatus {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions (markAttendance, getAttendanceList)
 - [ ] Test multi-tenant scoping
@@ -306,6 +335,7 @@ enum AttendanceStatus {
 - [ ] Test date normalization
 
 ### Integration Tests
+
 - [ ] Test attendance marking workflow end-to-end
 - [ ] Test updating existing attendance
 - [ ] Test CSV export with filters
@@ -314,6 +344,7 @@ enum AttendanceStatus {
 - [ ] Test low attendance identification
 
 ### E2E Tests (Playwright)
+
 - [ ] Test attendance marking for a class
 - [ ] Test bulk "mark all present"
 - [ ] Test updating attendance status
@@ -405,6 +436,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -412,6 +444,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -419,18 +452,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -441,6 +477,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

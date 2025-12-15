@@ -4,28 +4,35 @@
  * Server actions for double-entry bookkeeping integration
  */
 
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { createJournalEntry, postJournalEntry, reverseJournalEntry } from './utils'
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
 import {
-  createFeePaymentEntry,
-  createFeeAssignmentEntry,
-  createSalaryPaymentEntry,
   createExpensePaymentEntry,
+  createFeeAssignmentEntry,
+  createFeePaymentEntry,
   createInvoicePaymentEntry,
+  createSalaryPaymentEntry,
   createWalletTopupEntry,
-} from './posting-rules'
-import { initializeAccountingSystem, getOrCreateFiscalYear } from './seed-accounts'
-import type { PostingResult } from './types'
+} from "./posting-rules"
+import {
+  getOrCreateFiscalYear,
+  initializeAccountingSystem,
+} from "./seed-accounts"
+import type { PostingResult } from "./types"
+import {
+  createJournalEntry,
+  postJournalEntry,
+  reverseJournalEntry,
+} from "./utils"
 
 /**
  * Initialize accounting system for school
  */
-export async function initializeAccounting(
-  schoolId: string
-): Promise<{
+export async function initializeAccounting(schoolId: string): Promise<{
   success: boolean
   accountsCreated?: number
   fiscalYearId?: string
@@ -34,7 +41,7 @@ export async function initializeAccounting(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const result = await initializeAccountingSystem(schoolId)
@@ -45,10 +52,10 @@ export async function initializeAccounting(
       fiscalYearId: result.fiscalYearId,
     }
   } catch (error) {
-    console.error('Error initializing accounting:', error)
+    console.error("Error initializing accounting:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }
@@ -70,16 +77,16 @@ export async function postFeePayment(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
     const entryInput = await createFeePaymentEntry(schoolId, paymentData, db)
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting fee payment:', error)
+    console.error("Error posting fee payment:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -100,16 +107,20 @@ export async function postFeeAssignment(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
-    const entryInput = await createFeeAssignmentEntry(schoolId, assignmentData, db)
+    const entryInput = await createFeeAssignmentEntry(
+      schoolId,
+      assignmentData,
+      db
+    )
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting fee assignment:', error)
+    console.error("Error posting fee assignment:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -132,16 +143,16 @@ export async function postSalaryPayment(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
     const entryInput = await createSalaryPaymentEntry(schoolId, paymentData, db)
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting salary payment:', error)
+    console.error("Error posting salary payment:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -162,16 +173,20 @@ export async function postExpensePayment(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
-    const entryInput = await createExpensePaymentEntry(schoolId, expenseData, db)
+    const entryInput = await createExpensePaymentEntry(
+      schoolId,
+      expenseData,
+      db
+    )
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting expense payment:', error)
+    console.error("Error posting expense payment:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -191,16 +206,20 @@ export async function postInvoicePayment(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
-    const entryInput = await createInvoicePaymentEntry(schoolId, invoiceData, db)
+    const entryInput = await createInvoicePaymentEntry(
+      schoolId,
+      invoiceData,
+      db
+    )
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting invoice payment:', error)
+    console.error("Error posting invoice payment:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -219,16 +238,16 @@ export async function postWalletTopup(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
     const entryInput = await createWalletTopupEntry(schoolId, topupData, db)
     return await createJournalEntry(schoolId, entryInput, session.user.id)
   } catch (error) {
-    console.error('Error posting wallet top-up:', error)
+    console.error("Error posting wallet top-up:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -236,19 +255,21 @@ export async function postWalletTopup(
 /**
  * Post an unposted journal entry
  */
-export async function postJournalEntryAction(journalEntryId: string): Promise<PostingResult> {
+export async function postJournalEntryAction(
+  journalEntryId: string
+): Promise<PostingResult> {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
     return await postJournalEntry(journalEntryId, session.user.id)
   } catch (error) {
-    console.error('Error posting journal entry:', error)
+    console.error("Error posting journal entry:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -263,15 +284,15 @@ export async function reverseJournalEntryAction(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, errors: ['Unauthorized'] }
+      return { success: false, errors: ["Unauthorized"] }
     }
 
     return await reverseJournalEntry(journalEntryId, session.user.id, reason)
   } catch (error) {
-    console.error('Error reversing journal entry:', error)
+    console.error("Error reversing journal entry:", error)
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error'],
+      errors: [error instanceof Error ? error.message : "Unknown error"],
     }
   }
 }
@@ -283,20 +304,20 @@ export async function getChartOfAccounts(schoolId: string) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const accounts = await db.chartOfAccount.findMany({
       where: { schoolId },
-      orderBy: { code: 'asc' },
+      orderBy: { code: "asc" },
     })
 
     return { success: true, accounts }
   } catch (error) {
-    console.error('Error fetching chart of accounts:', error)
+    console.error("Error fetching chart of accounts:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }
@@ -316,7 +337,7 @@ export async function getJournalEntries(
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const entries = await db.journalEntry.findMany({
@@ -333,16 +354,16 @@ export async function getJournalEntries(
           },
         },
       },
-      orderBy: { entryDate: 'desc' },
+      orderBy: { entryDate: "desc" },
       take: options?.limit || 50,
     })
 
     return { success: true, entries }
   } catch (error) {
-    console.error('Error fetching journal entries:', error)
+    console.error("Error fetching journal entries:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }
@@ -350,11 +371,14 @@ export async function getJournalEntries(
 /**
  * Get account balances for a school
  */
-export async function getAccountBalances(schoolId: string, fiscalYearId?: string) {
+export async function getAccountBalances(
+  schoolId: string,
+  fiscalYearId?: string
+) {
   try {
     const session = await auth()
     if (!session?.user?.id) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     // Get or create current fiscal year if not provided
@@ -372,17 +396,17 @@ export async function getAccountBalances(schoolId: string, fiscalYearId?: string
       },
       orderBy: {
         account: {
-          code: 'asc',
+          code: "asc",
         },
       },
     })
 
     return { success: true, balances }
   } catch (error) {
-    console.error('Error fetching account balances:', error)
+    console.error("Error fetching account balances:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }

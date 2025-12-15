@@ -8,6 +8,7 @@ category: api
 # API Design Skill
 
 ## Server Action Pattern
+
 1. Validate with Zod
 2. Include schoolId
 3. Execute operation
@@ -15,6 +16,7 @@ category: api
 5. Handle errors
 
 ## Checklist
+
 - [ ] Zod validation
 - [ ] schoolId included
 - [ ] Revalidation called

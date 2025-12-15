@@ -107,18 +107,18 @@ The Admission module provides a comprehensive, production-ready self-service por
 
 ### Key Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Public Application Portal | **Production** | Parents can apply without creating an account first |
-| Campaign Selection | **Production** | Multiple admission campaigns (Early Decision, Regular, etc.) |
-| Multi-Step Form | **Production** | 6-step form with progress indicator and validation |
-| Auto-Save Sessions | **Production** | Forms auto-save every 30 seconds, resumable for 7 days |
-| OTP Status Tracking | **Production** | Secure status access with 6-digit OTP verification |
-| Tour Booking | **Production** | Calendar-based self-service tour scheduling |
-| Booking Management | **Production** | View, reschedule, or cancel tour bookings |
-| Inquiry Form | **Production** | Lead capture with source tracking |
-| Email Notifications | **Production** | Confirmation emails for applications and bookings |
-| Admin Dashboard | **Production** | Campaign management, application review, merit scoring |
+| Feature                   | Status         | Description                                                  |
+| ------------------------- | -------------- | ------------------------------------------------------------ |
+| Public Application Portal | **Production** | Parents can apply without creating an account first          |
+| Campaign Selection        | **Production** | Multiple admission campaigns (Early Decision, Regular, etc.) |
+| Multi-Step Form           | **Production** | 6-step form with progress indicator and validation           |
+| Auto-Save Sessions        | **Production** | Forms auto-save every 30 seconds, resumable for 7 days       |
+| OTP Status Tracking       | **Production** | Secure status access with 6-digit OTP verification           |
+| Tour Booking              | **Production** | Calendar-based self-service tour scheduling                  |
+| Booking Management        | **Production** | View, reschedule, or cancel tour bookings                    |
+| Inquiry Form              | **Production** | Lead capture with source tracking                            |
+| Email Notifications       | **Production** | Confirmation emails for applications and bookings            |
+| Admin Dashboard           | **Production** | Campaign management, application review, merit scoring       |
 
 ### File Structure
 
@@ -205,24 +205,24 @@ src/
 
 ### Public Routes (School Site)
 
-| Route | Component | Purpose |
-|-------|-----------|---------|
-| `/admissions` | `AdmissionContent` | Info page with hero, process steps, requirements, and CTAs |
-| `/apply` | `CampaignSelectorContent` | Select admission campaign to apply to |
-| `/apply/[campaignId]` | `ApplicationFormContent` | 6-step application form |
-| `/apply/success` | Success page | Confirmation with application number |
-| `/apply/status` | `StatusTrackerContent` | OTP-verified status tracking |
-| `/apply/continue` | `ContinueApplicationContent` | Resume saved application |
-| `/tour` | `TourBookingContent` | Calendar-based tour booking |
-| `/tour/[bookingId]` | Booking details | View/manage existing booking |
-| `/inquiry` | `InquiryFormContent` | Lead capture form |
+| Route                 | Component                    | Purpose                                                    |
+| --------------------- | ---------------------------- | ---------------------------------------------------------- |
+| `/admissions`         | `AdmissionContent`           | Info page with hero, process steps, requirements, and CTAs |
+| `/apply`              | `CampaignSelectorContent`    | Select admission campaign to apply to                      |
+| `/apply/[campaignId]` | `ApplicationFormContent`     | 6-step application form                                    |
+| `/apply/success`      | Success page                 | Confirmation with application number                       |
+| `/apply/status`       | `StatusTrackerContent`       | OTP-verified status tracking                               |
+| `/apply/continue`     | `ContinueApplicationContent` | Resume saved application                                   |
+| `/tour`               | `TourBookingContent`         | Calendar-based tour booking                                |
+| `/tour/[bookingId]`   | Booking details              | View/manage existing booking                               |
+| `/inquiry`            | `InquiryFormContent`         | Lead capture form                                          |
 
 ### Platform Routes (Admin)
 
-| Route | Component | Purpose |
-|-------|-----------|---------|
-| `/admission` | `CampaignsContent` | Campaign management dashboard |
-| `/admission/merit` | `MeritContent` | Merit scoring system |
+| Route              | Component          | Purpose                       |
+| ------------------ | ------------------ | ----------------------------- |
+| `/admission`       | `CampaignsContent` | Campaign management dashboard |
+| `/admission/merit` | `MeritContent`     | Merit scoring system          |
 
 ## Application Form
 
@@ -231,6 +231,7 @@ src/
 The application form is broken into 6 manageable steps:
 
 **Step 1: Personal Information**
+
 - Student's full name (English and Arabic)
 - Date of birth
 - Gender
@@ -239,6 +240,7 @@ The application form is broken into 6 manageable steps:
 - Photo upload
 
 **Step 2: Contact Details**
+
 - Home address
 - City, state, postal code
 - Country
@@ -246,12 +248,14 @@ The application form is broken into 6 manageable steps:
 - Emergency contact
 
 **Step 3: Guardian Information**
+
 - Father's details (name, occupation, phone, email)
 - Mother's details (name, occupation, phone, email)
 - Primary guardian selection
 - Relationship to student
 
 **Step 4: Academic History**
+
 - Previous school name
 - Years attended
 - Grade level completed
@@ -259,6 +263,7 @@ The application form is broken into 6 manageable steps:
 - Academic transcripts upload
 
 **Step 5: Documents**
+
 - Required documents checklist (configured per school)
 - Document upload with verification
 - Birth certificate
@@ -267,6 +272,7 @@ The application form is broken into 6 manageable steps:
 - Passport photos
 
 **Step 6: Review & Submit**
+
 - Review all entered information
 - Application fee payment (if configured)
 - Terms and conditions acceptance
@@ -312,6 +318,7 @@ For security without requiring account creation, status tracking uses OTP:
 ```
 
 Status display includes:
+
 - Current stage indicator
 - Date of last update
 - Required documents checklist
@@ -350,6 +357,7 @@ Administrators configure available slots in the platform:
 ### Booking Confirmation
 
 After booking, parents receive:
+
 - Booking number (e.g., `TOUR-2412-ABC123`)
 - Date and time details
 - Location information
@@ -362,21 +370,22 @@ After booking, parents receive:
 
 The inquiry form captures leads for families not ready to apply:
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| Parent Name | Yes | Contact name |
-| Email | Yes | For follow-up |
-| Phone | No | Alternative contact |
-| Student Name | No | For personalization |
-| Student DOB | No | Grade suggestion |
-| Interested Grade | No | Target grade level |
-| Source | No | How they heard about the school |
-| Message | No | Questions or comments |
-| Newsletter | No | Opt-in for updates |
+| Field            | Required | Description                     |
+| ---------------- | -------- | ------------------------------- |
+| Parent Name      | Yes      | Contact name                    |
+| Email            | Yes      | For follow-up                   |
+| Phone            | No       | Alternative contact             |
+| Student Name     | No       | For personalization             |
+| Student DOB      | No       | Grade suggestion                |
+| Interested Grade | No       | Target grade level              |
+| Source           | No       | How they heard about the school |
+| Message          | No       | Questions or comments           |
+| Newsletter       | No       | Opt-in for updates              |
 
 ### Source Tracking
 
 Track where inquiries come from:
+
 - Website
 - Social Media
 - Referral
@@ -527,22 +536,22 @@ enum SlotType {
 
 ### Server Actions Quick Reference
 
-| Action | Purpose | Key Parameters |
-|--------|---------|----------------|
-| `getActiveCampaigns()` | List active campaigns | subdomain |
-| `getCampaignById()` | Get campaign details | subdomain, campaignId |
-| `submitApplication()` | Submit application | subdomain, campaignId, formData |
-| `saveApplicationSession()` | Auto-save progress | subdomain, sessionToken, formData, step |
-| `resumeApplicationSession()` | Load saved session | sessionToken |
-| `requestStatusOTP()` | Send OTP for tracking | subdomain, appNumber, email |
-| `verifyStatusOTP()` | Verify OTP code | subdomain, appNumber, email, otp |
-| `getApplicationStatus()` | Get status after verify | accessToken |
-| `getAvailableSlots()` | List tour time slots | subdomain, slotType, date |
-| `createTourBooking()` | Book a tour | subdomain, bookingData |
-| `getBookingDetails()` | Get booking info | bookingNumber |
-| `cancelTourBooking()` | Cancel booking | bookingNumber, reason? |
-| `rescheduleTourBooking()` | Change booking time | bookingNumber, newSlotId |
-| `submitInquiry()` | Submit inquiry form | subdomain, inquiryData |
+| Action                       | Purpose                 | Key Parameters                          |
+| ---------------------------- | ----------------------- | --------------------------------------- |
+| `getActiveCampaigns()`       | List active campaigns   | subdomain                               |
+| `getCampaignById()`          | Get campaign details    | subdomain, campaignId                   |
+| `submitApplication()`        | Submit application      | subdomain, campaignId, formData         |
+| `saveApplicationSession()`   | Auto-save progress      | subdomain, sessionToken, formData, step |
+| `resumeApplicationSession()` | Load saved session      | sessionToken                            |
+| `requestStatusOTP()`         | Send OTP for tracking   | subdomain, appNumber, email             |
+| `verifyStatusOTP()`          | Verify OTP code         | subdomain, appNumber, email, otp        |
+| `getApplicationStatus()`     | Get status after verify | accessToken                             |
+| `getAvailableSlots()`        | List tour time slots    | subdomain, slotType, date               |
+| `createTourBooking()`        | Book a tour             | subdomain, bookingData                  |
+| `getBookingDetails()`        | Get booking info        | bookingNumber                           |
+| `cancelTourBooking()`        | Cancel booking          | bookingNumber, reason?                  |
+| `rescheduleTourBooking()`    | Change booking time     | bookingNumber, newSlotId                |
+| `submitInquiry()`            | Submit inquiry form     | subdomain, inquiryData                  |
 
 ### Application Actions
 
@@ -648,6 +657,7 @@ Configure admission portal in the platform settings:
 ### Email Templates
 
 The system sends emails for:
+
 - Application confirmation
 - Tour booking confirmation
 - Tour cancellation
@@ -671,26 +681,26 @@ await db.application.create({
   data: {
     ...formData,
     schoolId, // Required for tenant isolation
-  }
+  },
 })
 ```
 
 ## Competitor Features Comparison
 
-| Feature | Hogwarts | OpenApply | Blackbaud | PowerSchool |
-|---------|----------|-----------|-----------|-------------|
-| Public Application Portal | Yes | Yes | Yes | Yes |
-| No Account Required | Yes | No | No | No |
-| Multi-Step Form | Yes | Yes | Yes | Yes |
-| Auto-Save | Yes | Yes | Yes | Partial |
-| OTP Status Tracking | Yes | No | No | No |
-| Self-Service Tour Booking | Yes | Yes | Limited | No |
-| Lead Capture | Yes | Yes | Yes | Yes |
-| Grade Auto-Suggestion | Yes | Yes | No | No |
-| Email Notifications | Yes | Yes | Yes | Yes |
-| Payment Integration | Planned | Yes | Yes | Yes |
-| Document Upload | Yes | Yes | Yes | Yes |
-| Mobile Responsive | Yes | Yes | Yes | Partial |
+| Feature                   | Hogwarts | OpenApply | Blackbaud | PowerSchool |
+| ------------------------- | -------- | --------- | --------- | ----------- |
+| Public Application Portal | Yes      | Yes       | Yes       | Yes         |
+| No Account Required       | Yes      | No        | No        | No          |
+| Multi-Step Form           | Yes      | Yes       | Yes       | Yes         |
+| Auto-Save                 | Yes      | Yes       | Yes       | Partial     |
+| OTP Status Tracking       | Yes      | No        | No        | No          |
+| Self-Service Tour Booking | Yes      | Yes       | Limited   | No          |
+| Lead Capture              | Yes      | Yes       | Yes       | Yes         |
+| Grade Auto-Suggestion     | Yes      | Yes       | No        | No          |
+| Email Notifications       | Yes      | Yes       | Yes       | Yes         |
+| Payment Integration       | Planned  | Yes       | Yes       | Yes         |
+| Document Upload           | Yes      | Yes       | Yes       | Yes         |
+| Mobile Responsive         | Yes      | Yes       | Yes       | Partial     |
 
 ## Best Practices
 
@@ -715,21 +725,25 @@ await db.application.create({
 ### Common Issues
 
 **Application Not Saving**
+
 - Check browser console for network errors
 - Verify session token hasn't expired (7-day limit)
 - Ensure all required fields are filled
 
 **OTP Not Received**
+
 - Check spam folder
 - Verify email address matches application
 - Check rate limit (max 5 per hour)
 
 **Tour Slot Not Available**
+
 - Slot may have reached capacity
 - Date may be in the past
 - Check if tours are enabled in settings
 
 **Payment Not Processing**
+
 - Stripe integration requires configuration
 - Check application fee is set in campaign
 - Verify Stripe webhook is configured

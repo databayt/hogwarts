@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Type Safety Enforcement
+
 - **Enum Completeness**: Validate `Record<Enum, T>` has all enum values (prevents 2+ errors)
 - **Exhaustive Checking**: Ensure all discriminated union cases are handled
 - **Strict Mode Compliance**: Enforce TypeScript strict mode settings
@@ -22,7 +23,9 @@ model: sonnet
 - **Null Safety**: Enforce proper null/undefined handling
 
 ### Error Prevention
+
 From `docs/build-fixes-2025-10-29.md`:
+
 - **Pattern 5**: Incomplete Enum Definitions (2 errors)
   - Missing `CANCELLED` in `ExpenseStatusLabels`
   - Missing `CANCELLED` in `ExpenseStatusColors`
@@ -34,21 +37,22 @@ From `docs/build-fixes-2025-10-29.md`:
 ### 1. Enum Completeness Validation
 
 **Detects Missing Enum Values**:
+
 ```typescript
 // ❌ Incomplete enum mapping
 export enum ExpenseStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  PAID = 'PAID',
-  CANCELLED = 'CANCELLED', // ← Added to enum
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  PAID = "PAID",
+  CANCELLED = "CANCELLED", // ← Added to enum
 }
 
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending Approval',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid',
+  PENDING: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
   // ❌ Missing: CANCELLED
 }
 
@@ -57,6 +61,7 @@ export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
 ```
 
 **Detection Algorithm**:
+
 ```typescript
 function validateEnumCompleteness(filePath: string): EnumIssue[] {
   const issues: EnumIssue[] = []
@@ -72,9 +77,7 @@ function validateEnumCompleteness(filePath: string): EnumIssue[] {
     const recordKeys = getRecordKeys(mapping)
 
     // 4. Find missing enum values
-    const missingValues = enumDef.values.filter(
-      v => !recordKeys.includes(v)
-    )
+    const missingValues = enumDef.values.filter((v) => !recordKeys.includes(v))
 
     if (missingValues.length > 0) {
       issues.push({
@@ -82,7 +85,7 @@ function validateEnumCompleteness(filePath: string): EnumIssue[] {
         enumName: mapping.enumName,
         recordName: mapping.recordName,
         missingValues,
-        suggestion: generateEnumFix(mapping, missingValues)
+        suggestion: generateEnumFix(mapping, missingValues),
       })
     }
   }
@@ -92,6 +95,7 @@ function validateEnumCompleteness(filePath: string): EnumIssue[] {
 ```
 
 **Auto-Fix Generation**:
+
 ```typescript
 // Detected issue
 {
@@ -108,14 +112,19 @@ ExpenseStatusColors.CANCELLED = 'secondary'
 ### 2. Exhaustive Switch Checking
 
 **Ensures All Cases Handled**:
+
 ```typescript
 // ❌ Missing case
 function getStatusColor(status: ExpenseStatus): string {
   switch (status) {
-    case 'PENDING': return 'yellow'
-    case 'APPROVED': return 'green'
-    case 'REJECTED': return 'red'
-    case 'PAID': return 'blue'
+    case "PENDING":
+      return "yellow"
+    case "APPROVED":
+      return "green"
+    case "REJECTED":
+      return "red"
+    case "PAID":
+      return "blue"
     // ❌ Missing: CANCELLED case
   }
   // Falls through without return
@@ -124,11 +133,16 @@ function getStatusColor(status: ExpenseStatus): string {
 // ✅ With exhaustive checking
 function getStatusColor(status: ExpenseStatus): string {
   switch (status) {
-    case 'PENDING': return 'yellow'
-    case 'APPROVED': return 'green'
-    case 'REJECTED': return 'red'
-    case 'PAID': return 'blue'
-    case 'CANCELLED': return 'gray'
+    case "PENDING":
+      return "yellow"
+    case "APPROVED":
+      return "green"
+    case "REJECTED":
+      return "red"
+    case "PAID":
+      return "blue"
+    case "CANCELLED":
+      return "gray"
     default:
       // TypeScript ensures all cases are handled
       const _exhaustive: never = status
@@ -138,6 +152,7 @@ function getStatusColor(status: ExpenseStatus): string {
 ```
 
 **Validation**:
+
 ```typescript
 function validateExhaustiveSwitch(node: SwitchStatement): SwitchIssue | null {
   const discriminantType = getType(node.expression)
@@ -146,15 +161,13 @@ function validateExhaustiveSwitch(node: SwitchStatement): SwitchIssue | null {
     const enumValues = getEnumValues(discriminantType)
     const handledCases = getCaseValues(node)
 
-    const missingCases = enumValues.filter(
-      v => !handledCases.includes(v)
-    )
+    const missingCases = enumValues.filter((v) => !handledCases.includes(v))
 
     if (missingCases.length > 0) {
       return {
         enum: discriminantType.name,
         missingCases,
-        suggestion: `Add cases for: ${missingCases.join(', ')}`
+        suggestion: `Add cases for: ${missingCases.join(", ")}`,
       }
     }
   }
@@ -166,25 +179,28 @@ function validateExhaustiveSwitch(node: SwitchStatement): SwitchIssue | null {
 ### 3. Strict Mode Enforcement
 
 **Validates TypeScript Strict Settings**:
+
 ```json
 // tsconfig.json
 {
   "compilerOptions": {
-    "strict": true,              // ✅ Master switch
-    "noImplicitAny": true,       // ✅ No implicit any
-    "strictNullChecks": true,    // ✅ Null safety
+    "strict": true, // ✅ Master switch
+    "noImplicitAny": true, // ✅ No implicit any
+    "strictNullChecks": true, // ✅ Null safety
     "strictFunctionTypes": true, // ✅ Function type safety
     "strictPropertyInitialization": true, // ✅ Class property init
-    "noImplicitThis": true,      // ✅ This binding
-    "alwaysStrict": true         // ✅ Use strict mode
+    "noImplicitThis": true, // ✅ This binding
+    "alwaysStrict": true // ✅ Use strict mode
   }
 }
 ```
 
 **Detects Violations**:
+
 ```typescript
 // ❌ Implicit any
-function process(data) { // Type 'any' inferred
+function process(data) {
+  // Type 'any' inferred
   return data.value
 }
 
@@ -200,13 +216,14 @@ function getName(user: User): string {
 
 // ✅ Null check
 function getName(user: User | null): string {
-  return user?.name ?? 'Unknown'
+  return user?.name ?? "Unknown"
 }
 ```
 
 ### 4. Type Guard Validation
 
 **Ensures Proper Type Narrowing**:
+
 ```typescript
 // ❌ Unsafe type assertion
 function process(value: string | number) {
@@ -216,7 +233,7 @@ function process(value: string | number) {
 
 // ✅ Type guard
 function process(value: string | number): number {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return value * 2
   }
   return parseInt(value, 10) * 2
@@ -224,7 +241,9 @@ function process(value: string | number): number {
 
 // ✅ Custom type guard
 function isExpenseStatus(value: string): value is ExpenseStatus {
-  return ['PENDING', 'APPROVED', 'REJECTED', 'PAID', 'CANCELLED'].includes(value)
+  return ["PENDING", "APPROVED", "REJECTED", "PAID", "CANCELLED"].includes(
+    value
+  )
 }
 ```
 
@@ -358,27 +377,32 @@ Apply fix? [Y/n]
 ## Type Safety Checklist
 
 **Enum Completeness** ✅
+
 - [ ] All `Record<Enum, T>` have complete mappings
 - [ ] No missing enum values
 - [ ] TypeScript compilation passes
 
 **Exhaustive Checking** ✅
+
 - [ ] All switch statements handle all cases
 - [ ] Default case with never type
 - [ ] No implicit fall-throughs
 
 **Strict Mode** ✅
+
 - [ ] `strict: true` in tsconfig.json
 - [ ] No implicit any
 - [ ] Null checks enforced
 - [ ] Function types strict
 
 **Type Guards** ✅
+
 - [ ] No unsafe type assertions (as)
 - [ ] Proper type narrowing
 - [ ] Custom type guards for complex types
 
 **Null Safety** ✅
+
 - [ ] Optional chaining (?.) used appropriately
 - [ ] Nullish coalescing (??) for defaults
 - [ ] No possible undefined access
@@ -388,12 +412,14 @@ Apply fix? [Y/n]
 ## Integration with Skills
 
 ### Uses dictionary-validator Skill
+
 ```typescript
 // When validating dictionary types
 "Use dictionary-validator skill to check dictionary property types"
 ```
 
 ### Uses prisma-optimizer Skill
+
 ```typescript
 // When validating Prisma types
 "Use prisma-optimizer skill to check Prisma field types"
@@ -408,19 +434,19 @@ Apply fix? [Y/n]
 ```typescript
 // Before
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending Approval',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid',
+  PENDING: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
 }
 
 // After (auto-generated)
 export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
-  PENDING: 'Pending Approval',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  PAID: 'Paid',
-  CANCELLED: 'Cancelled', // ✅ Added
+  PENDING: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  PAID: "Paid",
+  CANCELLED: "Cancelled", // ✅ Added
 }
 ```
 
@@ -429,17 +455,24 @@ export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
 ```typescript
 // Before
 switch (status) {
-  case 'PENDING': return 'yellow'
-  case 'APPROVED': return 'green'
+  case "PENDING":
+    return "yellow"
+  case "APPROVED":
+    return "green"
 }
 
 // After
 switch (status) {
-  case 'PENDING': return 'yellow'
-  case 'APPROVED': return 'green'
-  case 'REJECTED': return 'red'
-  case 'PAID': return 'blue'
-  case 'CANCELLED': return 'gray'
+  case "PENDING":
+    return "yellow"
+  case "APPROVED":
+    return "green"
+  case "REJECTED":
+    return "red"
+  case "PAID":
+    return "blue"
+  case "CANCELLED":
+    return "gray"
   default: {
     const _exhaustive: never = status
     throw new Error(`Unhandled status: ${status}`)
@@ -466,6 +499,7 @@ function process(data: ProcessData): string {
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/typescript` - General TypeScript expertise
 - `/agents/refactor` - Code quality improvements
 - `/agents/i18n` - Dictionary type safety
@@ -498,11 +532,13 @@ function process(data: ProcessData): string {
 ## Success Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **2 errors** would have been caught (enum completeness)
 - **100% prevention** for enum-related errors
 - **Zero build failures** from type issues
 
 **Expected Results**:
+
 - Enum completeness: 100%
 - Type safety score: A+ (strict mode)
 - Build success rate: 100%

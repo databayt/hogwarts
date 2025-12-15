@@ -12,6 +12,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ### New MCP Servers
 
 #### 1. **a11y-mcp** ⭐ CRITICAL
+
 - **Purpose:** Automated accessibility testing (WCAG 2.1 AA)
 - **Automation:** Quality Gate #3 (Accessibility) - 100% automated
 - **Package:** `a11y-mcp` via npx
@@ -20,6 +21,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
   - `get_summary(url)` - Accessibility overview
 
 #### 2. **storybook-mcp**
+
 - **Purpose:** Component documentation automation
 - **Automation:** Quality Gate #7 (Documentation) - 95% automated
 - **Package:** `storybook-mcp` via npx
@@ -29,6 +31,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
   - `getComponentsProps(components[])` - Extract props metadata
 
 #### 3. **design-system-analyzer**
+
 - **Purpose:** Component and design token analysis
 - **Automation:** Quality Gate #1 (Semantic Tokens) - 95% automated
 - **Package:** `@yajihum/design-system-mcp` via npx
@@ -42,6 +45,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ## Configuration Files Modified
 
 ### `.mcp.json`
+
 ```json
 {
   "a11y": {
@@ -69,6 +73,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ```
 
 ### `UI_FACTORY.md`
+
 - Added comprehensive **MCP Integration** section (220+ lines)
 - Documented all 3 MCP servers with usage examples
 - Added MCP-enhanced workflow examples
@@ -79,15 +84,15 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 
 ## Enhanced Quality Gates
 
-| Gate | Before | After | MCP Server |
-|------|--------|-------|------------|
-| 1. Semantic Tokens | Manual | **95% automated** | design-system-analyzer |
-| 2. Semantic HTML | 90% automated | 90% automated | Built-in |
-| 3. Accessibility | Manual | **100% automated** | **a11y-mcp** |
-| 4. i18n | 60% automated | 60% automated | Built-in |
-| 5. TypeScript | 50% automated | 50% automated | Built-in |
-| 6. Testing | 30% automated | 30% automated | Built-in |
-| 7. Documentation | Manual | **95% automated** | **storybook-mcp** |
+| Gate               | Before        | After              | MCP Server             |
+| ------------------ | ------------- | ------------------ | ---------------------- |
+| 1. Semantic Tokens | Manual        | **95% automated**  | design-system-analyzer |
+| 2. Semantic HTML   | 90% automated | 90% automated      | Built-in               |
+| 3. Accessibility   | Manual        | **100% automated** | **a11y-mcp**           |
+| 4. i18n            | 60% automated | 60% automated      | Built-in               |
+| 5. TypeScript      | 50% automated | 50% automated      | Built-in               |
+| 6. Testing         | 30% automated | 30% automated      | Built-in               |
+| 7. Documentation   | Manual        | **95% automated**  | **storybook-mcp**      |
 
 **Overall Automation:** 60% → **85%** (+42% improvement)
 
@@ -109,6 +114,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ```
 
 **Result:**
+
 - Automated WCAG 2.1 AA compliance checking
 - Specific violation reports with line numbers
 - AI-powered fixes in agentic loop
@@ -128,6 +134,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ```
 
 **Result:**
+
 - Auto-generated Storybook stories
 - All component variants documented
 - Interactive controls added
@@ -147,6 +154,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ```
 
 **Result:**
+
 - Automated semantic token detection
 - Hardcoded color violations flagged
 - Design system consistency verified
@@ -159,6 +167,7 @@ Added 3 specialized MCP servers to enhance the UI Factory workflow with automate
 ```
 
 **Behind the scenes (fully automated):**
+
 1. shadcn MCP → Select Radix UI primitives (Dialog, Form, Input)
 2. Generate TypeScript component with strict mode
 3. **a11y-mcp** → Validate WCAG 2.1 AA compliance
@@ -204,6 +213,7 @@ node -e "JSON.parse(require('fs').readFileSync('.mcp.json', 'utf8')); console.lo
 ### For Storybook MCP
 
 **Start Storybook:**
+
 ```bash
 pnpm storybook
 # Runs at http://localhost:6006
@@ -215,6 +225,7 @@ The Storybook MCP expects `http://localhost:6006/index.json` by default.
 ### For a11y-mcp
 
 **No setup required!** Works with:
+
 - Local URLs (http://localhost:3000)
 - Remote URLs (https://example.com)
 - Component files (via dev server)
@@ -255,6 +266,7 @@ pnpm storybook
 ### 3. Integrate with Quality Gates
 
 Update `.claude/commands/ui-validate.md` to include MCP checks:
+
 ```bash
 # Run accessibility audit
 "Audit accessibility for {file}"
@@ -271,6 +283,7 @@ Update `.claude/commands/ui-validate.md` to include MCP checks:
 ## Benefits Summary
 
 ### Time Savings
+
 - **Accessibility audits:** 2 hours → 30 seconds (99.3% reduction)
 - **Storybook stories:** 1 hour → 1 minute (98.3% reduction)
 - **Design token validation:** 30 minutes → 10 seconds (99.4% reduction)
@@ -278,11 +291,13 @@ Update `.claude/commands/ui-validate.md` to include MCP checks:
 **Total time saved per component:** ~3.5 hours → ~2 minutes (98.1% reduction)
 
 ### Quality Improvements
+
 - **100% WCAG 2.1 AA compliance** (vs ~60% manual)
 - **95%+ semantic token adoption** (vs ~70% manual)
 - **Complete Storybook documentation** (vs partial coverage)
 
 ### Developer Experience
+
 - **Automated validation** in agentic loops
 - **Instant feedback** on violations
 - **AI-powered fixes** for common issues

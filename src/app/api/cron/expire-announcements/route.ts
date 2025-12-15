@@ -45,35 +45,33 @@
  * @see /publish-announcements for the inverse operation
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache"
+import { NextRequest, NextResponse } from "next/server"
+
+import { db } from "@/lib/db"
 
 // Verify cron secret to prevent unauthorized access
 function verifyCronSecret(request: NextRequest): boolean {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization")
+  const cronSecret = process.env.CRON_SECRET
 
   if (!cronSecret) {
-    console.error("[expire-announcements] CRON_SECRET not configured");
-    return false;
+    console.error("[expire-announcements] CRON_SECRET not configured")
+    return false
   }
 
-  return authHeader === `Bearer ${cronSecret}`;
+  return authHeader === `Bearer ${cronSecret}`
 }
 
 export async function GET(request: NextRequest) {
   try {
     // Verify authorization
     if (!verifyCronSecret(request)) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const now = new Date();
-    const startTime = Date.now();
+    const now = new Date()
+    const startTime = Date.now()
 
     // Find all published announcements that have expired
     const expiredAnnouncements = await db.announcement.findMany({
@@ -90,7 +88,7 @@ export async function GET(request: NextRequest) {
         titleAr: true,
         expiresAt: true,
       },
-    });
+    })
 
     if (expiredAnnouncements.length === 0) {
       return NextResponse.json({
@@ -98,7 +96,7 @@ export async function GET(request: NextRequest) {
         message: "No announcements to expire",
         expired: 0,
         duration: Date.now() - startTime,
-      });
+      })
     }
 
     // Unpublish all expired announcements
@@ -115,13 +113,13 @@ export async function GET(request: NextRequest) {
       data: {
         published: false,
       },
-    });
+    })
 
     // Invalidate cache for all affected schools
-    const affectedSchools = new Set(expiredAnnouncements.map((a) => a.schoolId));
+    const affectedSchools = new Set(expiredAnnouncements.map((a) => a.schoolId))
     affectedSchools.forEach((schoolId) => {
-      revalidateTag(`announcements-${schoolId}`, "max");
-    });
+      revalidateTag(`announcements-${schoolId}`, "max")
+    })
 
     // Log successful expiration
     console.log(
@@ -131,7 +129,7 @@ export async function GET(request: NextRequest) {
         title: a.titleEn || a.titleAr,
         expiresAt: a.expiresAt,
       }))
-    );
+    )
 
     return NextResponse.json({
       success: true,
@@ -143,9 +141,9 @@ export async function GET(request: NextRequest) {
         expiresAt: a.expiresAt,
       })),
       duration: Date.now() - startTime,
-    });
+    })
   } catch (error) {
-    console.error("[expire-announcements] Error:", error);
+    console.error("[expire-announcements] Error:", error)
 
     return NextResponse.json(
       {
@@ -153,11 +151,11 @@ export async function GET(request: NextRequest) {
         message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
-    );
+    )
   }
 }
 
 // Also support POST for manual triggers
 export async function POST(request: NextRequest) {
-  return GET(request);
+  return GET(request)
 }

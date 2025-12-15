@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useModal } from "@/components/atom/modal/context"
+import { Award, Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Form,
   FormControl,
@@ -15,18 +15,26 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Loader2, Award } from "lucide-react"
-import { SuccessToast, ErrorToast } from "@/components/atom/toast"
-import { scoreRangeCreateSchema, type ScoreRangeCreateInput } from "./validation"
-import { createScoreRange, updateScoreRange, getScoreRange } from "./actions"
+import { Input } from "@/components/ui/input"
+import { useModal } from "@/components/atom/modal/context"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+
+import { createScoreRange, getScoreRange, updateScoreRange } from "./actions"
+import {
+  scoreRangeCreateSchema,
+  type ScoreRangeCreateInput,
+} from "./validation"
 
 interface ScoreRangeFormProps {
   onSuccess?: () => void
   lang?: Locale
 }
 
-export function ScoreRangeForm({ onSuccess, lang = "en" }: ScoreRangeFormProps) {
+export function ScoreRangeForm({
+  onSuccess,
+  lang = "en",
+}: ScoreRangeFormProps) {
   const { modal, closeModal } = useModal()
   const [isPending, startTransition] = useTransition()
   const itemId = modal.id
@@ -51,8 +59,14 @@ export function ScoreRangeForm({ onSuccess, lang = "en" }: ScoreRangeFormProps) 
     cancel: lang === "ar" ? "إلغاء" : "Cancel",
     save: lang === "ar" ? "حفظ" : "Save",
     saving: lang === "ar" ? "جاري الحفظ..." : "Saving...",
-    createSuccess: lang === "ar" ? "تم إنشاء نطاق الدرجات بنجاح" : "Grade range created successfully",
-    updateSuccess: lang === "ar" ? "تم تحديث نطاق الدرجات بنجاح" : "Grade range updated successfully",
+    createSuccess:
+      lang === "ar"
+        ? "تم إنشاء نطاق الدرجات بنجاح"
+        : "Grade range created successfully",
+    updateSuccess:
+      lang === "ar"
+        ? "تم تحديث نطاق الدرجات بنجاح"
+        : "Grade range updated successfully",
   }
 
   const form = useForm<ScoreRangeCreateInput>({
@@ -99,7 +113,7 @@ export function ScoreRangeForm({ onSuccess, lang = "en" }: ScoreRangeFormProps) 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Award className="h-5 w-5 text-primary" />
+        <Award className="text-primary h-5 w-5" />
         <h2 className="font-semibold">{t.title}</h2>
       </div>
 
@@ -139,7 +153,9 @@ export function ScoreRangeForm({ onSuccess, lang = "en" }: ScoreRangeFormProps) 
                       max={100}
                       step={0.01}
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
                       disabled={isPending}
                     />
                   </FormControl>
@@ -161,7 +177,9 @@ export function ScoreRangeForm({ onSuccess, lang = "en" }: ScoreRangeFormProps) 
                       max={100}
                       step={0.01}
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value) || 0)
+                      }
                       disabled={isPending}
                     />
                   </FormControl>

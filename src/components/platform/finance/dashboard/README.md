@@ -1,11 +1,13 @@
 # Finance Dashboard Module
 
 ## Overview
+
 The Finance Dashboard provides a comprehensive financial overview for school administrators, accountants, and other stakeholders with role-based access control.
 
 ## Features
 
 ### 📊 Key Performance Indicators (KPIs)
+
 - **Revenue Metrics**: Total revenue, collected revenue, outstanding amounts, collection rate
 - **Expense Tracking**: Total expenses, budget utilization, category breakdown
 - **Profit Analysis**: Net profit, profit margin, trend analysis
@@ -14,6 +16,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 - **Payroll Status**: Processed vs pending payroll
 
 ### 📈 Interactive Charts
+
 1. **Revenue & Expenses Chart**
    - Monthly trends over 12 months
    - Area, bar, and line chart views
@@ -37,6 +40,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
    - Quick transfer/reconciliation actions
 
 ### 🚨 Smart Alerts System
+
 - **Overdue Invoices**: Automatic detection and notification
 - **Low Cash Balance**: Alert when below 2 months of expenses
 - **Pending Payroll**: Reminder for payroll processing
@@ -44,6 +48,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 - **Collection Success**: Positive reinforcement for good collection rates
 
 ### ⚡ Quick Actions
+
 - Create Invoice
 - Record Payment
 - Submit Expense
@@ -52,6 +57,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 - Bank Reconciliation
 
 ### 📝 Recent Transactions
+
 - Real-time transaction feed
 - Income, expense, and transfer tracking
 - Status indicators (completed, pending, failed)
@@ -60,6 +66,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 ## Role-Based Access Control (RBAC)
 
 ### Admin & Accountant
+
 - Full dashboard access
 - All KPIs visible
 - Complete chart access
@@ -68,12 +75,14 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 - Detailed transaction history
 
 ### Teacher & Staff
+
 - Limited KPIs (salary, basic metrics)
 - Expense submission access
 - View own transactions
 - Limited report access
 
 ### Student & Guardian
+
 - Fee payment status only
 - Outstanding balance visibility
 - Payment quick actions
@@ -82,6 +91,7 @@ The Finance Dashboard provides a comprehensive financial overview for school adm
 ## API Endpoints
 
 ### Server Actions
+
 ```typescript
 getDashboardStats(dateRange: 'month' | 'quarter' | 'year')
 getRecentTransactions(limit: number)
@@ -90,6 +100,7 @@ getQuickActionsForRole(role: string)
 ```
 
 ## Database Tables Used
+
 - `UserInvoice` - Invoice tracking
 - `Payment` - Payment records
 - `Expense` - Expense management
@@ -130,6 +141,7 @@ export default function FinanceDashboardPage() {
 ```
 
 ## Performance Optimization
+
 - Parallel data fetching for all metrics
 - Lazy loading for charts
 - Efficient decimal to number conversions
@@ -137,6 +149,7 @@ export default function FinanceDashboardPage() {
 - Client-side caching with SWR (if needed)
 
 ## Security Features
+
 - School ID scoping for multi-tenancy
 - Role-based data filtering
 - Session validation
@@ -144,6 +157,7 @@ export default function FinanceDashboardPage() {
 - Secure decimal handling for financial data
 
 ## Customization Options
+
 - Date range selection (month, quarter, year)
 - Chart type toggles
 - KPI color themes
@@ -151,6 +165,7 @@ export default function FinanceDashboardPage() {
 - Quick action configuration
 
 ## Testing
+
 ```bash
 # Run tests
 pnpm test src/components/platform/finance/lab
@@ -160,12 +175,14 @@ pnpm test src/components/platform/finance/lab/kpi-card.test.tsx
 ```
 
 ## Known Limitations
+
 - Trends currently use mock data (should be calculated from historical data)
 - Real-time updates require WebSocket implementation
 - PDF export for dashboard snapshot not yet implemented
 - Mobile responsive design needs optimization
 
 ## Future Enhancements
+
 1. Real-time data updates with WebSockets
 2. Customizable dashboard layouts
 3. Export dashboard as PDF report
@@ -178,6 +195,7 @@ pnpm test src/components/platform/finance/lab/kpi-card.test.tsx
 10. Mobile app dashboard view
 
 ## Dependencies
+
 - `recharts` - Chart library
 - `date-fns` - Date formatting
 - `lucide-react` - Icons
@@ -185,4 +203,5 @@ pnpm test src/components/platform/finance/lab/kpi-card.test.tsx
 - Custom UI components from shadcn/ui
 
 ## Support
+
 For issues or questions, please contact the development team or create an issue in the repository.

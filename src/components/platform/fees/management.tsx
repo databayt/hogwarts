@@ -1,11 +1,57 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback } from 'react';
-import { format, addDays, isPast, isFuture, differenceInDays } from 'date-fns';
-import { DollarSign, CreditCard, Receipt, CircleAlert, CircleCheck, Clock, Download, Send, ListFilter, Search, Calendar, Users, TrendingUp, TrendingDown, Wallet, Ban, RefreshCw, FileText, Mail, MessageSquare, Phone, Printer, Share2, Eye, Pencil, Plus } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useCallback, useMemo, useState } from "react"
+import { addDays, differenceInDays, format, isFuture, isPast } from "date-fns"
+import {
+  Ban,
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Eye,
+  FileText,
+  ListFilter,
+  Mail,
+  MessageSquare,
+  Pencil,
+  Phone,
+  Plus,
+  Printer,
+  Receipt,
+  RefreshCw,
+  Search,
+  Send,
+  Share2,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+} from "lucide-react"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+import { toast } from "sonner"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,28 +59,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -42,126 +67,152 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Student {
-  id: string;
-  givenName: string;
-  surname: string;
-  studentId: string;
-  profileImageUrl?: string;
-  class: string;
+  id: string
+  givenName: string
+  surname: string
+  studentId: string
+  profileImageUrl?: string
+  class: string
   guardian: {
-    name: string;
-    email: string;
-    phone: string;
-  };
+    name: string
+    email: string
+    phone: string
+  }
 }
 
 interface FeeStructure {
-  id: string;
-  name: string;
-  description?: string;
-  amount: number;
-  category: 'tuition' | 'transport' | 'library' | 'sports' | 'examination' | 'other';
-  frequency: 'one-time' | 'monthly' | 'quarterly' | 'annually';
-  mandatory: boolean;
-  applicableTo: string[]; // class names
-  academicYear: string;
-  dueDate?: Date;
+  id: string
+  name: string
+  description?: string
+  amount: number
+  category:
+    | "tuition"
+    | "transport"
+    | "library"
+    | "sports"
+    | "examination"
+    | "other"
+  frequency: "one-time" | "monthly" | "quarterly" | "annually"
+  mandatory: boolean
+  applicableTo: string[] // class names
+  academicYear: string
+  dueDate?: Date
 }
 
 interface FeePayment {
-  id: string;
-  studentId: string;
-  student?: Student;
-  feeStructureId: string;
-  feeStructure?: FeeStructure;
-  amountDue: number;
-  amountPaid: number;
-  balance: number;
-  status: 'pending' | 'partial' | 'paid' | 'overdue' | 'waived';
-  dueDate: Date;
-  paidDate?: Date;
-  paymentMethod?: 'cash' | 'card' | 'bank-transfer' | 'online' | 'cheque';
-  transactionId?: string;
-  receiptNumber?: string;
+  id: string
+  studentId: string
+  student?: Student
+  feeStructureId: string
+  feeStructure?: FeeStructure
+  amountDue: number
+  amountPaid: number
+  balance: number
+  status: "pending" | "partial" | "paid" | "overdue" | "waived"
+  dueDate: Date
+  paidDate?: Date
+  paymentMethod?: "cash" | "card" | "bank-transfer" | "online" | "cheque"
+  transactionId?: string
+  receiptNumber?: string
   discount?: {
-    type: 'percentage' | 'fixed';
-    value: number;
-    reason: string;
-  };
+    type: "percentage" | "fixed"
+    value: number
+    reason: string
+  }
   installments?: {
-    number: number;
-    amount: number;
-    dueDate: Date;
-    status: 'pending' | 'paid';
-  }[];
-  lateFee?: number;
-  notes?: string;
+    number: number
+    amount: number
+    dueDate: Date
+    status: "pending" | "paid"
+  }[]
+  lateFee?: number
+  notes?: string
 }
 
 interface PaymentTransaction {
-  id: string;
-  feePaymentId: string;
-  amount: number;
-  paymentDate: Date;
-  paymentMethod: string;
-  transactionId: string;
-  receiptNumber: string;
-  collectedBy: string;
-  notes?: string;
+  id: string
+  feePaymentId: string
+  amount: number
+  paymentDate: Date
+  paymentMethod: string
+  transactionId: string
+  receiptNumber: string
+  collectedBy: string
+  notes?: string
 }
 
 interface FeeManagementProps {
-  students: Student[];
-  feeStructures: FeeStructure[];
-  feePayments: FeePayment[];
-  transactions: PaymentTransaction[];
+  students: Student[]
+  feeStructures: FeeStructure[]
+  feePayments: FeePayment[]
+  transactions: PaymentTransaction[]
   currentUser: {
-    id: string;
-    name: string;
-    role: 'admin' | 'accountant' | 'parent' | 'student';
-  };
+    id: string
+    name: string
+    role: "admin" | "accountant" | "parent" | "student"
+  }
   onRecordPayment: (payment: {
-    feePaymentId: string;
-    amount: number;
-    paymentMethod: string;
-    transactionId?: string;
-  }) => Promise<void>;
-  onSendReminder: (studentIds: string[], method: 'email' | 'sms') => Promise<void>;
-  onGenerateReceipt: (transactionId: string) => Promise<Blob>;
-  onWaiveFee: (feePaymentId: string, reason: string) => Promise<void>;
-  onApplyDiscount: (feePaymentId: string, discount: { type: 'percentage' | 'fixed'; value: number; reason: string }) => Promise<void>;
-  onExportReport: (filters: any) => void;
+    feePaymentId: string
+    amount: number
+    paymentMethod: string
+    transactionId?: string
+  }) => Promise<void>
+  onSendReminder: (
+    studentIds: string[],
+    method: "email" | "sms"
+  ) => Promise<void>
+  onGenerateReceipt: (transactionId: string) => Promise<Blob>
+  onWaiveFee: (feePaymentId: string, reason: string) => Promise<void>
+  onApplyDiscount: (
+    feePaymentId: string,
+    discount: { type: "percentage" | "fixed"; value: number; reason: string }
+  ) => Promise<void>
+  onExportReport: (filters: any) => void
 }
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
 
 const categoryColors = {
-  tuition: 'bg-blue-100 text-blue-800',
-  transport: 'bg-green-100 text-green-800',
-  library: 'bg-purple-100 text-purple-800',
-  sports: 'bg-yellow-100 text-yellow-800',
-  examination: 'bg-red-100 text-red-800',
-  other: 'bg-gray-100 text-gray-800',
-};
+  tuition: "bg-blue-100 text-blue-800",
+  transport: "bg-green-100 text-green-800",
+  library: "bg-purple-100 text-purple-800",
+  sports: "bg-yellow-100 text-yellow-800",
+  examination: "bg-red-100 text-red-800",
+  other: "bg-gray-100 text-gray-800",
+}
 
 const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  partial: 'bg-orange-100 text-orange-800',
-  paid: 'bg-green-100 text-green-800',
-  overdue: 'bg-red-100 text-red-800',
-  waived: 'bg-gray-100 text-gray-800',
-};
+  pending: "bg-yellow-100 text-yellow-800",
+  partial: "bg-orange-100 text-orange-800",
+  paid: "bg-green-100 text-green-800",
+  overdue: "bg-red-100 text-red-800",
+  waived: "bg-gray-100 text-gray-800",
+}
 
 export function FeeManagement({
   students,
@@ -176,74 +227,89 @@ export function FeeManagement({
   onApplyDiscount,
   onExportReport,
 }: FeeManagementProps) {
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'payments' | 'defaulters' | 'reports'>('overview');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClass, setSelectedClass] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [transactionId, setTransactionId] = useState('');
-  const [discountDialogOpen, setDiscountDialogOpen] = useState(false);
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
-  const [discountValue, setDiscountValue] = useState('');
-  const [discountReason, setDiscountReason] = useState('');
+  const [selectedTab, setSelectedTab] = useState<
+    "overview" | "payments" | "defaulters" | "reports"
+  >("overview")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedClass, setSelectedClass] = useState<string>("all")
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(
+    null
+  )
+  const [paymentAmount, setPaymentAmount] = useState("")
+  const [paymentMethod, setPaymentMethod] = useState("cash")
+  const [transactionId, setTransactionId] = useState("")
+  const [discountDialogOpen, setDiscountDialogOpen] = useState(false)
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
+    "percentage"
+  )
+  const [discountValue, setDiscountValue] = useState("")
+  const [discountReason, setDiscountReason] = useState("")
 
   // Filter fee payments
   const filteredPayments = useMemo(() => {
-    let filtered = feePayments;
+    let filtered = feePayments
 
-    if (currentUser.role === 'parent' || currentUser.role === 'student') {
+    if (currentUser.role === "parent" || currentUser.role === "student") {
       // Show only relevant student's fees
-      filtered = filtered.filter(fp => fp.studentId === currentUser.id);
+      filtered = filtered.filter((fp) => fp.studentId === currentUser.id)
     }
 
-    if (selectedClass !== 'all') {
-      filtered = filtered.filter(fp => fp.student?.class === selectedClass);
+    if (selectedClass !== "all") {
+      filtered = filtered.filter((fp) => fp.student?.class === selectedClass)
     }
 
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(fp => fp.status === selectedStatus);
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter((fp) => fp.status === selectedStatus)
     }
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(fp =>
-        `${fp.student?.givenName} ${fp.student?.surname}`.toLowerCase().includes(query) ||
-        fp.student?.studentId.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (fp) =>
+          `${fp.student?.givenName} ${fp.student?.surname}`
+            .toLowerCase()
+            .includes(query) ||
+          fp.student?.studentId.toLowerCase().includes(query)
+      )
     }
 
     return filtered.sort((a, b) => {
       // Overdue first
-      if (a.status === 'overdue' && b.status !== 'overdue') return -1;
-      if (b.status === 'overdue' && a.status !== 'overdue') return 1;
-      return b.dueDate.getTime() - a.dueDate.getTime();
-    });
-  }, [feePayments, currentUser, selectedClass, selectedStatus, searchQuery]);
+      if (a.status === "overdue" && b.status !== "overdue") return -1
+      if (b.status === "overdue" && a.status !== "overdue") return 1
+      return b.dueDate.getTime() - a.dueDate.getTime()
+    })
+  }, [feePayments, currentUser, selectedClass, selectedStatus, searchQuery])
 
   // Statistics
   const stats = useMemo(() => {
-    const totalDue = feePayments.reduce((sum, fp) => sum + fp.amountDue, 0);
-    const totalPaid = feePayments.reduce((sum, fp) => sum + fp.amountPaid, 0);
-    const totalPending = feePayments.reduce((sum, fp) => sum + fp.balance, 0);
-    const overdueCount = feePayments.filter(fp => fp.status === 'overdue').length;
-    const collectionRate = totalDue > 0 ? (totalPaid / totalDue) * 100 : 0;
+    const totalDue = feePayments.reduce((sum, fp) => sum + fp.amountDue, 0)
+    const totalPaid = feePayments.reduce((sum, fp) => sum + fp.amountPaid, 0)
+    const totalPending = feePayments.reduce((sum, fp) => sum + fp.balance, 0)
+    const overdueCount = feePayments.filter(
+      (fp) => fp.status === "overdue"
+    ).length
+    const collectionRate = totalDue > 0 ? (totalPaid / totalDue) * 100 : 0
 
     // This month stats
-    const thisMonth = new Date();
+    const thisMonth = new Date()
     const monthlyCollected = transactions
-      .filter(t => {
-        const tDate = new Date(t.paymentDate);
-        return tDate.getMonth() === thisMonth.getMonth() &&
-               tDate.getFullYear() === thisMonth.getFullYear();
+      .filter((t) => {
+        const tDate = new Date(t.paymentDate)
+        return (
+          tDate.getMonth() === thisMonth.getMonth() &&
+          tDate.getFullYear() === thisMonth.getFullYear()
+        )
       })
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + t.amount, 0)
 
-    const defaulters = feePayments.filter(fp =>
-      fp.status === 'overdue' || (fp.status === 'partial' && isPast(fp.dueDate))
-    ).length;
+    const defaulters = feePayments.filter(
+      (fp) =>
+        fp.status === "overdue" ||
+        (fp.status === "partial" && isPast(fp.dueDate))
+    ).length
 
     return {
       totalDue,
@@ -253,55 +319,55 @@ export function FeeManagement({
       collectionRate,
       monthlyCollected,
       defaulters,
-    };
-  }, [feePayments, transactions]);
+    }
+  }, [feePayments, transactions])
 
   // Payment trends
   const paymentTrends = useMemo(() => {
     const last6Months = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (5 - i));
+      const date = new Date()
+      date.setMonth(date.getMonth() - (5 - i))
       return {
-        month: format(date, 'MMM'),
+        month: format(date, "MMM"),
         collected: 0,
         pending: 0,
-      };
-    });
-
-    transactions.forEach(t => {
-      const monthIndex = last6Months.findIndex(m =>
-        m.month === format(new Date(t.paymentDate), 'MMM')
-      );
-      if (monthIndex !== -1) {
-        last6Months[monthIndex].collected += t.amount;
       }
-    });
+    })
 
-    return last6Months;
-  }, [transactions]);
+    transactions.forEach((t) => {
+      const monthIndex = last6Months.findIndex(
+        (m) => m.month === format(new Date(t.paymentDate), "MMM")
+      )
+      if (monthIndex !== -1) {
+        last6Months[monthIndex].collected += t.amount
+      }
+    })
+
+    return last6Months
+  }, [transactions])
 
   // Fee category breakdown
   const categoryBreakdown = useMemo(() => {
-    const breakdown = feeStructures.map(fs => {
-      const payments = feePayments.filter(fp => fp.feeStructureId === fs.id);
-      const collected = payments.reduce((sum, fp) => sum + fp.amountPaid, 0);
+    const breakdown = feeStructures.map((fs) => {
+      const payments = feePayments.filter((fp) => fp.feeStructureId === fs.id)
+      const collected = payments.reduce((sum, fp) => sum + fp.amountPaid, 0)
       return {
         name: fs.name,
         value: collected,
         category: fs.category,
-      };
-    });
+      }
+    })
 
-    return breakdown;
-  }, [feeStructures, feePayments]);
+    return breakdown
+  }, [feeStructures, feePayments])
 
   const handleRecordPayment = async () => {
-    if (!selectedPayment) return;
+    if (!selectedPayment) return
 
-    const amount = parseFloat(paymentAmount);
+    const amount = parseFloat(paymentAmount)
     if (isNaN(amount) || amount <= 0 || amount > selectedPayment.balance) {
-      toast.error('Invalid payment amount');
-      return;
+      toast.error("Invalid payment amount")
+      return
     }
 
     try {
@@ -310,23 +376,23 @@ export function FeeManagement({
         amount,
         paymentMethod,
         transactionId: transactionId || undefined,
-      });
-      toast.success('Payment recorded successfully');
-      setPaymentDialogOpen(false);
-      setPaymentAmount('');
-      setTransactionId('');
+      })
+      toast.success("Payment recorded successfully")
+      setPaymentDialogOpen(false)
+      setPaymentAmount("")
+      setTransactionId("")
     } catch (error) {
-      toast.error('Failed to record payment');
+      toast.error("Failed to record payment")
     }
-  };
+  }
 
   const handleApplyDiscount = async () => {
-    if (!selectedPayment) return;
+    if (!selectedPayment) return
 
-    const value = parseFloat(discountValue);
+    const value = parseFloat(discountValue)
     if (isNaN(value) || value <= 0) {
-      toast.error('Invalid discount value');
-      return;
+      toast.error("Invalid discount value")
+      return
     }
 
     try {
@@ -334,38 +400,38 @@ export function FeeManagement({
         type: discountType,
         value,
         reason: discountReason,
-      });
-      toast.success('Discount applied successfully');
-      setDiscountDialogOpen(false);
-      setDiscountValue('');
-      setDiscountReason('');
+      })
+      toast.success("Discount applied successfully")
+      setDiscountDialogOpen(false)
+      setDiscountValue("")
+      setDiscountReason("")
     } catch (error) {
-      toast.error('Failed to apply discount');
+      toast.error("Failed to apply discount")
     }
-  };
+  }
 
   const handleSendReminders = async () => {
     const overdueStudentIds = filteredPayments
-      .filter(fp => fp.status === 'overdue')
-      .map(fp => fp.studentId);
+      .filter((fp) => fp.status === "overdue")
+      .map((fp) => fp.studentId)
 
     if (overdueStudentIds.length === 0) {
-      toast.error('No students with overdue payments');
-      return;
+      toast.error("No students with overdue payments")
+      return
     }
 
     try {
-      await onSendReminder(overdueStudentIds, 'email');
-      toast.success(`Reminders sent to ${overdueStudentIds.length} parents`);
+      await onSendReminder(overdueStudentIds, "email")
+      toast.success(`Reminders sent to ${overdueStudentIds.length} parents`)
     } catch (error) {
-      toast.error('Failed to send reminders');
+      toast.error("Failed to send reminders")
     }
-  };
+  }
 
   const getDaysOverdue = (dueDate: Date) => {
-    const days = differenceInDays(new Date(), dueDate);
-    return days > 0 ? days : 0;
-  };
+    const days = differenceInDays(new Date(), dueDate)
+    return days > 0 ? days : 0
+  }
 
   return (
     <div className="space-y-6">
@@ -375,16 +441,19 @@ export function FeeManagement({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Fee Management</CardTitle>
-              <CardDescription>Track and manage student fee payments</CardDescription>
+              <CardDescription>
+                Track and manage student fee payments
+              </CardDescription>
             </div>
-            {(currentUser.role === 'admin' || currentUser.role === 'accountant') && (
+            {(currentUser.role === "admin" ||
+              currentUser.role === "accountant") && (
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleSendReminders}>
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="mr-2 h-4 w-4" />
                   Send Reminders
                 </Button>
                 <Button variant="outline" onClick={() => onExportReport({})}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="mr-2 h-4 w-4" />
                   Export Report
                 </Button>
               </div>
@@ -394,7 +463,7 @@ export function FeeManagement({
       </Card>
 
       {/* Statistics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Due</CardDescription>
@@ -476,7 +545,7 @@ export function FeeManagement({
 
       {/* Main Content */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-        <TabsList className="grid grid-cols-4 w-full max-w-lg">
+        <TabsList className="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="payments">
             Payments
@@ -492,7 +561,7 @@ export function FeeManagement({
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Payment Trends */}
             <Card>
               <CardHeader>
@@ -526,13 +595,18 @@ export function FeeManagement({
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {categoryBreakdown.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => `$${value}`} />
@@ -546,27 +620,39 @@ export function FeeManagement({
           <Card>
             <CardHeader>
               <CardTitle>Fee Structures</CardTitle>
-              <CardDescription>Current academic year fee breakdown</CardDescription>
+              <CardDescription>
+                Current academic year fee breakdown
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {feeStructures.map(fs => (
-                  <div key={fs.id} className="flex items-center justify-between p-3 border rounded-lg">
+                {feeStructures.map((fs) => (
+                  <div
+                    key={fs.id}
+                    className="flex items-center justify-between rounded-lg border p-3"
+                  >
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium">{fs.name}</p>
-                        <Badge variant="outline" className={categoryColors[fs.category]}>
+                        <Badge
+                          variant="outline"
+                          className={categoryColors[fs.category]}
+                        >
                           {fs.category}
                         </Badge>
                         {fs.mandatory && (
                           <Badge variant="secondary">Mandatory</Badge>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{fs.description}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {fs.description}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold">${fs.amount}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{fs.frequency}</p>
+                      <p className="text-muted-foreground text-xs capitalize">
+                        {fs.frequency}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -616,47 +702,64 @@ export function FeeManagement({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPayments.map(payment => {
-                    const daysOverdue = getDaysOverdue(payment.dueDate);
+                  {filteredPayments.map((payment) => {
+                    const daysOverdue = getDaysOverdue(payment.dueDate)
 
                     return (
                       <TableRow key={payment.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src={payment.student?.profileImageUrl} />
+                              <AvatarImage
+                                src={payment.student?.profileImageUrl}
+                              />
                               <AvatarFallback>
-                                {payment.student?.givenName[0]}{payment.student?.surname[0]}
+                                {payment.student?.givenName[0]}
+                                {payment.student?.surname[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">
-                                {payment.student?.givenName} {payment.student?.surname}
+                                {payment.student?.givenName}{" "}
+                                {payment.student?.surname}
                               </p>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-muted-foreground text-xs">
                                 {payment.student?.studentId}
                               </p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={categoryColors[payment.feeStructure?.category || 'other']}>
+                          <Badge
+                            variant="outline"
+                            className={
+                              categoryColors[
+                                payment.feeStructure?.category || "other"
+                              ]
+                            }
+                          >
                             {payment.feeStructure?.name}
                           </Badge>
                         </TableCell>
-                        <TableCell>${payment.amountDue.toLocaleString()}</TableCell>
-                        <TableCell className="text-green-600 font-medium">
+                        <TableCell>
+                          ${payment.amountDue.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="font-medium text-green-600">
                           ${payment.amountPaid.toLocaleString()}
                         </TableCell>
-                        <TableCell className={cn(
-                          "font-medium",
-                          payment.balance > 0 ? "text-red-600" : "text-green-600"
-                        )}>
+                        <TableCell
+                          className={cn(
+                            "font-medium",
+                            payment.balance > 0
+                              ? "text-red-600"
+                              : "text-green-600"
+                          )}
+                        >
                           ${payment.balance.toLocaleString()}
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p>{format(payment.dueDate, 'MMM dd, yyyy')}</p>
+                            <p>{format(payment.dueDate, "MMM dd, yyyy")}</p>
                             {daysOverdue > 0 && (
                               <p className="text-xs text-red-600">
                                 {daysOverdue} days overdue
@@ -665,30 +768,37 @@ export function FeeManagement({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={statusColors[payment.status]}>
+                          <Badge
+                            variant="outline"
+                            className={statusColors[payment.status]}
+                          >
                             {payment.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {payment.balance > 0 && (currentUser.role === 'admin' || currentUser.role === 'accountant') && (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedPayment(payment);
-                                  setPaymentDialogOpen(true);
-                                }}
-                              >
-                                <DollarSign className="h-4 w-4 mr-1" />
-                                Pay
-                              </Button>
-                            )}
+                            {payment.balance > 0 &&
+                              (currentUser.role === "admin" ||
+                                currentUser.role === "accountant") && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedPayment(payment)
+                                    setPaymentDialogOpen(true)
+                                  }}
+                                >
+                                  <DollarSign className="mr-1 h-4 w-4" />
+                                  Pay
+                                </Button>
+                              )}
                             {payment.receiptNumber && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onGenerateReceipt(payment.receiptNumber!)}
+                                onClick={() =>
+                                  onGenerateReceipt(payment.receiptNumber!)
+                                }
                               >
                                 <Receipt className="h-4 w-4" />
                               </Button>
@@ -696,7 +806,7 @@ export function FeeManagement({
                           </div>
                         </TableCell>
                       </TableRow>
-                    );
+                    )
                   })}
                 </TableBody>
               </Table>
@@ -716,20 +826,25 @@ export function FeeManagement({
             <CardContent>
               <div className="space-y-3">
                 {filteredPayments
-                  .filter(fp => fp.status === 'overdue')
-                  .map(payment => {
-                    const daysOverdue = getDaysOverdue(payment.dueDate);
+                  .filter((fp) => fp.status === "overdue")
+                  .map((payment) => {
+                    const daysOverdue = getDaysOverdue(payment.dueDate)
 
                     return (
-                      <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
+                      <div
+                        key={payment.id}
+                        className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4"
+                      >
                         <div className="flex items-center gap-3">
                           <CircleAlert className="h-8 w-8 text-red-600" />
                           <div>
                             <p className="font-medium">
-                              {payment.student?.givenName} {payment.student?.surname}
+                              {payment.student?.givenName}{" "}
+                              {payment.student?.surname}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              {payment.feeStructure?.name} - ${payment.balance.toLocaleString()} overdue
+                            <p className="text-muted-foreground text-sm">
+                              {payment.feeStructure?.name} - $
+                              {payment.balance.toLocaleString()} overdue
                             </p>
                             <p className="text-xs text-red-600">
                               {daysOverdue} days past due date
@@ -740,24 +855,26 @@ export function FeeManagement({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onSendReminder([payment.studentId], 'email')}
+                            onClick={() =>
+                              onSendReminder([payment.studentId], "email")
+                            }
                           >
-                            <Mail className="h-4 w-4 mr-1" />
+                            <Mail className="mr-1 h-4 w-4" />
                             Remind
                           </Button>
                           <Button
                             variant="default"
                             size="sm"
                             onClick={() => {
-                              setSelectedPayment(payment);
-                              setPaymentDialogOpen(true);
+                              setSelectedPayment(payment)
+                              setPaymentDialogOpen(true)
                             }}
                           >
                             Record Payment
                           </Button>
                         </div>
                       </div>
-                    );
+                    )
                   })}
               </div>
             </CardContent>
@@ -769,24 +886,38 @@ export function FeeManagement({
           <Card>
             <CardHeader>
               <CardTitle>Financial Reports</CardTitle>
-              <CardDescription>Generate and export fee collection reports</CardDescription>
+              <CardDescription>
+                Generate and export fee collection reports
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" onClick={() => onExportReport({ type: 'collection' })}>
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  onClick={() => onExportReport({ type: "collection" })}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Collection Report
                 </Button>
-                <Button variant="outline" onClick={() => onExportReport({ type: 'outstanding' })}>
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  onClick={() => onExportReport({ type: "outstanding" })}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Outstanding Report
                 </Button>
-                <Button variant="outline" onClick={() => onExportReport({ type: 'defaulters' })}>
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  onClick={() => onExportReport({ type: "defaulters" })}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Defaulters Report
                 </Button>
-                <Button variant="outline" onClick={() => onExportReport({ type: 'category' })}>
-                  <Download className="h-4 w-4 mr-2" />
+                <Button
+                  variant="outline"
+                  onClick={() => onExportReport({ type: "category" })}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Category-wise Report
                 </Button>
               </div>
@@ -803,7 +934,8 @@ export function FeeManagement({
             <DialogDescription>
               {selectedPayment && (
                 <>
-                  {selectedPayment.student?.givenName} {selectedPayment.student?.surname} -{' '}
+                  {selectedPayment.student?.givenName}{" "}
+                  {selectedPayment.student?.surname} -{" "}
                   {selectedPayment.feeStructure?.name}
                 </>
               )}
@@ -812,14 +944,18 @@ export function FeeManagement({
 
           {selectedPayment && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded">
+              <div className="bg-muted grid grid-cols-2 gap-4 rounded p-3">
                 <div>
                   <Label className="text-xs">Amount Due</Label>
-                  <p className="font-bold">${selectedPayment.amountDue.toLocaleString()}</p>
+                  <p className="font-bold">
+                    ${selectedPayment.amountDue.toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-xs">Balance</Label>
-                  <p className="font-bold text-red-600">${selectedPayment.balance.toLocaleString()}</p>
+                  <p className="font-bold text-red-600">
+                    ${selectedPayment.balance.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -864,15 +1000,16 @@ export function FeeManagement({
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setPaymentDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleRecordPayment}>
-              Record Payment
-            </Button>
+            <Button onClick={handleRecordPayment}>Record Payment</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

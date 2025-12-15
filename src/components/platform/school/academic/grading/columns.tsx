@@ -1,10 +1,10 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
-import { Button } from "@/components/ui/button"
+import { Award, Ellipsis } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
-import { Ellipsis, Award } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
 import type { ScoreRangeRow } from "./types"
 
 export interface ScoreRangeColumnCallbacks {
@@ -22,7 +24,9 @@ export interface ScoreRangeColumnCallbacks {
 }
 
 // Grade color mapping
-const getGradeVariant = (grade: string): "default" | "secondary" | "destructive" | "outline" => {
+const getGradeVariant = (
+  grade: string
+): "default" | "secondary" | "destructive" | "outline" => {
   const upperGrade = grade.toUpperCase()
   if (upperGrade.startsWith("A")) return "default"
   if (upperGrade.startsWith("B")) return "secondary"
@@ -57,8 +61,8 @@ export const getScoreRangeColumns = (
       cell: ({ getValue }) => {
         const grade = getValue<string>()
         return (
-          <Badge variant={getGradeVariant(grade)} className="font-bold text-sm">
-            <Award className="h-3 w-3 mr-1" />
+          <Badge variant={getGradeVariant(grade)} className="text-sm font-bold">
+            <Award className="mr-1 h-3 w-3" />
             {grade}
           </Badge>
         )
@@ -101,16 +105,16 @@ export const getScoreRangeColumns = (
         const width = max - min
         return (
           <div className="flex items-center gap-2">
-            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+            <div className="bg-muted h-2 w-24 overflow-hidden rounded-full">
               <div
-                className="h-full bg-primary rounded-full"
+                className="bg-primary h-full rounded-full"
                 style={{
                   marginLeft: `${min}%`,
                   width: `${width}%`,
                 }}
               />
             </div>
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="text-muted-foreground text-xs tabular-nums">
               {min}-{max}%
             </span>
           </div>
@@ -124,7 +128,7 @@ export const getScoreRangeColumns = (
       ),
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
             lang === "ar" ? "ar-SA" : "en-US"
           )}

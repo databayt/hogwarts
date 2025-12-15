@@ -1,48 +1,59 @@
-import { StudentsTable } from '@/components/platform/students/table'
-import { type StudentRow } from '@/components/platform/students/columns'
-import { SearchParams } from 'nuqs/server'
-import { studentsSearchParams } from '@/components/platform/students/list-params'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
+import { SearchParams } from "nuqs/server"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { type StudentRow } from "@/components/platform/students/columns"
+import { studentsSearchParams } from "@/components/platform/students/list-params"
+import { StudentsTable } from "@/components/platform/students/table"
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  school?: any;
-  dictionary?: Dictionary['school'];
-  lang: Locale;
+  searchParams: Promise<SearchParams>
+  school?: any
+  dictionary?: Dictionary["school"]
+  lang: Locale
 }
 
-export default async function StudentsContent({ searchParams, school, dictionary, lang }: Props) {
+export default async function StudentsContent({
+  searchParams,
+  school,
+  dictionary,
+  lang,
+}: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
-  
+
   // Use school from props if available, otherwise fall back to tenant context
   const effectiveSchoolId = school?.id || schoolId
-  
+
   let data: StudentRow[] = []
   let total = 0
   if (effectiveSchoolId && (db as any).student) {
     const where: any = {
       schoolId: effectiveSchoolId,
-      ...(sp.name ? { OR: [
-        { givenName: { contains: sp.name, mode: 'insensitive' } },
-        { surname: { contains: sp.name, mode: 'insensitive' } },
-      ] } : {}),
+      ...(sp.name
+        ? {
+            OR: [
+              { givenName: { contains: sp.name, mode: "insensitive" } },
+              { surname: { contains: sp.name, mode: "insensitive" } },
+            ],
+          }
+        : {}),
       ...(sp.status
-        ? sp.status === 'active'
+        ? sp.status === "active"
           ? { NOT: { userId: null } }
-          : sp.status === 'inactive'
+          : sp.status === "inactive"
             ? { userId: null }
             : {}
         : {}),
     }
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
-      : [{ createdAt: 'desc' }]
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
     const [rows, count] = await Promise.all([
       (db as any).student.findMany({
         where,
@@ -54,26 +65,26 @@ export default async function StudentsContent({ searchParams, school, dictionary
             select: {
               studentClasses: true,
               results: true,
-            }
+            },
           },
           studentClasses: {
             take: 1,
             include: {
               class: {
-                select: { name: true }
-              }
-            }
-          }
-        }
+                select: { name: true },
+              },
+            },
+          },
+        },
       }),
       (db as any).student.count({ where }),
     ])
     data = rows.map((s: any) => ({
       id: s.id,
       userId: s.userId,
-      name: [s.givenName, s.surname].filter(Boolean).join(' '),
-      className: s.studentClasses?.[0]?.class?.name || '-',
-      status: s.userId ? 'active' : 'inactive',
+      name: [s.givenName, s.surname].filter(Boolean).join(" "),
+      className: s.studentClasses?.[0]?.class?.name || "-",
+      status: s.userId ? "active" : "inactive",
       createdAt: (s.createdAt as Date).toISOString(),
       classCount: s._count?.studentClasses || 0,
       gradeCount: s._count?.results || 0,
@@ -90,5 +101,3 @@ export default async function StudentsContent({ searchParams, school, dictionary
     />
   )
 }
-
-

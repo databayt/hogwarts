@@ -9,6 +9,7 @@ The central table block at `src/components/table/` has been reorganized to follo
 ### 1. File Structure Reorganization
 
 **Before:**
+
 ```
 src/components/table/
   ├── types/
@@ -27,6 +28,7 @@ src/components/table/
 ```
 
 **After:**
+
 ```
 src/components/table/
   ├── types.ts              # ✨ Consolidated types
@@ -45,12 +47,12 @@ src/components/table/
 
 ### 2. Import Path Changes
 
-| Old Import | New Import |
-|-----------|------------|
-| `@/components/table/types/data-table` | `@/components/table/types` |
-| `@/components/table/config/data-table` | `@/components/table/config` |
-| `@/components/table/lib/data-table` | `@/components/table/utils` |
-| `@/components/table/lib/parsers` | `@/components/table/utils` |
+| Old Import                                | New Import                          |
+| ----------------------------------------- | ----------------------------------- |
+| `@/components/table/types/data-table`     | `@/components/table/types`          |
+| `@/components/table/config/data-table`    | `@/components/table/config`         |
+| `@/components/table/lib/data-table`       | `@/components/table/utils`          |
+| `@/components/table/lib/parsers`          | `@/components/table/utils`          |
 | `@/components/table/hooks/use-data-table` | `@/components/table/use-data-table` |
 
 ### 3. New Features
@@ -68,13 +70,13 @@ If your feature uses page flipping and you're happy with it, **no changes needed
 
 ```tsx
 // ✅ This still works!
-import { DataTable } from "@/components/table/data-table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
+import { DataTable } from "@/components/table/data-table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
 
 export function StudentsTable({ data, pageCount }) {
-  const { table } = useDataTable({ data, columns, pageCount });
+  const { table } = useDataTable({ data, columns, pageCount })
 
-  return <DataTable table={table} />;
+  return <DataTable table={table} />
 }
 ```
 
@@ -86,40 +88,41 @@ For new features or when you want to improve UX with infinite scroll:
 
 ```typescript
 // src/components/platform/students/actions.ts
-"use server";
+"use server"
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 import {
-  getSeeMorePaginationParams,
+  buildPaginationResult,
   buildPrismaOrderBy,
-  buildPaginationResult
-} from "@/components/table/actions";
+  getSeeMorePaginationParams,
+} from "@/components/table/actions"
 
 export async function fetchStudents(params: {
-  loadedCount?: number;
-  batchSize?: number;
-  sorting?: SortingInput;
+  loadedCount?: number
+  batchSize?: number
+  sorting?: SortingInput
 }) {
-  const session = await auth();
-  const schoolId = session?.user?.schoolId;
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
 
-  if (!schoolId) throw new Error("No school context");
+  if (!schoolId) throw new Error("No school context")
 
   const { skip, take } = getSeeMorePaginationParams(
     params.loadedCount ?? 0,
     params.batchSize ?? 20
-  );
+  )
 
-  const where = { schoolId };
-  const orderBy = buildPrismaOrderBy(params.sorting);
+  const where = { schoolId }
+  const orderBy = buildPrismaOrderBy(params.sorting)
 
   const [data, total] = await Promise.all([
     db.student.findMany({ where, orderBy, skip, take }),
     db.student.count({ where }),
-  ]);
+  ])
 
-  return buildPaginationResult(data, total, { skip, take });
+  return buildPaginationResult(data, total, { skip, take })
 }
 ```
 
@@ -127,34 +130,36 @@ export async function fetchStudents(params: {
 
 ```tsx
 // src/components/platform/students/table.tsx
-"use client";
+"use client"
 
-import { useMemo, useState } from "react";
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
-import { DataTableSeeMore } from "@/components/table/data-table-see-more";
-import { useSeeMore } from "@/components/table/use-see-more";
-import { getStudentColumns } from "./columns";
-import { fetchStudents } from "./actions";
+import { useMemo, useState } from "react"
+
+import { DataTableSeeMore } from "@/components/table/data-table-see-more"
+import { DataTable } from "@/components/table/data-table/data-table"
+import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar"
+import { useSeeMore } from "@/components/table/use-see-more"
+
+import { fetchStudents } from "./actions"
+import { getStudentColumns } from "./columns"
 
 export function StudentsTable({ initialData, totalCount }) {
-  const columns = useMemo(() => getStudentColumns(), []);
-  const [data, setData] = useState(initialData);
+  const columns = useMemo(() => getStudentColumns(), [])
+  const [data, setData] = useState(initialData)
 
   const onSeeMore = async (newLoadedCount, batchSize) => {
     const result = await fetchStudents({
       loadedCount: newLoadedCount,
-      batchSize
-    });
-    setData(prev => [...prev, ...result.data]);
-  };
+      batchSize,
+    })
+    setData((prev) => [...prev, ...result.data])
+  }
 
   const { table, seeMoreState, handleSeeMore, isLoadingMore } = useSeeMore({
     data,
     columns,
     totalCount,
     onSeeMore,
-  });
+  })
 
   return (
     <DataTable table={table}>
@@ -167,7 +172,7 @@ export function StudentsTable({ initialData, totalCount }) {
         isLoading={isLoadingMore}
       />
     </DataTable>
-  );
+  )
 }
 ```
 
@@ -175,35 +180,30 @@ export function StudentsTable({ initialData, totalCount }) {
 
 ```tsx
 // src/app/[lang]/s/[subdomain]/(platform)/students/page.tsx
-import { StudentsTable } from "@/components/platform/students/table";
-import { fetchStudents } from "@/components/platform/students/actions";
+import { fetchStudents } from "@/components/platform/students/actions"
+import { StudentsTable } from "@/components/platform/students/table"
 
 export default async function StudentsPage() {
   // Fetch initial batch
   const { data, total } = await fetchStudents({
     loadedCount: 0,
-    batchSize: 20
-  });
+    batchSize: 20,
+  })
 
-  return (
-    <StudentsTable
-      initialData={data}
-      totalCount={total}
-    />
-  );
+  return <StudentsTable initialData={data} totalCount={total} />
 }
 ```
 
 ## Comparison: Page-Based vs See More
 
-| Feature | Page-Based | See More |
-|---------|-----------|----------|
-| **User Experience** | Traditional pagination with page numbers | Infinite scroll / load more button |
-| **Data Loading** | Replaces entire dataset on page change | Accumulates data progressively |
-| **URL State** | `?page=2&perPage=20` | `?loadedCount=40&batchSize=20` |
-| **Best For** | Admin panels, data tables with many filters | User-facing lists, mobile-friendly UIs |
-| **Implementation** | Existing `useDataTable` | New `useSeeMore` |
-| **Migration Required** | No | Yes (server + client changes) |
+| Feature                | Page-Based                                  | See More                               |
+| ---------------------- | ------------------------------------------- | -------------------------------------- |
+| **User Experience**    | Traditional pagination with page numbers    | Infinite scroll / load more button     |
+| **Data Loading**       | Replaces entire dataset on page change      | Accumulates data progressively         |
+| **URL State**          | `?page=2&perPage=20`                        | `?loadedCount=40&batchSize=20`         |
+| **Best For**           | Admin panels, data tables with many filters | User-facing lists, mobile-friendly UIs |
+| **Implementation**     | Existing `useDataTable`                     | New `useSeeMore`                       |
+| **Migration Required** | No                                          | Yes (server + client changes)          |
 
 ## Import Path Update Checklist
 
@@ -211,17 +211,19 @@ If you have custom table components or utilities, update these imports:
 
 ```typescript
 // ❌ Old imports
-import { ExtendedColumnSort } from "@/components/table/types/data-table";
-import { dataTableConfig } from "@/components/table/config/data-table";
-import { getSortingStateParser } from "@/components/table/lib/parsers";
-import { getCommonPinningStyles } from "@/components/table/lib/data-table";
-import { useDataTable } from "@/components/table/hooks/use-data-table";
-
+import { dataTableConfig } from "@/components/table/config"
+import { dataTableConfig } from "@/components/table/config/data-table"
+import { useDataTable } from "@/components/table/hooks/use-data-table"
+import { getCommonPinningStyles } from "@/components/table/lib/data-table"
+import { getSortingStateParser } from "@/components/table/lib/parsers"
 // ✅ New imports
-import { ExtendedColumnSort } from "@/components/table/types";
-import { dataTableConfig } from "@/components/table/config";
-import { getSortingStateParser, getCommonPinningStyles } from "@/components/table/utils";
-import { useDataTable } from "@/components/table/use-data-table";
+import { ExtendedColumnSort } from "@/components/table/types"
+import { ExtendedColumnSort } from "@/components/table/types/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+import {
+  getCommonPinningStyles,
+  getSortingStateParser,
+} from "@/components/table/utils"
 ```
 
 ## Backward Compatibility
@@ -266,16 +268,19 @@ The following folders are now deprecated (but not removed for backward compatibi
 ## Rollout Strategy
 
 **Phase 1 (Completed)**: ✅
+
 - Reorganize table block structure
 - Create new pagination components
 - Update internal imports
 
 **Phase 2 (Current)**: 🔄
+
 - Migrate 1-2 pilot features (start with students table)
 - Gather feedback and refine APIs
 - Document any edge cases
 
 **Phase 3 (Future)**: 📅
+
 - Gradually migrate remaining features
 - Remove deprecated folders
 - Publish final migration guide

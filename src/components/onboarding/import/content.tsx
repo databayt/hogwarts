@@ -1,60 +1,64 @@
-"use client";
+"use client"
 
-import React, { useState } from 'react';
-import { Upload, FileText, X } from 'lucide-react';
-import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { Button } from '@/components/ui/button';
+import React, { useState } from "react"
+import { FileText, Upload, X } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 interface Props {
-  dictionary?: any;
+  dictionary?: any
 }
 
 export default function ImportContent({ dictionary }: Props) {
-  const dict = dictionary?.onboarding || {};
-  const { enableNext } = useHostValidation();
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const dict = dictionary?.onboarding || {}
+  const { enableNext } = useHostValidation()
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   // Enable next button since import is optional
   React.useEffect(() => {
-    enableNext();
-  }, [enableNext]);
+    enableNext()
+  }, [enableNext])
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
     if (file) {
-      setIsUploading(true);
-      
+      setIsUploading(true)
+
       try {
         // Here you would normally upload and process the file
         // For now, just store it locally
-        setUploadedFile(file);
+        setUploadedFile(file)
       } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error("Error uploading file:", error)
       } finally {
-        setIsUploading(false);
+        setIsUploading(false)
       }
     }
-    
+
     // Reset input
-    event.target.value = '';
-  };
+    event.target.value = ""
+  }
 
   const removeFile = () => {
-    setUploadedFile(null);
-  };
+    setUploadedFile(null)
+  }
 
   return (
     <div className="w-full">
       <div className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+        <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
             <h1 className="text-3xl font-bold">
               {dict.importData || "Import your student data"}
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              {dict.importDescription || "Upload your student records in Excel or CSV format."}
+            <p className="text-muted-foreground text-sm sm:text-base">
+              {dict.importDescription ||
+                "Upload your student records in Excel or CSV format."}
               <br />
               {dict.optional || "This is optional."}
             </p>
@@ -64,13 +68,15 @@ export default function ImportContent({ dictionary }: Props) {
           <div className="lg:justify-self-end">
             {!uploadedFile ? (
               <label htmlFor="file-upload" className="cursor-pointer">
-                <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-[250px] w-[400px] flex flex-col items-center justify-center hover:border-muted-foreground/50 transition-colors">
-                  <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                  <p className="font-medium">{dict.uploadYourFile || "Upload file"}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                <div className="border-muted-foreground/30 hover:border-muted-foreground/50 flex h-[250px] w-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors">
+                  <Upload className="text-muted-foreground mb-4 h-10 w-10" />
+                  <p className="font-medium">
+                    {dict.uploadYourFile || "Upload file"}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm">
                     {dict.supportedFileTypes || "xlsx, xls, csv"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     {dict.optional || "(Optional)"}
                   </p>
                   <input
@@ -84,16 +90,16 @@ export default function ImportContent({ dictionary }: Props) {
                 </div>
               </label>
             ) : (
-              <div className="relative h-[250px] w-[400px] border rounded-lg overflow-hidden flex items-center justify-center">
+              <div className="relative flex h-[250px] w-[400px] items-center justify-center overflow-hidden rounded-lg border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-primary" />
+                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-lg">
+                    <FileText className="text-primary h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
+                    <p className="truncate text-sm font-medium">
                       {uploadedFile.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -112,5 +118,5 @@ export default function ImportContent({ dictionary }: Props) {
         </div>
       </div>
     </div>
-  );
+  )
 }

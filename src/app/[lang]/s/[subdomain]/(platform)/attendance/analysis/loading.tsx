@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function AttendanceAnalysisLoading() {
   return (

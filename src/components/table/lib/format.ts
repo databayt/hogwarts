@@ -1,8 +1,8 @@
 export function formatDate(
   date: Date | string | number | undefined,
-  opts: Intl.DateTimeFormatOptions = {},
+  opts: Intl.DateTimeFormatOptions = {}
 ) {
-  if (!date) return "";
+  if (!date) return ""
 
   try {
     return new Intl.DateTimeFormat("en-US", {
@@ -10,8 +10,8 @@ export function formatDate(
       day: opts.day ?? "numeric",
       year: opts.year ?? "numeric",
       ...opts,
-    }).format(new Date(date));
+    }).format(new Date(date))
   } catch {
-    return "";
+    return ""
   }
 }

@@ -1,14 +1,15 @@
 "use client"
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { floorPlanSchema, FloorPlanFormData } from '../floor-plan/validation'
-import { useListing, useHostNavigation } from '../use-listing'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
 import { STEP_NAVIGATION } from "../config.client"
+import { FloorPlanFormData, floorPlanSchema } from "../floor-plan/validation"
+import { useHostNavigation, useListing } from "../use-listing"
 
 export function useFloorPlan() {
   const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('capacity')
+  const { goToNextStep, goToPreviousStep } = useHostNavigation("capacity")
 
   const form = useForm<FloorPlanFormData>({
     resolver: zodResolver(floorPlanSchema),
@@ -17,13 +18,13 @@ export function useFloorPlan() {
       facilities: listing?.maxFacilities || 1,
       studentCount: listing?.maxStudents || 30,
     },
-    mode: 'onChange',
+    mode: "onChange",
   })
 
   const onSubmit = async (data: FloorPlanFormData) => {
     try {
-      console.log('🏫 School Capacity - Submitting:', data)
-      
+      console.log("🏫 School Capacity - Submitting:", data)
+
       // Update the listing with the school capacity data
       await updateListingData({
         maxTeachers: data.teachers,
@@ -32,17 +33,17 @@ export function useFloorPlan() {
       })
 
       // Navigate to next step
-      const nextStep = STEP_NAVIGATION['capacity'].next
+      const nextStep = STEP_NAVIGATION["capacity"].next
       if (nextStep) {
         goToNextStep(nextStep)
       }
     } catch (error) {
-      console.error('❌ Error submitting school capacity form:', error)
+      console.error("❌ Error submitting school capacity form:", error)
     }
   }
 
   const onBack = () => {
-    const previousStep = STEP_NAVIGATION['capacity'].previous
+    const previousStep = STEP_NAVIGATION["capacity"].previous
     if (previousStep) {
       goToPreviousStep(previousStep)
     }
@@ -55,7 +56,7 @@ export function useFloorPlan() {
 
   const decrement = (field: keyof FloorPlanFormData) => {
     const currentValue = form.getValues(field)
-    const minValue = field === 'studentCount' ? 1 : 1
+    const minValue = field === "studentCount" ? 1 : 1
     const newValue = Math.max(minValue, currentValue - 1)
     form.setValue(field, newValue, { shouldValidate: true })
   }
@@ -73,8 +74,8 @@ export function useFloorPlan() {
     error,
     isFormValid,
     isDirty,
-    teachers: form.watch('teachers'),
-    facilities: form.watch('facilities'),
-    studentCount: form.watch('studentCount'),
+    teachers: form.watch("teachers"),
+    facilities: form.watch("facilities"),
+    studentCount: form.watch("studentCount"),
   }
 }

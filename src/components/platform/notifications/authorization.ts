@@ -3,7 +3,7 @@
  * Implements role-based access control (RBAC) for notification operations
  */
 
-import { UserRole, NotificationType } from "@prisma/client"
+import { NotificationType, UserRole } from "@prisma/client"
 
 export type NotificationAction =
   | "create"
@@ -254,7 +254,9 @@ export function canManageOthersPreferences(role: UserRole): boolean {
  * @param role - User role
  * @returns Array of allowed notification types
  */
-export function getAllowedNotificationTypes(role: UserRole): NotificationType[] {
+export function getAllowedNotificationTypes(
+  role: UserRole
+): NotificationType[] {
   if (role === "DEVELOPER" || role === "ADMIN") {
     // Return all notification types
     return [

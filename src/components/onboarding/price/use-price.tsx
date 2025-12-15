@@ -1,14 +1,15 @@
 "use client"
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { schoolPriceSchema, SchoolPriceFormData } from './validation'
-import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from '../config.client'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+
+import { STEP_NAVIGATION } from "../config.client"
+import { useHostNavigation, useListing } from "../use-listing"
+import { SchoolPriceFormData, schoolPriceSchema } from "./validation"
 
 export function usePrice() {
   const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('price')
+  const { goToNextStep, goToPreviousStep } = useHostNavigation("price")
 
   const form = useForm<SchoolPriceFormData>({
     resolver: zodResolver(schoolPriceSchema),
@@ -16,16 +17,16 @@ export function usePrice() {
       tuitionFee: 5000,
       registrationFee: 0,
       applicationFee: 0,
-      currency: 'USD' as const,
-      paymentSchedule: 'semester' as const,
+      currency: "USD" as const,
+      paymentSchedule: "semester" as const,
     },
-    mode: 'onChange',
+    mode: "onChange",
   })
 
   const onSubmit = async (data: SchoolPriceFormData) => {
     try {
-      console.log('💰 Price - Submitting:', data)
-      
+      console.log("💰 Price - Submitting:", data)
+
       // Update the listing with the pricing data
       await updateListingData({
         tuitionFee: data.tuitionFee,
@@ -36,17 +37,17 @@ export function usePrice() {
       })
 
       // Navigate to next step
-      const nextStep = STEP_NAVIGATION['price'].next
+      const nextStep = STEP_NAVIGATION["price"].next
       if (nextStep) {
         goToNextStep(nextStep)
       }
     } catch (error) {
-      console.error('❌ Error submitting price form:', error)
+      console.error("❌ Error submitting price form:", error)
     }
   }
 
   const onBack = () => {
-    const previousStep = STEP_NAVIGATION['price'].previous
+    const previousStep = STEP_NAVIGATION["price"].previous
     if (previousStep) {
       goToPreviousStep(previousStep)
     }

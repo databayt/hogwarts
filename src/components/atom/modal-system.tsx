@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -27,7 +28,7 @@ export function ModalSystem() {
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             This is a placeholder for the modal system component.
           </p>
         </div>

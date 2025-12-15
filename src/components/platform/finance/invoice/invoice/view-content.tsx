@@ -1,60 +1,65 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import type { Locale } from "@/components/internationalization/config";
-import { formatCurrency, formatDate } from "@/lib/i18n-format";
+import { useEffect, useState } from "react"
+import { format } from "date-fns"
+
+import { formatCurrency, formatDate } from "@/lib/i18n-format"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import type { Locale } from "@/components/internationalization/config"
 
 interface InvoiceViewProps {
-  invoiceId: string;
-  dictionary?: any;
-  lang?: Locale;
+  invoiceId: string
+  dictionary?: any
+  lang?: Locale
 }
 
-export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang = 'en' }: InvoiceViewProps) {
-  const [invoice, setInvoice] = useState<any | null>(null);
+export default function ViewInvoiceModalContent({
+  invoiceId,
+  dictionary,
+  lang = "en",
+}: InvoiceViewProps) {
+  const [invoice, setInvoice] = useState<any | null>(null)
 
   useEffect(() => {
     const run = async () => {
       try {
-        const res = await fetch(`/api/invoice/${invoiceId}`);
+        const res = await fetch(`/api/invoice/${invoiceId}`)
         if (res.ok) {
-          const json = await res.json();
-          setInvoice(json);
+          const json = await res.json()
+          setInvoice(json)
         }
       } catch (_) {}
-    };
-    run();
-  }, [invoiceId]);
+    }
+    run()
+  }, [invoiceId])
 
-  if (!invoice) return <div>Loading...</div>;
+  if (!invoice) return <div>Loading...</div>
 
   return (
-    <div className="max-w-3xl w-full">
-      <div className="flex justify-between items-start mb-6">
+    <div className="w-full max-w-3xl">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold mb-1">Invoice</h1>
-          <p className="text-xs text-muted-foreground">#{invoice.invoice_no}</p>
+          <h1 className="mb-1 text-xl font-bold">Invoice</h1>
+          <p className="text-muted-foreground text-xs">#{invoice.invoice_no}</p>
         </div>
         <Badge>{invoice.status}</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-6">
         <div>
-          <h2 className="font-semibold mb-2">From</h2>
+          <h2 className="mb-2 font-semibold">From</h2>
           <p>{invoice.from.name}</p>
-          <p className="text-sm text-muted-foreground">{invoice.from.email}</p>
+          <p className="text-muted-foreground text-sm">{invoice.from.email}</p>
         </div>
         <div>
-          <h2 className="font-semibold mb-2">To</h2>
+          <h2 className="mb-2 font-semibold">To</h2>
           <p>{invoice.to.name}</p>
-          <p className="text-sm text-muted-foreground">{invoice.to.email}</p>
+          <p className="text-muted-foreground text-sm">{invoice.to.email}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mb-6 text-sm">
+      <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
         <div>
           <span className="font-medium">Invoice Date</span>
           <p>{formatDate(invoice.invoice_date, lang)}</p>
@@ -67,26 +72,30 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang = 
 
       <Separator className="my-6" />
 
-      <table className="w-full mb-6 text-sm">
+      <table className="mb-6 w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="text-left py-2">Item</th>
-            <th className="text-right py-2">Qty</th>
-            <th className="text-right py-2">Price</th>
-            <th className="text-right py-2">Total</th>
+            <th className="py-2 text-left">Item</th>
+            <th className="py-2 text-right">Qty</th>
+            <th className="py-2 text-right">Price</th>
+            <th className="py-2 text-right">Total</th>
           </tr>
         </thead>
         <tbody>
           {invoice.items.map((item: any) => {
-            const itemTotal = item.quantity * item.price;
+            const itemTotal = item.quantity * item.price
             return (
               <tr key={item.id} className="border-b">
                 <td className="py-2">{item.item_name}</td>
-                <td className="text-right py-2">{item.quantity}</td>
-                <td className="text-right py-2">{formatCurrency(item.price, lang)}</td>
-                <td className="text-right py-2">{formatCurrency(itemTotal, lang)}</td>
+                <td className="py-2 text-right">{item.quantity}</td>
+                <td className="py-2 text-right">
+                  {formatCurrency(item.price, lang)}
+                </td>
+                <td className="py-2 text-right">
+                  {formatCurrency(itemTotal, lang)}
+                </td>
               </tr>
-            );
+            )
           })}
         </tbody>
       </table>
@@ -95,12 +104,12 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang = 
         <div className="w-56">
           <div className="flex justify-between py-2">
             <span className="font-medium">Total</span>
-            <span className="font-bold">{formatCurrency(invoice.total, lang)}</span>
+            <span className="font-bold">
+              {formatCurrency(invoice.total, lang)}
+            </span>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
-
-

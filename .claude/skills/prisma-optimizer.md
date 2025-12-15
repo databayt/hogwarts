@@ -9,6 +9,7 @@
 ## Problem Statement
 
 Prisma queries can have multiple issues:
+
 1. **N+1 Query Problems**: Missing includes cause multiple database round trips
 2. **Field Type Confusion**: Using `connect` pattern on ID fields vs relation fields (8 errors in build-fixes-2025-10-29.md)
 3. **Invalid Includes**: Including ID fields as relations (3 errors)
@@ -22,6 +23,7 @@ Prisma queries can have multiple issues:
 ### 1. Field Type Detection (NEW - Prevents 8+ Errors)
 
 **Detects Relation vs ID Fields**:
+
 ```typescript
 // Prisma Schema Analysis
 model Expense {
@@ -39,6 +41,7 @@ model Expense {
 ```
 
 **Identifies Invalid Patterns**:
+
 ```typescript
 // ❌ Pattern 1: Using connect on ID field
 {
@@ -70,35 +73,36 @@ model Expense {
 ```
 
 **Detection Algorithm**:
+
 ```typescript
 function analyzeFieldType(model: string, field: string): FieldType {
   // 1. Read Prisma schema
   const schema = readPrismaSchema()
 
   // 2. Find model definition
-  const modelDef = schema.models.find(m => m.name === model)
+  const modelDef = schema.models.find((m) => m.name === model)
 
   // 3. Check field definition
-  const fieldDef = modelDef.fields.find(f => f.name === field)
+  const fieldDef = modelDef.fields.find((f) => f.name === field)
 
   if (!fieldDef) {
     // Check if it's a relation field without Id suffix
-    const idField = modelDef.fields.find(f => f.name === `${field}Id`)
+    const idField = modelDef.fields.find((f) => f.name === `${field}Id`)
     if (idField) {
       return {
-        type: 'ID_FIELD',
+        type: "ID_FIELD",
         actualName: `${field}Id`,
-        error: `Use ${field}Id (ID field) not ${field} (relation doesn't exist)`
+        error: `Use ${field}Id (ID field) not ${field} (relation doesn't exist)`,
       }
     }
-    return { type: 'NOT_FOUND', error: `Field ${field} doesn't exist` }
+    return { type: "NOT_FOUND", error: `Field ${field} doesn't exist` }
   }
 
   // 4. Determine type
-  if (fieldDef.kind === 'object') {
-    return { type: 'RELATION', supports: ['include', 'select'] }
+  if (fieldDef.kind === "object") {
+    return { type: "RELATION", supports: ["include", "select"] }
   } else {
-    return { type: 'SCALAR', supports: ['direct assignment'] }
+    return { type: "SCALAR", supports: ["direct assignment"] }
   }
 }
 ```
@@ -106,6 +110,7 @@ function analyzeFieldType(model: string, field: string): FieldType {
 ### 2. Required Fields Validator (NEW - Prevents 2+ Errors)
 
 **Validates Create/Update Operations**:
+
 ```typescript
 // Detects missing required fields
 const expense = await db.expense.create({
@@ -134,34 +139,34 @@ Suggested fix:
 ```
 
 **Required Field Detection**:
+
 ```typescript
 function getRequiredFields(model: string): string[] {
   const schema = readPrismaSchema()
-  const modelDef = schema.models.find(m => m.name === model)
+  const modelDef = schema.models.find((m) => m.name === model)
 
   return modelDef.fields
-    .filter(f => {
+    .filter((f) => {
       // Field is required if:
       // 1. Not optional (no ?)
       // 2. Not auto-generated (@default)
       // 3. Not relation field
-      return !f.isOptional &&
-             !f.hasDefaultValue &&
-             f.kind !== 'object'
+      return !f.isOptional && !f.hasDefaultValue && f.kind !== "object"
     })
-    .map(f => f.name)
+    .map((f) => f.name)
 }
 ```
 
 ### 3. N+1 Query Detection (Original)
 
 **Detects Missing Includes**:
+
 ```typescript
 // ❌ N+1 Problem
 const students = await db.student.findMany({ where: { schoolId } })
 for (const student of students) {
   const classes = await db.studentClass.findMany({
-    where: { studentId: student.id }
+    where: { studentId: student.id },
   })
   // N queries for N students
 }
@@ -170,26 +175,27 @@ for (const student of students) {
 const students = await db.student.findMany({
   where: { schoolId },
   include: {
-    classes: true // Single query
-  }
+    classes: true, // Single query
+  },
 })
 ```
 
 ### 4. Multi-Tenant Safety (Original)
 
 **Ensures schoolId Scoping**:
+
 ```typescript
 // ❌ Missing schoolId
 const students = await db.student.findMany({
-  where: { yearLevel: 'GRADE_10' }
+  where: { yearLevel: "GRADE_10" },
 })
 
 // ✅ With schoolId
 const students = await db.student.findMany({
   where: {
     schoolId: session.user.schoolId, // Multi-tenant safety
-    yearLevel: 'GRADE_10'
-  }
+    yearLevel: "GRADE_10",
+  },
 })
 ```
 
@@ -330,16 +336,19 @@ Apply fix? [Y/n]
 ### Used By Agents
 
 **1. Prisma Agent**
+
 ```bash
 /agents/prisma -p "Validate all queries using prisma-optimizer skill"
 ```
 
 **2. Database Optimizer Agent**
+
 ```bash
 /agents/database-optimizer -p "Find N+1 problems using prisma-optimizer skill"
 ```
 
 **3. Multi-Tenant Agent**
+
 ```bash
 /agents/multi-tenant -p "Verify schoolId scoping using prisma-optimizer skill"
 ```
@@ -347,11 +356,13 @@ Apply fix? [Y/n]
 ### Used By Commands
 
 **1. /validate-prisma Command**
+
 ```bash
 /validate-prisma src/components/platform/finance/expenses/actions.ts
 ```
 
 **2. /pre-commit-full Command**
+
 ```bash
 # Automatically validates Prisma queries before commit
 ```
@@ -366,7 +377,11 @@ Apply fix? [Y/n]
 // Before
 {
   data: {
-    submittedBy: { connect: { id: userId } }
+    submittedBy: {
+      connect: {
+        id: userId
+      }
+    }
   }
 }
 
@@ -459,10 +474,7 @@ Apply fix? [Y/n]
     "confirmBeforeFix": true
   },
   "schemaPath": "prisma/schema.prisma",
-  "excludePatterns": [
-    "*.test.ts",
-    "*.spec.ts"
-  ]
+  "excludePatterns": ["*.test.ts", "*.spec.ts"]
 }
 ```
 
@@ -471,6 +483,7 @@ Apply fix? [Y/n]
 ## Success Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **8 errors** would have been caught (field type issues)
 - **3 errors** would have been caught (invalid includes)
 - **2 errors** would have been caught (missing required fields)
@@ -486,23 +499,23 @@ Apply fix? [Y/n]
 
 ```typescript
 function parsePrismaSchema(schemaPath: string): PrismaSchema {
-  const content = fs.readFileSync(schemaPath, 'utf-8')
+  const content = fs.readFileSync(schemaPath, "utf-8")
 
   // Parse models
   const models = extractModels(content)
 
   // For each model, extract fields
-  return models.map(model => ({
+  return models.map((model) => ({
     name: model.name,
-    fields: extractFields(model.content).map(field => ({
+    fields: extractFields(model.content).map((field) => ({
       name: field.name,
       type: field.type,
       kind: determineKind(field), // 'scalar' | 'object' | 'enum'
-      isOptional: field.modifiers.includes('?'),
-      hasDefaultValue: field.attributes.some(a => a.name === 'default'),
-      isRelation: field.attributes.some(a => a.name === 'relation'),
-      relationInfo: extractRelationInfo(field)
-    }))
+      isOptional: field.modifiers.includes("?"),
+      hasDefaultValue: field.attributes.some((a) => a.name === "default"),
+      isRelation: field.attributes.some((a) => a.name === "relation"),
+      relationInfo: extractRelationInfo(field),
+    })),
   }))
 }
 ```
@@ -514,10 +527,14 @@ function analyzeQuery(code: string): QueryIssue[] {
   const issues: QueryIssue[] = []
 
   // Parse TypeScript AST
-  const sourceFile = ts.createSourceFile('temp.ts', code, ts.ScriptTarget.Latest)
+  const sourceFile = ts.createSourceFile(
+    "temp.ts",
+    code,
+    ts.ScriptTarget.Latest
+  )
 
   // Find all Prisma queries (db.model.operation)
-  ts.forEachChild(sourceFile, node => {
+  ts.forEachChild(sourceFile, (node) => {
     if (isPrismaQuery(node)) {
       // Check field types
       issues.push(...validateFieldTypes(node))
@@ -544,6 +561,7 @@ function analyzeQuery(code: string): QueryIssue[] {
 ### Case 1: Expense Relation Fields (8 Errors)
 
 **Would have detected**:
+
 ```typescript
 ❌ actions.ts:35 - Using connect on submittedBy (ID field)
 ❌ actions.ts:40 - Using connect on approvedBy (ID field)
@@ -553,6 +571,7 @@ function analyzeQuery(code: string): QueryIssue[] {
 ```
 
 **Before commit**:
+
 ```
 ⚠️  Found 8 Prisma field type errors
 All errors are in expenses/actions.ts
@@ -565,12 +584,14 @@ Continue? [Y/n]
 ### Case 2: Missing Required Fields (2 Errors)
 
 **Would have detected**:
+
 ```typescript
 ❌ actions.ts:32 - Missing required field: expenseNumber
 ❌ actions.ts:32 - Missing required field: submittedAt
 ```
 
 **Before commit**:
+
 ```
 ⚠️  Missing 2 required fields in expense.create
 Auto-fix will add:

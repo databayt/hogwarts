@@ -1,10 +1,10 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
-import { Button } from "@/components/ui/button"
+import { Calendar, CheckCircle, Ellipsis } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
-import { Ellipsis, Calendar, CheckCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
+
 import type { TermRow } from "./types"
 
 export interface TermColumnCallbacks {
@@ -54,13 +56,11 @@ export const getTermColumns = (
         const isActive = row.original.isActive
         return (
           <span className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="text-muted-foreground h-4 w-4" />
             <span className="font-medium">
               {lang === "ar" ? `الفصل ${termNumber}` : `Term ${termNumber}`}
             </span>
-            {isActive && (
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            )}
+            {isActive && <CheckCircle className="h-4 w-4 text-green-500" />}
           </span>
         )
       },
@@ -136,7 +136,7 @@ export const getTermColumns = (
       ),
       meta: { label: t.created, variant: "text" },
       cell: ({ getValue }) => (
-        <span className="text-xs tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(getValue<string>()).toLocaleDateString(
             lang === "ar" ? "ar-SA" : "en-US"
           )}

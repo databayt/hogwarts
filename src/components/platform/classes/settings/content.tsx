@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
@@ -16,10 +16,13 @@ export default function ClassSettingsContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>{d?.settings?.title || 'Class Settings'}</CardTitle>
+          <CardTitle>{d?.settings?.title || "Class Settings"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="muted">{d?.settings?.description || 'Class size limits, assignment rules, and module configurations will be available here.'}</p>
+          <p className="muted">
+            {d?.settings?.description ||
+              "Class size limits, assignment rules, and module configurations will be available here."}
+          </p>
         </CardContent>
       </Card>
     </div>

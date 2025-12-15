@@ -1,26 +1,32 @@
 "use client"
 
 import { Suspense } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Clock, GraduationCap, Target, Layers } from "lucide-react"
+import { Calendar, Clock, GraduationCap, Layers, Target } from "lucide-react"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ModalProvider } from "@/components/atom/modal/context"
 import type { Locale } from "@/components/internationalization/config"
 
+import { ScoreRangeTable } from "./grading/table"
+import type { ScoreRangeRow } from "./grading/types"
+import { YearLevelTable } from "./level/table"
+import type { YearLevelRow } from "./level/types"
+import { PeriodTable } from "./period/table"
+import type { PeriodRow } from "./period/types"
+import { TermTable } from "./term/table"
+import type { TermRow } from "./term/types"
 // Import table components
 import { SchoolYearTable } from "./year/table"
-import { TermTable } from "./term/table"
-import { PeriodTable } from "./period/table"
-import { YearLevelTable } from "./level/table"
-import { ScoreRangeTable } from "./grading/table"
-
 // Import types
 import type { SchoolYearRow } from "./year/types"
-import type { TermRow } from "./term/types"
-import type { PeriodRow } from "./period/types"
-import type { YearLevelRow } from "./level/types"
-import type { ScoreRangeRow } from "./grading/types"
 
 interface AcademicContentProps {
   lang: Locale
@@ -73,15 +79,25 @@ export function AcademicContent({
       ? "إدارة السنوات الدراسية والفصول والحصص والمراحل ونظام الدرجات"
       : "Manage academic years, terms, periods, year levels, and grading scale",
     years: isArabic ? "السنوات الدراسية" : "Academic Years",
-    yearsDescription: isArabic ? "إنشاء وإدارة السنوات الدراسية" : "Create and manage school years",
+    yearsDescription: isArabic
+      ? "إنشاء وإدارة السنوات الدراسية"
+      : "Create and manage school years",
     terms: isArabic ? "الفصول الدراسية" : "Terms",
-    termsDescription: isArabic ? "تحديد فصول السنة الدراسية" : "Define terms within the academic year",
+    termsDescription: isArabic
+      ? "تحديد فصول السنة الدراسية"
+      : "Define terms within the academic year",
     periods: isArabic ? "الحصص" : "Periods",
-    periodsDescription: isArabic ? "إعداد جدول الحصص اليومية" : "Configure daily class periods",
+    periodsDescription: isArabic
+      ? "إعداد جدول الحصص اليومية"
+      : "Configure daily class periods",
     levels: isArabic ? "المراحل الدراسية" : "Year Levels",
-    levelsDescription: isArabic ? "تعريف المراحل والصفوف الدراسية" : "Define grades and year levels",
+    levelsDescription: isArabic
+      ? "تعريف المراحل والصفوف الدراسية"
+      : "Define grades and year levels",
     grading: isArabic ? "نظام الدرجات" : "Grading Scale",
-    gradingDescription: isArabic ? "إعداد نظام التقييم والدرجات" : "Configure grading and score ranges",
+    gradingDescription: isArabic
+      ? "إعداد نظام التقييم والدرجات"
+      : "Configure grading and score ranges",
   }
 
   return (
@@ -122,7 +138,9 @@ export function AcademicContent({
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold">{t.years}</h3>
-                <p className="text-sm text-muted-foreground">{t.yearsDescription}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.yearsDescription}
+                </p>
               </div>
               <ModalProvider>
                 <Suspense fallback={<TableSkeleton />}>
@@ -140,7 +158,9 @@ export function AcademicContent({
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold">{t.terms}</h3>
-                <p className="text-sm text-muted-foreground">{t.termsDescription}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.termsDescription}
+                </p>
               </div>
               <ModalProvider>
                 <Suspense fallback={<TableSkeleton />}>
@@ -158,7 +178,9 @@ export function AcademicContent({
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold">{t.periods}</h3>
-                <p className="text-sm text-muted-foreground">{t.periodsDescription}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.periodsDescription}
+                </p>
               </div>
               <ModalProvider>
                 <Suspense fallback={<TableSkeleton />}>
@@ -176,7 +198,9 @@ export function AcademicContent({
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold">{t.levels}</h3>
-                <p className="text-sm text-muted-foreground">{t.levelsDescription}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.levelsDescription}
+                </p>
               </div>
               <ModalProvider>
                 <Suspense fallback={<TableSkeleton />}>
@@ -194,7 +218,9 @@ export function AcademicContent({
             <div className="space-y-4">
               <div>
                 <h3 className="font-semibold">{t.grading}</h3>
-                <p className="text-sm text-muted-foreground">{t.gradingDescription}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.gradingDescription}
+                </p>
               </div>
               <ModalProvider>
                 <Suspense fallback={<TableSkeleton />}>

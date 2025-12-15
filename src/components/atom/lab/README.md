@@ -42,11 +42,13 @@ All **68 components** live at the same level under `src/components/atom/lab/` - 
 ### Enhanced Original Cards (5)
 
 All original cards now support:
+
 - **Size variants**: `sm | md | lg | xl`
 - **Loading states**: `loading` prop
 - **Click actions**: `onClick` + `hoverable` props
 
 #### 1. **StatCard** - Single metric display
+
 ```tsx
 <StatCard
   icon={<Users />}
@@ -55,12 +57,13 @@ All original cards now support:
   trend={{ value: 12, direction: "up" }}
   variant="primary"
   size="lg"
-  onClick={() => router.push('/students')}
+  onClick={() => router.push("/students")}
   hoverable
 />
 ```
 
 #### 2. **ProgressCard** - Progress tracking
+
 ```tsx
 <ProgressCard
   icon={<CheckCircle />}
@@ -74,6 +77,7 @@ All original cards now support:
 ```
 
 #### 3. **ListCard** - Activity feed or lists
+
 ```tsx
 <ListCard
   title="Recent Activity"
@@ -82,23 +86,32 @@ All original cards now support:
       icon: <UserPlus />,
       title: "New student enrolled",
       subtitle: "2 minutes ago",
-      trailing: <MetricChip label="New" variant="success" />
-    }
+      trailing: <MetricChip label="New" variant="success" />,
+    },
   ]}
-  action={<Button variant="ghost" size="sm">View All</Button>}
+  action={
+    <Button variant="ghost" size="sm">
+      View All
+    </Button>
+  }
   maxItems={5}
   emptyMessage="No recent activity"
 />
 ```
 
 #### 4. **MultiStatCard** - Multiple statistics grid
+
 ```tsx
 <MultiStatCard
   title="Class Overview"
   stats={[
-    { value: 28, label: "Total Students", trend: { value: 2, direction: "up" } },
+    {
+      value: 28,
+      label: "Total Students",
+      trend: { value: 2, direction: "up" },
+    },
     { value: "94%", label: "Attendance" },
-    { value: 12, label: "Pending" }
+    { value: 12, label: "Pending" },
   ]}
   columns={3}
   size="lg"
@@ -106,6 +119,7 @@ All original cards now support:
 ```
 
 #### 5. **ChartCard** - Chart display with footer stats
+
 ```tsx
 <ChartCard
   title="Revenue Trends"
@@ -113,9 +127,13 @@ All original cards now support:
   chart={<LineChart data={data} />}
   stats={[
     { value: "$45,678", label: "Total Revenue" },
-    { value: "+23%", label: "Growth" }
+    { value: "+23%", label: "Growth" },
   ]}
-  action={<Button variant="ghost" size="sm">Export</Button>}
+  action={
+    <Button variant="ghost" size="sm">
+      Export
+    </Button>
+  }
   loading={isLoading}
 />
 ```
@@ -125,6 +143,7 @@ All original cards now support:
 ### New Card Variants (7)
 
 #### 6. **HeroStatCard** - Large prominent KPI
+
 ```tsx
 <HeroStatCard
   icon={<Users className="h-12 w-12" />}
@@ -133,7 +152,7 @@ All original cards now support:
   subtitle="Across all grade levels"
   trend={{ value: 12, direction: "up" }}
   variant="primary"
-  onClick={() => router.push('/students')}
+  onClick={() => router.push("/students")}
 />
 ```
 
@@ -142,6 +161,7 @@ All original cards now support:
 ---
 
 #### 7. **ActionCard** - Call-to-action prompts
+
 ```tsx
 <ActionCard
   icon={<FileText />}
@@ -150,7 +170,7 @@ All original cards now support:
   action={<Button>Get Started</Button>}
   variant="primary"
   dismissible
-  onDismiss={() => console.log('dismissed')}
+  onDismiss={() => console.log("dismissed")}
 />
 ```
 
@@ -159,15 +179,16 @@ All original cards now support:
 ---
 
 #### 8. **ComparisonCard** - Before/after metrics
+
 ```tsx
 <ComparisonCard
   title="Student Attendance"
   metrics={[
     { label: "This Week", value: 94, variant: "success" },
-    { label: "Last Week", value: 89, variant: "default" }
+    { label: "Last Week", value: 89, variant: "default" },
   ]}
   change={{ value: 5, direction: "up" }}
-  onClick={() => router.push('/attendance')}
+  onClick={() => router.push("/attendance")}
 />
 ```
 
@@ -176,6 +197,7 @@ All original cards now support:
 ---
 
 #### 9. **MediaCard** - Card with image/avatar
+
 ```tsx
 <MediaCard
   media={<Avatar src={user.image} fallback={user.initials} />}
@@ -191,6 +213,7 @@ All original cards now support:
 ---
 
 #### 10. **CollapsibleCard** - Expandable content
+
 ```tsx
 <CollapsibleCard
   title="Recent Activity"
@@ -207,6 +230,7 @@ All original cards now support:
 ---
 
 #### 11. **EmptyStateCard** - No data placeholder
+
 ```tsx
 <EmptyStateCard
   icon={<Inbox className="h-12 w-12" />}
@@ -221,10 +245,11 @@ All original cards now support:
 ---
 
 #### 12. **SkeletonCard** - Loading placeholder
+
 ```tsx
 <SkeletonCard
-  layout="stat"  // "stat" | "list" | "chart" | "progress" | "media"
-  rows={3}       // For list layout
+  layout="stat" // "stat" | "list" | "chart" | "progress" | "media"
+  rows={3} // For list layout
   size="lg"
   showHeader
 />
@@ -237,6 +262,7 @@ All original cards now support:
 ### Phase 2: Modern 2025 Patterns (12)
 
 #### 13. **FlipCard** - Interactive 3D flip card
+
 ```tsx
 <FlipCard
   front={
@@ -261,6 +287,7 @@ All original cards now support:
 ---
 
 #### 14. **MetricCard** - Stat with inline sparkline
+
 ```tsx
 <MetricCard
   value="$45,678"
@@ -269,7 +296,7 @@ All original cards now support:
   trend={{ value: 23, direction: "up" }}
   variant="success"
   size="md"
-  onClick={() => router.push('/revenue')}
+  onClick={() => router.push("/revenue")}
 />
 ```
 
@@ -278,13 +305,14 @@ All original cards now support:
 ---
 
 #### 15. **NotificationCard** - Alert card with types
+
 ```tsx
 <NotificationCard
-  type="success"  // "info" | "success" | "warning" | "error"
+  type="success" // "info" | "success" | "warning" | "error"
   title="Exam Published Successfully"
   message="Your exam is now available to students"
   dismissible
-  onDismiss={() => console.log('dismissed')}
+  onDismiss={() => console.log("dismissed")}
 />
 ```
 
@@ -293,14 +321,15 @@ All original cards now support:
 ---
 
 #### 16. **TimelineCard** - Timeline entry with connector
+
 ```tsx
 <TimelineCard
-  icon={<CheckCircle className="h-5 w-5 text-chart-2" />}
+  icon={<CheckCircle className="text-chart-2 h-5 w-5" />}
   title="Assignment Submitted"
   description="John Doe submitted Math Homework #5"
   timestamp="2 hours ago"
   showConnector={true}
-  onClick={() => router.push('/activity/123')}
+  onClick={() => router.push("/activity/123")}
 />
 ```
 
@@ -309,6 +338,7 @@ All original cards now support:
 ---
 
 #### 17. **ProfileCard** - User profile card
+
 ```tsx
 <ProfileCard
   avatar={<Avatar src={user.avatar} fallback={user.initials} />}
@@ -317,7 +347,9 @@ All original cards now support:
   info="sarah.j@school.edu"
   actions={
     <div className="flex gap-2">
-      <Button size="sm" variant="outline">Message</Button>
+      <Button size="sm" variant="outline">
+        Message
+      </Button>
       <Button size="sm">View Profile</Button>
     </div>
   }
@@ -330,13 +362,14 @@ All original cards now support:
 ---
 
 #### 18. **GoalCard** - Goal tracking with progress ring
+
 ```tsx
 <GoalCard
   title="Student Enrollment Goal"
   current={4812}
   target={5000}
   unit="students"
-  onClick={() => router.push('/enrollment')}
+  onClick={() => router.push("/enrollment")}
 />
 ```
 
@@ -345,15 +378,16 @@ All original cards now support:
 ---
 
 #### 19. **WeatherCard** - Weather/status information
+
 ```tsx
 <WeatherCard
-  icon={<Sun className="h-16 w-16 text-chart-3" />}
+  icon={<Sun className="text-chart-3 h-16 w-16" />}
   temperature="72°F"
   location="San Francisco, CA"
   condition="Sunny"
   stats={[
     { label: "Humidity", value: "45%" },
-    { label: "Wind", value: "12 mph" }
+    { label: "Wind", value: "12 mph" },
   ]}
 />
 ```
@@ -363,6 +397,7 @@ All original cards now support:
 ---
 
 #### 20. **CalendarCard** - Calendar event card
+
 ```tsx
 <CalendarCard
   title="Parent-Teacher Conference"
@@ -371,7 +406,7 @@ All original cards now support:
   location="Room 305"
   description="Quarterly progress discussion"
   status={<Badge>Upcoming</Badge>}
-  onClick={() => router.push('/events/123')}
+  onClick={() => router.push("/events/123")}
 />
 ```
 
@@ -380,6 +415,7 @@ All original cards now support:
 ---
 
 #### 21. **QuickActionCard** - Grid of quick actions
+
 ```tsx
 <QuickActionCard
   title="Quick Actions"
@@ -387,23 +423,23 @@ All original cards now support:
     {
       icon: <Plus className="h-5 w-5" />,
       label: "Create New",
-      onClick: () => router.push('/create')
+      onClick: () => router.push("/create"),
     },
     {
       icon: <Upload className="h-5 w-5" />,
       label: "Upload",
-      onClick: () => setUploadModalOpen(true)
+      onClick: () => setUploadModalOpen(true),
     },
     {
       icon: <Share className="h-5 w-5" />,
       label: "Share",
-      onClick: () => handleShare()
+      onClick: () => handleShare(),
     },
     {
       icon: <Download className="h-5 w-5" />,
       label: "Export",
-      onClick: () => handleExport()
-    }
+      onClick: () => handleExport(),
+    },
   ]}
   columns={2}
 />
@@ -414,6 +450,7 @@ All original cards now support:
 ---
 
 #### 22. **SocialCard** - Social engagement metrics
+
 ```tsx
 <SocialCard
   title="Post Engagement"
@@ -421,9 +458,9 @@ All original cards now support:
     { type: "likes", value: 1234, trend: { value: 12, isPositive: true } },
     { type: "comments", value: 89, trend: { value: 5, isPositive: true } },
     { type: "shares", value: 456, trend: { value: 8, isPositive: false } },
-    { type: "views", value: "12.5K" }
+    { type: "views", value: "12.5K" },
   ]}
-  onClick={() => router.push('/analytics')}
+  onClick={() => router.push("/analytics")}
 />
 ```
 
@@ -432,6 +469,7 @@ All original cards now support:
 ---
 
 #### 23. **GlanceCard** - Minimal quick-glance info
+
 ```tsx
 <GlanceCard
   icon={<Users className="h-4 w-4" />}
@@ -439,7 +477,7 @@ All original cards now support:
   value={234}
   unit="online"
   variant="primary"
-  onClick={() => router.push('/users')}
+  onClick={() => router.push("/users")}
 />
 ```
 
@@ -448,6 +486,7 @@ All original cards now support:
 ---
 
 #### 24. **IconStatCard** - Icon-first centered stat
+
 ```tsx
 <IconStatCard
   icon={<TrendingUp className="h-8 w-8" />}
@@ -455,7 +494,7 @@ All original cards now support:
   label="Success Rate"
   badge={<Badge variant="outline">Live</Badge>}
   variant="success"
-  onClick={() => router.push('/metrics')}
+  onClick={() => router.push("/metrics")}
 />
 ```
 
@@ -468,6 +507,7 @@ All original cards now support:
 Based on official shadcn/ui dashboard examples and bundui patterns.
 
 #### 25. **RecentSalesCard** - Recent transactions list
+
 ```tsx
 <RecentSalesCard
   title="Recent Sales"
@@ -477,17 +517,21 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       avatar: "/avatars/01.png",
       name: "Olivia Martin",
       email: "olivia.martin@email.com",
-      amount: "+$1,999.00"
+      amount: "+$1,999.00",
     },
     {
       name: "Jackson Lee",
       email: "jackson.lee@email.com",
       amount: "+$39.00",
-      badge: <Badge variant="outline">New</Badge>
-    }
+      badge: <Badge variant="outline">New</Badge>,
+    },
   ]}
   maxItems={5}
-  action={<Button variant="ghost" size="sm">View All</Button>}
+  action={
+    <Button variant="ghost" size="sm">
+      View All
+    </Button>
+  }
 />
 ```
 
@@ -496,6 +540,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 26. **ActivityFeedCard** - Activity log with timestamps
+
 ```tsx
 <ActivityFeedCard
   title="Recent Activity"
@@ -506,15 +551,15 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       title: "John Doe",
       description: "Created a new exam paper",
       timestamp: "2 hours ago",
-      type: "success"
+      type: "success",
     },
     {
       title: "System",
       description: "Backup completed successfully",
       timestamp: "5 hours ago",
       type: "success",
-      icon: <Server className="h-4 w-4" />
-    }
+      icon: <Server className="h-4 w-4" />,
+    },
   ]}
   maxItems={10}
   showAvatars={true}
@@ -526,6 +571,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 27. **TeamMembersCard** - Team roster with status
+
 ```tsx
 <TeamMembersCard
   title="Team Members"
@@ -536,14 +582,14 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       name: "Sarah Johnson",
       role: "Mathematics Teacher",
       status: "online",
-      onClick: () => router.push('/profile/sarah')
+      onClick: () => router.push("/profile/sarah"),
     },
     {
       name: "John Smith",
       role: "Science Teacher",
       status: "busy",
-      badge: <Badge variant="outline">Lead</Badge>
-    }
+      badge: <Badge variant="outline">Lead</Badge>,
+    },
   ]}
   maxItems={10}
   showStatus={true}
@@ -555,6 +601,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 28. **TopPerformersCard** - Ranking list with metrics
+
 ```tsx
 <TopPerformersCard
   title="Top Performers"
@@ -567,7 +614,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       subtitle: "Mathematics",
       value: 98,
       unit: "%",
-      progress: 98
+      progress: 98,
     },
     {
       rank: 2,
@@ -575,8 +622,8 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       subtitle: "Science",
       value: 95,
       unit: "%",
-      progress: 95
-    }
+      progress: 95,
+    },
   ]}
   showProgress={true}
   showMedals={true}
@@ -589,6 +636,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 29. **TaskListCard** - Checklist with progress
+
 ```tsx
 <TaskListCard
   title="Today's Tasks"
@@ -600,14 +648,14 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       description: "Grade Math exam for Class 10A",
       completed: false,
       dueDate: "Today",
-      priority: "high"
+      priority: "high",
     },
     {
       id: "2",
       title: "Prepare lesson plan",
       completed: true,
-      priority: "medium"
-    }
+      priority: "medium",
+    },
   ]}
   onToggle={(id) => handleToggleTask(id)}
   showProgress={true}
@@ -619,6 +667,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 30. **DataTableCard** - Mini table preview
+
 ```tsx
 <DataTableCard
   title="Recent Enrollments"
@@ -630,12 +679,12 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       header: "Date",
       accessor: "date",
       align: "right",
-      cell: (value) => new Date(value).toLocaleDateString()
-    }
+      cell: (value) => new Date(value).toLocaleDateString(),
+    },
   ]}
   data={[
     { id: "1", name: "John Doe", grade: "10A", date: "2025-01-15" },
-    { id: "2", name: "Jane Smith", grade: "9B", date: "2025-01-14" }
+    { id: "2", name: "Jane Smith", grade: "9B", date: "2025-01-14" },
   ]}
   maxRows={5}
   onRowClick={(row) => router.push(`/students/${row.id}`)}
@@ -647,6 +696,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 31. **StackedStatCard** - Multiple metrics vertically
+
 ```tsx
 <StackedStatCard
   title="Quick Stats"
@@ -656,22 +706,22 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
       value: "$45,678",
       icon: <DollarSign className="h-4 w-4" />,
       trend: { value: 12, direction: "up" },
-      variant: "success"
+      variant: "success",
     },
     {
       label: "Active Users",
       value: 1234,
       icon: <Users className="h-4 w-4" />,
       trend: { value: 5, direction: "up" },
-      variant: "primary"
+      variant: "primary",
     },
     {
       label: "Pending Tasks",
       value: 23,
       unit: "items",
       icon: <Clock className="h-4 w-4" />,
-      variant: "warning"
-    }
+      variant: "warning",
+    },
   ]}
   showDividers={true}
 />
@@ -682,14 +732,19 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ---
 
 #### 32. **BannerCard** - Announcement/alert banner
+
 ```tsx
 <BannerCard
   variant="warning"
   title="Scheduled Maintenance"
   description="System maintenance scheduled for Sunday, 2:00 AM - 4:00 AM. Some features may be unavailable."
-  action={<Button variant="outline" size="sm">Learn More</Button>}
+  action={
+    <Button variant="outline" size="sm">
+      Learn More
+    </Button>
+  }
   dismissible
-  onDismiss={() => console.log('dismissed')}
+  onDismiss={() => console.log("dismissed")}
 />
 ```
 
@@ -713,6 +768,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ```
 
 **Props:**
+
 - `columns`: Responsive breakpoints (`base`, `md`, `lg`, `xl`, `2xl`)
 - `gap`: Spacing between items (2, 3, 4, 6, 8)
 
@@ -734,6 +790,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ```
 
 **Props:**
+
 - `title`: Section heading
 - `description`: Optional subtitle
 - `action`: Optional action button
@@ -763,6 +820,7 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 ```
 
 **Props:**
+
 - `spacing`: Vertical spacing between sections
 - `maxWidth`: Maximum width constraint
 
@@ -772,15 +830,15 @@ Based on official shadcn/ui dashboard examples and bundui patterns.
 
 ```tsx
 import {
-  DashboardShell,
-  DashboardSection,
-  DashboardGrid,
-  HeroStatCard,
-  StatCard,
-  ChartCard,
-  ListCard,
   ActionCard,
-} from '@/components/atom/lab'
+  ChartCard,
+  DashboardGrid,
+  DashboardSection,
+  DashboardShell,
+  HeroStatCard,
+  ListCard,
+  StatCard,
+} from "@/components/atom/lab"
 
 export default function AdminDashboard() {
   const { data, isLoading } = useDashboardData()
@@ -823,7 +881,11 @@ export default function AdminDashboard() {
       {/* Charts Section */}
       <DashboardSection
         title="Performance Trends"
-        action={<Button variant="ghost" size="sm">View All</Button>}
+        action={
+          <Button variant="ghost" size="sm">
+            View All
+          </Button>
+        }
       >
         <DashboardGrid columns={{ base: 1, lg: 2 }}>
           <ChartCard
@@ -832,7 +894,7 @@ export default function AdminDashboard() {
             chart={<LineChart data={data?.enrollmentTrend} />}
             stats={[
               { value: data?.totalEnrolled, label: "Total Enrolled" },
-              { value: "+12%", label: "Growth" }
+              { value: "+12%", label: "Growth" },
             ]}
             loading={isLoading}
           />
@@ -849,7 +911,11 @@ export default function AdminDashboard() {
         <ListCard
           title="Recent Activity"
           items={data?.recentActivity || []}
-          action={<Button variant="ghost" size="sm">View All</Button>}
+          action={
+            <Button variant="ghost" size="sm">
+              View All
+            </Button>
+          }
           maxItems={5}
           loading={isLoading}
         />
@@ -870,6 +936,7 @@ export default function AdminDashboard() {
 ## 🎨 Design Principles
 
 ### Minimal Flat Style
+
 - Clean borders (`border-border`)
 - Subtle shadows (`shadow-sm`)
 - No gradients (solid backgrounds)
@@ -877,22 +944,24 @@ export default function AdminDashboard() {
 - Consistent spacing (p-4, p-6, gap-4)
 
 ### Semantic Tokens (99%+ Coverage)
+
 ```tsx
 // ✅ GOOD: Semantic tokens
-bg-background
-text-foreground
-text-muted-foreground
-border-border
-bg-primary
-bg-chart-1
+bg - background
+text - foreground
+text - muted - foreground
+border - border
+bg - primary
+bg - chart - 1
 
 // ❌ BAD: Hardcoded values
-bg-white
-text-gray-500
-border-gray-200
+bg - white
+text - gray - 500
+border - gray - 200
 ```
 
 ### Typography (Semantic HTML)
+
 ```tsx
 // ✅ GOOD: Semantic HTML
 <h3>Dashboard Title</h3>
@@ -927,6 +996,7 @@ const dict = await getDictionary(lang)
 ```
 
 **RTL/LTR Support:**
+
 - Flexbox/Grid automatically handles RTL
 - Icons positioned with flex utilities
 - Text alignment via Tailwind RTL support
@@ -938,10 +1008,10 @@ const dict = await getDictionary(lang)
 All card templates support 4 sizes:
 
 ```tsx
-size="sm"  // Compact (p-3)
-size="md"  // Default (p-4)
-size="lg"  // Large (p-6)
-size="xl"  // Extra large (p-8)
+size = "sm" // Compact (p-3)
+size = "md" // Default (p-4)
+size = "lg" // Large (p-6)
+size = "xl" // Extra large (p-8)
 ```
 
 ---
@@ -954,7 +1024,7 @@ All cards support loading with skeleton placeholders:
 <StatCard
   value={data?.students}
   label="Total Students"
-  loading={isLoading}  // Shows skeleton while loading
+  loading={isLoading} // Shows skeleton while loading
 />
 ```
 
@@ -969,20 +1039,22 @@ Use dedicated `SkeletonCard` for custom layouts:
 ## 🖱️ Interactive Features
 
 ### Click Actions
+
 ```tsx
 <StatCard
   value="4,812"
   label="Total Students"
-  onClick={() => router.push('/students')}
+  onClick={() => router.push("/students")}
 />
 ```
 
 ### Hover Effects
+
 ```tsx
 <StatCard
   value="4,812"
   label="Total Students"
-  hoverable  // Adds hover:bg-accent/50
+  hoverable // Adds hover:bg-accent/50
 />
 ```
 
@@ -1002,27 +1074,30 @@ Use dedicated `SkeletonCard` for custom layouts:
 ### From Old StatCard to Enhanced StatCard
 
 **Before (Old):**
+
 ```tsx
 <Card>
   <CardContent>
     <div className="text-2xl font-bold">{value}</div>
-    <p className="text-sm text-muted-foreground">{label}</p>
+    <p className="text-muted-foreground text-sm">{label}</p>
   </CardContent>
 </Card>
 ```
 
 **After (New):**
+
 ```tsx
 <StatCard
   value={value}
   label={label}
   size="lg"
   loading={isLoading}
-  onClick={() => router.push('/details')}
+  onClick={() => router.push("/details")}
 />
 ```
 
 **Benefits:**
+
 - 📉 50% fewer lines
 - ✅ Semantic tokens throughout
 - ✅ Loading states built-in
@@ -1036,6 +1111,7 @@ Use dedicated `SkeletonCard` for custom layouts:
 Official components from shadcn/ui v4 repository, adapted with `shadcn-` prefix.
 
 ### Field Components (5)
+
 - **ShadcnFieldDemo** - Payment form with card details and billing
 - **ShadcnFieldCheckbox** - Horizontal checkbox with label
 - **ShadcnFieldChoiceCard** - Radio group with descriptive cards
@@ -1043,33 +1119,40 @@ Official components from shadcn/ui v4 repository, adapted with `shadcn-` prefix.
 - **ShadcnFieldHear** - Multi-select checkbox group with pill styling
 
 ### Input Groups (4)
+
 - **ShadcnInputGroupDemo** - Various input patterns (search, URL, textarea, verified)
 - **ShadcnInputGroupButton** - Secure URL input with info popover
 - **ShadcnInputGroupTextarea** - Code editor interface with actions
 - **ShadcnEmptyInputGroup** - 404 error state with search
 
 ### Button Groups (4)
+
 - **ShadcnButtonGroupDemo** - Email actions with dropdown menus
 - **ShadcnButtonGroupInputGroup** - Messaging interface with voice mode
 - **ShadcnButtonGroupNested** - Nested button groups with navigation
 - **ShadcnButtonGroupPopover** - AI assistant interface with popover
 
 ### Display (3)
+
 - **ShadcnItemDemo** - List item patterns for settings/notifications
 - **ShadcnItemAvatar** - User list with avatars and actions
 - **ShadcnEmptyAvatarGroup** - Empty team state with invite CTA
 
 ### Feedback (2)
+
 - **ShadcnSpinnerBadge** - Loading badges with spinner variants
 - **ShadcnSpinnerEmpty** - Loading state with cancellation
 
 ### Settings (1)
+
 - **ShadcnAppearanceSettings** - Compute environment configuration
 
 ### Forms (1)
+
 - **ShadcnNotionPromptForm** - AI prompt interface with mentions and sources
 
 ### Usage Example
+
 ```tsx
 import { ShadcnFieldDemo, ShadcnButtonGroupDemo } from '@/components/atom/lab'
 
@@ -1081,43 +1164,43 @@ import { ShadcnFieldDemo, ShadcnButtonGroupDemo } from '@/components/atom/lab'
 
 ## 📊 Component Summary
 
-| Category | Component | Purpose | Key Props |
-|----------|-----------|---------|-----------|
-| **Enhanced** | StatCard | Single metric | value, label, icon, trend, size, loading, onClick |
-| **Enhanced** | ProgressCard | Progress tracking | value, label, icon, variant, size, loading |
-| **Enhanced** | ListCard | Activity feeds | title, items, action, maxItems, loading |
-| **Enhanced** | MultiStatCard | Multi-metric grid | title, stats, columns, size, loading |
-| **Enhanced** | ChartCard | Chart display | title, chart, stats, action, loading |
-| **Phase 1** | HeroStatCard | Large KPI | value, label, subtitle, icon, trend |
-| **Phase 1** | ActionCard | CTAs | icon, title, description, action, dismissible |
-| **Phase 1** | ComparisonCard | Comparisons | title, metrics, change |
-| **Phase 1** | MediaCard | With media | media, title, subtitle, trailing |
-| **Phase 1** | CollapsibleCard | Expandable | title, summary, children, defaultOpen |
-| **Phase 1** | EmptyStateCard | No data | icon, title, description, action |
-| **Phase 1** | SkeletonCard | Loading | layout, rows, size, showHeader |
-| **Phase 2** | FlipCard | 3D flip card | front, back, clickToFlip, size |
-| **Phase 2** | MetricCard | Stat + sparkline | value, label, data, trend, variant |
-| **Phase 2** | NotificationCard | System alerts | type, title, message, dismissible |
-| **Phase 2** | TimelineCard | Timeline entry | icon, title, timestamp, showConnector |
-| **Phase 2** | ProfileCard | User profile | avatar, name, role, info, actions |
-| **Phase 2** | GoalCard | Goal progress | title, current, target, unit |
-| **Phase 2** | WeatherCard | Weather/status | icon, temperature, location, stats |
-| **Phase 2** | CalendarCard | Event details | title, date, time, location, status |
-| **Phase 2** | QuickActionCard | Action grid | title, actions, columns |
-| **Phase 2** | SocialCard | Social metrics | title, metrics (likes, shares, etc.) |
-| **Phase 2** | GlanceCard | Minimal metric | icon, label, value, variant |
-| **Phase 2** | IconStatCard | Icon-first stat | icon, value, label, badge, variant |
-| **Phase 3** | RecentSalesCard | Transaction list | title, sales, maxItems, action |
-| **Phase 3** | ActivityFeedCard | Activity log | title, activities, showAvatars |
-| **Phase 3** | TeamMembersCard | Team roster | title, members, showStatus |
-| **Phase 3** | TopPerformersCard | Rankings | title, performers, showProgress, showMedals |
-| **Phase 3** | TaskListCard | Checklist | title, tasks, onToggle, showProgress |
-| **Phase 3** | DataTableCard | Table preview | title, columns, data, onRowClick |
-| **Phase 3** | StackedStatCard | Vertical metrics | title, stats, showDividers |
-| **Phase 3** | BannerCard | Announcements | variant, title, dismissible |
-| **Layout** | DashboardGrid | Grid container | columns, gap |
-| **Layout** | DashboardSection | Section wrapper | title, description, action |
-| **Layout** | DashboardShell | Page wrapper | spacing, maxWidth |
+| Category     | Component         | Purpose           | Key Props                                         |
+| ------------ | ----------------- | ----------------- | ------------------------------------------------- |
+| **Enhanced** | StatCard          | Single metric     | value, label, icon, trend, size, loading, onClick |
+| **Enhanced** | ProgressCard      | Progress tracking | value, label, icon, variant, size, loading        |
+| **Enhanced** | ListCard          | Activity feeds    | title, items, action, maxItems, loading           |
+| **Enhanced** | MultiStatCard     | Multi-metric grid | title, stats, columns, size, loading              |
+| **Enhanced** | ChartCard         | Chart display     | title, chart, stats, action, loading              |
+| **Phase 1**  | HeroStatCard      | Large KPI         | value, label, subtitle, icon, trend               |
+| **Phase 1**  | ActionCard        | CTAs              | icon, title, description, action, dismissible     |
+| **Phase 1**  | ComparisonCard    | Comparisons       | title, metrics, change                            |
+| **Phase 1**  | MediaCard         | With media        | media, title, subtitle, trailing                  |
+| **Phase 1**  | CollapsibleCard   | Expandable        | title, summary, children, defaultOpen             |
+| **Phase 1**  | EmptyStateCard    | No data           | icon, title, description, action                  |
+| **Phase 1**  | SkeletonCard      | Loading           | layout, rows, size, showHeader                    |
+| **Phase 2**  | FlipCard          | 3D flip card      | front, back, clickToFlip, size                    |
+| **Phase 2**  | MetricCard        | Stat + sparkline  | value, label, data, trend, variant                |
+| **Phase 2**  | NotificationCard  | System alerts     | type, title, message, dismissible                 |
+| **Phase 2**  | TimelineCard      | Timeline entry    | icon, title, timestamp, showConnector             |
+| **Phase 2**  | ProfileCard       | User profile      | avatar, name, role, info, actions                 |
+| **Phase 2**  | GoalCard          | Goal progress     | title, current, target, unit                      |
+| **Phase 2**  | WeatherCard       | Weather/status    | icon, temperature, location, stats                |
+| **Phase 2**  | CalendarCard      | Event details     | title, date, time, location, status               |
+| **Phase 2**  | QuickActionCard   | Action grid       | title, actions, columns                           |
+| **Phase 2**  | SocialCard        | Social metrics    | title, metrics (likes, shares, etc.)              |
+| **Phase 2**  | GlanceCard        | Minimal metric    | icon, label, value, variant                       |
+| **Phase 2**  | IconStatCard      | Icon-first stat   | icon, value, label, badge, variant                |
+| **Phase 3**  | RecentSalesCard   | Transaction list  | title, sales, maxItems, action                    |
+| **Phase 3**  | ActivityFeedCard  | Activity log      | title, activities, showAvatars                    |
+| **Phase 3**  | TeamMembersCard   | Team roster       | title, members, showStatus                        |
+| **Phase 3**  | TopPerformersCard | Rankings          | title, performers, showProgress, showMedals       |
+| **Phase 3**  | TaskListCard      | Checklist         | title, tasks, onToggle, showProgress              |
+| **Phase 3**  | DataTableCard     | Table preview     | title, columns, data, onRowClick                  |
+| **Phase 3**  | StackedStatCard   | Vertical metrics  | title, stats, showDividers                        |
+| **Phase 3**  | BannerCard        | Announcements     | variant, title, dismissible                       |
+| **Layout**   | DashboardGrid     | Grid container    | columns, gap                                      |
+| **Layout**   | DashboardSection  | Section wrapper   | title, description, action                        |
+| **Layout**   | DashboardShell    | Page wrapper      | spacing, maxWidth                                 |
 
 ---
 

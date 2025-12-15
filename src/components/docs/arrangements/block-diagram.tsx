@@ -13,17 +13,30 @@ interface Section {
   items: string[]
 }
 
-export function BuildingBlocks({ sections, title = "Building Blocks" }: { sections: Section[]; title?: string }) {
+export function BuildingBlocks({
+  sections,
+  title = "Building Blocks",
+}: {
+  sections: Section[]
+  title?: string
+}) {
   return (
     <div className="">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {sections.map((section) => (
           <div key={section.title} className="space-y-2">
-            <div className="text-xs text-muted-foreground">{section.title}</div>
+            <div className="text-muted-foreground text-xs">{section.title}</div>
             {chunk(section.items, 3).map((row, rowIdx) => (
-              <div key={`${section.title}-row-${rowIdx}`} className="flex gap-2">
+              <div
+                key={`${section.title}-row-${rowIdx}`}
+                className="flex gap-2"
+              >
                 {row.map((item) => (
-                  <Badge key={item} variant="secondary" className="w-auto text-xs font-normal px-2 py-1">
+                  <Badge
+                    key={item}
+                    variant="secondary"
+                    className="w-auto px-2 py-1 text-xs font-normal"
+                  >
                     {item}
                   </Badge>
                 ))}
@@ -32,7 +45,10 @@ export function BuildingBlocks({ sections, title = "Building Blocks" }: { sectio
           </div>
         ))}
       </div>
-      <div className="text-xs text-muted-foreground mt-4">Theme and assets are applied per school domain at runtime; all data remains centrally stored and scoped by schoolId.</div>
+      <div className="text-muted-foreground mt-4 text-xs">
+        Theme and assets are applied per school domain at runtime; all data
+        remains centrally stored and scoped by schoolId.
+      </div>
     </div>
   )
 }
@@ -104,5 +120,3 @@ export function LowLevelBlockDiagram() {
 export function BlockDiagram() {
   return <LowLevelBlockDiagram />
 }
-
-

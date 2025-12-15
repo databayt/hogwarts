@@ -1,17 +1,22 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { InvoiceSchemaZod } from "../validation";
+import { useFormContext } from "react-hook-form"
+import { z } from "zod"
+
+import { Input } from "@/components/ui/input"
+
+import { InvoiceSchemaZod } from "../validation"
 
 interface BasicInformationStepProps {
-  isView: boolean;
+  isView: boolean
 }
 
 export function BasicInformationStep({ isView }: BasicInformationStepProps) {
-  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>();
-  const { register, formState: { errors } } = form;
+  const form = useFormContext<z.infer<typeof InvoiceSchemaZod>>()
+  const {
+    register,
+    formState: { errors },
+  } = form
 
   return (
     <div className="space-y-6">
@@ -86,5 +91,5 @@ export function BasicInformationStep({ isView }: BasicInformationStepProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -6,17 +6,17 @@ This document tracks issues, improvements, and technical debt in the authenticat
 
 ## Current Status
 
-| Category | Status |
-|----------|--------|
-| Core Authentication | Production Ready |
-| Multi-Tenant Support | Production Ready |
+| Category                          | Status           |
+| --------------------------------- | ---------------- |
+| Core Authentication               | Production Ready |
+| Multi-Tenant Support              | Production Ready |
 | OAuth Providers (Google/Facebook) | Production Ready |
-| Email Verification | Production Ready |
-| Two-Factor Auth | Production Ready |
-| Cross-Subdomain SSO | Production Ready |
-| Invitation System | Not Implemented |
-| Bulk User Creation | Not Implemented |
-| School Join Codes | Not Implemented |
+| Email Verification                | Production Ready |
+| Two-Factor Auth                   | Production Ready |
+| Cross-Subdomain SSO               | Production Ready |
+| Invitation System                 | Not Implemented  |
+| Bulk User Creation                | Not Implemented  |
+| School Join Codes                 | Not Implemented  |
 
 ---
 
@@ -30,6 +30,7 @@ This document tracks issues, improvements, and technical debt in the authenticat
 **Impact**: Performance degradation, potential security info leakage
 
 **Current State**:
+
 ```typescript
 // Over 800 lines of console.log statements in redirect callback
 log('=====================================');
@@ -40,13 +41,15 @@ log('Input Parameters:', { url, baseUrl, ... });
 ```
 
 **Required Fix**:
+
 ```typescript
 // Wrap ALL debug logging
-const isDev = process.env.NODE_ENV === 'development';
-const log = isDev ? console.log : () => {};
+const isDev = process.env.NODE_ENV === "development"
+const log = isDev ? console.log : () => {}
 ```
 
 **Acceptance Criteria**:
+
 - [ ] Zero console.log in production builds
 - [ ] All debug logs wrapped in environment check
 - [ ] Performance improvement verified
@@ -61,33 +64,36 @@ const log = isDev ? console.log : () => {};
 **Impact**: Could return wrong user in multi-tenant edge cases
 
 **Current State**:
+
 ```typescript
 export const getUserByEmail = async (email: string) => {
   const users = await db.user.findMany({
     where: { email },
-    orderBy: { createdAt: 'desc' }
-  });
-  return users[0] || null; // Returns ANY user with this email
-};
+    orderBy: { createdAt: "desc" },
+  })
+  return users[0] || null // Returns ANY user with this email
+}
 ```
 
 **Required Fix**:
+
 ```typescript
 export const getUserByEmail = async (email: string, schoolId?: string) => {
   if (schoolId) {
     return db.user.findFirst({
-      where: { email, schoolId }
-    });
+      where: { email, schoolId },
+    })
   }
   const users = await db.user.findMany({
     where: { email },
-    orderBy: { createdAt: 'desc' }
-  });
-  return users[0] || null;
-};
+    orderBy: { createdAt: "desc" },
+  })
+  return users[0] || null
+}
 ```
 
 **Acceptance Criteria**:
+
 - [ ] Add optional schoolId parameter
 - [ ] Update all callers to pass schoolId when available
 - [ ] Add tenant-specific lookup for credentials login
@@ -102,16 +108,19 @@ export const getUserByEmail = async (email: string, schoolId?: string) => {
 **Impact**: Users exist in limbo without schoolId until completing onboarding
 
 **Current Flow**:
+
 ```
 OAuth Login → User Created (no schoolId) → Redirect → ??? → Onboarding
 ```
 
 **Required Fix**:
+
 1. Detect new OAuth users in JWT callback
 2. Force redirect to onboarding for users without schoolId
 3. Ensure onboarding creates school-user link atomically
 
 **Acceptance Criteria**:
+
 - [ ] New OAuth users redirected to /onboarding
 - [ ] No user can access dashboard without schoolId (except DEVELOPER)
 - [ ] Onboarding creates school-user link in single transaction
@@ -130,6 +139,7 @@ OAuth Login → User Created (no schoolId) → Redirect → ??? → Onboarding
 Schools want to invite specific users with pre-assigned roles instead of open registration.
 
 **Proposed Design**:
+
 ```typescript
 // Database model
 model Invitation {
@@ -148,6 +158,7 @@ model Invitation {
 ```
 
 **Components Needed**:
+
 ```
 src/components/auth/invitation/
 ├── action.ts       # Create, validate, use invitation
@@ -169,6 +180,7 @@ src/components/auth/invitation/
 Schools want to import students/teachers from CSV without manual entry.
 
 **Acceptance Criteria**:
+
 - [ ] CSV upload with column mapping
 - [ ] Validation before import
 - [ ] Batch creation with rollback
@@ -187,6 +199,7 @@ Schools want to import students/teachers from CSV without manual entry.
 Schools want simple codes for students to join.
 
 **Schema Change**:
+
 ```prisma
 model School {
   joinCode      String?   @unique  // e.g., "HOGWARTS-2024"
@@ -249,6 +262,7 @@ model School {
 ## P3 - Low Priority (Post-Launch)
 
 ### Future Enhancements
+
 1. Account linking (same user, multiple schools)
 2. Magic link authentication
 3. WebAuthn/passkey support
@@ -295,25 +309,25 @@ model School {
 
 ### What's Working Well
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Cross-subdomain cookies | Excellent | `.databayt.org` enables SSO |
-| Smart redirect | Excellent | Users → their school subdomain |
-| Role hierarchy | Excellent | 8 clear permission levels |
-| School isolation | Good | schoolId on User model |
-| Compound uniqueness | Good | Same email across schools |
-| OAuth integration | Good | Google/FB working |
-| Session management | Good | JWT with 24h expiry |
-| Tenant context | Good | Centralized retrieval |
+| Feature                 | Status    | Notes                          |
+| ----------------------- | --------- | ------------------------------ |
+| Cross-subdomain cookies | Excellent | `.databayt.org` enables SSO    |
+| Smart redirect          | Excellent | Users → their school subdomain |
+| Role hierarchy          | Excellent | 8 clear permission levels      |
+| School isolation        | Good      | schoolId on User model         |
+| Compound uniqueness     | Good      | Same email across schools      |
+| OAuth integration       | Good      | Google/FB working              |
+| Session management      | Good      | JWT with 24h expiry            |
+| Tenant context          | Good      | Centralized retrieval          |
 
 ### OAuth + Credentials: Best Practice?
 
 **Yes**, this is the right approach for school management:
 
-| Method | Use Case | Benefits |
-|--------|----------|----------|
-| **OAuth** | Self-registration | No password management, verified email |
-| **Credentials** | Admin-created accounts | Full control, bulk creation |
+| Method          | Use Case               | Benefits                               |
+| --------------- | ---------------------- | -------------------------------------- |
+| **OAuth**       | Self-registration      | No password management, verified email |
+| **Credentials** | Admin-created accounts | Full control, bulk creation            |
 
 **Recommendation**: Offer both, let schools choose.
 
@@ -321,12 +335,12 @@ model School {
 
 ## Technical Debt
 
-| Issue | File | Priority |
-|-------|------|----------|
-| Debug logs in production | auth.ts | P0 |
-| 1000+ line redirect callback | auth.ts | P2 |
-| Missing tests | all | P2 |
-| Hardcoded URLs in social.tsx | social.tsx | P3 |
+| Issue                        | File       | Priority |
+| ---------------------------- | ---------- | -------- |
+| Debug logs in production     | auth.ts    | P0       |
+| 1000+ line redirect callback | auth.ts    | P2       |
+| Missing tests                | all        | P2       |
+| Hardcoded URLs in social.tsx | social.tsx | P3       |
 
 ---
 
@@ -334,21 +348,21 @@ model School {
 
 ### Current Coverage
 
-| Test Type | Status | Tests |
-|-----------|--------|-------|
-| Unit tests | ✅ | 123 passing |
-| Integration tests | Pending | - |
-| E2E tests | Pending | Critical paths |
+| Test Type         | Status  | Tests          |
+| ----------------- | ------- | -------------- |
+| Unit tests        | ✅      | 123 passing    |
+| Integration tests | Pending | -              |
+| E2E tests         | Pending | Critical paths |
 
 ### Test Files
 
-| File | Tests | Status |
-|------|-------|--------|
-| `__tests__/validation.test.ts` | 49 | ✅ Passing |
-| `__tests__/user.test.ts` | 22 | ✅ Passing |
-| `__tests__/tokens.test.ts` | 16 | ✅ Passing |
-| `__tests__/login/action.test.ts` | 24 | ✅ Passing |
-| `__tests__/join/action.test.ts` | 12 | ✅ Passing |
+| File                             | Tests | Status     |
+| -------------------------------- | ----- | ---------- |
+| `__tests__/validation.test.ts`   | 49    | ✅ Passing |
+| `__tests__/user.test.ts`         | 22    | ✅ Passing |
+| `__tests__/tokens.test.ts`       | 16    | ✅ Passing |
+| `__tests__/login/action.test.ts` | 24    | ✅ Passing |
+| `__tests__/join/action.test.ts`  | 12    | ✅ Passing |
 
 ### Tests Document Known Issues
 
@@ -356,14 +370,14 @@ The test suite explicitly documents P0 issues:
 
 ```typescript
 // user.test.ts
-it('P0 ISSUE: returns user without tenant scoping', async () => {
+it("P0 ISSUE: returns user without tenant scoping", async () => {
   // Documents that getUserByEmail doesn't scope by schoolId
   expect(mockedDb.user.findMany).toHaveBeenCalledWith({
-    where: { email: 'shared@example.com' }, // Missing schoolId!
+    where: { email: "shared@example.com" }, // Missing schoolId!
   })
 })
 
-it('P0 ISSUE: creates user without schoolId', async () => {
+it("P0 ISSUE: creates user without schoolId", async () => {
   // Documents that OAuth users have no schoolId
   expect(createCall.data.schoolId).toBeUndefined()
 })
@@ -423,28 +437,31 @@ pnpm test src/components/auth/__tests__ --run
 
 ## Recommended Next Steps
 
-| Priority | Task | Description | Effort |
-|----------|------|-------------|--------|
-| **P0 - Immediate** | Remove debug logging | 800+ lines of console.log in auth.ts | 1 day |
-| **P1 - Short-term** | Invitation system | Schools invite users with pre-assigned roles | 3-5 days |
-| **P1 - Short-term** | School join codes | Simple codes like "HOGWARTS-2024" | 1-2 days |
-| **P1 - Medium-term** | Bulk user creation | CSV import for students/teachers | 2-3 days |
+| Priority             | Task                 | Description                                  | Effort   |
+| -------------------- | -------------------- | -------------------------------------------- | -------- |
+| **P0 - Immediate**   | Remove debug logging | 800+ lines of console.log in auth.ts         | 1 day    |
+| **P1 - Short-term**  | Invitation system    | Schools invite users with pre-assigned roles | 3-5 days |
+| **P1 - Short-term**  | School join codes    | Simple codes like "HOGWARTS-2024"            | 1-2 days |
+| **P1 - Medium-term** | Bulk user creation   | CSV import for students/teachers             | 2-3 days |
 
 ---
 
 ## Sprint Planning
 
 ### Current Sprint (Week 1)
+
 1. [P0] Remove debug logging from auth.ts
 2. [P0] Fix getUserByEmail tenant awareness
 3. [P0] Ensure OAuth users redirect to onboarding
 
 ### Next Sprint (Week 2-3)
+
 1. [P1] Implement invitation system with roles
 2. [P1] Add school join codes
 3. [P1] Implement bulk user creation via CSV
 
 ### Future Sprints
+
 - Session refresh improvements
 - Redirect logic refactoring
 - Testing suite
@@ -454,13 +471,13 @@ pnpm test src/components/auth/__tests__ --run
 
 ## Success Metrics
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Login success rate | 95% | 99% |
-| OAuth callback issues | 5/week | 0 |
-| Session-related bugs | 3/week | 0 |
-| Time to first dashboard | 8s | 3s |
-| Test coverage | 0% | 80% |
+| Metric                  | Current | Target |
+| ----------------------- | ------- | ------ |
+| Login success rate      | 95%     | 99%    |
+| OAuth callback issues   | 5/week  | 0      |
+| Session-related bugs    | 3/week  | 0      |
+| Time to first dashboard | 8s      | 3s     |
+| Test coverage           | 0%      | 80%    |
 
 ---
 

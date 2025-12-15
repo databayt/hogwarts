@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,15 +20,21 @@ export function FormField({
   ...props
 }: FormFieldProps) {
   return (
-    <div data-slot="form-field" className={cn("grid gap-2", className)} {...props}>
+    <div
+      data-slot="form-field"
+      className={cn("grid gap-2", className)}
+      {...props}
+    >
       <Label htmlFor={id}>{label}</Label>
       {children}
     </div>
   )
 }
 
-export interface FormFieldTextProps
-  extends Omit<React.ComponentProps<typeof Input>, "id"> {
+export interface FormFieldTextProps extends Omit<
+  React.ComponentProps<typeof Input>,
+  "id"
+> {
   label: string
   id?: string
 }

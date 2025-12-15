@@ -1,5 +1,7 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import type { BaseComponentProps } from "./types"
 
 interface ProgressBarProps extends BaseComponentProps {
@@ -65,14 +67,24 @@ export function ProgressBar({
 
   return (
     <div className={cn("w-full space-y-1", className)} {...props}>
-      <div className={cn("w-full overflow-hidden rounded-full bg-muted", sizeStyles[size])}>
+      <div
+        className={cn(
+          "bg-muted w-full overflow-hidden rounded-full",
+          sizeStyles[size]
+        )}
+      >
         <div
-          className={cn("h-full transition-all duration-300", variantStyles[variant])}
+          className={cn(
+            "h-full transition-all duration-300",
+            variantStyles[variant]
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>
       {showLabel && (
-        <p className="text-xs text-muted-foreground">{Math.round(percentage)}%</p>
+        <p className="text-muted-foreground text-xs">
+          {Math.round(percentage)}%
+        </p>
       )}
     </div>
   )

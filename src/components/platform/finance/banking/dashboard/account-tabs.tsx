@@ -1,10 +1,11 @@
-'use client'
+"use client"
 
-import { memo, useCallback, useMemo, useTransition } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatAmount } from '@/components/platform/finance/banking/lib/utils'
+import { memo, useCallback, useMemo, useTransition } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoaderCircle } from "lucide-react"
+
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatAmount } from "@/components/platform/finance/banking/lib/utils"
 
 interface AccountTabsProps {
   accounts: any[]
@@ -20,7 +21,9 @@ interface AccountTabTriggerProps {
  * AccountTabTrigger - Memoized individual tab trigger
  * Prevents re-renders when sibling tabs update
  */
-const AccountTabTrigger = memo(function AccountTabTrigger({ account }: AccountTabTriggerProps) {
+const AccountTabTrigger = memo(function AccountTabTrigger({
+  account,
+}: AccountTabTriggerProps) {
   // Format amount once and memoize
   const formattedBalance = useMemo(
     () => formatAmount(account.currentBalance),
@@ -34,9 +37,7 @@ const AccountTabTrigger = memo(function AccountTabTrigger({ account }: AccountTa
       className="flex flex-col items-start gap-1 text-left"
     >
       <span className="text-sm font-medium">{account.name}</span>
-      <span className="text-xs text-muted-foreground">
-        {formattedBalance}
-      </span>
+      <span className="text-muted-foreground text-xs">{formattedBalance}</span>
     </TabsTrigger>
   )
 })
@@ -69,7 +70,7 @@ export const AccountTabs = memo(function AccountTabs({
       // Use startTransition for non-blocking navigation
       startTransition(() => {
         const params = new URLSearchParams(searchParams.toString())
-        params.set('id', accountId)
+        params.set("id", accountId)
         router.push(`${pathname}?${params.toString()}`, { scroll: false })
       })
     },
@@ -93,7 +94,7 @@ export const AccountTabs = memo(function AccountTabs({
 
       {/* Loading indicator during transition */}
       {isPending && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+        <div className="bg-background/50 absolute inset-0 flex items-center justify-center">
           <LoaderCircle className="h-4 w-4 animate-spin" />
         </div>
       )}

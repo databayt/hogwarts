@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { guardianSchema, type GuardianSchemaType } from './validation';
+import { guardianSchema, type GuardianSchemaType } from "./validation"
 
 export interface SaveGuardianResult {
-  success: boolean;
-  data?: GuardianSchemaType;
-  error?: string;
+  success: boolean
+  data?: GuardianSchemaType
+  error?: string
 }
 
 export async function saveGuardianStep(
@@ -13,22 +13,22 @@ export async function saveGuardianStep(
 ): Promise<SaveGuardianResult> {
   try {
     // Validate data
-    const validatedData = guardianSchema.parse(data);
+    const validatedData = guardianSchema.parse(data)
 
     return {
       success: true,
-      data: validatedData
-    };
+      data: validatedData,
+    }
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        error: error.message
-      };
+        error: error.message,
+      }
     }
     return {
       success: false,
-      error: 'Validation failed'
-    };
+      error: "Validation failed",
+    }
   }
 }

@@ -1,13 +1,17 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
-import { Resend } from "resend";
-import { createInquirySchema } from "../validation";
-import type { ActionResult, InquiryFormData } from "../types";
+import { Resend } from "resend"
+
+import { db } from "@/lib/db"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+
+import type { ActionResult, InquiryFormData } from "../types"
+import { createInquirySchema } from "../validation"
 
 // Initialize Resend for email
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
 // ============================================
 // Inquiry Actions
@@ -21,24 +25,27 @@ export async function submitInquiry(
   data: InquiryFormData
 ): Promise<ActionResult<{ message: string }>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     // Validate data
-    const schema = createInquirySchema();
-    const validated = schema.parse(data);
+    const schema = createInquirySchema()
+    const validated = schema.parse(data)
 
     // Check if settings allow inquiry form
     const settings = await db.admissionSettings.findUnique({
       where: { schoolId },
-    });
+    })
 
     if (settings && !settings.enableInquiryForm) {
-      return { success: false, error: "Inquiry form is currently not accepting submissions" };
+      return {
+        success: false,
+        error: "Inquiry form is currently not accepting submissions",
+      }
     }
 
     // Check for duplicate inquiry (same email in last 24 hours)
@@ -50,13 +57,14 @@ export async function submitInquiry(
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
         },
       },
-    });
+    })
 
     if (recentInquiry) {
       return {
         success: false,
-        error: "You have already submitted an inquiry recently. Our team will contact you soon."
-      };
+        error:
+          "You have already submitted an inquiry recently. Our team will contact you soon.",
+      }
     }
 
     // Create inquiry
@@ -67,14 +75,16 @@ export async function submitInquiry(
         email: validated.email,
         phone: validated.phone || null,
         studentName: validated.studentName || null,
-        studentDOB: validated.studentDOB ? new Date(validated.studentDOB) : null,
+        studentDOB: validated.studentDOB
+          ? new Date(validated.studentDOB)
+          : null,
         interestedGrade: validated.interestedGrade || null,
         source: validated.source || null,
         message: validated.message || null,
         subscribeNewsletter: validated.subscribeNewsletter,
         status: "NEW",
       },
-    });
+    })
 
     // Send confirmation email to parent
     if (resend) {
@@ -95,9 +105,9 @@ export async function submitInquiry(
             </ul>
             <p>Best regards,<br>Admissions Team<br>${schoolResult.data.name}</p>
           `,
-        });
+        })
       } catch (emailError) {
-        console.error("Failed to send inquiry confirmation email:", emailError);
+        console.error("Failed to send inquiry confirmation email:", emailError)
       }
 
       // Send notification to school (if configured)
@@ -107,36 +117,43 @@ export async function submitInquiry(
 
     return {
       success: true,
-      data: { message: "Thank you for your inquiry! We will contact you soon." }
-    };
+      data: {
+        message: "Thank you for your inquiry! We will contact you soon.",
+      },
+    }
   } catch (error) {
-    console.error("Error submitting inquiry:", error);
-    return { success: false, error: "Failed to submit inquiry. Please try again." };
+    console.error("Error submitting inquiry:", error)
+    return {
+      success: false,
+      error: "Failed to submit inquiry. Please try again.",
+    }
   }
 }
 
 /**
  * Check if inquiry form is enabled for a school
  */
-export async function isInquiryFormEnabled(subdomain: string): Promise<ActionResult<boolean>> {
+export async function isInquiryFormEnabled(
+  subdomain: string
+): Promise<ActionResult<boolean>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     const settings = await db.admissionSettings.findUnique({
       where: { schoolId },
-    });
+    })
 
     // Default to enabled if no settings exist
-    const enabled = settings ? settings.enableInquiryForm : true;
+    const enabled = settings ? settings.enableInquiryForm : true
 
-    return { success: true, data: enabled };
+    return { success: true, data: enabled }
   } catch (error) {
-    console.error("Error checking inquiry form status:", error);
-    return { success: false, error: "Failed to check form status" };
+    console.error("Error checking inquiry form status:", error)
+    return { success: false, error: "Failed to check form status" }
   }
 }

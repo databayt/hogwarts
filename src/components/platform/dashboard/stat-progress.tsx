@@ -32,12 +32,14 @@ const data = [
 
 export default function StatsProgress() {
   return (
-    <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 w-full">
+    <dl className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {data.map((item) => (
         <Card key={item.name} className="py-4">
           <CardContent>
-            <p className="text-sm text-muted-foreground">{item.name}</p>
-            <p className="text-2xl font-semibold text-foreground">{item.stat}</p>
+            <p className="text-muted-foreground text-sm">{item.name}</p>
+            <p className="text-foreground text-2xl font-semibold">
+              {item.stat}
+            </p>
             <Progress value={item.percentage} className="mt-6 h-2" />
             <div className="mt-2 flex items-center justify-between text-sm">
               <span className="text-primary">{item.percentage}&#37;</span>

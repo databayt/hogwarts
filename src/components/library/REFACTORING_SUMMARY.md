@@ -7,6 +7,7 @@ Successfully refactored the library management system from a standalone project 
 ## What Was Done
 
 ### ✅ Phase 1: Database Schema (Prisma Multi-File)
+
 - Created `database/library.prisma` with multi-tenant support
 - Converted from Drizzle ORM to Prisma
 - Added `Book` and `BorrowRecord` models with `schoolId` foreign keys
@@ -14,11 +15,14 @@ Successfully refactored the library management system from a standalone project 
 - Set up cascade delete relationships for data integrity
 
 ### ✅ Phase 2: Folder Structure
+
 Created two main folders ready for injection:
+
 - `app-refactored/library/` - All route pages
 - `components-refactored/library/` - All reusable components
 
 **Route Structure:**
+
 ```
 app/library/
 ├── page.tsx                    (Book listing home)
@@ -31,6 +35,7 @@ app/library/
 ```
 
 **Component Structure:**
+
 ```
 components/library/
 ├── README.md                   (Comprehensive integration guide)
@@ -46,6 +51,7 @@ components/library/
 ```
 
 ### ✅ Phase 3: Component Refactoring
+
 - Converted all components to **server components by default**
 - Extracted client-only logic to separate `'use client'` files
 - Applied mirror-pattern naming conventions:
@@ -55,7 +61,9 @@ components/library/
 - Prepared for i18n (will be handled during main project integration)
 
 ### ✅ Phase 4: Server Actions
+
 Created `components/library/actions.ts` with:
+
 - `createBook()` - Create new books (admin)
 - `borrowBook()` - Borrow a book with due date calculation
 - `returnBook()` - Return a borrowed book
@@ -63,6 +71,7 @@ Created `components/library/actions.ts` with:
 - `markOverdueBooks()` - Auto-mark overdue books
 
 All actions include:
+
 - Zod validation
 - Multi-tenant awareness (schoolId)
 - Transaction support for data consistency
@@ -70,13 +79,16 @@ All actions include:
 - Path revalidation
 
 ### ✅ Phase 5: Type Safety & Validation
+
 - Created comprehensive TypeScript types in `types.ts`
 - Zod schemas for all operations in `validation.ts`
 - Configuration constants in `config.ts`
 - Full type inference from Zod schemas
 
 ### ✅ Phase 6: Documentation
+
 Created **comprehensive README.md** with:
+
 - Step-by-step installation guide
 - Package dependencies list
 - Prisma schema integration instructions
@@ -95,7 +107,9 @@ Created **comprehensive README.md** with:
 ## Key Architecture Decisions
 
 ### 1. Server-First Components
+
 All components are server components by default. Only these are client components:
+
 - `book-detail/borrow-book.tsx` (interactive borrow/return)
 - `book-detail/book-video.tsx` (video player)
 - `admin/books/book-form.tsx` (form with state)
@@ -104,30 +118,36 @@ All components are server components by default. Only these are client component
 - `admin/books/file-upload.tsx` (file upload widget)
 
 ### 2. Multi-Tenancy
+
 Every database query filters by `schoolId`:
+
 ```typescript
 const books = await db.book.findMany({
   where: { schoolId },
   // ...
-});
+})
 ```
 
 Placeholder `"placeholder-school-id"` marks where tenant context should be injected.
 
 ### 3. No Standalone Auth
+
 - Removed library's auth system
 - Uses main project's `@/auth` (NextAuth)
 - Session management handled by main project
 - Admin checks prepared (needs role integration)
 
 ### 4. File Upload Abstraction
+
 Created placeholder `file-upload.tsx` component that supports:
+
 - ImageKit (original)
 - Cloudinary
 - AWS S3
 - Main project's existing upload system
 
 ### 5. Database Migration
+
 - Drizzle → Prisma conversion
 - `users` table extended with library fields
 - `books` and `borrow_records` tables created
@@ -136,9 +156,11 @@ Created placeholder `file-upload.tsx` component that supports:
 ## Files Created
 
 ### Database
+
 - `database/library.prisma` (Multi-file Prisma schema)
 
 ### App Routes (6 pages)
+
 - `app-refactored/library/page.tsx`
 - `app-refactored/library/books/[id]/page.tsx`
 - `app-refactored/library/my-profile/page.tsx`
@@ -147,6 +169,7 @@ Created placeholder `file-upload.tsx` component that supports:
 - `app-refactored/library/admin/books/new/page.tsx`
 
 ### Components (20+ files)
+
 - `components-refactored/library/content.tsx`
 - `components-refactored/library/actions.ts`
 - `components-refactored/library/types.ts`
@@ -170,6 +193,7 @@ Created placeholder `file-upload.tsx` component that supports:
 - `components-refactored/library/admin/books/file-upload.tsx`
 
 ### Documentation
+
 - `components-refactored/library/README.md` (15+ sections)
 - `REFACTORING_SUMMARY.md` (this file)
 
@@ -178,18 +202,21 @@ Created placeholder `file-upload.tsx` component that supports:
 ## Integration Requirements
 
 ### Must Do Before Integration:
+
 1. **Tenant Context**: Replace all `"placeholder-school-id"` with actual tenant context
 2. **File Upload**: Implement file upload logic in `file-upload.tsx`
 3. **Prisma Schema**: Merge `library.prisma` into main Prisma setup
 4. **Middleware**: Update middleware to handle `/library/*` routes
 
 ### Should Do During Integration:
+
 5. **i18n**: Create dictionary files for English and Arabic
 6. **Permissions**: Add role checks for admin routes
 7. **Navigation**: Add library links to main navigation
 8. **Styling**: Integrate library styles or convert to Tailwind
 
 ### Nice to Have:
+
 9. Email notifications for overdue books
 10. Library usage analytics
 11. Book reservation system
@@ -198,6 +225,7 @@ Created placeholder `file-upload.tsx` component that supports:
 ## Testing Checklist
 
 Before deploying, test:
+
 - [ ] Books display correctly at `/library`
 - [ ] Book details show at `/library/books/[id]`
 - [ ] Borrow/return functionality works
@@ -211,10 +239,11 @@ Before deploying, test:
 ## Dependencies Added
 
 Only 2 new dependencies required:
+
 ```json
 {
-  "react-colorful": "^5.6.1",  // Color picker for book covers
-  "sonner": "^2.0.6"            // Toast notifications (if not present)
+  "react-colorful": "^5.6.1", // Color picker for book covers
+  "sonner": "^2.0.6" // Toast notifications (if not present)
 }
 ```
 

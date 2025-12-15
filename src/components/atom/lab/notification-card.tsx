@@ -1,10 +1,12 @@
-'use client'
+"use client"
 
 import * as React from "react"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+
 import type { BaseVariant } from "./types"
 
 interface NotificationCardProps {
@@ -96,12 +98,12 @@ export function NotificationCard({
     <Card className={cn("border-l-4", variants[type], className)}>
       <CardContent className="p-4">
         <div className="flex gap-3">
-          <div className="shrink-0 mt-0.5">
-            <Icon className="h-5 w-5 text-foreground" />
+          <div className="mt-0.5 shrink-0">
+            <Icon className="text-foreground h-5 w-5" />
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            <h5 className="font-semibold text-foreground">{title}</h5>
+          <div className="min-w-0 flex-1 space-y-1">
+            <h5 className="text-foreground font-semibold">{title}</h5>
             <p className="muted">{message}</p>
             {action && <div className="pt-2">{action}</div>}
           </div>

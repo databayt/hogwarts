@@ -3,12 +3,12 @@ description: Validate UI component quality
 requiresArgs: false
 ---
 
-Validate UI components: ${1:src/components/**/*.tsx}
+Validate UI components: ${1:src/components/\*_/_.tsx}
 
 ## Validation Process
 
 1. **Discover components**
-   - Scan target path: ${1:src/components/**/*.tsx}
+   - Scan target path: ${1:src/components/\*_/_.tsx}
    - Identify all .tsx files
    - Parse component structure
 
@@ -27,7 +27,7 @@ Validate UI components: ${1:src/components/**/*.tsx}
    ### Gate 3: Accessibility (HIGH)
    - ✅ Check: WCAG 2.1 AA compliance
    - ❌ Violations: Missing ARIA labels, no keyboard nav
-   - Fix: Add aria-* attributes, keyboard handlers
+   - Fix: Add aria-\* attributes, keyboard handlers
 
    ### Gate 4: Internationalization (HIGH)
    - ✅ Check: No hardcoded strings
@@ -50,6 +50,7 @@ Validate UI components: ${1:src/components/**/*.tsx}
    - Fix: Add JSDoc documentation
 
 3. **Generate report**
+
    ```
    Component: src/components/ui/button.tsx
 
@@ -95,27 +96,30 @@ Validate UI components: ${1:src/components/**/*.tsx}
 ## Validation Rules
 
 ### Semantic Token Rules
-| Hardcoded | Semantic Token | Usage |
-|-----------|---------------|-------|
-| `bg-white` | `bg-background` | Page background |
-| `bg-gray-50` | `bg-muted` | Subtle background |
-| `bg-gray-100` | `bg-accent` | Hover states |
-| `text-black` | `text-foreground` | Primary text |
-| `text-gray-600` | `text-muted-foreground` | Secondary text |
-| `border-gray-200` | `border-border` | Borders |
-| `bg-blue-500` | `bg-primary` | Primary actions |
-| `bg-red-500` | `bg-destructive` | Destructive actions |
-| `bg-green-500` | `bg-chart-2` | Success states |
+
+| Hardcoded         | Semantic Token          | Usage               |
+| ----------------- | ----------------------- | ------------------- |
+| `bg-white`        | `bg-background`         | Page background     |
+| `bg-gray-50`      | `bg-muted`              | Subtle background   |
+| `bg-gray-100`     | `bg-accent`             | Hover states        |
+| `text-black`      | `text-foreground`       | Primary text        |
+| `text-gray-600`   | `text-muted-foreground` | Secondary text      |
+| `border-gray-200` | `border-border`         | Borders             |
+| `bg-blue-500`     | `bg-primary`            | Primary actions     |
+| `bg-red-500`      | `bg-destructive`        | Destructive actions |
+| `bg-green-500`    | `bg-chart-2`            | Success states      |
 
 ### Semantic HTML Rules
-| Violation | Correct |
-|-----------|---------|
-| `<div className="text-3xl font-bold">` | `<h2>` |
-| `<div className="text-xl">` | `<h3>` |
-| `<div className="text-sm">` | `<small>` |
-| `<div className="font-semibold">` | `<h4>` |
+
+| Violation                              | Correct   |
+| -------------------------------------- | --------- |
+| `<div className="text-3xl font-bold">` | `<h2>`    |
+| `<div className="text-xl">`            | `<h3>`    |
+| `<div className="text-sm">`            | `<small>` |
+| `<div className="font-semibold">`      | `<h4>`    |
 
 ### Accessibility Requirements
+
 - ✅ All buttons have accessible names
 - ✅ All images have alt text
 - ✅ All form inputs have labels
@@ -127,6 +131,7 @@ Validate UI components: ${1:src/components/**/*.tsx}
 ## Output Formats
 
 ### Summary Report
+
 ```
 Validated 15 components
 
@@ -142,6 +147,7 @@ Overall Score: 85/100
 ```
 
 ### Detailed Report
+
 ```json
 {
   "component": "src/components/ui/button.tsx",
@@ -169,6 +175,7 @@ Overall Score: 85/100
 ## Integration with CI/CD
 
 Add to `.github/workflows/ui-quality.yml`:
+
 ```yaml
 - name: Validate UI Components
   run: pnpm /ui-validate src/components/**/*.tsx
@@ -184,6 +191,7 @@ Add to `.github/workflows/ui-quality.yml`:
 ## Success Criteria
 
 Component passes validation when:
+
 - ✅ All 7 quality gates pass
 - ✅ Score ≥ 95/100
 - ✅ Zero critical violations

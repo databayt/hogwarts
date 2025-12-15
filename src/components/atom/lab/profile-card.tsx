@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface ProfileCardProps {
@@ -93,7 +95,7 @@ export function ProfileCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -101,10 +103,10 @@ export function ProfileCard({
       <CardContent className={cn(sizeClasses[size])}>
         {loading ? (
           <div className="space-y-3">
-            <Skeleton className="h-16 w-16 rounded-full mx-auto" />
+            <Skeleton className="mx-auto h-16 w-16 rounded-full" />
             <div className="space-y-1 text-center">
-              <Skeleton className="h-5 w-32 mx-auto" />
-              <Skeleton className="h-4 w-24 mx-auto" />
+              <Skeleton className="mx-auto h-5 w-32" />
+              <Skeleton className="mx-auto h-4 w-24" />
             </div>
           </div>
         ) : (
@@ -114,7 +116,7 @@ export function ProfileCard({
 
             {/* Info */}
             <div className="space-y-1 text-center">
-              <h4 className="font-semibold text-foreground">{name}</h4>
+              <h4 className="text-foreground font-semibold">{name}</h4>
               {role && <p className="muted">{role}</p>}
               {info && <p className="muted">{info}</p>}
             </div>

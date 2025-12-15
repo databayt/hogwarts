@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonPageNav } from '@/components/ui/skeleton-page-nav'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function TeachersSettingsLoading() {
   return (
@@ -19,7 +19,7 @@ export default function TeachersSettingsLoading() {
               <Skeleton className="h-10 w-full" />
             </div>
           ))}
-          <Skeleton className="h-9 w-24 mt-4" />
+          <Skeleton className="mt-4 h-9 w-24" />
         </CardContent>
       </Card>
     </div>

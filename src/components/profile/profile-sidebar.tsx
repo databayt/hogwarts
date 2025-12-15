@@ -2,33 +2,45 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useSidebar } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
-  MapPin,
+  Award,
+  BookOpen,
+  Briefcase,
   Building2,
   Calendar,
-  Mail,
-  Phone,
-  GraduationCap,
-  BookOpen,
-  Users,
-  Briefcase,
-  Heart,
-  Award,
-  Star,
-  Trophy,
-  Medal,
-  Target,
-  Flame,
-  Zap,
   Crown,
-  Sparkles
+  Flame,
+  GraduationCap,
+  Heart,
+  Mail,
+  MapPin,
+  Medal,
+  Phone,
+  Sparkles,
+  Star,
+  Target,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react"
-import type { ProfileRole, Achievement, Organization, ProfileStat } from "./types"
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { useSidebar } from "@/components/ui/sidebar"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import type {
+  Achievement,
+  Organization,
+  ProfileRole,
+  ProfileStat,
+} from "./types"
 
 interface ProfileSidebarProps {
   role: ProfileRole
@@ -59,65 +71,175 @@ const achievementLevelColors = {
 
 function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
   const fullName = `${data.givenName || ""} ${data.surname || ""}`.trim()
-  const initials = `${(data.givenName as string)?.[0] || ""}${(data.surname as string)?.[0] || ""}`.toUpperCase()
+  const initials =
+    `${(data.givenName as string)?.[0] || ""}${(data.surname as string)?.[0] || ""}`.toUpperCase()
 
   switch (role) {
     case "student":
       return {
         title: fullName,
-        subtitle: (data.grNumber as string) || `@student_${(data.id as string)?.slice(-6)}`,
+        subtitle:
+          (data.grNumber as string) ||
+          `@student_${(data.id as string)?.slice(-6)}`,
         role: "Student",
         icon: <GraduationCap className="size-4" />,
         imageSrc: (data.profilePhotoUrl as string) || "/contributors/h.jpeg",
         initials,
         stats: [
-          { label: "subjects", value: 8, icon: <BookOpen className="size-4" /> },
+          {
+            label: "subjects",
+            value: 8,
+            icon: <BookOpen className="size-4" />,
+          },
           { label: "projects", value: 12, icon: <Target className="size-4" /> },
         ] as ProfileStat[],
         info: [
-          { icon: <Building2 className="size-4" />, value: "Grade 10 - Section A" },
-          { icon: <MapPin className="size-4" />, value: (data.city as string) || "Campus" },
-          { icon: <Calendar className="size-4" />, value: `Enrolled ${formatDate(data.enrollmentDate as string)}` },
+          {
+            icon: <Building2 className="size-4" />,
+            value: "Grade 10 - Section A",
+          },
+          {
+            icon: <MapPin className="size-4" />,
+            value: (data.city as string) || "Campus",
+          },
+          {
+            icon: <Calendar className="size-4" />,
+            value: `Enrolled ${formatDate(data.enrollmentDate as string)}`,
+          },
         ],
         achievements: [
-          { id: "1", title: "Honor Roll", description: "Achieved 4 times", icon: "honor_roll", level: "gold" as const },
-          { id: "2", title: "Perfect Attendance", description: "Current semester", icon: "perfect_attendance", level: "silver" as const },
-          { id: "3", title: "Science Fair Winner", description: "1st Place", icon: "science_fair", level: "gold" as const },
-          { id: "4", title: "Sports Champion", description: "2 events", icon: "sports", level: "bronze" as const },
-          { id: "5", title: "100 Day Streak", description: "Learning streak", icon: "streak", level: "platinum" as const },
+          {
+            id: "1",
+            title: "Honor Roll",
+            description: "Achieved 4 times",
+            icon: "honor_roll",
+            level: "gold" as const,
+          },
+          {
+            id: "2",
+            title: "Perfect Attendance",
+            description: "Current semester",
+            icon: "perfect_attendance",
+            level: "silver" as const,
+          },
+          {
+            id: "3",
+            title: "Science Fair Winner",
+            description: "1st Place",
+            icon: "science_fair",
+            level: "gold" as const,
+          },
+          {
+            id: "4",
+            title: "Sports Champion",
+            description: "2 events",
+            icon: "sports",
+            level: "bronze" as const,
+          },
+          {
+            id: "5",
+            title: "100 Day Streak",
+            description: "Learning streak",
+            icon: "streak",
+            level: "platinum" as const,
+          },
         ] as Achievement[],
         organizations: [
-          { id: "1", name: "Student Council", avatarUrl: "/icons/council.png", role: "Member" },
-          { id: "2", name: "Science Club", avatarUrl: "/icons/science.png", role: "Secretary" },
-          { id: "3", name: "Chess Club", avatarUrl: "/icons/chess.png", role: "Member" },
+          {
+            id: "1",
+            name: "Student Council",
+            avatarUrl: "/icons/council.png",
+            role: "Member",
+          },
+          {
+            id: "2",
+            name: "Science Club",
+            avatarUrl: "/icons/science.png",
+            role: "Secretary",
+          },
+          {
+            id: "3",
+            name: "Chess Club",
+            avatarUrl: "/icons/chess.png",
+            role: "Member",
+          },
         ] as Organization[],
       }
     case "teacher":
       return {
         title: fullName,
-        subtitle: (data.employeeId as string) || `@teacher_${(data.id as string)?.slice(-6)}`,
+        subtitle:
+          (data.employeeId as string) ||
+          `@teacher_${(data.id as string)?.slice(-6)}`,
         role: "Teacher",
         icon: <Briefcase className="size-4" />,
         imageSrc: (data.profilePhotoUrl as string) || "/contributors/d.jpeg",
         initials,
         stats: [
           { label: "classes", value: 6, icon: <Users className="size-4" /> },
-          { label: "students", value: 127, icon: <GraduationCap className="size-4" /> },
+          {
+            label: "students",
+            value: 127,
+            icon: <GraduationCap className="size-4" />,
+          },
         ] as ProfileStat[],
         info: [
-          { icon: <Building2 className="size-4" />, value: "Mathematics Department" },
-          { icon: <Mail className="size-4" />, value: data.emailAddress as string },
-          { icon: <Calendar className="size-4" />, value: `Joined ${formatDate(data.joiningDate as string || data.createdAt as string)}` },
+          {
+            icon: <Building2 className="size-4" />,
+            value: "Mathematics Department",
+          },
+          {
+            icon: <Mail className="size-4" />,
+            value: data.emailAddress as string,
+          },
+          {
+            icon: <Calendar className="size-4" />,
+            value: `Joined ${formatDate((data.joiningDate as string) || (data.createdAt as string))}`,
+          },
         ],
         achievements: [
-          { id: "1", title: "Excellence Award", description: "Best Teacher 2024", icon: "excellence", level: "gold" as const },
-          { id: "2", title: "Perfect Attendance", description: "12 months", icon: "perfect_attendance", level: "platinum" as const },
-          { id: "3", title: "Student Favorite", description: "Top rated", icon: "academic", level: "silver" as const },
-          { id: "4", title: "Leadership", description: "Department Head", icon: "leadership", level: "gold" as const },
+          {
+            id: "1",
+            title: "Excellence Award",
+            description: "Best Teacher 2024",
+            icon: "excellence",
+            level: "gold" as const,
+          },
+          {
+            id: "2",
+            title: "Perfect Attendance",
+            description: "12 months",
+            icon: "perfect_attendance",
+            level: "platinum" as const,
+          },
+          {
+            id: "3",
+            title: "Student Favorite",
+            description: "Top rated",
+            icon: "academic",
+            level: "silver" as const,
+          },
+          {
+            id: "4",
+            title: "Leadership",
+            description: "Department Head",
+            icon: "leadership",
+            level: "gold" as const,
+          },
         ] as Achievement[],
         organizations: [
-          { id: "1", name: "Mathematics Dept", avatarUrl: "/icons/math.png", role: "Senior Teacher" },
-          { id: "2", name: "Curriculum Committee", avatarUrl: "/icons/curriculum.png", role: "Member" },
+          {
+            id: "1",
+            name: "Mathematics Dept",
+            avatarUrl: "/icons/math.png",
+            role: "Senior Teacher",
+          },
+          {
+            id: "2",
+            name: "Curriculum Committee",
+            avatarUrl: "/icons/curriculum.png",
+            role: "Member",
+          },
         ] as Organization[],
       }
     case "parent":
@@ -133,16 +255,39 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
           { label: "events", value: 5, icon: <Calendar className="size-4" /> },
         ] as ProfileStat[],
         info: [
-          { icon: <Mail className="size-4" />, value: data.emailAddress as string || "parent@email.com" },
+          {
+            icon: <Mail className="size-4" />,
+            value: (data.emailAddress as string) || "parent@email.com",
+          },
           { icon: <Phone className="size-4" />, value: "+966 50 XXX XXXX" },
-          { icon: <Calendar className="size-4" />, value: `Member since ${formatDate(data.createdAt as string)}` },
+          {
+            icon: <Calendar className="size-4" />,
+            value: `Member since ${formatDate(data.createdAt as string)}`,
+          },
         ],
         achievements: [
-          { id: "1", title: "Engaged Parent", description: "100% event attendance", icon: "participation", level: "gold" as const },
-          { id: "2", title: "Community Helper", description: "Volunteer", icon: "community", level: "silver" as const },
+          {
+            id: "1",
+            title: "Engaged Parent",
+            description: "100% event attendance",
+            icon: "participation",
+            level: "gold" as const,
+          },
+          {
+            id: "2",
+            title: "Community Helper",
+            description: "Volunteer",
+            icon: "community",
+            level: "silver" as const,
+          },
         ] as Achievement[],
         organizations: [
-          { id: "1", name: "Parent Association", avatarUrl: "/icons/parents.png", role: "Member" },
+          {
+            id: "1",
+            name: "Parent Association",
+            avatarUrl: "/icons/parents.png",
+            role: "Member",
+          },
         ] as Organization[],
       }
     case "staff":
@@ -159,15 +304,38 @@ function getRoleConfig(role: ProfileRole, data: Record<string, unknown>) {
         ] as ProfileStat[],
         info: [
           { icon: <Building2 className="size-4" />, value: "Administration" },
-          { icon: <Mail className="size-4" />, value: data.emailAddress as string || "staff@school.edu" },
-          { icon: <Calendar className="size-4" />, value: `Joined ${formatDate(data.createdAt as string)}` },
+          {
+            icon: <Mail className="size-4" />,
+            value: (data.emailAddress as string) || "staff@school.edu",
+          },
+          {
+            icon: <Calendar className="size-4" />,
+            value: `Joined ${formatDate(data.createdAt as string)}`,
+          },
         ],
         achievements: [
-          { id: "1", title: "Excellence Award", description: "Outstanding service", icon: "excellence", level: "gold" as const },
-          { id: "2", title: "Perfect Attendance", description: "6 months", icon: "perfect_attendance", level: "silver" as const },
+          {
+            id: "1",
+            title: "Excellence Award",
+            description: "Outstanding service",
+            icon: "excellence",
+            level: "gold" as const,
+          },
+          {
+            id: "2",
+            title: "Perfect Attendance",
+            description: "6 months",
+            icon: "perfect_attendance",
+            level: "silver" as const,
+          },
         ] as Achievement[],
         organizations: [
-          { id: "1", name: "Admin Team", avatarUrl: "/icons/admin.png", role: "Coordinator" },
+          {
+            id: "1",
+            name: "Admin Team",
+            avatarUrl: "/icons/admin.png",
+            role: "Coordinator",
+          },
         ] as Organization[],
       }
     default:
@@ -201,27 +369,31 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
     <TooltipProvider>
       <div className={`space-y-4 ${useMobileLayout ? "max-w-xs" : "w-72"}`}>
         {/* Profile Avatar */}
-        <div className="relative group">
-          <Avatar className="size-64 border-4 border-border shadow-lg transition-transform group-hover:scale-[1.02]">
+        <div className="group relative">
+          <Avatar className="border-border size-64 border-4 shadow-lg transition-transform group-hover:scale-[1.02]">
             <AvatarImage
               src={config.imageSrc}
               alt={config.title}
               className="object-cover"
             />
-            <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary/20 to-primary/40">
+            <AvatarFallback className="from-primary/20 to-primary/40 bg-gradient-to-br text-4xl font-bold">
               {config.initials}
             </AvatarFallback>
           </Avatar>
           {/* Status indicator */}
-          <div className="absolute bottom-4 end-4 size-10 bg-background rounded-full flex items-center justify-center border-2 border-border shadow-md">
+          <div className="bg-background border-border absolute end-4 bottom-4 flex size-10 items-center justify-center rounded-full border-2 shadow-md">
             <span className="text-lg">😀</span>
           </div>
         </div>
 
         {/* Name and Username */}
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground leading-tight">{config.title}</h1>
-          <p className="text-lg text-muted-foreground font-light">{config.subtitle}</p>
+          <h1 className="text-foreground text-2xl leading-tight font-bold">
+            {config.title}
+          </h1>
+          <p className="text-muted-foreground text-lg font-light">
+            {config.subtitle}
+          </p>
           <Badge variant="secondary" className="mt-2 gap-1.5">
             {config.icon}
             {config.role}
@@ -229,8 +401,9 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
         </div>
 
         {/* Bio / Description */}
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Passionate about learning and growth. Always striving for excellence in academics and extracurricular activities.
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Passionate about learning and growth. Always striving for excellence
+          in academics and extracurricular activities.
         </p>
 
         {/* Edit Profile Button - GitHub style */}
@@ -239,11 +412,13 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
         </Button>
 
         {/* Stats - GitHub style: "12 followers · 3 following" */}
-        <div className="flex items-center flex-wrap gap-1 text-sm text-muted-foreground">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
           <Users className="size-4" />
           {config.stats.map((stat, idx) => (
             <span key={idx} className="flex items-center">
-              <span className="font-semibold text-foreground">{stat.value}</span>
+              <span className="text-foreground font-semibold">
+                {stat.value}
+              </span>
               <span className="ms-1">{stat.label}</span>
               {idx < config.stats.length - 1 && <span className="mx-1">·</span>}
             </span>
@@ -251,9 +426,12 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
         </div>
 
         {/* Info List */}
-        <div className="space-y-2 pt-2 border-t border-border">
+        <div className="border-border space-y-2 border-t pt-2">
           {config.info.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <div
+              key={idx}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm transition-colors"
+            >
               <span className="text-muted-foreground/70">{item.icon}</span>
               <span className="truncate">{item.value || "N/A"}</span>
             </div>
@@ -262,8 +440,10 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
 
         {/* Achievements */}
         {config.achievements.length > 0 && (
-          <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Achievements</h3>
+          <div className="border-border border-t pt-4">
+            <h3 className="text-foreground mb-3 text-sm font-semibold">
+              Achievements
+            </h3>
             <div className="flex flex-wrap gap-2">
               {config.achievements.map((achievement) => (
                 <Tooltip key={achievement.id}>
@@ -271,11 +451,13 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
                     <div
                       className={`relative size-12 rounded-full bg-gradient-to-br ${
                         achievementLevelColors[achievement.level || "bronze"]
-                      } flex items-center justify-center cursor-pointer transition-all hover:scale-110 hover:shadow-lg`}
+                      } flex cursor-pointer items-center justify-center transition-all hover:scale-110 hover:shadow-lg`}
                     >
-                      {achievementIcons[achievement.icon] || <Award className="size-5 text-white" />}
+                      {achievementIcons[achievement.icon] || (
+                        <Award className="size-5 text-white" />
+                      )}
                       {/* Multiplier badge */}
-                      <span className="absolute -bottom-1 -end-1 text-[10px] font-bold bg-background text-foreground px-1.5 py-0.5 rounded-full border border-border shadow-sm">
+                      <span className="bg-background text-foreground border-border absolute -end-1 -bottom-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold shadow-sm">
                         x{Math.floor(Math.random() * 4) + 1}
                       </span>
                     </div>
@@ -283,7 +465,9 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
                   <TooltipContent side="top" className="max-w-xs">
                     <div className="text-sm">
                       <p className="font-semibold">{achievement.title}</p>
-                      <p className="text-muted-foreground">{achievement.description}</p>
+                      <p className="text-muted-foreground">
+                        {achievement.description}
+                      </p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -294,15 +478,17 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
 
         {/* Organizations / Groups */}
         {config.organizations.length > 0 && (
-          <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Organizations</h3>
+          <div className="border-border border-t pt-4">
+            <h3 className="text-foreground mb-3 text-sm font-semibold">
+              Organizations
+            </h3>
             <div className="flex flex-wrap gap-2">
               {config.organizations.map((org) => (
                 <Tooltip key={org.id}>
                   <TooltipTrigger asChild>
-                    <Avatar className="size-8 cursor-pointer transition-transform hover:scale-110 border border-border">
+                    <Avatar className="border-border size-8 cursor-pointer border transition-transform hover:scale-110">
                       <AvatarImage src={org.avatarUrl} alt={org.name} />
-                      <AvatarFallback className="text-xs bg-muted">
+                      <AvatarFallback className="bg-muted text-xs">
                         {org.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -310,7 +496,9 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
                   <TooltipContent side="top">
                     <div className="text-sm">
                       <p className="font-semibold">{org.name}</p>
-                      {org.role && <p className="text-muted-foreground">{org.role}</p>}
+                      {org.role && (
+                        <p className="text-muted-foreground">{org.role}</p>
+                      )}
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -320,8 +508,8 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
         )}
 
         {/* Block/Report (subtle) */}
-        <div className="pt-4 border-t border-border">
-          <button className="text-xs text-muted-foreground hover:text-destructive transition-colors">
+        <div className="border-border border-t pt-4">
+          <button className="text-muted-foreground hover:text-destructive text-xs transition-colors">
             Block or Report
           </button>
         </div>

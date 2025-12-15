@@ -37,36 +37,42 @@ Transform PRDs and architecture documents into detailed, implementable stories w
 ## Story Types Generated
 
 ### 1. Setup Story
+
 - Directory structure creation
 - Base file scaffolding
 - Route configuration
 - Navigation updates
 
 ### 2. Database Story
+
 - Prisma schema changes
 - Migration generation
 - Index optimization
 - Seed data
 
 ### 3. API Stories
+
 - Server actions
 - CRUD operations
 - Validation schemas
 - Error handling
 
 ### 4. Component Stories
+
 - UI components
 - Forms and tables
 - Client interactions
 - Responsive layouts
 
 ### 5. Testing Story
+
 - Unit tests (95% coverage)
 - Integration tests
 - E2E test scenarios
 - Manual test plans
 
 ### 6. Documentation Story
+
 - Component README
 - API documentation
 - User guides
@@ -77,11 +83,13 @@ Transform PRDs and architecture documents into detailed, implementable stories w
 Creates files in `.bmad/stories/`:
 
 ### Epic File
+
 ```
 .bmad/stories/epics/EPIC-001-[feature].md
 ```
 
 ### Story Files
+
 ```
 .bmad/stories/stories/
 ├── STORY-001-setup.md
@@ -97,6 +105,7 @@ Creates files in `.bmad/stories/`:
 ## Story Structure
 
 Each story includes:
+
 - **Context**: Why the story exists
 - **Requirements**: Clear, testable requirements
 - **Technical Design**: Implementation approach
@@ -117,8 +126,10 @@ TODO → IN_PROGRESS → REVIEW → COMPLETED
 ## Dependencies
 
 Stories include dependency mapping:
+
 ```markdown
 Dependencies:
+
 - [ ] STORY-001: Must complete setup first
 - [ ] STORY-002: Database schema required
 ```
@@ -126,6 +137,7 @@ Dependencies:
 ## Story Points
 
 Automatic estimation based on:
+
 - Component complexity
 - Database changes
 - API endpoints
@@ -136,12 +148,12 @@ Automatic estimation based on:
 
 ```typescript
 // Invokes the story agent
-await invokeAgent('/agents/bmad/story', {
+await invokeAgent("/agents/bmad/story", {
   feature: featureName,
   planning: {
     prd: loadDocument(`prd-${feature}.md`),
-    architecture: loadDocument(`architecture-${feature}.md`)
-  }
+    architecture: loadDocument(`architecture-${feature}.md`),
+  },
 })
 
 // Generates:
@@ -154,6 +166,7 @@ await invokeAgent('/agents/bmad/story', {
 ## Workflow Integration
 
 After stories are generated:
+
 1. Review and adjust story details if needed
 2. Use `/cycle` to execute stories automatically
 3. Track progress with `/loop story EPIC-001`

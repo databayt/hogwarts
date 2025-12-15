@@ -1,17 +1,18 @@
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import AnalyticsContent from '@/components/platform/attendance/analytics/content'
-import { EarlyWarningContent } from '@/components/platform/attendance/early-warning/content'
-import { auth } from '@/auth'
-import { BarChart3, AlertTriangle } from 'lucide-react'
-import { type Metadata } from 'next'
+import { type Metadata } from "next"
+import { auth } from "@/auth"
+import { AlertTriangle, BarChart3 } from "lucide-react"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import AnalyticsContent from "@/components/platform/attendance/analytics/content"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+import { EarlyWarningContent } from "@/components/platform/attendance/early-warning/content"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Attendance Analysis',
-    description: 'Analyze attendance trends and identify at-risk students',
+    title: "Attendance Analysis",
+    description: "Analyze attendance trends and identify at-risk students",
   }
 }
 
@@ -25,9 +26,13 @@ export default async function Page({ params }: Props) {
   const session = await auth()
 
   // Check permissions - only ADMIN and TEACHER can access analytics
-  if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER' && session?.user?.role !== 'DEVELOPER') {
+  if (
+    session?.user?.role !== "ADMIN" &&
+    session?.user?.role !== "TEACHER" &&
+    session?.user?.role !== "DEVELOPER"
+  ) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2>Access Denied</h2>
         <p className="text-muted-foreground">
           You do not have permission to access attendance analysis.
@@ -64,7 +69,7 @@ export default async function Page({ params }: Props) {
             <AnalyticsContent
               dictionary={dictionary}
               locale={lang}
-              schoolId={session?.user?.schoolId || ''}
+              schoolId={session?.user?.schoolId || ""}
             />
           </TabsContent>
 

@@ -1,12 +1,9 @@
 // Auto-Marking System Utility Functions
 
-import type { QuestionType, DifficultyLevel } from "@prisma/client"
-import {
-  OCR_CONFIDENCE,
-  AI_CONFIDENCE,
-  QUESTION_TYPES,
-} from "./config"
-import type { ConfidenceLevel, ConfidenceIndicator } from "./types"
+import type { DifficultyLevel, QuestionType } from "@prisma/client"
+
+import { AI_CONFIDENCE, OCR_CONFIDENCE, QUESTION_TYPES } from "./config"
+import type { ConfidenceIndicator, ConfidenceLevel } from "./types"
 
 // ========== Score Calculation ==========
 
@@ -282,10 +279,7 @@ export function calculateTotalGradingTime(
 /**
  * Format points display (e.g., "8.5/10")
  */
-export function formatPoints(
-  pointsAwarded: number,
-  maxPoints: number
-): string {
+export function formatPoints(pointsAwarded: number, maxPoints: number): string {
   return `${pointsAwarded}/${maxPoints}`
 }
 

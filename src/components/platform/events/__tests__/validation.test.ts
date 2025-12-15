@@ -1,28 +1,51 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Events validation schema tests
 describe("Event Validation Schemas", () => {
-  const eventBaseSchema = z.object({
-    title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
-    startDate: z.string().min(1, "Start date is required"),
-    endDate: z.string().min(1, "End date is required"),
-    location: z.string().optional(),
-    type: z.enum(["ACADEMIC", "SPORTS", "CULTURAL", "HOLIDAY", "MEETING", "EXAMINATION", "OTHER"]).default("OTHER"),
-    isAllDay: z.boolean().default(false),
-    isRecurring: z.boolean().default(false),
-    visibility: z.enum(["PUBLIC", "STAFF_ONLY", "STUDENTS_ONLY", "PARENTS_ONLY", "PRIVATE"]).default("PUBLIC"),
-    color: z.string().optional(),
-    attachments: z.array(z.string()).optional(),
-  }).refine((data) => {
-    const start = new Date(data.startDate)
-    const end = new Date(data.endDate)
-    return end >= start
-  }, {
-    message: "End date must be after or equal to start date",
-    path: ["endDate"],
-  })
+  const eventBaseSchema = z
+    .object({
+      title: z.string().min(1, "Title is required"),
+      description: z.string().optional(),
+      startDate: z.string().min(1, "Start date is required"),
+      endDate: z.string().min(1, "End date is required"),
+      location: z.string().optional(),
+      type: z
+        .enum([
+          "ACADEMIC",
+          "SPORTS",
+          "CULTURAL",
+          "HOLIDAY",
+          "MEETING",
+          "EXAMINATION",
+          "OTHER",
+        ])
+        .default("OTHER"),
+      isAllDay: z.boolean().default(false),
+      isRecurring: z.boolean().default(false),
+      visibility: z
+        .enum([
+          "PUBLIC",
+          "STAFF_ONLY",
+          "STUDENTS_ONLY",
+          "PARENTS_ONLY",
+          "PRIVATE",
+        ])
+        .default("PUBLIC"),
+      color: z.string().optional(),
+      attachments: z.array(z.string()).optional(),
+    })
+    .refine(
+      (data) => {
+        const start = new Date(data.startDate)
+        const end = new Date(data.endDate)
+        return end >= start
+      },
+      {
+        message: "End date must be after or equal to start date",
+        path: ["endDate"],
+      }
+    )
 
   const eventCreateSchema = eventBaseSchema
 
@@ -35,8 +58,26 @@ describe("Event Validation Schemas", () => {
     perPage: z.number().int().positive().max(100).default(20),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
-    type: z.enum(["ACADEMIC", "SPORTS", "CULTURAL", "HOLIDAY", "MEETING", "EXAMINATION", "OTHER"]).optional(),
-    visibility: z.enum(["PUBLIC", "STAFF_ONLY", "STUDENTS_ONLY", "PARENTS_ONLY", "PRIVATE"]).optional(),
+    type: z
+      .enum([
+        "ACADEMIC",
+        "SPORTS",
+        "CULTURAL",
+        "HOLIDAY",
+        "MEETING",
+        "EXAMINATION",
+        "OTHER",
+      ])
+      .optional(),
+    visibility: z
+      .enum([
+        "PUBLIC",
+        "STAFF_ONLY",
+        "STUDENTS_ONLY",
+        "PARENTS_ONLY",
+        "PRIVATE",
+      ])
+      .optional(),
     search: z.string().optional(),
   })
 
@@ -98,7 +139,15 @@ describe("Event Validation Schemas", () => {
     })
 
     it("validates event type enum", () => {
-      const validTypes = ["ACADEMIC", "SPORTS", "CULTURAL", "HOLIDAY", "MEETING", "EXAMINATION", "OTHER"]
+      const validTypes = [
+        "ACADEMIC",
+        "SPORTS",
+        "CULTURAL",
+        "HOLIDAY",
+        "MEETING",
+        "EXAMINATION",
+        "OTHER",
+      ]
 
       validTypes.forEach((type) => {
         const data = {
@@ -120,7 +169,13 @@ describe("Event Validation Schemas", () => {
     })
 
     it("validates visibility enum", () => {
-      const validVisibilities = ["PUBLIC", "STAFF_ONLY", "STUDENTS_ONLY", "PARENTS_ONLY", "PRIVATE"]
+      const validVisibilities = [
+        "PUBLIC",
+        "STAFF_ONLY",
+        "STUDENTS_ONLY",
+        "PARENTS_ONLY",
+        "PRIVATE",
+      ]
 
       validVisibilities.forEach((visibility) => {
         const data = {

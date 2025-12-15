@@ -3,7 +3,7 @@
  * Comprehensive MIME type mappings and utilities
  */
 
-import type { FileCategory } from "./types";
+import type { FileCategory } from "./types"
 
 // ============================================================================
 // MIME Type to Extension Mappings
@@ -41,11 +41,17 @@ export const MIME_TO_EXTENSIONS: Record<string, string[]> = {
   // Documents
   "application/pdf": [".pdf"],
   "application/msword": [".doc"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    ".docx",
+  ],
   "application/vnd.ms-excel": [".xls"],
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    ".xlsx",
+  ],
   "application/vnd.ms-powerpoint": [".ppt"],
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": [
+    ".pptx",
+  ],
   "application/rtf": [".rtf"],
   "text/plain": [".txt"],
   "text/csv": [".csv"],
@@ -61,21 +67,23 @@ export const MIME_TO_EXTENSIONS: Record<string, string[]> = {
   "application/gzip": [".gz"],
   "application/x-7z-compressed": [".7z"],
   "application/x-tar": [".tar"],
-};
+}
 
 // ============================================================================
 // Extension to MIME Type Mappings
 // ============================================================================
 
-export const EXTENSION_TO_MIME: Record<string, string> = Object.entries(MIME_TO_EXTENSIONS).reduce(
+export const EXTENSION_TO_MIME: Record<string, string> = Object.entries(
+  MIME_TO_EXTENSIONS
+).reduce(
   (acc, [mime, extensions]) => {
     for (const ext of extensions) {
-      acc[ext.toLowerCase()] = mime;
+      acc[ext.toLowerCase()] = mime
     }
-    return acc;
+    return acc
   },
   {} as Record<string, string>
-);
+)
 
 // ============================================================================
 // Category MIME Types
@@ -135,7 +143,7 @@ export const CATEGORY_MIME_TYPES: Record<FileCategory, string[]> = {
     "application/x-tar",
   ],
   other: [],
-};
+}
 
 // ============================================================================
 // Accept Objects for React Dropzone
@@ -147,39 +155,47 @@ export const ACCEPT_IMAGES = {
   "image/gif": [".gif"],
   "image/webp": [".webp"],
   "image/svg+xml": [".svg"],
-};
+}
 
 export const ACCEPT_VIDEOS = {
   "video/mp4": [".mp4"],
   "video/webm": [".webm"],
   "video/quicktime": [".mov"],
-};
+}
 
 export const ACCEPT_DOCUMENTS = {
   "application/pdf": [".pdf"],
   "application/msword": [".doc"],
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    ".docx",
+  ],
   "application/vnd.ms-excel": [".xls"],
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-};
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    ".xlsx",
+  ],
+}
 
 export const ACCEPT_SPREADSHEETS = {
   "application/vnd.ms-excel": [".xls"],
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    ".xlsx",
+  ],
   "text/csv": [".csv"],
-};
+}
 
 export const ACCEPT_CSV = {
   "text/csv": [".csv"],
   "application/vnd.ms-excel": [".xls"],
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-};
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    ".xlsx",
+  ],
+}
 
 export const ACCEPT_ALL = {
   ...ACCEPT_IMAGES,
   ...ACCEPT_VIDEOS,
   ...ACCEPT_DOCUMENTS,
-};
+}
 
 // ============================================================================
 // Utility Functions
@@ -189,8 +205,8 @@ export const ACCEPT_ALL = {
  * Get MIME type from filename
  */
 export function getMimeFromFilename(filename: string): string {
-  const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
-  return EXTENSION_TO_MIME[ext] || "application/octet-stream";
+  const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase()
+  return EXTENSION_TO_MIME[ext] || "application/octet-stream"
 }
 
 /**
@@ -199,69 +215,77 @@ export function getMimeFromFilename(filename: string): string {
 export function getCategoryFromMime(mimeType: string): FileCategory {
   for (const [category, mimes] of Object.entries(CATEGORY_MIME_TYPES)) {
     if (mimes.includes(mimeType)) {
-      return category as FileCategory;
+      return category as FileCategory
     }
   }
-  return "other";
+  return "other"
 }
 
 /**
  * Check if MIME type is in category
  */
-export function isInCategory(mimeType: string, category: FileCategory): boolean {
-  return CATEGORY_MIME_TYPES[category].includes(mimeType);
+export function isInCategory(
+  mimeType: string,
+  category: FileCategory
+): boolean {
+  return CATEGORY_MIME_TYPES[category].includes(mimeType)
 }
 
 /**
  * Get accept object for category
  */
-export function getAcceptForCategory(category: FileCategory): Record<string, string[]> {
-  const mimes = CATEGORY_MIME_TYPES[category];
+export function getAcceptForCategory(
+  category: FileCategory
+): Record<string, string[]> {
+  const mimes = CATEGORY_MIME_TYPES[category]
   return mimes.reduce(
     (acc, mime) => {
       if (MIME_TO_EXTENSIONS[mime]) {
-        acc[mime] = MIME_TO_EXTENSIONS[mime];
+        acc[mime] = MIME_TO_EXTENSIONS[mime]
       }
-      return acc;
+      return acc
     },
     {} as Record<string, string[]>
-  );
+  )
 }
 
 /**
  * Validate MIME type against allowed types
  */
-export function validateMimeType(mimeType: string, allowedTypes: string[]): boolean {
-  return allowedTypes.includes(mimeType);
+export function validateMimeType(
+  mimeType: string,
+  allowedTypes: string[]
+): boolean {
+  return allowedTypes.includes(mimeType)
 }
 
 /**
  * Get file extension from MIME type
  */
 export function getExtensionFromMime(mimeType: string): string {
-  const extensions = MIME_TO_EXTENSIONS[mimeType];
-  return extensions?.[0] || "";
+  const extensions = MIME_TO_EXTENSIONS[mimeType]
+  return extensions?.[0] || ""
 }
 
 /**
  * Check if file is an image
  */
 export function isImage(mimeType: string): boolean {
-  return mimeType.startsWith("image/");
+  return mimeType.startsWith("image/")
 }
 
 /**
  * Check if file is a video
  */
 export function isVideo(mimeType: string): boolean {
-  return mimeType.startsWith("video/");
+  return mimeType.startsWith("video/")
 }
 
 /**
  * Check if file is a document
  */
 export function isDocument(mimeType: string): boolean {
-  return isInCategory(mimeType, "document");
+  return isInCategory(mimeType, "document")
 }
 
 /**
@@ -273,5 +297,5 @@ export function isPreviewable(mimeType: string): boolean {
     isVideo(mimeType) ||
     mimeType === "application/pdf" ||
     mimeType.startsWith("text/")
-  );
+  )
 }

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { getSchoolDescription } from './actions'
-import { type DescriptionFormData } from './validation'
+import { useEffect, useState } from "react"
+
+import { getSchoolDescription } from "./actions"
+import { type DescriptionFormData } from "./validation"
 
 interface UseDescriptionReturn {
   data: DescriptionFormData | null
@@ -18,20 +19,20 @@ export function useDescription(schoolId: string): UseDescriptionReturn {
 
   const fetchDescription = async () => {
     if (!schoolId) return
-    
+
     try {
       setLoading(true)
       setError(null)
       const result = await getSchoolDescription(schoolId)
-      
+
       if (result.success) {
         setData(result.data)
       } else {
-        setError(result.error || 'Failed to fetch description')
+        setError(result.error || "Failed to fetch description")
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-      console.error('Error fetching description:', err)
+      setError("An unexpected error occurred")
+      console.error("Error fetching description:", err)
     } finally {
       setLoading(false)
     }
@@ -49,6 +50,6 @@ export function useDescription(schoolId: string): UseDescriptionReturn {
     data,
     loading,
     error,
-    refresh
+    refresh,
   }
-} 
+}

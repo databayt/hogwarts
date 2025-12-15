@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { HexColorInput, HexColorPicker } from "react-colorful";
+import { HexColorInput, HexColorPicker } from "react-colorful"
 
 interface Props {
-  value: string;
-  onChange: (color: string) => void;
+  value: string
+  onChange: (color: string) => void
 }
 
 export default function ColorPicker({ value, onChange }: Props) {
@@ -24,5 +24,5 @@ export default function ColorPicker({ value, onChange }: Props) {
         className="color-picker"
       />
     </div>
-  );
+  )
 }

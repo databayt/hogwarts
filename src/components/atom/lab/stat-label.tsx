@@ -1,5 +1,7 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import type { BaseComponentProps } from "./types"
 
 interface StatLabelProps extends BaseComponentProps {
@@ -36,11 +38,7 @@ export function StatLabel({
 }: StatLabelProps) {
   return (
     <p
-      className={cn(
-        "text-sm leading-none",
-        variantStyles[variant],
-        className
-      )}
+      className={cn("text-sm leading-none", variantStyles[variant], className)}
       {...props}
     >
       {label}

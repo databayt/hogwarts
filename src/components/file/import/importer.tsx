@@ -3,33 +3,44 @@
  * File upload and column mapping for imports
  */
 
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { useCallback, useState } from "react"
 import {
-  Upload,
-  FileSpreadsheet,
-  FileText,
   AlertCircle,
+  ArrowRight,
   CheckCircle,
   ChevronRight,
+  FileSpreadsheet,
+  FileText,
   Loader2,
+  Upload,
   X,
-  ArrowRight,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+} from "lucide-react"
+import { useDropzone } from "react-dropzone"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -37,12 +48,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ImportColumn, ImportConfig, ImportResult } from "./types";
-import { useImport } from "./use-import";
+} from "@/components/ui/table"
+
+import type { ImportColumn, ImportConfig, ImportResult } from "./types"
+import { useImport } from "./use-import"
 
 // ============================================================================
 // Types
@@ -50,52 +59,52 @@ import { useImport } from "./use-import";
 
 interface ImporterProps<T> {
   /** Import configuration */
-  config: ImportConfig<T>;
+  config: ImportConfig<T>
 
   /** Callback when import completes */
-  onImport: (data: T[]) => Promise<void>;
+  onImport: (data: T[]) => Promise<void>
 
   /** Callback when import finishes (success or error) */
-  onComplete?: (result: ImportResult<T>) => void;
+  onComplete?: (result: ImportResult<T>) => void
 
   /** Cancel callback */
-  onCancel?: () => void;
+  onCancel?: () => void
 
   /** Custom class name */
-  className?: string;
+  className?: string
 
   /** Show step indicators */
-  showSteps?: boolean;
+  showSteps?: boolean
 
   /** Dictionary for i18n */
   dictionary?: {
-    title?: string;
-    description?: string;
-    uploadStep?: string;
-    mapStep?: string;
-    reviewStep?: string;
-    importStep?: string;
-    dropzone?: string;
-    browse?: string;
-    column?: string;
-    mapTo?: string;
-    required?: string;
-    optional?: string;
-    preview?: string;
-    errors?: string;
-    warnings?: string;
-    validRows?: string;
-    invalidRows?: string;
-    import?: string;
-    cancel?: string;
-    back?: string;
-    next?: string;
-    importing?: string;
-    complete?: string;
-  };
+    title?: string
+    description?: string
+    uploadStep?: string
+    mapStep?: string
+    reviewStep?: string
+    importStep?: string
+    dropzone?: string
+    browse?: string
+    column?: string
+    mapTo?: string
+    required?: string
+    optional?: string
+    preview?: string
+    errors?: string
+    warnings?: string
+    validRows?: string
+    invalidRows?: string
+    import?: string
+    cancel?: string
+    back?: string
+    next?: string
+    importing?: string
+    complete?: string
+  }
 }
 
-type ImportStep = "upload" | "map" | "review" | "import";
+type ImportStep = "upload" | "map" | "review" | "import"
 
 // ============================================================================
 // Component
@@ -110,8 +119,8 @@ export function Importer<T>({
   showSteps = true,
   dictionary,
 }: ImporterProps<T>) {
-  const [step, setStep] = useState<ImportStep>("upload");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [step, setStep] = useState<ImportStep>("upload")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const {
     isImporting,
@@ -124,7 +133,7 @@ export function Importer<T>({
     validateData,
     importData,
     reset,
-  } = useImport(config);
+  } = useImport(config)
 
   // ============================================================================
   // File Upload
@@ -132,30 +141,32 @@ export function Importer<T>({
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0];
-      if (!file) return;
+      const file = acceptedFiles[0]
+      if (!file) return
 
-      setSelectedFile(file);
-      const previewResult = await parseFile(file);
+      setSelectedFile(file)
+      const previewResult = await parseFile(file)
 
       if (previewResult) {
-        setStep("map");
+        setStep("map")
       }
     },
     [parseFile]
-  );
+  )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       "text/csv": [".csv"],
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+        ".xlsx",
+      ],
       "application/vnd.ms-excel": [".xls"],
       "application/json": [".json"],
     },
     maxFiles: 1,
     disabled: isImporting,
-  });
+  })
 
   // ============================================================================
   // Navigation
@@ -163,33 +174,33 @@ export function Importer<T>({
 
   const handleNext = useCallback(async () => {
     if (step === "map") {
-      const validationResult = await validateData();
+      const validationResult = await validateData()
       if (validationResult) {
-        setStep("review");
+        setStep("review")
       }
     } else if (step === "review") {
-      setStep("import");
-      const importResult = await importData(onImport);
-      onComplete?.(importResult);
+      setStep("import")
+      const importResult = await importData(onImport)
+      onComplete?.(importResult)
     }
-  }, [step, validateData, importData, onImport, onComplete]);
+  }, [step, validateData, importData, onImport, onComplete])
 
   const handleBack = useCallback(() => {
     if (step === "map") {
-      setStep("upload");
-      reset();
-      setSelectedFile(null);
+      setStep("upload")
+      reset()
+      setSelectedFile(null)
     } else if (step === "review") {
-      setStep("map");
+      setStep("map")
     }
-  }, [step, reset]);
+  }, [step, reset])
 
   const handleCancel = useCallback(() => {
-    reset();
-    setSelectedFile(null);
-    setStep("upload");
-    onCancel?.();
-  }, [reset, onCancel]);
+    reset()
+    setSelectedFile(null)
+    setStep("upload")
+    onCancel?.()
+  }, [reset, onCancel])
 
   // ============================================================================
   // Render Steps
@@ -200,9 +211,9 @@ export function Importer<T>({
     { key: "map", label: dictionary?.mapStep || "Map Columns" },
     { key: "review", label: dictionary?.reviewStep || "Review" },
     { key: "import", label: dictionary?.importStep || "Import" },
-  ];
+  ]
 
-  const currentStepIndex = steps.findIndex((s) => s.key === step);
+  const currentStepIndex = steps.findIndex((s) => s.key === step)
 
   // ============================================================================
   // Render Content
@@ -213,26 +224,30 @@ export function Importer<T>({
       <CardHeader>
         <CardTitle>{dictionary?.title || "Import Data"}</CardTitle>
         <CardDescription>
-          {dictionary?.description || "Upload a CSV or Excel file to import data"}
+          {dictionary?.description ||
+            "Upload a CSV or Excel file to import data"}
         </CardDescription>
 
         {/* Step Indicator */}
         {showSteps && (
-          <div className="flex items-center gap-2 mt-4">
+          <div className="mt-4 flex items-center gap-2">
             {steps.map((s, idx) => (
               <React.Fragment key={s.key}>
                 <div
                   className={cn(
                     "flex items-center gap-2",
-                    idx <= currentStepIndex ? "text-primary" : "text-muted-foreground"
+                    idx <= currentStepIndex
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   )}
                 >
                   <div
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium",
-                      idx < currentStepIndex && "bg-primary text-primary-foreground",
-                      idx === currentStepIndex && "border-2 border-primary",
-                      idx > currentStepIndex && "border-2 border-muted"
+                      idx < currentStepIndex &&
+                        "bg-primary text-primary-foreground",
+                      idx === currentStepIndex && "border-primary border-2",
+                      idx > currentStepIndex && "border-muted border-2"
                     )}
                   >
                     {idx < currentStepIndex ? (
@@ -241,10 +256,10 @@ export function Importer<T>({
                       idx + 1
                     )}
                   </div>
-                  <span className="text-sm hidden sm:inline">{s.label}</span>
+                  <span className="hidden text-sm sm:inline">{s.label}</span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <ChevronRight className="text-muted-foreground h-4 w-4" />
                 )}
               </React.Fragment>
             ))}
@@ -258,20 +273,21 @@ export function Importer<T>({
           <div
             {...getRootProps()}
             className={cn(
-              "flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border",
-              "bg-muted/50 p-8 text-center transition-colors cursor-pointer",
+              "border-border flex flex-col items-center justify-center rounded-lg border-2 border-dashed",
+              "bg-muted/50 cursor-pointer p-8 text-center transition-colors",
               isDragActive && "border-primary bg-primary/10"
             )}
           >
             <input {...getInputProps()} />
             <div className="flex items-center gap-4">
-              <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
-              <FileText className="h-10 w-10 text-muted-foreground" />
+              <FileSpreadsheet className="text-muted-foreground h-10 w-10" />
+              <FileText className="text-muted-foreground h-10 w-10" />
             </div>
             <p className="mt-4 text-sm font-medium">
-              {dictionary?.dropzone || "Drop your file here, or click to browse"}
+              {dictionary?.dropzone ||
+                "Drop your file here, or click to browse"}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               Supports CSV, Excel (.xlsx, .xls), and JSON files
             </p>
           </div>
@@ -283,7 +299,7 @@ export function Importer<T>({
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">{selectedFile?.name}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {preview.totalRows} rows found
                 </p>
               </div>
@@ -303,13 +319,17 @@ export function Importer<T>({
                 <TableBody>
                   {preview.mappedColumns.map((mapping) => (
                     <TableRow key={mapping.header}>
-                      <TableCell className="font-medium">{mapping.header}</TableCell>
+                      <TableCell className="font-medium">
+                        {mapping.header}
+                      </TableCell>
                       <TableCell>
                         <Select
                           value={mapping.mappedTo?.key || ""}
                           onValueChange={(value) => {
-                            const column = config.columns.find((c) => c.key === value);
-                            updateMapping(mapping.header, column || null);
+                            const column = config.columns.find(
+                              (c) => c.key === value
+                            )
+                            updateMapping(mapping.header, column || null)
                           }}
                         >
                           <SelectTrigger className="w-[200px]">
@@ -359,7 +379,10 @@ export function Importer<T>({
                     {preview.sampleRows.map((row, idx) => (
                       <TableRow key={idx}>
                         {preview.headers.map((header) => (
-                          <TableCell key={header} className="max-w-[200px] truncate">
+                          <TableCell
+                            key={header}
+                            className="max-w-[200px] truncate"
+                          >
                             {row[header]}
                           </TableCell>
                         ))}
@@ -376,21 +399,27 @@ export function Importer<T>({
         {step === "review" && result && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="rounded-lg border border-border p-4 text-center">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="border-border rounded-lg border p-4 text-center">
                 <p className="text-2xl font-bold">{result.totalRows}</p>
-                <p className="text-sm text-muted-foreground">Total Rows</p>
+                <p className="text-muted-foreground text-sm">Total Rows</p>
               </div>
               <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-900 dark:bg-green-950">
-                <p className="text-2xl font-bold text-green-600">{result.validRows}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {result.validRows}
+                </p>
                 <p className="text-sm text-green-600">Valid Rows</p>
               </div>
               <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center dark:border-red-900 dark:bg-red-950">
-                <p className="text-2xl font-bold text-red-600">{result.invalidRows}</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {result.invalidRows}
+                </p>
                 <p className="text-sm text-red-600">Invalid Rows</p>
               </div>
               <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center dark:border-yellow-900 dark:bg-yellow-950">
-                <p className="text-2xl font-bold text-yellow-600">{result.duplicates}</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {result.duplicates}
+                </p>
                 <p className="text-sm text-yellow-600">Duplicates</p>
               </div>
             </div>
@@ -399,9 +428,11 @@ export function Importer<T>({
             {result.errors.length > 0 && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{dictionary?.errors || "Validation Errors"}</AlertTitle>
+                <AlertTitle>
+                  {dictionary?.errors || "Validation Errors"}
+                </AlertTitle>
                 <AlertDescription>
-                  <ScrollArea className="h-[150px] mt-2">
+                  <ScrollArea className="mt-2 h-[150px]">
                     <ul className="space-y-1 text-sm">
                       {result.errors.slice(0, 20).map((err, idx) => (
                         <li key={idx}>
@@ -449,15 +480,20 @@ export function Importer<T>({
 
         {/* Import Step */}
         {step === "import" && (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <div className="flex flex-col items-center justify-center space-y-4 py-8">
             {progress.status === "processing" && (
               <>
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <Loader2 className="text-primary h-12 w-12 animate-spin" />
                 <p className="text-lg font-medium">
                   {dictionary?.importing || "Importing data..."}
                 </p>
-                <Progress value={progress.progress} className="w-full max-w-md" />
-                <p className="text-sm text-muted-foreground">{progress.message}</p>
+                <Progress
+                  value={progress.progress}
+                  className="w-full max-w-md"
+                />
+                <p className="text-muted-foreground text-sm">
+                  {progress.message}
+                </p>
               </>
             )}
 
@@ -467,15 +503,21 @@ export function Importer<T>({
                 <p className="text-lg font-medium">
                   {dictionary?.complete || "Import Complete!"}
                 </p>
-                <p className="text-sm text-muted-foreground">{progress.message}</p>
+                <p className="text-muted-foreground text-sm">
+                  {progress.message}
+                </p>
               </>
             )}
 
             {progress.status === "error" && (
               <>
-                <AlertCircle className="h-12 w-12 text-destructive" />
-                <p className="text-lg font-medium text-destructive">Import Failed</p>
-                <p className="text-sm text-muted-foreground">{progress.error}</p>
+                <AlertCircle className="text-destructive h-12 w-12" />
+                <p className="text-destructive text-lg font-medium">
+                  Import Failed
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {progress.error}
+                </p>
               </>
             )}
           </div>
@@ -493,14 +535,22 @@ export function Importer<T>({
       <CardFooter className="flex justify-between">
         <div>
           {step !== "upload" && step !== "import" && (
-            <Button variant="outline" onClick={handleBack} disabled={isImporting}>
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={isImporting}
+            >
               {dictionary?.back || "Back"}
             </Button>
           )}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel} disabled={isImporting}>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isImporting}
+          >
             {dictionary?.cancel || "Cancel"}
           </Button>
 
@@ -532,7 +582,7 @@ export function Importer<T>({
         </div>
       </CardFooter>
     </Card>
-  );
+  )
 }
 
-export type { ImporterProps };
+export type { ImporterProps }

@@ -8,7 +8,7 @@
 
   /* Top Left Border */
   .group .border-animation::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -21,7 +21,7 @@
 
   /* Top Right Border */
   .group .border-animation::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     right: 0;
@@ -34,7 +34,7 @@
 
   /* Bottom Left Border */
   .group .border-animation span::before {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -47,7 +47,7 @@
 
   /* Bottom Right Border */
   .group .border-animation span::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     right: 0;
@@ -117,4 +117,4 @@
   .group:hover .border-animation .right-bottom {
     transform: translateX(0) translateY(0);
   }
-} 
+}

@@ -1,13 +1,14 @@
-"use client";
+"use client"
 
-import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Eye, EyeOff } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 interface ReadStatusBadgeProps {
-  isRead: boolean;
-  variant?: "default" | "minimal";
-  className?: string;
+  isRead: boolean
+  variant?: "default" | "minimal"
+  className?: string
 }
 
 export function ReadStatusBadge({
@@ -25,7 +26,7 @@ export function ReadStatusBadge({
         )}
         title={isRead ? "Read" : "Unread"}
       />
-    );
+    )
   }
 
   return (
@@ -37,12 +38,8 @@ export function ReadStatusBadge({
         className
       )}
     >
-      {isRead ? (
-        <Eye className="h-3 w-3" />
-      ) : (
-        <EyeOff className="h-3 w-3" />
-      )}
+      {isRead ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
       {isRead ? "Read" : "Unread"}
     </Badge>
-  );
+  )
 }

@@ -2,8 +2,8 @@
 // Required for Prisma CLI to access DATABASE_URL in prisma.config.ts
 import "dotenv/config"
 
-import { defineConfig, env } from "prisma/config"
 import path from "node:path"
+import { defineConfig, env } from "prisma/config"
 
 /**
  * Prisma Configuration (v6.19+)

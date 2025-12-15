@@ -10,18 +10,22 @@ Execute the full 4-phase Block Rebound workflow for the specified block.
 ## Workflow
 
 ### Phase 1: Research
+
 - WebSearch for top 5 competitors in this domain
 - Feature benchmarking matrix
 - Industry best practices
 - Innovation opportunities
 
 ### Phase 2: Assessment
+
 Read and analyze:
+
 - `src/components/platform/$1/` (all files)
 - `src/app/[lang]/s/[subdomain]/(platform)/$1/` (routes)
 - Related Prisma models
 
 Check:
+
 - Architecture compliance (mirror pattern)
 - Multi-tenant safety (schoolId in queries)
 - Security (validation, auth checks)
@@ -31,7 +35,9 @@ Check:
 - Test coverage (target: 95%)
 
 ### Phase 3: Checklist
+
 Generate prioritized production checklist:
+
 - Critical (must fix): Security, multi-tenant, data integrity
 - High priority: Missing features, performance, major UX
 - Medium priority: Enhancements, i18n, accessibility
@@ -40,6 +46,7 @@ Generate prioritized production checklist:
 Include effort estimates for each item.
 
 ### Phase 4: Recommendations
+
 - Priority matrix (impact vs effort)
 - Quick wins list
 - Implementation phases (weekly)
@@ -54,6 +61,7 @@ Save combined report to:
 ## Integration
 
 Invoke during assessment:
+
 - `/agents/security` for security deep-dive
 - `/agents/multi-tenant` for tenant isolation
 - `/agents/performance` for optimization analysis

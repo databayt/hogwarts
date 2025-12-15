@@ -9,6 +9,7 @@ The Expense module provides a complete expense management solution from submissi
 ## Key Features
 
 ### 1. Expense Submission
+
 - Submit expenses with receipts
 - Multiple expense categories
 - Attach supporting documents (images, PDFs)
@@ -16,6 +17,7 @@ The Expense module provides a complete expense management solution from submissi
 - Recurring expense templates
 
 ### 2. Approval Workflow
+
 - Multi-level approval chain
 - Role-based approval routing
 - Conditional approvals based on amount
@@ -23,6 +25,7 @@ The Expense module provides a complete expense management solution from submissi
 - Approval comments and feedback
 
 ### 3. Receipt Management
+
 - Upload receipt images/PDFs
 - OCR for automatic data extraction
 - Receipt validation rules
@@ -30,12 +33,14 @@ The Expense module provides a complete expense management solution from submissi
 - Duplicate receipt detection
 
 ### 4. Budget Integration
+
 - Real-time budget availability checks
 - Automatic budget deduction on approval
 - Budget overrun warnings
 - Variance tracking and reporting
 
 ### 5. Reimbursement Processing
+
 - Track payment status
 - Multiple payment methods
 - Batch reimbursement processing
@@ -43,22 +48,23 @@ The Expense module provides a complete expense management solution from submissi
 
 ## Expense Categories
 
-| Category | Description | Typical Use Cases |
-|----------|-------------|-------------------|
-| **Office Supplies** | Stationery, printer ink, etc. | Pens, paper, folders |
-| **Travel** | Transportation costs | Conferences, site visits |
-| **Meals & Entertainment** | Client/staff meals | Team lunches, events |
-| **Utilities** | Electricity, water, internet | Monthly bills |
-| **Maintenance** | Repairs and upkeep | Equipment repair, cleaning |
-| **Professional Services** | Consultants, contractors | Legal, IT support |
-| **Technology** | Hardware, software licenses | Computers, subscriptions |
-| **Marketing** | Advertising, promotions | Social media ads, flyers |
-| **Training** | Staff development | Courses, workshops |
-| **Miscellaneous** | Other expenses | Uncategorized |
+| Category                  | Description                   | Typical Use Cases          |
+| ------------------------- | ----------------------------- | -------------------------- |
+| **Office Supplies**       | Stationery, printer ink, etc. | Pens, paper, folders       |
+| **Travel**                | Transportation costs          | Conferences, site visits   |
+| **Meals & Entertainment** | Client/staff meals            | Team lunches, events       |
+| **Utilities**             | Electricity, water, internet  | Monthly bills              |
+| **Maintenance**           | Repairs and upkeep            | Equipment repair, cleaning |
+| **Professional Services** | Consultants, contractors      | Legal, IT support          |
+| **Technology**            | Hardware, software licenses   | Computers, subscriptions   |
+| **Marketing**             | Advertising, promotions       | Social media ads, flyers   |
+| **Training**              | Staff development             | Courses, workshops         |
+| **Miscellaneous**         | Other expenses                | Uncategorized              |
 
 ## Data Models
 
 ### Expense
+
 ```typescript
 {
   id: string
@@ -81,6 +87,7 @@ The Expense module provides a complete expense management solution from submissi
 ```
 
 ### Expense Status
+
 ```typescript
 enum ExpenseStatus {
   DRAFT           // Being prepared
@@ -94,6 +101,7 @@ enum ExpenseStatus {
 ```
 
 ### Approval Step
+
 ```typescript
 {
   level: number           // 1, 2, 3, etc.
@@ -107,6 +115,7 @@ enum ExpenseStatus {
 ```
 
 ### Payment Status
+
 ```typescript
 enum PaymentStatus {
   NOT_REQUIRED     // No payment needed
@@ -122,20 +131,22 @@ enum PaymentStatus {
 ### Expense Submission
 
 #### `createExpenseWithRBAC(data)`
+
 Submits a new expense for approval.
 
 **Permissions Required:** `expenses:create`
 
 **Example:**
+
 ```typescript
 const result = await createExpenseWithRBAC({
   date: new Date("2024-11-15"),
   category: "OFFICE_SUPPLIES",
-  amount: 125.50,
+  amount: 125.5,
   description: "Printer ink cartridges",
   vendor: "Office Depot",
   budgetAllocationId: "alloc_123",
-  receiptUrls: ["https://s3.amazonaws.com/receipts/rec_123.jpg"]
+  receiptUrls: ["https://s3.amazonaws.com/receipts/rec_123.jpg"],
 })
 
 if (result.success && result.data) {
@@ -145,6 +156,7 @@ if (result.success && result.data) {
 ```
 
 **Process:**
+
 1. Validates expense data
 2. Checks budget availability (if allocated)
 3. Uploads receipt images
@@ -153,11 +165,13 @@ if (result.success && result.data) {
 6. Sets status to SUBMITTED
 
 #### `updateExpenseWithRBAC(id, data)`
+
 Updates an expense (only if status is DRAFT).
 
 **Permissions Required:** `expenses:edit`
 
 #### `deleteExpenseWithRBAC(id)`
+
 Deletes an expense (only if status is DRAFT).
 
 **Permissions Required:** `expenses:delete`
@@ -165,11 +179,13 @@ Deletes an expense (only if status is DRAFT).
 ### Approval Workflow
 
 #### `approveExpenseWithRBAC(expenseId, comment?)`
+
 Approves an expense at current approval level.
 
 **Permissions Required:** `expenses:approve`
 
 **Example:**
+
 ```typescript
 const result = await approveExpenseWithRBAC(
   expenseId,
@@ -184,6 +200,7 @@ if (result.success) {
 ```
 
 **Process:**
+
 1. Verifies user is assigned approver
 2. Records approval with timestamp
 3. Moves to next approval level (if any)
@@ -191,11 +208,13 @@ if (result.success) {
 5. Notifies next approver or finance team
 
 #### `rejectExpenseWithRBAC(expenseId, reason)`
+
 Rejects an expense at current approval level.
 
 **Permissions Required:** `expenses:approve`
 
 **Example:**
+
 ```typescript
 const result = await rejectExpenseWithRBAC(
   expenseId,
@@ -210,6 +229,7 @@ if (result.success) {
 ```
 
 **Process:**
+
 1. Verifies user is assigned approver
 2. Records rejection with reason
 3. Changes status to REJECTED
@@ -219,16 +239,15 @@ if (result.success) {
 ### Payment Processing
 
 #### `processExpensePaymentWithRBAC(expenseId, paymentMethod)`
+
 Processes reimbursement for approved expense.
 
 **Permissions Required:** `expenses:process`
 
 **Example:**
+
 ```typescript
-const result = await processExpensePaymentWithRBAC(
-  expenseId,
-  "BANK_TRANSFER"
-)
+const result = await processExpensePaymentWithRBAC(expenseId, "BANK_TRANSFER")
 
 if (result.success) {
   console.log("Payment initiated")
@@ -237,12 +256,14 @@ if (result.success) {
 ```
 
 **Payment Methods:**
+
 - `BANK_TRANSFER` - Direct deposit to employee account
 - `CHECK` - Physical check
 - `CASH` - Cash reimbursement
 - `PAYROLL` - Add to next payroll cycle
 
 #### `markExpenseAsPaidWithRBAC(expenseId)`
+
 Marks expense as paid after payment confirmation.
 
 **Permissions Required:** `expenses:process`
@@ -250,11 +271,13 @@ Marks expense as paid after payment confirmation.
 ### Bulk Operations
 
 #### `bulkApproveExpensesWithRBAC(expenseIds, comment?)`
+
 Approves multiple expenses at once.
 
 **Permissions Required:** `expenses:approve`
 
 **Example:**
+
 ```typescript
 const result = await bulkApproveExpensesWithRBAC(
   ["exp_1", "exp_2", "exp_3"],
@@ -265,6 +288,7 @@ console.log(`Approved: ${result.approved}, Failed: ${result.failed}`)
 ```
 
 #### `bulkPayExpensesWithRBAC(expenseIds, paymentMethod)`
+
 Processes payment for multiple expenses.
 
 **Permissions Required:** `expenses:process`
@@ -275,14 +299,15 @@ Processes payment for multiple expenses.
 
 Expenses route through approval levels based on amount:
 
-| Amount Range | Approval Level | Typical Approver |
-|--------------|----------------|------------------|
-| $0 - $100 | Level 1 | Department Head |
-| $101 - $500 | Level 2 | Finance Manager |
-| $501 - $2,000 | Level 3 | Principal/CFO |
-| $2,001+ | Level 4 | Board approval |
+| Amount Range  | Approval Level | Typical Approver |
+| ------------- | -------------- | ---------------- |
+| $0 - $100     | Level 1        | Department Head  |
+| $101 - $500   | Level 2        | Finance Manager  |
+| $501 - $2,000 | Level 3        | Principal/CFO    |
+| $2,001+       | Level 4        | Board approval   |
 
 **Example Workflow for $750 expense:**
+
 ```
 1. Teacher submits expense
 2. Department Head (Level 1) approves
@@ -294,7 +319,9 @@ Expenses route through approval levels based on amount:
 ```
 
 ### Fast-Track Approval
+
 Expenses meeting these criteria skip some levels:
+
 - Pre-approved vendors
 - Recurring expenses (utilities)
 - Emergency expenses (with justification)
@@ -303,12 +330,14 @@ Expenses meeting these criteria skip some levels:
 ## Receipt Management
 
 ### Acceptable Receipts
+
 - Original receipts (preferred)
 - Digital receipts (email confirmations)
 - Invoice copies
 - Credit card statements (last resort)
 
 ### Receipt Requirements
+
 - Clear vendor name
 - Transaction date
 - Amount matching expense
@@ -316,7 +345,9 @@ Expenses meeting these criteria skip some levels:
 - Payment method indicated
 
 ### OCR (Optical Character Recognition)
+
 The system automatically extracts:
+
 - Vendor name
 - Date
 - Total amount
@@ -330,6 +361,7 @@ The system automatically extracts:
 ### Real-Time Budget Checks
 
 When submitting an expense:
+
 ```
 1. Check if budget allocation specified
 2. Verify allocation has available funds
@@ -343,6 +375,7 @@ When submitting an expense:
 ### Budget Overrun Handling
 
 If expense would exceed budget:
+
 - **Option 1:** Request budget transfer
 - **Option 2:** Use contingency fund
 - **Option 3:** Defer expense to next period
@@ -351,6 +384,7 @@ If expense would exceed budget:
 ## Workflow
 
 ### 1. Submission Phase
+
 ```
 1. Employee incurs expense
 2. Collects receipt
@@ -363,6 +397,7 @@ If expense would exceed budget:
 ```
 
 ### 2. Approval Phase
+
 ```
 1. Approver receives email notification
 2. Reviews expense details and receipt
@@ -373,6 +408,7 @@ If expense would exceed budget:
 ```
 
 ### 3. Payment Phase
+
 ```
 1. Finance team reviews approved expenses
 2. Verifies payment details
@@ -384,23 +420,27 @@ If expense would exceed budget:
 ## Integration with Other Modules
 
 ### Budget Module
+
 - Real-time budget availability
 - Automatic budget deduction
 - Variance impact tracking
 - Budget transfer requests
 
 ### Accounts Module
+
 - Journal entries for each expense
 - Debit expense accounts
 - Credit cash/payable accounts
 - Month-end reconciliation
 
 ### Banking Module
+
 - Bank transfer initiation
 - Payment tracking
 - Bank statement reconciliation
 
 ### Payroll Module
+
 - Add reimbursements to payroll
 - Tax treatment of reimbursements
 - Net pay adjustment
@@ -409,16 +449,17 @@ If expense would exceed budget:
 
 ### Permissions
 
-| Role | View | Create | Edit | Delete | Approve | Pay |
-|------|------|--------|------|--------|---------|-----|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (own) | ✅ | ✅ (own) | ✅ (own) | ❌ | ❌ |
-| **STAFF** | ✅ (own) | ✅ | ✅ (own) | ✅ (own) | ❌ | ❌ |
-| **STUDENT** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Role           | View     | Create | Edit     | Delete   | Approve | Pay |
+| -------------- | -------- | ------ | -------- | -------- | ------- | --- |
+| **ADMIN**      | ✅       | ✅     | ✅       | ✅       | ✅      | ✅  |
+| **ACCOUNTANT** | ✅       | ✅     | ✅       | ✅       | ✅      | ✅  |
+| **TEACHER**    | ✅ (own) | ✅     | ✅ (own) | ✅ (own) | ❌      | ❌  |
+| **STAFF**      | ✅ (own) | ✅     | ✅ (own) | ✅ (own) | ❌      | ❌  |
+| **STUDENT**    | ❌       | ❌     | ❌       | ❌       | ❌      | ❌  |
+| **GUARDIAN**   | ❌       | ❌     | ❌       | ❌       | ❌      | ❌  |
 
 **Custom Permissions:**
+
 - Department heads can approve their department's expenses
 - Finance managers can approve up to $5,000
 - Principal/CFO can approve any amount
@@ -426,30 +467,35 @@ If expense would exceed budget:
 ## Best Practices
 
 ### 1. Timely Submission
+
 - Submit expenses within 30 days
 - Don't accumulate expenses
 - Submit receipts immediately
 - Set reminders for recurring expenses
 
 ### 2. Receipt Quality
+
 - Take clear photos
 - Ensure all corners visible
 - Good lighting, no glare
 - Store original receipts for 7 years
 
 ### 3. Accurate Descriptions
+
 - Be specific about purpose
 - Include project/event name
 - Mention beneficiaries
 - Provide context for unusual expenses
 
 ### 4. Budget Awareness
+
 - Check budget before incurring expense
 - Coordinate large expenses with finance
 - Plan expenses quarterly
 - Track department spending
 
 ### 5. Approval Etiquette
+
 - Review expenses within 48 hours
 - Provide constructive feedback
 - Ask questions if unclear
@@ -488,6 +534,7 @@ If expense would exceed budget:
    - Receipt quality scores
 
 ### Custom Reports
+
 - Department-wise spending trends
 - Vendor analysis
 - Seasonal expense patterns
@@ -496,18 +543,22 @@ If expense would exceed budget:
 ## Troubleshooting
 
 ### Approval Stuck
+
 **Issue:** Expense stuck at approval level for >5 days
 
 **Solution:**
+
 - Send reminder email to approver
 - Check if approver is on leave
 - Escalate to backup approver
 - Admin can reassign approver
 
 ### Receipt Upload Failed
+
 **Issue:** Cannot upload receipt image
 
 **Solution:**
+
 - Check file size (<10MB)
 - Verify file format (JPG, PNG, PDF)
 - Check internet connection
@@ -515,9 +566,11 @@ If expense would exceed budget:
 - Contact support if persists
 
 ### Budget Check Failed
+
 **Issue:** System says insufficient budget but allocation shows available funds
 
 **Solution:**
+
 - Verify correct allocation selected
 - Check for committed but unapproved expenses
 - Run budget recalculation

@@ -1,7 +1,8 @@
-import Link from 'next/link'
-import { BankCard } from '@/components/platform/finance/banking/shared/bank-card'
-import { Button } from '@/components/ui/button'
+import Link from "next/link"
 import { Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { BankCard } from "@/components/platform/finance/banking/shared/bank-card"
 
 interface DashboardSidebarProps {
   user: {
@@ -29,19 +30,19 @@ interface RecentActivityItemProps {
  * UserProfileSection - Server component for user profile display
  */
 function UserProfileSection({ user }: UserProfileSectionProps) {
-  const initial = user?.name?.[0]?.toUpperCase() || 'U'
+  const initial = user?.name?.[0]?.toUpperCase() || "U"
 
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="bg-card rounded-lg border p-6">
       <div className="flex items-center space-x-4">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-lg font-semibold text-primary">
-            {initial}
-          </span>
+        <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
+          <span className="text-primary text-lg font-semibold">{initial}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium truncate">{user?.name}</p>
-          <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+          <p className="truncate font-medium">{user?.name}</p>
+          <p className="text-muted-foreground truncate text-sm">
+            {user?.email}
+          </p>
         </div>
       </div>
     </div>
@@ -54,16 +55,14 @@ function UserProfileSection({ user }: UserProfileSectionProps) {
 function RecentActivityItem({ transaction }: RecentActivityItemProps) {
   const amount = Number(transaction.amount)
   const isPositive = amount > 0
-  const colorClass = isPositive ? 'text-green-600' : 'text-red-600'
-  const sign = isPositive ? '+' : ''
+  const colorClass = isPositive ? "text-green-600" : "text-red-600"
+  const sign = isPositive ? "+" : ""
 
   return (
     <div className="flex items-center justify-between py-2">
-      <div className="flex-1 min-w-0 mr-4">
-        <p className="text-sm font-medium truncate">
-          {transaction.name}
-        </p>
-        <p className="text-xs text-muted-foreground">
+      <div className="mr-4 min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{transaction.name}</p>
+        <p className="text-muted-foreground text-xs">
           {new Date(transaction.date).toLocaleDateString()}
         </p>
       </div>
@@ -90,7 +89,7 @@ export function DashboardSidebar({
   const recentTransactions = transactions?.slice(0, 3) || []
 
   return (
-    <aside className="w-96 border-l bg-muted/10 p-8">
+    <aside className="bg-muted/10 w-96 border-l p-8">
       <div className="space-y-6">
         {/* User Profile Section */}
         <UserProfileSection user={user} />
@@ -98,11 +97,13 @@ export function DashboardSidebar({
         {/* My Banks Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">{dictionary?.myBanks || 'My Banks'}</h3>
+            <h3 className="font-semibold">
+              {dictionary?.myBanks || "My Banks"}
+            </h3>
             <Link href={`/${lang}/banking/my-banks`}>
               <Button variant="ghost" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                {dictionary?.addBank || 'Add Bank'}
+                <Plus className="mr-1 h-4 w-4" />
+                {dictionary?.addBank || "Add Bank"}
               </Button>
             </Link>
           </div>
@@ -113,19 +114,19 @@ export function DashboardSidebar({
                 <BankCard
                   key={bank.id}
                   account={bank}
-                  userName={user?.name || 'User'}
+                  userName={user?.name || "User"}
                   showBalance={false}
                 />
               ))}
             </div>
           ) : (
             <div className="rounded-lg border border-dashed p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {dictionary?.noBanksConnected || 'No banks connected yet'}
+              <p className="text-muted-foreground text-sm">
+                {dictionary?.noBanksConnected || "No banks connected yet"}
               </p>
               <Link href={`/${lang}/banking/my-banks`}>
                 <Button variant="outline" size="sm" className="mt-2">
-                  {dictionary?.connectBank || 'Connect Bank'}
+                  {dictionary?.connectBank || "Connect Bank"}
                 </Button>
               </Link>
             </div>
@@ -134,7 +135,9 @@ export function DashboardSidebar({
 
         {/* Recent Activity */}
         <div className="space-y-4">
-          <h3 className="font-semibold">{dictionary?.recentActivity || 'Recent Activity'}</h3>
+          <h3 className="font-semibold">
+            {dictionary?.recentActivity || "Recent Activity"}
+          </h3>
           {recentTransactions.length > 0 ? (
             <div className="space-y-1">
               {recentTransactions.map((transaction: any) => (
@@ -145,23 +148,25 @@ export function DashboardSidebar({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {dictionary?.noRecentActivity || 'No recent activity'}
+            <p className="text-muted-foreground text-sm">
+              {dictionary?.noRecentActivity || "No recent activity"}
             </p>
           )}
         </div>
 
         {/* Quick Actions */}
         <div className="space-y-2">
-          <h3 className="font-semibold mb-3">{dictionary?.quickActions || 'Quick Actions'}</h3>
+          <h3 className="mb-3 font-semibold">
+            {dictionary?.quickActions || "Quick Actions"}
+          </h3>
           <Link href={`/${lang}/banking/payment-transfer`} className="block">
             <Button variant="outline" className="w-full justify-start">
-              {dictionary?.transferFunds || 'Transfer Funds'}
+              {dictionary?.transferFunds || "Transfer Funds"}
             </Button>
           </Link>
           <Link href={`/${lang}/banking/transaction-history`} className="block">
             <Button variant="outline" className="w-full justify-start">
-              {dictionary?.viewAllTransactions || 'View All Transactions'}
+              {dictionary?.viewAllTransactions || "View All Transactions"}
             </Button>
           </Link>
         </div>

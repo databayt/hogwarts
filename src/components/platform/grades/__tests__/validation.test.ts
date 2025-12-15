@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
 import { z } from "zod"
 
 // Grades/Results validation schema tests
@@ -7,7 +7,10 @@ describe("Grades Validation Schemas", () => {
     studentId: z.string().min(1, "Student is required"),
     examId: z.string().min(1, "Exam is required"),
     subjectId: z.string().min(1, "Subject is required"),
-    score: z.number().min(0, "Score must be non-negative").max(100, "Score cannot exceed 100"),
+    score: z
+      .number()
+      .min(0, "Score must be non-negative")
+      .max(100, "Score cannot exceed 100"),
     grade: z.string().optional(),
     remarks: z.string().optional(),
     submittedBy: z.string().optional(),

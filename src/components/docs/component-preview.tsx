@@ -1,10 +1,11 @@
-import * as React from "react"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { cn } from "@/lib/utils"
-import { highlightCode } from "@/lib/highlight-code"
-import { CopyButton } from "@/components/docs/copy-button"
+import * as React from "react"
 import { AtomsIndex } from "@/registry/atoms-index"
+
+import { highlightCode } from "@/lib/highlight-code"
+import { cn } from "@/lib/utils"
+import { CopyButton } from "@/components/docs/copy-button"
 
 interface ComponentPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   name?: string

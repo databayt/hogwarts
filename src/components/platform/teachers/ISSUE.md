@@ -11,6 +11,7 @@ Track production readiness and enhancements for the Teachers feature.
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] CRUD operations with Zod validation
 - [x] CSV bulk import with error reporting
 - [x] Department assignments (TeacherDepartment many-to-many)
@@ -28,6 +29,7 @@ Track production readiness and enhancements for the Teachers feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Add teachers individually via multi-step form
 - [x] Bulk import teachers via CSV
 - [x] View complete faculty roster with pagination
@@ -41,6 +43,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [x] Delete teacher records with confirmation
 
 ### Role-Based Access
+
 - [x] Admin can create/edit/delete teachers
 - [x] Teacher can view their own profile and update contact info
 - [x] Teacher can view assigned classes and subjects
@@ -49,6 +52,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [x] Department heads can view department roster
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Unique email per school constraint
 - [x] Validation on all inputs (client + server)
@@ -63,6 +67,7 @@ Track production readiness and enhancements for the Teachers feature.
 ### Critical Issues (Priority 1) 🔴
 
 **Qualification Tracking**
+
 - [ ] Add education field (degree, major, institution, graduation year)
 - [ ] Add certifications field (certification name, issuing body, date, expiry)
 - [ ] Add teaching license tracking (license number, state, expiry)
@@ -71,6 +76,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Automatic expiry alerts for licenses
 
 **Teaching Load Analytics**
+
 - [ ] Calculate total teaching periods per week from timetable
 - [ ] Display number of unique classes and subjects
 - [ ] Show contact hours vs. non-contact hours
@@ -79,6 +85,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Teaching load reports per term
 
 **Department Management**
+
 - [ ] Department head designation
 - [ ] Department roster view
 - [ ] Department-based filtering and reports
@@ -87,6 +94,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Department performance analytics
 
 ### Status & Employment Tracking
+
 - [ ] Employment status history log with timestamps
 - [ ] Reason/notes field for status changes
 - [ ] Contract start and end dates
@@ -95,6 +103,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Audit trail for status modifications
 
 ### Subject Specialization
+
 - [ ] Primary subject field (main expertise)
 - [ ] Secondary subjects (can teach)
 - [ ] Subject certification tracking
@@ -103,6 +112,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Subject assignment suggestions based on qualifications
 
 ### Document Management
+
 - [ ] Resume/CV upload
 - [ ] Certificate uploads (degree, teaching license)
 - [ ] Background check documents
@@ -112,6 +122,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Document expiry tracking
 
 ### Performance & Professional Development
+
 - [ ] Performance review tracking (dates, ratings, notes)
 - [ ] Goal setting and progress monitoring
 - [ ] Professional development courses attended
@@ -120,6 +131,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Self-evaluation forms
 
 ### Attendance & Leave Management
+
 - [ ] Teacher attendance tracking
 - [ ] Leave request system (sick, personal, professional)
 - [ ] Leave balance tracking (days used vs. remaining)
@@ -128,6 +140,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Leave approval workflow
 
 ### Class Assignment Enhancement
+
 - [ ] Homeroom teacher designation per class
 - [ ] Subject teacher assignment with effective date ranges
 - [ ] Co-teaching support (multiple teachers per subject)
@@ -136,6 +149,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Conflict detection (timetable clashes)
 
 ### Bulk Operations
+
 - [ ] Bulk department assignment (select multiple teachers)
 - [ ] Bulk status update
 - [ ] Bulk subject assignment
@@ -144,6 +158,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Progress indicators for bulk operations
 
 ### Performance Issues
+
 - [ ] Add indexes for search fields (givenName, surname, emailAddress)
 - [ ] Optimize department and class relationship queries (avoid N+1)
 - [ ] Cache frequently accessed teacher data
@@ -152,6 +167,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Optimize teaching load calculations
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for teacher list
 - [ ] Keyboard navigation for multi-step forms
 - [ ] ARIA labels for interactive elements
@@ -160,6 +176,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Skip navigation links
 
 ### UX Polish
+
 - [ ] Loading skeletons for table
 - [ ] Empty state with helpful guidance
 - [ ] Error handling with user-friendly messages
@@ -170,6 +187,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Form autosave for long forms
 
 ### Export/Import Enhancement
+
 - [ ] Export template with example data
 - [ ] Import validation preview before commit
 - [ ] Detailed error reporting per row
@@ -180,6 +198,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Include department and subject assignments in export
 
 ### Search & Filter Enhancement
+
 - [ ] Advanced search (multiple fields simultaneously)
 - [ ] Department filter dropdown
 - [ ] Subject specialization filter
@@ -189,6 +208,7 @@ Track production readiness and enhancements for the Teachers feature.
 - [ ] Recently searched queries
 
 ### Integration Enhancements
+
 - [ ] Link to teaching schedule (timetable view)
 - [ ] Link to classes taught (student roster)
 - [ ] Link to exam scores entered
@@ -202,6 +222,7 @@ Track production readiness and enhancements for the Teachers feature.
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Teacher {
   id               String               @id @default(cuid())
@@ -241,6 +262,7 @@ model TeacherDepartment {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `phone` field (String?)
 - [ ] Add `profilePhotoUrl` field (String?)
 - [ ] Add `employmentStatus` field (enum: ACTIVE, ON_LEAVE, TERMINATED, RETIRED)
@@ -260,6 +282,7 @@ model TeacherDepartment {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createTeacher(data: FormData)` - Create new teacher
 - [x] `updateTeacher(id: string, data: FormData)` - Update existing teacher
 - [x] `deleteTeacher(id: string)` - Delete teacher
@@ -267,6 +290,7 @@ model TeacherDepartment {
 - [x] `getTeachers(params)` - Fetch teacher list with filters/pagination
 
 ### Actions to Implement
+
 - [ ] `bulkAssignDepartment(teacherIds: string[], departmentId: string)` - Bulk department assignment
 - [ ] `bulkUpdateStatus(teacherIds: string[], status: EmploymentStatus)` - Bulk status update
 - [ ] `assignToClass(teacherId: string, classId: string, subjectId: string)` - Class assignment
@@ -279,6 +303,7 @@ model TeacherDepartment {
 - [ ] `assignSubstitute(teacherId: string, substituteId: string, dates: Date[])` - Assign substitute
 
 ### Action Enhancements
+
 - [ ] Add typed return values for all actions
 - [ ] Add request ID logging for traceability
 - [ ] Add proper error handling with user-friendly messages
@@ -291,6 +316,7 @@ model TeacherDepartment {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with data fetching
 - [x] `table.tsx` - Client data table with useDataTable
 - [x] `columns.tsx` - Column definitions with filters
@@ -303,6 +329,7 @@ model TeacherDepartment {
 - [x] `actions.ts` - Server actions
 
 ### Components to Create
+
 - [ ] `teacher-qualifications.tsx` - Qualifications management
 - [ ] `teacher-documents.tsx` - Document management
 - [ ] `teacher-schedule.tsx` - Teaching schedule view
@@ -315,6 +342,7 @@ model TeacherDepartment {
 - [ ] `export-dialog.tsx` - Export configuration
 
 ### Component Enhancements
+
 - [ ] Add loading states to table
 - [ ] Add empty state component
 - [ ] Add error boundary for graceful failures
@@ -329,6 +357,7 @@ model TeacherDepartment {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions (create, update, delete)
 - [ ] Test multi-tenant scoping in queries
@@ -338,6 +367,7 @@ model TeacherDepartment {
 - [ ] Test department assignment logic
 
 ### Integration Tests
+
 - [ ] Test teacher creation flow end-to-end
 - [ ] Test bulk import with errors
 - [ ] Test department assignment linking
@@ -347,6 +377,7 @@ model TeacherDepartment {
 - [ ] Test teaching load with timetable data
 
 ### E2E Tests (Playwright)
+
 - [ ] Test teacher list rendering
 - [ ] Test search and filters
 - [ ] Test create teacher multi-step form flow
@@ -431,6 +462,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -438,6 +470,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -445,18 +478,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -467,6 +503,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { TrendingDown, TrendingUp, Minus } from "lucide-react"
+import { Minus, TrendingDown, TrendingUp } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { TrendingStatItem, StatGridConfig, StatsDictionary } from "./types"
+
+import type { StatGridConfig, StatsDictionary, TrendingStatItem } from "./types"
 
 interface TrendingStatsProps {
   /** Array of stat items to display */
@@ -75,7 +77,12 @@ export function TrendingStats({
   // Bordered variant (stats-01 style)
   if (variant === "bordered") {
     return (
-      <div className={cn("grid grid-cols-1 gap-px rounded-xl bg-border sm:grid-cols-2 lg:grid-cols-4", className)}>
+      <div
+        className={cn(
+          "bg-border grid grid-cols-1 gap-px rounded-xl sm:grid-cols-2 lg:grid-cols-4",
+          className
+        )}
+      >
         {items.map((item, index) => (
           <Card
             key={item.label}
@@ -83,12 +90,13 @@ export function TrendingStats({
               "rounded-none border-0 shadow-none",
               index === 0 && "rounded-l-xl",
               index === items.length - 1 && "rounded-r-xl",
-              onItemClick && "cursor-pointer hover:bg-accent/50 transition-colors"
+              onItemClick &&
+                "hover:bg-accent/50 cursor-pointer transition-colors"
             )}
             onClick={() => onItemClick?.(item, index)}
           >
             <CardContent className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 p-4 sm:p-6">
-              <p className="text-sm font-medium text-muted-foreground truncate">
+              <p className="text-muted-foreground truncate text-sm font-medium">
                 {item.label}
               </p>
               {item.change !== undefined && (
@@ -100,10 +108,11 @@ export function TrendingStats({
                       : "text-destructive"
                   )}
                 >
-                  {item.changeType === "positive" ? "+" : ""}{item.change}%
+                  {item.changeType === "positive" ? "+" : ""}
+                  {item.change}%
                 </span>
               )}
-              <p className="w-full flex-none text-3xl font-medium tracking-tight text-foreground">
+              <p className="text-foreground w-full flex-none text-3xl font-medium tracking-tight">
                 {formatValue(item.value)}
               </p>
             </CardContent>
@@ -122,7 +131,8 @@ export function TrendingStats({
             key={item.label}
             className={cn(
               "py-4",
-              onItemClick && "cursor-pointer hover:bg-accent/50 transition-colors"
+              onItemClick &&
+                "hover:bg-accent/50 cursor-pointer transition-colors"
             )}
             onClick={() => onItemClick?.(item, index)}
           >
@@ -132,7 +142,7 @@ export function TrendingStats({
                   {item.icon && (
                     <span className="text-muted-foreground">{item.icon}</span>
                   )}
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-muted-foreground text-sm font-medium">
                     {item.label}
                   </p>
                 </div>
@@ -140,9 +150,9 @@ export function TrendingStats({
                   <Badge
                     variant="outline"
                     className={cn(
-                      "font-medium inline-flex items-center gap-1 px-2 py-0.5 text-xs",
+                      "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium",
                       item.changeType === "positive"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                         : "bg-destructive/10 text-destructive border-destructive/20"
                     )}
                   >
@@ -152,13 +162,17 @@ export function TrendingStats({
                       <TrendingDown className="h-3.5 w-3.5" />
                     )}
                     <span className="sr-only">
-                      {item.changeType === "positive" ? "Increased" : "Decreased"} by
+                      {item.changeType === "positive"
+                        ? "Increased"
+                        : "Decreased"}{" "}
+                      by
                     </span>
-                    {item.changeType === "positive" ? "+" : ""}{item.change}%
+                    {item.changeType === "positive" ? "+" : ""}
+                    {item.change}%
                   </Badge>
                 )}
               </div>
-              <p className="text-3xl font-semibold text-foreground mt-2">
+              <p className="text-foreground mt-2 text-3xl font-semibold">
                 {formatValue(item.value)}
               </p>
             </CardContent>
@@ -177,16 +191,17 @@ export function TrendingStats({
             key={item.label}
             className={cn(
               "p-6 py-4",
-              onItemClick && "cursor-pointer hover:bg-accent/50 transition-colors"
+              onItemClick &&
+                "hover:bg-accent/50 cursor-pointer transition-colors"
             )}
             onClick={() => onItemClick?.(item, index)}
           >
             <CardContent className="p-0">
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 {item.label}
               </p>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold text-foreground">
+                <span className="text-foreground text-3xl font-semibold">
                   {formatValue(item.value)}
                 </span>
                 {item.change !== undefined && (
@@ -198,7 +213,8 @@ export function TrendingStats({
                         : "text-destructive"
                     )}
                   >
-                    {item.changeType === "positive" ? "+" : ""}{item.change}%
+                    {item.changeType === "positive" ? "+" : ""}
+                    {item.change}%
                   </span>
                 )}
               </div>
@@ -216,13 +232,13 @@ export function TrendingStats({
         <Card
           key={item.label}
           className={cn(
-            onItemClick && "cursor-pointer hover:bg-accent/50 transition-colors"
+            onItemClick && "hover:bg-accent/50 cursor-pointer transition-colors"
           )}
           onClick={() => onItemClick?.(item, index)}
         >
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground text-sm font-medium">
                 {item.label}
               </p>
               {item.icon && (
@@ -230,7 +246,7 @@ export function TrendingStats({
               )}
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-foreground text-2xl font-bold">
                 {formatValue(item.value)}
               </span>
               {item.change !== undefined && (

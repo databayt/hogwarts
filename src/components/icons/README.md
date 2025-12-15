@@ -53,7 +53,7 @@ import { Icons } from "@/components/icons"
 ```tsx
 import { GithubIcon } from "@/components/icons"
 
-<GithubIcon className="w-6 h-6" />
+;<GithubIcon className="h-6 w-6" />
 ```
 
 ### Dynamic Icons
@@ -62,7 +62,8 @@ import { GithubIcon } from "@/components/icons"
 import { Icon } from "@/components/icons"
 
 // Load icon by ID
-<Icon name="github" className="w-6 h-6" />
+
+;<Icon name="github" className="h-6 w-6" />
 ```
 
 ## 📚 Design System
@@ -130,11 +131,13 @@ if (!result.valid) {
    - No gradients or scripts
 
 2. **Save File**:
+
    ```bash
    public/icons/{category}/{name}.svg
    ```
 
 3. **Create Component** (`categories/{category}.tsx`):
+
    ```typescript
    export const MyIcon = (props: IconProps) => (
      <svg
@@ -149,6 +152,7 @@ if (!result.valid) {
    ```
 
 4. **Register Icon** (`registry.ts`):
+
    ```typescript
    {
      id: "my-icon",
@@ -170,51 +174,61 @@ if (!result.valid) {
 ## 📦 Categories
 
 ### System (UI Icons)
+
 Core interface icons for buttons, navigation, and controls.
 
 **Examples**: close, menu, search, chevron, check, trash, edit, settings
 
 ### Academic (School Features)
+
 Education-specific icons for academic features.
 
 **Examples**: attendance, grades, exams, assignments, timetable, classes
 
 ### Finance (Financial Operations)
+
 Icons for billing, payments, and financial management.
 
 **Examples**: invoice, receipt, payment, fees, salary, expenses, budget
 
 ### Communication (Messaging)
+
 Icons for messaging and notifications.
 
 **Examples**: message, notification, email, chat, announcement, alert
 
 ### Library (Resources)
+
 Icons for library and resource management.
 
 **Examples**: book, library, borrow, return, catalog, materials
 
 ### Integrations (Logos)
+
 Third-party service and technology logos.
 
 **Examples**: github, stripe, google, vercel, nextjs, react, tailwind
 
 ### Branding (School Identity)
+
 School logos, certificates, and branded assets.
 
 **Examples**: school-logo, certificate, seal, badge, award, letterhead
 
 ### Illustrations (Graphics)
+
 Decorative illustrations and complex graphics.
 
 **Examples**: hand-build, puzzle, artifact, frame, concept
 
 ### Marketing (Landing Pages)
+
 Marketing and landing page graphics.
 
 **Examples**: hero, feature, testimonial, banner, promo
 
 ### Anthropic (Design System)
+
 Icons from Anthropic's design system, used for core values and marketing sections.
 
 **Tag**: `anthropic`
@@ -228,11 +242,13 @@ Icons from Anthropic's design system, used for core values and marketing section
 | `reaching-ascent` | Reaching Ascent | Ambition - figure reaching upward | `/anthropic/category-03.svg` |
 
 **Usage**:
+
 ```tsx
 import Image from "next/image"
 
 // Use as Image component (recommended for SVG files in public/)
-<Image
+
+;<Image
   src="/anthropic/claude-code-best-practices.svg"
   alt="Network Nodes"
   width={32}
@@ -242,6 +258,7 @@ import Image from "next/image"
 ```
 
 **Style Notes**:
+
 - ViewBox varies: `0 0 1000 1000` or `0 0 1200 1200`
 - Colors: `#FAF9F5` (light) and `#141413` (dark) or single `black`
 - Use `dark:invert` class for theme support
@@ -251,8 +268,8 @@ import Image from "next/image"
 Browse icons at `/docs/icons` or use the search utilities:
 
 ```typescript
-import { searchIcons } from "@/components/icons/utils"
 import { iconRegistry } from "@/components/icons/registry"
+import { searchIcons } from "@/components/icons/utils"
 
 const results = searchIcons(iconRegistry, {
   query: "github",

@@ -47,6 +47,7 @@ const messages = await db.message.findMany({
 ```
 
 **Impact**:
+
 - Page 1: ~same performance
 - Page 100: **95% faster** (10ms vs 200ms)
 - Page 1000: **99% faster** (10ms vs 2000ms)
@@ -59,10 +60,15 @@ const messages = await db.message.findMany({
 
 ```typescript
 // ❌ Bad: N+1 queries for unread counts
-const conversations = await db.conversationParticipant.findMany({ where: { userId } })
+const conversations = await db.conversationParticipant.findMany({
+  where: { userId },
+})
 for (const conv of conversations) {
   const count = await db.message.count({
-    where: { conversationId: conv.conversationId, createdAt: { gt: conv.lastReadAt } }
+    where: {
+      conversationId: conv.conversationId,
+      createdAt: { gt: conv.lastReadAt },
+    },
   })
 }
 
@@ -80,13 +86,14 @@ const result = await db.$queryRaw`
 const messages = await db.message.findMany({
   include: {
     sender: {
-      select: { id: true, username: true, email: true, image: true }
-    }
-  }
+      select: { id: true, username: true, email: true, image: true },
+    },
+  },
 })
 ```
 
 **Impact**:
+
 - Unread counts: 20+ queries → 1 query (95% faster)
 - Related data: 50-100 queries → 1 query
 
@@ -97,6 +104,9 @@ const messages = await db.message.findMany({
 **Solution**: Convert all dates to ISO strings using centralized utility.
 
 ```typescript
+// ✅ Good: Centralized utility
+import { serializeMessage } from "./serialization"
+
 // ❌ Bad: Manual serialization (error-prone)
 const data = {
   ...message,
@@ -104,8 +114,6 @@ const data = {
   // Easy to forget nested dates!
 }
 
-// ✅ Good: Centralized utility
-import { serializeMessage } from './serialization'
 const data = serializeMessage(message) // Handles all nested dates
 ```
 
@@ -143,13 +151,13 @@ model ConversationParticipant {
 
 Based on production data with 50,000 messages:
 
-| Operation | Before Optimization | After Optimization | Improvement |
-|-----------|--------------------|--------------------|-------------|
-| Load 50 messages (page 1) | 45ms | 12ms | 73% faster |
-| Load 50 messages (page 100) | 850ms | 15ms | 98% faster |
-| Load conversation list (50) | 120ms | 25ms | 79% faster |
-| Send message | 180ms | 35ms | 81% faster |
-| Real-time updates | 50ms | 8ms | 84% faster |
+| Operation                   | Before Optimization | After Optimization | Improvement |
+| --------------------------- | ------------------- | ------------------ | ----------- |
+| Load 50 messages (page 1)   | 45ms                | 12ms               | 73% faster  |
+| Load 50 messages (page 100) | 850ms               | 15ms               | 98% faster  |
+| Load conversation list (50) | 120ms               | 25ms               | 79% faster  |
+| Send message                | 180ms               | 35ms               | 81% faster  |
+| Real-time updates           | 50ms                | 8ms                | 84% faster  |
 
 ## Virtual Scrolling Integration
 
@@ -168,6 +176,7 @@ const virtualizer = useVirtualizer({
 ```
 
 **Combined Impact**:
+
 - 10,000 messages: Renders 15-20 items instead of 10,000
 - Memory usage: 95% reduction
 - Scroll performance: Constant 60fps
@@ -177,6 +186,7 @@ const virtualizer = useVirtualizer({
 ### DO ✅
 
 1. **Use cursor pagination for infinite scroll**
+
    ```typescript
    const result = await getMessagesWithCursor(conversationId, {
      cursor: lastMessageId,
@@ -185,12 +195,15 @@ const virtualizer = useVirtualizer({
    ```
 
 2. **Serialize dates using utilities**
+
    ```typescript
-   import { serializeMessages } from './serialization'
+   import { serializeMessages } from "./serialization"
+
    const safe = serializeMessages(messages)
    ```
 
 3. **Fetch only needed fields**
+
    ```typescript
    select: messageListSelect // Pre-defined optimized select
    ```
@@ -202,17 +215,20 @@ const virtualizer = useVirtualizer({
 ### DON'T ❌
 
 1. **Don't use offset pagination for deep pages**
+
    ```typescript
    skip: (page - 1) * 50 // Slow for page 100+
    ```
 
 2. **Don't manually serialize dates**
+
    ```typescript
    // Error-prone, easy to miss nested dates
    createdAt: new Date(msg.createdAt).toISOString()
    ```
 
 3. **Don't fetch unnecessary fields**
+
    ```typescript
    // Fetches 30+ fields when you only need 5
    await db.message.findMany()

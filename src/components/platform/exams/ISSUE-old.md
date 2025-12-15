@@ -10,6 +10,7 @@ Track production readiness and enhancements for the Exams feature.
 ## Current Status
 
 **Production-Ready MVP Features ✅**
+
 - [x] CRUD operations with Zod validation
 - [x] Multi-step form (basic info → schedule → instructions)
 - [x] Exam scheduling (date, time, duration)
@@ -26,6 +27,7 @@ Track production readiness and enhancements for the Exams feature.
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Create exams with multi-step form
 - [x] Schedule exam date and time
 - [x] Assign to class and subject
@@ -41,6 +43,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Export marks to CSV
 
 ### Role-Based Access
+
 - [x] Admin can create/edit/delete all exams
 - [ ] Teacher can create exams for their subjects
 - [ ] Teacher can enter marks for their exams
@@ -50,6 +53,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Parent can view child's results
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Validation on all inputs (client + server)
 - [x] Referential integrity (foreign keys)
@@ -64,6 +68,7 @@ Track production readiness and enhancements for the Exams feature.
 ### Critical Issues (Priority 1) 🔴
 
 **Marks Entry Interface**
+
 - [x] Create marks entry UI (roster with input fields)
 - [x] Validate marks ≤ total marks
 - [x] Auto-calculate percentage
@@ -76,6 +81,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Remarks field per student
 
 **Grade Boundaries Configuration**
+
 - [x] Add GradeBoundary model (per school or per subject)
 - [ ] Configure grade scale (A+, A, B+, B, C+, C, D, F)
 - [ ] Map percentage ranges to letter grades
@@ -84,6 +90,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Grade boundary settings in school config
 
 **Exam Results Model** ✅
+
 - [x] ExamResult model created in `prisma/models/exam.prisma`
 - [x] Database schema pushed to production
 - [x] Relations established (School, Exam, Student)
@@ -91,6 +98,7 @@ Track production readiness and enhancements for the Exams feature.
 - [x] Unique constraint on [examId, studentId]
 
 **Exam Analytics Dashboard**
+
 - [x] Calculate class average
 - [x] Find highest and lowest scores
 - [ ] Calculate median
@@ -102,6 +110,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Subject-wise performance comparison
 
 ### Exam Hall Assignment
+
 - [ ] Add `examHallId` field to Exam model
 - [ ] Link to Classroom model
 - [ ] Check room capacity vs. class size
@@ -110,6 +119,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Conflict detection (same room, same time)
 
 ### Invigilator Scheduling
+
 - [ ] Add ExamInvigilator model (many-to-many with Exam and Teacher)
 - [ ] Assign teachers as invigilators
 - [ ] Prevent teacher invigilating their own class
@@ -118,6 +128,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Automated conflict detection
 
 ### Question Paper Management
+
 - [ ] Upload question paper (PDF/DOCX)
 - [ ] Store in cloud storage (S3 or Vercel Blob)
 - [ ] Access control (only teachers can upload/view before exam)
@@ -126,6 +137,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Question bank integration
 
 ### Bulk Exam Creation
+
 - [ ] Create exams for multiple classes at once
 - [ ] Exam template functionality
 - [ ] Clone exam to another class
@@ -133,6 +145,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Exam series (midterms for all subjects)
 
 ### Exam Calendar View
+
 - [ ] Calendar component showing all exams
 - [ ] Color-coded by status
 - [ ] Drag-and-drop rescheduling
@@ -141,6 +154,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Export calendar to PDF
 
 ### Performance Comparison
+
 - [ ] Compare student performance across exams
 - [ ] Compare class performance across terms
 - [ ] Subject-wise trends
@@ -148,6 +162,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Peer comparison (anonymized)
 
 ### Exam Notifications
+
 - [ ] Send exam schedule to students/parents
 - [ ] Reminders 1 week, 3 days, 1 day before exam
 - [ ] Results published notification
@@ -155,6 +170,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Missing marks entry alerts to teachers
 
 ### Performance Issues
+
 - [ ] Add indexes for date-based queries
 - [ ] Optimize exam list with joins (class, subject names)
 - [ ] Cache exam analytics calculations
@@ -162,6 +178,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Lazy loading for exam results
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for exam list
 - [ ] Keyboard navigation for multi-step form
 - [ ] ARIA labels for date/time pickers
@@ -169,6 +186,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] High contrast mode
 
 ### UX Polish
+
 - [ ] Loading skeletons for table
 - [ ] Empty state with helpful guidance
 - [ ] Error handling with user-friendly messages
@@ -178,6 +196,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Visual exam status indicators
 
 ### Export/Import Enhancement
+
 - [ ] Export exam schedule to PDF
 - [ ] Export marks to CSV
 - [ ] Import marks from CSV
@@ -186,6 +205,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Scheduled exports (end of term)
 
 ### Search & Filter Enhancement
+
 - [ ] Advanced search (multiple fields)
 - [ ] Date range filter
 - [ ] Teacher filter
@@ -193,6 +213,7 @@ Track production readiness and enhancements for the Exams feature.
 - [ ] Saved filter presets
 
 ### Integration Enhancements
+
 - [ ] Link to gradebook (Results feature)
 - [ ] Link to student performance trends
 - [ ] Link to timetable (block regular classes on exam days)
@@ -203,6 +224,7 @@ Track production readiness and enhancements for the Exams feature.
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Exam {
   id           String     @id @default(cuid())
@@ -249,6 +271,7 @@ enum ExamStatus {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `examHallId` field (String? with relation to Classroom)
 - [ ] Add `results` relation (ExamResult[])
 - [ ] Add `invigilators` relation (ExamInvigilator[])
@@ -265,6 +288,7 @@ enum ExamStatus {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createExam(input)` - Create new exam
 - [x] `updateExam(input)` - Update existing exam
 - [x] `deleteExam(input)` - Delete exam
@@ -272,6 +296,7 @@ enum ExamStatus {
 - [x] `getExams(input)` - Fetch exam list with filters/pagination
 
 ### Actions to Implement
+
 - [x] `enterMarks(examId, marks: [{ studentId, marksObtained, remarks }])` - Save results
 - [x] `getExamResults(examId)` - Fetch all results for exam
 - [x] `getExamAnalytics(examId)` - Calculate statistics
@@ -289,6 +314,7 @@ enum ExamStatus {
 - [ ] `getUpcomingExams(classId)` - Next exams for class
 
 ### Action Enhancements
+
 - [ ] Add typed return values
 - [ ] Add request ID logging
 - [ ] Add proper error handling
@@ -300,6 +326,7 @@ enum ExamStatus {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with exam list
 - [x] `table.tsx` - Client data table
 - [x] `columns.tsx` - Column definitions
@@ -312,6 +339,7 @@ enum ExamStatus {
 - [x] `validation.ts` - Zod schemas
 
 ### Components to Create
+
 - [x] `marks-entry-form.tsx` - Marks input interface
 - [x] `analytics-dashboard.tsx` - Statistics and charts
 - [x] `results-list.tsx` - Exam results table
@@ -323,6 +351,7 @@ enum ExamStatus {
 - [ ] `grade-boundaries-config.tsx` - Grading scale settings
 
 ### Component Enhancements
+
 - [ ] Add loading states
 - [ ] Add empty states
 - [ ] Add error boundaries
@@ -334,6 +363,7 @@ enum ExamStatus {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions
 - [ ] Test multi-tenant scoping
@@ -341,12 +371,14 @@ enum ExamStatus {
 - [ ] Test grade calculation
 
 ### Integration Tests
+
 - [ ] Test exam creation workflow
 - [ ] Test marks entry and storage
 - [ ] Test analytics calculations
 - [ ] Test status workflow
 
 ### E2E Tests (Playwright)
+
 - [ ] Test exam creation multi-step form
 - [ ] Test marks entry interface
 - [ ] Test analytics dashboard
@@ -373,6 +405,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -380,6 +413,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -387,18 +421,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -409,6 +446,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

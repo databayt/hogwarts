@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { getSchoolCapacity } from './actions'
-import { type CapacityFormData } from './validation'
+import { useEffect, useState } from "react"
+
+import { getSchoolCapacity } from "./actions"
+import { type CapacityFormData } from "./validation"
 
 interface UseCapacityReturn {
   data: CapacityFormData | null
@@ -18,20 +19,20 @@ export function useCapacity(schoolId: string): UseCapacityReturn {
 
   const fetchCapacity = async () => {
     if (!schoolId) return
-    
+
     try {
       setLoading(true)
       setError(null)
       const result = await getSchoolCapacity(schoolId)
-      
+
       if (result.success) {
         setData(result.data)
       } else {
-        setError(result.error || 'Failed to fetch capacity')
+        setError(result.error || "Failed to fetch capacity")
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-      console.error('Error fetching capacity:', err)
+      setError("An unexpected error occurred")
+      console.error("Error fetching capacity:", err)
     } finally {
       setLoading(false)
     }
@@ -49,6 +50,6 @@ export function useCapacity(schoolId: string): UseCapacityReturn {
     data,
     loading,
     error,
-    refresh
+    refresh,
   }
 }

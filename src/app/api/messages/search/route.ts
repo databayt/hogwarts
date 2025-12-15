@@ -41,8 +41,12 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
+
 import { getTenantContext } from "@/lib/tenant-context"
-import { isConversationParticipant, searchMessages } from "@/components/platform/messaging/queries"
+import {
+  isConversationParticipant,
+  searchMessages,
+} from "@/components/platform/messaging/queries"
 
 // WHY: Messages change constantly
 export const dynamic = "force-dynamic"
@@ -55,7 +59,10 @@ export async function GET(request: NextRequest) {
 
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return NextResponse.json({ error: "Missing school context" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing school context" },
+        { status: 400 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -64,7 +71,10 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100)
 
     if (!conversationId) {
-      return NextResponse.json({ error: "Missing conversationId" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing conversationId" },
+        { status: 400 }
+      )
     }
 
     if (!query || query.length < 1) {
@@ -72,7 +82,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is participant in this conversation
-    const isParticipant = await isConversationParticipant(conversationId, session.user.id)
+    const isParticipant = await isConversationParticipant(
+      conversationId,
+      session.user.id
+    )
     if (!isParticipant) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 })
     }
@@ -84,7 +97,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Map to consistent format with dates as strings
-    const formattedMessages = result.rows.map(msg => ({
+    const formattedMessages = result.rows.map((msg) => ({
       id: msg.id,
       content: msg.content,
       senderId: msg.senderId,

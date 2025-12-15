@@ -1,6 +1,6 @@
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client"
 
-import { SidebarNavItem } from "@/components/marketing/pricing/types";
+import { SidebarNavItem } from "@/components/marketing/pricing/types"
 
 export const sidebarLinks: SidebarNavItem[] = [
   {
@@ -51,4 +51,4 @@ export const sidebarLinks: SidebarNavItem[] = [
       },
     ],
   },
-];
+]

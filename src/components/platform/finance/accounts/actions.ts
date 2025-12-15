@@ -3,33 +3,41 @@
  * Server-side operations for chart of accounts, journal entries, and accounting reports
  */
 
-'use server'
+"use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { revalidatePath } from 'next/cache'
-import { accountSchema, journalEntrySchema, fiscalYearSchema } from './validation'
-import type { AccountActionResult, JournalEntryActionResult } from './types'
-import { StandardAccountCodes, JOURNAL_ENTRY_NUMBER_FORMAT } from './config'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+
+import { JOURNAL_ENTRY_NUMBER_FORMAT, StandardAccountCodes } from "./config"
+import type { AccountActionResult, JournalEntryActionResult } from "./types"
+import {
+  accountSchema,
+  fiscalYearSchema,
+  journalEntrySchema,
+} from "./validation"
 
 /**
  * Create Account
  * Creates a new account in the chart of accounts
  */
-export async function createAccount(formData: FormData): Promise<AccountActionResult> {
+export async function createAccount(
+  formData: FormData
+): Promise<AccountActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      code: formData.get('code'),
-      name: formData.get('name'),
-      type: formData.get('type'),
-      description: formData.get('description') || undefined,
-      parentAccountId: formData.get('parentAccountId') || null,
-      isActive: formData.get('isActive') === 'true',
+      code: formData.get("code"),
+      name: formData.get("name"),
+      type: formData.get("type"),
+      description: formData.get("description") || undefined,
+      parentAccountId: formData.get("parentAccountId") || null,
+      isActive: formData.get("isActive") === "true",
     }
 
     const validated = accountSchema.parse(data)
@@ -43,11 +51,11 @@ export async function createAccount(formData: FormData): Promise<AccountActionRe
     })
 
     if (existing) {
-      return { success: false, error: 'Account code already exists' }
+      return { success: false, error: "Account code already exists" }
     }
 
     // Derive normalBalance from account type
-    const { NormalBalance } = await import('./config')
+    const { NormalBalance } = await import("./config")
     const normalBalance = NormalBalance[validated.type]
 
     const account = await db.chartOfAccount.create({
@@ -58,11 +66,15 @@ export async function createAccount(formData: FormData): Promise<AccountActionRe
       },
     })
 
-    revalidatePath('/finance/accounts')
+    revalidatePath("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
-    console.error('Error creating account:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to create account' }
+    console.error("Error creating account:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create account",
+    }
   }
 }
 
@@ -70,26 +82,29 @@ export async function createAccount(formData: FormData): Promise<AccountActionRe
  * Update Account
  * Updates an existing account
  */
-export async function updateAccount(accountId: string, formData: FormData): Promise<AccountActionResult> {
+export async function updateAccount(
+  accountId: string,
+  formData: FormData
+): Promise<AccountActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const data = {
-      code: formData.get('code'),
-      name: formData.get('name'),
-      type: formData.get('type'),
-      description: formData.get('description') || undefined,
-      parentAccountId: formData.get('parentAccountId') || null,
-      isActive: formData.get('isActive') === 'true',
+      code: formData.get("code"),
+      name: formData.get("name"),
+      type: formData.get("type"),
+      description: formData.get("description") || undefined,
+      parentAccountId: formData.get("parentAccountId") || null,
+      isActive: formData.get("isActive") === "true",
     }
 
     const validated = accountSchema.parse(data)
 
     // Derive normalBalance from account type
-    const { NormalBalance } = await import('./config')
+    const { NormalBalance } = await import("./config")
     const normalBalance = NormalBalance[validated.type]
 
     const account = await db.chartOfAccount.update({
@@ -103,11 +118,15 @@ export async function updateAccount(accountId: string, formData: FormData): Prom
       },
     })
 
-    revalidatePath('/finance/accounts')
+    revalidatePath("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
-    console.error('Error updating account:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to update account' }
+    console.error("Error updating account:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update account",
+    }
   }
 }
 
@@ -115,11 +134,13 @@ export async function updateAccount(accountId: string, formData: FormData): Prom
  * Delete Account
  * Soft deletes an account (marks as inactive)
  */
-export async function deleteAccount(accountId: string): Promise<AccountActionResult> {
+export async function deleteAccount(
+  accountId: string
+): Promise<AccountActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     // Check if account has been used in any ledger entries
@@ -130,7 +151,8 @@ export async function deleteAccount(accountId: string): Promise<AccountActionRes
     if (usageCount > 0) {
       return {
         success: false,
-        error: 'Cannot delete account that has been used in transactions. Mark as inactive instead.',
+        error:
+          "Cannot delete account that has been used in transactions. Mark as inactive instead.",
       }
     }
 
@@ -142,11 +164,15 @@ export async function deleteAccount(accountId: string): Promise<AccountActionRes
       data: { isActive: false },
     })
 
-    revalidatePath('/finance/accounts')
+    revalidatePath("/finance/accounts")
     return { success: true, data: account as any }
   } catch (error) {
-    console.error('Error deleting account:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete account' }
+    console.error("Error deleting account:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to delete account",
+    }
   }
 }
 
@@ -154,19 +180,21 @@ export async function deleteAccount(accountId: string): Promise<AccountActionRes
  * Create Journal Entry
  * Creates a new manual journal entry
  */
-export async function createJournalEntry(formData: FormData): Promise<JournalEntryActionResult> {
+export async function createJournalEntry(
+  formData: FormData
+): Promise<JournalEntryActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
-    const entriesData = JSON.parse(formData.get('entries') as string)
+    const entriesData = JSON.parse(formData.get("entries") as string)
 
     const data = {
-      entryDate: formData.get('entryDate'),
-      description: formData.get('description'),
-      fiscalYearId: formData.get('fiscalYearId'),
+      entryDate: formData.get("entryDate"),
+      description: formData.get("description"),
+      fiscalYearId: formData.get("fiscalYearId"),
       entries: entriesData,
     }
 
@@ -174,7 +202,7 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
 
     // Generate journal entry number
     const today = new Date()
-    const yearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+    const yearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`
 
     const lastEntry = await db.journalEntry.findFirst({
       where: {
@@ -183,16 +211,18 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
           startsWith: `${JOURNAL_ENTRY_NUMBER_FORMAT.prefix}-${yearMonth}`,
         },
       },
-      orderBy: { entryNumber: 'desc' },
+      orderBy: { entryNumber: "desc" },
     })
 
     let sequence = 1
     if (lastEntry) {
-      const lastSequence = parseInt(lastEntry.entryNumber.split('-').pop() || '0')
+      const lastSequence = parseInt(
+        lastEntry.entryNumber.split("-").pop() || "0"
+      )
       sequence = lastSequence + 1
     }
 
-    const entryNumber = `${JOURNAL_ENTRY_NUMBER_FORMAT.prefix}-${yearMonth}-${String(sequence).padStart(JOURNAL_ENTRY_NUMBER_FORMAT.sequenceLength, '0')}`
+    const entryNumber = `${JOURNAL_ENTRY_NUMBER_FORMAT.prefix}-${yearMonth}-${String(sequence).padStart(JOURNAL_ENTRY_NUMBER_FORMAT.sequenceLength, "0")}`
 
     // Create journal entry with ledger entries
     const journalEntry = await db.journalEntry.create({
@@ -202,10 +232,10 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
         description: validated.description,
         fiscalYearId: validated.fiscalYearId,
         schoolId: session.user.schoolId,
-        sourceModule: 'MANUAL',
+        sourceModule: "MANUAL",
         createdBy: session.user.id!,
         ledgerEntries: {
-          create: validated.entries.map(entry => ({
+          create: validated.entries.map((entry) => ({
             school: { connect: { id: session.user.schoolId! } },
             account: { connect: { id: entry.accountId } },
             debit: entry.debit,
@@ -229,11 +259,17 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
       },
     })
 
-    revalidatePath('/finance/accounts/journal')
+    revalidatePath("/finance/accounts/journal")
     return { success: true, data: journalEntry as any }
   } catch (error) {
-    console.error('Error creating journal entry:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to create journal entry' }
+    console.error("Error creating journal entry:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create journal entry",
+    }
   }
 }
 
@@ -241,11 +277,13 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
  * Post Journal Entry
  * Posts a draft journal entry to the ledger
  */
-export async function postJournalEntry(journalEntryId: string): Promise<JournalEntryActionResult> {
+export async function postJournalEntry(
+  journalEntryId: string
+): Promise<JournalEntryActionResult> {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const journalEntry = await db.journalEntry.findUnique({
@@ -259,11 +297,11 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
     })
 
     if (!journalEntry) {
-      return { success: false, error: 'Journal entry not found' }
+      return { success: false, error: "Journal entry not found" }
     }
 
     if (journalEntry.isPosted) {
-      return { success: false, error: 'Journal entry is already posted' }
+      return { success: false, error: "Journal entry is already posted" }
     }
 
     // Post the entry
@@ -292,12 +330,16 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
       },
     })
 
-    revalidatePath('/finance/accounts/journal')
-    revalidatePath('/finance/accounts/ledger')
+    revalidatePath("/finance/accounts/journal")
+    revalidatePath("/finance/accounts/ledger")
     return { success: true, data: updated as any }
   } catch (error) {
-    console.error('Error posting journal entry:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Failed to post journal entry' }
+    console.error("Error posting journal entry:", error)
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to post journal entry",
+    }
   }
 }
 
@@ -305,11 +347,14 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
  * Get Chart of Accounts
  * Retrieves all accounts with hierarchical structure
  */
-export async function getChartOfAccounts(filters?: { type?: string; isActive?: boolean }) {
+export async function getChartOfAccounts(filters?: {
+  type?: string
+  isActive?: boolean
+}) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const accounts = await db.chartOfAccount.findMany({
@@ -318,13 +363,13 @@ export async function getChartOfAccounts(filters?: { type?: string; isActive?: b
         ...(filters?.type && { type: filters.type as any }),
         ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
       },
-      orderBy: [{ code: 'asc' }],
+      orderBy: [{ code: "asc" }],
     })
 
     return { success: true, data: accounts }
   } catch (error) {
-    console.error('Error fetching chart of accounts:', error)
-    return { success: false, error: 'Failed to fetch chart of accounts' }
+    console.error("Error fetching chart of accounts:", error)
+    return { success: false, error: "Failed to fetch chart of accounts" }
   }
 }
 
@@ -332,11 +377,14 @@ export async function getChartOfAccounts(filters?: { type?: string; isActive?: b
  * Get Journal Entries
  * Retrieves journal entries with filtering
  */
-export async function getJournalEntries(filters?: { isPosted?: boolean; fiscalYearId?: string }) {
+export async function getJournalEntries(filters?: {
+  isPosted?: boolean
+  fiscalYearId?: string
+}) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
-      return { success: false, error: 'Unauthorized' }
+      return { success: false, error: "Unauthorized" }
     }
 
     const entries = await db.journalEntry.findMany({
@@ -358,13 +406,13 @@ export async function getJournalEntries(filters?: { isPosted?: boolean; fiscalYe
           },
         },
       },
-      orderBy: { entryDate: 'desc' },
+      orderBy: { entryDate: "desc" },
       take: 50,
     })
 
     return { success: true, data: entries }
   } catch (error) {
-    console.error('Error fetching journal entries:', error)
-    return { success: false, error: 'Failed to fetch journal entries' }
+    console.error("Error fetching journal entries:", error)
+    return { success: false, error: "Failed to fetch journal entries" }
   }
 }

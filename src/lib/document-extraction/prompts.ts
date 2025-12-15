@@ -3,7 +3,7 @@
  * Step-specific AI prompts for Claude Vision API
  */
 
-import type { OnboardingStep } from './types'
+import type { OnboardingStep } from "./types"
 
 export const stepPrompts: Record<OnboardingStep, string> = {
   title: `Extract school identification information from this document.

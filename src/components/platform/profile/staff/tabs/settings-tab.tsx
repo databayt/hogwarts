@@ -3,24 +3,68 @@
  * Profile and system preferences management
  */
 
-'use client'
+"use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { cn } from '@/lib/utils'
-import type { StaffProfile } from '../../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { User, Bell, Shield, Globe, Palette, Eye, Mail, Phone, MapPin, Camera, Lock, Key, Smartphone, Monitor, Moon, Sun, Languages, Volume2, Wifi, Download, Trash2, CircleAlert, CircleCheckBig, Info, Settings2, UserCog, BellRing, ShieldCheck, Calendar } from "lucide-react"
+import React, { useState } from "react"
+import {
+  Bell,
+  BellRing,
+  Calendar,
+  Camera,
+  CircleAlert,
+  CircleCheckBig,
+  Download,
+  Eye,
+  Globe,
+  Info,
+  Key,
+  Languages,
+  Lock,
+  Mail,
+  MapPin,
+  Monitor,
+  Moon,
+  Palette,
+  Phone,
+  Settings2,
+  Shield,
+  ShieldCheck,
+  Smartphone,
+  Sun,
+  Trash2,
+  User,
+  UserCog,
+  Volume2,
+  Wifi,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { StaffProfile } from "../../types"
 
 // ============================================================================
 // Types
@@ -29,7 +73,7 @@ import { User, Bell, Shield, Globe, Palette, Eye, Mail, Phone, MapPin, Camera, L
 interface SettingsTabProps {
   profile: any // Cast to any to support mock data properties (settings, staffInfo)
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   isOwner?: boolean
 }
 
@@ -49,7 +93,7 @@ interface PrivacySetting {
   id: string
   label: string
   description: string
-  value: 'public' | 'school' | 'department' | 'private'
+  value: "public" | "school" | "department" | "private"
   icon: React.ReactNode
 }
 
@@ -66,117 +110,117 @@ interface SecuritySession {
 // Mock notification settings
 const mockNotifications: NotificationSetting[] = [
   {
-    id: 'task-assigned',
-    label: 'Task Assignments',
-    description: 'When a new task is assigned to you',
+    id: "task-assigned",
+    label: "Task Assignments",
+    description: "When a new task is assigned to you",
     enabled: true,
-    channels: { email: true, push: true, sms: false }
+    channels: { email: true, push: true, sms: false },
   },
   {
-    id: 'task-completed',
-    label: 'Task Completion',
-    description: 'When a task you created is completed',
+    id: "task-completed",
+    label: "Task Completion",
+    description: "When a task you created is completed",
     enabled: true,
-    channels: { email: false, push: true, sms: false }
+    channels: { email: false, push: true, sms: false },
   },
   {
-    id: 'report-ready',
-    label: 'Report Generation',
-    description: 'When scheduled reports are ready',
+    id: "report-ready",
+    label: "Report Generation",
+    description: "When scheduled reports are ready",
     enabled: true,
-    channels: { email: true, push: false, sms: false }
+    channels: { email: true, push: false, sms: false },
   },
   {
-    id: 'meeting-reminder',
-    label: 'Meeting Reminders',
-    description: '15 minutes before scheduled meetings',
+    id: "meeting-reminder",
+    label: "Meeting Reminders",
+    description: "15 minutes before scheduled meetings",
     enabled: true,
-    channels: { email: false, push: true, sms: true }
+    channels: { email: false, push: true, sms: true },
   },
   {
-    id: 'system-updates',
-    label: 'System Updates',
-    description: 'Important system announcements',
+    id: "system-updates",
+    label: "System Updates",
+    description: "Important system announcements",
     enabled: false,
-    channels: { email: true, push: false, sms: false }
+    channels: { email: true, push: false, sms: false },
   },
   {
-    id: 'document-shared',
-    label: 'Document Sharing',
-    description: 'When someone shares a document with you',
+    id: "document-shared",
+    label: "Document Sharing",
+    description: "When someone shares a document with you",
     enabled: true,
-    channels: { email: true, push: true, sms: false }
-  }
+    channels: { email: true, push: true, sms: false },
+  },
 ]
 
 // Mock privacy settings
 const mockPrivacySettings: PrivacySetting[] = [
   {
-    id: 'profile-visibility',
-    label: 'Profile Visibility',
-    description: 'Who can view your profile',
-    value: 'school',
-    icon: <Eye className="h-4 w-4" />
+    id: "profile-visibility",
+    label: "Profile Visibility",
+    description: "Who can view your profile",
+    value: "school",
+    icon: <Eye className="h-4 w-4" />,
   },
   {
-    id: 'email-visibility',
-    label: 'Email Address',
-    description: 'Who can see your email',
-    value: 'department',
-    icon: <Mail className="h-4 w-4" />
+    id: "email-visibility",
+    label: "Email Address",
+    description: "Who can see your email",
+    value: "department",
+    icon: <Mail className="h-4 w-4" />,
   },
   {
-    id: 'phone-visibility',
-    label: 'Phone Number',
-    description: 'Who can see your phone',
-    value: 'private',
-    icon: <Phone className="h-4 w-4" />
+    id: "phone-visibility",
+    label: "Phone Number",
+    description: "Who can see your phone",
+    value: "private",
+    icon: <Phone className="h-4 w-4" />,
   },
   {
-    id: 'schedule-visibility',
-    label: 'Work Schedule',
-    description: 'Who can view your schedule',
-    value: 'school',
-    icon: <Calendar className="h-4 w-4" />
+    id: "schedule-visibility",
+    label: "Work Schedule",
+    description: "Who can view your schedule",
+    value: "school",
+    icon: <Calendar className="h-4 w-4" />,
   },
   {
-    id: 'activity-visibility',
-    label: 'Activity Status',
-    description: 'Who can see your online status',
-    value: 'department',
-    icon: <Wifi className="h-4 w-4" />
-  }
+    id: "activity-visibility",
+    label: "Activity Status",
+    description: "Who can see your online status",
+    value: "department",
+    icon: <Wifi className="h-4 w-4" />,
+  },
 ]
 
 // Mock sessions
 const mockSessions: SecuritySession[] = [
   {
-    id: '1',
-    device: 'Windows PC',
-    browser: 'Chrome 122.0',
-    location: 'New York, US',
-    ipAddress: '192.168.1.100',
+    id: "1",
+    device: "Windows PC",
+    browser: "Chrome 122.0",
+    location: "New York, US",
+    ipAddress: "192.168.1.100",
     lastActive: new Date(),
-    isCurrent: true
+    isCurrent: true,
   },
   {
-    id: '2',
-    device: 'iPhone 14',
-    browser: 'Safari 17.2',
-    location: 'New York, US',
-    ipAddress: '192.168.1.105',
+    id: "2",
+    device: "iPhone 14",
+    browser: "Safari 17.2",
+    location: "New York, US",
+    ipAddress: "192.168.1.105",
     lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    isCurrent: false
+    isCurrent: false,
   },
   {
-    id: '3',
-    device: 'iPad Pro',
-    browser: 'Safari 17.2',
-    location: 'Brooklyn, US',
-    ipAddress: '192.168.2.50',
+    id: "3",
+    device: "iPad Pro",
+    browser: "Safari 17.2",
+    location: "Brooklyn, US",
+    ipAddress: "192.168.2.50",
     lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    isCurrent: false
-  }
+    isCurrent: false,
+  },
 ]
 
 // ============================================================================
@@ -186,39 +230,46 @@ const mockSessions: SecuritySession[] = [
 export function SettingsTab({
   profile,
   dictionary,
-  lang = 'en',
-  isOwner = false
+  lang = "en",
+  isOwner = false,
 }: SettingsTabProps) {
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState("profile")
   const [notifications, setNotifications] = useState(mockNotifications)
   const [privacySettings, setPrivacySettings] = useState(mockPrivacySettings)
-  const [theme, setTheme] = useState(profile.settings?.theme || 'system')
-  const [language, setLanguage] = useState(profile.settings?.language || 'en')
+  const [theme, setTheme] = useState(profile.settings?.theme || "system")
+  const [language, setLanguage] = useState(profile.settings?.language || "en")
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
 
-  const handleNotificationToggle = (id: string, field: 'enabled' | 'email' | 'push' | 'sms') => {
-    setNotifications(prev => prev.map(notif => {
-      if (notif.id === id) {
-        if (field === 'enabled') {
-          return { ...notif, enabled: !notif.enabled }
-        } else {
-          return {
-            ...notif,
-            channels: { ...notif.channels, [field]: !notif.channels[field] }
+  const handleNotificationToggle = (
+    id: string,
+    field: "enabled" | "email" | "push" | "sms"
+  ) => {
+    setNotifications((prev) =>
+      prev.map((notif) => {
+        if (notif.id === id) {
+          if (field === "enabled") {
+            return { ...notif, enabled: !notif.enabled }
+          } else {
+            return {
+              ...notif,
+              channels: { ...notif.channels, [field]: !notif.channels[field] },
+            }
           }
         }
-      }
-      return notif
-    }))
+        return notif
+      })
+    )
   }
 
   const handlePrivacyChange = (id: string, value: string) => {
-    setPrivacySettings(prev => prev.map(setting => {
-      if (setting.id === id) {
-        return { ...setting, value: value as PrivacySetting['value'] }
-      }
-      return setting
-    }))
+    setPrivacySettings((prev) =>
+      prev.map((setting) => {
+        if (setting.id === id) {
+          return { ...setting, value: value as PrivacySetting["value"] }
+        }
+        return setting
+      })
+    )
   }
 
   if (!isOwner) {
@@ -236,22 +287,26 @@ export function SettingsTab({
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile">
-            <User className="h-4 w-4 mr-2" />
+            <User className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
           <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4 mr-2" />
+            <Bell className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
           <TabsTrigger value="privacy">
-            <Eye className="h-4 w-4 mr-2" />
+            <Eye className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Privacy</span>
           </TabsTrigger>
           <TabsTrigger value="security">
-            <Shield className="h-4 w-4 mr-2" />
+            <Shield className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
         </TabsList>
@@ -266,7 +321,7 @@ export function SettingsTab({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
@@ -314,7 +369,7 @@ export function SettingsTab({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
                   <Select defaultValue={profile.staffInfo?.department}>
@@ -322,8 +377,12 @@ export function SettingsTab({
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Finance & Administration">Finance & Administration</SelectItem>
-                      <SelectItem value="Human Resources">Human Resources</SelectItem>
+                      <SelectItem value="Finance & Administration">
+                        Finance & Administration
+                      </SelectItem>
+                      <SelectItem value="Human Resources">
+                        Human Resources
+                      </SelectItem>
                       <SelectItem value="Operations">Operations</SelectItem>
                       <SelectItem value="IT">Information Technology</SelectItem>
                     </SelectContent>
@@ -404,7 +463,7 @@ export function SettingsTab({
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label>Sound Effects</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Play sounds for notifications
                   </p>
                 </div>
@@ -414,7 +473,7 @@ export function SettingsTab({
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label>Compact Mode</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Reduce spacing between elements
                   </p>
                 </div>
@@ -438,7 +497,7 @@ export function SettingsTab({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Enable All Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Master switch for all notification types
                     </p>
                   </div>
@@ -448,7 +507,7 @@ export function SettingsTab({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Do Not Disturb</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Silence notifications during specific hours
                     </p>
                   </div>
@@ -466,42 +525,50 @@ export function SettingsTab({
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <Label>{notif.label}</Label>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           {notif.description}
                         </p>
                       </div>
                       <Switch
                         checked={notif.enabled}
-                        onCheckedChange={() => handleNotificationToggle(notif.id, 'enabled')}
+                        onCheckedChange={() =>
+                          handleNotificationToggle(notif.id, "enabled")
+                        }
                       />
                     </div>
                     {notif.enabled && (
                       <div className="ml-6 flex items-center gap-6 text-sm">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-2">
                           <input
                             type="checkbox"
                             checked={notif.channels.email}
-                            onChange={() => handleNotificationToggle(notif.id, 'email')}
+                            onChange={() =>
+                              handleNotificationToggle(notif.id, "email")
+                            }
                             className="rounded"
                           />
                           <Mail className="h-4 w-4" />
                           Email
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-2">
                           <input
                             type="checkbox"
                             checked={notif.channels.push}
-                            onChange={() => handleNotificationToggle(notif.id, 'push')}
+                            onChange={() =>
+                              handleNotificationToggle(notif.id, "push")
+                            }
                             className="rounded"
                           />
                           <BellRing className="h-4 w-4" />
                           Push
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex cursor-pointer items-center gap-2">
                           <input
                             type="checkbox"
                             checked={notif.channels.sms}
-                            onChange={() => handleNotificationToggle(notif.id, 'sms')}
+                            onChange={() =>
+                              handleNotificationToggle(notif.id, "sms")
+                            }
                             className="rounded"
                           />
                           <Smartphone className="h-4 w-4" />
@@ -537,12 +604,14 @@ export function SettingsTab({
                     {setting.icon}
                     <Label>{setting.label}</Label>
                   </div>
-                  <p className="text-sm text-muted-foreground ml-6">
+                  <p className="text-muted-foreground ml-6 text-sm">
                     {setting.description}
                   </p>
                   <Select
                     value={setting.value}
-                    onValueChange={(value) => handlePrivacyChange(setting.id, value)}
+                    onValueChange={(value) =>
+                      handlePrivacyChange(setting.id, value)
+                    }
                   >
                     <SelectTrigger className="ml-6">
                       <SelectValue />
@@ -550,7 +619,9 @@ export function SettingsTab({
                     <SelectContent>
                       <SelectItem value="public">Everyone</SelectItem>
                       <SelectItem value="school">School Only</SelectItem>
-                      <SelectItem value="department">Department Only</SelectItem>
+                      <SelectItem value="department">
+                        Department Only
+                      </SelectItem>
                       <SelectItem value="private">Only Me</SelectItem>
                     </SelectContent>
                   </Select>
@@ -560,12 +631,14 @@ export function SettingsTab({
               <Separator />
 
               <div className="space-y-4">
-                <h4 className="text-sm font-medium">Additional Privacy Options</h4>
+                <h4 className="text-sm font-medium">
+                  Additional Privacy Options
+                </h4>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Allow Messages</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Let others send you direct messages
                     </p>
                   </div>
@@ -575,7 +648,7 @@ export function SettingsTab({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Show in Directory</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Appear in the staff directory
                     </p>
                   </div>
@@ -585,7 +658,7 @@ export function SettingsTab({
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Activity Status</Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Show when you're online
                     </p>
                   </div>
@@ -612,18 +685,19 @@ export function SettingsTab({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  You can request a copy of your data at any time. The export will include
-                  all your profile information, activities, and generated content.
+                  You can request a copy of your data at any time. The export
+                  will include all your profile information, activities, and
+                  generated content.
                 </AlertDescription>
               </Alert>
 
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button variant="outline" className="flex-1">
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="mr-2 h-4 w-4" />
                   Export My Data
                 </Button>
                 <Button variant="destructive" className="flex-1">
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete Account
                 </Button>
               </div>
@@ -680,7 +754,7 @@ export function SettingsTab({
                       <ShieldCheck className="h-4 w-4" />
                       Two-Factor Authentication
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Add an extra layer of security to your account
                     </p>
                   </div>
@@ -694,8 +768,8 @@ export function SettingsTab({
                   <Alert>
                     <CircleCheckBig className="h-4 w-4" />
                     <AlertDescription>
-                      Two-factor authentication is enabled. You'll need to enter a code
-                      from your authenticator app when signing in.
+                      Two-factor authentication is enabled. You'll need to enter
+                      a code from your authenticator app when signing in.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -716,7 +790,7 @@ export function SettingsTab({
                 <div
                   key={session.id}
                   className={cn(
-                    "flex items-start justify-between p-4 rounded-lg border",
+                    "flex items-start justify-between rounded-lg border p-4",
                     session.isCurrent && "bg-primary/5 border-primary/20"
                   )}
                 >
@@ -730,15 +804,14 @@ export function SettingsTab({
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {session.browser} • {session.location}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.ipAddress} • Last active {
-                        session.isCurrent
-                          ? 'now'
-                          : `${Math.round((Date.now() - session.lastActive.getTime()) / (1000 * 60 * 60))} hours ago`
-                      }
+                    <p className="text-muted-foreground text-xs">
+                      {session.ipAddress} • Last active{" "}
+                      {session.isCurrent
+                        ? "now"
+                        : `${Math.round((Date.now() - session.lastActive.getTime()) / (1000 * 60 * 60))} hours ago`}
                     </p>
                   </div>
                   {!session.isCurrent && (
@@ -750,9 +823,7 @@ export function SettingsTab({
               ))}
 
               <div className="flex justify-end">
-                <Button variant="outline">
-                  Sign Out All Other Sessions
-                </Button>
+                <Button variant="outline">Sign Out All Other Sessions</Button>
               </div>
             </CardContent>
           </Card>
@@ -768,24 +839,32 @@ export function SettingsTab({
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <CircleCheckBig className="h-5 w-5 text-green-600 mt-0.5" />
+                  <CircleCheckBig className="mt-0.5 h-5 w-5 text-green-600" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Password changed successfully</p>
-                    <p className="text-xs text-muted-foreground">2 days ago from New York, US</p>
+                    <p className="text-sm font-medium">
+                      Password changed successfully
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      2 days ago from New York, US
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CircleAlert className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <CircleAlert className="mt-0.5 h-5 w-5 text-yellow-600" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">New device sign-in</p>
-                    <p className="text-xs text-muted-foreground">5 days ago from iPhone, Brooklyn</p>
+                    <p className="text-muted-foreground text-xs">
+                      5 days ago from iPhone, Brooklyn
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CircleCheckBig className="h-5 w-5 text-green-600 mt-0.5" />
+                  <CircleCheckBig className="mt-0.5 h-5 w-5 text-green-600" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">Two-factor authentication enabled</p>
-                    <p className="text-xs text-muted-foreground">1 week ago</p>
+                    <p className="text-sm font-medium">
+                      Two-factor authentication enabled
+                    </p>
+                    <p className="text-muted-foreground text-xs">1 week ago</p>
                   </div>
                 </div>
               </div>

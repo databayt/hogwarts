@@ -1,17 +1,18 @@
-import Image from "next/image";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import Image from "next/image"
+import Link from "next/link"
+
+import { buttonVariants } from "@/components/ui/button"
 
 interface CollaborateSectionProps {
-  lang?: string;
+  lang?: string
 }
 
 export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
   return (
-    <section className="bg-[#F5F5F0] dark:bg-muted/50 rounded-2xl overflow-hidden w-full max-w-full">
+    <section className="dark:bg-muted/50 w-full max-w-full overflow-hidden rounded-2xl bg-[#F5F5F0]">
       <div className="flex flex-col lg:flex-row">
         {/* Image - Left side */}
-        <div className="lg:w-1/2 relative aspect-[4/3] lg:aspect-auto">
+        <div className="relative aspect-[4/3] lg:aspect-auto lg:w-1/2">
           <Image
             src="/site/harry-potter.png"
             alt="Students in the library"
@@ -22,15 +23,14 @@ export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
         </div>
 
         {/* Content - Right side */}
-        <div className="lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-          <h2 className="text-3xl lg:text-4xl font-semibold tracking-tight mb-2">
+        <div className="flex flex-col justify-center p-8 lg:w-1/2 lg:p-12">
+          <h2 className="mb-2 text-3xl font-semibold tracking-tight lg:text-4xl">
             Harry Potter and the Philosopher&apos;s Stone
           </h2>
-          <p className="text-muted-foreground text-lg mb-4">
-            By J.K. Rowling
-          </p>
+          <p className="text-muted-foreground mb-4 text-lg">By J.K. Rowling</p>
           <p className="text-muted-foreground mb-6">
-            Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive.
+            Harry Potter has never even heard of Hogwarts when the letters start
+            dropping on the doormat at number four, Privet Drive.
           </p>
           <div>
             <Link
@@ -43,5 +43,5 @@ export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
         </div>
       </div>
     </section>
-  );
+  )
 }

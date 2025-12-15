@@ -1,18 +1,41 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { resultCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { ResultFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormStepProps) {
-  const [students, setStudents] = useState<Array<{ id: string; givenName: string; surname: string }>>([]);
-  const [assignments, setAssignments] = useState<Array<{ id: string; title: string; totalPoints: number }>>([]);
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
+import { ResultFormStepProps } from "./types"
+import { resultCreateSchema } from "./validation"
+
+export function StudentAssignmentStep({
+  form,
+  isView,
+  dictionary,
+}: ResultFormStepProps) {
+  const [students, setStudents] = useState<
+    Array<{ id: string; givenName: string; surname: string }>
+  >([])
+  const [assignments, setAssignments] = useState<
+    Array<{ id: string; title: string; totalPoints: number }>
+  >([])
+  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
 
   useEffect(() => {
     const loadData = async () => {
@@ -22,44 +45,50 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         setStudents([
           { id: "stu_001", givenName: "Harry", surname: "Potter" },
           { id: "stu_002", givenName: "Hermione", surname: "Granger" },
-          { id: "stu_003", givenName: "Ron", surname: "Weasley" }
-        ]);
+          { id: "stu_003", givenName: "Ron", surname: "Weasley" },
+        ])
         setAssignments([
           { id: "ass_001", title: "Transfiguration Quiz", totalPoints: 100 },
           { id: "ass_002", title: "Potions Essay", totalPoints: 50 },
-          { id: "ass_003", title: "Creatures Test", totalPoints: 75 }
-        ]);
+          { id: "ass_003", title: "Creatures Test", totalPoints: 75 },
+        ])
         setClasses([
           { id: "cls_001", name: "Transfiguration 101" },
           { id: "cls_002", name: "Potions 101" },
-          { id: "cls_003", name: "Creatures 101" }
-        ]);
+          { id: "cls_003", name: "Creatures 101" },
+        ])
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error("Failed to load data:", error)
       }
-    };
-    loadData();
-  }, []);
+    }
+    loadData()
+  }, [])
 
   // Auto-populate maxScore when assignment changes
-  const selectedAssignmentId = form.watch("assignmentId");
-  const selectedAssignment = assignments.find(a => a.id === selectedAssignmentId);
+  const selectedAssignmentId = form.watch("assignmentId")
+  const selectedAssignment = assignments.find(
+    (a) => a.id === selectedAssignmentId
+  )
 
   useEffect(() => {
     if (selectedAssignment && !isView) {
-      form.setValue("maxScore", selectedAssignment.totalPoints);
+      form.setValue("maxScore", selectedAssignment.totalPoints)
     }
-  }, [selectedAssignment, form, isView]);
+  }, [selectedAssignment, form, isView])
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="studentId"
         render={({ field }) => (
           <FormItem>
             <FormLabel>{dictionary.student}</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={dictionary.selectStudent} />
@@ -84,7 +113,11 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         render={({ field }) => (
           <FormItem>
             <FormLabel>{dictionary.assignment}</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={dictionary.selectAssignment} />
@@ -93,7 +126,8 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
               <SelectContent>
                 {assignments.map((assignment) => (
                   <SelectItem key={assignment.id} value={assignment.id}>
-                    {assignment.title} ({assignment.totalPoints} {dictionary.points})
+                    {assignment.title} ({assignment.totalPoints}{" "}
+                    {dictionary.points})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -109,7 +143,11 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         render={({ field }) => (
           <FormItem>
             <FormLabel>{dictionary.class}</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={dictionary.selectClass} />
@@ -128,5 +166,5 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         )}
       />
     </div>
-  );
+  )
 }

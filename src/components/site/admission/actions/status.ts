@@ -1,14 +1,23 @@
-"use server";
+"use server"
 
-import { db } from "@/lib/db";
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
-import { Resend } from "resend";
-import { nanoid } from "nanoid";
-import type { ActionResult, ApplicationStatus, StatusTimelineEntry, ChecklistItem } from "../types";
-import type { AdmissionApplicationStatus } from "@prisma/client";
+import type { AdmissionApplicationStatus } from "@prisma/client"
+import { nanoid } from "nanoid"
+import { Resend } from "resend"
+
+import { db } from "@/lib/db"
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+
+import type {
+  ActionResult,
+  ApplicationStatus,
+  ChecklistItem,
+  StatusTimelineEntry,
+} from "../types"
 
 // Initialize Resend for email
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
 // Status order for timeline
 const STATUS_ORDER: AdmissionApplicationStatus[] = [
@@ -20,9 +29,12 @@ const STATUS_ORDER: AdmissionApplicationStatus[] = [
   "INTERVIEW_SCHEDULED",
   "SELECTED",
   "ADMITTED",
-];
+]
 
-const STATUS_LABELS: Record<AdmissionApplicationStatus, { en: string; ar: string }> = {
+const STATUS_LABELS: Record<
+  AdmissionApplicationStatus,
+  { en: string; ar: string }
+> = {
   DRAFT: { en: "Draft", ar: "مسودة" },
   SUBMITTED: { en: "Submitted", ar: "تم التقديم" },
   UNDER_REVIEW: { en: "Under Review", ar: "قيد المراجعة" },
@@ -34,7 +46,7 @@ const STATUS_LABELS: Record<AdmissionApplicationStatus, { en: string; ar: string
   REJECTED: { en: "Rejected", ar: "مرفوض" },
   ADMITTED: { en: "Admitted", ar: "تم القبول" },
   WITHDRAWN: { en: "Withdrawn", ar: "منسحب" },
-};
+}
 
 // ============================================
 // OTP Actions
@@ -49,12 +61,12 @@ export async function requestStatusOTP(
   email: string
 ): Promise<ActionResult<{ message: string }>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     // Find the application
     const application = await db.application.findFirst({
@@ -63,16 +75,20 @@ export async function requestStatusOTP(
         applicationNumber,
         email,
       },
-    });
+    })
 
     if (!application) {
-      return { success: false, error: "Application not found. Please check your application number and email." };
+      return {
+        success: false,
+        error:
+          "Application not found. Please check your application number and email.",
+      }
     }
 
     // Generate OTP (6 digits)
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes expiry
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10) // 10 minutes expiry
 
     // Check for rate limiting (max 3 OTPs per hour)
     const recentOTPs = await db.admissionOTP.count({
@@ -83,10 +99,13 @@ export async function requestStatusOTP(
           gte: new Date(Date.now() - 60 * 60 * 1000), // Last hour
         },
       },
-    });
+    })
 
     if (recentOTPs >= 3) {
-      return { success: false, error: "Too many OTP requests. Please try again later." };
+      return {
+        success: false,
+        error: "Too many OTP requests. Please try again later.",
+      }
     }
 
     // Save OTP
@@ -98,7 +117,7 @@ export async function requestStatusOTP(
         otp,
         expiresAt,
       },
-    });
+    })
 
     // Send OTP via email
     if (resend) {
@@ -115,20 +134,26 @@ export async function requestStatusOTP(
             <p>If you didn't request this code, please ignore this email.</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
-        });
+        })
       } catch (emailError) {
-        console.error("Failed to send OTP email:", emailError);
-        return { success: false, error: "Failed to send verification code. Please try again." };
+        console.error("Failed to send OTP email:", emailError)
+        return {
+          success: false,
+          error: "Failed to send verification code. Please try again.",
+        }
       }
     } else {
       // For development without Resend
-      console.log(`[DEV] OTP for ${email}: ${otp}`);
+      console.log(`[DEV] OTP for ${email}: ${otp}`)
     }
 
-    return { success: true, data: { message: "Verification code sent to your email" } };
+    return {
+      success: true,
+      data: { message: "Verification code sent to your email" },
+    }
   } catch (error) {
-    console.error("Error requesting OTP:", error);
-    return { success: false, error: "Failed to send verification code" };
+    console.error("Error requesting OTP:", error)
+    return { success: false, error: "Failed to send verification code" }
   }
 }
 
@@ -141,12 +166,12 @@ export async function verifyStatusOTP(
   otp: string
 ): Promise<ActionResult<{ accessToken: string }>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     // Find the OTP
     const otpRecord = await db.admissionOTP.findFirst({
@@ -158,7 +183,7 @@ export async function verifyStatusOTP(
         verified: false,
       },
       orderBy: { createdAt: "desc" },
-    });
+    })
 
     if (!otpRecord) {
       // Check if there's an OTP with wrong attempts
@@ -170,33 +195,36 @@ export async function verifyStatusOTP(
           verified: false,
         },
         orderBy: { createdAt: "desc" },
-      });
+      })
 
       if (existingOTP) {
         // Increment attempts
         await db.admissionOTP.update({
           where: { id: existingOTP.id },
           data: { attempts: { increment: 1 } },
-        });
+        })
 
         if (existingOTP.attempts >= 4) {
           // Invalidate OTP after 5 attempts
           await db.admissionOTP.update({
             where: { id: existingOTP.id },
             data: { expiresAt: new Date() },
-          });
-          return { success: false, error: "Too many invalid attempts. Please request a new code." };
+          })
+          return {
+            success: false,
+            error: "Too many invalid attempts. Please request a new code.",
+          }
         }
       }
 
-      return { success: false, error: "Invalid or expired verification code" };
+      return { success: false, error: "Invalid or expired verification code" }
     }
 
     // Mark OTP as verified
     await db.admissionOTP.update({
       where: { id: otpRecord.id },
       data: { verified: true },
-    });
+    })
 
     // Get application and generate/update access token
     const application = await db.application.findFirst({
@@ -204,29 +232,33 @@ export async function verifyStatusOTP(
         schoolId,
         applicationNumber,
       },
-    });
+    })
 
     if (!application) {
-      return { success: false, error: "Application not found" };
+      return { success: false, error: "Application not found" }
     }
 
     // Generate new access token if expired or doesn't exist
-    let accessToken = application.accessToken;
-    if (!accessToken || (application.accessTokenExpiry && application.accessTokenExpiry < new Date())) {
-      accessToken = nanoid(32);
-      const accessTokenExpiry = new Date();
-      accessTokenExpiry.setMonth(accessTokenExpiry.getMonth() + 6);
+    let accessToken = application.accessToken
+    if (
+      !accessToken ||
+      (application.accessTokenExpiry &&
+        application.accessTokenExpiry < new Date())
+    ) {
+      accessToken = nanoid(32)
+      const accessTokenExpiry = new Date()
+      accessTokenExpiry.setMonth(accessTokenExpiry.getMonth() + 6)
 
       await db.application.update({
         where: { id: application.id },
         data: { accessToken, accessTokenExpiry },
-      });
+      })
     }
 
-    return { success: true, data: { accessToken } };
+    return { success: true, data: { accessToken } }
   } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return { success: false, error: "Failed to verify code" };
+    console.error("Error verifying OTP:", error)
+    return { success: false, error: "Failed to verify code" }
   }
 }
 
@@ -237,7 +269,9 @@ export async function verifyStatusOTP(
 /**
  * Get application status with access token
  */
-export async function getApplicationStatus(accessToken: string): Promise<ActionResult<ApplicationStatus>> {
+export async function getApplicationStatus(
+  accessToken: string
+): Promise<ActionResult<ApplicationStatus>> {
   try {
     const application = await db.application.findFirst({
       where: {
@@ -262,22 +296,27 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
           },
         },
       },
-    });
+    })
 
     if (!application) {
-      return { success: false, error: "Application not found or access expired" };
+      return {
+        success: false,
+        error: "Application not found or access expired",
+      }
     }
 
     // Build timeline
-    const currentStatusIndex = STATUS_ORDER.indexOf(application.status);
-    const timeline: StatusTimelineEntry[] = STATUS_ORDER.map((status, index) => ({
-      status,
-      label: STATUS_LABELS[status].en,
-      labelAr: STATUS_LABELS[status].ar,
-      completed: index < currentStatusIndex,
-      current: status === application.status,
-      date: status === application.status ? application.updatedAt : undefined,
-    }));
+    const currentStatusIndex = STATUS_ORDER.indexOf(application.status)
+    const timeline: StatusTimelineEntry[] = STATUS_ORDER.map(
+      (status, index) => ({
+        status,
+        label: STATUS_LABELS[status].en,
+        labelAr: STATUS_LABELS[status].ar,
+        completed: index < currentStatusIndex,
+        current: status === application.status,
+        date: status === application.status ? application.updatedAt : undefined,
+      })
+    )
 
     // Handle special statuses (waitlisted, rejected, withdrawn)
     if (["WAITLISTED", "REJECTED", "WITHDRAWN"].includes(application.status)) {
@@ -288,12 +327,12 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
         completed: false,
         current: true,
         date: application.updatedAt,
-      };
-      timeline.push(specialStatus);
+      }
+      timeline.push(specialStatus)
     }
 
     // Build checklist
-    const checklist: ChecklistItem[] = [];
+    const checklist: ChecklistItem[] = []
 
     // Application submitted
     checklist.push({
@@ -303,10 +342,13 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
       completed: application.submittedAt !== null,
       required: true,
       type: "other",
-    });
+    })
 
     // Payment
-    if (application.campaign.applicationFee && Number(application.campaign.applicationFee) > 0) {
+    if (
+      application.campaign.applicationFee &&
+      Number(application.campaign.applicationFee) > 0
+    ) {
       checklist.push({
         id: "payment",
         label: "Application Fee Paid",
@@ -314,28 +356,33 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
         completed: application.applicationFeePaid,
         required: true,
         type: "payment",
-      });
+      })
     }
 
     // Documents
-    const requiredDocs = (application.campaign.requiredDocuments as { type: string; name: string; required: boolean }[]) || [];
-    const uploadedDocs = (application.documents as { type: string }[]) || [];
+    const requiredDocs =
+      (application.campaign.requiredDocuments as {
+        type: string
+        name: string
+        required: boolean
+      }[]) || []
+    const uploadedDocs = (application.documents as { type: string }[]) || []
     for (const doc of requiredDocs) {
       if (doc.required) {
         checklist.push({
           id: `doc-${doc.type}`,
           label: doc.name,
           labelAr: doc.name,
-          completed: uploadedDocs.some(d => d.type === doc.type),
+          completed: uploadedDocs.some((d) => d.type === doc.type),
           required: true,
           type: "document",
-        });
+        })
       }
     }
 
     // Tour booking
     if (application.tourBookings.length > 0) {
-      const latestBooking = application.tourBookings[0];
+      const latestBooking = application.tourBookings[0]
       checklist.push({
         id: "tour",
         label: "Campus Tour",
@@ -343,11 +390,15 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
         completed: latestBooking.status === "COMPLETED",
         required: false,
         type: "tour",
-      });
+      })
     }
 
     // Interview (if scheduled)
-    if (["INTERVIEW_SCHEDULED", "SELECTED", "ADMITTED"].includes(application.status)) {
+    if (
+      ["INTERVIEW_SCHEDULED", "SELECTED", "ADMITTED"].includes(
+        application.status
+      )
+    ) {
       checklist.push({
         id: "interview",
         label: "Interview",
@@ -355,7 +406,7 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
         completed: ["SELECTED", "ADMITTED"].includes(application.status),
         required: true,
         type: "interview",
-      });
+      })
     }
 
     const status: ApplicationStatus = {
@@ -369,12 +420,12 @@ export async function getApplicationStatus(accessToken: string): Promise<ActionR
       },
       timeline,
       checklist,
-    };
+    }
 
-    return { success: true, data: status };
+    return { success: true, data: status }
   } catch (error) {
-    console.error("Error fetching status:", error);
-    return { success: false, error: "Failed to fetch application status" };
+    console.error("Error fetching status:", error)
+    return { success: false, error: "Failed to fetch application status" }
   }
 }
 
@@ -386,12 +437,12 @@ export async function getApplicationByNumber(
   applicationNumber: string
 ): Promise<ActionResult<{ hasApplication: boolean; email?: string }>> {
   try {
-    const schoolResult = await getSchoolBySubdomain(subdomain);
+    const schoolResult = await getSchoolBySubdomain(subdomain)
     if (!schoolResult.success || !schoolResult.data) {
-      return { success: false, error: "School not found" };
+      return { success: false, error: "School not found" }
     }
 
-    const schoolId = schoolResult.data.id;
+    const schoolId = schoolResult.data.id
 
     const application = await db.application.findFirst({
       where: {
@@ -401,20 +452,20 @@ export async function getApplicationByNumber(
       select: {
         email: true,
       },
-    });
+    })
 
     if (!application) {
-      return { success: true, data: { hasApplication: false } };
+      return { success: true, data: { hasApplication: false } }
     }
 
     // Mask email for privacy
-    const [localPart, domain] = application.email.split("@");
-    const maskedLocal = localPart.substring(0, 2) + "***";
-    const maskedEmail = `${maskedLocal}@${domain}`;
+    const [localPart, domain] = application.email.split("@")
+    const maskedLocal = localPart.substring(0, 2) + "***"
+    const maskedEmail = `${maskedLocal}@${domain}`
 
-    return { success: true, data: { hasApplication: true, email: maskedEmail } };
+    return { success: true, data: { hasApplication: true, email: maskedEmail } }
   } catch (error) {
-    console.error("Error checking application:", error);
-    return { success: false, error: "Failed to check application" };
+    console.error("Error checking application:", error)
+    return { success: false, error: "Failed to check application" }
   }
 }

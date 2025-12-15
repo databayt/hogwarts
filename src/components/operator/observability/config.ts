@@ -4,12 +4,17 @@
  * Static configuration data for logs, metrics, and monitoring.
  */
 
-import type { LogLevel, LogActionCategory } from "./types";
+import type { LogActionCategory, LogLevel } from "./types"
 
 /**
  * Available log levels
  */
-export const LOG_LEVELS: readonly LogLevel[] = ["debug", "info", "warn", "error"] as const;
+export const LOG_LEVELS: readonly LogLevel[] = [
+  "debug",
+  "info",
+  "warn",
+  "error",
+] as const
 
 /**
  * Log level display labels
@@ -19,17 +24,20 @@ export const LOG_LEVEL_LABELS: Record<LogLevel, string> = {
   info: "Info",
   warn: "Warning",
   error: "Error",
-} as const;
+} as const
 
 /**
  * Log level badge variants
  */
-export const LOG_LEVEL_VARIANTS: Record<LogLevel, "default" | "secondary" | "destructive" | "outline"> = {
+export const LOG_LEVEL_VARIANTS: Record<
+  LogLevel,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   debug: "outline",
   info: "secondary",
   warn: "default",
   error: "destructive",
-} as const;
+} as const
 
 /**
  * Log action categories
@@ -43,7 +51,7 @@ export const LOG_ACTION_CATEGORIES: readonly LogActionCategory[] = [
   "system",
   "security",
   "data",
-] as const;
+] as const
 
 /**
  * Action category display labels
@@ -57,7 +65,7 @@ export const ACTION_CATEGORY_LABELS: Record<LogActionCategory, string> = {
   system: "System",
   security: "Security",
   data: "Data Operations",
-} as const;
+} as const
 
 /**
  * Common audit actions
@@ -95,13 +103,13 @@ export const COMMON_ACTIONS = {
   IMPERSONATION_STARTED: "impersonation_started",
   IMPERSONATION_STOPPED: "impersonation_stopped",
   PERMISSION_CHANGED: "permission_changed",
-} as const;
+} as const
 
 /**
  * Default pagination options
  */
-export const DEFAULT_PAGE_SIZE = 20;
-export const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const;
+export const DEFAULT_PAGE_SIZE = 20
+export const PAGE_SIZE_OPTIONS = [20, 50, 100, 200] as const
 
 /**
  * Log table column IDs
@@ -115,7 +123,7 @@ export const LOG_TABLE_COLUMNS = {
   LEVEL: "level",
   REQUEST_ID: "requestId",
   REASON: "reason",
-} as const;
+} as const
 
 /**
  * Sortable columns
@@ -125,7 +133,7 @@ export const SORTABLE_COLUMNS = [
   LOG_TABLE_COLUMNS.ACTION,
   LOG_TABLE_COLUMNS.USER,
   LOG_TABLE_COLUMNS.LEVEL,
-] as const;
+] as const
 
 /**
  * Filterable columns
@@ -137,7 +145,7 @@ export const FILTERABLE_COLUMNS = [
   LOG_TABLE_COLUMNS.IP,
   LOG_TABLE_COLUMNS.LEVEL,
   LOG_TABLE_COLUMNS.REQUEST_ID,
-] as const;
+] as const
 
 /**
  * Date range presets (in milliseconds)
@@ -148,7 +156,7 @@ export const DATE_RANGE_PRESETS = {
   LAST_7_DAYS: 7 * 24 * 60 * 60 * 1000,
   LAST_30_DAYS: 30 * 24 * 60 * 60 * 1000,
   LAST_90_DAYS: 90 * 24 * 60 * 60 * 1000,
-} as const;
+} as const
 
 /**
  * Metrics refresh intervals (in milliseconds)
@@ -158,7 +166,7 @@ export const METRICS_REFRESH_INTERVAL = {
   FAST: 30000, // 30 seconds
   NORMAL: 60000, // 1 minute
   SLOW: 300000, // 5 minutes
-} as const;
+} as const
 
 /**
  * Performance thresholds
@@ -172,7 +180,7 @@ export const PERFORMANCE_THRESHOLDS = {
   CPU_CRITICAL: 90, // 90%
   MEMORY_WARNING: 80, // 80%
   MEMORY_CRITICAL: 95, // 95%
-} as const;
+} as const
 
 /**
  * Log retention periods (in days)
@@ -182,12 +190,12 @@ export const LOG_RETENTION = {
   INFO: 30,
   WARN: 90,
   ERROR: 365,
-} as const;
+} as const
 
 /**
  * Security event severity levels
  */
-export const SEVERITY_LEVELS = ["low", "medium", "high", "critical"] as const;
+export const SEVERITY_LEVELS = ["low", "medium", "high", "critical"] as const
 
 /**
  * Severity badge variants
@@ -200,7 +208,7 @@ export const SEVERITY_VARIANTS: Record<
   medium: "secondary",
   high: "default",
   critical: "destructive",
-} as const;
+} as const
 
 /**
  * Log provider options
@@ -208,7 +216,7 @@ export const SEVERITY_VARIANTS: Record<
 export const LOG_PROVIDERS = {
   DATABASE: "db",
   HTTP: "http",
-} as const;
+} as const
 
 /**
  * Chart colors for metrics
@@ -219,7 +227,7 @@ export const CHART_COLORS = {
   WARNING: "hsl(38 92% 50%)",
   ERROR: "hsl(0 84% 60%)",
   INFO: "hsl(199 89% 48%)",
-} as const;
+} as const
 
 /**
  * Metric unit labels
@@ -232,7 +240,7 @@ export const METRIC_UNITS = {
   SECONDS: "s",
   REQUESTS: "req/min",
   QUERIES: "q/min",
-} as const;
+} as const
 
 /**
  * Error messages
@@ -243,7 +251,7 @@ export const ERROR_MESSAGES = {
   PROVIDER_NOT_CONFIGURED: "Log provider not properly configured",
   INVALID_DATE_RANGE: "Invalid date range",
   EXPORT_FAILED: "Failed to export logs",
-} as const;
+} as const
 
 /**
  * Success messages
@@ -252,4 +260,4 @@ export const SUCCESS_MESSAGES = {
   LOGS_EXPORTED: "Logs exported successfully",
   METRICS_REFRESHED: "Metrics refreshed",
   FILTER_APPLIED: "Filter applied",
-} as const;
+} as const

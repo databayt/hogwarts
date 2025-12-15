@@ -5,7 +5,13 @@ import * as React from "react"
 /**
  * Base variant types using semantic tokens
  */
-export type BaseVariant = "default" | "primary" | "success" | "warning" | "danger" | "muted"
+export type BaseVariant =
+  | "default"
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "muted"
 
 /**
  * Size variants for components

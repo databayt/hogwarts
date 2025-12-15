@@ -1,6 +1,6 @@
-import StatsContent from "@/components/platform/dashboard/stat-showcase"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import StatsContent from "@/components/platform/dashboard/stat-showcase"
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

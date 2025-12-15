@@ -1,23 +1,30 @@
 "use client"
 
-import { useSidebar } from "@/components/ui/sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import {
-  Users,
-  FileText,
+  AlertCircle,
+  Building2,
   Calendar,
   CheckCircle2,
-  AlertCircle,
-  Clock,
-  TrendingUp,
-  Building2,
   ClipboardList,
+  Clock,
+  FileText,
   Settings,
-  Zap
+  TrendingUp,
+  Users,
+  Zap,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface StaffDashboardProps {
   data: Record<string, unknown>
@@ -33,18 +40,58 @@ const DEPARTMENT_STATS = [
 
 // Pending tasks
 const PENDING_TASKS = [
-  { title: "Process new student enrollments", count: 12, priority: "high", due: "Today" },
-  { title: "Update teacher schedules", count: 5, priority: "medium", due: "Tomorrow" },
-  { title: "Generate monthly attendance report", count: 1, priority: "high", due: "Dec 20" },
-  { title: "Review fee waiver requests", count: 8, priority: "medium", due: "Dec 22" },
-  { title: "Prepare event logistics", count: 3, priority: "low", due: "Dec 25" },
+  {
+    title: "Process new student enrollments",
+    count: 12,
+    priority: "high",
+    due: "Today",
+  },
+  {
+    title: "Update teacher schedules",
+    count: 5,
+    priority: "medium",
+    due: "Tomorrow",
+  },
+  {
+    title: "Generate monthly attendance report",
+    count: 1,
+    priority: "high",
+    due: "Dec 20",
+  },
+  {
+    title: "Review fee waiver requests",
+    count: 8,
+    priority: "medium",
+    due: "Dec 22",
+  },
+  {
+    title: "Prepare event logistics",
+    count: 3,
+    priority: "low",
+    due: "Dec 25",
+  },
 ]
 
 // Recent activities
 const RECENT_ACTIVITIES = [
-  { title: "New Computer Lab Setup", department: "Technology", status: "completed", time: "2 hours ago" },
-  { title: "Science Fair Planning", department: "Science", status: "in_progress", time: "5 hours ago" },
-  { title: "Fee Collection Report", department: "Finance", status: "completed", time: "Yesterday" },
+  {
+    title: "New Computer Lab Setup",
+    department: "Technology",
+    status: "completed",
+    time: "2 hours ago",
+  },
+  {
+    title: "Science Fair Planning",
+    department: "Science",
+    status: "in_progress",
+    time: "5 hours ago",
+  },
+  {
+    title: "Fee Collection Report",
+    department: "Finance",
+    status: "completed",
+    time: "Yesterday",
+  },
 ]
 
 export default function StaffDashboard({ data }: StaffDashboardProps) {
@@ -58,7 +105,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
   }
 
   const statusIcons = {
-    pending: <Clock className="size-4 text-muted-foreground" />,
+    pending: <Clock className="text-muted-foreground size-4" />,
     in_progress: <AlertCircle className="size-4 text-orange-500" />,
     completed: <CheckCircle2 className="size-4 text-emerald-500" />,
   }
@@ -66,10 +113,14 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className={cn(
-        "grid gap-4",
-        useMobileLayout ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 md:grid-cols-4"
-      )}>
+      <div
+        className={cn(
+          "grid gap-4",
+          useMobileLayout
+            ? "grid-cols-1 sm:grid-cols-2"
+            : "grid-cols-1 md:grid-cols-4"
+        )}
+      >
         {DEPARTMENT_STATS.map((stat, idx) => (
           <Card key={idx} className="border-border">
             <CardHeader className="pb-2">
@@ -83,61 +134,85 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className={cn(
-                  "text-3xl font-bold",
-                  idx === 0 && "text-blue-500",
-                  idx === 1 && "text-purple-500",
-                  idx === 2 && "text-emerald-500",
-                  idx === 3 && "text-orange-500"
-                )}>{stat.value.toLocaleString()}</span>
+                <span
+                  className={cn(
+                    "text-3xl font-bold",
+                    idx === 0 && "text-blue-500",
+                    idx === 1 && "text-purple-500",
+                    idx === 2 && "text-emerald-500",
+                    idx === 3 && "text-orange-500"
+                  )}
+                >
+                  {stat.value.toLocaleString()}
+                </span>
                 {stat.change !== "0" && (
-                  <span className={cn(
-                    "text-xs",
-                    stat.trend === "up" ? "text-emerald-500" : "text-destructive"
-                  )}>{stat.change}</span>
+                  <span
+                    className={cn(
+                      "text-xs",
+                      stat.trend === "up"
+                        ? "text-emerald-500"
+                        : "text-destructive"
+                    )}
+                  >
+                    {stat.change}
+                  </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">This semester</p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                This semester
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Main Content Grid */}
-      <div className={cn(
-        "grid gap-6",
-        useMobileLayout ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
-      )}>
+      <div
+        className={cn(
+          "grid gap-6",
+          useMobileLayout ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}
+      >
         {/* Pending Tasks */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <ClipboardList className="size-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ClipboardList className="text-primary size-5" />
               Pending Tasks
             </CardTitle>
-            <CardDescription>Administrative tasks requiring attention</CardDescription>
+            <CardDescription>
+              Administrative tasks requiring attention
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {PENDING_TASKS.map((task, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="size-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="bg-muted flex size-8 items-center justify-center rounded-full text-sm font-medium">
                     {task.count}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{task.title}</p>
-                    <p className="text-xs text-muted-foreground">Due: {task.due}</p>
+                    <p className="truncate text-sm font-medium">{task.title}</p>
+                    <p className="text-muted-foreground text-xs">
+                      Due: {task.due}
+                    </p>
                   </div>
                 </div>
-                <Badge variant="outline" className={cn("text-[10px]", priorityColors[task.priority as keyof typeof priorityColors])}>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px]",
+                    priorityColors[task.priority as keyof typeof priorityColors]
+                  )}
+                >
                   {task.priority}
                 </Badge>
               </div>
             ))}
-            <button className="w-full text-sm text-primary hover:underline py-2">
+            <button className="text-primary w-full py-2 text-sm hover:underline">
               View all tasks
             </button>
           </CardContent>
@@ -146,7 +221,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
         {/* Recent Activities */}
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Zap className="size-5 text-amber-500" />
               Recent Activities
             </CardTitle>
@@ -156,24 +231,33 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
             {RECENT_ACTIVITIES.map((activity, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   {statusIcons[activity.status as keyof typeof statusIcons]}
                   <div>
-                    <p className="font-medium text-sm">{activity.title}</p>
-                    <p className="text-xs text-muted-foreground">{activity.department} Department</p>
+                    <p className="text-sm font-medium">{activity.title}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {activity.department} Department
+                    </p>
                   </div>
                 </div>
                 <div className="text-end">
-                  <Badge variant={activity.status === "completed" ? "secondary" : "outline"} className="text-[10px] mb-1">
+                  <Badge
+                    variant={
+                      activity.status === "completed" ? "secondary" : "outline"
+                    }
+                    className="mb-1 text-[10px]"
+                  >
                     {activity.status.replace("_", " ")}
                   </Badge>
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {activity.time}
+                  </p>
                 </div>
               </div>
             ))}
-            <button className="w-full text-sm text-primary hover:underline py-2">
+            <button className="text-primary w-full py-2 text-sm hover:underline">
               View activity log
             </button>
           </CardContent>
@@ -187,34 +271,67 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
           <CardDescription>Staff allocation across departments</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-3",
-            useMobileLayout ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 md:grid-cols-3"
-          )}>
+          <div
+            className={cn(
+              "grid gap-3",
+              useMobileLayout
+                ? "grid-cols-1 sm:grid-cols-2"
+                : "grid-cols-2 md:grid-cols-3"
+            )}
+          >
             {[
-              { name: "Mathematics", teachers: 8, classes: 24, color: "bg-chart-1" },
-              { name: "Science", teachers: 12, classes: 32, color: "bg-chart-2" },
-              { name: "English", teachers: 10, classes: 28, color: "bg-chart-3" },
-              { name: "History", teachers: 6, classes: 18, color: "bg-chart-4" },
+              {
+                name: "Mathematics",
+                teachers: 8,
+                classes: 24,
+                color: "bg-chart-1",
+              },
+              {
+                name: "Science",
+                teachers: 12,
+                classes: 32,
+                color: "bg-chart-2",
+              },
+              {
+                name: "English",
+                teachers: 10,
+                classes: 28,
+                color: "bg-chart-3",
+              },
+              {
+                name: "History",
+                teachers: 6,
+                classes: 18,
+                color: "bg-chart-4",
+              },
               { name: "Art", teachers: 4, classes: 12, color: "bg-chart-5" },
-              { name: "Physical Education", teachers: 5, classes: 15, color: "bg-chart-1" },
+              {
+                name: "Physical Education",
+                teachers: 5,
+                classes: 15,
+                color: "bg-chart-1",
+              },
             ].map((dept, idx) => (
               <div
                 key={idx}
-                className="p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 rounded-lg border p-4 transition-colors"
               >
-                <div className="flex items-center gap-2 mb-3">
+                <div className="mb-3 flex items-center gap-2">
                   <div className={cn("size-3 rounded-full", dept.color)} />
-                  <span className="font-medium text-sm">{dept.name}</span>
+                  <span className="text-sm font-medium">{dept.name}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-2xl font-bold text-foreground">{dept.teachers}</p>
-                    <p className="text-xs text-muted-foreground">Teachers</p>
+                    <p className="text-foreground text-2xl font-bold">
+                      {dept.teachers}
+                    </p>
+                    <p className="text-muted-foreground text-xs">Teachers</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-foreground">{dept.classes}</p>
-                    <p className="text-xs text-muted-foreground">Classes</p>
+                    <p className="text-foreground text-2xl font-bold">
+                      {dept.classes}
+                    </p>
+                    <p className="text-muted-foreground text-xs">Classes</p>
                   </div>
                 </div>
               </div>
@@ -226,31 +343,74 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
       {/* School-wide Metrics */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="size-5 text-emerald-500" />
             School-wide Metrics
           </CardTitle>
           <CardDescription>Key performance indicators</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-4",
-            useMobileLayout ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 md:grid-cols-4"
-          )}>
+          <div
+            className={cn(
+              "grid gap-4",
+              useMobileLayout
+                ? "grid-cols-1 sm:grid-cols-2"
+                : "grid-cols-2 md:grid-cols-4"
+            )}
+          >
             {[
-              { label: "Attendance Rate", value: 94.2, suffix: "%", target: 95, color: "text-blue-500" },
-              { label: "Fee Collection", value: 98, suffix: "%", target: 100, color: "text-emerald-500" },
-              { label: "Teacher Retention", value: 96, suffix: "%", target: 95, color: "text-purple-500" },
-              { label: "Student Satisfaction", value: 4.5, suffix: "/5", target: 4.5, color: "text-amber-500" },
+              {
+                label: "Attendance Rate",
+                value: 94.2,
+                suffix: "%",
+                target: 95,
+                color: "text-blue-500",
+              },
+              {
+                label: "Fee Collection",
+                value: 98,
+                suffix: "%",
+                target: 100,
+                color: "text-emerald-500",
+              },
+              {
+                label: "Teacher Retention",
+                value: 96,
+                suffix: "%",
+                target: 95,
+                color: "text-purple-500",
+              },
+              {
+                label: "Student Satisfaction",
+                value: 4.5,
+                suffix: "/5",
+                target: 4.5,
+                color: "text-amber-500",
+              },
             ].map((metric, idx) => (
-              <div key={idx} className="p-4 rounded-lg border border-border bg-card">
-                <p className="text-xs text-muted-foreground mb-1">{metric.label}</p>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className={cn("text-2xl font-bold", metric.color)}>{metric.value}</span>
-                  <span className="text-sm text-muted-foreground">{metric.suffix}</span>
+              <div
+                key={idx}
+                className="border-border bg-card rounded-lg border p-4"
+              >
+                <p className="text-muted-foreground mb-1 text-xs">
+                  {metric.label}
+                </p>
+                <div className="mb-2 flex items-baseline gap-1">
+                  <span className={cn("text-2xl font-bold", metric.color)}>
+                    {metric.value}
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    {metric.suffix}
+                  </span>
                 </div>
-                <Progress value={(metric.value / metric.target) * 100} className="h-1.5 mb-1" />
-                <p className="text-[10px] text-muted-foreground">Target: {metric.target}{metric.suffix}</p>
+                <Progress
+                  value={(metric.value / metric.target) * 100}
+                  className="mb-1 h-1.5"
+                />
+                <p className="text-muted-foreground text-[10px]">
+                  Target: {metric.target}
+                  {metric.suffix}
+                </p>
               </div>
             ))}
           </div>
@@ -264,19 +424,33 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
           <CardDescription>Common administrative tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={cn(
-            "grid gap-3",
-            useMobileLayout ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"
-          )}>
+          <div
+            className={cn(
+              "grid gap-3",
+              useMobileLayout ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"
+            )}
+          >
             {[
               { icon: Users, label: "Add Student", color: "text-blue-500" },
-              { icon: Building2, label: "Add Teacher", color: "text-purple-500" },
-              { icon: FileText, label: "Generate Report", color: "text-emerald-500" },
-              { icon: Settings, label: "System Settings", color: "text-muted-foreground" },
+              {
+                icon: Building2,
+                label: "Add Teacher",
+                color: "text-purple-500",
+              },
+              {
+                icon: FileText,
+                label: "Generate Report",
+                color: "text-emerald-500",
+              },
+              {
+                icon: Settings,
+                label: "System Settings",
+                color: "text-muted-foreground",
+              },
             ].map((action, idx) => (
               <button
                 key={idx}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-muted/50 transition-colors"
+                className="border-border bg-card hover:bg-muted/50 flex flex-col items-center justify-center gap-2 rounded-lg border p-4 transition-colors"
               >
                 <action.icon className={cn("size-6", action.color)} />
                 <span className="text-xs font-medium">{action.label}</span>

@@ -1,31 +1,48 @@
-import { GraduationCap, School, Building2, Landmark, Wrench, Heart } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Building2,
+  GraduationCap,
+  Heart,
+  Landmark,
+  School,
+  Wrench,
+} from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface DescriptionCardProps {
-  schoolType?: 'private' | 'public' | 'international' | 'technical' | 'special' | null;
-  className?: string;
+  schoolType?:
+    | "private"
+    | "public"
+    | "international"
+    | "technical"
+    | "special"
+    | null
+  className?: string
 }
 
-export function DescriptionCard({ schoolType, className }: DescriptionCardProps) {
+export function DescriptionCard({
+  schoolType,
+  className,
+}: DescriptionCardProps) {
   const getTypeInfo = () => {
     switch (schoolType) {
-      case 'private':
-        return { title: 'Private School', icon: Building2 };
-      case 'public':
-        return { title: 'Public School', icon: School };
-      case 'international':
-        return { title: 'International School', icon: Landmark };
-      case 'technical':
-        return { title: 'Technical School', icon: Wrench };
-      case 'special':
-        return { title: 'Special School', icon: Heart };
+      case "private":
+        return { title: "Private School", icon: Building2 }
+      case "public":
+        return { title: "Public School", icon: School }
+      case "international":
+        return { title: "International School", icon: Landmark }
+      case "technical":
+        return { title: "Technical School", icon: Wrench }
+      case "special":
+        return { title: "Special School", icon: Heart }
       default:
-        return { title: 'Not selected', icon: School };
+        return { title: "Not selected", icon: School }
     }
-  };
+  }
 
-  const typeInfo = getTypeInfo();
-  const hasData = !!schoolType;
+  const typeInfo = getTypeInfo()
+  const hasData = !!schoolType
 
   return (
     <Card className={className}>
@@ -38,19 +55,21 @@ export function DescriptionCard({ schoolType, className }: DescriptionCardProps)
       <CardContent>
         <div className="space-y-4">
           {/* School Type */}
-          <div className="p-4 bg-muted/50 rounded-lg">
+          <div className="bg-muted/50 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <typeInfo.icon className="h-5 w-5 text-muted-foreground" />
+              <typeInfo.icon className="text-muted-foreground h-5 w-5" />
               <div>
-                <p className="font-medium text-foreground">{typeInfo.title}</p>
-                <p className="text-sm text-muted-foreground">Educational model and structure</p>
+                <p className="text-foreground font-medium">{typeInfo.title}</p>
+                <p className="text-muted-foreground text-sm">
+                  Educational model and structure
+                </p>
               </div>
             </div>
           </div>
-          
+
           {!hasData && (
-            <div className="p-3 bg-accent/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">
+            <div className="bg-accent/50 rounded-lg p-3">
+              <p className="text-muted-foreground text-sm">
                 Please select your school type to continue setup
               </p>
             </div>
@@ -58,5 +77,5 @@ export function DescriptionCard({ schoolType, className }: DescriptionCardProps)
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

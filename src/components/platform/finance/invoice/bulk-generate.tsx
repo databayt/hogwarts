@@ -21,9 +21,9 @@ export function BulkGenerateForm({
   feeStructures,
 }: BulkGenerateFormProps) {
   return (
-    <div className="text-center text-muted-foreground p-8">
+    <div className="text-muted-foreground p-8 text-center">
       <p>Bulk invoice generation is currently unavailable.</p>
-      <p className="text-sm mt-2">Please generate invoices individually.</p>
+      <p className="mt-2 text-sm">Please generate invoices individually.</p>
     </div>
   )
 }

@@ -1,9 +1,10 @@
 "use client"
 
+import { TrendingDown, TrendingUp } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { TrendingDown, TrendingUp } from "lucide-react"
 
 const stats = [
   {
@@ -31,15 +32,20 @@ const stats = [
 
 export default function StatsBorders() {
   return (
-    <div className="grid grid-cols-1 divide-y bg-border divide-border overflow-hidden rounded-lg md:grid-cols-3 md:divide-x md:divide-y-0">
+    <div className="bg-border divide-border grid grid-cols-1 divide-y overflow-hidden rounded-lg md:grid-cols-3 md:divide-x md:divide-y-0">
       {stats.map((item) => (
-        <Card key={item.metric} className="rounded-none border-0 shadow-sm py-0">
+        <Card
+          key={item.metric}
+          className="rounded-none border-0 py-0 shadow-sm"
+        >
           <CardContent className="p-4 sm:p-6">
-            <CardTitle className="text-base font-normal">{item.metric}</CardTitle>
+            <CardTitle className="text-base font-normal">
+              {item.metric}
+            </CardTitle>
             <div className="mt-1 flex items-baseline gap-2 md:block lg:flex">
-              <div className="flex items-baseline text-2xl font-semibold text-primary">
+              <div className="text-primary flex items-baseline text-2xl font-semibold">
                 {item.current}
-                <span className="ms-2 text-sm font-medium text-muted-foreground">
+                <span className="text-muted-foreground ms-2 text-sm font-medium">
                   from {item.previous}
                 </span>
               </div>
@@ -47,7 +53,7 @@ export default function StatsBorders() {
               <Badge
                 variant="outline"
                 className={cn(
-                  "inline-flex items-center px-1.5 ps-2.5 py-0.5 text-xs font-medium md:mt-2 lg:mt-0",
+                  "inline-flex items-center px-1.5 py-0.5 ps-2.5 text-xs font-medium md:mt-2 lg:mt-0",
                   item.trend === "up"
                     ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
                     : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"

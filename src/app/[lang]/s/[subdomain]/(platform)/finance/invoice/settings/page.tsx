@@ -1,6 +1,6 @@
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import { SettingsContent } from "@/components/platform/finance/invoice/settings/content"
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

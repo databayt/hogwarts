@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Code Refactoring
+
 - **Code Smell Detection**: Identify and eliminate technical debt
 - **Pattern Application**: Apply proven refactoring patterns
 - **Complexity Reduction**: Simplify convoluted logic
@@ -22,12 +23,14 @@ model: sonnet
 - **Type Safety**: Improve TypeScript typing
 
 ### Safety Guarantees
+
 - **Behavior Preservation**: Zero functional changes
 - **Test Coverage**: Maintain >80% coverage throughout
 - **Incremental Changes**: Small, reviewable commits
 - **Continuous Validation**: Tests run after each change
 
 ### Quality Metrics
+
 - Cyclomatic complexity: Reduce to <10 per function
 - Code duplication: Reduce by 40%+
 - Test coverage: Maintain 80%+ throughout
@@ -40,28 +43,29 @@ model: sonnet
 ### 1. Long Function
 
 **Before (Code Smell)**:
+
 ```typescript
 export async function createStudent(data: FormData) {
   // 150 lines of code
   const session = await auth()
-  if (!session) throw new Error('Not authenticated')
-  if (!session.user?.schoolId) throw new Error('No school')
+  if (!session) throw new Error("Not authenticated")
+  if (!session.user?.schoolId) throw new Error("No school")
 
-  const firstName = data.get('firstName')
-  const lastName = data.get('lastName')
-  const email = data.get('email')
-  const dateOfBirth = data.get('dateOfBirth')
+  const firstName = data.get("firstName")
+  const lastName = data.get("lastName")
+  const email = data.get("email")
+  const dateOfBirth = data.get("dateOfBirth")
 
-  if (!firstName) throw new Error('First name required')
-  if (!lastName) throw new Error('Last name required')
-  if (!email) throw new Error('Email required')
-  if (!dateOfBirth) throw new Error('Date of birth required')
+  if (!firstName) throw new Error("First name required")
+  if (!lastName) throw new Error("Last name required")
+  if (!email) throw new Error("Email required")
+  if (!dateOfBirth) throw new Error("Date of birth required")
 
   const existing = await db.student.findFirst({
     where: { email, schoolId: session.user.schoolId },
   })
 
-  if (existing) throw new Error('Email already exists')
+  if (existing) throw new Error("Email already exists")
 
   const student = await db.student.create({
     data: {
@@ -73,12 +77,13 @@ export async function createStudent(data: FormData) {
     },
   })
 
-  revalidatePath('/students')
+  revalidatePath("/students")
   return { success: true, data: student }
 }
 ```
 
 **After (Refactored)**:
+
 ```typescript
 // Broken into focused functions
 export async function createStudent(data: FormData) {
@@ -90,14 +95,14 @@ export async function createStudent(data: FormData) {
     data: { ...validated, schoolId: session.user.schoolId },
   })
 
-  revalidatePath('/students')
+  revalidatePath("/students")
   return { success: true, data: student }
 }
 
 async function requireAuth() {
   const session = await auth()
   if (!session?.user?.schoolId) {
-    throw new Error('Authentication required')
+    throw new Error("Authentication required")
   }
   return session
 }
@@ -111,7 +116,7 @@ async function checkEmailUnique(email: string, schoolId: string) {
     where: { email, schoolId },
   })
   if (existing) {
-    throw new Error('Email already exists')
+    throw new Error("Email already exists")
   }
 }
 ```
@@ -119,54 +124,57 @@ async function checkEmailUnique(email: string, schoolId: string) {
 ### 2. Nested Conditionals
 
 **Before (Code Smell)**:
+
 ```typescript
 function calculateGrade(student: Student) {
   if (student.scores) {
     if (student.scores.length > 0) {
-      const average = student.scores.reduce((a, b) => a + b, 0) / student.scores.length
+      const average =
+        student.scores.reduce((a, b) => a + b, 0) / student.scores.length
 
       if (average >= 90) {
-        return 'A'
+        return "A"
       } else {
         if (average >= 80) {
-          return 'B'
+          return "B"
         } else {
           if (average >= 70) {
-            return 'C'
+            return "C"
           } else {
             if (average >= 60) {
-              return 'D'
+              return "D"
             } else {
-              return 'F'
+              return "F"
             }
           }
         }
       }
     } else {
-      return 'N/A'
+      return "N/A"
     }
   } else {
-    return 'N/A'
+    return "N/A"
   }
 }
 ```
 
 **After (Refactored)**:
+
 ```typescript
 function calculateGrade(student: Student): string {
   // Early returns
   if (!student.scores || student.scores.length === 0) {
-    return 'N/A'
+    return "N/A"
   }
 
   const average = calculateAverage(student.scores)
 
   // Guard clauses with clear boundaries
-  if (average >= 90) return 'A'
-  if (average >= 80) return 'B'
-  if (average >= 70) return 'C'
-  if (average >= 60) return 'D'
-  return 'F'
+  if (average >= 90) return "A"
+  if (average >= 80) return "B"
+  if (average >= 70) return "C"
+  if (average >= 60) return "D"
+  return "F"
 }
 
 function calculateAverage(scores: number[]): number {
@@ -177,13 +185,14 @@ function calculateAverage(scores: number[]): number {
 ### 3. Magic Numbers
 
 **Before (Code Smell)**:
+
 ```typescript
 function getSubscriptionPrice(tier: string) {
-  if (tier === 'basic') {
+  if (tier === "basic") {
     return 49
-  } else if (tier === 'pro') {
+  } else if (tier === "pro") {
     return 99
-  } else if (tier === 'enterprise') {
+  } else if (tier === "enterprise") {
     return 299
   }
   return 0
@@ -195,6 +204,7 @@ function isStudentEligible(age: number) {
 ```
 
 **After (Refactored)**:
+
 ```typescript
 // config.ts
 export const SUBSCRIPTION_PRICING = {
@@ -222,11 +232,12 @@ function isStudentEligible(age: number): boolean {
 ### 4. Duplicate Code
 
 **Before (Code Smell)**:
+
 ```typescript
 // In StudentForm.tsx
 async function handleStudentSubmit(data: FormData) {
   const session = await auth()
-  if (!session?.user?.schoolId) throw new Error('Not authenticated')
+  if (!session?.user?.schoolId) throw new Error("Not authenticated")
 
   const validated = studentSchema.parse(Object.fromEntries(data))
 
@@ -234,13 +245,13 @@ async function handleStudentSubmit(data: FormData) {
     data: { ...validated, schoolId: session.user.schoolId },
   })
 
-  revalidatePath('/students')
+  revalidatePath("/students")
 }
 
 // In TeacherForm.tsx
 async function handleTeacherSubmit(data: FormData) {
   const session = await auth()
-  if (!session?.user?.schoolId) throw new Error('Not authenticated')
+  if (!session?.user?.schoolId) throw new Error("Not authenticated")
 
   const validated = teacherSchema.parse(Object.fromEntries(data))
 
@@ -248,22 +259,23 @@ async function handleTeacherSubmit(data: FormData) {
     data: { ...validated, schoolId: session.user.schoolId },
   })
 
-  revalidatePath('/teachers')
+  revalidatePath("/teachers")
 }
 ```
 
 **After (Refactored)**:
+
 ```typescript
 // lib/form-utils.ts
 export async function createWithSchoolId<T>(
   schema: z.ZodSchema<T>,
   data: FormData,
-  model: 'student' | 'teacher',
-  revalidatePath: string,
+  model: "student" | "teacher",
+  revalidatePath: string
 ) {
   const session = await auth()
   if (!session?.user?.schoolId) {
-    throw new Error('Authentication required')
+    throw new Error("Authentication required")
   }
 
   const validated = schema.parse(Object.fromEntries(data))
@@ -279,18 +291,19 @@ export async function createWithSchoolId<T>(
 
 // StudentForm.tsx
 async function handleStudentSubmit(data: FormData) {
-  return createWithSchoolId(studentSchema, data, 'student', '/students')
+  return createWithSchoolId(studentSchema, data, "student", "/students")
 }
 
 // TeacherForm.tsx
 async function handleTeacherSubmit(data: FormData) {
-  return createWithSchoolId(teacherSchema, data, 'teacher', '/teachers')
+  return createWithSchoolId(teacherSchema, data, "teacher", "/teachers")
 }
 ```
 
 ### 5. God Object/Component
 
 **Before (Code Smell)**:
+
 ```tsx
 // 500+ line component doing everything
 export function StudentDashboard() {
@@ -312,15 +325,12 @@ export function StudentDashboard() {
 
   // 50+ functions handling all logic
 
-  return (
-    <div>
-      {/* 400+ lines of JSX */}
-    </div>
-  )
+  return <div>{/* 400+ lines of JSX */}</div>
 }
 ```
 
 **After (Refactored)**:
+
 ```tsx
 // Break into focused components
 export function StudentDashboard() {
@@ -339,7 +349,7 @@ export function StudentDashboard() {
 
 // Each component is focused and testable
 export function StudentList() {
-  const { data: students, isLoading } = useSWR('students', getStudents)
+  const { data: students, isLoading } = useSWR("students", getStudents)
 
   if (isLoading) return <Skeleton />
 
@@ -356,12 +366,12 @@ export function StudentList() {
 ```typescript
 // Before
 if (student.scores.reduce((a, b) => a + b, 0) / student.scores.length >= 90) {
-  return 'Excellent'
+  return "Excellent"
 }
 
 // After
 if (getAverageScore(student.scores) >= GRADE_THRESHOLDS.EXCELLENT) {
-  return 'Excellent'
+  return "Excellent"
 }
 
 function getAverageScore(scores: number[]): number {
@@ -374,7 +384,9 @@ function getAverageScore(scores: number[]): number {
 ```typescript
 // Before
 if (
-  student.attendance.present / (student.attendance.present + student.attendance.absent) >= 0.9 &&
+  student.attendance.present /
+    (student.attendance.present + student.attendance.absent) >=
+    0.9 &&
   student.grades.every((g) => g.score >= 70)
 ) {
   // Eligible
@@ -394,11 +406,11 @@ if (attendanceRate >= ATTENDANCE_THRESHOLD && hasPassingGrades) {
 ```typescript
 // Before
 function getPaymentProcessor(method: string) {
-  if (method === 'stripe') {
+  if (method === "stripe") {
     return stripeProcessor
-  } else if (method === 'paypal') {
+  } else if (method === "paypal") {
     return paypalProcessor
-  } else if (method === 'bank') {
+  } else if (method === "bank") {
     return bankProcessor
   }
 }
@@ -452,13 +464,13 @@ pnpm exec ts-complex src/
 
 ```typescript
 // Before refactoring, ensure test coverage
-describe('calculateGrade', () => {
-  it('should return A for 90+', () => {
-    expect(calculateGrade({ scores: [90, 95, 92] })).toBe('A')
+describe("calculateGrade", () => {
+  it("should return A for 90+", () => {
+    expect(calculateGrade({ scores: [90, 95, 92] })).toBe("A")
   })
 
-  it('should return N/A for no scores', () => {
-    expect(calculateGrade({ scores: [] })).toBe('N/A')
+  it("should return N/A for no scores", () => {
+    expect(calculateGrade({ scores: [] })).toBe("N/A")
   })
 })
 ```
@@ -505,20 +517,22 @@ pnpm dev
 ### Multi-Tenant Safety
 
 **Before**:
+
 ```typescript
 // Missing schoolId checks
 const students = await db.student.findMany({
-  where: { yearLevel: 'GRADE_10' },
+  where: { yearLevel: "GRADE_10" },
 })
 ```
 
 **After**:
+
 ```typescript
 // Always include schoolId
 const students = await db.student.findMany({
   where: {
     schoolId: session.user.schoolId, // Multi-tenant safety
-    yearLevel: 'GRADE_10',
+    yearLevel: "GRADE_10",
   },
 })
 ```
@@ -526,6 +540,7 @@ const students = await db.student.findMany({
 ### Mirror Pattern Compliance
 
 **Before**:
+
 ```
 src/
 ├── components/
@@ -535,6 +550,7 @@ src/
 ```
 
 **After**:
+
 ```
 src/
 ├── components/
@@ -552,6 +568,7 @@ src/
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/typescript` - Type safety improvements
 - `/agents/test` - Test coverage maintenance
 - `/agents/architecture` - Pattern compliance
@@ -587,6 +604,7 @@ src/
 ## Success Metrics
 
 **Target Achievements**:
+
 - Cyclomatic complexity <10 per function
 - Code duplication reduced by 40%+
 - Test coverage maintained at 80%+

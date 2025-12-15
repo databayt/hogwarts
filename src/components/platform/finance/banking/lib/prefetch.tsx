@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import React, { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 // Prefetch banking routes for faster navigation
 export function usePrefetchBankingRoutes(lang: string) {
@@ -16,7 +16,7 @@ export function usePrefetchBankingRoutes(lang: string) {
       `/${lang}/banking/payment-transfer`,
     ]
 
-    routes.forEach(route => {
+    routes.forEach((route) => {
       router.prefetch(route)
     })
   }, [lang, router])
@@ -72,13 +72,13 @@ export function useViewportPrefetch(urls: string[]) {
   const router = useRouter()
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === "undefined") return
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const url = entry.target.getAttribute('data-prefetch')
+            const url = entry.target.getAttribute("data-prefetch")
             if (url) {
               router.prefetch(url)
               observer.unobserve(entry.target)
@@ -87,13 +87,13 @@ export function useViewportPrefetch(urls: string[]) {
         })
       },
       {
-        rootMargin: '100px', // Start prefetching 100px before element is visible
+        rootMargin: "100px", // Start prefetching 100px before element is visible
       }
     )
 
     // Observe elements with data-prefetch attribute
-    const elements = document.querySelectorAll('[data-prefetch]')
-    elements.forEach(el => observer.observe(el))
+    const elements = document.querySelectorAll("[data-prefetch]")
+    elements.forEach((el) => observer.observe(el))
 
     return () => observer.disconnect()
   }, [router, urls])
@@ -117,11 +117,7 @@ export function ResourceHints() {
       />
 
       {/* Preload critical CSS */}
-      <link
-        rel="preload"
-        href="/_next/static/css/app.css"
-        as="style"
-      />
+      <link rel="preload" href="/_next/static/css/app.css" as="style" />
     </>
   )
 }

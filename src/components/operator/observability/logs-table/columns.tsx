@@ -1,18 +1,20 @@
-"use client";
-import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
+"use client"
+
+import { ColumnDef } from "@tanstack/react-table"
+
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 export type AuditRow = {
-  id: string;
-  createdAt: string;
-  userEmail: string;
-  schoolName: string | null;
-  action: string;
-  reason: string | null;
-  ip?: string | null;
-  level?: string | null;
-  requestId?: string | null;
-};
+  id: string
+  createdAt: string
+  userEmail: string
+  schoolName: string | null
+  action: string
+  reason: string | null
+  ip?: string | null
+  level?: string | null
+  requestId?: string | null
+}
 
 export const auditColumns: ColumnDef<AuditRow>[] = [
   {
@@ -79,6 +81,4 @@ export const auditColumns: ColumnDef<AuditRow>[] = [
     ),
     meta: { label: "Reason", variant: "text" },
   },
-];
-
-
+]

@@ -1,17 +1,25 @@
-import { Suspense } from 'react';
-import type { Locale } from '@/components/internationalization/config';
-import type { getDictionary } from '@/components/internationalization/dictionaries';
-import { getAccounts } from './actions';
-import BankList from './bank-list';
-import AddBankButton from './add-bank-button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2 } from "lucide-react";
-import type { User } from 'next-auth';
+import { Suspense } from "react"
+import { Building2 } from "lucide-react"
+import type { User } from "next-auth"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import { getAccounts } from "./actions"
+import AddBankButton from "./add-bank-button"
+import BankList from "./bank-list"
 
 interface Props {
-  user: User;
-  dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
-  lang: Locale;
+  user: User
+  dictionary: Awaited<ReturnType<typeof getDictionary>>["banking"]
+  lang: Locale
 }
 
 export default async function MyBanksContent(props: Props) {
@@ -21,17 +29,21 @@ export default async function MyBanksContent(props: Props) {
       <div className="py-8">
         <p className="text-muted-foreground">User ID not found</p>
       </div>
-    );
+    )
   }
 
-  const accounts = await getAccounts({ userId: props.user.id });
+  const accounts = await getAccounts({ userId: props.user.id })
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         {accounts.length > 0 && (
-          <Suspense fallback={<div className="h-10 w-32 bg-muted animate-pulse rounded" />}>
+          <Suspense
+            fallback={
+              <div className="bg-muted h-10 w-32 animate-pulse rounded" />
+            }
+          >
             <AddBankButton dictionary={props.dictionary} />
           </Suspense>
         )}
@@ -41,14 +53,18 @@ export default async function MyBanksContent(props: Props) {
       {accounts.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Building2 className="h-16 w-16 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">
+            <Building2 className="text-muted-foreground mb-4 h-16 w-16" />
+            <h2 className="mb-2 text-xl font-semibold">
               {props.dictionary.noBanks}
             </h2>
-            <p className="text-muted-foreground text-center max-w-sm mb-6">
+            <p className="text-muted-foreground mb-6 max-w-sm text-center">
               {props.dictionary.connectYourBank}
             </p>
-            <Suspense fallback={<div className="h-10 w-40 bg-muted animate-pulse rounded" />}>
+            <Suspense
+              fallback={
+                <div className="bg-muted h-10 w-40 animate-pulse rounded" />
+              }
+            >
               <AddBankButton dictionary={props.dictionary} size="lg" />
             </Suspense>
           </CardContent>
@@ -65,7 +81,7 @@ export default async function MyBanksContent(props: Props) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{accounts.length}</div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {props.dictionary.connectBank}
                 </p>
               </CardContent>
@@ -94,9 +110,7 @@ export default async function MyBanksContent(props: Props) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatTimeAgo(
-                    accounts[0]?.lastUpdated || new Date()
-                  )}
+                  {formatTimeAgo(accounts[0]?.lastUpdated || new Date())}
                 </div>
               </CardContent>
             </Card>
@@ -111,29 +125,29 @@ export default async function MyBanksContent(props: Props) {
         </>
       )}
     </div>
-  );
+  )
 }
 
 // Utility functions
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)
 }
 
 function formatTimeAgo(date: Date | string): string {
-  const now = new Date();
-  const past = new Date(date);
-  const diffMs = now.getTime() - past.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const now = new Date()
+  const past = new Date(date)
+  const diffMs = now.getTime() - past.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} mins ago`;
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  return `${diffDays} days ago`;
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins} mins ago`
+  if (diffHours < 24) return `${diffHours} hours ago`
+  return `${diffDays} days ago`
 }

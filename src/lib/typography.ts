@@ -44,7 +44,8 @@ export const typography = {
  */
 export const typographyVariants = {
   // Page headers
-  pageTitle: "scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-balance",
+  pageTitle:
+    "scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-balance",
   pageDescription: "text-xl text-muted-foreground",
 
   // Section headers
@@ -56,12 +57,14 @@ export const typographyVariants = {
   cardDescription: "text-sm text-muted-foreground",
 
   // Form labels
-  label: "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+  label:
+    "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
   hint: "text-sm text-muted-foreground",
   error: "text-sm text-destructive",
 
   // Table
-  tableHeader: "h-12 px-4 text-left align-middle font-medium text-muted-foreground",
+  tableHeader:
+    "h-12 px-4 text-left align-middle font-medium text-muted-foreground",
   tableCell: "p-4 align-middle",
 } as const
 

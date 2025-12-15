@@ -1,30 +1,32 @@
 "use client"
 
 import { useState } from "react"
+import {
+  Award,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  FolderKanban,
+  GraduationCap,
+  LayoutGrid,
+  Star,
+  Users,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import {
-  LayoutGrid,
-  BookOpen,
-  FolderKanban,
-  Award,
-  Star,
-  GraduationCap,
-  Users,
-  Calendar,
-  Briefcase
-} from "lucide-react"
-import ProfileSidebar from "./profile-sidebar"
-import PinnedItems from "./pinned-items"
-import ContributionGraph from "./contribution-graph"
-import ContributionActivity from "./contribution-activity"
+import type { Locale } from "@/components/internationalization/config"
+
 import ActivityOverview from "./activity-overview"
+import ContributionActivity from "./contribution-activity"
+import ContributionGraph from "./contribution-graph"
+import ParentDashboard from "./parent"
+import PinnedItems from "./pinned-items"
+import ProfileSidebar from "./profile-sidebar"
+import StaffDashboard from "./staff"
 import StudentDashboard from "./student"
 import TeacherDashboard from "./teacher"
-import StaffDashboard from "./staff"
-import ParentDashboard from "./parent"
-import type { Locale } from "@/components/internationalization/config"
 import type { ProfileRole, ProfileTab } from "./types"
 
 interface Props {
@@ -37,34 +39,123 @@ interface Props {
 // Tab configurations per role
 const ROLE_TABS: Record<ProfileRole, ProfileTab[]> = {
   student: [
-    { id: "overview", label: "Overview", icon: <LayoutGrid className="size-4" /> },
-    { id: "courses", label: "Courses", count: 8, icon: <BookOpen className="size-4" /> },
-    { id: "projects", label: "Projects", count: 12, icon: <FolderKanban className="size-4" /> },
-    { id: "achievements", label: "Achievements", count: 5, icon: <Award className="size-4" /> },
-    { id: "awards", label: "Awards", count: 2, icon: <Star className="size-4" /> },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutGrid className="size-4" />,
+    },
+    {
+      id: "courses",
+      label: "Courses",
+      count: 8,
+      icon: <BookOpen className="size-4" />,
+    },
+    {
+      id: "projects",
+      label: "Projects",
+      count: 12,
+      icon: <FolderKanban className="size-4" />,
+    },
+    {
+      id: "achievements",
+      label: "Achievements",
+      count: 5,
+      icon: <Award className="size-4" />,
+    },
+    {
+      id: "awards",
+      label: "Awards",
+      count: 2,
+      icon: <Star className="size-4" />,
+    },
   ],
   teacher: [
-    { id: "overview", label: "Overview", icon: <LayoutGrid className="size-4" /> },
-    { id: "classes", label: "Classes", count: 6, icon: <Users className="size-4" /> },
-    { id: "schedule", label: "Schedule", icon: <Calendar className="size-4" /> },
-    { id: "achievements", label: "Awards", count: 4, icon: <Award className="size-4" /> },
-    { id: "resources", label: "Resources", count: 15, icon: <BookOpen className="size-4" /> },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutGrid className="size-4" />,
+    },
+    {
+      id: "classes",
+      label: "Classes",
+      count: 6,
+      icon: <Users className="size-4" />,
+    },
+    {
+      id: "schedule",
+      label: "Schedule",
+      icon: <Calendar className="size-4" />,
+    },
+    {
+      id: "achievements",
+      label: "Awards",
+      count: 4,
+      icon: <Award className="size-4" />,
+    },
+    {
+      id: "resources",
+      label: "Resources",
+      count: 15,
+      icon: <BookOpen className="size-4" />,
+    },
   ],
   parent: [
-    { id: "overview", label: "Overview", icon: <LayoutGrid className="size-4" /> },
-    { id: "children", label: "Children", count: 3, icon: <GraduationCap className="size-4" /> },
-    { id: "events", label: "Events", count: 5, icon: <Calendar className="size-4" /> },
-    { id: "communications", label: "Messages", count: 8, icon: <Star className="size-4" /> },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutGrid className="size-4" />,
+    },
+    {
+      id: "children",
+      label: "Children",
+      count: 3,
+      icon: <GraduationCap className="size-4" />,
+    },
+    {
+      id: "events",
+      label: "Events",
+      count: 5,
+      icon: <Calendar className="size-4" />,
+    },
+    {
+      id: "communications",
+      label: "Messages",
+      count: 8,
+      icon: <Star className="size-4" />,
+    },
   ],
   staff: [
-    { id: "overview", label: "Overview", icon: <LayoutGrid className="size-4" /> },
-    { id: "tasks", label: "Tasks", count: 24, icon: <FolderKanban className="size-4" /> },
-    { id: "department", label: "Department", icon: <Briefcase className="size-4" /> },
-    { id: "reports", label: "Reports", count: 8, icon: <BookOpen className="size-4" /> },
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <LayoutGrid className="size-4" />,
+    },
+    {
+      id: "tasks",
+      label: "Tasks",
+      count: 24,
+      icon: <FolderKanban className="size-4" />,
+    },
+    {
+      id: "department",
+      label: "Department",
+      icon: <Briefcase className="size-4" />,
+    },
+    {
+      id: "reports",
+      label: "Reports",
+      count: 8,
+      icon: <BookOpen className="size-4" />,
+    },
   ],
 }
 
-export default function ProfileContent({ role, data, dictionary, lang }: Props) {
+export default function ProfileContent({
+  role,
+  data,
+  dictionary,
+  lang,
+}: Props) {
   const { open, isMobile } = useSidebar()
   const [activeTab, setActiveTab] = useState("overview")
 
@@ -92,18 +183,21 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
     <div className="space-y-6">
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="border-b border-border">
-          <TabsList className="h-auto bg-transparent p-0 gap-0">
+        <div className="border-border border-b">
+          <TabsList className="h-auto gap-0 bg-transparent p-0">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="relative px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary gap-2 transition-colors hover:text-foreground"
+                className="text-muted-foreground data-[state=active]:text-foreground data-[state=active]:border-primary hover:text-foreground relative gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium transition-colors data-[state=active]:bg-transparent"
               >
                 {tab.icon}
                 <span className="hidden sm:inline">{tab.label}</span>
                 {tab.count !== undefined && (
-                  <Badge variant="secondary" className="h-5 px-1.5 text-[10px] ms-1">
+                  <Badge
+                    variant="secondary"
+                    className="ms-1 h-5 px-1.5 text-[10px]"
+                  >
                     {tab.count}
                   </Badge>
                 )}
@@ -118,7 +212,7 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
           <PinnedItems role={role} data={data} />
 
           {/* Activity Graph */}
-          <div className="rounded-lg border border-border p-6">
+          <div className="border-border rounded-lg border p-6">
             <ContributionGraph role={role} data={data} />
           </div>
 
@@ -138,7 +232,7 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
       </Tabs>
 
       {/* Footer Help Link */}
-      <p className="text-sm text-muted-foreground text-center pb-6">
+      <p className="text-muted-foreground pb-6 text-center text-sm">
         Need help navigating the system? Check out the{" "}
         <a href="#" className="text-primary hover:underline">
           school portal guide
@@ -150,7 +244,7 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto max-w-7xl">
         {useMobileLayout ? (
           // Mobile/Expanded sidebar layout: Stack vertically
           <div className="flex flex-col gap-6 pb-6">
@@ -166,7 +260,7 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
           </div>
         ) : (
           // Desktop Collapsed sidebar layout: Side by side
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 py-6">
+          <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-4">
             {/* Left Sidebar */}
             <div className="lg:col-span-1">
               <ProfileSidebar role={role} data={data} />

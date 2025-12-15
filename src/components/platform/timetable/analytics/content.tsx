@@ -1,24 +1,43 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { RefreshCw, TriangleAlert, Users, DoorOpen, BookOpen, Clock, TrendingUp } from "lucide-react"
-import { BarChart3 } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { useEffect, useState, useTransition } from "react"
 import {
-  getTermsForSelection,
-  getTimetableAnalytics
-} from '../actions'
+  BarChart3,
+  BookOpen,
+  Clock,
+  DoorOpen,
+  RefreshCw,
+  TrendingUp,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getTermsForSelection, getTimetableAnalytics } from "../actions"
 
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
 }
 
 type AnalyticsData = {
@@ -59,7 +78,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const [terms, setTerms] = useState<{ id: string; label: string }[]>([])
-  const [selectedTerm, setSelectedTerm] = useState<string>('')
+  const [selectedTerm, setSelectedTerm] = useState<string>("")
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
 
   // Load terms on mount
@@ -82,7 +101,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch {
-      setError('Failed to load terms')
+      setError("Failed to load terms")
     }
   }
 
@@ -93,15 +112,17 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         const data = await getTimetableAnalytics({ termId: selectedTerm })
         setAnalytics(data as AnalyticsData)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load analytics')
+        setError(
+          err instanceof Error ? err.message : "Failed to load analytics"
+        )
       }
     })
   }
 
   const getUtilizationColor = (rate: number) => {
-    if (rate >= 80) return 'bg-red-500'
-    if (rate >= 60) return 'bg-yellow-500'
-    return 'bg-green-500'
+    if (rate >= 80) return "bg-red-500"
+    if (rate >= 60) return "bg-yellow-500"
+    return "bg-green-500"
   }
 
   return (
@@ -111,10 +132,11 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            {d?.analytics?.title || 'Timetable Analytics'}
+            {d?.analytics?.title || "Timetable Analytics"}
           </CardTitle>
           <CardDescription>
-            {d?.analytics?.description || 'Teacher workload and room utilization analytics'}
+            {d?.analytics?.description ||
+              "Teacher workload and room utilization analytics"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -126,7 +148,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                   <SelectValue placeholder="Select term" />
                 </SelectTrigger>
                 <SelectContent>
-                  {terms.map(term => (
+                  {terms.map((term) => (
                     <SelectItem key={term.id} value={term.id}>
                       {term.label}
                     </SelectItem>
@@ -136,8 +158,15 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
             </div>
 
             <div className="flex items-end">
-              <Button variant="outline" size="sm" onClick={loadAnalytics} disabled={isPending || !selectedTerm}>
-                <RefreshCw className={cn("h-4 w-4 me-2", isPending && "animate-spin")} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadAnalytics}
+                disabled={isPending || !selectedTerm}
+              >
+                <RefreshCw
+                  className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
+                />
                 Refresh
               </Button>
             </div>
@@ -170,10 +199,12 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <Clock className="h-8 w-8 text-primary" />
+                  <Clock className="text-primary h-8 w-8" />
                   <div>
-                    <p className="text-2xl font-bold">{analytics.summary.totalSlots}</p>
-                    <p className="text-sm text-muted-foreground">Total Slots</p>
+                    <p className="text-2xl font-bold">
+                      {analytics.summary.totalSlots}
+                    </p>
+                    <p className="text-muted-foreground text-sm">Total Slots</p>
                   </div>
                 </div>
               </CardContent>
@@ -184,8 +215,10 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 <div className="flex items-center gap-4">
                   <Users className="h-8 w-8 text-blue-500" />
                   <div>
-                    <p className="text-2xl font-bold">{analytics.summary.totalTeachers}</p>
-                    <p className="text-sm text-muted-foreground">Teachers</p>
+                    <p className="text-2xl font-bold">
+                      {analytics.summary.totalTeachers}
+                    </p>
+                    <p className="text-muted-foreground text-sm">Teachers</p>
                   </div>
                 </div>
               </CardContent>
@@ -196,8 +229,10 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 <div className="flex items-center gap-4">
                   <BookOpen className="h-8 w-8 text-green-500" />
                   <div>
-                    <p className="text-2xl font-bold">{analytics.summary.totalClasses}</p>
-                    <p className="text-sm text-muted-foreground">Classes</p>
+                    <p className="text-2xl font-bold">
+                      {analytics.summary.totalClasses}
+                    </p>
+                    <p className="text-muted-foreground text-sm">Classes</p>
                   </div>
                 </div>
               </CardContent>
@@ -208,23 +243,35 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 <div className="flex items-center gap-4">
                   <DoorOpen className="h-8 w-8 text-purple-500" />
                   <div>
-                    <p className="text-2xl font-bold">{analytics.summary.totalRooms}</p>
-                    <p className="text-sm text-muted-foreground">Rooms</p>
+                    <p className="text-2xl font-bold">
+                      {analytics.summary.totalRooms}
+                    </p>
+                    <p className="text-muted-foreground text-sm">Rooms</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className={cn(analytics.summary.conflictCount > 0 && "border-red-500")}>
+            <Card
+              className={cn(
+                analytics.summary.conflictCount > 0 && "border-red-500"
+              )}
+            >
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <TriangleAlert className={cn(
-                    "h-8 w-8",
-                    analytics.summary.conflictCount > 0 ? "text-red-500" : "text-green-500"
-                  )} />
+                  <TriangleAlert
+                    className={cn(
+                      "h-8 w-8",
+                      analytics.summary.conflictCount > 0
+                        ? "text-red-500"
+                        : "text-green-500"
+                    )}
+                  />
                   <div>
-                    <p className="text-2xl font-bold">{analytics.summary.conflictCount}</p>
-                    <p className="text-sm text-muted-foreground">Conflicts</p>
+                    <p className="text-2xl font-bold">
+                      {analytics.summary.conflictCount}
+                    </p>
+                    <p className="text-muted-foreground text-sm">Conflicts</p>
                   </div>
                 </div>
               </CardContent>
@@ -241,12 +288,13 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {analytics.teacherWorkload.slice(0, 10).map(teacher => (
+                {analytics.teacherWorkload.slice(0, 10).map((teacher) => (
                   <div key={teacher.id} className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{teacher.name}</span>
                       <span className="text-muted-foreground">
-                        {teacher.periodsPerWeek} periods | {teacher.classesCount} classes
+                        {teacher.periodsPerWeek} periods |{" "}
+                        {teacher.classesCount} classes
                       </span>
                     </div>
                     <Progress
@@ -256,7 +304,9 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                   </div>
                 ))}
                 {analytics.teacherWorkload.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No teacher data available</p>
+                  <p className="text-muted-foreground py-4 text-center">
+                    No teacher data available
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -270,29 +320,40 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {analytics.roomUtilization.slice(0, 10).map(room => (
+                {analytics.roomUtilization.slice(0, 10).map((room) => (
                   <div key={room.id} className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="font-medium">{room.name}</span>
-                      <span className={cn(
-                        "font-semibold",
-                        room.utilizationRate >= 80 ? "text-red-500" :
-                        room.utilizationRate >= 60 ? "text-yellow-500" : "text-green-500"
-                      )}>
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          room.utilizationRate >= 80
+                            ? "text-red-500"
+                            : room.utilizationRate >= 60
+                              ? "text-yellow-500"
+                              : "text-green-500"
+                        )}
+                      >
                         {room.utilizationRate}%
                       </span>
                     </div>
                     <Progress
                       value={room.utilizationRate}
-                      className={cn("h-2", getUtilizationColor(room.utilizationRate))}
+                      className={cn(
+                        "h-2",
+                        getUtilizationColor(room.utilizationRate)
+                      )}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      {room.usedSlots}/{room.totalSlots} slots ({room.capacity} seats)
+                    <p className="text-muted-foreground text-xs">
+                      {room.usedSlots}/{room.totalSlots} slots ({room.capacity}{" "}
+                      seats)
                     </p>
                   </div>
                 ))}
                 {analytics.roomUtilization.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No room data available</p>
+                  <p className="text-muted-foreground py-4 text-center">
+                    No room data available
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -308,20 +369,20 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {analytics.subjectDistribution.map(subject => (
+                {analytics.subjectDistribution.map((subject) => (
                   <div
                     key={subject.name}
-                    className="p-4 bg-muted rounded-lg space-y-2"
+                    className="bg-muted space-y-2 rounded-lg p-4"
                   >
                     <h4 className="font-semibold">{subject.name}</h4>
-                    <div className="flex justify-between text-sm text-muted-foreground">
+                    <div className="text-muted-foreground flex justify-between text-sm">
                       <span>{subject.periodsPerWeek} periods/week</span>
                       <span>{subject.classesCount} classes</span>
                     </div>
                   </div>
                 ))}
                 {analytics.subjectDistribution.length === 0 && (
-                  <p className="col-span-full text-center text-muted-foreground py-4">
+                  <p className="text-muted-foreground col-span-full py-4 text-center">
                     No subject data available
                   </p>
                 )}
@@ -333,8 +394,8 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
 
       {/* No Term Selected */}
       {!selectedTerm && !isPending && (
-        <div className="text-center py-12 text-muted-foreground">
-          <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <div className="text-muted-foreground py-12 text-center">
+          <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
           <p>Select a term to view analytics</p>
         </div>
       )}

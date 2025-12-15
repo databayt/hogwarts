@@ -46,15 +46,18 @@ src/components/platform/finance/
 ## Sub-Blocks
 
 ### 1. Invoice (`/finance/invoice`)
+
 **Purpose**: Client invoicing and billing management
 
 **Features**:
+
 - Professional invoice generation
 - Payment tracking
 - Email delivery
 - Status management
 
 **Accounting Integration**:
+
 ```typescript
 // When invoice is paid
 DR: Cash/Bank Account
@@ -62,26 +65,32 @@ CR: Accounts Receivable
 ```
 
 ### 2. Receipt (`/finance/receipt`)
+
 **Purpose**: Receipt generation and expense scanning
 
 **Features**:
+
 - Receipt generation
 - AI OCR for expense scanning
 - Transaction tracking
 
 ### 3. Banking (`/finance/banking`)
+
 **Purpose**: Bank account and transaction management
 
 **Features**:
+
 - Bank account linking (Plaid/Dwolla)
 - Transaction tracking
 - Payment transfers
 - Bank reconciliation
 
 ### 4. Fees (`/finance/fees`)
+
 **Purpose**: Student fee management
 
 **Features**:
+
 - Fee structure definition
 - Student fee assignment
 - Payment tracking
@@ -89,6 +98,7 @@ CR: Accounts Receivable
 - Fine management
 
 **Accounting Integration**:
+
 ```typescript
 // Fee Assignment
 DR: Student Fees Receivable
@@ -100,18 +110,22 @@ CR: Student Fees Receivable
 ```
 
 ### 5. Salary (`/finance/salary`)
+
 **Purpose**: Staff salary structure management
 
 **Features**:
+
 - Salary structure definition
 - Allowances and deductions
 - Salary calculator
 - Bulk operations
 
 ### 6. Payroll (`/finance/payroll`)
+
 **Purpose**: Payroll processing and disbursement
 
 **Features**:
+
 - Payroll run creation
 - Salary slip generation
 - Tax calculations
@@ -119,6 +133,7 @@ CR: Student Fees Receivable
 - Disbursement management
 
 **Accounting Integration**:
+
 ```typescript
 // Salary Payment
 DR: Salary Expense
@@ -129,9 +144,11 @@ CR: Social Security Payable
 ```
 
 ### 7. Timesheet (`/finance/timesheet`)
+
 **Purpose**: Staff time tracking
 
 **Features**:
+
 - Timesheet periods
 - Hour tracking
 - Approval workflow
@@ -139,15 +156,18 @@ CR: Social Security Payable
 - Payroll integration
 
 ### 8. Wallet (`/finance/wallet`)
+
 **Purpose**: School and parent wallet management
 
 **Features**:
+
 - School wallet management
 - Parent wallet balances
 - Top-up functionality
 - Transaction history
 
 **Accounting Integration**:
+
 ```typescript
 // Wallet Top-up
 DR: Cash/Bank Account
@@ -155,24 +175,29 @@ CR: Unearned Revenue
 ```
 
 ### 9. Budget (`/finance/budget`)
+
 **Purpose**: Budget planning and tracking
 
 **Features**:
+
 - Budget creation
 - Department allocation
 - Spending tracking
 - Variance analysis
 
 ### 10. Expenses (`/finance/expenses`)
+
 **Purpose**: Expense submission and approval
 
 **Features**:
+
 - Expense submission
 - Category management
 - Approval workflow
 - Reimbursement processing
 
 **Accounting Integration**:
+
 ```typescript
 // Expense Payment
 DR: Expense Account (by category)
@@ -180,9 +205,11 @@ CR: Cash/Bank Account
 ```
 
 ### 11. Accounts (`/finance/accounts`)
+
 **Purpose**: Core accounting system
 
 **Features**:
+
 - Chart of accounts
 - Journal entries
 - General ledger
@@ -190,6 +217,7 @@ CR: Cash/Bank Account
 - Period closing
 
 **Account Structure**:
+
 - **Assets**: Cash, Bank, Accounts Receivable, Fixed Assets
 - **Liabilities**: Accounts Payable, Salary Payable, Tax Payable
 - **Equity**: Retained Earnings, Current Year Earnings
@@ -197,9 +225,11 @@ CR: Cash/Bank Account
 - **Expenses**: Salaries, Utilities, Supplies, Maintenance
 
 ### 12. Reports (`/finance/reports`)
+
 **Purpose**: Financial reporting and analysis
 
 **Features**:
+
 - Profit & Loss Statement
 - Balance Sheet
 - Cash Flow Statement
@@ -239,6 +269,7 @@ const result = await postFeePayment(schoolId, {
 ### Posting Rules
 
 Each module has predefined posting rules that determine:
+
 - Which accounts to debit
 - Which accounts to credit
 - How to calculate amounts
@@ -286,18 +317,18 @@ The finance block uses a two-tier permission system:
 ### Usage
 
 ```typescript
-import { checkFinancePermission } from '@/components/platform/finance/lib/permissions'
+import { checkFinancePermission } from "@/components/platform/finance/lib/permissions"
 
 // Check permission
 const canApprove = await checkFinancePermission(
   userId,
   schoolId,
-  'payroll',
-  'approve'
+  "payroll",
+  "approve"
 )
 
 if (!canApprove) {
-  return { success: false, error: 'Unauthorized' }
+  return { success: false, error: "Unauthorized" }
 }
 ```
 
@@ -314,27 +345,32 @@ if (!canApprove) {
 ### Core Models
 
 **Chart of Accounts** (`ChartOfAccount`)
+
 - Account hierarchy
 - Account types (Asset, Liability, Equity, Revenue, Expense)
 - Account codes and names
 
 **Journal Entries** (`JournalEntry`)
+
 - Entry number and date
 - Source module tracking
 - Posted/unposted status
 - Reversal tracking
 
 **Ledger Entries** (`LedgerEntry`)
+
 - Debit and credit amounts
 - Account references
 - Entry descriptions
 
 **Account Balances** (`AccountBalance`)
+
 - Running balances per account
 - Fiscal year tracking
 - Debit/credit totals
 
 **Fiscal Years** (`FiscalYear`)
+
 - Year definition
 - Start/end dates
 - Active status
@@ -344,7 +380,7 @@ if (!canApprove) {
 ### 1. Initialize Accounting System
 
 ```typescript
-import { initializeAccounting } from '@/components/platform/finance/lib/accounting'
+import { initializeAccounting } from "@/components/platform/finance/lib/accounting"
 
 // This seeds the chart of accounts and creates fiscal year
 const result = await initializeAccounting(schoolId)
@@ -457,6 +493,7 @@ Testing has been skipped for now as per requirements. When testing is implemente
 ### From Old Structure
 
 Old routes automatically work due to the migrations completed:
+
 - Invoice, receipt, and banking were migrated with import path updates
 - All functionality preserved
 - No breaking changes
@@ -475,6 +512,7 @@ To add a new finance module:
 ## Support
 
 For issues or questions:
+
 - Check the main project README
 - Review the prisma schema in `prisma/models/finance.prisma`
 - Examine example implementations in existing sub-blocks

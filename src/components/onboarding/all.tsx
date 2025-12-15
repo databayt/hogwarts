@@ -1,67 +1,85 @@
-"use client";
+"use client"
 
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Filter, Download, Plus } from 'lucide-react';
-import { SchoolCard } from './card';
-import { useUserSchools } from './use-onboarding';
-import type { OnboardingSchoolData } from './types';
-import { exportSchoolsToCSV } from './column';
-import { SCHOOL_CATEGORIES } from "./config";
+import React, { useMemo, useState } from "react"
+import { Download, Filter, Plus, Search } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+
+import { SchoolCard } from "./card"
+import { exportSchoolsToCSV } from "./column"
+import { SCHOOL_CATEGORIES } from "./config"
+import type { OnboardingSchoolData } from "./types"
+import { useUserSchools } from "./use-onboarding"
 
 interface AllSchoolsProps {
-  onSchoolClick?: (school: OnboardingSchoolData) => void;
-  onCreateNew?: () => void;
-  showActions?: boolean;
+  onSchoolClick?: (school: OnboardingSchoolData) => void
+  onCreateNew?: () => void
+  showActions?: boolean
 }
 
-export default function AllSchools({ 
-  onSchoolClick, 
-  onCreateNew, 
-  showActions = true 
+export default function AllSchools({
+  onSchoolClick,
+  onCreateNew,
+  showActions = true,
 }: AllSchoolsProps) {
-  const { schools, isLoading, error, refreshSchools } = useUserSchools();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'created' | 'updated'>('updated');
+  const { schools, isLoading, error, refreshSchools } = useUserSchools()
+  const [searchQuery, setSearchQuery] = useState("")
+  const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<"name" | "created" | "updated">(
+    "updated"
+  )
 
   // Filter and sort schools
   const filteredAndSortedSchools = useMemo(() => {
-    const filtered = schools.filter(school => {
-      const matchesSearch = !searchQuery || 
+    const filtered = schools.filter((school) => {
+      const matchesSearch =
+        !searchQuery ||
         school.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         school.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        school.city?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesType = typeFilter === 'all' || school.schoolType === typeFilter;
-      
-      return matchesSearch && matchesType;
-    });
+        school.city?.toLowerCase().includes(searchQuery.toLowerCase())
+
+      const matchesType =
+        typeFilter === "all" || school.schoolType === typeFilter
+
+      return matchesSearch && matchesType
+    })
 
     // Sort schools
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'name':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'created':
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        case 'updated':
+        case "name":
+          return (a.name || "").localeCompare(b.name || "")
+        case "created":
+          return (
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime()
+          )
+        case "updated":
         default:
-          return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+          return (
+            new Date(b.updatedAt || 0).getTime() -
+            new Date(a.updatedAt || 0).getTime()
+          )
       }
-    });
+    })
 
-    return filtered;
-  }, [schools, searchQuery, typeFilter, sortBy]);
+    return filtered
+  }, [schools, searchQuery, typeFilter, sortBy])
 
   const handleExport = () => {
-    exportSchoolsToCSV(filteredAndSortedSchools);
-  };
+    exportSchoolsToCSV(filteredAndSortedSchools)
+  }
 
   if (isLoading) {
     return (
@@ -70,13 +88,13 @@ export default function AllSchools({
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -91,7 +109,7 @@ export default function AllSchools({
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -107,12 +125,12 @@ export default function AllSchools({
         {showActions && (
           <div className="flex gap-2">
             <Button onClick={handleExport} variant="outline" size="sm">
-              <Download className="h-4 w-4 me-2" />
+              <Download className="me-2 h-4 w-4" />
               Export
             </Button>
             {onCreateNew && (
               <Button onClick={onCreateNew} size="sm">
-                <Plus className="h-4 w-4 me-2" />
+                <Plus className="me-2 h-4 w-4" />
                 New School
               </Button>
             )}
@@ -123,10 +141,10 @@ export default function AllSchools({
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="text-muted-foreground absolute start-3 top-3 h-4 w-4" />
                 <Input
                   placeholder="Search schools by name, description, or location..."
                   value={searchQuery}
@@ -135,16 +153,16 @@ export default function AllSchools({
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 me-2" />
+                  <Filter className="me-2 h-4 w-4" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {SCHOOL_CATEGORIES.map(category => (
+                  {SCHOOL_CATEGORIES.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
                       {category.label}
                     </SelectItem>
@@ -152,7 +170,10 @@ export default function AllSchools({
                 </SelectContent>
               </Select>
 
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as any)}
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -166,25 +187,26 @@ export default function AllSchools({
           </div>
 
           {/* Active filters */}
-          {(searchQuery || typeFilter !== 'all') && (
-            <div className="flex flex-wrap gap-2 mt-3">
+          {(searchQuery || typeFilter !== "all") && (
+            <div className="mt-3 flex flex-wrap gap-2">
               {searchQuery && (
                 <Badge variant="secondary" className="gap-1">
                   Search: {searchQuery}
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="ms-1 hover:bg-muted rounded"
+                    onClick={() => setSearchQuery("")}
+                    className="hover:bg-muted ms-1 rounded"
                   >
                     ×
                   </button>
                 </Badge>
               )}
-              {typeFilter !== 'all' && (
+              {typeFilter !== "all" && (
                 <Badge variant="secondary" className="gap-1">
-                  Type: {SCHOOL_CATEGORIES.find(c => c.value === typeFilter)?.label}
+                  Type:{" "}
+                  {SCHOOL_CATEGORIES.find((c) => c.value === typeFilter)?.label}
                   <button
-                    onClick={() => setTypeFilter('all')}
-                    className="ms-1 hover:bg-muted rounded"
+                    onClick={() => setTypeFilter("all")}
+                    className="hover:bg-muted ms-1 rounded"
                   >
                     ×
                   </button>
@@ -203,7 +225,10 @@ export default function AllSchools({
               {schools.length === 0 ? (
                 <>
                   <h5 className="mb-2">No schools yet</h5>
-                  <p>Create your first school to get started with the onboarding process.</p>
+                  <p>
+                    Create your first school to get started with the onboarding
+                    process.
+                  </p>
                 </>
               ) : (
                 <>
@@ -214,15 +239,15 @@ export default function AllSchools({
             </div>
             {onCreateNew && schools.length === 0 && (
               <Button onClick={onCreateNew}>
-                <Plus className="h-4 w-4 me-2" />
+                <Plus className="me-2 h-4 w-4" />
                 Create First School
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAndSortedSchools.map(school => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAndSortedSchools.map((school) => (
             <SchoolCard
               key={school.id}
               school={school}
@@ -233,5 +258,5 @@ export default function AllSchools({
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { FeatureLdg, InfoLdg, TestimonialType } from "../types";
+import { FeatureLdg, InfoLdg, TestimonialType } from "../types"
 
 export const infos: InfoLdg[] = [
   {
@@ -50,7 +50,7 @@ export const infos: InfoLdg[] = [
       },
     ],
   },
-];
+]
 
 export const features: FeatureLdg[] = [
   {
@@ -95,7 +95,7 @@ export const features: FeatureLdg[] = [
     link: "/",
     icon: "copy",
   },
-];
+]
 
 export const testimonials: TestimonialType[] = [
   {
@@ -147,4 +147,4 @@ export const testimonials: TestimonialType[] = [
     review:
       "Thanks to next-saas-stripe-starter, I've been able to create modern and attractive user interfaces in record time. The starter kit provides a solid foundation for building sleek and intuitive designs, allowing me to focus more on the creative aspects of my work.",
   },
-];
+]

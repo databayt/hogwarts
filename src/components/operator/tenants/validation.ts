@@ -1,4 +1,9 @@
-import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
+
 // import * as z from "zod";
 
 export const tenantsSearchParams = createSearchParamsCache({
@@ -15,8 +20,8 @@ export const tenantsSearchParams = createSearchParamsCache({
   status: parseAsString.withDefault(""), // "true" | "false" | ""
   // Sorting state (JSON string array of { id, desc })
   sort: parseAsString.withDefault(""),
-});
+})
 
-export type GetTenantsSearch = Awaited<ReturnType<typeof tenantsSearchParams.parse>>;
-
-
+export type GetTenantsSearch = Awaited<
+  ReturnType<typeof tenantsSearchParams.parse>
+>

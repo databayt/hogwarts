@@ -1,12 +1,13 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { useEffect } from "react";
-import type { z } from "zod";
-import { toast } from "sonner";
-import { createOperatorLead, updateOperatorLead, getOperatorLeadById } from "./actions";
-import { createLeadSchema } from "@/components/sales/validation";
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, type SubmitHandler } from "react-hook-form"
+import { toast } from "sonner"
+import type { z } from "zod"
+
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -14,45 +15,53 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useModal } from "@/components/atom/modal/context";
-import { useRouter } from "next/navigation";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useModal } from "@/components/atom/modal/context"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
-  LEAD_STATUS,
-  LEAD_SOURCE,
   LEAD_PRIORITY,
+  LEAD_SOURCE,
+  LEAD_STATUS,
   LEAD_TYPE,
-  type LeadStatusKey,
-  type LeadSourceKey,
   type LeadPriorityKey,
+  type LeadSourceKey,
+  type LeadStatusKey,
   type LeadTypeKey,
-} from "@/components/sales/constants";
+} from "@/components/sales/constants"
+import { createLeadSchema } from "@/components/sales/validation"
+
+import {
+  createOperatorLead,
+  getOperatorLeadById,
+  updateOperatorLead,
+} from "./actions"
 
 interface OperatorLeadFormProps {
-  dictionary?: Dictionary["sales"];
-  onSuccess?: () => void;
+  dictionary?: Dictionary["sales"]
+  onSuccess?: () => void
 }
 
-type LeadFormValues = z.input<typeof createLeadSchema>;
+type LeadFormValues = z.input<typeof createLeadSchema>
 
-export function OperatorLeadForm({ dictionary, onSuccess }: OperatorLeadFormProps) {
-  const { modal, closeModal } = useModal();
-  const router = useRouter();
+export function OperatorLeadForm({
+  dictionary,
+  onSuccess,
+}: OperatorLeadFormProps) {
+  const { modal, closeModal } = useModal()
+  const router = useRouter()
 
   // Detect if editing
-  const currentId = modal.id || undefined;
-  const isEditing = !!currentId;
+  const currentId = modal.id || undefined
+  const isEditing = !!currentId
 
   // Translations
   const t = {
@@ -104,7 +113,7 @@ export function OperatorLeadForm({ dictionary, onSuccess }: OperatorLeadFormProp
     SCHOOL: "School",
     PARTNERSHIP: "Partnership",
     OTHER: "Other",
-  };
+  }
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(createLeadSchema),
@@ -127,15 +136,15 @@ export function OperatorLeadForm({ dictionary, onSuccess }: OperatorLeadFormProp
       tags: [],
       verified: false,
     },
-  });
+  })
 
   // Load existing lead for editing
   useEffect(() => {
     const load = async () => {
-      if (!currentId) return;
-      const res = await getOperatorLeadById(currentId);
-      if (!res.success || !res.data) return;
-      const lead = res.data;
+      if (!currentId) return
+      const res = await getOperatorLeadById(currentId)
+      if (!res.success || !res.data) return
+      const lead = res.data
       form.reset({
         name: lead.name || "",
         email: lead.email || "",
@@ -153,43 +162,48 @@ export function OperatorLeadForm({ dictionary, onSuccess }: OperatorLeadFormProp
         score: lead.score ?? 50,
         notes: lead.notes || "",
         tags: lead.tags || [],
-      });
-    };
-    void load();
+      })
+    }
+    void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentId]);
+  }, [currentId])
 
   const onSubmit: SubmitHandler<LeadFormValues> = async (values) => {
     try {
       // Cast to action input types (zod will validate and apply defaults)
       const res = isEditing
-        ? await updateOperatorLead(currentId!, values as Parameters<typeof updateOperatorLead>[1])
-        : await createOperatorLead(values as Parameters<typeof createOperatorLead>[0]);
+        ? await updateOperatorLead(
+            currentId!,
+            values as Parameters<typeof updateOperatorLead>[1]
+          )
+        : await createOperatorLead(
+            values as Parameters<typeof createOperatorLead>[0]
+          )
 
       if (res?.success) {
         const successMsg = isEditing
           ? "Lead updated successfully"
-          : "Lead created successfully";
-        toast.success(successMsg);
-        closeModal();
+          : "Lead created successfully"
+        toast.success(successMsg)
+        closeModal()
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         } else {
-          router.refresh();
+          router.refresh()
         }
       } else {
         const errorMsg =
           res?.error ||
-          (isEditing ? "Failed to update lead" : "Failed to create lead");
-        toast.error(errorMsg);
+          (isEditing ? "Failed to update lead" : "Failed to create lead")
+        toast.error(errorMsg)
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Form submission error:", error)
+      toast.error("An unexpected error occurred")
     }
-  };
+  }
 
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting = form.formState.isSubmitting
 
   return (
     <Form {...form}>
@@ -464,14 +478,10 @@ export function OperatorLeadForm({ dictionary, onSuccess }: OperatorLeadFormProp
             {t.cancel}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting
-              ? isEditing
-                ? t.updating
-                : t.creating
-              : t.save}
+            {isSubmitting ? (isEditing ? t.updating : t.creating) : t.save}
           </Button>
         </div>
       </form>
     </Form>
-  );
+  )
 }

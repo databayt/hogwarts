@@ -1,24 +1,28 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import type { Locale } from "@/components/internationalization/config";
+import Link from "next/link"
+
+import { buttonVariants } from "@/components/ui/button"
+import type { Locale } from "@/components/internationalization/config"
 
 interface AIFluencySectionProps {
-  dictionary?: any;
-  lang: Locale;
+  dictionary?: any
+  lang: Locale
 }
 
 export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
-  const isRTL = lang === "ar";
+  const isRTL = lang === "ar"
 
   const content = {
     badge: dictionary?.aiFluency?.badge || "New",
-    title: dictionary?.aiFluency?.title || "Scale AI fluency across your organization",
-    description: dictionary?.aiFluency?.description ||
+    title:
+      dictionary?.aiFluency?.title ||
+      "Scale AI fluency across your organization",
+    description:
+      dictionary?.aiFluency?.description ||
       "Our new AI Packages help employees at all levels understand, communicate about, and implement AI solutions with confidence and ethical awareness.",
     cta: dictionary?.aiFluency?.cta || "Contact us",
-  };
+  }
 
   return (
     <div
@@ -65,7 +69,9 @@ export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
               marginBottom: "16px",
             }}
           >
-            <span style={{ fontSize: "14px", fontWeight: 500, color: "#0D5261" }}>
+            <span
+              style={{ fontSize: "14px", fontWeight: 500, color: "#0D5261" }}
+            >
               {content.badge}
             </span>
           </div>
@@ -108,5 +114,5 @@ export function AIFluencySection({ dictionary, lang }: AIFluencySectionProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

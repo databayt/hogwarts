@@ -1,23 +1,46 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import React from "react"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import {
+  Barcode,
+  Bluetooth,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  CreditCard,
+  Fingerprint,
+  MapPin,
+  Pencil,
+  QrCode,
+  Smartphone,
+  TrendingUp,
+  Upload,
+  User,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Pencil, MapPin, QrCode, Barcode, CreditCard, Fingerprint, User, Users, Smartphone, Bluetooth, Upload, ChevronRight, CircleAlert, CircleCheck, Clock, TrendingUp } from "lucide-react";
-import { useAttendanceContext } from './attendance-context';
-import { cn } from '@/lib/utils';
-import { getMethodIcon, getMethodDisplayName, formatAttendanceDate } from '../shared/utils';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
-import type { AttendanceMethod } from '../shared/types';
+  CardTitle,
+} from "@/components/ui/card"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { AttendanceMethod } from "../shared/types"
+import {
+  formatAttendanceDate,
+  getMethodDisplayName,
+  getMethodIcon,
+} from "../shared/utils"
+import { useAttendanceContext } from "./attendance-context"
 
 // Method icon mapping
 const METHOD_ICONS: Record<AttendanceMethod, React.ReactNode> = {
@@ -30,16 +53,19 @@ const METHOD_ICONS: Record<AttendanceMethod, React.ReactNode> = {
   FACE_RECOGNITION: <User className="h-6 w-6" />,
   NFC: <Smartphone className="h-6 w-6" />,
   BLUETOOTH: <Bluetooth className="h-6 w-6" />,
-  BULK_UPLOAD: <Upload className="h-6 w-6" />
-};
-
-interface AttendanceHubProps {
-  dictionary?: any;
-  locale?: string;
+  BULK_UPLOAD: <Upload className="h-6 w-6" />,
 }
 
-export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps) {
-  const router = useRouter();
+interface AttendanceHubProps {
+  dictionary?: any
+  locale?: string
+}
+
+export function AttendanceHub({
+  dictionary,
+  locale = "en",
+}: AttendanceHubProps) {
+  const router = useRouter()
   const {
     currentMethod,
     methods,
@@ -48,38 +74,38 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
     selectedDate,
     permissions,
     checkMethodSupport,
-    setCurrentMethod
-  } = useAttendanceContext();
+    setCurrentMethod,
+  } = useAttendanceContext()
 
   const handleMethodSelect = (method: AttendanceMethod) => {
-    setCurrentMethod(method);
+    setCurrentMethod(method)
 
     // Navigate to method-specific page
-    const methodPath = method.toLowerCase().replace('_', '-');
-    router.push(`/${locale}/s/subdomain/(platform)/attendance/${methodPath}`);
-  };
+    const methodPath = method.toLowerCase().replace("_", "-")
+    router.push(`/${locale}/s/subdomain/(platform)/attendance/${methodPath}`)
+  }
 
   const isMethodAvailable = (method: AttendanceMethod) => {
-    const methodConfig = methods.find(m => m.method === method);
-    if (!methodConfig) return false;
+    const methodConfig = methods.find((m) => m.method === method)
+    if (!methodConfig) return false
 
     // Check if method is enabled and user has permission
     const permissionMap: Record<AttendanceMethod, keyof typeof permissions> = {
-      MANUAL: 'canMarkManual',
-      GEOFENCE: 'canUseGeofence',
-      QR_CODE: 'canScanQR',
-      BARCODE: 'canScanBarcode',
-      RFID: 'canUseRFID',
-      FINGERPRINT: 'canUseBiometric',
-      FACE_RECOGNITION: 'canUseBiometric',
-      NFC: 'canUseNFC',
-      BLUETOOTH: 'canUseBluetooth',
-      BULK_UPLOAD: 'canBulkUpload'
-    };
+      MANUAL: "canMarkManual",
+      GEOFENCE: "canUseGeofence",
+      QR_CODE: "canScanQR",
+      BARCODE: "canScanBarcode",
+      RFID: "canUseRFID",
+      FINGERPRINT: "canUseBiometric",
+      FACE_RECOGNITION: "canUseBiometric",
+      NFC: "canUseNFC",
+      BLUETOOTH: "canUseBluetooth",
+      BULK_UPLOAD: "canBulkUpload",
+    }
 
-    const hasPermission = permissions[permissionMap[method]];
-    return methodConfig.enabled && hasPermission;
-  };
+    const hasPermission = permissions[permissionMap[method]]
+    return methodConfig.enabled && hasPermission
+  }
 
   return (
     <div className="space-y-6">
@@ -88,8 +114,10 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Total Students
+              </CardTitle>
+              <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
@@ -101,7 +129,9 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
               <CircleCheck className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.present}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.present}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -110,7 +140,9 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
               <CircleAlert className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.absent}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.absent}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -119,12 +151,16 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{stats.late}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.late}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Attendance Rate
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -152,19 +188,21 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
                 onClick={() => handleMethodSelect(currentMethod)}
               >
                 Continue
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-lg">
+              <div className="bg-primary/10 rounded-lg p-3">
                 {METHOD_ICONS[currentMethod]}
               </div>
               <div>
-                <p className="font-semibold">{getMethodDisplayName(currentMethod)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {methods.find(m => m.method === currentMethod)?.description}
+                <p className="font-semibold">
+                  {getMethodDisplayName(currentMethod)}
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  {methods.find((m) => m.method === currentMethod)?.description}
                 </p>
               </div>
             </div>
@@ -174,8 +212,8 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
         {/* Method Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {methods.map((method) => {
-            const isAvailable = isMethodAvailable(method.method);
-            const isCurrent = method.method === currentMethod;
+            const isAvailable = isMethodAvailable(method.method)
+            const isCurrent = method.method === currentMethod
 
             return (
               <motion.div
@@ -186,16 +224,22 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
                 <Card
                   className={cn(
                     "cursor-pointer transition-all",
-                    isAvailable ? "hover:shadow-lg" : "opacity-50 cursor-not-allowed",
-                    isCurrent && "ring-2 ring-primary"
+                    isAvailable
+                      ? "hover:shadow-lg"
+                      : "cursor-not-allowed opacity-50",
+                    isCurrent && "ring-primary ring-2"
                   )}
-                  onClick={() => isAvailable && !isCurrent && handleMethodSelect(method.method)}
+                  onClick={() =>
+                    isAvailable &&
+                    !isCurrent &&
+                    handleMethodSelect(method.method)
+                  }
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div
                         className={cn(
-                          "p-2 rounded-lg",
+                          "rounded-lg p-2",
                           isAvailable ? `bg-${method.color}-100` : "bg-gray-100"
                         )}
                       >
@@ -204,9 +248,7 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
                       {!isAvailable && (
                         <Badge variant="secondary">Unavailable</Badge>
                       )}
-                      {isCurrent && (
-                        <Badge variant="default">Current</Badge>
-                      )}
+                      {isCurrent && <Badge variant="default">Current</Badge>}
                     </div>
                     <CardTitle className="mt-4">{method.name}</CardTitle>
                     <CardDescription>{method.description}</CardDescription>
@@ -214,16 +256,20 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
                   <CardContent>
                     <div className="space-y-2 text-sm">
                       {method.requiresHardware && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="text-muted-foreground flex items-center gap-1">
                           <CircleAlert className="h-3 w-3" />
                           <span>Requires hardware</span>
                         </div>
                       )}
                       {method.supportedDevices.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {method.supportedDevices.map(device => (
-                            <Badge key={device} variant="outline" className="text-xs">
-                              {device.replace('_', ' ')}
+                          {method.supportedDevices.map((device) => (
+                            <Badge
+                              key={device}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {device.replace("_", " ")}
                             </Badge>
                           ))}
                         </div>
@@ -232,10 +278,10 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
                   </CardContent>
                 </Card>
               </motion.div>
-            );
+            )
           })}
         </div>
       </div>
     </div>
-  );
+  )
 }

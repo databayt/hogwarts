@@ -15,27 +15,35 @@ Launch orchestrated loops for automated development workflows that run until tar
 ## Loop Types
 
 ### Story Loop
+
 Execute all stories in an epic
+
 ```bash
 /loop story EPIC-001
 ```
 
 ### Bug Loop
+
 Fix bugs matching criteria
+
 ```bash
 /loop bug priority:high
 /loop bug status:open assignee:me
 ```
 
 ### Refactor Loop
+
 Improve code quality to target
+
 ```bash
 /loop refactor coverage:95
 /loop refactor complexity:10
 ```
 
 ### Test Loop
+
 Increase test coverage
+
 ```bash
 /loop test 95  # Target 95% coverage
 ```
@@ -68,6 +76,7 @@ Executes stories with full TDD cycle:
 ```
 
 Process:
+
 1. Load stories from epic
 2. Order by dependencies
 3. For each story:
@@ -87,6 +96,7 @@ Systematically fixes bugs:
 ```
 
 Process:
+
 1. Query bugs by filter
 2. For each bug:
    - Create reproduction test
@@ -98,6 +108,7 @@ Process:
 4. Generate fix report
 
 Filters:
+
 - `priority`: critical, high, medium, low
 - `status`: open, in_progress
 - `assignee`: username
@@ -113,6 +124,7 @@ Improves code quality:
 ```
 
 Process:
+
 1. Analyze code quality metrics
 2. Identify improvement areas
 3. For each issue:
@@ -124,6 +136,7 @@ Process:
 5. Update quality metrics
 
 Targets:
+
 - `coverage`: Test coverage percentage
 - `complexity`: Cyclomatic complexity
 - `smells`: Code smell count
@@ -139,6 +152,7 @@ Generates tests systematically:
 ```
 
 Process:
+
 1. Measure current coverage
 2. Find uncovered code
 3. For each uncovered file:
@@ -173,6 +187,7 @@ Status: Running tests...
 ## Stop Conditions
 
 Loops stop when:
+
 - Target achieved ✓
 - All items processed ✓
 - Max iterations reached (default: 50)
@@ -183,16 +198,19 @@ Loops stop when:
 ## Checkpoint System
 
 ### Automatic Checkpoints
+
 - Saved after each item
 - Allows resume after interruption
 - Preserves progress
 
 ### Resume Loop
+
 ```bash
 /loop resume [loop-id]
 ```
 
 ### View Checkpoints
+
 ```bash
 /loop status
 ```
@@ -200,6 +218,7 @@ Loops stop when:
 ## Configuration
 
 ### Loop Settings
+
 ```json
 {
   "loop": {
@@ -214,6 +233,7 @@ Loops stop when:
 ```
 
 ### Custom Targets
+
 ```bash
 # Multiple targets
 /loop refactor coverage:95 complexity:10 smells:0
@@ -225,11 +245,13 @@ Loops stop when:
 ## Error Recovery
 
 ### Retry Strategy
+
 1. Transient errors: Automatic retry (3 attempts)
 2. Persistent errors: Skip and continue
 3. Critical errors: Pause and checkpoint
 
 ### Error Handling
+
 ```
 On Error:
 1. Log error details
@@ -242,12 +264,14 @@ On Error:
 ## Metrics Tracked
 
 ### Performance Metrics
+
 - Items processed per hour
 - Success rate
 - Average time per item
 - Error rate
 
 ### Quality Metrics
+
 - Coverage improvement
 - Bugs fixed
 - Code complexity reduction
@@ -257,14 +281,14 @@ On Error:
 
 ```typescript
 // Invokes the loop agent
-await invokeAgent('/agents/bmad/loop', {
+await invokeAgent("/agents/bmad/loop", {
   type: loopType,
   target: loopTarget,
   config: {
     maxIterations: 50,
     maxDuration: 4 * 60 * 60 * 1000,
-    saveCheckpoints: true
-  }
+    saveCheckpoints: true,
+  },
 })
 
 // Loop agent orchestrates:
@@ -279,6 +303,7 @@ await invokeAgent('/agents/bmad/loop', {
 ## Loop Combinations
 
 ### Quality Sprint
+
 ```bash
 /loop quality all
 # Runs sequentially:
@@ -288,6 +313,7 @@ await invokeAgent('/agents/bmad/loop', {
 ```
 
 ### Pre-Release
+
 ```bash
 /loop release
 # Runs:
@@ -300,18 +326,21 @@ await invokeAgent('/agents/bmad/loop', {
 ## Best Practices
 
 ### Before Starting
+
 1. Review target metrics
 2. Ensure good test coverage
 3. Commit current work
 4. Clear schedule (can take hours)
 
 ### During Execution
+
 1. Monitor progress
 2. Check error logs
 3. Review committed changes
 4. Adjust targets if needed
 
 ### After Completion
+
 1. Review metrics report
 2. Verify quality improvements
 3. Run integration tests

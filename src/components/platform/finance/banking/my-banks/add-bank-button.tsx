@@ -1,35 +1,33 @@
-'use client';
+"use client"
 
-import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus, LoaderCircle } from "lucide-react";
-import type { getDictionary } from '@/components/internationalization/dictionaries';
-import { PlaidLink } from '../shared/plaid-link';
+import { useCallback, useState } from "react"
+import { LoaderCircle, Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
+
+import { PlaidLink } from "../shared/plaid-link"
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
-  size?: 'default' | 'sm' | 'lg';
+  dictionary: Awaited<ReturnType<typeof getDictionary>>["banking"]
+  size?: "default" | "sm" | "lg"
 }
 
 export default function AddBankButton(props: Props) {
-  const [isLinking, setIsLinking] = useState(false);
+  const [isLinking, setIsLinking] = useState(false)
 
   const handleLinkStart = useCallback(() => {
-    setIsLinking(true);
-  }, []);
+    setIsLinking(true)
+  }, [])
 
   const handleLinkComplete = useCallback(() => {
-    setIsLinking(false);
+    setIsLinking(false)
     // Page will be refreshed by PlaidLink component
-  }, []);
+  }, [])
 
   return (
     <>
-      <Button
-        size={props.size}
-        onClick={handleLinkStart}
-        disabled={isLinking}
-      >
+      <Button size={props.size} onClick={handleLinkStart} disabled={isLinking}>
         {isLinking ? (
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -45,10 +43,10 @@ export default function AddBankButton(props: Props) {
 
       {isLinking && (
         <PlaidLink
-          user={{ id: '' }} // Will be fetched in PlaidLink
+          user={{ id: "" }} // Will be fetched in PlaidLink
           dictionary={props.dictionary}
         />
       )}
     </>
-  );
+  )
 }

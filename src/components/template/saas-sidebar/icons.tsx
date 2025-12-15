@@ -1,6 +1,6 @@
-import { LucideProps, type Icon as LucideIcon } from "lucide-react";
+import { LucideProps, type Icon as LucideIcon } from "lucide-react"
 
-export type Icon = typeof LucideIcon;
+export type Icon = typeof LucideIcon
 
 export const Icons = {
   edit: ({ ...props }: LucideProps) => (
@@ -381,7 +381,10 @@ export const Icons = {
     >
       <g fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="9" r="7" />
-        <path strokeLinecap="round" d="m7.351 15l-.637 2.323c-.628 2.292-.942 3.438-.523 4.065c.147.22.344.396.573.513c.652.332 1.66-.193 3.675-1.243c.67-.35 1.006-.524 1.362-.562a2 2 0 0 1 .398 0c.356.038.691.213 1.362.562c2.015 1.05 3.023 1.575 3.675 1.243c.229-.117.426-.293.573-.513c.42-.627.105-1.773-.523-4.065L16.649 15" />
+        <path
+          strokeLinecap="round"
+          d="m7.351 15l-.637 2.323c-.628 2.292-.942 3.438-.523 4.065c.147.22.344.396.573.513c.652.332 1.66-.193 3.675-1.243c.67-.35 1.006-.524 1.362-.562a2 2 0 0 1 .398 0c.356.038.691.213 1.362.562c2.015 1.05 3.023 1.575 3.675 1.243c.229-.117.426-.293.573-.513c.42-.627.105-1.773-.523-4.065L16.649 15"
+        />
       </g>
     </svg>
   ),
@@ -424,10 +427,35 @@ export const Icons = {
     </svg>
   ),
   clock: ({ ...props }: LucideProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="m12.6 11.503l3.891 3.891l-.848.849L11.4 12V6h1.2zM12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-1.2a8.8 8.8 0 1 0 0-17.6a8.8 8.8 0 0 0 0 17.6" stroke-width="0.5" stroke="currentColor"/></svg>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="56"
+      height="56"
+      viewBox="0 0 24 24"
+    >
+      <path
+        fill="currentColor"
+        fill-rule="evenodd"
+        d="m12.6 11.503l3.891 3.891l-.848.849L11.4 12V6h1.2zM12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-1.2a8.8 8.8 0 1 0 0-17.6a8.8 8.8 0 0 0 0 17.6"
+        stroke-width="0.5"
+        stroke="currentColor"
+      />
+    </svg>
   ),
   subject: ({ ...props }: LucideProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><path fill="currentColor" d="M5.616 18.212q-.262 0-.439-.171T5 17.617t.177-.435t.439-.182H12.5q.213 0 .356.15t.144.37q0 .212-.143.356t-.338.143zM5.5 14.327q-.213 0-.356-.144T5 13.826t.144-.356t.356-.143h13q.213 0 .356.144q.144.144.144.357t-.144.356t-.356.143zm0-3.654q-.213 0-.356-.144Q5 10.385 5 10.173q0-.213.144-.357t.356-.143h13q.213 0 .356.144t.144.357t-.144.356t-.356.143zM5.616 7q-.262 0-.439-.177T5 6.385t.177-.439t.439-.177h12.769q.261 0 .438.177t.177.439t-.177.438t-.438.177z" stroke-width="0.5" stroke="currentColor"/></svg>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="96"
+      height="96"
+      viewBox="0 0 24 24"
+    >
+      <path
+        fill="currentColor"
+        d="M5.616 18.212q-.262 0-.439-.171T5 17.617t.177-.435t.439-.182H12.5q.213 0 .356.15t.144.37q0 .212-.143.356t-.338.143zM5.5 14.327q-.213 0-.356-.144T5 13.826t.144-.356t.356-.143h13q.213 0 .356.144q.144.144.144.357t-.144.356t-.356.143zm0-3.654q-.213 0-.356-.144Q5 10.385 5 10.173q0-.213.144-.357t.356-.143h13q.213 0 .356.144t.144.357t-.144.356t-.356.143zM5.616 7q-.262 0-.439-.177T5 6.385t.177-.439t.439-.177h12.769q.261 0 .438.177t.177.439t-.177.438t-.438.177z"
+        stroke-width="0.5"
+        stroke="currentColor"
+      />
+    </svg>
   ),
   sales: ({ ...props }: LucideProps) => (
     <svg
@@ -446,4 +474,4 @@ export const Icons = {
       <circle cx="12" cy="12" r="2"></circle>
     </svg>
   ),
-};
+}

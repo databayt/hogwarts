@@ -1,11 +1,11 @@
 "use client"
 
-import Lottie from "lottie-react"
 import animationData from "@/../public/animations/anthropic-hero.json"
+import Lottie from "lottie-react"
 
 export function HeroIllustration() {
   return (
-    <div className="relative w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] lg:w-[450px] lg:h-[450px]">
+    <div className="relative h-[300px] w-[300px] sm:h-[350px] sm:w-[350px] lg:h-[450px] lg:w-[450px]">
       <Lottie
         animationData={animationData}
         loop={true}

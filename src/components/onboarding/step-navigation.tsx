@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React from "react"
 
 interface StepNavigationProps {
   onNext: () => void
@@ -18,8 +18,8 @@ export function StepNavigation(props: StepNavigationProps) {
     onPrevious,
     isNextDisabled = false,
     isPreviousDisabled = false,
-    nextLabel = 'Next',
-    previousLabel = 'Back',
+    nextLabel = "Next",
+    previousLabel = "Back",
     showPrevious = true,
   } = props
 
@@ -28,10 +28,10 @@ export function StepNavigation(props: StepNavigationProps) {
       type="button"
       onClick={onPrevious}
       disabled={isPreviousDisabled}
-      className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+      className={`rounded-lg px-6 py-2.5 font-medium transition-colors ${
         isPreviousDisabled
-          ? 'text-muted-foreground cursor-not-allowed'
-          : 'text-foreground hover:bg-muted'
+          ? "text-muted-foreground cursor-not-allowed"
+          : "text-foreground hover:bg-muted"
       }`}
     >
       {previousLabel}
@@ -41,19 +41,19 @@ export function StepNavigation(props: StepNavigationProps) {
   )
 
   return (
-    <div className="flex items-center justify-between pt-8 border-t">
+    <div className="flex items-center justify-between border-t pt-8">
       {previousButton}
       <button
         type="submit"
         disabled={isNextDisabled}
-        className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+        className={`rounded-lg px-6 py-2.5 font-medium transition-colors ${
           isNextDisabled
-            ? 'bg-muted text-muted-foreground cursor-not-allowed'
-            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            ? "bg-muted text-muted-foreground cursor-not-allowed"
+            : "bg-primary text-primary-foreground hover:bg-primary/90"
         }`}
       >
         {nextLabel}
       </button>
     </div>
   )
-} 
+}

@@ -28,7 +28,7 @@ function Progress({
         transition={{
           type: "tween",
           duration: 0.8,
-          ease: [0.4, 0.0, 0.2, 1] // Material Design easing for steady movement
+          ease: [0.4, 0.0, 0.2, 1], // Material Design easing for steady movement
         }}
       />
     </ProgressPrimitive.Root>

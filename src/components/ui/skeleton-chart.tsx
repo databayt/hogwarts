@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonChart Component
@@ -51,7 +51,7 @@ export function SkeletonChart({
 
       <CardContent className={cn(showCard && "pt-0")}>
         {/* Chart visualization area */}
-        <div className={cn(height, "w-full relative")}>
+        <div className={cn(height, "relative w-full")}>
           {variant === "bar" && <BarChartSkeleton />}
           {variant === "line" && <LineChartSkeleton />}
           {variant === "pie" && <PieChartSkeleton />}
@@ -59,7 +59,7 @@ export function SkeletonChart({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-6 mt-4">
+        <div className="mt-4 flex items-center justify-center gap-6">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
               <Skeleton className="h-3 w-3 rounded-full" />
@@ -81,9 +81,9 @@ export function SkeletonChart({
 /** Bar chart skeleton visualization */
 function BarChartSkeleton() {
   return (
-    <div className="flex items-end justify-around gap-2 h-full pb-8">
+    <div className="flex h-full items-end justify-around gap-2 pb-8">
       {Array.from({ length: 7 }).map((_, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+        <div key={i} className="flex flex-1 flex-col items-center gap-2">
           <Skeleton
             className="w-full"
             style={{ height: `${Math.random() * 60 + 40}%` }}
@@ -100,15 +100,15 @@ function LineChartSkeleton() {
   return (
     <div className="relative h-full">
       {/* Y-axis labels */}
-      <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between">
+      <div className="absolute top-0 bottom-8 left-0 flex flex-col justify-between">
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-3 w-8" />
         ))}
       </div>
 
       {/* Chart area */}
-      <div className="ml-12 h-full flex flex-col">
-        <div className="flex-1 relative">
+      <div className="ml-12 flex h-full flex-col">
+        <div className="relative flex-1">
           {/* Simulated line chart path */}
           <div className="absolute inset-0 flex items-center">
             <Skeleton className="h-1 w-full" />
@@ -129,7 +129,7 @@ function LineChartSkeleton() {
 /** Pie chart skeleton visualization */
 function PieChartSkeleton() {
   return (
-    <div className="flex items-center justify-center h-full">
+    <div className="flex h-full items-center justify-center">
       <Skeleton className="h-48 w-48 rounded-full" />
     </div>
   )
@@ -149,7 +149,7 @@ function AreaChartSkeleton() {
         ))}
       </div>
       {/* X-axis labels */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-around pt-2">
+      <div className="absolute right-0 bottom-0 left-0 flex justify-around pt-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-3 w-8" />
         ))}

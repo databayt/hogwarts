@@ -11,16 +11,19 @@ You are tasked with validating icons in the Hogwarts icon system against Anthrop
 ## Design System Requirements
 
 ### 1. ViewBox (CRITICAL)
+
 - ✅ **Standard**: `0 0 1000 1000`
 - ✅ **Wide format**: `0 0 1680 1260` or `0 0 1681 1261`
 - ❌ Any other dimensions
 
 ### 2. Color Palette (STRICT)
+
 - ✅ **Light**: `#FAF9F5` (background/fills)
 - ✅ **Dark**: `#141413` (foreground/details)
 - ❌ Any other colors, gradients, or patterns
 
 ### 3. SVG Structure
+
 - ✅ Root `<svg>` has `fill="none"`
 - ✅ All `<path>` elements have explicit `fill` attribute
 - ✅ Valid XML structure
@@ -29,12 +32,14 @@ You are tasked with validating icons in the Hogwarts icon system against Anthrop
 - ❌ JavaScript or animations
 
 ### 4. Naming Convention
+
 - ✅ Pattern: `{Category}-{Description}.svg`
 - ✅ Categories: Hands, People, Objects, Abstract, Letters, Scenes
 - ✅ Semantic, descriptive names
 - ❌ Hash-based or cryptic names
 
 ### 5. File Organization
+
 - ✅ All icons in `public/icons/`
 - ✅ Registered in `src/components/icons/registry.ts`
 - ✅ No duplicates
@@ -44,6 +49,7 @@ You are tasked with validating icons in the Hogwarts icon system against Anthrop
 ### 1. Determine Validation Scope
 
 Ask user or default to:
+
 - **Single file**: Validate specific icon
 - **Category**: Validate all icons in category
 - **Full system**: Validate all 51+ icons
@@ -52,6 +58,7 @@ Ask user or default to:
 ### 2. Read Icon Files
 
 Use Glob tool to find icons:
+
 ```bash
 # All icons
 public/icons/*.svg
@@ -67,6 +74,7 @@ Use Read tool to examine each file.
 For each icon, check:
 
 #### A. ViewBox Validation
+
 ```typescript
 // Extract viewBox attribute
 const viewBoxMatch = svgContent.match(/viewBox="([^"]+)"/)
@@ -80,13 +88,14 @@ if (!validViewBoxes.includes(viewBox)) {
 ```
 
 #### B. Color Validation
+
 ```typescript
 // Extract all fill colors
 const fillMatches = svgContent.matchAll(/fill="(#[A-Fa-f0-9]{6})"/g)
-const colors = new Set([...fillMatches].map(m => m[1].toUpperCase()))
+const colors = new Set([...fillMatches].map((m) => m[1].toUpperCase()))
 
 const allowedColors = new Set(["#FAF9F5", "#141413"])
-const invalidColors = [...colors].filter(c => !allowedColors.has(c))
+const invalidColors = [...colors].filter((c) => !allowedColors.has(c))
 
 if (invalidColors.length > 0) {
   errors.push(`Invalid colors: ${invalidColors.join(", ")}`)
@@ -94,9 +103,10 @@ if (invalidColors.length > 0) {
 ```
 
 #### C. Structure Validation
+
 ```typescript
 // Check root fill="none"
-if (!svgContent.includes('<svg') || !svgContent.includes('fill="none"')) {
+if (!svgContent.includes("<svg") || !svgContent.includes('fill="none"')) {
   errors.push('Root svg must have fill="none"')
 }
 
@@ -107,16 +117,18 @@ if (pathsWithoutFill && pathsWithoutFill.length > 0) {
 }
 
 // Check for inline styles
-if (svgContent.includes('style=')) {
-  errors.push('Inline styles not allowed')
+if (svgContent.includes("style=")) {
+  errors.push("Inline styles not allowed")
 }
 ```
 
 #### D. Naming Validation
+
 ```typescript
 // Check naming convention
 const filename = path.basename(filepath)
-const namePattern = /^(Hands|People|Objects|Abstract|Letters|Scenes)-[\w-]+\.svg$/
+const namePattern =
+  /^(Hands|People|Objects|Abstract|Letters|Scenes)-[\w-]+\.svg$/
 
 if (!namePattern.test(filename)) {
   errors.push(`Invalid naming: ${filename}`)
@@ -135,6 +147,7 @@ Output validation results:
 **Total Icons**: {count}
 
 ### Summary
+
 - ✅ Valid: {validCount}
 - ⚠️ Warnings: {warningCount}
 - ❌ Errors: {errorCount}
@@ -142,10 +155,12 @@ Output validation results:
 ### Issues Found
 
 #### Hands-Gesture-01.svg
+
 - ❌ Invalid viewBox: "0 0 500 500" (expected: "0 0 1000 1000")
 - ⚠️ Missing keywords in registry
 
 #### Abstract-Curves-03.svg
+
 - ❌ Invalid color: #FF0000 (only #FAF9F5 and #141413 allowed)
 - ❌ 3 paths missing fill attribute
 
@@ -160,6 +175,7 @@ Output validation results:
 ### 5. Offer Auto-Fix
 
 For fixable issues, offer to:
+
 - Adjust viewBox to standard dimensions
 - Replace colors with nearest compliant color
 - Add fill attributes to paths
@@ -170,6 +186,7 @@ For fixable issues, offer to:
 ### 6. Update Registry
 
 After validation, check if registry is in sync:
+
 - All files have registry entries
 - Registry entries point to existing files
 - Metadata is accurate
@@ -177,6 +194,7 @@ After validation, check if registry is in sync:
 ## Example Validation Sessions
 
 ### Example 1: Single File
+
 ```
 User: /icon-validate Hands-Gesture-01.svg
 Assistant: Validating Hands-Gesture-01.svg...
@@ -191,6 +209,7 @@ Result: PASSED - No issues found
 ```
 
 ### Example 2: Category
+
 ```
 User: /icon-validate category:Hands
 Assistant: Validating 15 Hands icons...
@@ -209,6 +228,7 @@ Would you like me to:
 ```
 
 ### Example 3: Full System
+
 ```
 User: /icon-validate
 Assistant: Validating all 51 icons...
@@ -228,12 +248,14 @@ Compliance: 96%
 ## Auto-Fix Capabilities
 
 ### Fixable Issues
+
 1. **ViewBox scaling**: Can resize paths proportionally
 2. **Color replacement**: Can substitute colors
 3. **Structure fixes**: Can add fill="none" to root
 4. **Naming**: Can rename files (with backup)
 
 ### Manual Review Required
+
 1. **Design changes**: Altering visual appearance
 2. **Path modifications**: Complex structural changes
 3. **Category reassignment**: Requires semantic understanding
@@ -241,6 +263,7 @@ Compliance: 96%
 ## Output Formats
 
 Support multiple output formats:
+
 - **Console**: Colorized terminal output
 - **Markdown**: `.md` report file
 - **JSON**: Machine-readable validation results
@@ -249,6 +272,7 @@ Support multiple output formats:
 ## Performance
 
 For large icon sets:
+
 - Process in batches of 10
 - Show progress indicator
 - Cache validation results

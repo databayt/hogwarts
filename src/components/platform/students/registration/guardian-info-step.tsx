@@ -1,18 +1,30 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, User } from "lucide-react";
-import { useFieldArray } from "react-hook-form";
+import { Plus, Trash2, User } from "lucide-react"
+import { useFieldArray, UseFormReturn } from "react-hook-form"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface GuardianInfoStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
 const relationOptions = [
@@ -24,13 +36,13 @@ const relationOptions = [
   "Grandfather",
   "Grandmother",
   "Other",
-];
+]
 
 export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "guardians",
-  });
+  })
 
   const addGuardian = () => {
     append({
@@ -41,12 +53,12 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
       mobileNumber: "",
       occupation: "",
       isPrimary: fields.length === 0,
-    });
-  };
+    })
+  }
 
   // Ensure at least one guardian
   if (fields.length === 0) {
-    addGuardian();
+    addGuardian()
   }
 
   return (
@@ -107,7 +119,10 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Relationship *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select relationship" />
@@ -135,7 +150,11 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="guardian@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="guardian@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,7 +168,11 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                   <FormItem>
                     <FormLabel>Mobile Number *</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="+966 XX XXX XXXX" {...field} />
+                      <Input
+                        type="tel"
+                        placeholder="+966 XX XXX XXXX"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -184,15 +207,15 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
                         if (checked) {
                           fields.forEach((_, i) => {
                             if (i !== index) {
-                              form.setValue(`guardians.${i}.isPrimary`, false);
+                              form.setValue(`guardians.${i}.isPrimary`, false)
                             }
-                          });
+                          })
                         }
-                        field.onChange(checked);
+                        field.onChange(checked)
                       }}
                     />
                   </FormControl>
-                  <FormLabel className="text-sm font-normal cursor-pointer">
+                  <FormLabel className="cursor-pointer text-sm font-normal">
                     Primary Guardian (will receive all school communications)
                   </FormLabel>
                   <FormMessage />
@@ -203,10 +226,15 @@ export function GuardianInfoStep({ form, dictionary }: GuardianInfoStepProps) {
         </Card>
       ))}
 
-      <Button type="button" variant="outline" onClick={addGuardian} className="w-full">
-        <Plus className="h-4 w-4 mr-2" />
+      <Button
+        type="button"
+        variant="outline"
+        onClick={addGuardian}
+        className="w-full"
+      >
+        <Plus className="mr-2 h-4 w-4" />
         Add Another Guardian
       </Button>
     </div>
-  );
+  )
 }

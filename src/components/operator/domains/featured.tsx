@@ -1,23 +1,29 @@
-"use client";
+"use client"
 
 /**
  * Featured domains and domain insights component
  *
  * Displays highlighted domains, pending requests, and domain statistics.
  */
+import { AlertTriangle, CheckCircle, Clock, Globe, XCircle } from "lucide-react"
 
-import { DomainCard, DomainStatsCard } from "./card";
-import { Globe, CheckCircle, Clock, XCircle, AlertTriangle } from "lucide-react";
-import type { DomainRequestWithSchool, DomainStatus } from "./types";
-import { isPendingApproval, isVerified, isRejected, formatTimeSince, normalizeDomain } from "./util";
+import { DomainCard, DomainStatsCard } from "./card"
+import type { DomainRequestWithSchool, DomainStatus } from "./types"
+import {
+  formatTimeSince,
+  isPendingApproval,
+  isRejected,
+  isVerified,
+  normalizeDomain,
+} from "./util"
 
 interface FeaturedDomainsProps {
-  domains: DomainRequestWithSchool[];
-  maxItems?: number;
-  onDomainClick?: (domainId: string) => void;
-  onApprove?: (domainId: string) => void;
-  onReject?: (domainId: string) => void;
-  onVerify?: (domainId: string) => void;
+  domains: DomainRequestWithSchool[]
+  maxItems?: number
+  onDomainClick?: (domainId: string) => void
+  onApprove?: (domainId: string) => void
+  onReject?: (domainId: string) => void
+  onVerify?: (domainId: string) => void
 }
 
 /**
@@ -31,7 +37,7 @@ export function FeaturedDomains({
   onReject,
   onVerify,
 }: FeaturedDomainsProps) {
-  const featuredDomains = domains.slice(0, maxItems);
+  const featuredDomains = domains.slice(0, maxItems)
 
   return (
     <div className="space-y-6">
@@ -56,16 +62,25 @@ export function FeaturedDomains({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Recent domain requests
  */
-export function RecentDomains({ domains, maxItems = 5 }: { domains: DomainRequestWithSchool[]; maxItems?: number }) {
+export function RecentDomains({
+  domains,
+  maxItems = 5,
+}: {
+  domains: DomainRequestWithSchool[]
+  maxItems?: number
+}) {
   const recentDomains = [...domains]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, maxItems);
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, maxItems)
 
   return (
     <div className="space-y-4">
@@ -77,8 +92,8 @@ export function RecentDomains({ domains, maxItems = 5 }: { domains: DomainReques
             className="flex items-center justify-between rounded-lg border p-4"
           >
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                <Globe className="size-5 text-primary" />
+              <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+                <Globe className="text-primary size-5" />
               </div>
               <div>
                 <h6>{normalizeDomain(domain.domain)}</h6>
@@ -90,25 +105,31 @@ export function RecentDomains({ domains, maxItems = 5 }: { domains: DomainReques
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Pending domain requests requiring review
  */
-export function PendingDomains({ domains }: { domains: DomainRequestWithSchool[] }) {
-  const pendingDomains = domains.filter((d) => isPendingApproval(d.status as DomainStatus));
+export function PendingDomains({
+  domains,
+}: {
+  domains: DomainRequestWithSchool[]
+}) {
+  const pendingDomains = domains.filter((d) =>
+    isPendingApproval(d.status as DomainStatus)
+  )
 
   if (pendingDomains.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-green-500/10 mx-auto">
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-500/10">
           <CheckCircle className="size-6 text-green-600" />
         </div>
         <h5 className="mt-4">All caught up</h5>
         <p className="muted mt-2">No pending domain requests at this time</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -125,7 +146,7 @@ export function PendingDomains({ domains }: { domains: DomainRequestWithSchool[]
         {pendingDomains.map((domain) => (
           <div
             key={domain.id}
-            className="flex items-start justify-between rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 p-4"
+            className="flex items-start justify-between rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:bg-amber-950/10"
           >
             <div className="flex items-start gap-3">
               <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
@@ -145,19 +166,25 @@ export function PendingDomains({ domains }: { domains: DomainRequestWithSchool[]
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Approved but not verified domains
  */
-export function ApprovedNotVerified({ domains, maxItems = 5 }: { domains: DomainRequestWithSchool[]; maxItems?: number }) {
+export function ApprovedNotVerified({
+  domains,
+  maxItems = 5,
+}: {
+  domains: DomainRequestWithSchool[]
+  maxItems?: number
+}) {
   const approvedNotVerified = domains
     .filter((d) => d.status === "approved")
-    .slice(0, maxItems);
+    .slice(0, maxItems)
 
   if (approvedNotVerified.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -174,7 +201,7 @@ export function ApprovedNotVerified({ domains, maxItems = 5 }: { domains: Domain
         {approvedNotVerified.map((domain) => (
           <div
             key={domain.id}
-            className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 dark:bg-blue-950/10 p-4"
+            className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50/50 p-4 dark:bg-blue-950/10"
           >
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-full bg-blue-500/10">
@@ -190,20 +217,29 @@ export function ApprovedNotVerified({ domains, maxItems = 5 }: { domains: Domain
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Rejected domains
  */
-export function RejectedDomains({ domains, maxItems = 3 }: { domains: DomainRequestWithSchool[]; maxItems?: number }) {
+export function RejectedDomains({
+  domains,
+  maxItems = 3,
+}: {
+  domains: DomainRequestWithSchool[]
+  maxItems?: number
+}) {
   const rejectedDomains = domains
     .filter((d) => isRejected(d.status as DomainStatus))
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    .slice(0, maxItems);
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
+    .slice(0, maxItems)
 
   if (rejectedDomains.length === 0) {
-    return null;
+    return null
   }
 
   return (
@@ -217,7 +253,7 @@ export function RejectedDomains({ domains, maxItems = 3 }: { domains: DomainRequ
         {rejectedDomains.map((domain) => (
           <div
             key={domain.id}
-            className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 dark:bg-red-950/10 p-4"
+            className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 p-4 dark:bg-red-950/10"
           >
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-full bg-red-500/10">
@@ -226,24 +262,36 @@ export function RejectedDomains({ domains, maxItems = 3 }: { domains: DomainRequ
               <div>
                 <h6>{normalizeDomain(domain.domain)}</h6>
                 <small className="muted">{domain.school.name}</small>
-                {domain.notes && <p className="muted line-clamp-1 mt-1">{domain.notes}</p>}
+                {domain.notes && (
+                  <p className="muted mt-1 line-clamp-1">{domain.notes}</p>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 /**
  * Domain overview statistics
  */
-export function DomainOverviewStats({ domains }: { domains: DomainRequestWithSchool[] }) {
-  const totalDomains = domains.length;
-  const verifiedCount = domains.filter((d) => isVerified(d.status as DomainStatus)).length;
-  const pendingCount = domains.filter((d) => isPendingApproval(d.status as DomainStatus)).length;
-  const rejectedCount = domains.filter((d) => isRejected(d.status as DomainStatus)).length;
+export function DomainOverviewStats({
+  domains,
+}: {
+  domains: DomainRequestWithSchool[]
+}) {
+  const totalDomains = domains.length
+  const verifiedCount = domains.filter((d) =>
+    isVerified(d.status as DomainStatus)
+  ).length
+  const pendingCount = domains.filter((d) =>
+    isPendingApproval(d.status as DomainStatus)
+  ).length
+  const rejectedCount = domains.filter((d) =>
+    isRejected(d.status as DomainStatus)
+  ).length
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -272,13 +320,17 @@ export function DomainOverviewStats({ domains }: { domains: DomainRequestWithSch
         description={`${Math.round((rejectedCount / totalDomains) * 100) || 0}% of total`}
       />
     </div>
-  );
+  )
 }
 
 /**
  * Comprehensive domain lab
  */
-export function DomainDashboard({ domains }: { domains: DomainRequestWithSchool[] }) {
+export function DomainDashboard({
+  domains,
+}: {
+  domains: DomainRequestWithSchool[]
+}) {
   return (
     <div className="space-y-6">
       <DomainOverviewStats domains={domains} />
@@ -293,5 +345,5 @@ export function DomainDashboard({ domains }: { domains: DomainRequestWithSchool[
 
       <RecentDomains domains={domains} />
     </div>
-  );
+  )
 }

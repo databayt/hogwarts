@@ -3,23 +3,23 @@
  * Run: npx tsx scripts/analytics-usage.ts [--school portsudan] [--period month]
  */
 
-import { PrismaClient } from '@prisma/client'
-import { Command } from 'commander'
-import chalk from 'chalk'
-import ora from 'ora'
+import { PrismaClient } from "@prisma/client"
+import chalk from "chalk"
+import { Command } from "commander"
+import ora from "ora"
 
 const prisma = new PrismaClient()
 
 const program = new Command()
 program
-  .option('-s, --school <domain>', 'Specific school')
-  .option('-p, --period <period>', 'Period: day|week|month|year', 'month')
+  .option("-s, --school <domain>", "Specific school")
+  .option("-p, --period <period>", "Period: day|week|month|year", "month")
   .parse()
 
 const options = program.opts()
 
 async function generateUsageReport() {
-  const spinner = ora('Generating usage report...').start()
+  const spinner = ora("Generating usage report...").start()
 
   try {
     const periodMs = {
@@ -29,12 +29,14 @@ async function generateUsageReport() {
       year: 365 * 24 * 60 * 60 * 1000,
     }
 
-    const since = new Date(Date.now() - periodMs[options.period as keyof typeof periodMs])
+    const since = new Date(
+      Date.now() - periodMs[options.period as keyof typeof periodMs]
+    )
 
     let whereClause: any = {}
     if (options.school) {
       const school = await prisma.school.findUnique({
-        where: { domain: options.school }
+        where: { domain: options.school },
       })
       if (!school) {
         spinner.fail(chalk.red(`School "${options.school}" not found`))
@@ -44,7 +46,7 @@ async function generateUsageReport() {
     }
 
     // Get statistics
-    spinner.text = 'Calculating statistics...'
+    spinner.text = "Calculating statistics..."
 
     const [
       totalStudents,
@@ -60,59 +62,61 @@ async function generateUsageReport() {
       prisma.user.count({
         where: {
           ...whereClause,
-          lastLogin: { gte: since }
-        }
+          lastLogin: { gte: since },
+        },
       }),
       prisma.attendance.count({
         where: {
           ...whereClause,
-          date: { gte: since }
-        }
+          date: { gte: since },
+        },
       }),
       prisma.exam.count({
         where: {
           ...whereClause,
-          createdAt: { gte: since }
-        }
+          createdAt: { gte: since },
+        },
       }),
     ])
 
-    spinner.succeed(chalk.green('Report generated'))
+    spinner.succeed(chalk.green("Report generated"))
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-    console.log(chalk.bold('📊 Usage Analytics Report'))
-    console.log(chalk.cyan('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+    console.log(chalk.bold("📊 Usage Analytics Report"))
+    console.log(chalk.cyan("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
 
     if (options.school) {
-      console.log(chalk.white('School:'), chalk.green(options.school))
+      console.log(chalk.white("School:"), chalk.green(options.school))
     } else {
-      console.log(chalk.white('Scope:'), chalk.green('All schools'))
+      console.log(chalk.white("Scope:"), chalk.green("All schools"))
     }
 
-    console.log(chalk.white('Period:'), chalk.green(options.period))
-    console.log(chalk.white('Since:'), chalk.gray(since.toLocaleDateString()))
+    console.log(chalk.white("Period:"), chalk.green(options.period))
+    console.log(chalk.white("Since:"), chalk.gray(since.toLocaleDateString()))
 
-    console.log(chalk.white('\nUsers:'))
+    console.log(chalk.white("\nUsers:"))
     console.log(`  Students: ${chalk.green(totalStudents)}`)
     console.log(`  Teachers: ${chalk.green(totalTeachers)}`)
     console.log(`  Active (${options.period}): ${chalk.green(activeUsers)}`)
 
-    console.log(chalk.white('\nContent:'))
+    console.log(chalk.white("\nContent:"))
     console.log(`  Classes: ${chalk.green(totalClasses)}`)
     console.log(`  Exams (${options.period}): ${chalk.green(examsCount)}`)
-    console.log(`  Attendance records (${options.period}): ${chalk.green(attendanceRecords)}`)
+    console.log(
+      `  Attendance records (${options.period}): ${chalk.green(attendanceRecords)}`
+    )
 
-    const engagementRate = totalStudents > 0
-      ? ((activeUsers / (totalStudents + totalTeachers)) * 100).toFixed(1)
-      : '0'
+    const engagementRate =
+      totalStudents > 0
+        ? ((activeUsers / (totalStudents + totalTeachers)) * 100).toFixed(1)
+        : "0"
 
-    console.log(chalk.white('\nEngagement:'))
-    console.log(`  Rate: ${chalk.green(engagementRate + '%')}`)
+    console.log(chalk.white("\nEngagement:"))
+    console.log(`  Rate: ${chalk.green(engagementRate + "%")}`)
 
-    console.log(chalk.cyan('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n'))
-
+    console.log(chalk.cyan("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"))
   } catch (error) {
-    spinner.fail(chalk.red('Report generation failed'))
+    spinner.fail(chalk.red("Report generation failed"))
     console.error(error)
     process.exit(1)
   } finally {

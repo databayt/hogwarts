@@ -5,8 +5,8 @@
  * for AI-powered question generation.
  */
 
-import { PDFParse } from 'pdf-parse'
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
+import { PDFParse } from "pdf-parse"
 
 export interface PDFParseResult {
   text: string
@@ -33,9 +33,7 @@ export interface ContentChunk {
 /**
  * Parse PDF from buffer
  */
-export async function parsePDF(
-  buffer: Buffer
-): Promise<PDFParseResult> {
+export async function parsePDF(buffer: Buffer): Promise<PDFParseResult> {
   try {
     // Use new pdf-parse v2.x API
     const parser = new PDFParse({ data: buffer })
@@ -61,9 +59,9 @@ export async function parsePDF(
       },
     }
   } catch (error) {
-    console.error('Error parsing PDF:', error)
+    console.error("Error parsing PDF:", error)
     throw new Error(
-      `Failed to parse PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -87,7 +85,7 @@ export async function chunkContent(
   const {
     chunkSize = 1500, // ~375 words
     chunkOverlap = 300, // ~75 words overlap for context
-    separators = ['\n\n', '\n', '. ', ' ', ''],
+    separators = ["\n\n", "\n", ". ", " ", ""],
   } = options
 
   try {
@@ -108,9 +106,9 @@ export async function chunkContent(
       sectionTitle: undefined,
     }))
   } catch (error) {
-    console.error('Error chunking content:', error)
+    console.error("Error chunking content:", error)
     throw new Error(
-      `Failed to chunk content: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to chunk content: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -150,16 +148,16 @@ export function cleanPDFText(text: string): string {
   return (
     text
       // Remove page numbers (common patterns)
-      .replace(/^\s*\d+\s*$/gm, '')
+      .replace(/^\s*\d+\s*$/gm, "")
       // Remove excessive whitespace
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n{3,}/g, "\n\n")
       // Remove leading/trailing whitespace per line
-      .split('\n')
+      .split("\n")
       .map((line) => line.trim())
-      .join('\n')
+      .join("\n")
       // Remove non-breaking spaces and other unicode weirdness
-      .replace(/\u00A0/g, ' ')
-      .replace(/\uFEFF/g, '')
+      .replace(/\u00A0/g, " ")
+      .replace(/\uFEFF/g, "")
       // Normalize quotes
       .replace(/[""]/g, '"')
       .replace(/['']/g, "'")
@@ -183,7 +181,7 @@ export function extractSectionTitles(text: string): Array<{
   // - Lines ending with numbers (e.g., "1. Introduction")
   // - Lines with specific keywords
 
-  const lines = text.split('\n')
+  const lines = text.split("\n")
   let currentIndex = 0
 
   for (const line of lines) {
@@ -192,9 +190,10 @@ export function extractSectionTitles(text: string): Array<{
     // Check if line is a section title
     const isAllCaps = /^[A-Z\s\d.:]+$/.test(trimmed) && trimmed.length > 3
     const isNumbered = /^\d+\.\s+[A-Z]/.test(trimmed)
-    const isKeyword = /^(CHAPTER|SECTION|PART|INTRODUCTION|CONCLUSION|REFERENCES)/i.test(
-      trimmed
-    )
+    const isKeyword =
+      /^(CHAPTER|SECTION|PART|INTRODUCTION|CONCLUSION|REFERENCES)/i.test(
+        trimmed
+      )
 
     if ((isAllCaps || isNumbered || isKeyword) && trimmed.length < 100) {
       titles.push({

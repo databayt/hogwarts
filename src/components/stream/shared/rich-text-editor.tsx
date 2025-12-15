@@ -1,29 +1,30 @@
-"use client";
+"use client"
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
+import TextAlign from "@tiptap/extension-text-align"
+import { EditorContent, useEditor } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Bold,
+  Heading2,
+  Heading3,
   Italic,
   List,
   ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Undo,
   Redo,
-  Heading2,
-  Heading3,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Undo,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface RichTextEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  disabled?: boolean;
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  className?: string
+  disabled?: boolean
 }
 
 export function RichTextEditor({
@@ -47,7 +48,7 @@ export function RichTextEditor({
     content: value,
     editable: !disabled,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.getHTML())
     },
     editorProps: {
       attributes: {
@@ -57,23 +58,23 @@ export function RichTextEditor({
         ),
       },
     },
-  });
+  })
 
   if (!editor) {
-    return null;
+    return null
   }
 
   return (
-    <div className={cn("border rounded-md", className)}>
+    <div className={cn("rounded-md border", className)}>
       {/* Toolbar */}
-      <div className="border-b bg-muted/30 p-2 flex flex-wrap gap-1">
+      <div className="bg-muted/30 flex flex-wrap gap-1 border-b p-2">
         {/* Undo/Redo */}
         <button
           type="button"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo() || disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors"
           )}
           title="Undo"
@@ -85,7 +86,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo() || disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors"
           )}
           title="Redo"
@@ -93,15 +94,17 @@ export function RichTextEditor({
           <Redo className="h-4 w-4" />
         </button>
 
-        <div className="w-px bg-border mx-1" />
+        <div className="bg-border mx-1 w-px" />
 
         {/* Headings */}
         <button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("heading", { level: 2 }) && "bg-muted"
           )}
@@ -111,10 +114,12 @@ export function RichTextEditor({
         </button>
         <button
           type="button"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          }
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("heading", { level: 3 }) && "bg-muted"
           )}
@@ -123,7 +128,7 @@ export function RichTextEditor({
           <Heading3 className="h-4 w-4" />
         </button>
 
-        <div className="w-px bg-border mx-1" />
+        <div className="bg-border mx-1 w-px" />
 
         {/* Text Formatting */}
         <button
@@ -131,7 +136,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("bold") && "bg-muted"
           )}
@@ -144,7 +149,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("italic") && "bg-muted"
           )}
@@ -153,7 +158,7 @@ export function RichTextEditor({
           <Italic className="h-4 w-4" />
         </button>
 
-        <div className="w-px bg-border mx-1" />
+        <div className="bg-border mx-1 w-px" />
 
         {/* Lists */}
         <button
@@ -161,7 +166,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("bulletList") && "bg-muted"
           )}
@@ -174,7 +179,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive("orderedList") && "bg-muted"
           )}
@@ -183,7 +188,7 @@ export function RichTextEditor({
           <ListOrdered className="h-4 w-4" />
         </button>
 
-        <div className="w-px bg-border mx-1" />
+        <div className="bg-border mx-1 w-px" />
 
         {/* Alignment */}
         <button
@@ -191,7 +196,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive({ textAlign: "left" }) && "bg-muted"
           )}
@@ -204,7 +209,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive({ textAlign: "center" }) && "bg-muted"
           )}
@@ -217,7 +222,7 @@ export function RichTextEditor({
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
           disabled={disabled}
           className={cn(
-            "p-2 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed",
+            "hover:bg-muted rounded p-2 disabled:cursor-not-allowed disabled:opacity-30",
             "transition-colors",
             editor.isActive({ textAlign: "right" }) && "bg-muted"
           )}
@@ -230,5 +235,5 @@ export function RichTextEditor({
       {/* Editor Content */}
       <EditorContent editor={editor} placeholder={placeholder} />
     </div>
-  );
+  )
 }

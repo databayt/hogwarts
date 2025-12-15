@@ -5,7 +5,7 @@
  * data for testing onboarding flows.
  */
 
-import { faker } from '@faker-js/faker'
+import { faker } from "@faker-js/faker"
 
 // ============================================================================
 // Type Definitions
@@ -15,14 +15,14 @@ import { faker } from '@faker-js/faker'
  * User roles available in the system
  */
 export type UserRole =
-  | 'DEVELOPER'
-  | 'ADMIN'
-  | 'TEACHER'
-  | 'STUDENT'
-  | 'GUARDIAN'
-  | 'ACCOUNTANT'
-  | 'STAFF'
-  | 'USER'
+  | "DEVELOPER"
+  | "ADMIN"
+  | "TEACHER"
+  | "STUDENT"
+  | "GUARDIAN"
+  | "ACCOUNTANT"
+  | "STAFF"
+  | "USER"
 
 /**
  * Auth context structure for server actions
@@ -63,23 +63,23 @@ export interface MockSession {
 // ============================================================================
 
 const USER_ROLES: UserRole[] = [
-  'DEVELOPER',
-  'ADMIN',
-  'TEACHER',
-  'STUDENT',
-  'GUARDIAN',
-  'ACCOUNTANT',
-  'STAFF',
-  'USER',
+  "DEVELOPER",
+  "ADMIN",
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "ACCOUNTANT",
+  "STAFF",
+  "USER",
 ]
 
 const SCHOOL_SCOPED_ROLES: UserRole[] = [
-  'ADMIN',
-  'TEACHER',
-  'STUDENT',
-  'GUARDIAN',
-  'ACCOUNTANT',
-  'STAFF',
+  "ADMIN",
+  "TEACHER",
+  "STUDENT",
+  "GUARDIAN",
+  "ACCOUNTANT",
+  "STAFF",
 ]
 
 // ============================================================================
@@ -90,9 +90,11 @@ const SCHOOL_SCOPED_ROLES: UserRole[] = [
  * Create a mock auth context for server action testing
  * @param overrides - Optional overrides for the auth context
  */
-export function createMockAuthContext(overrides: Partial<MockAuthContext> = {}): MockAuthContext {
-  const role = overrides.role ?? 'ADMIN'
-  const isPlatformAdmin = role === 'DEVELOPER'
+export function createMockAuthContext(
+  overrides: Partial<MockAuthContext> = {}
+): MockAuthContext {
+  const role = overrides.role ?? "ADMIN"
+  const isPlatformAdmin = role === "DEVELOPER"
 
   return {
     userId: faker.string.cuid(),
@@ -113,7 +115,7 @@ export function createAdminAuthContext(
   overrides: Partial<MockAuthContext> = {}
 ): MockAuthContext {
   return createMockAuthContext({
-    role: 'ADMIN',
+    role: "ADMIN",
     schoolId: schoolId ?? faker.string.cuid(),
     isPlatformAdmin: false,
     ...overrides,
@@ -127,7 +129,7 @@ export function createDeveloperAuthContext(
   overrides: Partial<MockAuthContext> = {}
 ): MockAuthContext {
   return createMockAuthContext({
-    role: 'DEVELOPER',
+    role: "DEVELOPER",
     schoolId: null,
     isPlatformAdmin: true,
     ...overrides,
@@ -142,7 +144,7 @@ export function createTeacherAuthContext(
   overrides: Partial<MockAuthContext> = {}
 ): MockAuthContext {
   return createMockAuthContext({
-    role: 'TEACHER',
+    role: "TEACHER",
     schoolId: schoolId ?? faker.string.cuid(),
     isPlatformAdmin: false,
     ...overrides,
@@ -157,7 +159,7 @@ export function createStudentAuthContext(
   overrides: Partial<MockAuthContext> = {}
 ): MockAuthContext {
   return createMockAuthContext({
-    role: 'STUDENT',
+    role: "STUDENT",
     schoolId: schoolId ?? faker.string.cuid(),
     isPlatformAdmin: false,
     ...overrides,
@@ -179,9 +181,11 @@ export function createUnauthenticatedContext(): null {
  * Create a mock session user
  * @param overrides - Optional overrides for the session user
  */
-export function createMockSessionUser(overrides: Partial<MockSessionUser> = {}): MockSessionUser {
-  const role = overrides.role ?? 'ADMIN'
-  const isPlatformAdmin = role === 'DEVELOPER'
+export function createMockSessionUser(
+  overrides: Partial<MockSessionUser> = {}
+): MockSessionUser {
+  const role = overrides.role ?? "ADMIN"
+  const isPlatformAdmin = role === "DEVELOPER"
 
   return {
     id: faker.string.cuid(),
@@ -200,7 +204,9 @@ export function createMockSessionUser(overrides: Partial<MockSessionUser> = {}):
  * Create a complete mock session
  * @param userOverrides - Optional overrides for the session user
  */
-export function createMockSession(userOverrides: Partial<MockSessionUser> = {}): MockSession {
+export function createMockSession(
+  userOverrides: Partial<MockSessionUser> = {}
+): MockSession {
   // Session expires 24 hours from now
   const expiresDate = new Date()
   expiresDate.setHours(expiresDate.getHours() + 24)
@@ -219,7 +225,7 @@ export function createAdminSession(
   overrides: Partial<MockSessionUser> = {}
 ): MockSession {
   return createMockSession({
-    role: 'ADMIN',
+    role: "ADMIN",
     schoolId: schoolId ?? faker.string.cuid(),
     isPlatformAdmin: false,
     ...overrides,
@@ -229,9 +235,11 @@ export function createAdminSession(
 /**
  * Create a developer session (platform admin)
  */
-export function createDeveloperSession(overrides: Partial<MockSessionUser> = {}): MockSession {
+export function createDeveloperSession(
+  overrides: Partial<MockSessionUser> = {}
+): MockSession {
   return createMockSession({
-    role: 'DEVELOPER',
+    role: "DEVELOPER",
     schoolId: null,
     isPlatformAdmin: true,
     ...overrides,
@@ -241,7 +249,9 @@ export function createDeveloperSession(overrides: Partial<MockSessionUser> = {})
 /**
  * Create an expired session
  */
-export function createExpiredSession(userOverrides: Partial<MockSessionUser> = {}): MockSession {
+export function createExpiredSession(
+  userOverrides: Partial<MockSessionUser> = {}
+): MockSession {
   const expiredDate = new Date()
   expiredDate.setHours(expiredDate.getHours() - 1) // Expired 1 hour ago
 
@@ -254,7 +264,9 @@ export function createExpiredSession(userOverrides: Partial<MockSessionUser> = {
 /**
  * Create a session with unverified email
  */
-export function createUnverifiedSession(userOverrides: Partial<MockSessionUser> = {}): MockSession {
+export function createUnverifiedSession(
+  userOverrides: Partial<MockSessionUser> = {}
+): MockSession {
   return createMockSession({
     emailVerified: null,
     ...userOverrides,
@@ -269,7 +281,7 @@ export function createUnverifiedSession(userOverrides: Partial<MockSessionUser> 
  * Create a mock auth function that returns a session
  * Usage: vi.mocked(auth).mockResolvedValue(createAuthMock('ADMIN'))
  */
-export function createAuthMock(role: UserRole = 'ADMIN', schoolId?: string) {
+export function createAuthMock(role: UserRole = "ADMIN", schoolId?: string) {
   const session = createMockSession({ role, schoolId })
   return session
 }
@@ -278,7 +290,10 @@ export function createAuthMock(role: UserRole = 'ADMIN', schoolId?: string) {
  * Create auth mock factory for vi.mock setup
  * Returns a function that can be used as mockImplementation
  */
-export function createAuthMockFactory(defaultRole: UserRole = 'ADMIN', defaultSchoolId?: string) {
+export function createAuthMockFactory(
+  defaultRole: UserRole = "ADMIN",
+  defaultSchoolId?: string
+) {
   return () => Promise.resolve(createAuthMock(defaultRole, defaultSchoolId))
 }
 
@@ -287,7 +302,7 @@ export function createAuthMockFactory(defaultRole: UserRole = 'ADMIN', defaultSc
  * Usage in test setup:
  * vi.mock('@/auth', () => setupAuthMock('ADMIN', 'school-123'))
  */
-export function setupAuthMock(role: UserRole = 'ADMIN', schoolId?: string) {
+export function setupAuthMock(role: UserRole = "ADMIN", schoolId?: string) {
   const session = createAuthMock(role, schoolId)
   return {
     auth: vi.fn().mockResolvedValue(session),

@@ -1,18 +1,24 @@
 "use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react"
-import { DataTable } from "@/components/table/data-table"
-import { useDataTable } from "@/components/table/use-data-table"
-import { getSchoolYearColumns, type SchoolYearColumnCallbacks } from "./columns"
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
-import { SchoolYearForm } from "./form"
-import { getSchoolYears, deleteSchoolYear } from "./actions"
-import { usePlatformData } from "@/hooks/use-platform-data"
-import { PlatformToolbar } from "@/components/platform/shared"
-import { useRouter } from "next/navigation"
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast"
+import {
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
+import { PlatformToolbar } from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteSchoolYear, getSchoolYears } from "./actions"
+import { getSchoolYearColumns, type SchoolYearColumnCallbacks } from "./columns"
+import { SchoolYearForm } from "./form"
 import type { SchoolYearRow } from "./types"
 
 interface SchoolYearTableProps {
@@ -34,7 +40,8 @@ export function SchoolYearTable({
 
   // Translations
   const t = {
-    search: lang === "ar" ? "بحث في الأعوام الدراسية..." : "Search academic years...",
+    search:
+      lang === "ar" ? "بحث في الأعوام الدراسية..." : "Search academic years...",
     create: lang === "ar" ? "إضافة عام دراسي" : "Add Year",
     deleteYear: lang === "ar" ? "حذف العام الدراسي" : "Delete academic year",
     noYears: lang === "ar" ? "لا توجد أعوام دراسية" : "No academic years found",

@@ -1,114 +1,120 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { useListing } from '@/components/onboarding/use-listing';
-import { useTitle } from './use-title';
-import { TitleForm, type TitleFormRef } from './form';
-import { TitleCard } from './card';
-import { FORM_LIMITS } from '@/components/onboarding/config.client';
-import { generateSubdomain } from '@/lib/subdomain';
-import { Badge } from '@/components/ui/badge';
-import { Globe } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useLocale } from '@/components/internationalization/use-locale';
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { Globe } from "lucide-react"
+
+import { generateSubdomain } from "@/lib/subdomain"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useLocale } from "@/components/internationalization/use-locale"
+import { FORM_LIMITS } from "@/components/onboarding/config.client"
+import { useHostValidation } from "@/components/onboarding/host-validation-context"
+import { useListing } from "@/components/onboarding/use-listing"
+
+import { TitleCard } from "./card"
+import { TitleForm, type TitleFormRef } from "./form"
+import { useTitle } from "./use-title"
 
 interface Props {
-  dictionary?: any;
+  dictionary?: any
 }
 
 export default function TitleContent({ dictionary }: Props) {
-  const params = useParams();
-  const router = useRouter();
-  const schoolId = params.id as string;
-  const { isRTL } = useLocale();
-  const { enableNext, disableNext, setCustomNavigation } = useHostValidation();
-  const titleFormRef = useRef<TitleFormRef>(null);
-  const { listing } = useListing();
-  const { data: titleData, loading } = useTitle(schoolId);
-  const [generatedSubdomain, setGeneratedSubdomain] = useState<string>('');
-  const [currentFormTitle, setCurrentFormTitle] = useState<string>('');
+  const params = useParams()
+  const router = useRouter()
+  const schoolId = params.id as string
+  const { isRTL } = useLocale()
+  const { enableNext, disableNext, setCustomNavigation } = useHostValidation()
+  const titleFormRef = useRef<TitleFormRef>(null)
+  const { listing } = useListing()
+  const { data: titleData, loading } = useTitle(schoolId)
+  const [generatedSubdomain, setGeneratedSubdomain] = useState<string>("")
+  const [currentFormTitle, setCurrentFormTitle] = useState<string>("")
 
-  const dict = dictionary?.onboarding || {};
-  const currentTitle = currentFormTitle || titleData?.title || listing?.name || '';
+  const dict = dictionary?.onboarding || {}
+  const currentTitle =
+    currentFormTitle || titleData?.title || listing?.name || ""
 
   const handleTitleChange = useCallback((title: string) => {
-    setCurrentFormTitle(title);
-  }, []);
+    setCurrentFormTitle(title)
+  }, [])
 
   const onNext = useCallback(async () => {
     console.log("🚀 [TITLE CONTENT] onNext called", {
       schoolId,
       hasFormRef: !!titleFormRef.current,
-      timestamp: new Date().toISOString()
-    });
-    
+      timestamp: new Date().toISOString(),
+    })
+
     if (titleFormRef.current) {
       try {
-        await titleFormRef.current.saveAndNext();
-        console.log("✅ [TITLE CONTENT] saveAndNext completed successfully");
-        
+        await titleFormRef.current.saveAndNext()
+        console.log("✅ [TITLE CONTENT] saveAndNext completed successfully")
+
         // Navigate to the next step after successful save
-        console.log("🦭 [TITLE CONTENT] Navigating to description step");
-        router.push(`/onboarding/${schoolId}/description`);
+        console.log("🦭 [TITLE CONTENT] Navigating to description step")
+        router.push(`/onboarding/${schoolId}/description`)
       } catch (error) {
-        console.error("❌ [TITLE CONTENT] Error during saveAndNext:", error);
+        console.error("❌ [TITLE CONTENT] Error during saveAndNext:", error)
       }
     } else {
-      console.warn("⚠️ [TITLE CONTENT] No form ref available");
+      console.warn("⚠️ [TITLE CONTENT] No form ref available")
     }
-  }, [schoolId]);
+  }, [schoolId])
 
   // Enable/disable next button based on title and set custom navigation
   useEffect(() => {
-    const trimmedLength = currentTitle.trim().length;
-    if (trimmedLength >= FORM_LIMITS.TITLE_MIN_LENGTH && trimmedLength <= FORM_LIMITS.TITLE_MAX_LENGTH) {
-      enableNext();
+    const trimmedLength = currentTitle.trim().length
+    if (
+      trimmedLength >= FORM_LIMITS.TITLE_MIN_LENGTH &&
+      trimmedLength <= FORM_LIMITS.TITLE_MAX_LENGTH
+    ) {
+      enableNext()
       setCustomNavigation({
-        onNext
-      });
+        onNext,
+      })
     } else {
-      disableNext();
-      setCustomNavigation(undefined);
+      disableNext()
+      setCustomNavigation(undefined)
     }
-  }, [currentTitle, enableNext, disableNext, setCustomNavigation, onNext]);
+  }, [currentTitle, enableNext, disableNext, setCustomNavigation, onNext])
 
   // Generate subdomain preview
   useEffect(() => {
     if (currentTitle.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH) {
-      const subdomain = generateSubdomain(currentTitle);
-      setGeneratedSubdomain(subdomain);
+      const subdomain = generateSubdomain(currentTitle)
+      setGeneratedSubdomain(subdomain)
     } else {
-      setGeneratedSubdomain('');
+      setGeneratedSubdomain("")
     }
-  }, [currentTitle]);
+  }, [currentTitle])
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
           {/* Left side - Text content skeleton */}
           <div className="space-y-6">
             <div className="space-y-4">
               <Skeleton className="h-8 w-64" />
               <Skeleton className="h-4 w-96" />
             </div>
-            
+
             {/* Form skeleton */}
             <div className="space-y-4">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-4 w-48" />
             </div>
-            
+
             {/* Subdomain preview skeleton */}
             <div className="space-y-3">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-8 w-48" />
             </div>
           </div>
-          
+
           {/* Right side - Card skeleton */}
           <div className="space-y-4">
             <Skeleton className="h-32 w-full" />
@@ -119,18 +125,23 @@ export default function TitleContent({ dictionary }: Props) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className={`space-y-8 ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+    <div className={`space-y-8 ${isRTL ? "rtl" : "ltr"}`}>
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
           {/* Left side - Text content */}
-          <div className={`space-y-3 sm:space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <h1 className="text-3xl font-bold">{dict.whatsYourSchoolName || "What's your school's name?"}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              {dict.schoolNameDescription || "This will be your school's official name in the system."}
+          <div
+            className={`space-y-3 sm:space-y-4 ${isRTL ? "text-right" : "text-left"}`}
+          >
+            <h1 className="text-3xl font-bold">
+              {dict.whatsYourSchoolName || "What's your school's name?"}
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              {dict.schoolNameDescription ||
+                "This will be your school's official name in the system."}
             </p>
           </div>
 
@@ -141,7 +152,7 @@ export default function TitleContent({ dictionary }: Props) {
               schoolId={schoolId}
               initialData={{
                 title: currentTitle,
-                subdomain: titleData?.subdomain || ""
+                subdomain: titleData?.subdomain || "",
               }}
               onTitleChange={handleTitleChange}
               dictionary={dictionary}
@@ -150,5 +161,5 @@ export default function TitleContent({ dictionary }: Props) {
         </div>
       </div>
     </div>
-  );
+  )
 }

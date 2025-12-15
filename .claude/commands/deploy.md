@@ -10,11 +10,13 @@ Validates, commits, pushes, and monitors deployment automatically.
 ## Execute
 
 Run the deploy hook:
+
 ```bash
 .claude/hooks/deploy.sh
 ```
 
 This will:
+
 1. **Validate** - TypeScript, lint, tests
 2. **Auto-fix** - Lint issues
 3. **Build** - Production build check
@@ -30,6 +32,7 @@ This will:
 ## For Production
 
 If deploying to production, run extra checks:
+
 ```bash
 # Ensure on main branch
 git checkout main
@@ -44,10 +47,10 @@ pnpm test
 
 ## Quick Reference
 
-| Command | Use Case | Time |
-|---------|----------|------|
-| `/deploy` | Auto-deploy current changes | ~30s |
-| `/quick` | Tiny changes (skip tests/build) | ~10s |
-| `/dev` | Small changes with full checks | ~45s |
-| `/validate` | Full agent validation | ~2min |
-| `/ship production` | Production release | ~5min |
+| Command            | Use Case                        | Time  |
+| ------------------ | ------------------------------- | ----- |
+| `/deploy`          | Auto-deploy current changes     | ~30s  |
+| `/quick`           | Tiny changes (skip tests/build) | ~10s  |
+| `/dev`             | Small changes with full checks  | ~45s  |
+| `/validate`        | Full agent validation           | ~2min |
+| `/ship production` | Production release              | ~5min |

@@ -1,18 +1,31 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { examCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ExamFormStepProps } from "./types";
-import { EXAM_TYPES } from "./config";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
+
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+
+import { EXAM_TYPES } from "./config"
+import { ExamFormStepProps } from "./types"
+import { examCreateSchema } from "./validation"
 
 export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
   return (
-    <div className="space-y-6 w-full">
+    <div className="w-full space-y-6">
       {/* Title */}
       <FormField
         control={form.control}
@@ -34,10 +47,10 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea 
-                placeholder="Exam description (optional)" 
-                disabled={isView} 
-                {...field} 
+              <Textarea
+                placeholder="Exam description (optional)"
+                disabled={isView}
+                {...field}
                 rows={3}
               />
             </FormControl>
@@ -53,7 +66,11 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
           name="classId"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select class" />
@@ -76,7 +93,11 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
           name="subjectId"
           render={({ field }) => (
             <FormItem>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isView}
+              >
                 <FormControl>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select subject" />
@@ -101,7 +122,11 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
         name="examType"
         render={({ field }) => (
           <FormItem>
-            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+              disabled={isView}
+            >
               <FormControl>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select exam type" />
@@ -120,5 +145,5 @@ export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

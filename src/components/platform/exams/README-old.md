@@ -7,6 +7,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📝 Create and schedule exams (date, time, duration)
 - 📚 Assign exams to classes and subjects
 - ⏰ Set exam timing (start time, end time, duration)
@@ -18,6 +19,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - 📈 View exam performance analytics
 
 ### What Teachers Can Do
+
 - ✅ Create exams for their assigned classes
 - ✅ Schedule exam date and time
 - ✅ Enter marks for students
@@ -27,6 +29,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - ❌ Cannot modify other teachers' exams
 
 ### What Students Can View
+
 - ✅ View upcoming exams (schedule)
 - ✅ See exam details (date, time, duration, total marks)
 - ✅ View their exam scores after marking
@@ -34,6 +37,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - ❌ Cannot view other students' marks
 
 ### What Parents Can View
+
 - ✅ View their child's exam schedule
 - ✅ See exam details and instructions
 - ✅ View child's exam results
@@ -41,9 +45,11 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - ❌ Cannot view full class results
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Multi-step form (basic info → schedule → instructions)
 - ✅ Exam scheduling (date, time, duration)
@@ -55,11 +61,13 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - ✅ Multi-tenant isolation (schoolId scoping)
 
 **In Progress:**
+
 - 🚧 Marks entry interface
 - 🚧 Grade boundaries (A+, A, B+, etc.)
 - 🚧 Exam analytics dashboard
 
 **Planned:**
+
 - ⏸️ Exam hall assignment
 - ⏸️ Invigilator scheduling
 - ⏸️ Question paper upload
@@ -71,6 +79,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 ## Admin Workflows
 
 ### 1. Create a New Exam
+
 **Prerequisites:** Classes, subjects, and term already configured
 
 1. Navigate to `/exams`
@@ -99,6 +108,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 7. Success toast confirms creation
 
 ### 2. Bulk Create Exams for Multiple Classes
+
 **Scenario:** Final exams for all Grade 10 sections (A, B, C, D)
 
 1. Navigate to `/exams/bulk-create`
@@ -115,6 +125,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 6. Review created exams in list
 
 ### 3. Schedule Exam Calendar
+
 **View all exams on timeline:**
 
 1. Navigate to `/exams/calendar`
@@ -132,6 +143,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 5. Identify scheduling conflicts (same class, same time)
 
 ### 4. Enter Exam Marks
+
 **After exam is completed:**
 
 1. Navigate to exam detail page
@@ -147,11 +159,13 @@ The Exams feature empowers school administrators and teachers to schedule examin
 8. Students can now view their scores
 
 **Bulk Marks Entry:**
+
 - Import marks from CSV (studentId, marks)
 - Copy-paste from spreadsheet
 - Quick keyboard navigation (Tab between students)
 
 ### 5. Configure Grade Boundaries
+
 **Define grading scale:**
 
 1. Navigate to `/settings/grading`
@@ -168,6 +182,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 4. System auto-calculates letter grades from numeric marks
 
 ### 6. View Exam Results and Analytics
+
 **Class Performance Analysis:**
 
 1. Navigate to exam detail page
@@ -189,19 +204,23 @@ The Exams feature empowers school administrators and teachers to schedule examin
    - Pie chart: Pass/fail ratio
 
 **Individual Student Performance:**
+
 1. Navigate to student detail page
 2. View "Exams" tab
 3. See all exams with scores, grades, and trends
 4. Identify strengths and weaknesses per subject
 
 ### 7. Export Exam Data
+
 **Export Exam Schedule:**
+
 1. Navigate to `/exams`
 2. Apply filters (date range, class, subject)
 3. Click "Export Schedule to PDF"
 4. Generate printable exam timetable for distribution
 
 **Export Exam Marks:**
+
 1. Navigate to exam detail page
 2. Click "Export Marks to CSV"
 3. Download CSV with columns:
@@ -209,12 +228,14 @@ The Exams feature empowers school administrators and teachers to schedule examin
 4. Use for record-keeping or analysis
 
 ### 8. Manage Exam Status Workflow
+
 **Status Transitions:**
 
 - **PLANNED** → **IN_PROGRESS** → **COMPLETED**
 - **PLANNED** → **CANCELLED** (if exam is postponed/cancelled)
 
 **Update Status:**
+
 1. Navigate to exam detail page
 2. Click "Update Status" button
 3. Select new status:
@@ -226,6 +247,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 6. Students notified of status change
 
 ### 9. Assign Exam Hall and Invigilators (Future)
+
 **Exam Logistics:**
 
 1. Edit exam
@@ -238,12 +260,15 @@ The Exams feature empowers school administrators and teachers to schedule examin
 8. Print seating arrangement
 
 ### 10. Search and Filter Exams
+
 **Quick Search:**
+
 1. Use search box in toolbar
 2. Type exam title (partial match)
 3. Results update as you type
 
 **Advanced Filtering:**
+
 1. Click "Class" dropdown → Select specific class
 2. Click "Subject" dropdown → Select subject
 3. Click "Exam Type" dropdown → Select midterm/final/quiz
@@ -257,48 +282,56 @@ The Exams feature empowers school administrators and teachers to schedule examin
 ## Integration with Other Features
 
 ### Links to Classes
+
 - Exams assigned to specific classes
 - All students in class take the exam
 - Class roster used for marks entry
 - Class performance analytics calculated
 
 ### Links to Subjects
+
 - Exams linked to specific subjects
 - Subject-wise performance tracking
 - Subject teachers create exams
 - Curriculum alignment per subject
 
 ### Links to Students
+
 - Exam results stored per student
 - Student profile shows exam history
 - Performance trends across exams
 - GPA calculation uses exam scores
 
 ### Links to Results
+
 - Exam marks feed into gradebook
 - Results aggregated for report cards
 - GPA calculation includes exam scores
 - Term-wise and year-wise performance
 
 ### Links to Teachers
+
 - Teachers create exams for their subjects
 - Teachers enter marks for their classes
 - Teacher dashboard shows marking tasks
 - Exam creation permissions per teacher
 
 ### Links to Timetable
+
 - Exam schedule integrated with regular timetable
 - Exam dates block regular class slots
 - Conflict detection (no two exams same time for student)
 - Exam hall availability checked
 
 ### Links to Announcements
+
 - Exam schedule announcements sent to students/parents
 - Reminders for upcoming exams
 - Results publication announcements
 - Important updates about exam changes
 
 ### Links to Dashboard
+
 - Admin dashboard shows:
   - Upcoming exams count
   - Exams needing marks entry
@@ -331,6 +364,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 ### Server Actions
 
 **`createExam(input)`**
+
 - Input: `{ title, description, classId, subjectId, examDate, startTime, endTime, duration, totalMarks, passingMarks, examType, instructions }`
 - Validates with `examCreateSchema`
 - Creates exam with status "PLANNED"
@@ -339,6 +373,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - Returns `{ success: true, id }`
 
 **`updateExam(input)`**
+
 - Input: `{ id, ...fields to update }`
 - Validates with `examUpdateSchema`
 - Updates only provided fields
@@ -347,6 +382,7 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - Returns `{ success: true }`
 
 **`deleteExam(input)`**
+
 - Input: `{ id }`
 - Uses `deleteMany` with schoolId filter
 - Cascades to exam results (if configured)
@@ -354,12 +390,14 @@ The Exams feature empowers school administrators and teachers to schedule examin
 - Returns `{ success: true }`
 
 **`getExam(input)`**
+
 - Input: `{ id }`
 - Fetches single exam by id and schoolId
 - Returns full exam object
 - Used for detail page and edit form
 
 **`getExams(input)`**
+
 - Input: `{ title?, classId?, subjectId?, examType?, status?, examDate?, page, perPage, sort }`
 - Supports filtering and pagination
 - Joins with class and subject for display names
@@ -424,6 +462,7 @@ enum ExamStatus {
 ### Validation
 
 **Client-Side:**
+
 - Title required, min 3 characters
 - Class and subject selection required
 - Exam date required
@@ -432,6 +471,7 @@ enum ExamStatus {
 - Passing marks ≤ total marks
 
 **Server-Side:**
+
 - `examCreateSchema` validates all fields
 - Date parsing and normalization
 - Status enum validation
@@ -467,37 +507,44 @@ The component is used in the platform dashboard at `/dashboard/exams` and automa
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

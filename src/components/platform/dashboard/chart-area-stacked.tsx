@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { TrendingUp, TrendingDown } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { TrendingDown, TrendingUp } from "lucide-react"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
 import {
   Card,
@@ -10,26 +10,26 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/ui/chart"
 
 export interface AreaChartStackedData {
-  label: string;
-  primary: number;
-  secondary: number;
+  label: string
+  primary: number
+  secondary: number
 }
 
 export interface AreaChartStackedProps {
-  data?: AreaChartStackedData[];
-  primaryLabel?: string;
-  secondaryLabel?: string;
-  trend?: number;
-  trendLabel?: string;
+  data?: AreaChartStackedData[]
+  primaryLabel?: string
+  secondaryLabel?: string
+  trend?: number
+  trendLabel?: string
 }
 
 const defaultChartData = [
@@ -39,7 +39,7 @@ const defaultChartData = [
   { month: "April", desktop: 73, mobile: 190 },
   { month: "May", desktop: 209, mobile: 130 },
   { month: "June", desktop: 214, mobile: 140 },
-];
+]
 
 export function AreaChartStacked({
   data,
@@ -50,16 +50,16 @@ export function AreaChartStacked({
 }: AreaChartStackedProps) {
   // Transform custom data to use primary/secondary keys if provided
   const chartData = data
-    ? data.map(d => ({
+    ? data.map((d) => ({
         label: d.label,
         primary: d.primary,
         secondary: d.secondary,
       }))
-    : defaultChartData.map(d => ({
+    : defaultChartData.map((d) => ({
         label: d.month,
         primary: d.desktop,
         secondary: d.mobile,
-      }));
+      }))
 
   const chartConfig = {
     primary: {
@@ -70,12 +70,11 @@ export function AreaChartStacked({
       label: secondaryLabel,
       color: "hsl(var(--chart-2))",
     },
-  } satisfies ChartConfig;
+  } satisfies ChartConfig
 
   return (
-    <Card className="flex flex-col border-none shadow-none bg-muted">
-      <CardHeader>
-      </CardHeader>
+    <Card className="bg-muted flex flex-col border-none shadow-none">
+      <CardHeader></CardHeader>
       <CardContent className="flex-1">
         <ChartContainer config={chartConfig}>
           <AreaChart
@@ -117,22 +116,22 @@ export function AreaChartStacked({
           </AreaChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
+      <CardFooter className="flex-col gap-2 text-center text-sm text-pretty">
+        <div className="flex items-center gap-2 leading-none font-medium">
           {trend >= 0 ? (
             <>
-              Trending up by {trend}% this month <TrendingUp className="size-4" />
+              Trending up by {trend}% this month{" "}
+              <TrendingUp className="size-4" />
             </>
           ) : (
             <>
-              Trending down by {Math.abs(trend)}% this month <TrendingDown className="size-4" />
+              Trending down by {Math.abs(trend)}% this month{" "}
+              <TrendingDown className="size-4" />
             </>
           )}
         </div>
-        <div className="leading-none text-muted-foreground">
-          {trendLabel}
-        </div>
+        <div className="text-muted-foreground leading-none">{trendLabel}</div>
       </CardFooter>
     </Card>
-  );
+  )
 }

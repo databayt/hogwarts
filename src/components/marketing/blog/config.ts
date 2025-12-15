@@ -4,7 +4,7 @@
  * Static configuration for blog categories, authors, and settings.
  */
 
-import type { BlogCategory, BlogCategoryInfo } from "./types";
+import type { BlogCategory, BlogCategoryInfo } from "./types"
 
 /**
  * Available blog categories
@@ -16,7 +16,7 @@ export const BLOG_CATEGORIES: readonly BlogCategory[] = [
   "case-studies",
   "tutorials",
   "announcements",
-] as const;
+] as const
 
 /**
  * Blog category information
@@ -58,18 +58,18 @@ export const BLOG_CATEGORY_INFO: Record<BlogCategory, BlogCategoryInfo> = {
     description: "Company news and updates",
     color: "bg-pink-500",
   },
-} as const;
+} as const
 
 /**
  * Default pagination settings
  */
-export const DEFAULT_POSTS_PER_PAGE = 12;
-export const POSTS_PER_PAGE_OPTIONS = [6, 12, 24, 48] as const;
+export const DEFAULT_POSTS_PER_PAGE = 12
+export const POSTS_PER_PAGE_OPTIONS = [6, 12, 24, 48] as const
 
 /**
  * Reading speed (words per minute)
  */
-export const WORDS_PER_MINUTE = 200;
+export const WORDS_PER_MINUTE = 200
 
 /**
  * Popular tags (example)
@@ -83,12 +83,17 @@ export const POPULAR_TAGS = [
   "mobile",
   "integration",
   "security",
-] as const;
+] as const
 
 /**
  * Social share platforms
  */
-export const SHARE_PLATFORMS = ["twitter", "facebook", "linkedin", "email"] as const;
+export const SHARE_PLATFORMS = [
+  "twitter",
+  "facebook",
+  "linkedin",
+  "email",
+] as const
 
 /**
  * Blog post status
@@ -98,22 +103,22 @@ export const POST_STATUS = {
   PUBLISHED: "published",
   SCHEDULED: "scheduled",
   ARCHIVED: "archived",
-} as const;
+} as const
 
 /**
  * Maximum excerpt length
  */
-export const MAX_EXCERPT_LENGTH = 160;
+export const MAX_EXCERPT_LENGTH = 160
 
 /**
  * Maximum title length
  */
-export const MAX_TITLE_LENGTH = 60;
+export const MAX_TITLE_LENGTH = 60
 
 /**
  * Default cover image
  */
-export const DEFAULT_COVER_IMAGE = "/images/blog-default.jpg";
+export const DEFAULT_COVER_IMAGE = "/images/blog-default.jpg"
 
 /**
  * Author roles
@@ -125,4 +130,4 @@ export const AUTHOR_ROLES = {
   DESIGNER: "Designer",
   MARKETING: "Marketing Manager",
   EDUCATOR: "Education Specialist",
-} as const;
+} as const

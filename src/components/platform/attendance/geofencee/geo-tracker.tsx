@@ -5,13 +5,26 @@
  * Progressive Web App (PWA) optimized with offline support
  * Features: GPS tracking, IndexedDB offline queue, battery monitoring
  */
+import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  Battery,
+  CircleAlert,
+  LoaderCircle,
+  MapPin,
+  Wifi,
+  WifiOff,
+} from "lucide-react"
+import { toast } from "sonner"
 
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
-import { MapPin, Battery, Wifi, WifiOff, LoaderCircle, CircleAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 // ============================================================================
 // TYPES
@@ -41,8 +54,8 @@ interface GeoTrackerProps {
 // ============================================================================
 
 class LocationQueue {
-  private dbName = 'hogwarts-geofence'
-  private storeName = 'location-queue'
+  private dbName = "hogwarts-geofence"
+  private storeName = "location-queue"
   private db: IDBDatabase | null = null
 
   async init(): Promise<void> {
@@ -59,10 +72,10 @@ class LocationQueue {
         const db = (event.target as IDBOpenDBRequest).result
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, {
-            keyPath: 'id',
+            keyPath: "id",
             autoIncrement: true,
           })
-          store.createIndex('timestamp', 'timestamp', { unique: false })
+          store.createIndex("timestamp", "timestamp", { unique: false })
         }
       }
     })
@@ -72,7 +85,7 @@ class LocationQueue {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite')
+      const transaction = this.db!.transaction([this.storeName], "readwrite")
       const store = transaction.objectStore(this.storeName)
       const request = store.add(location)
 
@@ -85,7 +98,7 @@ class LocationQueue {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly')
+      const transaction = this.db!.transaction([this.storeName], "readonly")
       const store = transaction.objectStore(this.storeName)
       const request = store.getAll()
 
@@ -98,7 +111,7 @@ class LocationQueue {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readwrite')
+      const transaction = this.db!.transaction([this.storeName], "readwrite")
       const store = transaction.objectStore(this.storeName)
       const request = store.clear()
 
@@ -111,7 +124,7 @@ class LocationQueue {
     if (!this.db) await this.init()
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([this.storeName], 'readonly')
+      const transaction = this.db!.transaction([this.storeName], "readonly")
       const store = transaction.objectStore(this.storeName)
       const request = store.count()
 
@@ -138,7 +151,8 @@ export function GeoTracker({
   const [lastLocation, setLastLocation] = useState<LocationData | null>(null)
   const [queueSize, setQueueSize] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null)
+  const [permissionStatus, setPermissionStatus] =
+    useState<PermissionState | null>(null)
 
   // Refs
   const watchIdRef = useRef<number | null>(null)
@@ -152,10 +166,10 @@ export function GeoTracker({
 
   useEffect(() => {
     const getDeviceId = () => {
-      let deviceId = localStorage.getItem('hogwarts-device-id')
+      let deviceId = localStorage.getItem("hogwarts-device-id")
       if (!deviceId) {
         deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        localStorage.setItem('hogwarts-device-id', deviceId)
+        localStorage.setItem("hogwarts-device-id", deviceId)
       }
       return deviceId
     }
@@ -174,12 +188,16 @@ export function GeoTracker({
     }
 
     // Battery Status API (experimental, not supported in all browsers)
-    if ('getBattery' in navigator) {
+    if ("getBattery" in navigator) {
       ;(navigator as any).getBattery().then((battery: any) => {
         updateBatteryStatus(battery)
 
-        battery.addEventListener('levelchange', () => updateBatteryStatus(battery))
-        battery.addEventListener('chargingchange', () => updateBatteryStatus(battery))
+        battery.addEventListener("levelchange", () =>
+          updateBatteryStatus(battery)
+        )
+        battery.addEventListener("chargingchange", () =>
+          updateBatteryStatus(battery)
+        )
       })
     }
   }, [])
@@ -191,21 +209,21 @@ export function GeoTracker({
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      toast.success('Back online - syncing queued locations...')
+      toast.success("Back online - syncing queued locations...")
       syncOfflineQueue()
     }
 
     const handleOffline = () => {
       setIsOnline(false)
-      toast.warning('Offline - locations will be queued')
+      toast.warning("Offline - locations will be queued")
     }
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
     }
   }, [])
 
@@ -229,7 +247,7 @@ export function GeoTracker({
           try {
             await submitLocation(location)
           } catch (error) {
-            console.error('Failed to sync location:', error)
+            console.error("Failed to sync location:", error)
             // Keep in queue if submission fails
             return
           }
@@ -241,7 +259,7 @@ export function GeoTracker({
       setQueueSize(0)
       toast.success(`Synced ${locations.length} queued locations`)
     } catch (error) {
-      console.error('Error syncing offline queue:', error)
+      console.error("Error syncing offline queue:", error)
     }
   }, [])
 
@@ -251,10 +269,10 @@ export function GeoTracker({
 
   const submitLocation = async (location: LocationData) => {
     try {
-      const response = await fetch('/api/geo/location', {
-        method: 'POST',
+      const response = await fetch("/api/geo/location", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           lat: location.lat,
@@ -321,14 +339,14 @@ export function GeoTracker({
 
         setError(null)
       } catch (error) {
-        console.error('Error handling location update:', error)
+        console.error("Error handling location update:", error)
 
         // Add to queue on error
         await queueRef.current.add(locationData)
         const newCount = await queueRef.current.count()
         setQueueSize(newCount)
 
-        setError('Failed to submit location - added to queue')
+        setError("Failed to submit location - added to queue")
       }
     },
     [isOnline, batteryLevel, onLocationUpdate, syncOfflineQueue]
@@ -341,19 +359,23 @@ export function GeoTracker({
   const startTracking = useCallback(async () => {
     try {
       // Check permission
-      if ('permissions' in navigator) {
-        const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation" as PermissionName,
+        })
         setPermissionStatus(permission.state)
 
-        if (permission.state === 'denied') {
-          setError('Location permission denied. Please enable location access in your browser settings.')
+        if (permission.state === "denied") {
+          setError(
+            "Location permission denied. Please enable location access in your browser settings."
+          )
           return
         }
       }
 
       // Request location
-      if (!('geolocation' in navigator)) {
-        setError('Geolocation is not supported by your browser')
+      if (!("geolocation" in navigator)) {
+        setError("Geolocation is not supported by your browser")
         return
       }
 
@@ -361,11 +383,11 @@ export function GeoTracker({
       const watchId = navigator.geolocation.watchPosition(
         handleLocationUpdate,
         (error) => {
-          console.error('Geolocation error:', error)
+          console.error("Geolocation error:", error)
           setError(`Location error: ${error.message}`)
 
           if (error.code === error.PERMISSION_DENIED) {
-            setPermissionStatus('denied')
+            setPermissionStatus("denied")
           }
         },
         {
@@ -378,16 +400,15 @@ export function GeoTracker({
       watchIdRef.current = watchId
       setIsTracking(true)
       setError(null)
-      toast.success('Location tracking started')
+      toast.success("Location tracking started")
 
       // Initialize offline queue
       await queueRef.current.init()
       const count = await queueRef.current.count()
       setQueueSize(count)
-
     } catch (error) {
-      console.error('Error starting tracking:', error)
-      setError('Failed to start tracking')
+      console.error("Error starting tracking:", error)
+      setError("Failed to start tracking")
     }
   }, [handleLocationUpdate, highAccuracyMode])
 
@@ -407,7 +428,7 @@ export function GeoTracker({
     }
 
     setIsTracking(false)
-    toast.info('Location tracking stopped')
+    toast.info("Location tracking stopped")
   }, [])
 
   // ============================================================================
@@ -432,24 +453,25 @@ export function GeoTracker({
           Location Tracking
         </CardTitle>
         <CardDescription>
-          Your location is tracked to automatically mark attendance when you enter school grounds
+          Your location is tracked to automatically mark attendance when you
+          enter school grounds
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2">
-          <Badge variant={isTracking ? 'default' : 'secondary'}>
+          <Badge variant={isTracking ? "default" : "secondary"}>
             {isTracking ? (
               <>
                 <LoaderCircle className="mr-1 h-3 w-3 animate-spin" />
                 Tracking Active
               </>
             ) : (
-              'Tracking Stopped'
+              "Tracking Stopped"
             )}
           </Badge>
 
-          <Badge variant={isOnline ? 'default' : 'destructive'}>
+          <Badge variant={isOnline ? "default" : "destructive"}>
             {isOnline ? (
               <>
                 <Wifi className="mr-1 h-3 w-3" />
@@ -464,23 +486,19 @@ export function GeoTracker({
           </Badge>
 
           {batteryLevel !== null && (
-            <Badge variant={batteryLevel < 20 ? 'destructive' : 'secondary'}>
+            <Badge variant={batteryLevel < 20 ? "destructive" : "secondary"}>
               <Battery className="mr-1 h-3 w-3" />
-              {batteryLevel}% {isCharging && '⚡'}
+              {batteryLevel}% {isCharging && "⚡"}
             </Badge>
           )}
 
-          {queueSize > 0 && (
-            <Badge variant="outline">
-              {queueSize} queued
-            </Badge>
-          )}
+          {queueSize > 0 && <Badge variant="outline">{queueSize} queued</Badge>}
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-            <CircleAlert className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="border-destructive/50 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <CircleAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
             <p>{error}</p>
           </div>
         )}
@@ -489,7 +507,7 @@ export function GeoTracker({
         {lastLocation && (
           <div className="space-y-2 rounded-lg border p-3 text-sm">
             <p className="font-medium">Last Location:</p>
-            <div className="grid grid-cols-2 gap-2 text-muted-foreground">
+            <div className="text-muted-foreground grid grid-cols-2 gap-2">
               <div>Latitude: {lastLocation.lat.toFixed(6)}</div>
               <div>Longitude: {lastLocation.lon.toFixed(6)}</div>
               {lastLocation.accuracy && (
@@ -509,22 +527,31 @@ export function GeoTracker({
               Start Tracking
             </Button>
           ) : (
-            <Button onClick={stopTracking} variant="destructive" className="flex-1">
+            <Button
+              onClick={stopTracking}
+              variant="destructive"
+              className="flex-1"
+            >
               Stop Tracking
             </Button>
           )}
 
           {queueSize > 0 && (
-            <Button onClick={syncOfflineQueue} variant="outline" disabled={!isOnline}>
+            <Button
+              onClick={syncOfflineQueue}
+              variant="outline"
+              disabled={!isOnline}
+            >
               Sync Queue ({queueSize})
             </Button>
           )}
         </div>
 
         {/* Permission Warning */}
-        {permissionStatus === 'denied' && (
-          <p className="text-xs text-muted-foreground">
-            Location permission is required. Please enable it in your browser settings and reload the page.
+        {permissionStatus === "denied" && (
+          <p className="text-muted-foreground text-xs">
+            Location permission is required. Please enable it in your browser
+            settings and reload the page.
           </p>
         )}
       </CardContent>

@@ -9,6 +9,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ## Key Features
 
 ### 1. Salary Structure Definition
+
 - Base salary configuration
 - Grade/scale definitions
 - Allowances (housing, transportation, etc.)
@@ -16,6 +17,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 - Performance-based increments
 
 ### 2. Salary Components
+
 - **Base Salary**: Fixed monthly/annual salary
 - **Allowances**: Additional fixed amounts
 - **Bonuses**: Performance/annual bonuses
@@ -23,12 +25,14 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 - **Deductions**: Loans, advances, taxes
 
 ### 3. Pay Scales
+
 - Define salary bands by position
 - Annual increment structures
 - Merit-based adjustments
 - Cost of living adjustments (COLA)
 
 ### 4. Salary History
+
 - Track all salary changes
 - Effective date management
 - Approval workflow
@@ -37,6 +41,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ## Data Models
 
 ### SalaryStructure
+
 ```typescript
 {
   id: string
@@ -55,6 +60,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ```
 
 ### Allowance
+
 ```typescript
 {
   type: "HOUSING" | "TRANSPORTATION" | "MEAL" | "COMMUNICATION" | "OTHER"
@@ -66,6 +72,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ```
 
 ### Benefit
+
 ```typescript
 {
   type: "HEALTH" | "RETIREMENT" | "LIFE_INSURANCE" | "OTHER"
@@ -77,6 +84,7 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ```
 
 ### SalaryScale
+
 ```typescript
 {
   id: string
@@ -93,30 +101,34 @@ The Salary module manages salary structures, pay scales, allowances, and benefit
 ## Common Salary Components
 
 ### Allowances
-| Type | Typical Amount | Taxable |
-|------|----------------|---------|
-| **Housing** | 20-30% of base | Yes |
-| **Transportation** | 10-15% of base | Yes |
-| **Communication** | Fixed ($50-$100) | Yes |
-| **Meal** | Fixed ($100-$200) | Yes |
-| **Education** | Fixed ($500-$2,000) | No |
+
+| Type               | Typical Amount      | Taxable |
+| ------------------ | ------------------- | ------- |
+| **Housing**        | 20-30% of base      | Yes     |
+| **Transportation** | 10-15% of base      | Yes     |
+| **Communication**  | Fixed ($50-$100)    | Yes     |
+| **Meal**           | Fixed ($100-$200)   | Yes     |
+| **Education**      | Fixed ($500-$2,000) | No      |
 
 ### Benefits
-| Type | Employer % | Employee % |
-|------|------------|------------|
-| **Health Insurance** | 80% | 20% |
-| **Retirement (401k)** | 3-6% match | Variable |
-| **Life Insurance** | 100% | 0% |
-| **Dental** | 50% | 50% |
+
+| Type                  | Employer % | Employee % |
+| --------------------- | ---------- | ---------- |
+| **Health Insurance**  | 80%        | 20%        |
+| **Retirement (401k)** | 3-6% match | Variable   |
+| **Life Insurance**    | 100%       | 0%         |
+| **Dental**            | 50%        | 50%        |
 
 ## Server Actions
 
 ### Salary Structure Management
 
 #### `createSalaryStructureWithRBAC(data)`
+
 **Permissions Required:** `salary:create`
 
 **Example:**
+
 ```typescript
 const result = await createSalaryStructureWithRBAC({
   userId: "teacher_123",
@@ -124,8 +136,13 @@ const result = await createSalaryStructureWithRBAC({
   grade: "T3",
   baseSalary: 5000,
   allowances: [
-    { type: "HOUSING", name: "Housing Allowance", amount: 1500, isTaxable: true },
-    { type: "TRANSPORTATION", name: "Transport", amount: 500, isTaxable: true }
+    {
+      type: "HOUSING",
+      name: "Housing Allowance",
+      amount: 1500,
+      isTaxable: true,
+    },
+    { type: "TRANSPORTATION", name: "Transport", amount: 500, isTaxable: true },
   ],
   benefits: [
     {
@@ -133,25 +150,29 @@ const result = await createSalaryStructureWithRBAC({
       name: "Health Insurance",
       value: 500,
       employerContribution: 400,
-      employeeContribution: 100
-    }
+      employeeContribution: 100,
+    },
   ],
-  effectiveFrom: new Date("2024-09-01")
+  effectiveFrom: new Date("2024-09-01"),
 })
 ```
 
 #### `updateSalaryStructureWithRBAC(id, data)`
+
 Updates salary structure (creates new version with effectiveFrom date).
 
 #### `approveSalaryChangeWithRBAC(id)`
+
 Approves a salary change (requires approval permission).
 
 ### Salary Scale Management
 
 #### `createSalaryScaleWithRBAC(data)`
+
 Defines a salary scale for a position.
 
 **Example:**
+
 ```typescript
 await createSalaryScaleWithRBAC({
   position: "Teacher",
@@ -159,16 +180,18 @@ await createSalaryScaleWithRBAC({
   minSalary: 3000,
   maxSalary: 4000,
   annualIncrement: 150,
-  effectiveFrom: new Date("2024-01-01")
+  effectiveFrom: new Date("2024-01-01"),
 })
 ```
 
 ### Salary Calculations
 
 #### `calculateTotalCompensationWithRBAC(userId)`
+
 Calculates total compensation including salary, allowances, and benefits.
 
 **Returns:**
+
 ```typescript
 {
   baseSalary: number
@@ -201,12 +224,12 @@ Calculates total compensation including salary, allowances, and benefits.
 
 ## RBAC
 
-| Role | View | Create | Edit | Approve |
-|------|------|--------|------|---------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (own) | ❌ | ❌ | ❌ |
-| **STAFF** | ✅ (own) | ❌ | ❌ | ❌ |
+| Role           | View     | Create | Edit | Approve |
+| -------------- | -------- | ------ | ---- | ------- |
+| **ADMIN**      | ✅       | ✅     | ✅   | ✅      |
+| **ACCOUNTANT** | ✅       | ✅     | ✅   | ✅      |
+| **TEACHER**    | ✅ (own) | ❌     | ❌   | ❌      |
+| **STAFF**      | ✅ (own) | ❌     | ❌   | ❌      |
 
 ## Best Practices
 

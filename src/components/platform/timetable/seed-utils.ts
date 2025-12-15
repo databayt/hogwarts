@@ -26,15 +26,15 @@ export const SUBJECT_DISTRIBUTION = {
   Biology: 3,
 
   // Specialized subjects (low frequency)
-  'Physical Education': 2,
+  "Physical Education": 2,
   Art: 2,
   Music: 2,
-  'Computer Science': 2,
-  'Religious Studies': 2,
+  "Computer Science": 2,
+  "Religious Studies": 2,
 
   // Once-a-week subjects
   Library: 1,
-  'Life Skills': 1,
+  "Life Skills": 1,
   Assembly: 1,
 } as const
 
@@ -43,20 +43,20 @@ export const SUBJECT_DISTRIBUTION = {
  */
 export const TEACHER_SPECIALIZATIONS = {
   // Math/Science teachers
-  mathTeacher: ['Mathematics', 'Physics'],
-  scienceTeacher: ['Science', 'Chemistry', 'Biology'],
+  mathTeacher: ["Mathematics", "Physics"],
+  scienceTeacher: ["Science", "Chemistry", "Biology"],
 
   // Language teachers
-  englishTeacher: ['English', 'Library'],
-  arabicTeacher: ['Arabic', 'Religious Studies'],
+  englishTeacher: ["English", "Library"],
+  arabicTeacher: ["Arabic", "Religious Studies"],
 
   // Social studies teachers
-  historyTeacher: ['History', 'Geography', 'Life Skills'],
+  historyTeacher: ["History", "Geography", "Life Skills"],
 
   // Specialist teachers
-  peTeacher: ['Physical Education'],
-  artTeacher: ['Art', 'Music'],
-  computerTeacher: ['Computer Science'],
+  peTeacher: ["Physical Education"],
+  artTeacher: ["Art", "Music"],
+  computerTeacher: ["Computer Science"],
 } as const
 
 // ============================================================================
@@ -77,9 +77,17 @@ interface TimetableSlot {
 interface GenerateTimetableOptions {
   schoolId: string
   termId: string
-  classes: Array<{ id: string; name: string; teacherId: string; classroomId: string }>
+  classes: Array<{
+    id: string
+    name: string
+    teacherId: string
+    classroomId: string
+  }>
   periods: Array<{ id: string }>
-  teachers: Array<{ id: string; specialization: keyof typeof TEACHER_SPECIALIZATIONS }>
+  teachers: Array<{
+    id: string
+    specialization: keyof typeof TEACHER_SPECIALIZATIONS
+  }>
   workingDays: number[]
   includeConflicts?: boolean
   includeNextWeek?: boolean
@@ -88,7 +96,9 @@ interface GenerateTimetableOptions {
 /**
  * Generates a realistic timetable with proper subject distribution
  */
-export function generateRealisticTimetable(options: GenerateTimetableOptions): TimetableSlot[] {
+export function generateRealisticTimetable(
+  options: GenerateTimetableOptions
+): TimetableSlot[] {
   const {
     schoolId,
     termId,
@@ -108,11 +118,11 @@ export function generateRealisticTimetable(options: GenerateTimetableOptions): T
   const classSubjectCount = new Map<string, Map<string, number>>()
 
   // Initialize tracking
-  classes.forEach(cls => {
+  classes.forEach((cls) => {
     classSubjectCount.set(cls.id, new Map())
   })
 
-  teachers.forEach(teacher => {
+  teachers.forEach((teacher) => {
     teacherSchedule.set(teacher.id, new Set())
   })
 
@@ -126,7 +136,11 @@ export function generateRealisticTimetable(options: GenerateTimetableOptions): T
         const slotKey = `${day}:${period.id}`
 
         // Select appropriate subject based on distribution
-        const subject = selectSubjectForSlot(subjectCount, day, periods.indexOf(period))
+        const subject = selectSubjectForSlot(
+          subjectCount,
+          day,
+          periods.indexOf(period)
+        )
 
         // Find available teacher for this subject
         const teacher = findAvailableTeacher(
@@ -164,7 +178,9 @@ export function generateRealisticTimetable(options: GenerateTimetableOptions): T
         // Update tracking
         subjectCount.set(subject, (subjectCount.get(subject) || 0) + 1)
         teacherSchedule.get(teacher.id)!.add(slotKey)
-        roomSchedule.has(room) ? roomSchedule.get(room)!.add(slotKey) : roomSchedule.set(room, new Set([slotKey]))
+        roomSchedule.has(room)
+          ? roomSchedule.get(room)!.add(slotKey)
+          : roomSchedule.set(room, new Set([slotKey]))
 
         // Generate next week data if requested
         if (includeNextWeek) {
@@ -192,7 +208,7 @@ function selectSubjectForSlot(
 ): string {
   // Special handling for first period Monday (Assembly)
   if (day === 1 && periodIndex === 0) {
-    return 'Assembly'
+    return "Assembly"
   }
 
   // Find subjects that haven't reached their weekly limit
@@ -205,13 +221,13 @@ function selectSubjectForSlot(
 
   if (availableSubjects.length === 0) {
     // All subjects at capacity, return a core subject
-    return 'Mathematics'
+    return "Mathematics"
   }
 
   // Prioritize core subjects in morning periods
   if (periodIndex < 3) {
-    const coreSubjects = availableSubjects.filter(s =>
-      ['Mathematics', 'English', 'Arabic', 'Science'].includes(s)
+    const coreSubjects = availableSubjects.filter((s) =>
+      ["Mathematics", "English", "Arabic", "Science"].includes(s)
     )
     if (coreSubjects.length > 0) {
       return coreSubjects[Math.floor(Math.random() * coreSubjects.length)]
@@ -219,8 +235,8 @@ function selectSubjectForSlot(
   }
 
   // PE typically after lunch
-  if (periodIndex > 4 && availableSubjects.includes('Physical Education')) {
-    return 'Physical Education'
+  if (periodIndex > 4 && availableSubjects.includes("Physical Education")) {
+    return "Physical Education"
   }
 
   // Random selection from available subjects
@@ -231,14 +247,17 @@ function selectSubjectForSlot(
  * Finds an available teacher who can teach the subject
  */
 function findAvailableTeacher(
-  teachers: Array<{ id: string; specialization: keyof typeof TEACHER_SPECIALIZATIONS }>,
+  teachers: Array<{
+    id: string
+    specialization: keyof typeof TEACHER_SPECIALIZATIONS
+  }>,
   subject: string,
   teacherSchedule: Map<string, Set<string>>,
   slotKey: string,
   allowConflicts: boolean
 ): { id: string; specialization: keyof typeof TEACHER_SPECIALIZATIONS } | null {
   // Find teachers who can teach this subject
-  const qualifiedTeachers = teachers.filter(teacher => {
+  const qualifiedTeachers = teachers.filter((teacher) => {
     const specializations = TEACHER_SPECIALIZATIONS[teacher.specialization]
     return (specializations as readonly string[]).includes(subject)
   })
@@ -280,7 +299,9 @@ function findAvailableRoom(
 /**
  * Generates intentional conflict slots for testing
  */
-function generateConflictSlots(options: GenerateTimetableOptions): TimetableSlot[] {
+function generateConflictSlots(
+  options: GenerateTimetableOptions
+): TimetableSlot[] {
   const { schoolId, termId, classes, periods, teachers, workingDays } = options
   const conflicts: TimetableSlot[] = []
 
@@ -357,20 +378,20 @@ export const SCHOOL_CONFIGS = {
   arabicSchool: {
     workingDays: [0, 1, 2, 3, 4], // Sunday to Thursday
     defaultLunchAfterPeriod: 4,
-    startTime: '08:00',
-    endTime: '14:00',
+    startTime: "08:00",
+    endTime: "14:00",
   },
   westernSchool: {
     workingDays: [1, 2, 3, 4, 5], // Monday to Friday
     defaultLunchAfterPeriod: 3,
-    startTime: '08:30',
-    endTime: '15:30',
+    startTime: "08:30",
+    endTime: "15:30",
   },
   saturdaySchool: {
     workingDays: [1, 2, 3, 4, 5, 6], // Monday to Saturday
     defaultLunchAfterPeriod: 4,
-    startTime: '07:30',
-    endTime: '13:30',
+    startTime: "07:30",
+    endTime: "13:30",
   },
 } as const
 
@@ -382,7 +403,9 @@ export const SCHOOL_CONFIGS = {
  * Creates sample teacher data with specializations
  */
 export function createSampleTeachers(schoolId: string, count: number = 10) {
-  const specializations = Object.keys(TEACHER_SPECIALIZATIONS) as Array<keyof typeof TEACHER_SPECIALIZATIONS>
+  const specializations = Object.keys(TEACHER_SPECIALIZATIONS) as Array<
+    keyof typeof TEACHER_SPECIALIZATIONS
+  >
   const teachers = []
 
   for (let i = 0; i < count; i++) {
@@ -405,7 +428,7 @@ export function createSampleTeachers(schoolId: string, count: number = 10) {
  */
 export function createSampleClassrooms(schoolId: string, count: number = 15) {
   const classrooms = []
-  const types = ['Regular', 'Lab', 'Computer', 'Art', 'Music', 'Gym']
+  const types = ["Regular", "Lab", "Computer", "Art", "Music", "Gym"]
 
   for (let i = 0; i < count; i++) {
     classrooms.push({
@@ -426,7 +449,7 @@ export function createSampleClassrooms(schoolId: string, count: number = 15) {
 export function createSamplePeriods(
   schoolId: string,
   yearId: string,
-  startTime: string = '08:00',
+  startTime: string = "08:00",
   periodDuration: number = 45,
   periodCount: number = 8
 ) {

@@ -11,6 +11,7 @@ Part of the [Exam Block System](../README.md)
 The Auto-Generate Block automates exam creation using predefined templates, distribution rules, and intelligent question selection algorithms. It generates balanced exams that meet specific difficulty, Bloom's taxonomy, and question type requirements.
 
 **Key Features:**
+
 - Exam template management
 - Question distribution configuration
 - AI-powered question selection
@@ -57,6 +58,7 @@ Create reusable blueprints for exam generation:
 ### 2. Distribution Editor
 
 Visual interface for configuring question distribution:
+
 - Drag-and-drop grid
 - Real-time total calculation
 - Balance validation
@@ -74,8 +76,8 @@ export async function selectQuestions(
   template: ExamTemplate,
   options: GenerationOptions
 ): Promise<QuestionBank[]> {
-  const { distribution, bloomDistribution } = template;
-  const selected: QuestionBank[] = [];
+  const { distribution, bloomDistribution } = template
+  const selected: QuestionBank[] = []
 
   // Select by type and difficulty
   for (const [type, difficultyMap] of Object.entries(distribution)) {
@@ -85,19 +87,19 @@ export async function selectQuestions(
           schoolId,
           subjectId: template.subjectId,
           questionType: type,
-          difficulty: difficulty
+          difficulty: difficulty,
         },
         take: count * 2, // Buffer for selection
-        orderBy: options.randomize ? { id: 'asc' } : { timesUsed: 'asc' }
-      });
+        orderBy: options.randomize ? { id: "asc" } : { timesUsed: "asc" },
+      })
 
       // Apply Bloom distribution
-      const bloomFiltered = filterByBloomLevel(questions, bloomDistribution);
-      selected.push(...bloomFiltered.slice(0, count));
+      const bloomFiltered = filterByBloomLevel(questions, bloomDistribution)
+      selected.push(...bloomFiltered.slice(0, count))
     }
   }
 
-  return selected;
+  return selected
 }
 ```
 
@@ -110,7 +112,7 @@ export async function selectQuestions(
 ### Creating a Template
 
 ```typescript
-import { createExamTemplate } from './actions';
+import { createExamTemplate } from "./actions"
 
 const template = await createExamTemplate({
   name: "Physics Final Template",
@@ -122,11 +124,11 @@ const template = await createExamTemplate({
     MULTIPLE_CHOICE: {
       EASY: 15,
       MEDIUM: 10,
-      HARD: 5
+      HARD: 5,
     },
     ESSAY: {
-      HARD: 2
-    }
+      HARD: 2,
+    },
   },
   bloomDistribution: {
     REMEMBER: 10,
@@ -134,15 +136,15 @@ const template = await createExamTemplate({
     APPLY: 8,
     ANALYZE: 4,
     EVALUATE: 2,
-    CREATE: 1
-  }
-});
+    CREATE: 1,
+  },
+})
 ```
 
 ### Generating an Exam
 
 ```typescript
-import { generateExamFromTemplate } from './actions';
+import { generateExamFromTemplate } from "./actions"
 
 const result = await generateExamFromTemplate({
   templateId: "template-123",
@@ -151,9 +153,9 @@ const result = await generateExamFromTemplate({
     randomize: true,
     seed: "unique-seed-2025",
     excludeRecentlyUsed: true,
-    preferHighPerforming: true
-  }
-});
+    preferHighPerforming: true,
+  },
+})
 
 // Returns: { generatedExamId: "...", questions: [...] }
 ```
@@ -199,8 +201,8 @@ export const EXAM_GENERATION_SETTINGS = {
   defaultDuration: 60,
   allowDuplicateQuestions: false,
   defaultRandomization: false,
-  selectionStrategy: 'BALANCED' // BALANCED, RANDOM, LEAST_USED
-};
+  selectionStrategy: "BALANCED", // BALANCED, RANDOM, LEAST_USED
+}
 ```
 
 ---
@@ -208,11 +210,13 @@ export const EXAM_GENERATION_SETTINGS = {
 ## Integration
 
 ### With Question Bank
+
 - Queries available questions
 - Filters by metadata
 - Tracks usage statistics
 
 ### With Manage Block
+
 - "Generate from Template" option
 - Pre-fills exam details
 - Links to generated exam
@@ -224,6 +228,7 @@ export const EXAM_GENERATION_SETTINGS = {
 ### Optimization Strategies
 
 1. **Pre-filter Questions**
+
 ```typescript
 // Get all matching questions once
 const pool = await db.questionBank.findMany({
@@ -231,19 +236,20 @@ const pool = await db.questionBank.findMany({
     schoolId,
     subjectId,
     questionType: { in: requiredTypes },
-    difficulty: { in: requiredDifficulties }
-  }
-});
+    difficulty: { in: requiredDifficulties },
+  },
+})
 
 // Then filter in memory
-const selected = filterByBloomAndSelect(pool, distribution);
+const selected = filterByBloomAndSelect(pool, distribution)
 ```
 
 2. **Cache Templates**
+
 ```typescript
 // Cache frequently used templates
-const cachedTemplate = await redis.get(`template:${id}`);
-if (cachedTemplate) return JSON.parse(cachedTemplate);
+const cachedTemplate = await redis.get(`template:${id}`)
+if (cachedTemplate) return JSON.parse(cachedTemplate)
 ```
 
 ---

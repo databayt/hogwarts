@@ -1,10 +1,17 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface ChartAreaInteractiveProps {
-  data?: any;
+  data?: any
 }
 
 export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
@@ -17,16 +24,16 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px] flex items-center justify-center bg-muted rounded-lg">
-          <div className="text-center space-y-2">
-            <TrendingUp className="mx-auto size-12 text-muted-foreground" />
+        <div className="bg-muted flex h-[300px] items-center justify-center rounded-lg">
+          <div className="space-y-2 text-center">
+            <TrendingUp className="text-muted-foreground mx-auto size-12" />
             <p className="muted">Chart visualization placeholder</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               TODO: Implement chart with Recharts
             </p>
           </div>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

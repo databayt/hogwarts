@@ -1,44 +1,48 @@
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import BookTableActions from "./book-table-actions";
-import { type Locale } from "@/components/internationalization/config";
+import Link from "next/link"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
+import { type Locale } from "@/components/internationalization/config"
+
+import BookTableActions from "./book-table-actions"
 
 interface LibraryAdminBooksContentProps {
-  dictionary: any;
-  lang: Locale;
+  dictionary: any
+  lang: Locale
 }
 
 export default async function LibraryAdminBooksContent({
   dictionary,
   lang,
 }: LibraryAdminBooksContentProps) {
-  const { schoolId } = await getTenantContext();
-  const t = dictionary.school;
+  const { schoolId } = await getTenantContext()
+  const t = dictionary.school
 
   if (!schoolId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <h2 className="mb-4">{t.library.messages.schoolContextNotFound}</h2>
-        <p className="muted">
-          {t.common.messages.errorOccurred}
-        </p>
+        <p className="muted">{t.common.messages.errorOccurred}</p>
       </div>
-    );
+    )
   }
 
   const books = await db.book.findMany({
     where: { schoolId },
     orderBy: { createdAt: "desc" },
-  });
+  })
 
   return (
     <section className="library-admin-books-container">
       <div className="library-admin-books-header">
-        <h2 className="library-admin-books-title">{t.library.admin.allBooks}</h2>
+        <h2 className="library-admin-books-title">
+          {t.library.admin.allBooks}
+        </h2>
         <Button asChild>
-          <Link href="/library/admin/books/new">+ {t.library.admin.createNewBook}</Link>
+          <Link href="/library/admin/books/new">
+            + {t.library.admin.createNewBook}
+          </Link>
         </Button>
       </div>
 
@@ -47,7 +51,9 @@ export default async function LibraryAdminBooksContent({
           <div className="library-admin-books-empty">
             <p>{t.library.admin.noBooks}</p>
             <Button asChild className="mt-4">
-              <Link href="/library/admin/books/new">{t.library.admin.addFirstBook}</Link>
+              <Link href="/library/admin/books/new">
+                {t.library.admin.addFirstBook}
+              </Link>
             </Button>
           </div>
         ) : (
@@ -66,14 +72,20 @@ export default async function LibraryAdminBooksContent({
             <tbody>
               {books.map((book) => (
                 <tr key={book.id}>
-                  <td><strong>{book.title}</strong></td>
+                  <td>
+                    <strong>{book.title}</strong>
+                  </td>
                   <td>{book.author}</td>
                   <td>{book.genre}</td>
                   <td>{book.totalCopies}</td>
                   <td>{book.availableCopies}</td>
                   <td>⭐ {book.rating}/5</td>
                   <td>
-                    <BookTableActions bookId={book.id} schoolId={schoolId} dictionary={dictionary} />
+                    <BookTableActions
+                      bookId={book.id}
+                      schoolId={schoolId}
+                      dictionary={dictionary}
+                    />
                   </td>
                 </tr>
               ))}
@@ -82,5 +94,5 @@ export default async function LibraryAdminBooksContent({
         )}
       </div>
     </section>
-  );
+  )
 }

@@ -5,20 +5,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import UserEditProfile from "./user-edit-profile";
-import { currentUser } from "@/components/auth/auth";
-import { getUserById } from "@/components/auth/user";
+} from "@/components/ui/dialog"
+import { currentUser } from "@/components/auth/auth"
+import { getUserById } from "@/components/auth/user"
+
+import UserEditProfile from "./user-edit-profile"
 
 export default async function UserProfile() {
-  const user = await currentUser();
-  const extendedUser = user ? await getUserById(user.id) : null;
-  const firstName = extendedUser?.username?.split(" ")[0];
-  const lastName = extendedUser?.username?.split(" ").slice(1).join(" ") || undefined;
-  
+  const user = await currentUser()
+  const extendedUser = user ? await getUserById(user.id) : null
+  const firstName = extendedUser?.username?.split(" ")[0]
+  const lastName =
+    extendedUser?.username?.split(" ").slice(1).join(" ") || undefined
+
   return (
     <Dialog>
-      <DialogTrigger className="w-full text-left px-2 py-1 cursor-pointer hover:bg-muted-foreground/5">
+      <DialogTrigger className="hover:bg-muted-foreground/5 w-full cursor-pointer px-2 py-1 text-left">
         Profile
       </DialogTrigger>
       <DialogContent>
@@ -35,7 +37,5 @@ export default async function UserProfile() {
         />
       </DialogContent>
     </Dialog>
-  );
+  )
 }
-
-

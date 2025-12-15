@@ -4,19 +4,19 @@
  */
 
 import type {
+  AccountOverview,
   BankAccount,
   BankAccountWithTransactions,
-  Transaction,
-  Transfer,
-  AccountOverview,
-  TransactionFilters,
-  PaginationOptions,
-  PaginatedResponse,
-  PlaidLinkMetadata,
-  CreateBankAccountInput,
   BankInstitution,
+  CreateBankAccountInput,
+  PaginatedResponse,
+  PaginationOptions,
+  PlaidLinkMetadata,
+  Transaction,
+  TransactionFilters,
+  Transfer,
   TransferWithBanks,
-} from './bank.types'
+} from "./bank.types"
 
 // ============================================================================
 // Result Types for Better Error Handling
@@ -43,7 +43,7 @@ export interface ActionError {
  * Field-level validation errors
  */
 export interface ValidationError extends ActionError {
-  code: 'VALIDATION_ERROR'
+  code: "VALIDATION_ERROR"
   fieldErrors?: Record<string, string[]>
 }
 
@@ -99,7 +99,8 @@ export interface DeleteBankAccountParams {
 // Transaction Actions
 // ============================================================================
 
-export interface GetTransactionsParams extends TransactionFilters, PaginationOptions {
+export interface GetTransactionsParams
+  extends TransactionFilters, PaginationOptions {
   userId: string
 }
 
@@ -163,8 +164,8 @@ export interface CreateTransferResult extends Transfer {}
 
 export interface GetTransfersParams extends PaginationOptions {
   userId: string
-  type?: 'sent' | 'received' | 'all'
-  status?: Transfer['status']
+  type?: "sent" | "received" | "all"
+  status?: Transfer["status"]
 }
 
 export interface GetTransfersResult extends PaginatedResponse<TransferWithBanks> {}
@@ -176,7 +177,7 @@ export interface GetTransferParams {
 
 export interface UpdateTransferStatusParams {
   transferId: string
-  status: Transfer['status']
+  status: Transfer["status"]
   userId: string
 }
 
@@ -216,7 +217,7 @@ export interface UpdatePlaidAccountParams {
 
 export interface GetSpendingAnalyticsParams {
   userId: string
-  period: 'week' | 'month' | 'quarter' | 'year'
+  period: "week" | "month" | "quarter" | "year"
   accountId?: string
 }
 
@@ -244,7 +245,7 @@ export interface SpendingAnalytics {
     transactionCount: number
   }>
   insights: Array<{
-    type: 'warning' | 'info' | 'success'
+    type: "warning" | "info" | "success"
     message: string
     data?: Record<string, unknown>
   }>
@@ -269,7 +270,7 @@ export function isActionError<E = ActionError>(
 export function isValidationError(
   error: ActionError
 ): error is ValidationError {
-  return error.code === 'VALIDATION_ERROR'
+  return error.code === "VALIDATION_ERROR"
 }
 
 // ============================================================================
@@ -277,32 +278,70 @@ export function isValidationError(
 // ============================================================================
 
 export type BankActions = {
-  getAccounts: (params: GetAccountsParams) => Promise<ActionResult<GetAccountsResult>>
-  getAccount: (params: GetAccountParams) => Promise<ActionResult<BankAccountWithTransactions>>
-  getAccountByPlaidId: (params: GetAccountByPlaidIdParams) => Promise<ActionResult<BankAccountWithTransactions>>
-  createBankAccount: (params: CreateBankAccountParams) => Promise<ActionResult<CreateBankAccountResult>>
-  syncTransactions: (params: SyncTransactionsParams) => Promise<ActionResult<SyncTransactionsResult>>
-  getBankInfo: (params: GetBankInfoParams) => Promise<ActionResult<GetBankInfoResult>>
-  deleteBankAccount: (params: DeleteBankAccountParams) => Promise<ActionResult<void>>
+  getAccounts: (
+    params: GetAccountsParams
+  ) => Promise<ActionResult<GetAccountsResult>>
+  getAccount: (
+    params: GetAccountParams
+  ) => Promise<ActionResult<BankAccountWithTransactions>>
+  getAccountByPlaidId: (
+    params: GetAccountByPlaidIdParams
+  ) => Promise<ActionResult<BankAccountWithTransactions>>
+  createBankAccount: (
+    params: CreateBankAccountParams
+  ) => Promise<ActionResult<CreateBankAccountResult>>
+  syncTransactions: (
+    params: SyncTransactionsParams
+  ) => Promise<ActionResult<SyncTransactionsResult>>
+  getBankInfo: (
+    params: GetBankInfoParams
+  ) => Promise<ActionResult<GetBankInfoResult>>
+  deleteBankAccount: (
+    params: DeleteBankAccountParams
+  ) => Promise<ActionResult<void>>
 }
 
 export type TransactionActions = {
-  getTransactions: (params: GetTransactionsParams) => Promise<ActionResult<GetTransactionsResult>>
-  getTransaction: (params: GetTransactionParams) => Promise<ActionResult<Transaction>>
-  getRecentTransactions: (params: GetRecentTransactionsParams) => Promise<ActionResult<Transaction[]>>
-  getTransactionCategories: (params: GetTransactionCategoriesParams) => Promise<ActionResult<GetTransactionCategoriesResult>>
-  getTransactionStats: (params: GetTransactionStatsParams) => Promise<ActionResult<GetTransactionStatsResult>>
+  getTransactions: (
+    params: GetTransactionsParams
+  ) => Promise<ActionResult<GetTransactionsResult>>
+  getTransaction: (
+    params: GetTransactionParams
+  ) => Promise<ActionResult<Transaction>>
+  getRecentTransactions: (
+    params: GetRecentTransactionsParams
+  ) => Promise<ActionResult<Transaction[]>>
+  getTransactionCategories: (
+    params: GetTransactionCategoriesParams
+  ) => Promise<ActionResult<GetTransactionCategoriesResult>>
+  getTransactionStats: (
+    params: GetTransactionStatsParams
+  ) => Promise<ActionResult<GetTransactionStatsResult>>
 }
 
 export type TransferActions = {
-  createTransfer: (params: CreateTransferParams) => Promise<ActionResult<CreateTransferResult>>
-  getTransfers: (params: GetTransfersParams) => Promise<ActionResult<GetTransfersResult>>
-  getTransfer: (params: GetTransferParams) => Promise<ActionResult<TransferWithBanks>>
-  updateTransferStatus: (params: UpdateTransferStatusParams) => Promise<ActionResult<Transfer>>
+  createTransfer: (
+    params: CreateTransferParams
+  ) => Promise<ActionResult<CreateTransferResult>>
+  getTransfers: (
+    params: GetTransfersParams
+  ) => Promise<ActionResult<GetTransfersResult>>
+  getTransfer: (
+    params: GetTransferParams
+  ) => Promise<ActionResult<TransferWithBanks>>
+  updateTransferStatus: (
+    params: UpdateTransferStatusParams
+  ) => Promise<ActionResult<Transfer>>
 }
 
 export type PlaidActions = {
-  createLinkToken: (params: CreatePlaidLinkTokenParams) => Promise<ActionResult<CreatePlaidLinkTokenResult>>
-  exchangePublicToken: (params: ExchangePublicTokenParams) => Promise<ActionResult<ExchangePublicTokenResult>>
-  updateAccount: (params: UpdatePlaidAccountParams) => Promise<ActionResult<void>>
+  createLinkToken: (
+    params: CreatePlaidLinkTokenParams
+  ) => Promise<ActionResult<CreatePlaidLinkTokenResult>>
+  exchangePublicToken: (
+    params: ExchangePublicTokenParams
+  ) => Promise<ActionResult<ExchangePublicTokenResult>>
+  updateAccount: (
+    params: UpdatePlaidAccountParams
+  ) => Promise<ActionResult<void>>
 }

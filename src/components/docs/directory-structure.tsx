@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { Folder, File } from 'lucide-react'
+import { File, Folder } from "lucide-react"
 
 interface DirectoryNode {
   name: string
-  type: 'file' | 'directory'
+  type: "file" | "directory"
   description?: string
   children?: DirectoryNode[]
 }
@@ -32,22 +32,22 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
               {
                 name: "(marketing)/",
                 type: "directory",
-                description: "Entry point 01: SaaS marketing"
+                description: "Entry point 01: SaaS marketing",
               },
               {
                 name: "(operator)/",
                 type: "directory",
-                description: "Entry point 02: SaaS dashboard"
+                description: "Entry point 02: SaaS dashboard",
               },
               {
                 name: "(auth)/",
                 type: "directory",
-                description: "Authentication pages"
+                description: "Authentication pages",
               },
               {
                 name: "onboarding/",
                 type: "directory",
-                description: "User onboarding flow"
+                description: "User onboarding flow",
               },
               {
                 name: "s/",
@@ -62,25 +62,25 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
                       {
                         name: "(platform)/",
                         type: "directory",
-                        description: "Entry point 04: School dashboard"
+                        description: "Entry point 04: School dashboard",
                       },
                       {
                         name: "(site)/",
                         type: "directory",
-                        description: "Entry point 03: School marketing"
-                      }
-                    ]
-                  }
-                ]
+                        description: "Entry point 03: School marketing",
+                      },
+                    ],
+                  },
+                ],
               },
               {
                 name: "layout.tsx",
                 type: "file",
-                description: "Root layout component"
-              }
-            ]
-          }
-        ]
+                description: "Root layout component",
+              },
+            ],
+          },
+        ],
       },
       {
         name: "components/",
@@ -90,65 +90,65 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
           {
             name: "ui/",
             type: "directory",
-            description: "shadcn/ui components"
+            description: "shadcn/ui components",
           },
           {
             name: "atom/",
             type: "directory",
-            description: "Complex components (2+ shadcn combined)"
+            description: "Complex components (2+ shadcn combined)",
           },
           {
             name: "template/",
             type: "directory",
-            description: "Full sections (header, hero, footer)"
+            description: "Full sections (header, hero, footer)",
           },
           {
             name: "auth/",
             type: "directory",
-            description: "Authentication components"
+            description: "Authentication components",
           },
           {
             name: "onboarding/",
             type: "directory",
-            description: "Onboarding flow components"
+            description: "Onboarding flow components",
           },
           {
             name: "marketing/",
             type: "directory",
-            description: "Entry point 01: SaaS marketing"
+            description: "Entry point 01: SaaS marketing",
           },
           {
             name: "operator/",
             type: "directory",
-            description: "Entry point 02: SaaS dashboard"
+            description: "Entry point 02: SaaS dashboard",
           },
           {
             name: "site/",
             type: "directory",
-            description: "Entry point 03: School marketing"
+            description: "Entry point 03: School marketing",
           },
           {
             name: "platform/",
             type: "directory",
-            description: "Entry point 04: School dashboard"
-          }
-        ]
-      }
-    ]
+            description: "Entry point 04: School dashboard",
+          },
+        ],
+      },
+    ],
   }
 
   const FileIcon = ({ type }: { type: string }) => {
     if (type === "directory") {
-      return <Folder className="w-4 h-4" />
+      return <Folder className="h-4 w-4" />
     }
-    return <File className="w-4 h-4" />
+    return <File className="h-4 w-4" />
   }
 
   const FileTree = ({
     item,
     level = 0,
     isLast = false,
-    parentIsLast = []
+    parentIsLast = [],
   }: {
     item: DirectoryNode
     level?: number
@@ -158,18 +158,21 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
     <div className="relative">
       {level > 0 && (
         <>
-          {parentIsLast.slice(0, -1).map((isLastParent, idx) => (
-            !isLastParent && (
-              <div
-                key={idx}
-                className="absolute border-l h-full"
-                style={{ left: `${(idx + 1) * 24 - 20}px` }}
-              />
-            )
-          ))}
+          {parentIsLast
+            .slice(0, -1)
+            .map(
+              (isLastParent, idx) =>
+                !isLastParent && (
+                  <div
+                    key={idx}
+                    className="absolute h-full border-l"
+                    style={{ left: `${(idx + 1) * 24 - 20}px` }}
+                  />
+                )
+            )}
           {!isLast && (
             <div
-              className="absolute border-l h-full"
+              className="absolute h-full border-l"
               style={{ left: `${level * 24 - 20}px` }}
             />
           )}
@@ -180,14 +183,16 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
         style={{ paddingLeft: `${level * 24}px` }}
       >
         <FileIcon type={item.type} />
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <code className={`bg-transparent px-0 py-0 ${
-            item.type === 'directory' ? 'font-semibold' : ''
-          }`}>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <code
+            className={`bg-transparent px-0 py-0 ${
+              item.type === "directory" ? "font-semibold" : ""
+            }`}
+          >
             {item.name}
           </code>
           {item.description && (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               — {item.description}
             </span>
           )}

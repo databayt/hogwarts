@@ -3,28 +3,30 @@
  * Follows Hogwarts server action pattern with schoolId scoping
  */
 
-'use server'
+"use server"
 
-import { revalidatePath } from 'next/cache'
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import { logger } from '@/lib/logger'
-import { getProvider } from '@/components/file'
-import { extractReceiptData, retryExtraction } from './ai/extract-receipt-data'
-import {
-  uploadReceiptSchema,
-  deleteReceiptSchema,
-  getReceiptsSchema,
-  getReceiptByIdSchema,
-  updateReceiptSchema,
-} from './validation'
+import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
+import { logger } from "@/lib/logger"
+import { getTenantContext } from "@/lib/tenant-context"
+import { getProvider } from "@/components/file"
+
+import { extractReceiptData, retryExtraction } from "./ai/extract-receipt-data"
 import type {
+  ExpenseReceipt,
+  GetReceiptsResponse,
   ServerActionResponse,
   UploadReceiptResponse,
-  GetReceiptsResponse,
-  ExpenseReceipt,
-} from './types'
+} from "./types"
+import {
+  deleteReceiptSchema,
+  getReceiptByIdSchema,
+  getReceiptsSchema,
+  updateReceiptSchema,
+  uploadReceiptSchema,
+} from "./validation"
 
 /**
  * Upload a new receipt file and create database record
@@ -39,7 +41,7 @@ export async function uploadReceipt(
     if (!session?.user) {
       return {
         success: false,
-        error: 'Unauthorized. Please sign in.',
+        error: "Unauthorized. Please sign in.",
       }
     }
 
@@ -48,16 +50,16 @@ export async function uploadReceipt(
     if (!schoolId) {
       return {
         success: false,
-        error: 'Missing school context',
+        error: "Missing school context",
       }
     }
 
     // 3. Extract and validate file
-    const file = formData.get('file') as File
+    const file = formData.get("file") as File
     if (!file) {
       return {
         success: false,
-        error: 'No file provided',
+        error: "No file provided",
       }
     }
 
@@ -71,19 +73,19 @@ export async function uploadReceipt(
     if (!validation.success) {
       return {
         success: false,
-        error: validation.error.issues[0]?.message || 'Invalid file',
+        error: validation.error.issues[0]?.message || "Invalid file",
       }
     }
 
     // 4. Upload to storage using centralized provider
     const filename = `${schoolId}/receipts/${Date.now()}-${file.name}`
-    const provider = getProvider('vercel_blob')
+    const provider = getProvider("vercel_blob")
     const fileUrl = await provider.upload(file, filename, {
       contentType: file.type,
     })
 
-    logger.info('Receipt file uploaded to storage', {
-      action: 'receipt_upload',
+    logger.info("Receipt file uploaded to storage", {
+      action: "receipt_upload",
       schoolId,
       userId: session.user.id,
       filename,
@@ -99,12 +101,12 @@ export async function uploadReceipt(
         fileUrl,
         fileSize: file.size,
         mimeType: file.type,
-        status: 'pending',
+        status: "pending",
       },
     })
 
-    logger.info('Receipt database record created', {
-      action: 'receipt_db_create',
+    logger.info("Receipt database record created", {
+      action: "receipt_db_create",
       receiptId: receipt.id,
       schoolId,
     })
@@ -123,16 +125,16 @@ export async function uploadReceipt(
     }
   } catch (error) {
     logger.error(
-      'Receipt upload failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Receipt upload failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'receipt_upload_error',
+        action: "receipt_upload_error",
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
+      error: error instanceof Error ? error.message : "Upload failed",
     }
   }
 }
@@ -143,7 +145,7 @@ export async function uploadReceipt(
  */
 export async function getReceipts(input?: {
   userId?: string
-  status?: 'pending' | 'processing' | 'processed' | 'error'
+  status?: "pending" | "processing" | "processed" | "error"
   limit?: number
   offset?: number
   startDate?: Date
@@ -155,7 +157,7 @@ export async function getReceipts(input?: {
     if (!session?.user) {
       return {
         success: false,
-        error: 'Unauthorized',
+        error: "Unauthorized",
       }
     }
 
@@ -164,7 +166,7 @@ export async function getReceipts(input?: {
     if (!schoolId) {
       return {
         success: false,
-        error: 'Missing school context',
+        error: "Missing school context",
       }
     }
 
@@ -201,7 +203,7 @@ export async function getReceipts(input?: {
     const [receipts, total] = await Promise.all([
       db.expenseReceipt.findMany({
         where,
-        orderBy: { uploadedAt: 'desc' },
+        orderBy: { uploadedAt: "desc" },
         take: validated.limit,
         skip: validated.offset,
       }),
@@ -217,16 +219,17 @@ export async function getReceipts(input?: {
     }
   } catch (error) {
     logger.error(
-      'Get receipts failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Get receipts failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'get_receipts_error',
+        action: "get_receipts_error",
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch receipts',
+      error:
+        error instanceof Error ? error.message : "Failed to fetch receipts",
     }
   }
 }
@@ -244,7 +247,7 @@ export async function getReceiptById(
     if (!session?.user) {
       return {
         success: false,
-        error: 'Unauthorized',
+        error: "Unauthorized",
       }
     }
 
@@ -253,7 +256,7 @@ export async function getReceiptById(
     if (!schoolId) {
       return {
         success: false,
-        error: 'Missing school context',
+        error: "Missing school context",
       }
     }
 
@@ -271,7 +274,7 @@ export async function getReceiptById(
     if (!receipt) {
       return {
         success: false,
-        error: 'Receipt not found',
+        error: "Receipt not found",
       }
     }
 
@@ -281,17 +284,17 @@ export async function getReceiptById(
     }
   } catch (error) {
     logger.error(
-      'Get receipt by ID failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Get receipt by ID failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'get_receipt_by_id_error',
+        action: "get_receipt_by_id_error",
         receiptId: id,
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch receipt',
+      error: error instanceof Error ? error.message : "Failed to fetch receipt",
     }
   }
 }
@@ -300,16 +303,14 @@ export async function getReceiptById(
  * Delete a receipt and its associated file
  * Verifies tenant ownership
  */
-export async function deleteReceipt(
-  id: string
-): Promise<ServerActionResponse> {
+export async function deleteReceipt(id: string): Promise<ServerActionResponse> {
   try {
     // 1. Authenticate
     const session = await auth()
     if (!session?.user) {
       return {
         success: false,
-        error: 'Unauthorized',
+        error: "Unauthorized",
       }
     }
 
@@ -318,7 +319,7 @@ export async function deleteReceipt(
     if (!schoolId) {
       return {
         success: false,
-        error: 'Missing school context',
+        error: "Missing school context",
       }
     }
 
@@ -336,16 +337,16 @@ export async function deleteReceipt(
     if (!receipt) {
       return {
         success: false,
-        error: 'Receipt not found',
+        error: "Receipt not found",
       }
     }
 
     // 5. Delete file from storage using centralized provider
-    const provider = getProvider('vercel_blob')
+    const provider = getProvider("vercel_blob")
     await provider.delete(receipt.fileUrl)
 
-    logger.info('Receipt file deleted from storage', {
-      action: 'receipt_file_delete',
+    logger.info("Receipt file deleted from storage", {
+      action: "receipt_file_delete",
       receiptId: id,
       schoolId,
     })
@@ -355,8 +356,8 @@ export async function deleteReceipt(
       where: { id },
     })
 
-    logger.info('Receipt database record deleted', {
-      action: 'receipt_db_delete',
+    logger.info("Receipt database record deleted", {
+      action: "receipt_db_delete",
       receiptId: id,
       schoolId,
     })
@@ -369,17 +370,17 @@ export async function deleteReceipt(
     }
   } catch (error) {
     logger.error(
-      'Delete receipt failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Delete receipt failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'delete_receipt_error',
+        action: "delete_receipt_error",
         receiptId: id,
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Delete failed',
+      error: error instanceof Error ? error.message : "Delete failed",
     }
   }
 }
@@ -396,7 +397,7 @@ export async function retryReceiptExtraction(
     if (!session?.user) {
       return {
         success: false,
-        error: 'Unauthorized',
+        error: "Unauthorized",
       }
     }
 
@@ -405,7 +406,7 @@ export async function retryReceiptExtraction(
     if (!schoolId) {
       return {
         success: false,
-        error: 'Missing school context',
+        error: "Missing school context",
       }
     }
 
@@ -420,7 +421,7 @@ export async function retryReceiptExtraction(
     if (!receipt) {
       return {
         success: false,
-        error: 'Receipt not found',
+        error: "Receipt not found",
       }
     }
 
@@ -436,17 +437,17 @@ export async function retryReceiptExtraction(
     }
   } catch (error) {
     logger.error(
-      'Retry receipt extraction failed',
-      error instanceof Error ? error : new Error('Unknown error'),
+      "Retry receipt extraction failed",
+      error instanceof Error ? error : new Error("Unknown error"),
       {
-        action: 'retry_extraction_error',
+        action: "retry_extraction_error",
         receiptId: id,
       }
     )
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Retry failed',
+      error: error instanceof Error ? error.message : "Retry failed",
     }
   }
 }

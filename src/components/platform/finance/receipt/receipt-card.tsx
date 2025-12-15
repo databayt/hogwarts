@@ -4,42 +4,59 @@
  * Follows Hogwarts component pattern
  */
 
-'use client'
+"use client"
 
-import * as React from 'react'
-import Link from 'next/link'
-import { format } from 'date-fns'
-import { ExpenseReceipt } from './types'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { FileText, Calendar, DollarSign, MapPin, Clock, LoaderCircle, CircleAlert, CircleCheck } from "lucide-react"
+import * as React from "react"
+import Link from "next/link"
+import { format } from "date-fns"
+import {
+  Calendar,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  DollarSign,
+  FileText,
+  LoaderCircle,
+  MapPin,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import { ExpenseReceipt } from "./types"
 
 interface ReceiptCardProps {
   receipt: ExpenseReceipt
   locale?: string
 }
 
-export function ReceiptCard({ receipt, locale = 'en' }: ReceiptCardProps) {
+export function ReceiptCard({ receipt, locale = "en" }: ReceiptCardProps) {
   const statusConfig = {
     pending: {
-      label: 'Pending',
-      variant: 'secondary' as const,
+      label: "Pending",
+      variant: "secondary" as const,
       icon: Clock,
     },
     processing: {
-      label: 'Processing',
-      variant: 'default' as const,
+      label: "Processing",
+      variant: "default" as const,
       icon: LoaderCircle,
     },
     processed: {
-      label: 'Processed',
-      variant: 'default' as const,
+      label: "Processed",
+      variant: "default" as const,
       icon: CircleCheck,
     },
     error: {
-      label: 'Error',
-      variant: 'destructive' as const,
+      label: "Error",
+      variant: "destructive" as const,
       icon: CircleAlert,
     },
   }
@@ -48,17 +65,19 @@ export function ReceiptCard({ receipt, locale = 'en' }: ReceiptCardProps) {
   const StatusIcon = status.icon
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="transition-shadow hover:shadow-md">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-muted-foreground" />
+            <FileText className="text-muted-foreground h-5 w-5" />
             <CardTitle className="text-lg">
               {receipt.fileDisplayName || receipt.fileName}
             </CardTitle>
           </div>
           <Badge variant={status.variant} className="gap-1">
-            <StatusIcon className={`h-3 w-3 ${receipt.status === 'processing' ? 'animate-spin' : ''}`} />
+            <StatusIcon
+              className={`h-3 w-3 ${receipt.status === "processing" ? "animate-spin" : ""}`}
+            />
             {status.label}
           </Badge>
         </div>
@@ -67,11 +86,13 @@ export function ReceiptCard({ receipt, locale = 'en' }: ReceiptCardProps) {
       <CardContent className="space-y-3">
         {receipt.merchantName && (
           <div className="flex items-start gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
             <div>
               <p className="font-medium">{receipt.merchantName}</p>
               {receipt.merchantAddress && (
-                <p className="text-xs text-muted-foreground">{receipt.merchantAddress}</p>
+                <p className="text-muted-foreground text-xs">
+                  {receipt.merchantAddress}
+                </p>
               )}
             </div>
           </div>
@@ -79,43 +100,43 @@ export function ReceiptCard({ receipt, locale = 'en' }: ReceiptCardProps) {
 
         {receipt.transactionDate && (
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{format(new Date(receipt.transactionDate), 'PPP')}</span>
+            <Calendar className="text-muted-foreground h-4 w-4" />
+            <span>{format(new Date(receipt.transactionDate), "PPP")}</span>
           </div>
         )}
 
-        {receipt.transactionAmount !== null && receipt.transactionAmount !== undefined && (
-          <div className="flex items-center gap-2 text-sm">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">
-              {receipt.currency || 'USD'} {receipt.transactionAmount.toFixed(2)}
-            </span>
-          </div>
-        )}
+        {receipt.transactionAmount !== null &&
+          receipt.transactionAmount !== undefined && (
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="text-muted-foreground h-4 w-4" />
+              <span className="font-semibold">
+                {receipt.currency || "USD"}{" "}
+                {receipt.transactionAmount.toFixed(2)}
+              </span>
+            </div>
+          )}
 
-        {receipt.receiptSummary && receipt.status === 'processed' && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
+        {receipt.receiptSummary && receipt.status === "processed" && (
+          <p className="text-muted-foreground line-clamp-2 text-xs">
             {receipt.receiptSummary}
           </p>
         )}
 
-        {receipt.status === 'pending' && (
-          <p className="text-xs text-muted-foreground">
+        {receipt.status === "pending" && (
+          <p className="text-muted-foreground text-xs">
             AI extraction pending...
           </p>
         )}
 
-        {receipt.status === 'error' && (
-          <p className="text-xs text-destructive">
+        {receipt.status === "error" && (
+          <p className="text-destructive text-xs">
             Extraction failed. Click to retry.
           </p>
         )}
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          Uploaded {format(new Date(receipt.uploadedAt), 'PP')}
-        </span>
+      <CardFooter className="text-muted-foreground flex items-center justify-between text-xs">
+        <span>Uploaded {format(new Date(receipt.uploadedAt), "PP")}</span>
         <Button
           variant="ghost"
           size="sm"

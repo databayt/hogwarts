@@ -1,23 +1,25 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useEffect, useState, useTransition } from "react"
 import { TriangleAlert } from "lucide-react"
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { getActiveTerm, getPersonalizedTimetable } from '../actions'
-import AdminView from './admin-view'
-import TeacherView from './teacher-view'
-import StudentView from './student-view'
-import GuardianView from './guardian-view'
+
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import { getActiveTerm, getPersonalizedTimetable } from "../actions"
+import AdminView from "./admin-view"
+import GuardianView from "./guardian-view"
+import StudentView from "./student-view"
+import TeacherView from "./teacher-view"
 
 interface Props {
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
   lang: Locale
 }
 
-type ViewType = 'admin' | 'teacher' | 'student' | 'guardian'
+type ViewType = "admin" | "teacher" | "student" | "guardian"
 
 interface PersonalizedData {
   viewType: ViewType
@@ -63,7 +65,7 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         const { term, source } = await getActiveTerm()
 
         if (!term) {
-          setError('No term configured for this school')
+          setError("No term configured for this school")
           return
         }
 
@@ -74,11 +76,13 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         setViewData(data as PersonalizedData)
 
         // Log term source for debugging
-        if (source === 'most_recent') {
-          console.log('Using most recent term (no active term set)')
+        if (source === "most_recent") {
+          console.log("Using most recent term (no active term set)")
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load timetable')
+        setError(
+          err instanceof Error ? err.message : "Failed to load timetable"
+        )
       }
     })
   }
@@ -92,7 +96,9 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         const data = await getPersonalizedTimetable({ termId: newTermId })
         setViewData(data as PersonalizedData)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load timetable')
+        setError(
+          err instanceof Error ? err.message : "Failed to load timetable"
+        )
       }
     })
   }
@@ -139,15 +145,10 @@ export default function RoleRouter({ dictionary, lang }: Props) {
   }
 
   switch (viewData.viewType) {
-    case 'admin':
-      return (
-        <AdminView
-          {...commonProps}
-          onTermChange={handleTermChange}
-        />
-      )
+    case "admin":
+      return <AdminView {...commonProps} onTermChange={handleTermChange} />
 
-    case 'teacher':
+    case "teacher":
       return (
         <TeacherView
           {...commonProps}
@@ -155,15 +156,12 @@ export default function RoleRouter({ dictionary, lang }: Props) {
         />
       )
 
-    case 'student':
+    case "student":
       return (
-        <StudentView
-          {...commonProps}
-          classId={viewData.filterData.classId}
-        />
+        <StudentView {...commonProps} classId={viewData.filterData.classId} />
       )
 
-    case 'guardian':
+    case "guardian":
       return (
         <GuardianView
           {...commonProps}
@@ -174,10 +172,7 @@ export default function RoleRouter({ dictionary, lang }: Props) {
     default:
       // Fallback to student view (most restricted)
       return (
-        <StudentView
-          {...commonProps}
-          classId={viewData.filterData.classId}
-        />
+        <StudentView {...commonProps} classId={viewData.filterData.classId} />
       )
   }
 }

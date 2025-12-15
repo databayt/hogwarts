@@ -1,12 +1,11 @@
-'use client'
+"use client"
 
-import { UpdatePlanDialog } from '@/components/billingsdk/update-plan-dialog';
-import { plans } from '@/lib/billingsdk-config';
+import { plans } from "@/lib/billingsdk-config"
+import { UpdatePlanDialog } from "@/components/billingsdk/update-plan-dialog"
 
 export function UpdatePlanDialogDemo() {
-
   return (
-    <div className="flex flex-1 flex-col justify-center text-center p-4 mx-auto min-h-[300px]">
+    <div className="mx-auto flex min-h-[300px] flex-1 flex-col justify-center p-4 text-center">
       <UpdatePlanDialog
         currentPlan={plans[1]}
         plans={plans}
@@ -16,5 +15,5 @@ export function UpdatePlanDialogDemo() {
         triggerText="Update Plan"
       />
     </div>
-  );
+  )
 }

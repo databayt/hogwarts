@@ -3,17 +3,18 @@
  * PDF template for academic transcripts
  */
 
-import React from "react";
+import React from "react"
 import {
   Document,
-  Page,
-  View,
-  Text,
-  Image,
-  StyleSheet,
   Font,
-} from "@react-pdf/renderer";
-import type { TranscriptData, TemplateStyle } from "./types";
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+} from "@react-pdf/renderer"
+
+import type { TemplateStyle, TranscriptData } from "./types"
 
 // ============================================================================
 // Font Registration
@@ -31,7 +32,7 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 Font.register({
   family: "Inter",
@@ -45,15 +46,15 @@ Font.register({
       fontWeight: "bold",
     },
   ],
-});
+})
 
 // ============================================================================
 // Styles
 // ============================================================================
 
 const createStyles = (locale: string = "en") => {
-  const isRTL = locale === "ar";
-  const fontFamily = isRTL ? "Tajawal" : "Inter";
+  const isRTL = locale === "ar"
+  const fontFamily = isRTL ? "Tajawal" : "Inter"
 
   return StyleSheet.create({
     page: {
@@ -331,8 +332,8 @@ const createStyles = (locale: string = "en") => {
       transform: "rotate(-45deg)",
       opacity: 0.3,
     },
-  });
-};
+  })
+}
 
 // ============================================================================
 // Helper Functions
@@ -343,35 +344,38 @@ const formatDate = (date: Date, locale: string): string => {
     year: "numeric",
     month: "long",
     day: "numeric",
-  }).format(date);
-};
+  }).format(date)
+}
 
 // Group courses by term
 const groupCoursesByTerm = (courses: TranscriptData["courses"]) => {
-  const grouped = new Map<string, typeof courses>();
+  const grouped = new Map<string, typeof courses>()
   courses.forEach((course) => {
-    const key = `${course.year} - ${course.term}`;
+    const key = `${course.year} - ${course.term}`
     if (!grouped.has(key)) {
-      grouped.set(key, []);
+      grouped.set(key, [])
     }
-    grouped.get(key)!.push(course);
-  });
-  return grouped;
-};
+    grouped.get(key)!.push(course)
+  })
+  return grouped
+}
 
 // ============================================================================
 // Transcript Template Component
 // ============================================================================
 
 interface TranscriptTemplateProps {
-  data: TranscriptData;
-  style?: TemplateStyle;
+  data: TranscriptData
+  style?: TemplateStyle
 }
 
-export function TranscriptTemplate({ data, style = "official" }: TranscriptTemplateProps) {
-  const locale = data.locale || "en";
-  const styles = createStyles(locale);
-  const isRTL = locale === "ar";
+export function TranscriptTemplate({
+  data,
+  style = "official",
+}: TranscriptTemplateProps) {
+  const locale = data.locale || "en"
+  const styles = createStyles(locale)
+  const isRTL = locale === "ar"
 
   const labels = {
     transcript: isRTL ? "السجل الأكاديمي" : "OFFICIAL TRANSCRIPT",
@@ -401,9 +405,9 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
     issuedTo: isRTL ? "صادر إلى" : "Issued To",
     purpose: isRTL ? "الغرض" : "Purpose",
     issueDate: isRTL ? "تاريخ الإصدار" : "Issue Date",
-  };
+  }
 
-  const coursesByTerm = groupCoursesByTerm(data.courses);
+  const coursesByTerm = groupCoursesByTerm(data.courses)
 
   return (
     <Document>
@@ -430,7 +434,9 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>{labels.name}</Text>
                 <Text style={styles.infoValue}>
-                  {isRTL ? data.studentNameAr || data.studentName : data.studentName}
+                  {isRTL
+                    ? data.studentNameAr || data.studentName
+                    : data.studentName}
                 </Text>
               </View>
               <View style={styles.infoItem}>
@@ -440,12 +446,16 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
               {data.dateOfBirth && (
                 <View style={styles.infoItem}>
                   <Text style={styles.infoLabel}>{labels.dateOfBirth}</Text>
-                  <Text style={styles.infoValue}>{formatDate(data.dateOfBirth, locale)}</Text>
+                  <Text style={styles.infoValue}>
+                    {formatDate(data.dateOfBirth, locale)}
+                  </Text>
                 </View>
               )}
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>{labels.enrollmentDate}</Text>
-                <Text style={styles.infoValue}>{formatDate(data.enrollmentDate, locale)}</Text>
+                <Text style={styles.infoValue}>
+                  {formatDate(data.enrollmentDate, locale)}
+                </Text>
               </View>
             </View>
           </View>
@@ -458,7 +468,9 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>{labels.program}</Text>
               <Text style={styles.infoValue}>
-                {isRTL ? data.programNameAr || data.programName : data.programName}
+                {isRTL
+                  ? data.programNameAr || data.programName
+                  : data.programName}
               </Text>
             </View>
             {data.major && (
@@ -482,11 +494,21 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
 
           {/* Table Header */}
           <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, styles.colCode]}>{labels.code}</Text>
-            <Text style={[styles.headerText, styles.colName]}>{labels.courseName}</Text>
-            <Text style={[styles.headerText, styles.colCredits]}>{labels.credits}</Text>
-            <Text style={[styles.headerText, styles.colGrade]}>{labels.grade}</Text>
-            <Text style={[styles.headerText, styles.colPoints]}>{labels.points}</Text>
+            <Text style={[styles.headerText, styles.colCode]}>
+              {labels.code}
+            </Text>
+            <Text style={[styles.headerText, styles.colName]}>
+              {labels.courseName}
+            </Text>
+            <Text style={[styles.headerText, styles.colCredits]}>
+              {labels.credits}
+            </Text>
+            <Text style={[styles.headerText, styles.colGrade]}>
+              {labels.grade}
+            </Text>
+            <Text style={[styles.headerText, styles.colPoints]}>
+              {labels.points}
+            </Text>
           </View>
 
           {/* Courses grouped by term */}
@@ -496,13 +518,25 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
                 <Text style={styles.termHeaderText}>{termKey}</Text>
               </View>
               {courses.map((course, idx) => (
-                <View key={idx} style={[styles.tableRow, ...(idx % 2 === 1 ? [styles.tableRowAlt] : [])]}>
-                  <Text style={[styles.cellText, styles.colCode]}>{course.code}</Text>
+                <View
+                  key={idx}
+                  style={[
+                    styles.tableRow,
+                    ...(idx % 2 === 1 ? [styles.tableRowAlt] : []),
+                  ]}
+                >
+                  <Text style={[styles.cellText, styles.colCode]}>
+                    {course.code}
+                  </Text>
                   <Text style={[styles.cellText, styles.colName]}>
                     {isRTL ? course.nameAr || course.name : course.name}
                   </Text>
-                  <Text style={[styles.cellText, styles.colCredits]}>{course.credits || "-"}</Text>
-                  <Text style={[styles.cellText, styles.colGrade]}>{course.grade}</Text>
+                  <Text style={[styles.cellText, styles.colCredits]}>
+                    {course.credits || "-"}
+                  </Text>
+                  <Text style={[styles.cellText, styles.colGrade]}>
+                    {course.grade}
+                  </Text>
                   <Text style={[styles.cellText, styles.colPoints]}>
                     {course.gradePoints?.toFixed(2) || "-"}
                   </Text>
@@ -528,7 +562,9 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
           )}
           {data.cumulativeGpa !== undefined && (
             <View style={styles.summaryBlock}>
-              <Text style={styles.summaryValue}>{data.cumulativeGpa.toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>
+                {data.cumulativeGpa.toFixed(2)}
+              </Text>
               <Text style={styles.summaryLabel}>{labels.cumulativeGpa}</Text>
             </View>
           )}
@@ -564,7 +600,10 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
           {/* Seal */}
           <View style={styles.signatureBlock}>
             {data.seal ? (
-              <Image src={data.seal} style={{ width: 60, height: 60, marginBottom: 8 }} />
+              <Image
+                src={data.seal}
+                style={{ width: 60, height: 60, marginBottom: 8 }}
+              />
             ) : (
               <View style={styles.sealPlaceholder}>
                 <Text style={styles.sealText}>OFFICIAL{"\n"}SEAL</Text>
@@ -614,7 +653,7 @@ export function TranscriptTemplate({ data, style = "official" }: TranscriptTempl
         </View>
       </Page>
     </Document>
-  );
+  )
 }
 
-export { createStyles as createTranscriptStyles };
+export { createStyles as createTranscriptStyles }

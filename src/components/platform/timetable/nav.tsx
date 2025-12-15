@@ -3,14 +3,22 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Calendar, Utensils, Clock, Settings } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+import { Calendar, Clock, Menu, Settings, Utensils } from "lucide-react"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+
+import { AboutHoverCard } from "./about-hover-card"
 import { ConfigDialog } from "./config-dialog"
 import { useTimetableStore } from "./timetable"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import {AboutHoverCard} from "./about-hover-card";
 
 const links = [
   { href: "/", label: "Timetable", icon: Clock },
@@ -21,7 +29,8 @@ const links = [
 export function Nav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
-  const { showConfig, setShowConfig, classConfig, setTempConfig, saveConfig } = useTimetableStore()
+  const { showConfig, setShowConfig, classConfig, setTempConfig, saveConfig } =
+    useTimetableStore()
 
   const handleConfigSave = (newConfig: any) => {
     setTempConfig(newConfig)
@@ -29,12 +38,16 @@ export function Nav() {
   }
 
   return (
-    <nav className="print:hidden bg-muted">
-      <div className="flex h-16 items-center px-2 sm:px-4 md:px-6 max-w-4xl mx-auto">
+    <nav className="bg-muted print:hidden">
+      <div className="mx-auto flex h-16 max-w-4xl items-center px-2 sm:px-4 md:px-6">
         <div className="sm:hidden">
           <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="sm:hidden hover:bg-muted/80">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hover:bg-muted/80 sm:hidden"
+              >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
@@ -55,7 +68,7 @@ export function Nav() {
                         href={link.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex items-center gap-2 lead",
+                          "lead flex items-center gap-2",
                           "text-muted-foreground",
                           "hover:text-foreground",
                           pathname === link.href && "text-foreground"
@@ -71,8 +84,8 @@ export function Nav() {
             </DrawerContent>
           </Drawer>
         </div>
-        
-        <div className="hidden sm:flex sm:gap-8 sm:items-center">
+
+        <div className="hidden sm:flex sm:items-center sm:gap-8">
           {links.map((link) => {
             const Icon = link.icon
             return (
@@ -98,7 +111,7 @@ export function Nav() {
           <button
             onClick={() => setShowConfig(true)}
             className={cn(
-              "flex items-center gap-2 p-2 rounded-lg",
+              "flex items-center gap-2 rounded-lg p-2",
               "text-muted-foreground",
               "hover:bg-muted/80"
             )}
@@ -118,4 +131,4 @@ export function Nav() {
       />
     </nav>
   )
-} 
+}

@@ -9,15 +9,16 @@ model: sonnet
 **Specialization**: Server actions, API routes, validation
 
 ## Server Actions (Preferred)
+
 ```typescript
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 const schema = z.object({
   name: z.string().min(1),
-  email: z.string().email()
+  email: z.string().email(),
 })
 
 export async function createStudent(formData: FormData) {
@@ -29,36 +30,38 @@ export async function createStudent(formData: FormData) {
 
   // Execute
   await prisma.student.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
-  revalidatePath('/students')
+  revalidatePath("/students")
 }
 ```
 
 ## API Routes (When Needed)
+
 ```typescript
 // app/api/webhook/route.ts
 export async function POST(req: Request) {
   const body = await req.json()
-  
+
   // Validate
   const validated = schema.parse(body)
-  
+
   // Process
   await processWebhook(validated)
-  
+
   return Response.json({ success: true })
 }
 ```
 
 ## Validation Pattern
+
 ```typescript
 // validation.ts
 export const studentSchema = z.object({
   name: z.string().min(1, "Name required"),
   email: z.string().email("Invalid email"),
-  age: z.number().int().positive()
+  age: z.number().int().positive(),
 })
 
 // Infer type
@@ -66,6 +69,7 @@ export type StudentInput = z.infer<typeof studentSchema>
 ```
 
 ## Error Handling
+
 ```typescript
 try {
   const result = await action(data)
@@ -79,6 +83,7 @@ try {
 ```
 
 ## Checklist
+
 - [ ] Zod validation
 - [ ] schoolId included
 - [ ] revalidatePath() called
@@ -86,6 +91,7 @@ try {
 - [ ] Type-safe
 
 ## Invoke When
+
 - Creating endpoints, server actions, API design
 
 **Rule**: Server actions preferred. Always validate. Include schoolId.

@@ -4,62 +4,70 @@
  * Helper functions for feature management and display.
  */
 
-import type { Feature, FeatureCategory, FeatureComparison } from "./types";
+import type { Feature, FeatureCategory, FeatureComparison } from "./types"
 
 /**
  * Filter features by category
  */
-export function filterFeaturesByCategory(features: Feature[], category: FeatureCategory): Feature[] {
-  return features.filter((feature) => feature.category === category);
+export function filterFeaturesByCategory(
+  features: Feature[],
+  category: FeatureCategory
+): Feature[] {
+  return features.filter((feature) => feature.category === category)
 }
 
 /**
  * Get features by multiple categories
  */
-export function getFeaturesByCategories(features: Feature[], categories: FeatureCategory[]): Feature[] {
-  return features.filter((feature) => categories.includes(feature.category));
+export function getFeaturesByCategories(
+  features: Feature[],
+  categories: FeatureCategory[]
+): Feature[] {
+  return features.filter((feature) => categories.includes(feature.category))
 }
 
 /**
  * Get new features
  */
 export function getNewFeatures(features: Feature[]): Feature[] {
-  return features.filter((feature) => feature.isNew === true);
+  return features.filter((feature) => feature.isNew === true)
 }
 
 /**
  * Get premium features
  */
 export function getPremiumFeatures(features: Feature[]): Feature[] {
-  return features.filter((feature) => feature.isPremium === true);
+  return features.filter((feature) => feature.isPremium === true)
 }
 
 /**
  * Search features by query
  */
 export function searchFeatures(features: Feature[], query: string): Feature[] {
-  const lowerQuery = query.toLowerCase();
+  const lowerQuery = query.toLowerCase()
   return features.filter(
     (feature) =>
       feature.title.toLowerCase().includes(lowerQuery) ||
       feature.description.toLowerCase().includes(lowerQuery)
-  );
+  )
 }
 
 /**
  * Group features by category
  */
-export function groupFeaturesByCategory(features: Feature[]): Map<FeatureCategory, Feature[]> {
-  const grouped = new Map<FeatureCategory, Feature[]>();
+export function groupFeaturesByCategory(
+  features: Feature[]
+): Map<FeatureCategory, Feature[]> {
+  const grouped = new Map<FeatureCategory, Feature[]>()
 
   features.forEach((feature) => {
     if (!grouped.has(feature.category)) {
-      grouped.set(feature.category, []);
+      grouped.set(feature.category, [])
     }
-    grouped.get(feature.category)!.push(feature);
-  });
+    grouped.get(feature.category)!.push(feature)
+  })
 
-  return grouped;
+  return grouped
 }
 
 /**
@@ -75,8 +83,8 @@ export function getCategoryLabel(category: FeatureCategory): string {
     scheduling: "Scheduling",
     billing: "Billing & Payments",
     reporting: "Reporting",
-  };
-  return labels[category];
+  }
+  return labels[category]
 }
 
 /**
@@ -84,9 +92,9 @@ export function getCategoryLabel(category: FeatureCategory): string {
  */
 export function formatFeatureAvailability(value: boolean | string): string {
   if (typeof value === "boolean") {
-    return value ? "✓" : "—";
+    return value ? "✓" : "—"
   }
-  return value;
+  return value
 }
 
 /**
@@ -96,21 +104,23 @@ export function isFeatureAvailableInPlan(
   comparison: FeatureComparison,
   plan: "starter" | "professional" | "enterprise"
 ): boolean {
-  const value = comparison[plan];
-  return value === true || (typeof value === "string" && value !== "—");
+  const value = comparison[plan]
+  return value === true || (typeof value === "string" && value !== "—")
 }
 
 /**
  * Get features count by category
  */
-export function getFeatureCountByCategory(features: Feature[]): Record<FeatureCategory, number> {
-  const counts = {} as Record<FeatureCategory, number>;
+export function getFeatureCountByCategory(
+  features: Feature[]
+): Record<FeatureCategory, number> {
+  const counts = {} as Record<FeatureCategory, number>
 
   features.forEach((feature) => {
-    counts[feature.category] = (counts[feature.category] || 0) + 1;
-  });
+    counts[feature.category] = (counts[feature.category] || 0) + 1
+  })
 
-  return counts;
+  return counts
 }
 
 /**
@@ -118,12 +128,12 @@ export function getFeatureCountByCategory(features: Feature[]): Record<FeatureCa
  */
 export function sortFeaturesByPriority(features: Feature[]): Feature[] {
   return [...features].sort((a, b) => {
-    if (a.isNew && !b.isNew) return -1;
-    if (!a.isNew && b.isNew) return 1;
-    if (a.isPremium && !b.isPremium) return -1;
-    if (!a.isPremium && b.isPremium) return 1;
-    return a.title.localeCompare(b.title);
-  });
+    if (a.isNew && !b.isNew) return -1
+    if (!a.isNew && b.isNew) return 1
+    if (a.isPremium && !b.isPremium) return -1
+    if (!a.isPremium && b.isPremium) return 1
+    return a.title.localeCompare(b.title)
+  })
 }
 
 /**
@@ -139,8 +149,8 @@ export function getFeatureIconColor(category: FeatureCategory): string {
     scheduling: "text-pink-600",
     billing: "text-amber-600",
     reporting: "text-teal-600",
-  };
-  return colors[category] || "text-gray-600";
+  }
+  return colors[category] || "text-gray-600"
 }
 
 /**
@@ -150,5 +160,5 @@ export function generateFeatureSlug(title: string): string {
   return title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
 }

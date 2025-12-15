@@ -1,16 +1,18 @@
 "use client"
 
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { format, isToday, isYesterday } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { LoaderCircle, ArrowDown } from "lucide-react"
-import type { MessageDTO } from "./types"
-import { MessageGroup, groupMessages } from "./message-group"
-import { ChatEmpty } from "./empty-state"
-import { AutoScroller, useIsAtBottom } from "./auto-scroller"
+import { ArrowDown, LoaderCircle } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { useRef, useState, useMemo, useEffect } from "react"
-import { useVirtualizer } from "@tanstack/react-virtual"
+
+import { AutoScroller, useIsAtBottom } from "./auto-scroller"
+import { ChatEmpty } from "./empty-state"
+import { groupMessages, MessageGroup } from "./message-group"
+import type { MessageDTO } from "./types"
 
 export interface MessageListProps {
   messages: MessageDTO[]
@@ -31,7 +33,12 @@ export interface MessageListProps {
 // Virtual list item types
 type VirtualListItem =
   | { type: "date-separator"; dateKey: string; label: string }
-  | { type: "message-group"; dateKey: string; groupIndex: number; messages: MessageDTO[] }
+  | {
+      type: "message-group"
+      dateKey: string
+      groupIndex: number
+      messages: MessageDTO[]
+    }
   | { type: "loader"; position: "top" | "bottom" }
 
 export function MessageList({
@@ -50,22 +57,28 @@ export function MessageList({
   enableVirtualization = true, // Default to enabled for performance
 }: MessageListProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
-  const isAtBottom = useIsAtBottom(scrollContainerRef as React.RefObject<HTMLDivElement>, 150)
+  const isAtBottom = useIsAtBottom(
+    scrollContainerRef as React.RefObject<HTMLDivElement>,
+    150
+  )
   const [hasScrolledUp, setHasScrolledUp] = useState(false)
   const dateLocale = locale === "ar" ? ar : enUS
 
   // Group messages by date first
   const messagesByDate = useMemo(() => {
-    return messages.reduce((groups, message) => {
-      const date = new Date(message.createdAt)
-      const dateKey = format(date, "yyyy-MM-dd")
+    return messages.reduce(
+      (groups, message) => {
+        const date = new Date(message.createdAt)
+        const dateKey = format(date, "yyyy-MM-dd")
 
-      if (!groups[dateKey]) {
-        groups[dateKey] = []
-      }
-      groups[dateKey].push(message)
-      return groups
-    }, {} as Record<string, MessageDTO[]>)
+        if (!groups[dateKey]) {
+          groups[dateKey] = []
+        }
+        groups[dateKey].push(message)
+        return groups
+      },
+      {} as Record<string, MessageDTO[]>
+    )
   }, [messages])
 
   const getDateLabel = (dateString: string): string => {
@@ -156,7 +169,11 @@ export function MessageList({
 
   // Auto-scroll to bottom on new messages (virtualized)
   useEffect(() => {
-    if (enableVirtualization && virtualListItems.length > 0 && (isAtBottom || !hasScrolledUp)) {
+    if (
+      enableVirtualization &&
+      virtualListItems.length > 0 &&
+      (isAtBottom || !hasScrolledUp)
+    ) {
       // Scroll to bottom when new messages arrive
       virtualizer.scrollToIndex(virtualListItems.length - 1, { align: "end" })
     }
@@ -173,10 +190,10 @@ export function MessageList({
   // Render virtualized list
   if (enableVirtualization) {
     return (
-      <div className={cn("relative flex-1 bg-background", className)}>
+      <div className={cn("bg-background relative flex-1", className)}>
         <div
           ref={scrollContainerRef}
-          className="flex-1 h-full overflow-y-auto overflow-x-hidden"
+          className="h-full flex-1 overflow-x-hidden overflow-y-auto"
           onScroll={handleScrollToTop}
         >
           {/* Virtual list container */}
@@ -206,13 +223,13 @@ export function MessageList({
                 >
                   {item.type === "loader" && (
                     <div className="flex justify-center py-2">
-                      <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+                      <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
                     </div>
                   )}
 
                   {item.type === "date-separator" && (
-                    <div className="flex items-center justify-center my-6">
-                      <div className="bg-muted/50 text-muted-foreground text-xs font-medium px-4 py-1.5 rounded-full backdrop-blur-sm">
+                    <div className="my-6 flex items-center justify-center">
+                      <div className="bg-muted/50 text-muted-foreground rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
                         {item.label}
                       </div>
                     </div>
@@ -240,11 +257,11 @@ export function MessageList({
 
         {/* Scroll to bottom button - appears when user scrolls up */}
         {!isAtBottom && messages.length > 0 && (
-          <div className="absolute bottom-4 right-4 z-10">
+          <div className="absolute right-4 bottom-4 z-10">
             <Button
               variant="secondary"
               size="icon"
-              className="h-10 w-10 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2"
+              className="animate-in fade-in slide-in-from-bottom-2 h-10 w-10 rounded-full shadow-lg"
               onClick={scrollToBottom}
             >
               <ArrowDown className="h-5 w-5" />
@@ -257,18 +274,18 @@ export function MessageList({
 
   // Non-virtualized rendering (fallback)
   return (
-    <div className={cn("relative flex-1 bg-background", className)}>
+    <div className={cn("bg-background relative flex-1", className)}>
       <AutoScroller
         ref={scrollContainerRef}
-        className="flex-1 h-full overflow-y-auto overflow-x-hidden"
+        className="h-full flex-1 overflow-x-hidden overflow-y-auto"
         enabled={isAtBottom || !hasScrolledUp}
         onScrollToTop={handleScrollToTop}
       >
-        <div className="py-4 space-y-6">
+        <div className="space-y-6 py-4">
           {/* Loading indicator at top */}
           {isLoading && hasMore && (
             <div className="flex justify-center py-2">
-              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+              <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
             </div>
           )}
 
@@ -280,8 +297,8 @@ export function MessageList({
             return (
               <div key={dateKey} className="space-y-4">
                 {/* Date separator - iMessage style */}
-                <div className="flex items-center justify-center my-6">
-                  <div className="bg-muted/50 text-muted-foreground text-xs font-medium px-4 py-1.5 rounded-full backdrop-blur-sm">
+                <div className="my-6 flex items-center justify-center">
+                  <div className="bg-muted/50 text-muted-foreground rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur-sm">
                     {getDateLabel(dateKey)}
                   </div>
                 </div>
@@ -309,7 +326,7 @@ export function MessageList({
           {/* Loading indicator at bottom */}
           {isLoading && !hasMore && (
             <div className="flex justify-center py-2">
-              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+              <LoaderCircle className="text-muted-foreground h-5 w-5 animate-spin" />
             </div>
           )}
         </div>
@@ -317,11 +334,11 @@ export function MessageList({
 
       {/* Scroll to bottom button - appears when user scrolls up */}
       {!isAtBottom && messages.length > 0 && (
-        <div className="absolute bottom-4 right-4 z-10">
+        <div className="absolute right-4 bottom-4 z-10">
           <Button
             variant="secondary"
             size="icon"
-            className="h-10 w-10 rounded-full shadow-lg animate-in fade-in slide-in-from-bottom-2"
+            className="animate-in fade-in slide-in-from-bottom-2 h-10 w-10 rounded-full shadow-lg"
             onClick={scrollToBottom}
           >
             <ArrowDown className="h-5 w-5" />
@@ -332,12 +349,16 @@ export function MessageList({
   )
 }
 
-export function MessageListSkeleton({ locale = "en" }: { locale?: "ar" | "en" }) {
+export function MessageListSkeleton({
+  locale = "en",
+}: {
+  locale?: "ar" | "en"
+}) {
   return (
-    <div className="flex-1 px-4 py-4 space-y-6 bg-background">
+    <div className="bg-background flex-1 space-y-6 px-4 py-4">
       {/* Date separator skeleton */}
-      <div className="flex items-center justify-center my-6">
-        <div className="h-6 w-24 bg-muted/50 animate-pulse rounded-full" />
+      <div className="my-6 flex items-center justify-center">
+        <div className="bg-muted/50 h-6 w-24 animate-pulse rounded-full" />
       </div>
 
       {/* Message group skeletons */}
@@ -351,13 +372,15 @@ export function MessageListSkeleton({ locale = "en" }: { locale?: "ar" | "en" })
                 groupIndex % 2 === 0 ? "justify-end" : "justify-start"
               )}
             >
-              <div className={cn(
-                "flex gap-2 max-w-[65%]",
-                groupIndex % 2 === 0 ? "flex-row-reverse" : "flex-row"
-              )}>
+              <div
+                className={cn(
+                  "flex max-w-[65%] gap-2",
+                  groupIndex % 2 === 0 ? "flex-row-reverse" : "flex-row"
+                )}
+              >
                 {/* Avatar skeleton - only on last message */}
                 {groupIndex % 2 === 1 && msgIndex === 0 && (
-                  <div className="h-7 w-7 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                  <div className="bg-muted h-7 w-7 flex-shrink-0 animate-pulse rounded-full" />
                 )}
                 {groupIndex % 2 === 1 && msgIndex !== 0 && (
                   <div className="h-7 w-7 flex-shrink-0" />
@@ -366,21 +389,27 @@ export function MessageListSkeleton({ locale = "en" }: { locale?: "ar" | "en" })
                 <div className="flex flex-col gap-1">
                   {/* Sender name skeleton - only on first message */}
                   {groupIndex % 2 === 1 && msgIndex === 0 && (
-                    <div className="h-3 w-20 bg-muted animate-pulse rounded ml-3 mb-1" />
+                    <div className="bg-muted mb-1 ml-3 h-3 w-20 animate-pulse rounded" />
                   )}
 
                   {/* Message bubble skeleton */}
                   <div
                     className={cn(
-                      "rounded-[18px] bg-muted animate-pulse",
-                      groupIndex % 2 === 0 ? "rounded-tr-[4px]" : "rounded-tl-[4px]",
-                      msgIndex % 3 === 0 ? "h-16 w-48" : msgIndex % 3 === 1 ? "h-20 w-64" : "h-12 w-56"
+                      "bg-muted animate-pulse rounded-[18px]",
+                      groupIndex % 2 === 0
+                        ? "rounded-tr-[4px]"
+                        : "rounded-tl-[4px]",
+                      msgIndex % 3 === 0
+                        ? "h-16 w-48"
+                        : msgIndex % 3 === 1
+                          ? "h-20 w-64"
+                          : "h-12 w-56"
                     )}
                   />
 
                   {/* Timestamp skeleton - only on last message */}
-                  {msgIndex === (1 + (groupIndex % 2)) && (
-                    <div className="h-2 w-16 bg-muted animate-pulse rounded mt-1" />
+                  {msgIndex === 1 + (groupIndex % 2) && (
+                    <div className="bg-muted mt-1 h-2 w-16 animate-pulse rounded" />
                   )}
                 </div>
               </div>

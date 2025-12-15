@@ -1,37 +1,38 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
+} from "@dnd-kit/core"
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { GripVertical } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface BaseSortableItem {
-  id: string;
-  position: number;
+  id: string
+  position: number
 }
 
 interface SortableListProps<T extends BaseSortableItem> {
-  items: T[];
-  onReorder: (items: T[]) => void;
-  renderItem: (item: T, index: number) => React.ReactNode;
-  className?: string;
-  disabled?: boolean;
+  items: T[]
+  onReorder: (items: T[]) => void
+  renderItem: (item: T, index: number) => React.ReactNode
+  className?: string
+  disabled?: boolean
 }
 
 function SortableListItem({
@@ -39,9 +40,9 @@ function SortableListItem({
   children,
   disabled,
 }: {
-  id: string;
-  children: React.ReactNode;
-  disabled?: boolean;
+  id: string
+  children: React.ReactNode
+  disabled?: boolean
 }) {
   const {
     attributes,
@@ -50,20 +51,20 @@ function SortableListItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled });
+  } = useSortable({ id, disabled })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  };
+  }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-2 bg-white border rounded-md p-3 transition-all",
-        isDragging && "opacity-50 shadow-lg z-50",
+        "flex items-center gap-2 rounded-md border bg-white p-3 transition-all",
+        isDragging && "z-50 opacity-50 shadow-lg",
         !disabled && "hover:shadow-md"
       )}
     >
@@ -71,15 +72,15 @@ function SortableListItem({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+          className="hover:bg-muted cursor-grab rounded p-1 active:cursor-grabbing"
           type="button"
         >
-          <GripVertical className="h-5 w-5 text-muted-foreground" />
+          <GripVertical className="text-muted-foreground h-5 w-5" />
         </button>
       )}
       <div className="flex-1">{children}</div>
     </div>
-  );
+  )
 }
 
 export function SortableList<T extends BaseSortableItem>({
@@ -89,35 +90,35 @@ export function SortableList<T extends BaseSortableItem>({
   className,
   disabled = false,
 }: SortableListProps<T>) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
-  );
+  )
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over } = event
 
     if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((item) => item.id === active.id);
-      const newIndex = items.findIndex((item) => item.id === over.id);
+      const oldIndex = items.findIndex((item) => item.id === active.id)
+      const newIndex = items.findIndex((item) => item.id === over.id)
 
-      const reorderedItems = arrayMove(items, oldIndex, newIndex);
+      const reorderedItems = arrayMove(items, oldIndex, newIndex)
 
       // Update positions
       const itemsWithNewPositions = reorderedItems.map((item, index) => ({
         ...item,
         position: index + 1,
-      }));
+      }))
 
-      onReorder(itemsWithNewPositions);
+      onReorder(itemsWithNewPositions)
     }
 
-    setActiveId(null);
-  };
+    setActiveId(null)
+  }
 
   return (
     <DndContext
@@ -139,5 +140,5 @@ export function SortableList<T extends BaseSortableItem>({
         </div>
       </SortableContext>
     </DndContext>
-  );
+  )
 }

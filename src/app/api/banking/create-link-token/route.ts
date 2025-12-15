@@ -32,9 +32,10 @@
  * @see /components/platform/finance/banking/lib/plaid.ts
  */
 
-import { NextResponse } from 'next/server'
-import { plaidClient } from '@/components/platform/finance/banking/lib/plaid'
-import { Products, CountryCode } from 'plaid'
+import { NextResponse } from "next/server"
+import { CountryCode, Products } from "plaid"
+
+import { plaidClient } from "@/components/platform/finance/banking/lib/plaid"
 
 export async function POST(request: Request) {
   try {
@@ -44,19 +45,23 @@ export async function POST(request: Request) {
       user: {
         client_user_id: userId,
       },
-      client_name: 'Banking App',
-      products: (process.env.PLAID_PRODUCTS?.split(',') || ['transactions']) as Products[],
-      country_codes: (process.env.PLAID_COUNTRY_CODES?.split(',') || ['US']) as CountryCode[],
-      language: 'en',
+      client_name: "Banking App",
+      products: (process.env.PLAID_PRODUCTS?.split(",") || [
+        "transactions",
+      ]) as Products[],
+      country_codes: (process.env.PLAID_COUNTRY_CODES?.split(",") || [
+        "US",
+      ]) as CountryCode[],
+      language: "en",
     })
 
     return NextResponse.json({
       link_token: tokenResponse.data.link_token,
     })
   } catch (error) {
-    console.error('Error creating link token:', error)
+    console.error("Error creating link token:", error)
     return NextResponse.json(
-      { error: 'Failed to create link token' },
+      { error: "Failed to create link token" },
       { status: 500 }
     )
   }

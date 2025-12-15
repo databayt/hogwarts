@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { DetailedUsageTable } from "@/components/billingsdk/detailed-usage-table";
+import { DetailedUsageTable } from "@/components/billingsdk/detailed-usage-table"
 
 const demoResources = [
   {
@@ -31,7 +31,7 @@ const demoResources = [
     percentage: 50,
     unit: "MB",
   },
-];
+]
 
 export function DetailedUsageTableDemo() {
   return (
@@ -40,5 +40,5 @@ export function DetailedUsageTableDemo() {
       description="Current usage across your school's resources"
       resources={demoResources}
     />
-  );
+  )
 }

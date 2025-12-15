@@ -43,6 +43,7 @@ LOG_DATABASE_QUERIES=false
 **Edit `src/middleware.ts` (around line 82):**
 
 **Before:**
+
 ```typescript
 // Get session for authentication check
 const session = await auth()
@@ -50,6 +51,7 @@ const isLoggedIn = !!session?.user
 ```
 
 **After:**
+
 ```typescript
 // Skip auth check for public routes
 const needsAuth = !isPublicRoute && !isDocsRoute && !isStreamPublicRoute
@@ -59,11 +61,11 @@ if (!needsAuth) {
   if (!pathnameHasLocale) {
     url.pathname = `/${currentLocale}${pathnameWithoutLocale}`
     const response = NextResponse.redirect(url)
-    response.headers.set('x-request-id', requestId)
+    response.headers.set("x-request-id", requestId)
     return response
   }
   const response = NextResponse.next()
-  response.headers.set('x-request-id', requestId)
+  response.headers.set("x-request-id", requestId)
   return response
 }
 
@@ -105,12 +107,12 @@ pnpm dev:ws
 
 ## Expected Results
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Server startup | 5-7s | 2-3s |
-| Initial load | 2-5s | 800ms |
-| HMR | 2-3s | 400ms |
-| Docs page | 1-2s | 300ms |
+| Metric         | Before | After |
+| -------------- | ------ | ----- |
+| Server startup | 5-7s   | 2-3s  |
+| Initial load   | 2-5s   | 800ms |
+| HMR            | 2-3s   | 400ms |
+| Docs page      | 1-2s   | 300ms |
 
 **Overall: 5-10x faster** 🚀
 
@@ -119,12 +121,14 @@ pnpm dev:ws
 ## Automated Script (Optional)
 
 **Linux/Mac:**
+
 ```bash
 chmod +x scripts/optimize-dev.sh
 ./scripts/optimize-dev.sh
 ```
 
 **Windows:**
+
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\scripts\optimize-dev.ps1

@@ -42,14 +42,15 @@ The School Admin area is the in-tenant control center for Owners and Admins to c
 ### Implementation Plan
 
 Tracked in `ISSUE.md` in this folder. High-level order:
-1) Shell & route protection (Owner/Admin only)
-2) Users & Roles basics
-3) School Settings (profile, locale, timezone)
-4) Domain Settings (subdomain + custom domain request)
-5) Billing Summary (read-only; portal button when Stripe ready)
-6) Invites
-7) Imports scaffolding
-8) Tests (unit + integration)
+
+1. Shell & route protection (Owner/Admin only)
+2. Users & Roles basics
+3. School Settings (profile, locale, timezone)
+4. Domain Settings (subdomain + custom domain request)
+5. Billing Summary (read-only; portal button when Stripe ready)
+6. Invites
+7. Imports scaffolding
+8. Tests (unit + integration)
 
 ### Local Development
 
@@ -74,37 +75,44 @@ pnpm test
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions
@@ -114,5 +122,3 @@ export async function performAction(input: FormData) {
 For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
 
 ---
-
-

@@ -1,25 +1,30 @@
-import { ApplicationsTable } from "@/components/platform/admission/applications-table";
-import type { ApplicationRow } from "@/components/platform/admission/applications-columns";
-import { SearchParams } from "nuqs/server";
-import { applicationsSearchParams } from "@/components/platform/admission/list-params";
-import { getTenantContext } from "@/lib/tenant-context";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { getApplicationsList } from "@/components/platform/admission/queries";
+import { SearchParams } from "nuqs/server"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import type { ApplicationRow } from "@/components/platform/admission/applications-columns"
+import { ApplicationsTable } from "@/components/platform/admission/applications-table"
+import { applicationsSearchParams } from "@/components/platform/admission/list-params"
+import { getApplicationsList } from "@/components/platform/admission/queries"
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  dictionary: Dictionary["school"];
-  lang: Locale;
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary["school"]
+  lang: Locale
 }
 
-export default async function ApplicationsContent({ searchParams, dictionary, lang }: Props) {
-  const sp = await applicationsSearchParams.parse(await searchParams);
-  const { schoolId } = await getTenantContext();
-  const t = dictionary.admission;
+export default async function ApplicationsContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
+  const sp = await applicationsSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+  const t = dictionary.admission
 
-  let data: ApplicationRow[] = [];
-  let total = 0;
+  let data: ApplicationRow[] = []
+  let total = 0
 
   if (schoolId) {
     try {
@@ -31,7 +36,7 @@ export default async function ApplicationsContent({ searchParams, dictionary, la
         page: sp.page,
         perPage: sp.perPage,
         sort: sp.sort,
-      });
+      })
 
       data = rows.map((a) => ({
         id: a.id,
@@ -47,15 +52,19 @@ export default async function ApplicationsContent({ searchParams, dictionary, la
         meritRank: a.meritRank,
         campaignName: a.campaign.name,
         campaignId: a.campaign.id,
-        submittedAt: a.submittedAt ? new Date(a.submittedAt).toISOString() : null,
-        createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : new Date().toISOString(),
-      }));
+        submittedAt: a.submittedAt
+          ? new Date(a.submittedAt).toISOString()
+          : null,
+        createdAt: a.createdAt
+          ? new Date(a.createdAt).toISOString()
+          : new Date().toISOString(),
+      }))
 
-      total = count;
+      total = count
     } catch (error) {
-      console.error("[ApplicationsContent] Error fetching applications:", error);
-      data = [];
-      total = 0;
+      console.error("[ApplicationsContent] Error fetching applications:", error)
+      data = []
+      total = 0
     }
   }
 
@@ -70,5 +79,5 @@ export default async function ApplicationsContent({ searchParams, dictionary, la
         campaignId={sp.campaignId || undefined}
       />
     </div>
-  );
+  )
 }

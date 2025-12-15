@@ -29,6 +29,7 @@ Brief flash of default theme before user's saved theme loads from localStorage.
 React hydration happens after initial HTML render. Theme CSS variables are injected client-side.
 
 **Workaround**:
+
 ```tsx
 // In app/layout.tsx, add inline script BEFORE body
 <script
@@ -47,7 +48,7 @@ React hydration happens after initial HTML render. Theme CSS variables are injec
           }
         }
       } catch (e) {}
-    `
+    `,
   }}
 />
 ```
@@ -69,6 +70,7 @@ OKLCH colors may render slightly differently in Safari compared to Chrome/Firefo
 Safari's color space conversion algorithms differ from other browsers.
 
 **Workaround**:
+
 - Use Safari's Color Sync utility to test
 - Consider providing sRGB fallbacks for critical colors
 
@@ -102,7 +104,7 @@ Added retry mechanism in `usePresetThemes()` hook (100ms delay).
 ```tsx
 // Already implemented in use-theme.ts
 if (presetsArray.length === 0) {
-  await new Promise(resolve => setTimeout(resolve, 100))
+  await new Promise((resolve) => setTimeout(resolve, 100))
   const retryPresets = Object.values(presetStore.getAllPresets())
   setPresets(retryPresets)
 }
@@ -137,12 +139,14 @@ const adjusted = ensureContrast(foreground, background, 4.6)
 ### Problem 1: Theme Not Applying After Switch
 
 **Symptoms**:
+
 - Click preset theme but UI doesn't update
 - Some components update, others don't
 
 **Common Causes**:
 
 #### A. Component Using Hardcoded Colors
+
 ```tsx
 // ❌ This component won't respond to theme changes
 <div className="bg-white dark:bg-gray-900">
@@ -152,29 +156,36 @@ const adjusted = ensureContrast(foreground, background, 4.6)
 ```
 
 **Solution**: Search for hardcoded colors in your component:
+
 ```bash
 # Find hardcoded Tailwind colors
 grep -r "bg-white\|bg-gray-\|text-black" src/components/
 ```
 
 #### B. Stale CSS Variables in Browser Cache
+
 ```tsx
 // Clear CSS variables and reload
-localStorage.removeItem('theme-editor-storage')
-localStorage.removeItem('editor-storage')
+localStorage.removeItem("theme-editor-storage")
+localStorage.removeItem("editor-storage")
 location.reload()
 ```
 
 **Solution**: Add cache-busting meta tag:
+
 ```html
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta
+  http-equiv="Cache-Control"
+  content="no-cache, no-store, must-revalidate"
+/>
 ```
 
 #### C. Zustand State Out of Sync
 
 **Solution**: Reset Zustand store:
+
 ```tsx
-import { useEditorStore } from '@/store/theme-editor-store'
+import { useEditorStore } from "@/store/theme-editor-store"
 
 // In your component
 const resetTheme = () => {
@@ -187,20 +198,23 @@ const resetTheme = () => {
 ### Problem 2: Imported Theme Colors Look Wrong
 
 **Symptoms**:
+
 - Imported theme has incorrect colors
 - Theme preview doesn't match exported version
 
 **Causes**:
 
 #### A. OKLCH Format Mismatch
+
 Exported theme might use different OKLCH format.
 
 **Solution**: Validate OKLCH strings on import:
+
 ```tsx
-import { parseOKLCH } from '@/lib/theme-utils'
+import { parseOKLCH } from "@/lib/theme-utils"
 
 // Validate each color
-Object.values(importedTheme.styles.light).forEach(color => {
+Object.values(importedTheme.styles.light).forEach((color) => {
   if (!parseOKLCH(color)) {
     throw new Error(`Invalid OKLCH color: ${color}`)
   }
@@ -208,19 +222,25 @@ Object.values(importedTheme.styles.light).forEach(color => {
 ```
 
 #### B. Missing Required Tokens
+
 Imported theme missing some semantic tokens.
 
 **Solution**: Merge with default theme:
+
 ```tsx
-import { defaultLightThemeStyles, defaultDarkThemeStyles } from '@/components/theme/config'
+import {
+  defaultDarkThemeStyles,
+  defaultLightThemeStyles,
+} from "@/components/theme/config"
 
 const safeImport = {
   light: { ...defaultLightThemeStyles, ...importedTheme.light },
-  dark: { ...defaultDarkThemeStyles, ...importedTheme.dark }
+  dark: { ...defaultDarkThemeStyles, ...importedTheme.dark },
 }
 ```
 
 #### C. Incorrect Color Space
+
 Theme exported from another tool using HSL/RGB instead of OKLCH.
 
 **Solution**: Convert on import (not yet implemented - manual conversion needed).
@@ -230,30 +250,35 @@ Theme exported from another tool using HSL/RGB instead of OKLCH.
 ### Problem 3: Contrast Warnings for Accessible Themes
 
 **Symptoms**:
+
 - Theme passes WCAG checkers but fails our validation
 - Contrast ratio lower than expected
 
 **Causes**:
 
 #### A. Different Calculation Methods
+
 Our implementation uses WCAG 2.1 relative luminance formula. Some tools use approximations.
 
 **Solution**: Use our built-in checker as source of truth:
+
 ```tsx
-import { checkContrast } from '@/lib/theme-utils'
+import { checkContrast } from "@/lib/theme-utils"
 
 const result = checkContrast(foreground, background)
-console.log('Actual ratio:', result.ratio)
-console.log('WCAG level:', result.level)
+console.log("Actual ratio:", result.ratio)
+console.log("WCAG level:", result.level)
 ```
 
 #### B. Alpha Channel Not Considered
+
 Colors with transparency may have different effective contrast.
 
 **Solution**: Flatten alpha channel before checking:
+
 ```tsx
 // For semi-transparent foreground on solid background
-const effectiveColor = 'oklch(...)' // Calculate blended color
+const effectiveColor = "oklch(...)" // Calculate blended color
 const result = checkContrast(effectiveColor, background)
 ```
 
@@ -262,6 +287,7 @@ const result = checkContrast(effectiveColor, background)
 ### Problem 4: Dark Mode Colors Too Similar to Light Mode
 
 **Symptoms**:
+
 - Dark mode looks washed out
 - Insufficient contrast in dark mode
 
@@ -269,17 +295,27 @@ const result = checkContrast(effectiveColor, background)
 Light mode colors directly inverted without adjusting chroma/lightness.
 
 **Solution**: Use proper dark mode color adjustments:
+
 ```tsx
 // ❌ Bad: Direct inversion
-light: { primary: 'oklch(0.3 0.2 200)' }
-dark: { primary: 'oklch(0.7 0.2 200)' }  // Same chroma
+light: {
+  primary: "oklch(0.3 0.2 200)"
+}
+dark: {
+  primary: "oklch(0.7 0.2 200)"
+} // Same chroma
 
 // ✅ Good: Adjust chroma and lightness
-light: { primary: 'oklch(0.3 0.25 200)' }  // Higher chroma for light
-dark: { primary: 'oklch(0.75 0.15 200)' }  // Lower chroma for dark
+light: {
+  primary: "oklch(0.3 0.25 200)"
+} // Higher chroma for light
+dark: {
+  primary: "oklch(0.75 0.15 200)"
+} // Lower chroma for dark
 ```
 
 **Guidelines**:
+
 - **Light mode**: L: 0.2-0.6, C: 0.15-0.25
 - **Dark mode**: L: 0.7-0.9, C: 0.08-0.15
 
@@ -288,6 +324,7 @@ dark: { primary: 'oklch(0.75 0.15 200)' }  // Lower chroma for dark
 ### Problem 5: Font Loading Delays (FOUT)
 
 **Symptoms**:
+
 - Text appears in fallback font briefly
 - Layout shift when custom font loads
 
@@ -295,6 +332,7 @@ dark: { primary: 'oklch(0.75 0.15 200)' }  // Lower chroma for dark
 Google Fonts loaded asynchronously.
 
 **Solution**: Preload fonts in `head`:
+
 ```tsx
 // In app/layout.tsx
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -302,6 +340,7 @@ Google Fonts loaded asynchronously.
 ```
 
 **Advanced**: Use `font-display: swap` in `dynamic-font-loader.tsx`:
+
 ```tsx
 // Already implemented, but verify CSS injection includes:
 font-display: swap;
@@ -313,22 +352,23 @@ font-display: swap;
 
 ### Supported Browsers
 
-| Browser | Version | OKLCH Support | Issues |
-|---------|---------|---------------|--------|
-| Chrome | 111+ | ✅ Native | None |
-| Firefox | 113+ | ✅ Native | None |
-| Safari | 15.4+ | ✅ Native | Minor color differences |
-| Edge | 111+ | ✅ Native | None |
-| Samsung Internet | 20+ | ✅ Native | None |
-| Opera | 97+ | ✅ Native | None |
+| Browser          | Version | OKLCH Support | Issues                  |
+| ---------------- | ------- | ------------- | ----------------------- |
+| Chrome           | 111+    | ✅ Native     | None                    |
+| Firefox          | 113+    | ✅ Native     | None                    |
+| Safari           | 15.4+   | ✅ Native     | Minor color differences |
+| Edge             | 111+    | ✅ Native     | None                    |
+| Samsung Internet | 20+     | ✅ Native     | None                    |
+| Opera            | 97+     | ✅ Native     | None                    |
 
 ### Fallback Strategy
 
 For older browsers, OKLCH colors may not render correctly.
 
 **Detection**:
+
 ```tsx
-const supportsOKLCH = CSS.supports('color', 'oklch(0.5 0.2 200)')
+const supportsOKLCH = CSS.supports("color", "oklch(0.5 0.2 200)")
 ```
 
 **Fallback** (not yet implemented):
@@ -341,15 +381,18 @@ Consider adding automatic sRGB fallbacks for older browsers.
 ### Problem: Slow Theme Switching (> 200ms)
 
 **Symptoms**:
+
 - Noticeable delay when clicking preset
 - UI freezes briefly
 
 **Causes**:
 
 #### A. Too Many CSS Variable Updates
+
 Updating all 40+ CSS variables at once can be slow on low-end devices.
 
 **Solution**: Batch updates using `requestAnimationFrame`:
+
 ```tsx
 requestAnimationFrame(() => {
   Object.entries(styles).forEach(([key, value]) => {
@@ -359,9 +402,11 @@ requestAnimationFrame(() => {
 ```
 
 #### B. Excessive Re-renders
+
 Components re-rendering unnecessarily on theme change.
 
 **Solution**: Use `React.memo` for expensive components:
+
 ```tsx
 export const ExpensiveComponent = React.memo(({ theme }) => {
   // Component logic
@@ -371,11 +416,12 @@ export const ExpensiveComponent = React.memo(({ theme }) => {
 #### C. Zustand Store Updates Triggering Watchers
 
 **Solution**: Use shallow equality for selectors:
+
 ```tsx
-import shallow from 'zustand/shallow'
+import shallow from "zustand/shallow"
 
 const { themeState } = useEditorStore(
-  state => ({ themeState: state.themeState }),
+  (state) => ({ themeState: state.themeState }),
   shallow
 )
 ```
@@ -385,6 +431,7 @@ const { themeState } = useEditorStore(
 ### Problem: Large Bundle Size (> 100KB)
 
 **Symptoms**:
+
 - Slow initial page load
 - High JavaScript bundle size
 
@@ -392,12 +439,14 @@ const { themeState } = useEditorStore(
 `presets.ts` contains 160+ themes (~45KB).
 
 **Solution**: Lazy load presets:
+
 ```tsx
 // Already implemented via React.lazy()
-const PresetGallery = React.lazy(() => import('./preset-gallery'))
+const PresetGallery = React.lazy(() => import("./preset-gallery"))
 ```
 
 **Verify**: Check bundle size:
+
 ```bash
 pnpm build
 # Look for theme-related chunks in .next/static/chunks/
@@ -410,6 +459,7 @@ pnpm build
 ### Problem: Colors Appear Washed Out
 
 **Symptoms**:
+
 - Colors look desaturated
 - Theme lacks vibrancy
 
@@ -417,15 +467,17 @@ pnpm build
 Chroma (C value) too low.
 
 **Solution**: Increase chroma for primary colors:
+
 ```tsx
 // ❌ Too muted
-primary: 'oklch(0.5 0.05 200)'  // C = 0.05
+primary: "oklch(0.5 0.05 200)" // C = 0.05
 
 // ✅ More vibrant
-primary: 'oklch(0.5 0.20 200)'  // C = 0.20
+primary: "oklch(0.5 0.20 200)" // C = 0.20
 ```
 
 **Guidelines**:
+
 - **UI backgrounds**: C: 0.01-0.05
 - **Buttons/CTAs**: C: 0.15-0.25
 - **Decorative elements**: C: 0.20-0.40
@@ -435,29 +487,32 @@ primary: 'oklch(0.5 0.20 200)'  // C = 0.20
 ### Problem: Text Hard to Read
 
 **Symptoms**:
+
 - Low contrast between text and background
 - Fails WCAG checkers
 
 **Solution**: Use `ensureContrast()` utility:
+
 ```tsx
-import { ensureContrast } from '@/lib/theme-utils'
+import { ensureContrast } from "@/lib/theme-utils"
 
 const safeColor = ensureContrast(
-  textColor,      // Foreground
+  textColor, // Foreground
   backgroundColor, // Background
-  4.5             // WCAG AA for normal text
+  4.5 // WCAG AA for normal text
 )
 ```
 
 **Quick Fix**: Increase lightness difference:
+
 ```tsx
 // ❌ Poor contrast
-background: 'oklch(0.6 0.1 200)'
-foreground: 'oklch(0.5 0.1 200)'  // Only 0.1 L difference
+background: "oklch(0.6 0.1 200)"
+foreground: "oklch(0.5 0.1 200)" // Only 0.1 L difference
 
 // ✅ Good contrast
-background: 'oklch(0.9 0.05 200)'
-foreground: 'oklch(0.2 0.1 200)'  // 0.7 L difference
+background: "oklch(0.9 0.05 200)"
+foreground: "oklch(0.2 0.1 200)" // 0.7 L difference
 ```
 
 ---
@@ -467,33 +522,38 @@ foreground: 'oklch(0.2 0.1 200)'  // 0.7 L difference
 ### Problem: Export Button Not Working
 
 **Symptoms**:
+
 - Click "Export Theme" but nothing happens
 - No download prompt
 
 **Causes**:
 
 #### A. Pop-up Blocker
+
 Browser blocking automatic download.
 
 **Solution**: User must click "Allow" in browser popup blocker.
 
 #### B. Insufficient Permissions
+
 File system access denied.
 
 **Solution**: Request permissions explicitly:
+
 ```tsx
 // Check if downloads are blocked
-if (!document.createElement('a').download) {
-  alert('Your browser does not support downloads')
+if (!document.createElement("a").download) {
+  alert("Your browser does not support downloads")
 }
 ```
 
 #### C. Theme State Empty
 
 **Solution**: Validate state before export:
+
 ```tsx
 if (!themeState || !themeState.styles) {
-  toast.error('No active theme to export')
+  toast.error("No active theme to export")
   return
 }
 ```
@@ -503,37 +563,44 @@ if (!themeState || !themeState.styles) {
 ### Problem: Import Fails with "Invalid Format"
 
 **Symptoms**:
+
 - Import shows error message
 - Theme JSON appears valid
 
 **Causes**:
 
 #### A. Missing Required Fields
+
 Theme JSON missing `styles.light` or `styles.dark`.
 
 **Solution**: Validate structure:
+
 ```tsx
 if (!theme.styles?.light || !theme.styles?.dark) {
-  throw new Error('Theme must include both light and dark styles')
+  throw new Error("Theme must include both light and dark styles")
 }
 ```
 
 #### B. Invalid JSON
+
 File contains syntax errors.
 
 **Solution**: Use JSON validator before import:
+
 ```bash
 # Validate JSON file
 cat theme.json | jq .
 ```
 
 #### C. Wrong File Type
+
 Imported file is not JSON.
 
 **Solution**: Check MIME type:
+
 ```tsx
-if (file.type !== 'application/json') {
-  toast.error('Please upload a JSON file')
+if (file.type !== "application/json") {
+  toast.error("Please upload a JSON file")
   return
 }
 ```
@@ -545,25 +612,30 @@ if (file.type !== 'application/json') {
 ### Problem: Undo/Redo Not Working
 
 **Symptoms**:
+
 - Undo button does nothing
 - History stack empty
 
 **Causes**:
 
 #### A. History Threshold
+
 Changes too rapid - debounced within 500ms.
 
 **Solution**: Wait 500ms between significant changes for history entry.
 
 #### B. History Stack Full
+
 Max 30 entries reached, oldest discarded.
 
 **Solution**: Increase `MAX_HISTORY_COUNT` in `theme-editor-store.ts`:
+
 ```tsx
 const MAX_HISTORY_COUNT = 50 // Increase from 30
 ```
 
 #### C. Mode-Only Changes
+
 Switching light/dark mode doesn't create history entry (by design).
 
 **Expected behavior**: Only color/style changes create undo points.
@@ -573,15 +645,18 @@ Switching light/dark mode doesn't create history entry (by design).
 ### Problem: Theme Not Persisting Across Sessions
 
 **Symptoms**:
+
 - Theme resets to default on page reload
 - User preferences not saved
 
 **Causes**:
 
 #### A. localStorage Disabled
+
 Private browsing or browser settings blocking localStorage.
 
 **Solution**: Detect and warn user:
+
 ```tsx
 try {
   localStorage.setItem('test', 'test')
@@ -594,6 +669,7 @@ try {
 #### B. Zustand Persist Not Working
 
 **Solution**: Check browser console for errors. Ensure `zustand/middleware` installed:
+
 ```bash
 pnpm list zustand
 ```
@@ -601,10 +677,11 @@ pnpm list zustand
 #### C. Database Save Failing
 
 **Solution**: Check server action response:
+
 ```tsx
 const result = await saveUserTheme(formData)
 if (result.error) {
-  console.error('Database save failed:', result.error)
+  console.error("Database save failed:", result.error)
 }
 ```
 
@@ -615,44 +692,45 @@ if (result.error) {
 ### Enable Debug Mode
 
 Add to your component:
-```tsx
-'use client'
 
-import { useEffect } from 'react'
+```tsx
+"use client"
+
+import { useEffect } from "react"
 
 useEffect(() => {
   // Log all CSS variables
   const styles = getComputedStyle(document.documentElement)
   const allVars = Array.from(document.documentElement.style)
-    .filter(key => key.startsWith('--'))
-    .map(key => `${key}: ${styles.getPropertyValue(key)}`)
+    .filter((key) => key.startsWith("--"))
+    .map((key) => `${key}: ${styles.getPropertyValue(key)}`)
 
-  console.log('Active CSS Variables:', allVars)
+  console.log("Active CSS Variables:", allVars)
 }, [])
 ```
 
 ### Inspect Theme State
 
 ```tsx
-import { useEditorStore } from '@/store/theme-editor-store'
+import { useEditorStore } from "@/store/theme-editor-store"
 
 // In component
 const state = useEditorStore.getState()
-console.log('Theme State:', JSON.stringify(state.themeState, null, 2))
-console.log('History Length:', state.history.length)
-console.log('Can Undo:', state.canUndo())
+console.log("Theme State:", JSON.stringify(state.themeState, null, 2))
+console.log("History Length:", state.history.length)
+console.log("Can Undo:", state.canUndo())
 ```
 
 ### Check Contrast Ratios
 
 ```tsx
-import { getContrastRatio } from '@/lib/theme-utils'
+import { getContrastRatio } from "@/lib/theme-utils"
 
 // For any element
 const fg = getComputedStyle(element).color
 const bg = getComputedStyle(element).backgroundColor
 const ratio = getContrastRatio(fg, bg)
-console.log('Contrast Ratio:', ratio)
+console.log("Contrast Ratio:", ratio)
 ```
 
 ### Monitor Performance
@@ -660,9 +738,9 @@ console.log('Contrast Ratio:', ratio)
 ```tsx
 // Measure theme switch time
 const start = performance.now()
-applyThemePreset('zinc')
+applyThemePreset("zinc")
 requestAnimationFrame(() => {
-  console.log('Theme switch took:', performance.now() - start, 'ms')
+  console.log("Theme switch took:", performance.now() - start, "ms")
 })
 ```
 
@@ -673,6 +751,7 @@ requestAnimationFrame(() => {
 ### Q: Can I use HSL/RGB colors instead of OKLCH?
 
 **A**: Not recommended. The system is built around OKLCH for:
+
 - Perceptual uniformity
 - Accurate contrast calculations
 - Future-proof color spaces
@@ -708,6 +787,7 @@ If you must use RGB, convert to OKLCH first (manual conversion needed).
 ### Q: Are themes stored server-side or client-side?
 
 **A**: Both!
+
 - **localStorage**: Immediate persistence
 - **Database**: Cross-device sync (when saved)
 - **Zustand**: In-memory state
@@ -723,10 +803,11 @@ If you must use RGB, convert to OKLCH first (manual conversion needed).
 ### Q: Can I programmatically generate themes?
 
 **A**: Yes! Use utilities:
-```tsx
-import { generateSemanticPalette } from '@/lib/theme-utils'
 
-const palette = generateSemanticPalette('oklch(0.5 0.2 264)')
+```tsx
+import { generateSemanticPalette } from "@/lib/theme-utils"
+
+const palette = generateSemanticPalette("oklch(0.5 0.2 264)")
 // Returns complete theme
 ```
 
@@ -745,6 +826,7 @@ const palette = generateSemanticPalette('oklch(0.5 0.2 264)')
 ### How to Report
 
 Include:
+
 - **Browser & version**
 - **Steps to reproduce**
 - **Expected behavior**
@@ -763,6 +845,7 @@ Label: `theme-system`
 ## Version History
 
 ### v2.0 (2025-10-27) - Current
+
 - ✅ Integrated into Settings page
 - ✅ Added advanced color utilities
 - ✅ Added WCAG contrast checking
@@ -770,6 +853,7 @@ Label: `theme-system`
 - ✅ Improved performance (50ms theme switching)
 
 ### v1.0 (2025-10-20)
+
 - Initial release
 - 160+ preset themes
 - Import/export functionality

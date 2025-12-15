@@ -1,13 +1,15 @@
-import { ExamsTable } from './table'
-import { type ExamRow } from './columns'
-import { SearchParams } from 'nuqs/server'
-import { examsSearchParams } from './list-params'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import { type Locale } from '@/components/internationalization/config'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
-import { type Prisma, ExamType, ExamStatus } from '@prisma/client'
+import { ExamStatus, ExamType, type Prisma } from "@prisma/client"
+import { SearchParams } from "nuqs/server"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { type Locale } from "@/components/internationalization/config"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+import { type ExamRow } from "./columns"
+import { examsSearchParams } from "./list-params"
+import { ExamsTable } from "./table"
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -15,7 +17,11 @@ interface Props {
   lang: Locale
 }
 
-export default async function ExamsContent({ searchParams, dictionary, lang }: Props) {
+export default async function ExamsContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
   const sp = await examsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: ExamRow[] = []
@@ -24,7 +30,9 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
   if (schoolId) {
     const where: Prisma.ExamWhereInput = {
       schoolId,
-      ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
+      ...(sp.title
+        ? { title: { contains: sp.title, mode: "insensitive" } }
+        : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
       ...(sp.examType ? { examType: sp.examType as ExamType } : {}),
@@ -34,9 +42,10 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
-      : [{ examDate: 'desc' }, { startTime: 'asc' }]
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ examDate: "desc" }, { startTime: "asc" }]
 
     const [rows, count] = await Promise.all([
       db.exam.findMany({
@@ -46,12 +55,12 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
         take,
         include: {
           class: {
-            select: { name: true }
+            select: { name: true },
           },
           subject: {
-            select: { subjectName: true }
-          }
-        }
+            select: { subjectName: true },
+          },
+        },
       }),
       db.exam.count({ where }),
     ])
@@ -59,8 +68,8 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
     data = rows.map((e) => ({
       id: e.id,
       title: e.title,
-      className: e.class?.name || 'Unknown',
-      subjectName: e.subject?.subjectName || 'Unknown',
+      className: e.class?.name || "Unknown",
+      subjectName: e.subject?.subjectName || "Unknown",
       examDate: e.examDate.toISOString(),
       startTime: e.startTime,
       endTime: e.endTime,
@@ -68,11 +77,11 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
       totalMarks: e.totalMarks,
       examType: e.examType,
       status: e.status,
-      createdAt: e.createdAt.toISOString()
+      createdAt: e.createdAt.toISOString(),
     }))
     total = count
   }
-  
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">

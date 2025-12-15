@@ -1,14 +1,20 @@
 "use client"
 
 // Unified Question Create/Pencil Form
-
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
+import { ArrowLeft, ArrowRight, Plus, Save, Trash } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -16,16 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Trash, Save, ArrowLeft, ArrowRight } from "lucide-react";
-import { createQuestionSchema, type CreateQuestionFormData } from "./validation"
-import { createQuestion, updateQuestion } from "./actions"
+import { Textarea } from "@/components/ui/textarea"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+
+import { createQuestion, updateQuestion } from "./actions"
+import { createQuestionSchema, type CreateQuestionFormData } from "./validation"
 
 interface QuestionFormProps {
   dictionary: Dictionary
@@ -48,7 +49,9 @@ export function QuestionForm({
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [options, setOptions] = useState<Array<{ text: string; isCorrect: boolean }>>(
+  const [options, setOptions] = useState<
+    Array<{ text: string; isCorrect: boolean }>
+  >(
     initialData?.options || [
       { text: "", isCorrect: false },
       { text: "", isCorrect: false },
@@ -96,7 +99,9 @@ export function QuestionForm({
 
       if (result.success) {
         toast.success(
-          questionId ? dict.messages.questionUpdated : dict.messages.questionCreated
+          questionId
+            ? dict.messages.questionUpdated
+            : dict.messages.questionCreated
         )
         onSuccess?.()
         router.push(`/${locale}/exams/mark/questions`)
@@ -120,7 +125,11 @@ export function QuestionForm({
     }
   }
 
-  const updateOption = (index: number, field: "text" | "isCorrect", value: string | boolean) => {
+  const updateOption = (
+    index: number,
+    field: "text" | "isCorrect",
+    value: string | boolean
+  ) => {
     const newOptions = [...options]
     if (field === "text") {
       newOptions[index].text = value as string
@@ -144,7 +153,9 @@ export function QuestionForm({
           <CardContent className="space-y-4">
             {/* Question Text */}
             <div>
-              <Label htmlFor="questionText">{dict.questionForm.questionText}</Label>
+              <Label htmlFor="questionText">
+                {dict.questionForm.questionText}
+              </Label>
               <Textarea
                 id="questionText"
                 rows={4}
@@ -152,7 +163,7 @@ export function QuestionForm({
                 {...form.register("questionText")}
               />
               {form.formState.errors.questionText && (
-                <p className="text-xs text-destructive mt-1">
+                <p className="text-destructive mt-1 text-xs">
                   {form.formState.errors.questionText.message}
                 </p>
               )}
@@ -160,13 +171,19 @@ export function QuestionForm({
 
             {/* Question Type */}
             <div>
-              <Label htmlFor="questionType">{dict.questionForm.questionType}</Label>
+              <Label htmlFor="questionType">
+                {dict.questionForm.questionType}
+              </Label>
               <Select
                 value={form.watch("questionType")}
-                onValueChange={(value) => form.setValue("questionType", value as QuestionType)}
+                onValueChange={(value) =>
+                  form.setValue("questionType", value as QuestionType)
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={dict.questionForm.selectQuestionType} />
+                  <SelectValue
+                    placeholder={dict.questionForm.selectQuestionType}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(dict.questionTypes).map(([key, label]) => (
@@ -183,10 +200,14 @@ export function QuestionForm({
               <Label htmlFor="difficulty">{dict.questionForm.difficulty}</Label>
               <Select
                 value={form.watch("difficulty")}
-                onValueChange={(value) => form.setValue("difficulty", value as DifficultyLevel)}
+                onValueChange={(value) =>
+                  form.setValue("difficulty", value as DifficultyLevel)
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={dict.questionForm.selectDifficulty} />
+                  <SelectValue
+                    placeholder={dict.questionForm.selectDifficulty}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(dict.difficulty).map(([key, label]) => (
@@ -203,10 +224,14 @@ export function QuestionForm({
               <Label htmlFor="bloomLevel">{dict.questionForm.bloomLevel}</Label>
               <Select
                 value={form.watch("bloomLevel")}
-                onValueChange={(value) => form.setValue("bloomLevel", value as BloomLevel)}
+                onValueChange={(value) =>
+                  form.setValue("bloomLevel", value as BloomLevel)
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={dict.questionForm.selectBloomLevel} />
+                  <SelectValue
+                    placeholder={dict.questionForm.selectBloomLevel}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(dict.bloomLevels).map(([key, label]) => (
@@ -232,7 +257,9 @@ export function QuestionForm({
                 />
               </div>
               <div>
-                <Label htmlFor="timeEstimate">{dict.questionForm.timeEstimate}</Label>
+                <Label htmlFor="timeEstimate">
+                  {dict.questionForm.timeEstimate}
+                </Label>
                 <Input
                   id="timeEstimate"
                   type="number"
@@ -284,12 +311,19 @@ export function QuestionForm({
               </div>
             ))}
 
-            <Button type="button" variant="outline" onClick={addOption} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addOption}
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" />
               {dict.options.addOption}
             </Button>
 
-            <p className="text-xs text-muted-foreground">{dict.options.atLeastTwo}</p>
+            <p className="text-muted-foreground text-xs">
+              {dict.options.atLeastTwo}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -303,7 +337,9 @@ export function QuestionForm({
           <CardContent className="space-y-4">
             {/* Explanation */}
             <div>
-              <Label htmlFor="explanation">{dict.questionForm.explanation}</Label>
+              <Label htmlFor="explanation">
+                {dict.questionForm.explanation}
+              </Label>
               <Textarea
                 id="explanation"
                 rows={3}
@@ -314,7 +350,9 @@ export function QuestionForm({
 
             {/* Sample Answer */}
             <div>
-              <Label htmlFor="sampleAnswer">{dict.questionForm.sampleAnswer}</Label>
+              <Label htmlFor="sampleAnswer">
+                {dict.questionForm.sampleAnswer}
+              </Label>
               <Textarea
                 id="sampleAnswer"
                 rows={3}
@@ -331,7 +369,7 @@ export function QuestionForm({
                 placeholder={dict.questionForm.tagsPlaceholder}
                 {...form.register("tags")}
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Comma-separated tags
               </p>
             </div>
@@ -354,8 +392,12 @@ export function QuestionForm({
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
           {step > 1 && (
-            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
               {dict.buttons.previous}
             </Button>
           )}
@@ -365,13 +407,15 @@ export function QuestionForm({
           {step < (needsOptions ? 3 : 2) && (
             <Button type="button" onClick={() => setStep(step + 1)}>
               {dict.buttons.next}
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
           {step === (needsOptions ? 3 : 2) && (
             <Button type="submit" disabled={loading}>
-              <Save className="h-4 w-4 mr-2" />
-              {questionId ? dict.buttons.saveQuestion : dict.buttons.createQuestion}
+              <Save className="mr-2 h-4 w-4" />
+              {questionId
+                ? dict.buttons.saveQuestion
+                : dict.buttons.createQuestion}
             </Button>
           )}
         </div>

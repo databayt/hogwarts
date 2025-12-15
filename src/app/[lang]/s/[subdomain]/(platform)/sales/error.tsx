@@ -1,30 +1,31 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { useEffect } from "react"
+import { AlertCircle, RefreshCw } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 interface ErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }
 
 export default function SalesError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error("Sales page error:", error);
-  }, [error]);
+    console.error("Sales page error:", error)
+  }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <div className="flex items-center gap-2 text-destructive">
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+      <div className="text-destructive flex items-center gap-2">
         <AlertCircle className="h-6 w-6" />
         <h2 className="text-lg font-semibold">Something went wrong</h2>
       </div>
-      <p className="text-muted-foreground text-center max-w-md">
+      <p className="text-muted-foreground max-w-md text-center">
         {error.message || "An unexpected error occurred while loading leads."}
       </p>
       {error.digest && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Error ID: {error.digest}
         </p>
       )}
@@ -33,5 +34,5 @@ export default function SalesError({ error, reset }: ErrorProps) {
         Try again
       </Button>
     </div>
-  );
+  )
 }

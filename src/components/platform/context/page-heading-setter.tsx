@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+
 import { usePageHeading } from "./page-heading-context"
 
 interface PageHeadingSetterProps {
@@ -8,7 +9,10 @@ interface PageHeadingSetterProps {
   description?: string
 }
 
-export function PageHeadingSetter({ title, description }: PageHeadingSetterProps) {
+export function PageHeadingSetter({
+  title,
+  description,
+}: PageHeadingSetterProps) {
   const { setHeading, clearHeading } = usePageHeading()
 
   useEffect(() => {

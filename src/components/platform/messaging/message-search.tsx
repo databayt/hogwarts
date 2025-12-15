@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useCallback, useTransition } from "react"
-import { Search, X, ChevronUp, ChevronDown, Loader2 } from "lucide-react"
+import { useCallback, useState, useTransition } from "react"
+import { ChevronDown, ChevronUp, Loader2, Search, X } from "lucide-react"
 import { useDebouncedCallback } from "use-debounce"
-import type { MessageDTO } from "./types"
+
 import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+import type { MessageDTO } from "./types"
 
 interface MessageSearchProps {
   conversationId: string
@@ -98,30 +100,34 @@ export function MessageSearch({
   }
 
   return (
-    <div className={cn(
-      "flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg",
-      "animate-in fade-in slide-in-from-right-2 duration-200",
-      className
-    )}>
+    <div
+      className={cn(
+        "bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2",
+        "animate-in fade-in slide-in-from-right-2 duration-200",
+        className
+      )}
+    >
       {/* Search input */}
       <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
         <Input
           value={query}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder={locale === "ar" ? "بحث في الرسائل..." : "Search messages..."}
-          className="pl-8 pr-4 h-8 text-sm"
+          placeholder={
+            locale === "ar" ? "بحث في الرسائل..." : "Search messages..."
+          }
+          className="h-8 pr-4 pl-8 text-sm"
           autoFocus
         />
         {isSearching && (
-          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground absolute top-1/2 right-2.5 h-4 w-4 -translate-y-1/2 animate-spin" />
         )}
       </div>
 
       {/* Results counter & navigation */}
       {results.length > 0 && (
         <div className="flex items-center gap-1">
-          <Badge variant="secondary" className="text-xs px-2 py-0.5">
+          <Badge variant="secondary" className="px-2 py-0.5 text-xs">
             {currentIndex + 1}/{results.length}
           </Badge>
           <Button
@@ -147,7 +153,7 @@ export function MessageSearch({
 
       {/* No results message */}
       {query && !isSearching && results.length === 0 && (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {locale === "ar" ? "لا توجد نتائج" : "No results"}
         </span>
       )}

@@ -1,5 +1,8 @@
 "use client"
 
+import { Calendar } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -8,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { Calendar } from "lucide-react"
 
 export interface ChargeItem {
   id: string
@@ -50,23 +51,25 @@ export function UpcomingCharges({
   }
 
   return (
-    <Card className={cn("w-full max-w-2xl mx-auto", className)}>
+    <Card className={cn("mx-auto w-full max-w-2xl", className)}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="rounded-lg border bg-muted/30 p-4">
+        <div className="bg-muted/30 rounded-lg border p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <Calendar className="text-muted-foreground h-5 w-5" />
               <div>
-                <p className="text-sm text-muted-foreground">Next Billing Date</p>
+                <p className="text-muted-foreground text-sm">
+                  Next Billing Date
+                </p>
                 <p className="font-semibold">{nextBillingDate}</p>
               </div>
             </div>
             <div className="text-end">
-              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-muted-foreground text-sm">Total</p>
               <p className="text-2xl font-bold tabular-nums">{totalAmount}</p>
             </div>
           </div>
@@ -78,16 +81,18 @@ export function UpcomingCharges({
             {charges.map((charge) => (
               <div
                 key={charge.id}
-                className="rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                className="hover:bg-muted/50 rounded-lg border p-3 transition-colors"
               >
-                <div className="flex items-start justify-between gap-3 mb-1.5">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="mb-1.5 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
                     <span className="font-medium">{charge.description}</span>
                     {getChargeTypeBadge(charge.type)}
                   </div>
-                  <span className="font-semibold tabular-nums shrink-0">{charge.amount}</span>
+                  <span className="shrink-0 font-semibold tabular-nums">
+                    {charge.amount}
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground">{charge.date}</p>
+                <p className="text-muted-foreground text-sm">{charge.date}</p>
               </div>
             ))}
           </div>

@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges";
-import { InvoiceHistory } from "@/components/billingsdk/invoice-history";
-import type { ChargeItem, InvoiceItem } from "@/lib/billingsdk-config";
+import type { ChargeItem, InvoiceItem } from "@/lib/billingsdk-config"
+import { InvoiceHistory } from "@/components/billingsdk/invoice-history"
+import { UpcomingCharges } from "@/components/billingsdk/upcoming-charges"
 
 interface BillingSectionProps {
-  nextBillingDate: string;
-  totalAmount: string;
-  upcomingCharges: ChargeItem[];
-  invoices: InvoiceItem[];
-  onDownloadInvoice?: (invoiceId: string) => void;
+  nextBillingDate: string
+  totalAmount: string
+  upcomingCharges: ChargeItem[]
+  invoices: InvoiceItem[]
+  onDownloadInvoice?: (invoiceId: string) => void
 }
 
 export function BillingSection({
@@ -49,5 +49,5 @@ export function BillingSection({
         />
       </div>
     </section>
-  );
+  )
 }

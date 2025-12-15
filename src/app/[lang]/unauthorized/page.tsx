@@ -1,29 +1,31 @@
-import { ShieldX, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { ArrowLeft, Home, ShieldX } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface UnauthorizedPageProps {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function UnauthorizedPage({ params }: UnauthorizedPageProps) {
+export default async function UnauthorizedPage({
+  params,
+}: UnauthorizedPageProps) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4">
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="rounded-full bg-destructive/10 p-4">
-          <ShieldX className="h-12 w-12 text-destructive" />
+        <div className="bg-destructive/10 rounded-full p-4">
+          <ShieldX className="text-destructive h-12 w-12" />
         </div>
         <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
           {dictionary?.errors?.unauthorized || "Access Denied"}
         </h1>
-        <p className="max-w-md text-muted-foreground">
+        <p className="text-muted-foreground max-w-md">
           {lang === "ar"
             ? "ليس لديك صلاحية للوصول إلى هذه الصفحة. يرجى التواصل مع المسؤول إذا كنت تعتقد أن هذا خطأ."
             : "You don't have permission to access this page. Please contact your administrator if you believe this is an error."}
@@ -46,7 +48,8 @@ export default async function UnauthorizedPage({ params }: UnauthorizedPageProps
         <Button variant="outline" className="gap-2" asChild>
           <Link href={`/${lang}/dashboard`}>
             <ArrowLeft className="h-4 w-4" />
-            {dictionary?.common?.back || "Back"} {lang === "ar" ? "للوحة التحكم" : "to Dashboard"}
+            {dictionary?.common?.back || "Back"}{" "}
+            {lang === "ar" ? "للوحة التحكم" : "to Dashboard"}
           </Link>
         </Button>
         <Button variant="ghost" className="gap-2" asChild>

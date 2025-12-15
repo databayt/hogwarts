@@ -5,9 +5,10 @@
  * based on source material and specified parameters.
  */
 
-import Anthropic from '@anthropic-ai/sdk'
-import { getGenerationPrompt, type GenerationPromptParams } from './prompts'
-import type { QuestionType, DifficultyLevel, BloomLevel } from '@prisma/client'
+import Anthropic from "@anthropic-ai/sdk"
+import type { BloomLevel, DifficultyLevel, QuestionType } from "@prisma/client"
+
+import { getGenerationPrompt, type GenerationPromptParams } from "./prompts"
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -59,7 +60,7 @@ export async function generateQuestion(
     bloomLevel,
     examType,
     subject,
-    aiModel = 'claude-3-5-sonnet-20241022',
+    aiModel = "claude-3-5-sonnet-20241022",
     temperature = 0.7,
   } = params
 
@@ -81,7 +82,7 @@ export async function generateQuestion(
       temperature,
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: prompt,
         },
       ],
@@ -89,13 +90,13 @@ export async function generateQuestion(
 
     // Extract content
     const content =
-      message.content[0].type === 'text' ? message.content[0].text : ''
+      message.content[0].type === "text" ? message.content[0].text : ""
 
     // Parse JSON response
     const generated = extractJSON(content)
 
     if (!generated) {
-      throw new Error('Failed to parse AI response as JSON')
+      throw new Error("Failed to parse AI response as JSON")
     }
 
     // Validate and structure the response
@@ -109,16 +110,16 @@ export async function generateQuestion(
       gradingRubric: generated.gradingRubric,
       explanation: generated.explanation,
       tags: generated.tags || [],
-      subject: generated.subject || subject || 'General',
+      subject: generated.subject || subject || "General",
       points: generated.points || 1,
       timeEstimate: generated.timeEstimate || 2,
       aiModel,
       generatedAt: new Date(),
     }
   } catch (error) {
-    console.error('Error generating question:', error)
+    console.error("Error generating question:", error)
     throw new Error(
-      `Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to generate question: ${error instanceof Error ? error.message : "Unknown error"}`
     )
   }
 }
@@ -144,13 +145,16 @@ export async function generateQuestionBatch(
       }
     } catch (error) {
       errors.push(
-        `Question ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Question ${i + 1}: ${error instanceof Error ? error.message : "Unknown error"}`
       )
     }
   }
 
   if (errors.length > 0) {
-    console.warn(`Generated ${questions.length}/${count} questions. Errors:`, errors)
+    console.warn(
+      `Generated ${questions.length}/${count} questions. Errors:`,
+      errors
+    )
   }
 
   return questions
@@ -177,11 +181,11 @@ function extractJSON(text: string): any {
     try {
       return JSON.parse(jsonMatch[0])
     } catch (e) {
-      throw new Error('Found JSON-like content but failed to parse it')
+      throw new Error("Found JSON-like content but failed to parse it")
     }
   }
 
-  throw new Error('No valid JSON found in response')
+  throw new Error("No valid JSON found in response")
 }
 
 /**
@@ -204,7 +208,11 @@ export function estimateGenerationCost(params: {
   estimatedOutputTokens: number
   estimatedCostUSD: number
 } {
-  const { questionCount, avgContextTokens = 2000, avgOutputTokens = 800 } = params
+  const {
+    questionCount,
+    avgContextTokens = 2000,
+    avgOutputTokens = 800,
+  } = params
 
   const inputTokens = questionCount * avgContextTokens
   const outputTokens = questionCount * avgOutputTokens

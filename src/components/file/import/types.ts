@@ -3,13 +3,13 @@
  * Type definitions for import operations
  */
 
-import { z } from "zod";
+import { z } from "zod"
 
 // ============================================================================
 // Import Format Types
 // ============================================================================
 
-export type ImportFormat = "csv" | "excel" | "json";
+export type ImportFormat = "csv" | "excel" | "json"
 
 // ============================================================================
 // Column Mapping
@@ -17,40 +17,40 @@ export type ImportFormat = "csv" | "excel" | "json";
 
 export interface ImportColumn<T = unknown> {
   /** Target field key in the data model */
-  key: keyof T & string;
+  key: keyof T & string
 
   /** Display label for the column */
-  label: string;
+  label: string
 
   /** Arabic label */
-  labelAr?: string;
+  labelAr?: string
 
   /** Expected column header in file (exact match) */
-  header?: string;
+  header?: string
 
   /** Alternative headers (for fuzzy matching) */
-  alternativeHeaders?: string[];
+  alternativeHeaders?: string[]
 
   /** Whether this column is required */
-  required?: boolean;
+  required?: boolean
 
   /** Data type for parsing */
-  type?: "string" | "number" | "boolean" | "date" | "email" | "phone";
+  type?: "string" | "number" | "boolean" | "date" | "email" | "phone"
 
   /** Default value if missing */
-  defaultValue?: unknown;
+  defaultValue?: unknown
 
   /** Zod schema for validation */
-  schema?: z.ZodType;
+  schema?: z.ZodType
 
   /** Custom parser function */
-  parser?: (value: string, row: Record<string, string>) => unknown;
+  parser?: (value: string, row: Record<string, string>) => unknown
 
   /** Custom validator function */
-  validator?: (value: unknown, row: Record<string, unknown>) => boolean | string;
+  validator?: (value: unknown, row: Record<string, unknown>) => boolean | string
 
   /** Transform function after parsing */
-  transform?: (value: unknown) => unknown;
+  transform?: (value: unknown) => unknown
 }
 
 // ============================================================================
@@ -59,31 +59,31 @@ export interface ImportColumn<T = unknown> {
 
 export interface ImportConfig<T = unknown> {
   /** Column definitions */
-  columns: ImportColumn<T>[];
+  columns: ImportColumn<T>[]
 
   /** Maximum rows to process */
-  maxRows?: number;
+  maxRows?: number
 
   /** Skip first N rows (for headers) */
-  skipRows?: number;
+  skipRows?: number
 
   /** Stop on first error or collect all */
-  stopOnError?: boolean;
+  stopOnError?: boolean
 
   /** Unique key for duplicate detection */
-  uniqueKey?: keyof T & string;
+  uniqueKey?: keyof T & string
 
   /** Handle duplicates: skip, update, or error */
-  duplicateHandling?: "skip" | "update" | "error";
+  duplicateHandling?: "skip" | "update" | "error"
 
   /** Current locale */
-  locale?: "en" | "ar";
+  locale?: "en" | "ar"
 
   /** Batch size for processing */
-  batchSize?: number;
+  batchSize?: number
 
   /** Schema for full row validation */
-  rowSchema?: z.ZodType<T>;
+  rowSchema?: z.ZodType<T>
 }
 
 // ============================================================================
@@ -91,35 +91,35 @@ export interface ImportConfig<T = unknown> {
 // ============================================================================
 
 export interface ImportRowError {
-  row: number;
-  column?: string;
-  value?: unknown;
-  message: string;
-  type: "validation" | "parsing" | "duplicate" | "required";
+  row: number
+  column?: string
+  value?: unknown
+  message: string
+  type: "validation" | "parsing" | "duplicate" | "required"
 }
 
 export interface ImportResult<T = unknown> {
-  success: boolean;
-  totalRows: number;
-  validRows: number;
-  invalidRows: number;
-  skippedRows: number;
-  data: T[];
-  errors: ImportRowError[];
-  duplicates: number;
-  warnings: string[];
+  success: boolean
+  totalRows: number
+  validRows: number
+  invalidRows: number
+  skippedRows: number
+  data: T[]
+  errors: ImportRowError[]
+  duplicates: number
+  warnings: string[]
 }
 
 export interface ImportPreview<T = unknown> {
-  headers: string[];
+  headers: string[]
   mappedColumns: Array<{
-    header: string;
-    mappedTo?: ImportColumn<T>;
-    autoMatched: boolean;
-  }>;
-  sampleRows: Array<Record<string, string>>;
-  totalRows: number;
-  format: ImportFormat;
+    header: string
+    mappedTo?: ImportColumn<T>
+    autoMatched: boolean
+  }>
+  sampleRows: Array<Record<string, string>>
+  totalRows: number
+  format: ImportFormat
 }
 
 // ============================================================================
@@ -127,12 +127,19 @@ export interface ImportPreview<T = unknown> {
 // ============================================================================
 
 export interface ImportProgress {
-  status: "idle" | "reading" | "parsing" | "validating" | "processing" | "completed" | "error";
-  progress: number;
-  currentRow?: number;
-  totalRows?: number;
-  message?: string;
-  error?: string;
+  status:
+    | "idle"
+    | "reading"
+    | "parsing"
+    | "validating"
+    | "processing"
+    | "completed"
+    | "error"
+  progress: number
+  currentRow?: number
+  totalRows?: number
+  message?: string
+  error?: string
 }
 
 // ============================================================================
@@ -141,25 +148,25 @@ export interface ImportProgress {
 
 export interface ImportOptions {
   /** Skip header row */
-  skipHeader?: boolean;
+  skipHeader?: boolean
 
   /** Trim whitespace from values */
-  trimValues?: boolean;
+  trimValues?: boolean
 
   /** Convert empty strings to null */
-  emptyToNull?: boolean;
+  emptyToNull?: boolean
 
   /** Custom date format */
-  dateFormat?: string;
+  dateFormat?: string
 
   /** Decimal separator for numbers */
-  decimalSeparator?: "." | ",";
+  decimalSeparator?: "." | ","
 
   /** Sheet name/index for Excel */
-  sheetName?: string | number;
+  sheetName?: string | number
 
   /** Custom column mapping (header -> key) */
-  columnMapping?: Record<string, string>;
+  columnMapping?: Record<string, string>
 }
 
 // ============================================================================
@@ -168,19 +175,19 @@ export interface ImportOptions {
 
 export interface UseImportReturn<T> {
   /** Import state */
-  isImporting: boolean;
-  progress: ImportProgress;
-  error: string | null;
-  preview: ImportPreview<T> | null;
-  result: ImportResult<T> | null;
+  isImporting: boolean
+  progress: ImportProgress
+  error: string | null
+  preview: ImportPreview<T> | null
+  result: ImportResult<T> | null
 
   /** Actions */
-  parseFile: (file: File) => Promise<ImportPreview<T> | null>;
-  updateMapping: (header: string, column: ImportColumn<T> | null) => void;
-  validateData: () => Promise<ImportResult<T>>;
-  importData: (onSave: (data: T[]) => Promise<void>) => Promise<ImportResult<T>>;
+  parseFile: (file: File) => Promise<ImportPreview<T> | null>
+  updateMapping: (header: string, column: ImportColumn<T> | null) => void
+  validateData: () => Promise<ImportResult<T>>
+  importData: (onSave: (data: T[]) => Promise<void>) => Promise<ImportResult<T>>
 
   /** Control */
-  reset: () => void;
-  cancel: () => void;
+  reset: () => void
+  cancel: () => void
 }

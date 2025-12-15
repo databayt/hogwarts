@@ -3,7 +3,11 @@ import { z } from "zod"
 // Base schema for term - without refinement for extend compatibility
 export const termBaseSchema = z.object({
   yearId: z.string().min(1, "Academic year is required"),
-  termNumber: z.coerce.number().int().min(1, "Term number must be at least 1").max(4, "Term number cannot exceed 4"),
+  termNumber: z.coerce
+    .number()
+    .int()
+    .min(1, "Term number must be at least 1")
+    .max(4, "Term number cannot exceed 4"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
   isActive: z.coerce.boolean().default(false),
@@ -19,20 +23,29 @@ export const termCreateSchema = termBaseSchema.refine(
 )
 
 // Update schema - extend base first, then refine
-export const termUpdateSchema = termBaseSchema.extend({
-  id: z.string().min(1, "Required"),
-}).partial({ yearId: true, termNumber: true, startDate: true, endDate: true, isActive: true }).refine(
-  (data) => {
-    if (data.startDate && data.endDate) {
-      return data.endDate > data.startDate
+export const termUpdateSchema = termBaseSchema
+  .extend({
+    id: z.string().min(1, "Required"),
+  })
+  .partial({
+    yearId: true,
+    termNumber: true,
+    startDate: true,
+    endDate: true,
+    isActive: true,
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return data.endDate > data.startDate
+      }
+      return true
+    },
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
     }
-    return true
-  },
-  {
-    message: "End date must be after start date",
-    path: ["endDate"],
-  }
-)
+  )
 
 // List schema with sorting and pagination
 export const sortItemSchema = z.object({

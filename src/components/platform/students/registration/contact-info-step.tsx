@@ -1,29 +1,36 @@
-"use client";
+"use client"
 
-import { UseFormReturn } from "react-hook-form";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect } from "react";
+import { useEffect } from "react"
+import { UseFormReturn } from "react-hook-form"
+
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ContactInfoStepProps {
-  form: UseFormReturn<any>;
-  dictionary?: any;
+  form: UseFormReturn<any>
+  dictionary?: any
 }
 
 export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
-  const sameAsPermanent = form.watch("sameAsPermanent");
+  const sameAsPermanent = form.watch("sameAsPermanent")
 
   useEffect(() => {
     if (sameAsPermanent) {
-      form.setValue("permanentAddress", form.getValues("currentAddress"));
-      form.setValue("permanentCity", form.getValues("city"));
-      form.setValue("permanentState", form.getValues("state"));
-      form.setValue("permanentPostalCode", form.getValues("postalCode"));
-      form.setValue("permanentCountry", form.getValues("country"));
+      form.setValue("permanentAddress", form.getValues("currentAddress"))
+      form.setValue("permanentCity", form.getValues("city"))
+      form.setValue("permanentState", form.getValues("state"))
+      form.setValue("permanentPostalCode", form.getValues("postalCode"))
+      form.setValue("permanentCountry", form.getValues("country"))
     }
-  }, [sameAsPermanent, form]);
+  }, [sameAsPermanent, form])
 
   return (
     <div className="grid gap-6">
@@ -37,7 +44,11 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
             <FormItem>
               <FormLabel>Email Address</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="student@example.com" {...field} />
+                <Input
+                  type="email"
+                  placeholder="student@example.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,7 +178,7 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel className="text-sm font-normal cursor-pointer">
+                <FormLabel className="cursor-pointer text-sm font-normal">
                   Same as current address
                 </FormLabel>
                 <FormMessage />
@@ -256,5 +267,5 @@ export function ContactInfoStep({ form, dictionary }: ContactInfoStepProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

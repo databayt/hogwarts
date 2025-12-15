@@ -1,11 +1,16 @@
-import { Suspense } from 'react'
-import { getAccounts, getAccount } from '@/components/platform/finance/banking/actions/bank.actions'
-import { DashboardHeader } from './header'
-import { DashboardMainContent } from './main-content'
-import { DashboardSidebar } from './sidebar'
-import { DashboardSkeleton } from './skeleton'
-import { checkFinancePermission } from '../../lib/permissions'
-import { getTenantContext } from '@/lib/tenant-context'
+import { Suspense } from "react"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import {
+  getAccount,
+  getAccounts,
+} from "@/components/platform/finance/banking/actions/bank.actions"
+
+import { checkFinancePermission } from "../../lib/permissions"
+import { DashboardHeader } from "./header"
+import { DashboardMainContent } from "./main-content"
+import { DashboardSidebar } from "./sidebar"
+import { DashboardSkeleton } from "./skeleton"
 
 interface BankingDashboardContentProps {
   user: any
@@ -25,15 +30,18 @@ export async function BankingDashboardContent({
   if (!schoolId) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p className="text-muted-foreground">
-          School context not found
-        </p>
+        <p className="text-muted-foreground">School context not found</p>
       </div>
     )
   }
 
   // Check permissions for current user
-  const canView = await checkFinancePermission(user.id, schoolId, 'banking', 'view')
+  const canView = await checkFinancePermission(
+    user.id,
+    schoolId,
+    "banking",
+    "view"
+  )
 
   // If user can't view banking, show permission denied
   if (!canView) {
@@ -49,15 +57,20 @@ export async function BankingDashboardContent({
   const currentPage = Number(searchParams?.page) || 1
 
   const accountsResult = await getAccounts({
-    userId: user.id
+    userId: user.id,
   })
 
   // Handle error or no accounts
-  if (!accountsResult.success || !accountsResult.data?.data || accountsResult.data.data.length === 0) {
+  if (
+    !accountsResult.success ||
+    !accountsResult.data?.data ||
+    accountsResult.data.data.length === 0
+  ) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-muted-foreground">
-          {dictionary?.noAccounts || 'No accounts found. Please connect a bank account.'}
+          {dictionary?.noAccounts ||
+            "No accounts found. Please connect a bank account."}
         </p>
       </div>
     )

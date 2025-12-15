@@ -1,24 +1,13 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2, Save } from "lucide-react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
-import { Save, Loader2 } from "lucide-react"
 
-import { AnthropicIcons } from "@/components/icons/anthropic"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -27,15 +16,25 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form"
-
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-  announcementConfigSchema,
-  type AnnouncementConfigFormValues,
-} from "@/components/platform/announcements/validation"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { AnthropicIcons } from "@/components/icons/anthropic"
 import {
   updateAnnouncementConfig,
   type AnnouncementConfigData,
 } from "@/components/platform/announcements/actions"
+import {
+  announcementConfigSchema,
+  type AnnouncementConfigFormValues,
+} from "@/components/platform/announcements/validation"
 
 interface ConfigFormProps {
   initialConfig: AnnouncementConfigData
@@ -45,10 +44,10 @@ interface ConfigFormProps {
 
 // Anthropic color palette
 const CARD_COLORS = {
-  oat: "bg-[#E3DACC]",      // Publishing Defaults
-  cactus: "bg-[#BCD1CA]",   // Notifications
-  heather: "bg-[#CBCADB]",  // Templates
-  coral: "bg-[#D97757]",    // Tracking & Retention
+  oat: "bg-[#E3DACC]", // Publishing Defaults
+  cactus: "bg-[#BCD1CA]", // Notifications
+  heather: "bg-[#CBCADB]", // Templates
+  coral: "bg-[#D97757]", // Tracking & Retention
 }
 
 export function AnnouncementConfigForm({
@@ -62,14 +61,21 @@ export function AnnouncementConfigForm({
     resolver: zodResolver(announcementConfigSchema),
     defaultValues: {
       defaultScope: initialConfig.defaultScope as "school" | "class" | "role",
-      defaultPriority: initialConfig.defaultPriority as "low" | "normal" | "high" | "urgent",
+      defaultPriority: initialConfig.defaultPriority as
+        | "low"
+        | "normal"
+        | "high"
+        | "urgent",
       autoPublish: initialConfig.autoPublish,
       defaultExpiryDays: initialConfig.defaultExpiryDays,
       emailOnPublish: initialConfig.emailOnPublish,
       pushNotifications: initialConfig.pushNotifications,
       quietHoursStart: initialConfig.quietHoursStart,
       quietHoursEnd: initialConfig.quietHoursEnd,
-      digestFrequency: initialConfig.digestFrequency as "none" | "daily" | "weekly",
+      digestFrequency: initialConfig.digestFrequency as
+        | "none"
+        | "daily"
+        | "weekly",
       defaultTemplateId: initialConfig.defaultTemplateId,
       allowCustomTemplates: initialConfig.allowCustomTemplates,
       readTracking: initialConfig.readTracking,
@@ -85,7 +91,9 @@ export function AnnouncementConfigForm({
       if (result.success) {
         toast.success(dictionary?.saved || "Settings saved successfully")
       } else {
-        toast.error(result.error || dictionary?.saveFailed || "Failed to save settings")
+        toast.error(
+          result.error || dictionary?.saveFailed || "Failed to save settings"
+        )
       }
     })
   }
@@ -99,23 +107,34 @@ export function AnnouncementConfigForm({
     defaultScope: dictionary?.defaultScope || "Default Scope",
     defaultPriority: dictionary?.defaultPriority || "Default Priority",
     autoPublish: dictionary?.autoPublish || "Auto-publish",
-    autoPublishDesc: dictionary?.autoPublishDesc || "Automatically publish new announcements",
+    autoPublishDesc:
+      dictionary?.autoPublishDesc || "Automatically publish new announcements",
     defaultExpiryDays: dictionary?.defaultExpiryDays || "Default Expiry (days)",
     emailOnPublish: dictionary?.emailOnPublish || "Email on Publish",
-    emailOnPublishDesc: dictionary?.emailOnPublishDesc || "Send email notifications when published",
+    emailOnPublishDesc:
+      dictionary?.emailOnPublishDesc ||
+      "Send email notifications when published",
     pushNotifications: dictionary?.pushNotifications || "Push Notifications",
-    pushNotificationsDesc: dictionary?.pushNotificationsDesc || "Send push notifications (coming soon)",
+    pushNotificationsDesc:
+      dictionary?.pushNotificationsDesc ||
+      "Send push notifications (coming soon)",
     quietHoursStart: dictionary?.quietHoursStart || "Quiet Hours Start",
     quietHoursEnd: dictionary?.quietHoursEnd || "Quiet Hours End",
     digestFrequency: dictionary?.digestFrequency || "Digest Frequency",
     defaultTemplate: dictionary?.defaultTemplate || "Default Template",
-    allowCustomTemplates: dictionary?.allowCustomTemplates || "Allow Custom Templates",
-    allowCustomTemplatesDesc: dictionary?.allowCustomTemplatesDesc || "Let users create custom announcement templates",
+    allowCustomTemplates:
+      dictionary?.allowCustomTemplates || "Allow Custom Templates",
+    allowCustomTemplatesDesc:
+      dictionary?.allowCustomTemplatesDesc ||
+      "Let users create custom announcement templates",
     readTracking: dictionary?.readTracking || "Read Tracking",
-    readTrackingDesc: dictionary?.readTrackingDesc || "Track when users read announcements",
+    readTrackingDesc:
+      dictionary?.readTrackingDesc || "Track when users read announcements",
     retentionDays: dictionary?.retentionDays || "Retention Period (days)",
     autoArchive: dictionary?.autoArchive || "Auto-archive",
-    autoArchiveDesc: dictionary?.autoArchiveDesc || "Automatically archive expired announcements",
+    autoArchiveDesc:
+      dictionary?.autoArchiveDesc ||
+      "Automatically archive expired announcements",
     archiveAfterDays: dictionary?.archiveAfterDays || "Archive After (days)",
     saveChanges: dictionary?.saveChanges || "Save Changes",
     saving: dictionary?.saving || "Saving...",
@@ -142,12 +161,12 @@ export function AnnouncementConfigForm({
           <Button type="submit" disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {d.saving}
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 {d.saveChanges}
               </>
             )}
@@ -158,7 +177,7 @@ export function AnnouncementConfigForm({
         <div className="grid gap-6 md:grid-cols-2">
           {/* Card 1: Publishing Defaults (Oat) */}
           <div className={`${CARD_COLORS.oat} rounded-lg p-6`}>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="mb-6 flex items-center gap-3">
               <AnthropicIcons.Announcement className="h-8 w-8" />
               <h3 className="text-xl font-medium">{d.publishingDefaults}</h3>
             </div>
@@ -169,8 +188,13 @@ export function AnnouncementConfigForm({
                 name="defaultScope"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.defaultScope}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-sm font-medium">
+                      {d.defaultScope}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="bg-background">
                           <SelectValue />
@@ -192,8 +216,13 @@ export function AnnouncementConfigForm({
                 name="defaultPriority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.defaultPriority}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-sm font-medium">
+                      {d.defaultPriority}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="bg-background">
                           <SelectValue />
@@ -217,11 +246,18 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">{d.autoPublish}</FormLabel>
-                      <FormDescription className="text-xs">{d.autoPublishDesc}</FormDescription>
+                      <FormLabel className="text-sm font-medium">
+                        {d.autoPublish}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {d.autoPublishDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -233,7 +269,9 @@ export function AnnouncementConfigForm({
                 name="defaultExpiryDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.defaultExpiryDays}</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      {d.defaultExpiryDays}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -241,7 +279,9 @@ export function AnnouncementConfigForm({
                         max={365}
                         className="bg-background"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 30)
+                        }
                       />
                     </FormControl>
                   </FormItem>
@@ -252,7 +292,7 @@ export function AnnouncementConfigForm({
 
           {/* Card 2: Notifications (Cactus) */}
           <div className={`${CARD_COLORS.cactus} rounded-lg p-6`}>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="mb-6 flex items-center gap-3">
               <AnthropicIcons.Lightning className="h-8 w-8" />
               <h3 className="text-xl font-medium">{d.notifications}</h3>
             </div>
@@ -264,11 +304,18 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">{d.emailOnPublish}</FormLabel>
-                      <FormDescription className="text-xs">{d.emailOnPublishDesc}</FormDescription>
+                      <FormLabel className="text-sm font-medium">
+                        {d.emailOnPublish}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {d.emailOnPublishDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -281,14 +328,22 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between opacity-60">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium flex items-center gap-2">
+                      <FormLabel className="flex items-center gap-2 text-sm font-medium">
                         {d.pushNotifications}
-                        <Badge variant="secondary" className="text-xs">{d.comingSoon}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {d.comingSoon}
+                        </Badge>
                       </FormLabel>
-                      <FormDescription className="text-xs">{d.pushNotificationsDesc}</FormDescription>
+                      <FormDescription className="text-xs">
+                        {d.pushNotificationsDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} disabled />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -301,7 +356,9 @@ export function AnnouncementConfigForm({
                   name="quietHoursStart"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">{d.quietHoursStart}</FormLabel>
+                      <FormLabel className="text-sm font-medium">
+                        {d.quietHoursStart}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="time"
@@ -318,7 +375,9 @@ export function AnnouncementConfigForm({
                   name="quietHoursEnd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">{d.quietHoursEnd}</FormLabel>
+                      <FormLabel className="text-sm font-medium">
+                        {d.quietHoursEnd}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="time"
@@ -338,8 +397,13 @@ export function AnnouncementConfigForm({
                 name="digestFrequency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.digestFrequency}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-sm font-medium">
+                      {d.digestFrequency}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="bg-background">
                           <SelectValue />
@@ -359,10 +423,12 @@ export function AnnouncementConfigForm({
 
           {/* Card 3: Templates (Heather) */}
           <div className={`${CARD_COLORS.heather} rounded-lg p-6`}>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="mb-6 flex items-center gap-3">
               <AnthropicIcons.Copy className="h-8 w-8" />
               <h3 className="text-xl font-medium">{d.templates}</h3>
-              <Badge variant="secondary">{templates.length} {d.templatesCount}</Badge>
+              <Badge variant="secondary">
+                {templates.length} {d.templatesCount}
+              </Badge>
             </div>
             <div className="space-y-5">
               {/* Default Template */}
@@ -371,9 +437,13 @@ export function AnnouncementConfigForm({
                 name="defaultTemplateId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.defaultTemplate}</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      {d.defaultTemplate}
+                    </FormLabel>
                     <Select
-                      onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                      onValueChange={(val) =>
+                        field.onChange(val === "none" ? null : val)
+                      }
                       defaultValue={field.value || "none"}
                     >
                       <FormControl>
@@ -401,11 +471,18 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">{d.allowCustomTemplates}</FormLabel>
-                      <FormDescription className="text-xs">{d.allowCustomTemplatesDesc}</FormDescription>
+                      <FormLabel className="text-sm font-medium">
+                        {d.allowCustomTemplates}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {d.allowCustomTemplatesDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -415,7 +492,7 @@ export function AnnouncementConfigForm({
 
           {/* Card 4: Tracking & Retention (Coral) */}
           <div className={`${CARD_COLORS.coral} rounded-lg p-6`}>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="mb-6 flex items-center gap-3">
               <AnthropicIcons.ShieldCheck className="h-8 w-8" />
               <h3 className="text-xl font-medium">{d.trackingRetention}</h3>
             </div>
@@ -427,11 +504,18 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">{d.readTracking}</FormLabel>
-                      <FormDescription className="text-xs">{d.readTrackingDesc}</FormDescription>
+                      <FormLabel className="text-sm font-medium">
+                        {d.readTracking}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {d.readTrackingDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -443,7 +527,9 @@ export function AnnouncementConfigForm({
                 name="retentionDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.retentionDays}</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      {d.retentionDays}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -451,7 +537,9 @@ export function AnnouncementConfigForm({
                         max={365}
                         className="bg-background"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 90)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 90)
+                        }
                       />
                     </FormControl>
                   </FormItem>
@@ -465,11 +553,18 @@ export function AnnouncementConfigForm({
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">{d.autoArchive}</FormLabel>
-                      <FormDescription className="text-xs">{d.autoArchiveDesc}</FormDescription>
+                      <FormLabel className="text-sm font-medium">
+                        {d.autoArchive}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {d.autoArchiveDesc}
+                      </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -481,7 +576,9 @@ export function AnnouncementConfigForm({
                 name="archiveAfterDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">{d.archiveAfterDays}</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      {d.archiveAfterDays}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -489,7 +586,9 @@ export function AnnouncementConfigForm({
                         max={365}
                         className="bg-background"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 30)
+                        }
                       />
                     </FormControl>
                   </FormItem>

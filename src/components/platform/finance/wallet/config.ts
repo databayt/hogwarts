@@ -2,36 +2,36 @@
  * Wallet Module - Configuration
  */
 
-import { WalletType, TransactionType } from '@prisma/client'
+import { TransactionType, WalletType } from "@prisma/client"
 
 export const WalletTypeLabels: Record<WalletType, string> = {
-  SCHOOL: 'School Wallet',
-  PARENT: 'Parent Wallet',
-  STUDENT: 'Student Wallet',
+  SCHOOL: "School Wallet",
+  PARENT: "Parent Wallet",
+  STUDENT: "Student Wallet",
 }
 
 export const WalletTransactionTypeLabels: Record<TransactionType, string> = {
-  CREDIT: 'Credit (Top-up)',
-  DEBIT: 'Debit (Payment)',
-  TRANSFER: 'Transfer',
+  CREDIT: "Credit (Top-up)",
+  DEBIT: "Debit (Payment)",
+  TRANSFER: "Transfer",
 }
 
 export const PaymentMethods = [
-  'CASH',
-  'CARD',
-  'BANK_TRANSFER',
-  'WALLET',
-  'OTHER',
+  "CASH",
+  "CARD",
+  "BANK_TRANSFER",
+  "WALLET",
+  "OTHER",
 ] as const
 
-export type PaymentMethod = typeof PaymentMethods[number]
+export type PaymentMethod = (typeof PaymentMethods)[number]
 
 export const PaymentMethodLabels: Record<PaymentMethod, string> = {
-  CASH: 'Cash',
-  CARD: 'Credit/Debit Card',
-  BANK_TRANSFER: 'Bank Transfer',
-  WALLET: 'Wallet',
-  OTHER: 'Other',
+  CASH: "Cash",
+  CARD: "Credit/Debit Card",
+  BANK_TRANSFER: "Bank Transfer",
+  WALLET: "Wallet",
+  OTHER: "Other",
 }
 
 export const WALLET_LIMITS = {

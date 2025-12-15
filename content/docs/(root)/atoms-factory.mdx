@@ -12,6 +12,7 @@ The atoms system showcases interactive UI components and patterns with live demo
 ## Architecture
 
 ### File Structure
+
 ```
 content/atoms/                      # Root atoms content directory
 ├── (root)/                         # Main atom components
@@ -39,24 +40,28 @@ src/lib/
 ## How It Works
 
 ### 1. Content Processing
+
 - MDX files stored in `content/atoms/(root)/` directory
 - Fumadocs processes MDX at build time
 - ComponentPreview blocks render live demos
 - Frontmatter provides metadata and links
 
 ### 2. Routing
+
 - Catch-all route `[[...slug]]` handles all atom paths
 - Dynamic generation based on file structure
 - Static paths generated at build time
 - URLs: `/atoms/[component-name]`
 
 ### 3. Navigation
+
 - Static sidebar with predefined links
 - Manual curation for best UX
 - Categories: Card Components, Other Atoms
 - Flat structure for simplicity
 
 ### 4. Components
+
 - **AtomsSidebar**: Static navigation list
 - **ComponentPreview**: Live demo renderer
 - **DocsTableOfContents**: Heading navigation
@@ -65,6 +70,7 @@ src/lib/
 ## How to Add New Atoms
 
 ### Step 1: Create MDX File
+
 Create your `.mdx` file in `content/atoms/(root)/`:
 
 ```mdx
@@ -119,13 +125,14 @@ export default function Example() {
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
+| Prop    | Type   | Default   | Description          |
+| ------- | ------ | --------- | -------------------- |
 | variant | string | "default" | Visual style variant |
-| size | string | "md" | Component size |
+| size    | string | "md"      | Component size       |
 ```
 
 ### Step 2: Update Navigation
+
 Add your atom to the sidebar in `src/components/docs/atoms-sidebar.tsx`:
 
 ```typescript
@@ -142,6 +149,7 @@ const ATOMS_LINKS = [
 ```
 
 ### Step 3: Add meta.json Entry
+
 Update `content/atoms/(root)/meta.json`:
 
 ```json
@@ -150,13 +158,14 @@ Update `content/atoms/(root)/meta.json`:
   "pages": [
     "index",
     "accordion",
-    "your-component",  // Add your atom here
+    "your-component" // Add your atom here
     // ... other atoms
   ]
 }
 ```
 
 ### Step 4: Build and Test
+
 ```bash
 # Generate MDX files
 pnpm fumadocs-mdx
@@ -170,7 +179,9 @@ pnpm dev
 ## Component Categories
 
 ### Card Components
+
 Interactive card-based UI patterns:
+
 - **Activity Goal**: Progress tracking cards
 - **Calendar**: Date picker card interface
 - **Chat**: Messaging interface cards
@@ -185,7 +196,9 @@ Interactive card-based UI patterns:
 - **Team Members**: User profile cards
 
 ### Interactive Atoms
+
 Animation and interaction patterns:
+
 - **Accordion**: Expandable content sections
 - **Infinite Slider**: Auto-scrolling content
 - **Card Hover Effect**: Interactive hover states
@@ -196,7 +209,9 @@ Animation and interaction patterns:
 - **Sortable**: Drag and drop interfaces
 
 ### AI Components
+
 AI-specific UI patterns:
+
 - **AI Prompt Input**: AI query interface
 - **AI Response Display**: Response rendering
 - **AI Status Indicator**: Processing states
@@ -204,7 +219,9 @@ AI-specific UI patterns:
 - **Agent Heading**: AI agent headers
 
 ### UI Utilities
+
 Core UI building blocks:
+
 - **Announcement**: News and updates display
 - **Expand Button**: Show more/less controls
 - **Fonts**: Typography showcase
@@ -225,19 +242,21 @@ Core UI building blocks:
 ## MDX Features
 
 ### Component Preview
+
 The main feature for showcasing components:
 
 ```mdx
 <ComponentPreview
-  align="start"              // Alignment: start, center, end
-  className="custom-class"   // Custom styling
-  code={`// Your code here`}  // Code to display
+  align="start" // Alignment: start, center, end
+  className="custom-class" // Custom styling
+  code={`// Your code here`} // Code to display
 >
-  <ActualComponent />        // Live demo
+  <ActualComponent /> // Live demo
 </ComponentPreview>
 ```
 
 ### Code Blocks
+
 Syntax-highlighted code examples:
 
 ````mdx
@@ -251,6 +270,7 @@ function Example() {
 ````
 
 ### Installation Tabs
+
 Show multiple installation methods:
 
 ```mdx
@@ -260,38 +280,35 @@ Show multiple installation methods:
     <TabsTrigger value="yarn">yarn</TabsTrigger>
     <TabsTrigger value="pnpm">pnpm</TabsTrigger>
   </TabsList>
-  <TabsContent value="npm">
-    npm install package
-  </TabsContent>
-  <TabsContent value="yarn">
-    yarn add package
-  </TabsContent>
-  <TabsContent value="pnpm">
-    pnpm add package
-  </TabsContent>
+  <TabsContent value="npm">npm install package</TabsContent>
+  <TabsContent value="yarn">yarn add package</TabsContent>
+  <TabsContent value="pnpm">pnpm add package</TabsContent>
 </Tabs>
 ```
 
 ### Props Tables
+
 Document component APIs:
 
 ```mdx
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| variant | "default" \| "outline" | "default" | Visual style |
-| size | "sm" \| "md" \| "lg" | "md" | Component size |
-| disabled | boolean | false | Disable interaction |
+| Prop     | Type                   | Default   | Description         |
+| -------- | ---------------------- | --------- | ------------------- |
+| variant  | "default" \| "outline" | "default" | Visual style        |
+| size     | "sm" \| "md" \| "lg"   | "md"      | Component size      |
+| disabled | boolean                | false     | Disable interaction |
 ```
 
 ## Best Practices
 
 ### 1. Component Organization
+
 - One component per MDX file
 - Group related variants in same file
 - Keep demos focused and clear
 - Show most common use case first
 
 ### 2. Documentation Structure
+
 ```
 1. Brief overview
 2. Visual demo (ComponentPreview)
@@ -304,6 +321,7 @@ Document component APIs:
 ```
 
 ### 3. Demo Guidelines
+
 - Keep demos interactive when possible
 - Show real-world use cases
 - Include both light and dark mode
@@ -311,19 +329,22 @@ Document component APIs:
 - Provide copy-able code
 
 ### 4. Frontmatter Standards
+
 Always include:
+
 ```yaml
 ---
-title: "Component Name"        # Clear, concise name
-description: "What it does"    # One-line description
-component: true                 # Marks as component doc
-links:                         # Optional external links
+title: "Component Name" # Clear, concise name
+description: "What it does" # One-line description
+component: true # Marks as component doc
+links: # Optional external links
   doc: "https://..."
   api: "https://..."
 ---
 ```
 
 ### 5. Code Examples
+
 - Use TypeScript for all examples
 - Include imports in examples
 - Show complete, runnable code
@@ -332,6 +353,7 @@ links:                         # Optional external links
 ## Customization
 
 ### Custom Sidebar Sections
+
 To add sections to the sidebar, modify `atoms-sidebar.tsx`:
 
 ```typescript
@@ -349,21 +371,26 @@ const ATOMS_LINKS = [
 ```
 
 ### Styling Atoms Pages
+
 Atoms use consistent styling from docs:
+
 - Container: `max-w-2xl` for content
 - Typography: Tailwind prose classes
 - Code blocks: Syntax highlighting
 - Dark mode: Automatic with next-themes
 
 ### Adding Dependencies
+
 When your atom requires packages:
 
 1. Install the package:
+
 ```bash
 pnpm add your-package
 ```
 
 2. Document in MDX:
+
 ```mdx
 ## Installation
 
@@ -377,6 +404,7 @@ pnpm add your-package
 ## Troubleshooting
 
 ### Build Errors
+
 ```bash
 # Regenerate MDX
 pnpm fumadocs-mdx
@@ -387,18 +415,21 @@ pnpm build
 ```
 
 ### Component Not Rendering
+
 - Check ComponentPreview syntax
 - Verify imports in code string
 - Ensure component exists
 - Check browser console
 
 ### Navigation Not Updating
+
 1. Add to `atoms-sidebar.tsx`
 2. Update `meta.json`
 3. Regenerate with `pnpm fumadocs-mdx`
 4. Restart dev server
 
 ### Styling Issues
+
 - Check global CSS imports
 - Verify Tailwind classes
 - Test in both themes
@@ -407,6 +438,7 @@ pnpm build
 ## Advanced Features
 
 ### Live Code Editing
+
 For interactive playgrounds:
 
 ```mdx
@@ -418,6 +450,7 @@ For interactive playgrounds:
 ```
 
 ### Component Variants
+
 Show multiple versions:
 
 ```mdx
@@ -437,13 +470,11 @@ Show multiple versions:
 ```
 
 ### Responsive Demos
+
 Show responsive behavior:
 
 ```mdx
-<ComponentPreview
-  className="[&_.preview]:w-full"
-  code={responsiveCode}
->
+<ComponentPreview className="[&_.preview]:w-full" code={responsiveCode}>
   <ResponsiveComponent />
 </ComponentPreview>
 ```
@@ -451,12 +482,14 @@ Show responsive behavior:
 ## Performance
 
 ### Optimization
+
 - Static generation at build time
 - Code splitting per atom
 - Lazy loading for demos
 - Optimized images with Next.js
 
 ### Metrics
+
 - Build time: approximately 20s for 50 atoms
 - Page load: less than 500ms cached
 - Interactive time: less than 1s
@@ -465,6 +498,7 @@ Show responsive behavior:
 ## Migration Guide
 
 ### From Individual Files
+
 1. Move component docs to `content/atoms/(root)/`
 2. Convert to MDX format
 3. Add ComponentPreview blocks
@@ -472,7 +506,9 @@ Show responsive behavior:
 5. Test all demos
 
 ### Adding to Existing Project
+
 1. Install dependencies:
+
 ```bash
 pnpm add fumadocs-mdx fumadocs-core
 ```
@@ -485,6 +521,7 @@ pnpm add fumadocs-mdx fumadocs-core
 ## Future Enhancements
 
 ### Planned Features
+
 - [ ] Search within atoms
 - [ ] Component playground
 - [ ] npm package generation
@@ -495,7 +532,9 @@ pnpm add fumadocs-mdx fumadocs-core
 - [ ] Performance metrics
 
 ### Community Contributions
+
 Atoms can be contributed via:
+
 1. Fork repository
 2. Add atom in `content/atoms/`
 3. Update navigation

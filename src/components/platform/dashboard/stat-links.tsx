@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 
 const data = [
   {
@@ -29,12 +29,14 @@ const data = [
 
 export default function StatsLinks() {
   return (
-    <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 w-full">
+    <dl className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {data.map((item) => (
-        <Card key={item.name} className="p-0 gap-0">
+        <Card key={item.name} className="gap-0 p-0">
           <CardContent className="p-6">
             <div className="flex items-start justify-between space-x-2">
-              <span className="truncate text-sm text-muted-foreground">{item.name}</span>
+              <span className="text-muted-foreground truncate text-sm">
+                {item.name}
+              </span>
               <span
                 className={cn(
                   "text-sm font-medium",
@@ -46,12 +48,14 @@ export default function StatsLinks() {
                 {item.change}
               </span>
             </div>
-            <p className="mt-1 text-3xl font-semibold text-foreground">{item.value}</p>
+            <p className="text-foreground mt-1 text-3xl font-semibold">
+              {item.value}
+            </p>
           </CardContent>
-          <CardFooter className="flex justify-end border-t border-border p-0!">
+          <CardFooter className="border-border flex justify-end border-t p-0!">
             <a
               href={item.href}
-              className="px-6 py-3 text-sm font-medium text-primary hover:text-primary/90"
+              className="text-primary hover:text-primary/90 px-6 py-3 text-sm font-medium"
             >
               View more &#8594;
             </a>

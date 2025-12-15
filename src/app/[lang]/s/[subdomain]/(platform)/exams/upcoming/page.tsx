@@ -1,5 +1,5 @@
-import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 import UpcomingExamsContent from "@/components/platform/exams/upcoming/content"
 
 export const metadata = { title: "Upcoming Exams" }

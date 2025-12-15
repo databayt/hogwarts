@@ -9,6 +9,7 @@
 ## Problem Statement
 
 The Hogwarts i18n dictionary system has a strict type definition that **does not include** nested properties like:
+
 - `d?.stats?.*` (173+ invalid accesses in build-fixes-2025-10-29.md)
 - `d?.blocks?.*`
 - `d?.sections?.*`
@@ -25,6 +26,7 @@ These patterns cause TypeScript build errors discovered late in CI/CD.
 ### 1. Dictionary Property Scanner
 
 **Scans for invalid patterns**:
+
 ```typescript
 // ❌ Invalid patterns to detect
 d?.stats?.totalBudget
@@ -35,6 +37,7 @@ d?.workflow?.step1?.title
 ```
 
 **Detection Strategy**:
+
 1. Parse all `.tsx` and `.ts` files in specified directory
 2. Find all dictionary variable patterns (usually `d` or `dictionary`)
 3. Extract property chains using AST parsing
@@ -44,6 +47,7 @@ d?.workflow?.step1?.title
 ### 2. Type Definition Analyzer
 
 **Reads Dictionary type**:
+
 ```typescript
 // From: src/components/internationalization/dictionaries.ts
 type Dictionary = {
@@ -56,6 +60,7 @@ type Dictionary = {
 ```
 
 **Validates**:
+
 - Property exists in Dictionary type
 - Correct nesting level
 - Type compatibility
@@ -63,6 +68,7 @@ type Dictionary = {
 ### 3. Auto-Fix Generator
 
 **Generates fixes**:
+
 ```typescript
 // Before (invalid)
 <h3>{d?.stats?.totalBudget || 'Total Budget'}</h3>
@@ -74,6 +80,7 @@ type Dictionary = {
 ```
 
 **Fix strategies**:
+
 1. **Remove invalid chain, keep fallback**: Most common (173 cases)
 2. **Replace with valid dictionary key**: If alternative exists
 3. **Add TODO comment**: If context needed
@@ -82,6 +89,7 @@ type Dictionary = {
 ### 4. Type-Safe Access Utilities
 
 **Generates helper functions**:
+
 ```typescript
 // src/lib/dictionary-utils.ts (generated)
 
@@ -98,8 +106,8 @@ export function getDictionaryValue<K extends keyof Dictionary>(
 }
 
 // Usage (prevents invalid access)
-getDictionaryValue(d, 'common', 'Default') // ✅ OK
-getDictionaryValue(d, 'stats', 'Default')  // ❌ Type error
+getDictionaryValue(d, "common", "Default") // ✅ OK
+getDictionaryValue(d, "stats", "Default") // ❌ Type error
 ```
 
 ---
@@ -109,16 +117,19 @@ getDictionaryValue(d, 'stats', 'Default')  // ❌ Type error
 ### Used By Agents
 
 **1. i18n Agent**
+
 ```bash
 /agents/i18n -p "Validate all dictionary usage in finance module using dictionary-validator skill"
 ```
 
 **2. Refactor Agent**
+
 ```bash
 /agents/refactor -p "Clean up dictionary usage patterns using dictionary-validator skill"
 ```
 
 **3. TypeScript Agent**
+
 ```bash
 /agents/typescript -p "Fix dictionary type errors using dictionary-validator skill"
 ```
@@ -126,12 +137,14 @@ getDictionaryValue(d, 'stats', 'Default')  // ❌ Type error
 ### Used By Commands
 
 **1. /scan-errors Command**
+
 ```bash
 /scan-errors dictionary
 # Scans entire codebase for invalid dictionary patterns
 ```
 
 **2. /pre-commit-full Command**
+
 ```bash
 # Automatically runs dictionary-validator before commit
 ```
@@ -234,13 +247,17 @@ function scanDictionaryUsage(filePath: string): ValidationResult[] {
   const errors: ValidationResult[] = []
 
   // 1. Parse TypeScript AST
-  const sourceFile = ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest)
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest
+  )
 
   // 2. Find dictionary variables (d, dict, dictionary)
   const dictionaryVars = findDictionaryVariables(sourceFile)
 
   // 3. Find all property access chains
-  ts.forEachChild(sourceFile, node => {
+  ts.forEachChild(sourceFile, (node) => {
     if (ts.isPropertyAccessExpression(node)) {
       const chain = extractPropertyChain(node)
 
@@ -252,7 +269,7 @@ function scanDictionaryUsage(filePath: string): ValidationResult[] {
         if (!isValid) {
           errors.push({
             line: node.getStart(),
-            property: chain.join('.'),
+            property: chain.join("."),
             suggestion: generateFix(node),
           })
         }
@@ -286,10 +303,12 @@ function generateFix(node: PropertyAccessExpression): string {
 ```typescript
 function getDictionaryType(): DictionaryStructure {
   // Read from src/components/internationalization/dictionaries.ts
-  const dictionaryFile = readTypeScriptFile('src/components/internationalization/dictionaries.ts')
+  const dictionaryFile = readTypeScriptFile(
+    "src/components/internationalization/dictionaries.ts"
+  )
 
   // Parse Dictionary type definition
-  const dictionaryType = extractTypeDefinition(dictionaryFile, 'Dictionary')
+  const dictionaryType = extractTypeDefinition(dictionaryFile, "Dictionary")
 
   // Build structure map
   return buildStructureMap(dictionaryType)
@@ -304,24 +323,14 @@ function getDictionaryType(): DictionaryStructure {
 
 ```json
 {
-  "invalidPatterns": [
-    "stats",
-    "blocks",
-    "sections",
-    "actions",
-    "workflow"
-  ],
+  "invalidPatterns": ["stats", "blocks", "sections", "actions", "workflow"],
   "dictionaryVariableNames": ["d", "dict", "dictionary"],
   "autoFix": {
     "enabled": true,
     "preserveFallbacks": true,
     "addTodoComments": false
   },
-  "excludePaths": [
-    "node_modules",
-    ".next",
-    "dist"
-  ]
+  "excludePaths": ["node_modules", ".next", "dist"]
 }
 ```
 
@@ -330,6 +339,7 @@ function getDictionaryType(): DictionaryStructure {
 ## Success Metrics
 
 **From build-fixes-2025-10-29.md**:
+
 - **173+ errors** would have been caught by this skill
 - **0 build failures** if used in pre-commit
 - **3 hours saved** (time spent debugging)
@@ -342,6 +352,7 @@ function getDictionaryType(): DictionaryStructure {
 ## Error Prevention Examples
 
 ### Case 1: Finance Module Stats (16 errors)
+
 ```typescript
 // Would have detected:
 ❌ d?.stats?.totalBudget
@@ -355,6 +366,7 @@ Would you like to auto-fix? [Y/n]
 ```
 
 ### Case 2: Finance Module Blocks (72 errors)
+
 ```typescript
 // Would have detected all 12 blocks × 6 properties:
 ❌ d?.blocks?.invoice?.title
@@ -369,6 +381,7 @@ Continue? [Y/n]
 ```
 
 ### Case 3: Workflow Properties (14 errors)
+
 ```typescript
 // Would have detected:
 ❌ d?.workflow?.step1?.title

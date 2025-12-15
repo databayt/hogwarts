@@ -10,8 +10,8 @@
  * - Accessibility props
  * - Error handling
  */
-
 import { cn } from "@/lib/utils"
+
 import type { IconProps } from "../types"
 
 /**
@@ -115,7 +115,7 @@ export function IconSkeleton({
     <div
       className={cn(
         SIZE_CLASSES[size],
-        "rounded bg-muted animate-pulse",
+        "bg-muted animate-pulse rounded",
         className
       )}
       aria-hidden="true"
@@ -139,7 +139,7 @@ export function IconError({
     <div
       className={cn(
         SIZE_CLASSES[size],
-        "flex items-center justify-center rounded border-2 border-dashed border-destructive text-destructive",
+        "border-destructive text-destructive flex items-center justify-center rounded border-2 border-dashed",
         className
       )}
       title={message}

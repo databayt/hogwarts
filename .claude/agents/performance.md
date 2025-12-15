@@ -9,6 +9,7 @@ model: sonnet
 **Specialization**: React rendering, query optimization, profiling
 
 ## Performance Targets
+
 - First Contentful Paint < 1.5s
 - Time to Interactive < 3.5s
 - API Response < 100ms
@@ -17,6 +18,7 @@ model: sonnet
 ## React Optimization
 
 ### Prevent Re-renders
+
 ```typescript
 const Component = React.memo(({ data }) => {
   const sorted = useMemo(() => data.sort(), [data])
@@ -26,6 +28,7 @@ const Component = React.memo(({ data }) => {
 ```
 
 ### Code Splitting
+
 ```typescript
 const Heavy = lazy(() => import('./Heavy'))
 
@@ -37,6 +40,7 @@ const Heavy = lazy(() => import('./Heavy'))
 ## Database Optimization
 
 ### N+1 Detection
+
 ```typescript
 // Bad
 for (const class of classes) {
@@ -50,12 +54,14 @@ await prisma.class.findMany({
 ```
 
 ### Indexes
+
 ```prisma
 @@index([schoolId])
 @@index([schoolId, createdAt])
 ```
 
 ## Checklist
+
 - [ ] React.memo for expensive components
 - [ ] useMemo for calculations
 - [ ] useCallback for handlers
@@ -65,6 +71,7 @@ await prisma.class.findMany({
 - [ ] Image optimization (next/image)
 
 ## Invoke When
+
 - Slow pages, rendering issues, query performance
 
 **Rule**: Profile first. Optimize bottlenecks. Measure impact.

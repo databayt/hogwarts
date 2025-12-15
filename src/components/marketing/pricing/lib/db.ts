@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client"
-import "server-only";
+
+import "server-only"
 
 declare global {
-   
   var cachedPrisma: PrismaClient
 }
 

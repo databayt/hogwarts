@@ -3,7 +3,7 @@
  * Advanced TypeScript patterns for the banking module
  */
 
-import type { z } from 'zod'
+import type { z } from "zod"
 
 // ============================================================================
 // Discriminated Unions
@@ -13,20 +13,20 @@ import type { z } from 'zod'
  * Loading state with discriminated union for better type narrowing
  */
 export type LoadingState<T> =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'success'; data: T; timestamp: Date }
-  | { status: 'error'; error: Error; retryCount: number }
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: T; timestamp: Date }
+  | { status: "error"; error: Error; retryCount: number }
 
 /**
  * Form state with discriminated union
  */
 export type FormState<T> =
-  | { status: 'idle' }
-  | { status: 'loading'; data: Partial<T> }
-  | { status: 'success'; data: T; message?: string }
-  | { status: 'error'; errors: FormErrors; data: Partial<T> }
-  | { status: 'validating'; data: Partial<T> }
+  | { status: "idle" }
+  | { status: "loading"; data: Partial<T> }
+  | { status: "success"; data: T; message?: string }
+  | { status: "error"; errors: FormErrors; data: Partial<T> }
+  | { status: "validating"; data: Partial<T> }
 
 export interface FormErrors {
   root?: string[]
@@ -37,21 +37,21 @@ export interface FormErrors {
  * Connection state for Plaid Link
  */
 export type PlaidConnectionState =
-  | { status: 'disconnected' }
-  | { status: 'connecting'; institutionName: string }
-  | { status: 'connected'; institutionName: string; accountId: string }
-  | { status: 'error'; error: string; canRetry: boolean }
-  | { status: 'expired'; lastConnected: Date }
+  | { status: "disconnected" }
+  | { status: "connecting"; institutionName: string }
+  | { status: "connected"; institutionName: string; accountId: string }
+  | { status: "error"; error: string; canRetry: boolean }
+  | { status: "expired"; lastConnected: Date }
 
 /**
  * Sync state for data synchronization
  */
 export type SyncState =
-  | { status: 'idle'; lastSync: Date | null }
-  | { status: 'syncing'; progress: number; message: string }
-  | { status: 'completed'; syncedAt: Date; itemsCount: number }
-  | { status: 'failed'; error: string; failedAt: Date }
-  | { status: 'partial'; syncedCount: number; failedCount: number }
+  | { status: "idle"; lastSync: Date | null }
+  | { status: "syncing"; progress: number; message: string }
+  | { status: "completed"; syncedAt: Date; itemsCount: number }
+  | { status: "failed"; error: string; failedAt: Date }
+  | { status: "partial"; syncedCount: number; failedCount: number }
 
 // ============================================================================
 // Generic Utility Types
@@ -126,7 +126,7 @@ export type PickOptional<T> = Pick<T, NullableKeys<T>>
 /**
  * Currency codes
  */
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD' | 'AUD'
+export type CurrencyCode = "USD" | "EUR" | "GBP" | "JPY" | "CAD" | "AUD"
 
 /**
  * Formatted amount string
@@ -141,12 +141,16 @@ export type AccountMask = `•••• ${string}`
 /**
  * Date format strings
  */
-export type DateFormat = 'short' | 'medium' | 'long' | 'full' | 'relative'
+export type DateFormat = "short" | "medium" | "long" | "full" | "relative"
 
 /**
  * Time period strings
  */
-export type TimePeriod = `${number}d` | `${number}w` | `${number}m` | `${number}y`
+export type TimePeriod =
+  | `${number}d`
+  | `${number}w`
+  | `${number}m`
+  | `${number}y`
 
 // ============================================================================
 // Conditional Types
@@ -165,7 +169,9 @@ export type ArrayElement<T> = T extends readonly (infer U)[] ? U : never
 /**
  * Function return type
  */
-export type ReturnTypeAsync<T extends (...args: any) => any> = UnwrapPromise<ReturnType<T>>
+export type ReturnTypeAsync<T extends (...args: any) => any> = UnwrapPromise<
+  ReturnType<T>
+>
 
 /**
  * Check if type is any
@@ -180,7 +186,8 @@ export type IsNever<T> = [T] extends [never] ? true : false
 /**
  * Check if type is unknown
  */
-export type IsUnknown<T> = IsAny<T> extends true ? false : unknown extends T ? true : false
+export type IsUnknown<T> =
+  IsAny<T> extends true ? false : unknown extends T ? true : false
 
 // ============================================================================
 // Mapped Types
@@ -292,26 +299,40 @@ export type FormFields<T> = {
  * Banking event types
  */
 export type BankingEvent =
-  | { type: 'ACCOUNT_CONNECTED'; payload: { accountId: string; institutionName: string } }
-  | { type: 'ACCOUNT_DISCONNECTED'; payload: { accountId: string } }
-  | { type: 'TRANSACTION_CREATED'; payload: { transactionId: string; amount: number } }
-  | { type: 'TRANSFER_INITIATED'; payload: { transferId: string; amount: number } }
-  | { type: 'TRANSFER_COMPLETED'; payload: { transferId: string } }
-  | { type: 'TRANSFER_FAILED'; payload: { transferId: string; error: string } }
-  | { type: 'SYNC_STARTED'; payload: { accountId: string } }
-  | { type: 'SYNC_COMPLETED'; payload: { accountId: string; transactionCount: number } }
-  | { type: 'SYNC_FAILED'; payload: { accountId: string; error: string } }
+  | {
+      type: "ACCOUNT_CONNECTED"
+      payload: { accountId: string; institutionName: string }
+    }
+  | { type: "ACCOUNT_DISCONNECTED"; payload: { accountId: string } }
+  | {
+      type: "TRANSACTION_CREATED"
+      payload: { transactionId: string; amount: number }
+    }
+  | {
+      type: "TRANSFER_INITIATED"
+      payload: { transferId: string; amount: number }
+    }
+  | { type: "TRANSFER_COMPLETED"; payload: { transferId: string } }
+  | { type: "TRANSFER_FAILED"; payload: { transferId: string; error: string } }
+  | { type: "SYNC_STARTED"; payload: { accountId: string } }
+  | {
+      type: "SYNC_COMPLETED"
+      payload: { accountId: string; transactionCount: number }
+    }
+  | { type: "SYNC_FAILED"; payload: { accountId: string; error: string } }
 
 /**
  * Event handler type
  */
-export type EventHandler<T extends BankingEvent> = (event: T) => void | Promise<void>
+export type EventHandler<T extends BankingEvent> = (
+  event: T
+) => void | Promise<void>
 
 /**
  * Event listener map
  */
 export type EventListeners = {
-  [K in BankingEvent['type']]?: EventHandler<Extract<BankingEvent, { type: K }>>
+  [K in BankingEvent["type"]]?: EventHandler<Extract<BankingEvent, { type: K }>>
 }
 
 // ============================================================================
@@ -374,16 +395,18 @@ export interface CacheEntry<T> {
 /**
  * Cache key generator
  */
-export type CacheKeyGenerator<T extends Record<string, any>> = (params: T) => string
+export type CacheKeyGenerator<T extends Record<string, any>> = (
+  params: T
+) => string
 
 /**
  * Cache invalidation strategy
  */
 export type CacheInvalidationStrategy =
-  | { type: 'time-based'; ttl: number }
-  | { type: 'event-based'; events: string[] }
-  | { type: 'tag-based'; tags: string[] }
-  | { type: 'manual' }
+  | { type: "time-based"; ttl: number }
+  | { type: "event-based"; events: string[] }
+  | { type: "tag-based"; tags: string[] }
+  | { type: "manual" }
 
 // ============================================================================
 // Type Predicates & Assertions
@@ -394,8 +417,8 @@ export type CacheInvalidationStrategy =
  */
 export function isLoadingState<T>(
   state: LoadingState<T>
-): state is Extract<LoadingState<T>, { status: 'loading' }> {
-  return state.status === 'loading'
+): state is Extract<LoadingState<T>, { status: "loading" }> {
+  return state.status === "loading"
 }
 
 /**
@@ -403,8 +426,8 @@ export function isLoadingState<T>(
  */
 export function isSuccessState<T>(
   state: LoadingState<T>
-): state is Extract<LoadingState<T>, { status: 'success' }> {
-  return state.status === 'success'
+): state is Extract<LoadingState<T>, { status: "success" }> {
+  return state.status === "success"
 }
 
 /**
@@ -412,8 +435,8 @@ export function isSuccessState<T>(
  */
 export function isErrorState<T>(
   state: LoadingState<T>
-): state is Extract<LoadingState<T>, { status: 'error' }> {
-  return state.status === 'error'
+): state is Extract<LoadingState<T>, { status: "error" }> {
+  return state.status === "error"
 }
 
 /**
@@ -424,14 +447,16 @@ export function assertNonNullable<T>(
   message?: string
 ): asserts value is NonNullable<T> {
   if (value === null || value === undefined) {
-    throw new Error(message || 'Value is null or undefined')
+    throw new Error(message || "Value is null or undefined")
   }
 }
 
 /**
  * Type-safe object keys
  */
-export function objectKeys<T extends Record<string, unknown>>(obj: T): (keyof T)[] {
+export function objectKeys<T extends Record<string, unknown>>(
+  obj: T
+): (keyof T)[] {
   return Object.keys(obj) as (keyof T)[]
 }
 

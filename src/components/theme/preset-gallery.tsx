@@ -4,13 +4,15 @@
  * Displays all available preset themes in a grid.
  */
 
-'use client'
+"use client"
 
-import { useEffect, useMemo } from 'react'
-import { PresetButton } from './preset-button'
-import { usePresetThemes, useUserTheme } from './use-theme'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useThemePresetStore } from '@/store/theme-preset-store'
+import { useEffect, useMemo } from "react"
+import { useThemePresetStore } from "@/store/theme-preset-store"
+
+import { Skeleton } from "@/components/ui/skeleton"
+
+import { PresetButton } from "./preset-button"
+import { usePresetThemes, useUserTheme } from "./use-theme"
 
 export function PresetGallery() {
   const { presets, isLoading, fetchPresets } = usePresetThemes()
@@ -26,14 +28,17 @@ export function PresetGallery() {
   const presetsArray = useMemo(() => {
     if (!presets || presets.length === 0) {
       // Fallback: read directly from store if hook hasn't populated yet
-      return Object.entries(presetStore.getAllPresets()).map(([name, preset]) => ({
-        name,
-        ...preset,
-      }))
+      return Object.entries(presetStore.getAllPresets()).map(
+        ([name, preset]) => ({
+          name,
+          ...preset,
+        })
+      )
     }
     // Use presets from hook (already formatted correctly)
     return presets.map((preset, index) => ({
-      name: preset.label?.toLowerCase().replace(/\s+/g, '-') || `preset-${index}`,
+      name:
+        preset.label?.toLowerCase().replace(/\s+/g, "-") || `preset-${index}`,
       ...preset,
     }))
   }, [presets]) // Only depend on presets array from hook (stable reference)

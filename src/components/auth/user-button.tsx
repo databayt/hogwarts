@@ -1,25 +1,21 @@
-"use client";
+"use client"
 
-import { FaUser } from "react-icons/fa";
 import { ExitIcon } from "@radix-ui/react-icons"
+import { FaUser } from "react-icons/fa"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+} from "@/components/ui/dropdown-menu"
+import { LogoutButton } from "@/components/auth/logout-button"
 
-import { LogoutButton } from "@/components/auth/logout-button";
-import { useCurrentUser } from "./use-current-user";
+import { useCurrentUser } from "./use-current-user"
 
 export const UserButton = () => {
-  const user = useCurrentUser();
+  const user = useCurrentUser()
 
   return (
     <DropdownMenu>
@@ -34,11 +30,11 @@ export const UserButton = () => {
       <DropdownMenuContent className="w-40" align="end">
         <LogoutButton>
           <DropdownMenuItem>
-            <ExitIcon className="h-4 w-4 me-2" />
+            <ExitIcon className="me-2 h-4 w-4" />
             Logout
           </DropdownMenuItem>
         </LogoutButton>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-};
+  )
+}

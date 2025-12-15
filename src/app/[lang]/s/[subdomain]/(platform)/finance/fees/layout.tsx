@@ -1,7 +1,7 @@
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 interface Props {
   children: React.ReactNode
@@ -15,19 +15,17 @@ export default async function FeesLayout({ children, params }: Props) {
 
   // Define fees page navigation
   const feesPages: PageNavItem[] = [
-    { name: 'Overview', href: `/${lang}/finance/fees` },
-    { name: 'Fee Structure', href: `/${lang}/finance/fees/structure` },
-    { name: 'Fee Collection', href: `/${lang}/finance/fees/collection` },
-    { name: 'Pending Fees', href: `/${lang}/finance/fees/pending` },
-    { name: 'Scholarships', href: `/${lang}/finance/fees/scholarships` },
-    { name: 'Reports', href: `/${lang}/finance/fees/reports` },
+    { name: "Overview", href: `/${lang}/finance/fees` },
+    { name: "Fee Structure", href: `/${lang}/finance/fees/structure` },
+    { name: "Fee Collection", href: `/${lang}/finance/fees/collection` },
+    { name: "Pending Fees", href: `/${lang}/finance/fees/pending` },
+    { name: "Scholarships", href: `/${lang}/finance/fees/scholarships` },
+    { name: "Reports", href: `/${lang}/finance/fees/reports` },
   ]
 
   return (
     <div className="space-y-6">
-      <PageHeadingSetter
-        title={d?.title || 'Fees'}
-      />
+      <PageHeadingSetter title={d?.title || "Fees"} />
       <PageNav pages={feesPages} />
       {children}
     </div>

@@ -26,10 +26,10 @@
  * use a PDF service like Puppeteer/React-PDF
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
 export async function GET() {
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true })
 }
 // import { NextRequest, NextResponse } from "next/server";
 // import { connectDB } from "@/lib/connectDB";
@@ -50,7 +50,7 @@ export async function GET() {
 //     // console.log(invoiceId, userId);
 
 //     //connect db
-//     await connectDB() 
+//     await connectDB()
 //     const settings:ISettings | null = await SettingModel.findOne({ userId : userId })
 //     const invoice:IInvoice | null = await InvoiceModel.findById(invoiceId)
 
@@ -69,8 +69,6 @@ export async function GET() {
 //           status : 500
 //         })
 //     }
-
-
 
 //     const doc = new jsPDF({
 //       orientation: "portrait",
@@ -113,7 +111,7 @@ export async function GET() {
 
 //     doc.text("Bill To.",15,60)
 
-//     //client details 
+//     //client details
 //     doc.setFontSize(12)
 //     doc.setFont('times','bold')
 //     doc.text(invoice.to.name,15,70)
@@ -127,7 +125,7 @@ export async function GET() {
 
 //     const ITESM_XAXIS = 18
 //     const QUANTITY_XAXIS = 110
-//     const PRICE_XAXIS = 140 
+//     const PRICE_XAXIS = 140
 //     const TOTAL_AXIIS = 165
 
 //     //items
@@ -145,10 +143,9 @@ export async function GET() {
 //     doc.setTextColor("#000")
 //     doc.setFontSize(10)
 
-
 //     invoice.items.forEach((item,index)=>{
 //       Yaxis = Yaxis + 6
-      
+
 //       doc.text(`${item.item_name}`,ITESM_XAXIS,Yaxis)
 //       doc.text(`${item.quantity}`,QUANTITY_XAXIS,Yaxis)
 //       doc.text(`${item.price}`,PRICE_XAXIS,Yaxis)
@@ -172,26 +169,22 @@ export async function GET() {
 //     }
 //     doc.text(`${taxAmount}`,FULL_WIDTH-15,Yaxis+30,{align : "right"})
 
-
 //     //total amount
 //     doc.setFont('times',"bold")
 //     const totalAmount = Number(subtotal_remove_discount) - Number(taxAmount) //this line will be change
 //     doc.text(`Total :`,160,Yaxis+35)
 //     doc.text(`${totalAmount}`,FULL_WIDTH-15,Yaxis+35,{align : "right"})
 
-
 //     //signature
 //     doc.setFont('times',"normal")
 //     doc.addImage(settings.signature?.image as string,FULL_WIDTH-60,Yaxis+40,50,20)
 //     doc.text(`${settings.signature?.name as string}`,FULL_WIDTH-15,Yaxis+60,{align : "right"})
-
 
 //     //notes
 //     doc.setFont('times',"bold")
 //     doc.text("Notes : ",15,Yaxis+70)
 //     doc.setFont('times',"normal")
 //     doc.text(`${invoice.notes}`,15,Yaxis+75)
-
 
 //     const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
 

@@ -1,41 +1,49 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { useEffect } from "react"
+import { AlertCircle, RefreshCw } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 export default function OperatorError({
   error,
   reset,
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Operator lab error:", error);
-  }, [error]);
+    console.error("Operator lab error:", error)
+  }, [error])
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="max-w-md w-full">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
-            <AlertCircle className="h-6 w-6 text-destructive" />
+          <div className="bg-destructive/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+            <AlertCircle className="text-destructive h-6 w-6" />
           </div>
           <CardTitle>Something went wrong!</CardTitle>
           <CardDescription>
-            An error occurred while loading the operator dashboard. This has been logged and our team will investigate.
+            An error occurred while loading the operator dashboard. This has
+            been logged and our team will investigate.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg bg-muted p-3">
-            <p className="text-sm font-mono text-muted-foreground">
+          <div className="bg-muted rounded-lg p-3">
+            <p className="text-muted-foreground font-mono text-sm">
               {error.message || "An unexpected error occurred"}
             </p>
             {error.digest && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Error ID: {error.digest}
               </p>
             )}
@@ -50,7 +58,7 @@ export default function OperatorError({
               Try again
             </Button>
             <Button
-              onClick={() => window.location.href = "/"}
+              onClick={() => (window.location.href = "/")}
               className="flex-1"
               variant="outline"
             >
@@ -60,5 +68,5 @@ export default function OperatorError({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

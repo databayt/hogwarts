@@ -29,7 +29,7 @@ export default function CardsLoading() {
             <div className="flex flex-col gap-4">
               <Skeleton className="h-80" />
               <Skeleton className="h-72" />
-              <Skeleton className="h-64 hidden xl:block" />
+              <Skeleton className="hidden h-64 xl:block" />
             </div>
           </div>
         </div>
@@ -37,14 +37,14 @@ export default function CardsLoading() {
         {/* Right column */}
         <div className="flex flex-col gap-4 lg:col-span-6 xl:col-span-5">
           {/* Activity + Exercise */}
-          <div className="hidden gap-4 md:grid sm:grid-cols-2">
+          <div className="hidden gap-4 sm:grid-cols-2 md:grid">
             <Skeleton className="h-72" />
             <Skeleton className="h-72" />
             <Skeleton className="h-52 sm:col-span-2" />
           </div>
 
           {/* Payments table */}
-          <Skeleton className="h-[400px] hidden md:block" />
+          <Skeleton className="hidden h-[400px] md:block" />
 
           {/* Payment method */}
           <Skeleton className="h-80" />

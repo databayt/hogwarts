@@ -69,14 +69,19 @@
  * - Implement student activity tracking (attendance, grades, behavior)
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { studentCreateSchema, studentUpdateSchema, getStudentsSchema } from "@/components/platform/students/validation";
-import { arrayToCSV } from "@/components/file";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { arrayToCSV } from "@/components/file"
+import {
+  getStudentsSchema,
+  studentCreateSchema,
+  studentUpdateSchema,
+} from "@/components/platform/students/validation"
 
 // ============================================================================
 // Types
@@ -84,13 +89,13 @@ import { arrayToCSV } from "@/components/file";
 
 export type ActionResponse<T = void> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: false; error: string }
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const STUDENTS_PATH = "/students";
+const STUDENTS_PATH = "/students"
 
 // ============================================================================
 // Mutations
@@ -106,30 +111,35 @@ export async function createStudent(
 ): Promise<ActionResponse<{ id: string }>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = studentCreateSchema.parse(input);
+    const parsed = studentCreateSchema.parse(input)
 
-    let normalizedUserId: string | null = parsed.userId && parsed.userId.trim().length > 0 ? parsed.userId.trim() : null;
+    let normalizedUserId: string | null =
+      parsed.userId && parsed.userId.trim().length > 0
+        ? parsed.userId.trim()
+        : null
 
     if (normalizedUserId) {
       // Ensure the referenced user exists to avoid FK violation
-      const user = await (db as any).user.findFirst({ where: { id: normalizedUserId } });
+      const user = await (db as any).user.findFirst({
+        where: { id: normalizedUserId },
+      })
       if (!user) {
-        normalizedUserId = null;
+        normalizedUserId = null
       } else {
         // Check if this userId is already being used by ANY student (global unique constraint)
         const existingStudent = await (db as any).student.findFirst({
           where: {
-            userId: normalizedUserId
-          }
-        });
+            userId: normalizedUserId,
+          },
+        })
         if (existingStudent) {
-          normalizedUserId = null; // Don't use this userId if it's already taken
+          normalizedUserId = null // Don't use this userId if it's already taken
         }
       }
     }
@@ -141,34 +151,39 @@ export async function createStudent(
         givenName: parsed.givenName,
         middleName: parsed.middleName ?? null,
         surname: parsed.surname,
-        ...(parsed.dateOfBirth ? { dateOfBirth: new Date(parsed.dateOfBirth) } : {}),
+        ...(parsed.dateOfBirth
+          ? { dateOfBirth: new Date(parsed.dateOfBirth) }
+          : {}),
         gender: parsed.gender,
-        ...(parsed.enrollmentDate ? { enrollmentDate: new Date(parsed.enrollmentDate) } : {}),
+        ...(parsed.enrollmentDate
+          ? { enrollmentDate: new Date(parsed.enrollmentDate) }
+          : {}),
         userId: normalizedUserId,
       },
-    });
+    })
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH);
+    revalidatePath(STUDENTS_PATH)
 
-    return { success: true, data: { id: row.id } };
+    return { success: true, data: { id: row.id } }
   } catch (error) {
     console.error("[createStudent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create student"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to create student",
+    }
   }
 }
 
@@ -182,72 +197,78 @@ export async function updateStudent(
 ): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const parsed = studentUpdateSchema.parse(input);
-    const { id, ...rest } = parsed;
+    const parsed = studentUpdateSchema.parse(input)
+    const { id, ...rest } = parsed
 
     // Build update data object
-    const data: Record<string, unknown> = {};
-    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName;
-    if (typeof rest.middleName !== "undefined") data.middleName = rest.middleName ?? null;
-    if (typeof rest.surname !== "undefined") data.surname = rest.surname;
-    if (typeof rest.gender !== "undefined") data.gender = rest.gender;
+    const data: Record<string, unknown> = {}
+    if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName
+    if (typeof rest.middleName !== "undefined")
+      data.middleName = rest.middleName ?? null
+    if (typeof rest.surname !== "undefined") data.surname = rest.surname
+    if (typeof rest.gender !== "undefined") data.gender = rest.gender
     if (typeof rest.userId !== "undefined") {
-      const trimmed = rest.userId?.trim();
+      const trimmed = rest.userId?.trim()
       if (trimmed) {
-        const user = await (db as any).user.findFirst({ where: { id: trimmed } });
+        const user = await (db as any).user.findFirst({
+          where: { id: trimmed },
+        })
         if (user) {
           // Check if this userId is already being used by ANY other student (global unique constraint)
           const existingStudent = await (db as any).student.findFirst({
             where: {
               userId: trimmed,
-              NOT: { id } // Exclude current student
-            }
-          });
-          data.userId = existingStudent ? null : trimmed;
+              NOT: { id }, // Exclude current student
+            },
+          })
+          data.userId = existingStudent ? null : trimmed
         } else {
-          data.userId = null;
+          data.userId = null
         }
       } else {
-        data.userId = null;
+        data.userId = null
       }
     }
     if (typeof rest.dateOfBirth !== "undefined") {
-      data.dateOfBirth = rest.dateOfBirth ? new Date(rest.dateOfBirth) : null;
+      data.dateOfBirth = rest.dateOfBirth ? new Date(rest.dateOfBirth) : null
     }
     if (typeof rest.enrollmentDate !== "undefined") {
-      data.enrollmentDate = rest.enrollmentDate ? new Date(rest.enrollmentDate) : null;
+      data.enrollmentDate = rest.enrollmentDate
+        ? new Date(rest.enrollmentDate)
+        : null
     }
 
     // Update student (using updateMany for tenant safety)
-    await (db as any).student.updateMany({ where: { id, schoolId }, data });
+    await (db as any).student.updateMany({ where: { id, schoolId }, data })
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH);
+    revalidatePath(STUDENTS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[updateStudent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update student"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to update student",
+    }
   }
 }
 
@@ -256,43 +277,44 @@ export async function updateStudent(
  * @param input - Student ID
  * @returns Action response
  */
-export async function deleteStudent(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteStudent(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete student (using deleteMany for tenant safety)
-    await (db as any).student.deleteMany({ where: { id, schoolId } });
+    await (db as any).student.deleteMany({ where: { id, schoolId } })
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH);
+    revalidatePath(STUDENTS_PATH)
 
-    return { success: true, data: undefined };
+    return { success: true, data: undefined }
   } catch (error) {
     console.error("[deleteStudent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete student"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to delete student",
+    }
   }
 }
 
@@ -305,22 +327,22 @@ export async function deleteStudent(
  * @param input - Student ID
  * @returns Action response with student data
  */
-export async function getStudent(
-  input: { id: string }
-): Promise<ActionResponse<Record<string, unknown> | null>> {
+export async function getStudent(input: {
+  id: string
+}): Promise<ActionResponse<Record<string, unknown> | null>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+    const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Check if student model exists
     if (!(db as any).student) {
-      return { success: true, data: null };
+      return { success: true, data: null }
     }
 
     // Fetch student record
@@ -339,26 +361,26 @@ export async function getStudent(
         createdAt: true,
         updatedAt: true,
       },
-    });
+    })
 
-    return { success: true, data: student };
+    return { success: true, data: student }
   } catch (error) {
     console.error("[getStudent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch student"
-    };
+      error: error instanceof Error ? error.message : "Failed to fetch student",
+    }
   }
 }
 
@@ -369,20 +391,32 @@ export async function getStudent(
  */
 export async function getStudents(
   input: Partial<z.infer<typeof getStudentsSchema>>
-): Promise<ActionResponse<{ rows: Array<{ id: string; userId: string | null; name: string; className: string; status: string; createdAt: string }>; total: number }>> {
+): Promise<
+  ActionResponse<{
+    rows: Array<{
+      id: string
+      userId: string | null
+      name: string
+      className: string
+      status: string
+      createdAt: string
+    }>
+    total: number
+  }>
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getStudentsSchema.parse(input ?? {});
+    const sp = getStudentsSchema.parse(input ?? {})
 
     // Check if student model exists
     if (!(db as any).student) {
-      return { success: true, data: { rows: [], total: 0 } };
+      return { success: true, data: { rows: [], total: 0 } }
     }
 
     // Build where clause
@@ -403,16 +437,17 @@ export async function getStudents(
             ? { userId: null }
             : {}
         : {}),
-    };
+    }
 
     // Build pagination
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
 
     // Build order by clause
-    const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-      ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-      : [{ createdAt: "desc" }];
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
@@ -435,7 +470,7 @@ export async function getStudents(
         },
       }),
       (db as any).student.count({ where }),
-    ]);
+    ])
 
     // Map results
     const mapped = (rows as Array<any>).map((s) => ({
@@ -448,26 +483,27 @@ export async function getStudents(
           : "-",
       status: s.userId ? "active" : "inactive",
       createdAt: (s.createdAt as Date).toISOString(),
-    }));
+    }))
 
-    return { success: true, data: { rows: mapped, total: count as number } };
+    return { success: true, data: { rows: mapped, total: count as number } }
   } catch (error) {
     console.error("[getStudents] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch students"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch students",
+    }
   }
 }
 
@@ -481,17 +517,17 @@ export async function getStudentsCSV(
 ): Promise<ActionResponse<string>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getStudentsSchema.parse(input ?? {});
+    const sp = getStudentsSchema.parse(input ?? {})
 
     // Check if student model exists
     if (!(db as any).student) {
-      return { success: true, data: "" };
+      return { success: true, data: "" }
     }
 
     // Build where clause with filters
@@ -512,7 +548,7 @@ export async function getStudentsCSV(
             ? { userId: null }
             : {}
         : {}),
-    };
+    }
 
     // Fetch ALL students matching filters (no pagination for export)
     const students = await (db as any).student.findMany({
@@ -535,7 +571,7 @@ export async function getStudentsCSV(
         },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
-    });
+    })
 
     // Transform data for CSV export
     const exportData = students.map((student: any) => ({
@@ -560,7 +596,7 @@ export async function getStudentsCSV(
           ? student.studentClasses[0].class.name
           : "",
       createdAt: new Date(student.createdAt).toISOString().split("T")[0],
-    }));
+    }))
 
     // Define CSV columns
     const columns = [
@@ -576,28 +612,29 @@ export async function getStudentsCSV(
       { key: "status", label: "Status" },
       { key: "className", label: "Class" },
       { key: "createdAt", label: "Created Date" },
-    ];
+    ]
 
-    const csv = arrayToCSV(exportData, { columns });
+    const csv = arrayToCSV(exportData, { columns })
 
-    return { success: true, data: csv };
+    return { success: true, data: csv }
   } catch (error) {
     console.error("[getStudentsCSV] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to export students"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to export students",
+    }
   }
 }
 
@@ -609,42 +646,46 @@ export async function getStudentsCSV(
  */
 export async function getStudentsExportData(
   input?: Partial<z.infer<typeof getStudentsSchema>>
-): Promise<ActionResponse<Array<{
-  id: string;
-  studentId: string | null;
-  grNumber: string | null;
-  givenName: string;
-  middleName: string | null;
-  surname: string;
-  fullName: string;
-  dateOfBirth: Date | null;
-  gender: string;
-  email: string | null;
-  mobileNumber: string | null;
-  status: string;
-  studentType: string;
-  enrollmentDate: Date;
-  admissionNumber: string | null;
-  nationality: string | null;
-  className: string | null;
-  yearLevel: string | null;
-  guardianName: string | null;
-  guardianPhone: string | null;
-  createdAt: Date;
-}>>> {
+): Promise<
+  ActionResponse<
+    Array<{
+      id: string
+      studentId: string | null
+      grNumber: string | null
+      givenName: string
+      middleName: string | null
+      surname: string
+      fullName: string
+      dateOfBirth: Date | null
+      gender: string
+      email: string | null
+      mobileNumber: string | null
+      status: string
+      studentType: string
+      enrollmentDate: Date
+      admissionNumber: string | null
+      nationality: string | null
+      className: string | null
+      yearLevel: string | null
+      guardianName: string | null
+      guardianPhone: string | null
+      createdAt: Date
+    }>
+  >
+> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Parse and validate input
-    const sp = getStudentsSchema.parse(input ?? {});
+    const sp = getStudentsSchema.parse(input ?? {})
 
     // Check if student model exists
     if (!(db as any).student) {
-      return { success: true, data: [] };
+      return { success: true, data: [] }
     }
 
     // Build where clause with filters
@@ -665,7 +706,7 @@ export async function getStudentsExportData(
             ? { status: "INACTIVE" }
             : {}
         : {}),
-    };
+    }
 
     // Fetch ALL students matching filters (no pagination for export)
     const students = await (db as any).student.findMany({
@@ -712,7 +753,7 @@ export async function getStudentsExportData(
         },
       },
       orderBy: [{ givenName: "asc" }, { surname: "asc" }],
-    });
+    })
 
     // Transform data for export
     const exportData = students.map((student: any) => ({
@@ -740,31 +781,35 @@ export async function getStudentsExportData(
         ? [
             student.studentGuardians[0].guardian.givenName,
             student.studentGuardians[0].guardian.surname,
-          ].filter(Boolean).join(" ")
+          ]
+            .filter(Boolean)
+            .join(" ")
         : null,
       guardianPhone:
-        student.studentGuardians?.[0]?.guardian?.phoneNumbers?.[0]?.phoneNumber || null,
+        student.studentGuardians?.[0]?.guardian?.phoneNumbers?.[0]
+          ?.phoneNumber || null,
       createdAt: new Date(student.createdAt),
-    }));
+    }))
 
-    return { success: true, data: exportData };
+    return { success: true, data: exportData }
   } catch (error) {
     console.error("[getStudentsExportData] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch export data"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to fetch export data",
+    }
   }
 }
 
@@ -778,13 +823,13 @@ export async function registerStudent(
 ): Promise<ActionResponse<any>> {
   try {
     // Get tenant context
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Process guardian data first if provided
-    const guardianIds = [];
+    const guardianIds = []
     if (input.guardians && input.guardians.length > 0) {
       for (const guardian of input.guardians) {
         // Check if guardian already exists by email
@@ -793,7 +838,7 @@ export async function registerStudent(
             schoolId,
             emailAddress: guardian.email,
           },
-        });
+        })
 
         if (!guardianRecord) {
           // Create new guardian
@@ -804,7 +849,7 @@ export async function registerStudent(
               surname: guardian.surname,
               emailAddress: guardian.email,
             },
-          });
+          })
 
           // Add phone number if provided
           if (guardian.mobileNumber) {
@@ -816,7 +861,7 @@ export async function registerStudent(
                 phoneType: "mobile",
                 isPrimary: true,
               },
-            });
+            })
           }
         }
 
@@ -824,7 +869,7 @@ export async function registerStudent(
           id: guardianRecord.id,
           relation: guardian.relation,
           isPrimary: guardian.isPrimary || false,
-        });
+        })
       }
     }
 
@@ -840,7 +885,9 @@ export async function registerStudent(
       nationality: input.nationality || "Saudi Arabia",
       passportNumber: input.passportNumber || null,
       visaStatus: input.visaStatus || null,
-      visaExpiryDate: input.visaExpiryDate ? new Date(input.visaExpiryDate) : null,
+      visaExpiryDate: input.visaExpiryDate
+        ? new Date(input.visaExpiryDate)
+        : null,
 
       // Contact Information
       email: input.email || null,
@@ -851,7 +898,7 @@ export async function registerStudent(
       currentAddress: input.currentAddress || null,
       permanentAddress: input.sameAsPermanent
         ? input.currentAddress
-        : (input.permanentAddress || null),
+        : input.permanentAddress || null,
       city: input.city || null,
       state: input.state || null,
       postalCode: input.postalCode || null,
@@ -864,9 +911,13 @@ export async function registerStudent(
 
       // Status and Enrollment
       status: input.status || "ACTIVE",
-      enrollmentDate: input.enrollmentDate ? new Date(input.enrollmentDate) : new Date(),
+      enrollmentDate: input.enrollmentDate
+        ? new Date(input.enrollmentDate)
+        : new Date(),
       admissionNumber: input.admissionNumber || null,
-      admissionDate: input.admissionDate ? new Date(input.admissionDate) : new Date(),
+      admissionDate: input.admissionDate
+        ? new Date(input.admissionDate)
+        : new Date(),
 
       // Academic
       category: input.category || null,
@@ -894,7 +945,7 @@ export async function registerStudent(
 
       // GR Number - Auto-generate if not provided
       grNumber: input.grNumber || null,
-    };
+    }
 
     // Generate GR Number if not provided
     if (!studentData.grNumber) {
@@ -902,24 +953,24 @@ export async function registerStudent(
         where: { schoolId },
         orderBy: { createdAt: "desc" },
         select: { grNumber: true },
-      });
+      })
 
-      let nextGRNumber = 1;
+      let nextGRNumber = 1
       if (lastStudent?.grNumber) {
-        const match = lastStudent.grNumber.match(/\d+/);
+        const match = lastStudent.grNumber.match(/\d+/)
         if (match) {
-          nextGRNumber = parseInt(match[0]) + 1;
+          nextGRNumber = parseInt(match[0]) + 1
         }
       }
 
-      const year = new Date().getFullYear();
-      studentData.grNumber = `GR${year}${nextGRNumber.toString().padStart(4, '0')}`;
+      const year = new Date().getFullYear()
+      studentData.grNumber = `GR${year}${nextGRNumber.toString().padStart(4, "0")}`
     }
 
     // Create the student record
     const student = await (db as any).student.create({
       data: studentData,
-    });
+    })
 
     // Create guardian relationships
     if (guardianIds.length > 0) {
@@ -927,9 +978,9 @@ export async function registerStudent(
       let guardianType = await (db as any).guardianType.findFirst({
         where: {
           schoolId,
-          name: "Parent"
+          name: "Parent",
         },
-      });
+      })
 
       if (!guardianType) {
         guardianType = await (db as any).guardianType.create({
@@ -937,7 +988,7 @@ export async function registerStudent(
             schoolId,
             name: "Parent",
           },
-        });
+        })
       }
 
       // Create student-guardian relationships
@@ -950,7 +1001,7 @@ export async function registerStudent(
             guardianTypeId: guardianType.id,
             isPrimary: guardian.isPrimary,
           },
-        });
+        })
       }
     }
 
@@ -970,7 +1021,7 @@ export async function registerStudent(
               mimeType: doc.mimeType || null,
               tags: doc.tags || [],
             },
-          });
+          })
         }
       }
     }
@@ -987,10 +1038,12 @@ export async function registerStudent(
               recordType: "VACCINATION",
               title: vaccination.name,
               description: `Vaccination record for ${vaccination.name}`,
-              followUpDate: vaccination.nextDueDate ? new Date(vaccination.nextDueDate) : null,
+              followUpDate: vaccination.nextDueDate
+                ? new Date(vaccination.nextDueDate)
+                : null,
               recordedBy: "System",
             },
-          });
+          })
         }
       }
     }
@@ -1005,26 +1058,26 @@ export async function registerStudent(
           name: true,
           maxCapacity: true,
           _count: {
-            select: { studentClasses: true }
-          }
-        }
-      });
+            select: { studentClasses: true },
+          },
+        },
+      })
 
       if (!classData) {
         return {
           success: false,
-          error: "Selected class not found"
-        };
+          error: "Selected class not found",
+        }
       }
 
-      const maxCapacity = classData.maxCapacity || 50; // Default to 50 if not set
-      const currentEnrollment = classData._count.studentClasses;
+      const maxCapacity = classData.maxCapacity || 50 // Default to 50 if not set
+      const currentEnrollment = classData._count.studentClasses
 
       if (currentEnrollment >= maxCapacity) {
         return {
           success: false,
-          error: `Cannot enroll in "${classData.name}": Class is at full capacity (${currentEnrollment}/${maxCapacity} students)`
-        };
+          error: `Cannot enroll in "${classData.name}": Class is at full capacity (${currentEnrollment}/${maxCapacity} students)`,
+        }
       }
 
       await (db as any).studentClass.create({
@@ -1035,7 +1088,7 @@ export async function registerStudent(
           dateJoined: new Date(),
           isActive: true,
         },
-      });
+      })
     }
 
     if (input.batchId) {
@@ -1047,32 +1100,33 @@ export async function registerStudent(
           startDate: new Date(),
           isActive: true,
         },
-      });
+      })
     }
 
     // Revalidate cache
-    revalidatePath(STUDENTS_PATH);
+    revalidatePath(STUDENTS_PATH)
 
     return {
       success: true,
       data: student,
-    };
+    }
   } catch (error) {
     console.error("[registerStudent] Error:", error, {
       input,
       timestamp: new Date().toISOString(),
-    });
+    })
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
-      };
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      }
     }
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to register student"
-    };
+      error:
+        error instanceof Error ? error.message : "Failed to register student",
+    }
   }
 }

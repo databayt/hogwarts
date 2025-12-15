@@ -1,19 +1,24 @@
-import { TeachersTable } from '@/components/platform/teachers/table'
-import { type TeacherRow } from '@/components/platform/teachers/columns'
-import { SearchParams } from 'nuqs/server'
-import { teachersSearchParams } from '@/components/platform/teachers/list-params'
-import { db } from '@/lib/db'
-import { getTenantContext } from '@/lib/tenant-context'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
+import { SearchParams } from "nuqs/server"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { type TeacherRow } from "@/components/platform/teachers/columns"
+import { teachersSearchParams } from "@/components/platform/teachers/list-params"
+import { TeachersTable } from "@/components/platform/teachers/table"
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary?: Dictionary['school']
+  dictionary?: Dictionary["school"]
   lang: Locale
 }
 
-export default async function TeachersContent({ searchParams, dictionary, lang }: Props) {
+export default async function TeachersContent({
+  searchParams,
+  dictionary,
+  lang,
+}: Props) {
   const sp = await teachersSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: TeacherRow[] = []
@@ -23,28 +28,33 @@ export default async function TeachersContent({ searchParams, dictionary, lang }
     // Build where clause with filters
     const where: any = {
       schoolId,
-      ...(sp.name ? {
-        OR: [
-          { givenName: { contains: sp.name, mode: 'insensitive' } },
-          { surname: { contains: sp.name, mode: 'insensitive' } },
-          { emailAddress: { contains: sp.name, mode: 'insensitive' } },
-        ]
-      } : {}),
-      ...(sp.emailAddress ? { emailAddress: { contains: sp.emailAddress, mode: 'insensitive' } } : {}),
+      ...(sp.name
+        ? {
+            OR: [
+              { givenName: { contains: sp.name, mode: "insensitive" } },
+              { surname: { contains: sp.name, mode: "insensitive" } },
+              { emailAddress: { contains: sp.name, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(sp.emailAddress
+        ? { emailAddress: { contains: sp.emailAddress, mode: "insensitive" } }
+        : {}),
       ...(sp.status
-        ? sp.status === 'active'
-          ? { employmentStatus: 'ACTIVE' }
-          : sp.status === 'inactive'
-            ? { NOT: { employmentStatus: 'ACTIVE' } }
+        ? sp.status === "active"
+          ? { employmentStatus: "ACTIVE" }
+          : sp.status === "inactive"
+            ? { NOT: { employmentStatus: "ACTIVE" } }
             : {}
         : {}),
     }
 
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
-      : [{ createdAt: 'desc' }]
+    const orderBy =
+      sp.sort && Array.isArray(sp.sort) && sp.sort.length
+        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        : [{ createdAt: "desc" }]
 
     // Fetch teachers with related data for practical display
     const [rows, count] = await Promise.all([
@@ -58,7 +68,7 @@ export default async function TeachersContent({ searchParams, dictionary, lang }
           phoneNumbers: {
             where: { isPrimary: true },
             take: 1,
-            select: { phoneNumber: true }
+            select: { phoneNumber: true },
           },
           // Get primary department
           teacherDepartments: {
@@ -69,24 +79,24 @@ export default async function TeachersContent({ searchParams, dictionary, lang }
                 select: {
                   id: true,
                   departmentName: true,
-                  departmentNameAr: true
-                }
-              }
-            }
+                  departmentNameAr: true,
+                },
+              },
+            },
           },
           // Get subject expertise count
           subjectExpertise: {
-            select: { id: true }
+            select: { id: true },
           },
           // Get assigned classes
           classes: {
-            select: { id: true }
+            select: { id: true },
           },
           // User account status
           user: {
-            select: { id: true, email: true }
-          }
-        }
+            select: { id: true, email: true },
+          },
+        },
       }),
       (db as any).teacher.count({ where }),
     ])
@@ -95,27 +105,31 @@ export default async function TeachersContent({ searchParams, dictionary, lang }
     data = rows.map((t: any) => {
       const primaryDept = t.teacherDepartments?.[0]?.department
       const departmentName = primaryDept
-        ? (lang === 'ar' ? primaryDept.departmentNameAr : primaryDept.departmentName) || primaryDept.departmentName
+        ? (lang === "ar"
+            ? primaryDept.departmentNameAr
+            : primaryDept.departmentName) || primaryDept.departmentName
         : null
 
       return {
         id: t.id,
-        name: [t.givenName, t.surname].filter(Boolean).join(' '),
-        givenName: t.givenName || '',
-        surname: t.surname || '',
-        emailAddress: t.emailAddress || '-',
+        name: [t.givenName, t.surname].filter(Boolean).join(" "),
+        givenName: t.givenName || "",
+        surname: t.surname || "",
+        emailAddress: t.emailAddress || "-",
         phone: t.phoneNumbers?.[0]?.phoneNumber || null,
         department: departmentName,
         departmentId: primaryDept?.id || null,
         subjectCount: t.subjectExpertise?.length || 0,
         classCount: t.classes?.length || 0,
-        employmentStatus: t.employmentStatus || 'ACTIVE',
-        employmentType: t.employmentType || 'FULL_TIME',
+        employmentStatus: t.employmentStatus || "ACTIVE",
+        employmentType: t.employmentType || "FULL_TIME",
         hasAccount: !!t.userId,
         userId: t.userId || null,
         profilePhotoUrl: t.profilePhotoUrl || null,
-        joiningDate: t.joiningDate ? (t.joiningDate as Date).toISOString() : null,
-        createdAt: (t.createdAt as Date).toISOString()
+        joiningDate: t.joiningDate
+          ? (t.joiningDate as Date).toISOString()
+          : null,
+        createdAt: (t.createdAt as Date).toISOString(),
       }
     })
     total = count as number

@@ -1,8 +1,8 @@
-import MembershipContent from '@/components/platform/school/membership/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import MembershipContent from "@/components/platform/school/membership/content"
 
-export const metadata = { title: 'School: Membership' }
+export const metadata = { title: "School: Membership" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

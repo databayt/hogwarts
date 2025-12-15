@@ -3,13 +3,13 @@
  * Route: /[lang]/s/[subdomain]/attendance/geo
  */
 
-import { GeofenceContent } from '@/components/platform/attendance/geofencee/content'
+import { GeofenceContent } from "@/components/platform/attendance/geofencee/content"
 
 export default function GeofencePage() {
   return <GeofenceContent />
 }
 
 export const metadata = {
-  title: 'Geofence Tracking | Hogwarts',
-  description: 'Automatic attendance tracking using GPS location',
+  title: "Geofence Tracking | Hogwarts",
+  description: "Automatic attendance tracking using GPS location",
 }

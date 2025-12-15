@@ -1,8 +1,8 @@
-import SalaryContent from '@/components/platform/finance/salary/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import SalaryContent from "@/components/platform/finance/salary/content"
 
-export const metadata = { title: 'Dashboard: Salary Management' }
+export const metadata = { title: "Dashboard: Salary Management" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

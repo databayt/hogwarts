@@ -1,8 +1,8 @@
-import GenerateTimetableContent from '@/components/platform/timetable/generate/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import GenerateTimetableContent from "@/components/platform/timetable/generate/content"
 
-export const metadata = { title: 'Dashboard: Generate Timetable' }
+export const metadata = { title: "Dashboard: Generate Timetable" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

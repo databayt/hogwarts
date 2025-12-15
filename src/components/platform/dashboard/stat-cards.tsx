@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { Card, CardContent } from "@/components/ui/card"
 
 const data = [
   {
@@ -36,9 +36,13 @@ export default function StatsCards() {
       {data.map((item) => (
         <Card key={item.name} className="p-6 py-4">
           <CardContent className="p-0">
-            <p className="text-sm font-medium text-muted-foreground">{item.name}</p>
+            <p className="text-muted-foreground text-sm font-medium">
+              {item.name}
+            </p>
             <div className="mt-2 flex items-baseline space-x-2.5">
-              <span className="text-3xl font-semibold text-foreground">{item.stat}</span>
+              <span className="text-foreground text-3xl font-semibold">
+                {item.stat}
+              </span>
               <span
                 className={cn(
                   item.changeType === "positive"

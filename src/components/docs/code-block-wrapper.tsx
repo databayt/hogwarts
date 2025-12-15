@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface CodeBlockWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   expandButtonTitle?: string
@@ -18,14 +19,21 @@ export function CodeBlockWrapper({
 
   return (
     <div className={cn("relative", className)} {...props}>
-      <pre className={cn("mb-4 mt-6 max-h-[650px] overflow-x-auto rounded-lg border bg-muted px-4 py-4", {
-        "max-h-none": isOpened,
-      })}>
+      <pre
+        className={cn(
+          "bg-muted mt-6 mb-4 max-h-[650px] overflow-x-auto rounded-lg border px-4 py-4",
+          {
+            "max-h-none": isOpened,
+          }
+        )}
+      >
         {children}
       </pre>
-      <div className={cn("flex items-center justify-end px-4", {
-        "hidden": isOpened,
-      })}>
+      <div
+        className={cn("flex items-center justify-end px-4", {
+          hidden: isOpened,
+        })}
+      >
         <Button
           variant="secondary"
           size="sm"
@@ -37,4 +45,4 @@ export function CodeBlockWrapper({
       </div>
     </div>
   )
-} 
+}

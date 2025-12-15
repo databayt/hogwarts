@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+
 import { getIcon } from "./config"
 import type { ProgressCardProps } from "./types"
 
@@ -22,17 +23,21 @@ export function ProgressCard({
 
   return (
     <Card className={cn("p-4", className)}>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-          <span className="text-sm font-medium text-muted-foreground">{title}</span>
+          {Icon && <Icon className="text-muted-foreground h-4 w-4" />}
+          <span className="text-muted-foreground text-sm font-medium">
+            {title}
+          </span>
         </div>
         {showPercentage && (
-          <span className="text-sm font-medium text-foreground">{percentage}%</span>
+          <span className="text-foreground text-sm font-medium">
+            {percentage}%
+          </span>
         )}
       </div>
       <Progress value={percentage} className={cn("h-2", `[&>div]:${color}`)} />
-      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+      <div className="text-muted-foreground mt-2 flex items-center justify-between text-xs">
         <span>
           {current} {unit}
         </span>

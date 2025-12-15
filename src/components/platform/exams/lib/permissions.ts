@@ -8,8 +8,9 @@
  * - Multi-tenant safety
  */
 
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
+import { auth } from "@/auth"
+
+import { db } from "@/lib/db"
 
 // Permission types
 export type Permission =
@@ -39,7 +40,7 @@ export type Permission =
   | "marking:update"
   | "marking:override"
   | "analytics:read"
-  | "analytics:export";
+  | "analytics:export"
 
 // Role definitions with permissions
 const ROLE_PERMISSIONS: Record<string, Permission[]> = {
@@ -152,34 +153,34 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     "exam:read",
     "analytics:read",
   ],
-};
+}
 
 // Context for permission checks
 export interface PermissionContext {
-  userId: string;
-  userRole: string;
-  schoolId: string;
-  isTeacher?: boolean;
-  teacherId?: string;
-  isStudent?: boolean;
-  studentId?: string;
-  isGuardian?: boolean;
-  guardianId?: string;
+  userId: string
+  userRole: string
+  schoolId: string
+  isTeacher?: boolean
+  teacherId?: string
+  isStudent?: boolean
+  studentId?: string
+  isGuardian?: boolean
+  guardianId?: string
 }
 
 /**
  * Get current user's permission context
  */
 export async function getPermissionContext(): Promise<PermissionContext | null> {
-  const session = await auth();
-  if (!session?.user) return null;
+  const session = await auth()
+  if (!session?.user) return null
 
-  const user = session.user;
+  const user = session.user
   const context: PermissionContext = {
     userId: user.id!,
     userRole: user.role || "USER",
     schoolId: user.schoolId!,
-  };
+  }
 
   // Check if user is a teacher
   if (user.role === "TEACHER") {
@@ -188,10 +189,10 @@ export async function getPermissionContext(): Promise<PermissionContext | null> 
         userId: user.id,
         schoolId: user.schoolId,
       },
-    });
+    })
     if (teacher) {
-      context.isTeacher = true;
-      context.teacherId = teacher.id;
+      context.isTeacher = true
+      context.teacherId = teacher.id
     }
   }
 
@@ -202,10 +203,10 @@ export async function getPermissionContext(): Promise<PermissionContext | null> 
         userId: user.id,
         schoolId: user.schoolId,
       },
-    });
+    })
     if (student) {
-      context.isStudent = true;
-      context.studentId = student.id;
+      context.isStudent = true
+      context.studentId = student.id
     }
   }
 
@@ -216,14 +217,14 @@ export async function getPermissionContext(): Promise<PermissionContext | null> 
         userId: user.id,
         schoolId: user.schoolId,
       },
-    });
+    })
     if (guardian) {
-      context.isGuardian = true;
-      context.guardianId = guardian.id;
+      context.isGuardian = true
+      context.guardianId = guardian.id
     }
   }
 
-  return context;
+  return context
 }
 
 /**
@@ -233,8 +234,8 @@ export function hasPermission(
   context: PermissionContext,
   permission: Permission
 ): boolean {
-  const rolePermissions = ROLE_PERMISSIONS[context.userRole] || [];
-  return rolePermissions.includes(permission);
+  const rolePermissions = ROLE_PERMISSIONS[context.userRole] || []
+  return rolePermissions.includes(permission)
 }
 
 /**
@@ -245,7 +246,7 @@ export async function canAccessExam(
   examId: string
 ): Promise<boolean> {
   // Developers have full access
-  if (context.userRole === "DEVELOPER") return true;
+  if (context.userRole === "DEVELOPER") return true
 
   // Check exam exists in user's school
   const exam = await db.exam.findFirst({
@@ -253,12 +254,12 @@ export async function canAccessExam(
       id: examId,
       schoolId: context.schoolId,
     },
-  });
+  })
 
-  if (!exam) return false;
+  if (!exam) return false
 
   // Admins can access all exams in their school
-  if (context.userRole === "ADMIN") return true;
+  if (context.userRole === "ADMIN") return true
 
   // Teachers can access exams for their classes/subjects
   if (context.isTeacher && context.teacherId) {
@@ -268,13 +269,13 @@ export async function canAccessExam(
         teacherId: context.teacherId,
         schoolId: context.schoolId,
       },
-    });
-    if (teacherClass) return true;
+    })
+    if (teacherClass) return true
   }
 
   // Students can access published exam results
   if (context.isStudent) {
-    return exam.status === "COMPLETED";
+    return exam.status === "COMPLETED"
   }
 
   // Guardians can access their children's exams
@@ -290,16 +291,16 @@ export async function canAccessExam(
           },
         },
       },
-    });
-    return !!studentGuardian;
+    })
+    return !!studentGuardian
   }
 
   // Staff can view completed exams
   if (context.userRole === "STAFF") {
-    return exam.status === "COMPLETED";
+    return exam.status === "COMPLETED"
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -309,10 +310,10 @@ export async function canModifyExam(
   context: PermissionContext,
   examId: string
 ): Promise<boolean> {
-  if (!hasPermission(context, "exam:update")) return false;
+  if (!hasPermission(context, "exam:update")) return false
 
   // Developers and Admins can modify any exam
-  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true;
+  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
   // Teachers can only modify their own exams
   if (context.isTeacher && context.teacherId) {
@@ -324,11 +325,11 @@ export async function canModifyExam(
           teacherId: context.teacherId,
         },
       },
-    });
-    return !!exam;
+    })
+    return !!exam
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -340,7 +341,7 @@ export async function canAccessStudentResult(
   examId?: string
 ): Promise<boolean> {
   // Developers and Admins have full access
-  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true;
+  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
   // Teachers can access results for students in their classes
   if (context.isTeacher && context.teacherId) {
@@ -352,13 +353,13 @@ export async function canAccessStudentResult(
           schoolId: context.schoolId,
         },
       },
-    });
-    if (studentClass) return true;
+    })
+    if (studentClass) return true
   }
 
   // Students can only access their own results
   if (context.isStudent && context.studentId === studentId) {
-    return true;
+    return true
   }
 
   // Guardians can access their children's results
@@ -368,11 +369,11 @@ export async function canAccessStudentResult(
         guardianId: context.guardianId,
         studentId,
       },
-    });
-    return !!studentGuardian;
+    })
+    return !!studentGuardian
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -382,10 +383,10 @@ export async function canManageQuestions(
   context: PermissionContext,
   subjectId?: string
 ): Promise<boolean> {
-  if (!hasPermission(context, "question:create")) return false;
+  if (!hasPermission(context, "question:create")) return false
 
   // Developers and Admins can manage all questions
-  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true;
+  if (["DEVELOPER", "ADMIN"].includes(context.userRole)) return true
 
   // Teachers can manage questions for their subjects
   if (context.isTeacher && context.teacherId && subjectId) {
@@ -395,11 +396,11 @@ export async function canManageQuestions(
         subjectId,
         schoolId: context.schoolId,
       },
-    });
-    return !!teacherSubject;
+    })
+    return !!teacherSubject
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -410,12 +411,12 @@ export async function canAccessAnalytics(
   scope: "school" | "class" | "subject" | "student",
   resourceId?: string
 ): Promise<boolean> {
-  if (!hasPermission(context, "analytics:read")) return false;
+  if (!hasPermission(context, "analytics:read")) return false
 
   switch (scope) {
     case "school":
       // Only Developers and Admins can see school-wide analytics
-      return ["DEVELOPER", "ADMIN"].includes(context.userRole);
+      return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
     case "class":
       // Teachers can see analytics for their classes
@@ -426,10 +427,10 @@ export async function canAccessAnalytics(
             teacherId: context.teacherId,
             schoolId: context.schoolId,
           },
-        });
-        return !!teacherClass;
+        })
+        return !!teacherClass
       }
-      return ["DEVELOPER", "ADMIN"].includes(context.userRole);
+      return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
     case "subject":
       // Teachers can see analytics for their subjects
@@ -440,15 +441,15 @@ export async function canAccessAnalytics(
             teacherId: context.teacherId,
             schoolId: context.schoolId,
           },
-        });
-        return !!teacherSubject;
+        })
+        return !!teacherSubject
       }
-      return ["DEVELOPER", "ADMIN"].includes(context.userRole);
+      return ["DEVELOPER", "ADMIN"].includes(context.userRole)
 
     case "student":
       // Students can see their own analytics
       if (context.isStudent && context.studentId === resourceId) {
-        return true;
+        return true
       }
       // Guardians can see their children's analytics
       if (context.isGuardian && context.guardianId && resourceId) {
@@ -457,8 +458,8 @@ export async function canAccessAnalytics(
             guardianId: context.guardianId,
             studentId: resourceId,
           },
-        });
-        return !!studentGuardian;
+        })
+        return !!studentGuardian
       }
       // Teachers can see analytics for students in their classes
       if (context.isTeacher && context.teacherId && resourceId) {
@@ -470,13 +471,13 @@ export async function canAccessAnalytics(
               schoolId: context.schoolId,
             },
           },
-        });
-        return !!studentClass;
+        })
+        return !!studentClass
       }
-      return ["DEVELOPER", "ADMIN"].includes(context.userRole);
+      return ["DEVELOPER", "ADMIN"].includes(context.userRole)
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -488,19 +489,19 @@ export async function applyPermissionFilters(
 ): Promise<any> {
   const baseFilter: any = {
     schoolId: context.schoolId,
-  };
+  }
 
   switch (resource) {
     case "exam":
       if (context.isTeacher && context.teacherId) {
         baseFilter.class = {
           teacherId: context.teacherId,
-        };
+        }
       }
       if (context.isStudent) {
-        baseFilter.status = "COMPLETED";
+        baseFilter.status = "COMPLETED"
       }
-      break;
+      break
 
     case "question":
       if (context.isTeacher && context.teacherId) {
@@ -510,13 +511,13 @@ export async function applyPermissionFilters(
               teacherId: context.teacherId,
             },
           },
-        };
+        }
       }
-      break;
+      break
 
     case "result":
       if (context.isStudent && context.studentId) {
-        baseFilter.studentId = context.studentId;
+        baseFilter.studentId = context.studentId
       }
       if (context.isGuardian && context.guardianId) {
         baseFilter.student = {
@@ -525,18 +526,18 @@ export async function applyPermissionFilters(
               guardianId: context.guardianId,
             },
           },
-        };
+        }
       }
-      break;
+      break
 
     case "template":
       if (context.isTeacher && context.teacherId) {
-        baseFilter.createdBy = context.userId;
+        baseFilter.createdBy = context.userId
       }
-      break;
+      break
   }
 
-  return baseFilter;
+  return baseFilter
 }
 
 /**
@@ -546,13 +547,13 @@ export async function validatePermission(
   permission: Permission,
   resourceId?: string
 ): Promise<{ allowed: boolean; reason?: string }> {
-  const context = await getPermissionContext();
+  const context = await getPermissionContext()
 
   if (!context) {
     return {
       allowed: false,
       reason: "Not authenticated",
-    };
+    }
   }
 
   // Check basic permission
@@ -560,7 +561,7 @@ export async function validatePermission(
     return {
       allowed: false,
       reason: `Role ${context.userRole} does not have ${permission} permission`,
-    };
+    }
   }
 
   // Additional resource-specific checks
@@ -569,44 +570,46 @@ export async function validatePermission(
       case "exam:read":
       case "exam:update":
       case "exam:delete":
-        const canAccess = await canAccessExam(context, resourceId);
+        const canAccess = await canAccessExam(context, resourceId)
         if (!canAccess) {
           return {
             allowed: false,
             reason: "You do not have access to this exam",
-          };
+          }
         }
-        break;
+        break
 
       case "result:read":
-        const canAccessResult = await canAccessStudentResult(context, resourceId);
+        const canAccessResult = await canAccessStudentResult(
+          context,
+          resourceId
+        )
         if (!canAccessResult) {
           return {
             allowed: false,
             reason: "You do not have access to this result",
-          };
+          }
         }
-        break;
+        break
     }
   }
 
-  return { allowed: true };
+  return { allowed: true }
 }
 
 /**
  * Permission guard for server actions
  */
-export async function withPermission<T extends (...args: any[]) => Promise<any>>(
-  permission: Permission,
-  action: T
-): Promise<T> {
+export async function withPermission<
+  T extends (...args: any[]) => Promise<any>,
+>(permission: Permission, action: T): Promise<T> {
   return (async (...args: Parameters<T>) => {
-    const validation = await validatePermission(permission);
+    const validation = await validatePermission(permission)
 
     if (!validation.allowed) {
-      throw new Error(validation.reason || "Permission denied");
+      throw new Error(validation.reason || "Permission denied")
     }
 
-    return action(...args);
-  }) as T;
+    return action(...args)
+  }) as T
 }

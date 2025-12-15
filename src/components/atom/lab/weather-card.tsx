@@ -1,9 +1,11 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import type { CardSize } from "./types"
 
 interface WeatherCardProps {
@@ -90,7 +92,7 @@ export function WeatherCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}
@@ -98,9 +100,9 @@ export function WeatherCard({
       <CardContent className={cn(sizeClasses[size])}>
         {loading ? (
           <div className="space-y-3">
-            <Skeleton className="h-16 w-16 rounded-full mx-auto" />
-            <Skeleton className="h-8 w-20 mx-auto" />
-            <Skeleton className="h-4 w-32 mx-auto" />
+            <Skeleton className="mx-auto h-16 w-16 rounded-full" />
+            <Skeleton className="mx-auto h-8 w-20" />
+            <Skeleton className="mx-auto h-4 w-32" />
           </div>
         ) : (
           <div className="space-y-4">
@@ -108,19 +110,19 @@ export function WeatherCard({
             <div className="flex justify-center">{icon}</div>
 
             {/* Primary Stat */}
-            <div className="text-center space-y-1">
-              <h2 className="font-bold text-foreground">{temperature}</h2>
-              <p className="font-medium text-foreground">{location}</p>
+            <div className="space-y-1 text-center">
+              <h2 className="text-foreground font-bold">{temperature}</h2>
+              <p className="text-foreground font-medium">{location}</p>
               <p className="muted">{condition}</p>
             </div>
 
             {/* Secondary Stats */}
             {stats && stats.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+              <div className="border-border grid grid-cols-2 gap-3 border-t pt-2">
                 {stats.map((stat, index) => (
-                  <div key={index} className="text-center space-y-0.5">
+                  <div key={index} className="space-y-0.5 text-center">
                     <p className="muted">{stat.label}</p>
-                    <p className="font-medium text-foreground">{stat.value}</p>
+                    <p className="text-foreground font-medium">{stat.value}</p>
                   </div>
                 ))}
               </div>

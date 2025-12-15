@@ -1,43 +1,45 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
+import { revalidatePath } from "next/cache"
+
 import {
-  requireSchoolOwnership,
   createActionResponse,
-  type ActionResponse
-} from "@/lib/auth-security";
-import { subdomainValidation } from './validation';
-import type { SubdomainFormData } from './types';
+  requireSchoolOwnership,
+  type ActionResponse,
+} from "@/lib/auth-security"
+import { db } from "@/lib/db"
+
+import type { SubdomainFormData } from "./types"
+import { subdomainValidation } from "./validation"
 
 export async function updateSchoolSubdomain(
-  schoolId: string, 
+  schoolId: string,
   data: SubdomainFormData
 ): Promise<ActionResponse> {
   try {
-    await requireSchoolOwnership(schoolId);
-    
+    await requireSchoolOwnership(schoolId)
+
     // Validate input data
-    const validatedData = subdomainValidation.parse(data);
-    
+    const validatedData = subdomainValidation.parse(data)
+
     // Check subdomain availability
     if (validatedData.domain) {
       const existingSchool = await db.school.findFirst({
-        where: { 
+        where: {
           domain: validatedData.domain,
-          id: { not: schoolId }
+          id: { not: schoolId },
         },
-        select: { id: true }
-      });
+        select: { id: true },
+      })
 
       if (existingSchool) {
         return createActionResponse(undefined, {
           message: "This subdomain is already taken",
-          name: "ValidationError"
-        });
+          name: "ValidationError",
+        })
       }
     }
-    
+
     // Update school subdomain
     const school = await db.school.update({
       where: { id: schoolId },
@@ -45,33 +47,37 @@ export async function updateSchoolSubdomain(
         domain: validatedData.domain,
         updatedAt: new Date(),
       },
-    });
+    })
 
-    revalidatePath(`/onboarding/${schoolId}`);
-    return createActionResponse(school);
+    revalidatePath(`/onboarding/${schoolId}`)
+    return createActionResponse(school)
   } catch (error) {
-    console.error("Failed to update school subdomain:", error);
-    return createActionResponse(undefined, error);
+    console.error("Failed to update school subdomain:", error)
+    return createActionResponse(undefined, error)
   }
 }
 
-export async function checkSubdomainAvailability(subdomain: string): Promise<ActionResponse> {
+export async function checkSubdomainAvailability(
+  subdomain: string
+): Promise<ActionResponse> {
   try {
     const existingSchool = await db.school.findFirst({
       where: { domain: subdomain },
-      select: { id: true }
-    });
+      select: { id: true },
+    })
 
-    const isAvailable = !existingSchool;
-    
+    const isAvailable = !existingSchool
+
     return createActionResponse({
       subdomain,
       available: isAvailable,
-      message: isAvailable ? 'Subdomain is available' : 'Subdomain is already taken'
-    });
+      message: isAvailable
+        ? "Subdomain is available"
+        : "Subdomain is already taken",
+    })
   } catch (error) {
-    console.error("Failed to check subdomain availability:", error);
-    return createActionResponse(undefined, error);
+    console.error("Failed to check subdomain availability:", error)
+    return createActionResponse(undefined, error)
   }
 }
 
@@ -82,8 +88,8 @@ export async function generateSubdomainSuggestions(
     // Generate suggestions based on school name
     const baseName = schoolName
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .substring(0, 20);
+      .replace(/[^a-z0-9]/g, "")
+      .substring(0, 20)
 
     const suggestions = [
       baseName,
@@ -91,44 +97,44 @@ export async function generateSubdomainSuggestions(
       `${baseName}academy`,
       `${baseName}edu`,
       `${baseName}learning`,
-    ];
+    ]
 
     // Check availability for each suggestion
-    const availableSuggestions = [];
-    
+    const availableSuggestions = []
+
     for (const suggestion of suggestions) {
       const existing = await db.school.findFirst({
         where: { domain: suggestion },
-        select: { id: true }
-      });
-      
+        select: { id: true },
+      })
+
       if (!existing) {
-        availableSuggestions.push(suggestion);
+        availableSuggestions.push(suggestion)
       }
     }
 
     // If none available, add numbered suggestions
     if (availableSuggestions.length === 0) {
       for (let i = 1; i <= 10; i++) {
-        const numberedSuggestion = `${baseName}${i}`;
+        const numberedSuggestion = `${baseName}${i}`
         const existing = await db.school.findFirst({
           where: { domain: numberedSuggestion },
-          select: { id: true }
-        });
-        
+          select: { id: true },
+        })
+
         if (!existing) {
-          availableSuggestions.push(numberedSuggestion);
-          if (availableSuggestions.length >= 5) break;
+          availableSuggestions.push(numberedSuggestion)
+          if (availableSuggestions.length >= 5) break
         }
       }
     }
 
     return createActionResponse({
       suggestions: availableSuggestions.slice(0, 5),
-      baseName
-    });
+      baseName,
+    })
   } catch (error) {
-    console.error("Failed to generate subdomain suggestions:", error);
-    return createActionResponse(undefined, error);
+    console.error("Failed to generate subdomain suggestions:", error)
+    return createActionResponse(undefined, error)
   }
 }

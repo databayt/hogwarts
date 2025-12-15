@@ -1,31 +1,37 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { createEvent, getEvent, updateEvent } from "@/components/platform/events/actions";
-import { eventCreateSchema } from "@/components/platform/events/validation";
-import { Form } from "@/components/ui/form";
-import { useModal } from "@/components/atom/modal/context";
-import { useRouter } from "next/navigation";
-import { BasicInformationStep } from "./basic-information";
-import { ScheduleLocationStep } from "./schedule-location";
-import { DetailsAttendeesStep } from "./details-attendees";
-import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
-import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
+
+import { Form } from "@/components/ui/form"
+import { useModal } from "@/components/atom/modal/context"
+import { ModalFooter } from "@/components/atom/modal/modal-footer"
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout"
+import {
+  createEvent,
+  getEvent,
+  updateEvent,
+} from "@/components/platform/events/actions"
+import { eventCreateSchema } from "@/components/platform/events/validation"
+
+import { BasicInformationStep } from "./basic-information"
+import { DetailsAttendeesStep } from "./details-attendees"
+import { ScheduleLocationStep } from "./schedule-location"
 
 interface EventCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
-  const { modal, closeModal } = useModal();
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
-  
+  const { modal, closeModal } = useModal()
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(1)
+
   const form = useForm<z.infer<typeof eventCreateSchema>>({
     resolver: zodResolver(eventCreateSchema),
     defaultValues: {
@@ -43,17 +49,21 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
       registrationRequired: false,
       notes: "",
     },
-  });
+  })
 
-  const isView = !!(modal.id && modal.id.startsWith("view:"));
-  const currentId = modal.id ? (modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id) : undefined;
+  const isView = !!(modal.id && modal.id.startsWith("view:"))
+  const currentId = modal.id
+    ? modal.id.startsWith("view:")
+      ? modal.id.split(":")[1]
+      : modal.id
+    : undefined
 
   useEffect(() => {
     const load = async () => {
-      if (!currentId) return;
-      const res = await getEvent({ id: currentId });
-      if (!res.success || !res.data) return;
-      const e = res.data as any;
+      if (!currentId) return
+      const res = await getEvent({ id: currentId })
+      if (!res.success || !res.data) return
+      const e = res.data as any
 
       form.reset({
         title: e.title ?? "",
@@ -69,108 +79,127 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
         isPublic: e.isPublic ?? false,
         registrationRequired: e.registrationRequired ?? false,
         notes: e.notes ?? "",
-      });
-    };
-    void load();
+      })
+    }
+    void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentId]);
+  }, [currentId])
 
   async function onSubmit(values: z.infer<typeof eventCreateSchema>) {
     try {
       const res = currentId
         ? await updateEvent({ id: currentId, ...values })
-        : await createEvent(values);
+        : await createEvent(values)
 
       if (res?.success) {
-        toast.success(currentId ? "Event updated" : "Event created");
-        closeModal();
+        toast.success(currentId ? "Event updated" : "Event created")
+        closeModal()
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
-          onSuccess();
+          onSuccess()
         } else {
-          router.refresh();
+          router.refresh()
         }
       } else {
-        toast.error(res?.error || (currentId ? "Failed to update event" : "Failed to create event"));
+        toast.error(
+          res?.error ||
+            (currentId ? "Failed to update event" : "Failed to create event")
+        )
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Form submission error:", error)
+      toast.error("An unexpected error occurred")
     }
   }
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['title', 'eventType'] as const;
-      const step1Valid = await form.trigger(step1Fields);
+      const step1Fields = ["title", "eventType"] as const
+      const step1Valid = await form.trigger(step1Fields)
       if (step1Valid) {
-        setCurrentStep(2);
+        setCurrentStep(2)
       }
     } else if (currentStep === 2) {
-      const step2Fields = ['eventDate', 'startTime', 'endTime'] as const;
-      const step2Valid = await form.trigger(step2Fields);
+      const step2Fields = ["eventDate", "startTime", "endTime"] as const
+      const step2Valid = await form.trigger(step2Fields)
       if (step2Valid) {
-        setCurrentStep(3);
+        setCurrentStep(3)
       }
     } else if (currentStep === 3) {
-      await form.handleSubmit(onSubmit)();
+      await form.handleSubmit(onSubmit)()
     }
-  };
+  }
 
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1 
-        ? ['title', 'eventType'] as const
-        : currentStep === 2
-        ? ['eventDate', 'startTime', 'endTime', 'location'] as const
-        : ['organizer', 'targetAudience', 'maxAttendees', 'isPublic', 'registrationRequired', 'notes'] as const;
-      
-      const stepValid = await form.trigger(currentStepFields);
+      const currentStepFields =
+        currentStep === 1
+          ? (["title", "eventType"] as const)
+          : currentStep === 2
+            ? (["eventDate", "startTime", "endTime", "location"] as const)
+            : ([
+                "organizer",
+                "targetAudience",
+                "maxAttendees",
+                "isPublic",
+                "registrationRequired",
+                "notes",
+              ] as const)
+
+      const stepValid = await form.trigger(currentStepFields)
       if (stepValid) {
-        await form.handleSubmit(onSubmit)();
+        await form.handleSubmit(onSubmit)()
       }
     } else {
       // For creating, just go to next step
-      await handleNext();
+      await handleNext()
     }
-  };
+  }
 
   const handleBack = () => {
     if (currentStep === 3) {
-      setCurrentStep(2);
+      setCurrentStep(2)
     } else if (currentStep === 2) {
-      setCurrentStep(1);
+      setCurrentStep(1)
     } else {
-      closeModal();
+      closeModal()
     }
-  };
+  }
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInformationStep form={form} isView={isView} />;
+        return <BasicInformationStep form={form} isView={isView} />
       case 2:
-        return <ScheduleLocationStep form={form} isView={isView} />;
+        return <ScheduleLocationStep form={form} isView={isView} />
       case 3:
-        return <DetailsAttendeesStep form={form} isView={isView} />;
+        return <DetailsAttendeesStep form={form} isView={isView} />
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   const stepLabels: Record<number, string> = {
     1: "Basic Information",
     2: "Schedule & Location",
     3: "Details & Attendees",
-  };
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={(e) => e.preventDefault()}>
         <ModalFormLayout
-          title={isView ? "View Event" : currentId ? "Edit Event" : "Create Event"}
-          description={isView ? "View event details" : currentId ? "Update event details" : "Schedule a new school event"}
+          title={
+            isView ? "View Event" : currentId ? "Edit Event" : "Create Event"
+          }
+          description={
+            isView
+              ? "View event details"
+              : currentId
+                ? "Update event details"
+                : "Schedule a new school event"
+          }
         >
           {renderCurrentStep()}
         </ModalFormLayout>
@@ -188,7 +217,7 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
         />
       </form>
     </Form>
-  );
+  )
 }
 
-export default EventCreateForm;
+export default EventCreateForm

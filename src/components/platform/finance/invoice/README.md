@@ -1,11 +1,13 @@
 # Invoice Module
 
 ## Overview
+
 The Invoice Module provides comprehensive invoice management with role-based access control, automated billing cycles, recurring invoices, bulk generation, and payment tracking integration.
 
 ## Features
 
 ### Core Capabilities
+
 - **RBAC-Enhanced Operations**: Role-based permissions for all invoice actions
 - **Invoice Lifecycle Management**: Draft → Pending → Sent → Partially Paid → Paid → Overdue
 - **Recurring Invoices**: Template-based automatic generation
@@ -17,6 +19,7 @@ The Invoice Module provides comprehensive invoice management with role-based acc
 - **Discounts & Scholarships**: Automatic application based on student profiles
 
 ### Dashboard Metrics
+
 - Total invoices by status
 - Collection rate and trends
 - Outstanding amounts
@@ -27,19 +30,20 @@ The Invoice Module provides comprehensive invoice management with role-based acc
 
 ### Permission Matrix
 
-| Role | View Own | View All | Create | Edit | Delete | Approve | Export |
-|------|----------|----------|---------|------|--------|---------|--------|
-| DEVELOPER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| ADMIN | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| ACCOUNTANT | ✓ | ✓ | ✓ | ✓ | - | ✓ | ✓ |
-| TEACHER | ✓ | - | - | - | - | - | - |
-| STUDENT | ✓ | - | - | - | - | - | - |
-| GUARDIAN | ✓ | - | - | - | - | - | - |
-| STAFF | ✓ | - | - | - | - | - | - |
+| Role       | View Own | View All | Create | Edit | Delete | Approve | Export |
+| ---------- | -------- | -------- | ------ | ---- | ------ | ------- | ------ |
+| DEVELOPER  | ✓        | ✓        | ✓      | ✓    | ✓      | ✓       | ✓      |
+| ADMIN      | ✓        | ✓        | ✓      | ✓    | ✓      | ✓       | ✓      |
+| ACCOUNTANT | ✓        | ✓        | ✓      | ✓    | -      | ✓       | ✓      |
+| TEACHER    | ✓        | -        | -      | -    | -      | -       | -      |
+| STUDENT    | ✓        | -        | -      | -    | -      | -       | -      |
+| GUARDIAN   | ✓        | -        | -      | -    | -      | -       | -      |
+| STAFF      | ✓        | -        | -      | -    | -      | -       | -      |
 
 ### Role-Specific Views
 
 #### Admin & Accountant
+
 - Full dashboard with all KPIs
 - Bulk generation tools
 - Recurring invoice management
@@ -47,11 +51,13 @@ The Invoice Module provides comprehensive invoice management with role-based acc
 - Export and reporting
 
 #### Teachers & Staff
+
 - View own salary invoices
 - Download invoice PDFs
 - View payment history
 
 #### Students & Guardians
+
 - View fee invoices
 - Check payment status
 - Download receipts
@@ -60,6 +66,7 @@ The Invoice Module provides comprehensive invoice management with role-based acc
 ## Components
 
 ### Main Components
+
 ```
 invoice/
 ├── content-enhanced.tsx    # Main invoice dashboard with RBAC
@@ -78,14 +85,16 @@ invoice/
 ### Server Actions (actions-enhanced.ts)
 
 #### RBAC-Enhanced CRUD
+
 ```typescript
-getInvoicesWithRBAC(page, limit, filters)  // Role-aware invoice fetching
-createInvoiceWithRBAC(data)                // Create with permission check
-updateInvoiceWithRBAC(id, data)            // Update with permission check
-deleteInvoiceWithRBAC(id)                  // Delete with permission check
+getInvoicesWithRBAC(page, limit, filters) // Role-aware invoice fetching
+createInvoiceWithRBAC(data) // Create with permission check
+updateInvoiceWithRBAC(id, data) // Update with permission check
+deleteInvoiceWithRBAC(id) // Delete with permission check
 ```
 
 #### Bulk Operations
+
 ```typescript
 generateBulkInvoices({
   invoiceType: "TUITION_FEE",
@@ -93,11 +102,12 @@ generateBulkInvoices({
   classIds: ["class1", "class2"],
   dueDate: new Date(),
   termId: "term1",
-  sendNotifications: true
+  sendNotifications: true,
 })
 ```
 
 #### Recurring Invoices
+
 ```typescript
 createRecurringTemplate({
   name: "Monthly Tuition",
@@ -109,22 +119,27 @@ processRecurringInvoices()  // Run by cron job
 ```
 
 #### Payment Reminders
+
 ```typescript
 sendPaymentReminders({
   invoiceIds: ["inv1", "inv2"],
   includePastDue: true,
-  reminderType: "EMAIL"
+  reminderType: "EMAIL",
 })
 ```
 
 ### `list-params.ts`
+
 Search parameter configuration:
+
 - Page and per-page pagination
 - Invoice number, status, and client name filters
 - Sorting state management
 
 ### `types.ts`
+
 TypeScript types including:
+
 - `InvoiceRow`: Data structure for table rows
 - `Invoice`: Complete invoice model
 - `Address` and `Item`: Supporting types
@@ -157,6 +172,7 @@ The invoice component follows the established pattern used in the students compo
 ## Integration
 
 This component integrates with:
+
 - Shared table components (`@/components/table/*`)
 - Modal system (`@/components/atom/modal/*`)
 - Toast notifications (`@/components/atom/toast`)
@@ -166,6 +182,7 @@ This component integrates with:
 ## Architecture Status
 
 ### Current Structure
+
 ```
 src/components/invoice/
 ├── dashboard/         # Invoice dashboard views
@@ -185,6 +202,7 @@ src/components/invoice/
 ```
 
 ### Compliance Status
+
 - ✅ **Server Actions**: Properly implemented with validation
 - ✅ **Multi-tenant**: SchoolId scoping implemented
 - ✅ **TypeScript**: Good type coverage
@@ -195,22 +213,26 @@ src/components/invoice/
 ## Critical Issues Found
 
 ### Code Organization Issues
+
 - **Legacy folders**: `_component/` and `actions/` folders need cleanup
 - **Duplicate logic**: Multiple invoice creation implementations
 - **Mixed patterns**: Inconsistent between old and new approaches
 - **File naming**: Not following kebab-case convention
 
 ### TypeScript Issues
+
 - Some `any` type usage in actions
 - Missing proper error types
 - Incomplete type definitions for complex objects
 
 ### Performance Concerns
+
 - Client-side filtering in some components
 - Missing pagination optimization
 - No caching strategy for frequently accessed data
 
 ## Technology Stack
+
 - **Framework**: Next.js 15.4.4 App Router
 - **UI**: ShadCN UI + Custom components
 - **Forms**: React Hook Form + Zod
@@ -221,10 +243,12 @@ src/components/invoice/
 ## Development Guidelines
 
 ### Server Actions Pattern
+
 ```typescript
 "use server"
 
 import { auth } from "@/auth"
+
 import { invoiceSchema } from "./validation"
 
 export async function createInvoice(data: FormData) {
@@ -236,7 +260,7 @@ export async function createInvoice(data: FormData) {
 
   // Create with schoolId scope
   const invoice = await db.invoice.create({
-    data: { ...validated, schoolId }
+    data: { ...validated, schoolId },
   })
 
   revalidatePath("/invoices")
@@ -245,6 +269,7 @@ export async function createInvoice(data: FormData) {
 ```
 
 ### Form Implementation
+
 ```typescript
 "use client"
 
@@ -269,7 +294,9 @@ export function InvoiceForm() {
 ```
 
 ### Multi-step Forms
+
 The invoice module uses a multi-step form pattern:
+
 1. Basic Information
 2. Client & Items
 3. Review & Submit
@@ -279,6 +306,7 @@ Each step validates independently before proceeding.
 ## Required Improvements
 
 ### Immediate Actions
+
 1. Clean up legacy folders (`_component/`, `actions/`)
 2. Standardize file naming to kebab-case
 3. Consolidate duplicate implementations
@@ -286,12 +314,14 @@ Each step validates independently before proceeding.
 5. Implement proper error handling
 
 ### Performance Optimizations
+
 1. Move filtering to server-side
 2. Implement data caching
 3. Add optimistic UI updates
 4. Optimize bundle size
 
 ### Testing Requirements
+
 1. Unit tests for calculations
 2. Integration tests for workflows
 3. E2E tests for invoice creation
@@ -300,6 +330,7 @@ Each step validates independently before proceeding.
 ## API Endpoints
 
 ### Server Actions
+
 - `getInvoicesWithFilters` - Fetch with search/filter
 - `createInvoice` - Create new invoice
 - `updateInvoice` - Update existing invoice
@@ -325,6 +356,7 @@ graph LR
 ## Database Schema
 
 ### Main Tables
+
 ```prisma
 model UserInvoice {
   id               String   @id @default(cuid())
@@ -382,13 +414,16 @@ model InvoiceReminder {
 ```
 
 ## Related Documentation
+
 - [CLAUDE.md](../../../CLAUDE.md) - Architecture guidelines
 - [Platform README](../platform/README.md)
 - [Table Components](../table/README.md)
 - [Form Patterns](../../docs/forms.md)
 
 ## Maintainers
+
 Finance and billing team responsible for invoice features.
 
 ## License
+
 MIT

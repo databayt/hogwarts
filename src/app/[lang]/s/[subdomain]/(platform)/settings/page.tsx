@@ -1,12 +1,13 @@
-import { EnhancedSettingsContent } from '@/components/platform/settings/content-enhanced'
-import { SettingsErrorBoundary } from '@/components/platform/settings/error-boundary'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { Metadata } from 'next'
+import { Metadata } from "next"
+
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { EnhancedSettingsContent } from "@/components/platform/settings/content-enhanced"
+import { SettingsErrorBoundary } from "@/components/platform/settings/error-boundary"
 
 export const metadata: Metadata = {
-  title: 'Settings - School Management',
-  description: 'Manage school settings, users, roles, and permissions'
+  title: "Settings - School Management",
+  description: "Manage school settings, users, roles, and permissions",
 }
 
 interface Props {
@@ -23,10 +24,3 @@ export default async function Page({ params }: Props) {
     </SettingsErrorBoundary>
   )
 }
-
-
-
-
-
-
-

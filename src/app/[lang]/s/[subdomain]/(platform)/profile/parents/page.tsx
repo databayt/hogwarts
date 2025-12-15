@@ -1,8 +1,8 @@
-import { ParentDirectoryContent } from '@/components/platform/profile/parent/directory'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { ParentDirectoryContent } from "@/components/platform/profile/parent/directory"
 
-export const metadata = { title: 'Parent Portal' }
+export const metadata = { title: "Parent Portal" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

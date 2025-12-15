@@ -8,13 +8,14 @@
  * - Analytics export
  */
 
-"use server";
+"use server"
 
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { revalidatePath } from "next/cache";
-import { gradeBoundaryCache, cacheKeys } from "@/lib/cache/exam-cache";
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
+import { cacheKeys, gradeBoundaryCache } from "@/lib/cache/exam-cache"
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 // Validation schemas
 const exportResultsSchema = z.object({
@@ -22,14 +23,14 @@ const exportResultsSchema = z.object({
   includeAbsent: z.boolean().optional().default(false),
   includeAnalytics: z.boolean().optional().default(false),
   format: z.enum(["csv", "excel"]).optional().default("csv"),
-});
+})
 
 const importResultsSchema = z.object({
   examId: z.string().min(1, "Exam ID is required"),
   csvContent: z.string().min(1, "CSV content is required"),
   validateOnly: z.boolean().optional().default(false),
   updateExisting: z.boolean().optional().default(false),
-});
+})
 
 const exportAnalyticsSchema = z.object({
   examId: z.string().optional(),
@@ -38,7 +39,7 @@ const exportAnalyticsSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   format: z.enum(["csv", "excel"]).optional().default("csv"),
-});
+})
 
 // CSV Headers for results export/import
 const RESULT_CSV_HEADERS = [
@@ -57,31 +58,31 @@ const RESULT_CSV_HEADERS = [
   "Pass/Fail",
   "Absent",
   "Remarks",
-] as const;
+] as const
 
 // Types
 interface ExportData {
-  csv: string;
-  filename: string;
-  rowCount: number;
+  csv: string
+  filename: string
+  rowCount: number
   metadata?: {
-    examTitle: string;
-    className: string;
-    subjectName: string;
-    examDate: Date;
-  };
+    examTitle: string
+    className: string
+    subjectName: string
+    examDate: Date
+  }
 }
 
 interface ImportResult {
-  totalRows: number;
-  successCount: number;
-  errorCount: number;
-  updatedCount?: number;
+  totalRows: number
+  successCount: number
+  errorCount: number
+  updatedCount?: number
   errors: Array<{
-    row: number;
-    studentId?: string;
-    errors: string[];
-  }>;
+    row: number
+    studentId?: string
+    errors: string[]
+  }>
 }
 
 /**
@@ -91,12 +92,12 @@ export async function exportExamResultsToCSV(
   input: z.infer<typeof exportResultsSchema>
 ): Promise<{ success: boolean; data?: ExportData; error?: string }> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = exportResultsSchema.parse(input);
+    const parsed = exportResultsSchema.parse(input)
 
     // Fetch exam with results
     const exam = await db.exam.findFirst({
@@ -130,28 +131,28 @@ export async function exportExamResultsToCSV(
           orderBy: { marksObtained: "desc" },
         },
       },
-    });
+    })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" };
+      return { success: false, error: "Exam not found" }
     }
 
     if (exam.examResults.length === 0) {
-      return { success: false, error: "No results found for this exam" };
+      return { success: false, error: "No results found for this exam" }
     }
 
     // Get grade boundaries from cache
-    const cacheKey = cacheKeys.gradeBoundaries(schoolId);
-    let boundaries = gradeBoundaryCache.get(cacheKey);
+    const cacheKey = cacheKeys.gradeBoundaries(schoolId)
+    let boundaries = gradeBoundaryCache.get(cacheKey)
 
     if (!boundaries) {
       boundaries = await db.gradeBoundary.findMany({
         where: { schoolId },
         orderBy: { minScore: "desc" },
-      });
+      })
 
       if (boundaries.length > 0) {
-        gradeBoundaryCache.set(cacheKey, boundaries);
+        gradeBoundaryCache.set(cacheKey, boundaries)
       }
     }
 
@@ -161,22 +162,22 @@ export async function exportExamResultsToCSV(
         (b) =>
           result.percentage >= Number(b.minScore) &&
           result.percentage <= Number(b.maxScore)
-      );
+      )
 
       return {
         ...result,
         rank: result.isAbsent ? 0 : index + 1,
         gpa: boundary ? Number(boundary.gpaValue) : null,
-      };
-    });
+      }
+    })
 
     // Generate CSV content
-    const rows = [RESULT_CSV_HEADERS.join(",")];
+    const rows = [RESULT_CSV_HEADERS.join(",")]
 
     for (const result of resultsWithRank) {
       const studentName = `${result.student.givenName} ${
         result.student.middleName || ""
-      } ${result.student.surname}`.trim();
+      } ${result.student.surname}`.trim()
 
       const row = [
         result.student.studentId || "",
@@ -194,66 +195,68 @@ export async function exportExamResultsToCSV(
         result.marksObtained >= exam.passingMarks ? "Pass" : "Fail",
         result.isAbsent ? "Yes" : "No",
         result.remarks ? `"${result.remarks.replace(/"/g, '""')}"` : "",
-      ].join(",");
+      ].join(",")
 
-      rows.push(row);
+      rows.push(row)
     }
 
     // Add analytics section if requested
     if (parsed.includeAnalytics) {
-      rows.push("");
-      rows.push("--- ANALYTICS ---");
-      rows.push("");
+      rows.push("")
+      rows.push("--- ANALYTICS ---")
+      rows.push("")
 
       const passedCount = resultsWithRank.filter(
         (r) => !r.isAbsent && r.marksObtained >= exam.passingMarks
-      ).length;
-      const presentCount = resultsWithRank.filter((r) => !r.isAbsent).length;
+      ).length
+      const presentCount = resultsWithRank.filter((r) => !r.isAbsent).length
       const avgMarks =
         presentCount > 0
           ? resultsWithRank
               .filter((r) => !r.isAbsent)
               .reduce((sum, r) => sum + r.marksObtained, 0) / presentCount
-          : 0;
+          : 0
       const avgPercentage =
         presentCount > 0
           ? resultsWithRank
               .filter((r) => !r.isAbsent)
               .reduce((sum, r) => sum + r.percentage, 0) / presentCount
-          : 0;
+          : 0
 
-      rows.push(`Total Students,${exam.examResults.length}`);
-      rows.push(`Present Students,${presentCount}`);
-      rows.push(`Absent Students,${exam.examResults.length - presentCount}`);
-      rows.push(`Passed Students,${passedCount}`);
-      rows.push(`Failed Students,${presentCount - passedCount}`);
-      rows.push(`Pass Percentage,${((passedCount / presentCount) * 100).toFixed(2)}%`);
-      rows.push(`Average Marks,${avgMarks.toFixed(2)}/${exam.totalMarks}`);
-      rows.push(`Average Percentage,${avgPercentage.toFixed(2)}%`);
+      rows.push(`Total Students,${exam.examResults.length}`)
+      rows.push(`Present Students,${presentCount}`)
+      rows.push(`Absent Students,${exam.examResults.length - presentCount}`)
+      rows.push(`Passed Students,${passedCount}`)
+      rows.push(`Failed Students,${presentCount - passedCount}`)
+      rows.push(
+        `Pass Percentage,${((passedCount / presentCount) * 100).toFixed(2)}%`
+      )
+      rows.push(`Average Marks,${avgMarks.toFixed(2)}/${exam.totalMarks}`)
+      rows.push(`Average Percentage,${avgPercentage.toFixed(2)}%`)
 
       // Grade distribution
-      rows.push("");
-      rows.push("Grade Distribution");
-      const gradeDistribution: Record<string, number> = {};
+      rows.push("")
+      rows.push("Grade Distribution")
+      const gradeDistribution: Record<string, number> = {}
       resultsWithRank.forEach((r) => {
         if (!r.isAbsent && r.grade) {
-          gradeDistribution[r.grade] = (gradeDistribution[r.grade] || 0) + 1;
+          gradeDistribution[r.grade] = (gradeDistribution[r.grade] || 0) + 1
         }
-      });
+      })
 
       Object.entries(gradeDistribution)
         .sort(([a], [b]) => a.localeCompare(b))
         .forEach(([grade, count]) => {
-          rows.push(`${grade},${count}`);
-        });
+          rows.push(`${grade},${count}`)
+        })
     }
 
-    const csv = rows.join("\n");
-    const timestamp = new Date().toISOString().split("T")[0];
+    const csv = rows.join("\n")
+    const timestamp = new Date().toISOString().split("T")[0]
     const filename = `exam_results_${exam.title.replace(
       /[^a-z0-9]/gi,
       "_"
-    )}_${timestamp}.csv`;
+    )}_${timestamp}.csv`
 
     return {
       success: true,
@@ -268,21 +271,21 @@ export async function exportExamResultsToCSV(
           examDate: exam.examDate,
         },
       },
-    };
+    }
   } catch (error) {
-    console.error("Error exporting exam results:", error);
+    console.error("Error exporting exam results:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: "Invalid export parameters",
-      };
+      }
     }
 
     return {
       success: false,
       error: "Failed to export exam results",
-    };
+    }
   }
 }
 
@@ -293,12 +296,12 @@ export async function importExamResultsFromCSV(
   input: z.infer<typeof importResultsSchema>
 ): Promise<{ success: boolean; data?: ImportResult; error?: string }> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
-    const parsed = importResultsSchema.parse(input);
+    const parsed = importResultsSchema.parse(input)
 
     // Verify exam exists and belongs to school
     const exam = await db.exam.findFirst({
@@ -306,31 +309,31 @@ export async function importExamResultsFromCSV(
         id: parsed.examId,
         schoolId,
       },
-    });
+    })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" };
+      return { success: false, error: "Exam not found" }
     }
 
     // Parse CSV content
-    const lines = parsed.csvContent.split("\n").map((line) => line.trim());
-    const headers = lines[0].split(",").map((h) => h.trim());
+    const lines = parsed.csvContent.split("\n").map((line) => line.trim())
+    const headers = lines[0].split(",").map((h) => h.trim())
 
     // Validate headers
-    const requiredHeaders = ["Student ID", "Marks Obtained", "Absent"];
-    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h));
+    const requiredHeaders = ["Student ID", "Marks Obtained", "Absent"]
+    const missingHeaders = requiredHeaders.filter((h) => !headers.includes(h))
 
     if (missingHeaders.length > 0) {
       return {
         success: false,
         error: `Missing required headers: ${missingHeaders.join(", ")}`,
-      };
+      }
     }
 
-    const studentIdIndex = headers.indexOf("Student ID");
-    const marksIndex = headers.indexOf("Marks Obtained");
-    const absentIndex = headers.indexOf("Absent");
-    const remarksIndex = headers.indexOf("Remarks");
+    const studentIdIndex = headers.indexOf("Student ID")
+    const marksIndex = headers.indexOf("Marks Obtained")
+    const absentIndex = headers.indexOf("Absent")
+    const remarksIndex = headers.indexOf("Remarks")
 
     const importResults: ImportResult = {
       totalRows: lines.length - 1, // Exclude header
@@ -338,40 +341,42 @@ export async function importExamResultsFromCSV(
       errorCount: 0,
       updatedCount: 0,
       errors: [],
-    };
+    }
 
     // Process each row
     for (let i = 1; i < lines.length; i++) {
-      if (!lines[i]) continue; // Skip empty lines
+      if (!lines[i]) continue // Skip empty lines
 
-      const values = parseCSVLine(lines[i]);
-      const studentId = values[studentIdIndex]?.trim();
-      const marksStr = values[marksIndex]?.trim();
-      const absentStr = values[absentIndex]?.trim();
-      const remarks = values[remarksIndex]?.trim();
+      const values = parseCSVLine(lines[i])
+      const studentId = values[studentIdIndex]?.trim()
+      const marksStr = values[marksIndex]?.trim()
+      const absentStr = values[absentIndex]?.trim()
+      const remarks = values[remarksIndex]?.trim()
 
       // Validate row data
-      const rowErrors: string[] = [];
+      const rowErrors: string[] = []
 
       if (!studentId) {
-        rowErrors.push("Student ID is required");
+        rowErrors.push("Student ID is required")
       }
 
-      const marks = parseInt(marksStr);
+      const marks = parseInt(marksStr)
       if (isNaN(marks) || marks < 0 || marks > exam.totalMarks) {
-        rowErrors.push(`Invalid marks: must be between 0 and ${exam.totalMarks}`);
+        rowErrors.push(
+          `Invalid marks: must be between 0 and ${exam.totalMarks}`
+        )
       }
 
-      const isAbsent = ["yes", "true", "1"].includes(absentStr.toLowerCase());
+      const isAbsent = ["yes", "true", "1"].includes(absentStr.toLowerCase())
 
       if (rowErrors.length > 0) {
         importResults.errors.push({
           row: i + 1,
           studentId,
           errors: rowErrors,
-        });
-        importResults.errorCount++;
-        continue;
+        })
+        importResults.errorCount++
+        continue
       }
 
       // Find student
@@ -380,22 +385,22 @@ export async function importExamResultsFromCSV(
           schoolId,
           studentId,
         },
-      });
+      })
 
       if (!student) {
         importResults.errors.push({
           row: i + 1,
           studentId,
           errors: ["Student not found"],
-        });
-        importResults.errorCount++;
-        continue;
+        })
+        importResults.errorCount++
+        continue
       }
 
       // Validate only mode
       if (parsed.validateOnly) {
-        importResults.successCount++;
-        continue;
+        importResults.successCount++
+        continue
       }
 
       // Check if result already exists
@@ -406,7 +411,7 @@ export async function importExamResultsFromCSV(
             studentId: student.id,
           },
         },
-      });
+      })
 
       try {
         if (existingResult) {
@@ -423,16 +428,18 @@ export async function importExamResultsFromCSV(
                 isAbsent,
                 remarks,
               },
-            });
-            importResults.updatedCount = (importResults.updatedCount || 0) + 1;
+            })
+            importResults.updatedCount = (importResults.updatedCount || 0) + 1
           } else {
             importResults.errors.push({
               row: i + 1,
               studentId,
-              errors: ["Result already exists. Set updateExisting=true to update"],
-            });
-            importResults.errorCount++;
-            continue;
+              errors: [
+                "Result already exists. Set updateExisting=true to update",
+              ],
+            })
+            importResults.errorCount++
+            continue
           }
         } else {
           // Create new result
@@ -448,55 +455,57 @@ export async function importExamResultsFromCSV(
               isAbsent,
               remarks,
             },
-          });
-          importResults.successCount++;
+          })
+          importResults.successCount++
         }
       } catch (error) {
         importResults.errors.push({
           row: i + 1,
           studentId,
           errors: [`Database error: ${error}`],
-        });
-        importResults.errorCount++;
+        })
+        importResults.errorCount++
       }
     }
 
     // Revalidate the results page
     if (!parsed.validateOnly && importResults.successCount > 0) {
-      revalidatePath(`/exams/${exam.id}/results`);
+      revalidatePath(`/exams/${exam.id}/results`)
     }
 
     return {
       success: true,
       data: importResults,
-    };
+    }
   } catch (error) {
-    console.error("Error importing exam results:", error);
+    console.error("Error importing exam results:", error)
 
     if (error instanceof z.ZodError) {
       return {
         success: false,
         error: "Invalid import parameters",
-      };
+      }
     }
 
     return {
       success: false,
       error: "Failed to import exam results",
-    };
+    }
   }
 }
 
 /**
  * Generate CSV template for result import
  */
-export async function generateResultImportTemplate(
-  examId: string
-): Promise<{ success: boolean; data?: { csv: string; filename: string }; error?: string }> {
+export async function generateResultImportTemplate(examId: string): Promise<{
+  success: boolean
+  data?: { csv: string; filename: string }
+  error?: string
+}> {
   try {
-    const { schoolId } = await getTenantContext();
+    const { schoolId } = await getTenantContext()
     if (!schoolId) {
-      return { success: false, error: "Missing school context" };
+      return { success: false, error: "Missing school context" }
     }
 
     // Get exam details
@@ -517,10 +526,10 @@ export async function generateResultImportTemplate(
         },
         subject: true,
       },
-    });
+    })
 
     if (!exam) {
-      return { success: false, error: "Exam not found" };
+      return { success: false, error: "Exam not found" }
     }
 
     // Generate template with student list
@@ -532,19 +541,20 @@ export async function generateResultImportTemplate(
       `# Total Marks: ${exam.totalMarks}`,
       `# Passing Marks: ${exam.passingMarks}`,
       "",
-    ];
+    ]
 
     // Add student rows
     for (const sc of exam.class.studentClasses) {
-      const studentName = `${sc.student.givenName} ${sc.student.middleName || ""} ${
-        sc.student.surname
-      }`.trim();
+      const studentName =
+        `${sc.student.givenName} ${sc.student.middleName || ""} ${
+          sc.student.surname
+        }`.trim()
 
-      rows.push(`${sc.student.studentId || ""},"${studentName}",0,No,`);
+      rows.push(`${sc.student.studentId || ""},"${studentName}",0,No,`)
     }
 
-    const csv = rows.join("\n");
-    const filename = `result_import_template_${exam.title.replace(/[^a-z0-9]/gi, "_")}.csv`;
+    const csv = rows.join("\n")
+    const filename = `result_import_template_${exam.title.replace(/[^a-z0-9]/gi, "_")}.csv`
 
     return {
       success: true,
@@ -552,13 +562,13 @@ export async function generateResultImportTemplate(
         csv,
         filename,
       },
-    };
+    }
   } catch (error) {
-    console.error("Error generating template:", error);
+    console.error("Error generating template:", error)
     return {
       success: false,
       error: "Failed to generate template",
-    };
+    }
   }
 }
 
@@ -566,45 +576,45 @@ export async function generateResultImportTemplate(
  * Helper: Parse CSV line handling quotes
  */
 function parseCSVLine(line: string): string[] {
-  const values: string[] = [];
-  let currentValue = "";
-  let inQuotes = false;
+  const values: string[] = []
+  let currentValue = ""
+  let inQuotes = false
 
   for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const nextChar = line[i + 1];
+    const char = line[i]
+    const nextChar = line[i + 1]
 
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
-        currentValue += '"';
-        i++;
+        currentValue += '"'
+        i++
       } else {
-        inQuotes = !inQuotes;
+        inQuotes = !inQuotes
       }
     } else if (char === "," && !inQuotes) {
-      values.push(currentValue);
-      currentValue = "";
+      values.push(currentValue)
+      currentValue = ""
     } else {
-      currentValue += char;
+      currentValue += char
     }
   }
 
-  values.push(currentValue);
-  return values;
+  values.push(currentValue)
+  return values
 }
 
 /**
  * Helper: Calculate grade based on percentage
  */
 function calculateGrade(marks: number, totalMarks: number): string {
-  const percentage = (marks / totalMarks) * 100;
+  const percentage = (marks / totalMarks) * 100
 
-  if (percentage >= 90) return "A+";
-  if (percentage >= 80) return "A";
-  if (percentage >= 70) return "B+";
-  if (percentage >= 60) return "B";
-  if (percentage >= 50) return "C+";
-  if (percentage >= 40) return "C";
-  if (percentage >= 30) return "D";
-  return "F";
+  if (percentage >= 90) return "A+"
+  if (percentage >= 80) return "A"
+  if (percentage >= 70) return "B+"
+  if (percentage >= 60) return "B"
+  if (percentage >= 50) return "C+"
+  if (percentage >= 40) return "C"
+  if (percentage >= 30) return "D"
+  return "F"
 }

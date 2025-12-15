@@ -12,23 +12,26 @@ Track production readiness and enhancements for the Students feature.
 
 ### Guardian Linking (NOT FUNCTIONAL)
 
-| Property | Value |
-|----------|-------|
+| Property          | Value                                                  |
+| ----------------- | ------------------------------------------------------ |
 | **URLs Affected** | `/students/guardians`, `/students/[id]` (Guardian tab) |
-| **Current State** | UI exists, no server actions implemented |
-| **Impact** | Schools cannot link parents to students |
+| **Current State** | UI exists, no server actions implemented               |
+| **Impact**        | Schools cannot link parents to students                |
 
 **Missing Implementation:**
+
 - `linkGuardian(studentId, guardianId)` server action
 - `unlinkGuardian(studentId, guardianId)` server action
 - `getStudentGuardians(studentId)` query
 - Guardian tab UI wiring to actions
 
 **Files to Create/Modify:**
+
 - `src/components/platform/students/actions.ts` - Add guardian actions
 - `src/components/platform/students/guardian-tab/` - Wire UI to actions
 
 **Prisma Models (Exist ✅):**
+
 ```prisma
 model StudentGuardian {
   studentId   String
@@ -44,6 +47,7 @@ model StudentGuardian {
 ## Current Status
 
 **MVP Features Status**
+
 - [x] CRUD operations with Zod validation
 - [x] CSV bulk import with error reporting
 - [x] Class enrollment management (many-to-many via StudentClass)
@@ -61,6 +65,7 @@ model StudentGuardian {
 ## Admin Capabilities Checklist
 
 ### Core Features
+
 - [x] Add students individually via form
 - [x] Bulk import students via CSV
 - [x] View complete student roster with pagination
@@ -74,6 +79,7 @@ model StudentGuardian {
 - [x] Delete student records with confirmation
 
 ### Role-Based Access
+
 - [x] Admin can create/edit/delete students
 - [x] Teacher can view students in their classes
 - [x] Student can view their own profile
@@ -81,6 +87,7 @@ model StudentGuardian {
 - [x] Staff can view student roster (read-only)
 
 ### Data Integrity
+
 - [x] Multi-tenant scoping (schoolId)
 - [x] Unique constraints prevent duplicates
 - [x] Validation on all inputs (client + server)
@@ -95,6 +102,7 @@ model StudentGuardian {
 ### Critical Issues (Priority 1) 🔴
 
 **Photo Upload**
+
 - [ ] Add profile photo upload functionality
 - [ ] Image storage (S3 or Vercel Blob)
 - [ ] Avatar display in student list and detail page
@@ -102,6 +110,7 @@ model StudentGuardian {
 - [ ] Default avatar placeholder
 
 **Document Attachments**
+
 - [ ] Birth certificate upload
 - [ ] Medical records attachment
 - [ ] Previous school transcripts
@@ -109,6 +118,7 @@ model StudentGuardian {
 - [ ] Document viewer/download
 
 ### Status Tracking Enhancement
+
 - [ ] Status change history log with timestamps
 - [ ] Reason/notes field for status changes
 - [ ] Automated status transitions (e.g., graduated after completing final year)
@@ -116,6 +126,7 @@ model StudentGuardian {
 - [ ] Audit trail for status modifications
 
 ### Bulk Operations
+
 - [ ] Bulk class assignment (select multiple students)
 - [ ] Bulk status update
 - [ ] Bulk delete with confirmation
@@ -123,6 +134,7 @@ model StudentGuardian {
 - [ ] Progress indicators for bulk operations
 
 ### Class Enrollment Enhancement
+
 - [ ] Visual class capacity indicators
 - [ ] Waitlist functionality for full classes
 - [ ] Enrollment history (track class changes over time)
@@ -130,6 +142,7 @@ model StudentGuardian {
 - [ ] Automated class assignment based on grade level
 
 ### Guardian Management (Requires Blocker Fix First)
+
 - [ ] **Basic guardian linking** ← MVP BLOCKER
 - [ ] Multiple guardians per student
 - [ ] Primary/secondary guardian designation
@@ -138,6 +151,7 @@ model StudentGuardian {
 - [ ] Guardian access permissions (what data they can see)
 
 ### Academic History
+
 - [ ] Previous schools attended
 - [ ] Transfer credits tracking
 - [ ] Grade progression history
@@ -145,6 +159,7 @@ model StudentGuardian {
 - [ ] Disciplinary records (if applicable)
 
 ### Health Records
+
 - [ ] Medical conditions tracking
 - [ ] Allergies and dietary restrictions
 - [ ] Vaccination records
@@ -152,6 +167,7 @@ model StudentGuardian {
 - [ ] School nurse access controls
 
 ### Performance Issues
+
 - [ ] Add indexes for search fields (givenName, surname)
 - [ ] Optimize class relationship queries (avoid N+1)
 - [ ] Cache frequently accessed student data
@@ -159,6 +175,7 @@ model StudentGuardian {
 - [ ] Lazy loading for student detail tabs
 
 ### Accessibility Requirements
+
 - [ ] Screen reader support for student list
 - [ ] Keyboard navigation for forms
 - [ ] ARIA labels for interactive elements
@@ -166,6 +183,7 @@ model StudentGuardian {
 - [ ] High contrast mode support
 
 ### UX Polish
+
 - [ ] Loading skeletons for table
 - [ ] Empty state with helpful guidance
 - [ ] Error handling with user-friendly messages
@@ -174,6 +192,7 @@ model StudentGuardian {
 - [ ] Mobile-responsive table view
 
 ### Export/Import Enhancement
+
 - [ ] Export template with example data
 - [ ] Import validation preview before commit
 - [ ] Detailed error reporting per row
@@ -183,6 +202,7 @@ model StudentGuardian {
 - [ ] PDF export for reports
 
 ### Search & Filter Enhancement
+
 - [ ] Advanced search (multiple fields simultaneously)
 - [ ] Date range filter (enrollment date)
 - [ ] Age range filter
@@ -192,6 +212,7 @@ model StudentGuardian {
 - [ ] Recently searched queries
 
 ### Integration Enhancements
+
 - [ ] Link to attendance summary per student
 - [ ] Link to grades/results overview
 - [ ] Link to timetable for student's class
@@ -204,6 +225,7 @@ model StudentGuardian {
 ## Database & Schema
 
 ### Current Schema
+
 ```prisma
 model Student {
   id               String            @id @default(cuid())
@@ -233,6 +255,7 @@ model Student {
 ```
 
 ### Schema Enhancements Needed
+
 - [ ] Add `profilePhotoUrl` field (String?)
 - [ ] Add `address` field (String?)
 - [ ] Add `emergencyContact` field (JSON?)
@@ -249,6 +272,7 @@ model Student {
 ## Server Actions
 
 ### Current Actions (Implemented ✅)
+
 - [x] `createStudent(data: FormData)` - Create new student
 - [x] `updateStudent(id: string, data: FormData)` - Update existing student
 - [x] `deleteStudent(id: string)` - Delete student
@@ -256,6 +280,7 @@ model Student {
 - [x] `getStudents(params)` - Fetch student list with filters/pagination
 
 ### Actions to Implement
+
 - [ ] `bulkAssignClass(studentIds: string[], classId: string)` - Bulk class assignment
 - [ ] `bulkUpdateStatus(studentIds: string[], status: StudentStatus)` - Bulk status update
 - [ ] `uploadStudentPhoto(studentId: string, file: File)` - Photo upload
@@ -265,6 +290,7 @@ model Student {
 - [ ] `promoteStudents(classId: string, targetYearLevel: string)` - Bulk grade promotion
 
 ### Action Enhancements
+
 - [ ] Add typed return values for all actions
 - [ ] Add request ID logging for traceability
 - [ ] Add proper error handling with user-friendly messages
@@ -276,6 +302,7 @@ model Student {
 ## UI Components
 
 ### Current Components (Implemented ✅)
+
 - [x] `content.tsx` - Server component with data fetching
 - [x] `table.tsx` - Client data table with useDataTable
 - [x] `columns.tsx` - Column definitions with filters
@@ -285,6 +312,7 @@ model Student {
 - [x] `actions.ts` - Server actions
 
 ### Components to Create
+
 - [ ] `student-photo-upload.tsx` - Photo upload component
 - [ ] `student-documents.tsx` - Document management component
 - [ ] `student-history.tsx` - Academic history timeline
@@ -295,6 +323,7 @@ model Student {
 - [ ] `export-dialog.tsx` - Export configuration dialog
 
 ### Component Enhancements
+
 - [ ] Add loading states to table
 - [ ] Add empty state component
 - [ ] Add error boundary for graceful failures
@@ -307,6 +336,7 @@ model Student {
 ## Testing
 
 ### Unit Tests
+
 - [ ] Test Zod validation schemas
 - [ ] Test server actions (create, update, delete)
 - [ ] Test multi-tenant scoping in queries
@@ -314,6 +344,7 @@ model Student {
 - [ ] Test CSV parsing and validation
 
 ### Integration Tests
+
 - [ ] Test student creation flow end-to-end
 - [ ] Test bulk import with errors
 - [ ] Test class enrollment linking
@@ -322,6 +353,7 @@ model Student {
 - [ ] Test export with filters applied
 
 ### E2E Tests (Playwright)
+
 - [ ] Test student list rendering
 - [ ] Test search and filters
 - [ ] Test create student modal flow
@@ -401,6 +433,7 @@ pnpm test:e2e               # Run E2E tests
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -408,6 +441,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -415,18 +449,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod
@@ -437,6 +474,7 @@ For detailed version requirements and architecture patterns, see [Platform Techn
 ---
 
 **Status Legend:**
+
 - ✅ Complete and production-ready
 - 🚧 In progress or needs polish
 - ⏸️ Planned but not started

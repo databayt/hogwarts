@@ -40,6 +40,7 @@ export default async function Page() {
 ```
 
 **Detection Regex**:
+
 ```regex
 ^(?!.*"use client").*window\.|document\.|navigator\.|localStorage\.|sessionStorage\.
 ```
@@ -74,6 +75,7 @@ const columns = useMemo(() => getColumns(dictionary), [dictionary])
 ```
 
 **Detection Regex**:
+
 ```regex
 ^(?!.*"use client").*use[A-Z][a-zA-Z]*\(
 ```
@@ -84,14 +86,14 @@ const columns = useMemo(() => getColumns(dictionary), [dictionary])
 
 ```typescript
 // ❌ SSE CAUSE - Hooks without directive
-import { useState, useEffect } from 'react';
+import { useEffect, useEffect, useState, useState } from "react"
+
 export function Component() {
-  const [state, setState] = useState(false);
+  const [state, setState] = useState(false)
 }
 
 // ✅ FIX - Add directive
-"use client"
-import { useState, useEffect } from 'react';
+;("use client")
 ```
 
 **Detection**: Check first 10 lines for `"use client"` if file contains hooks
@@ -102,14 +104,14 @@ import { useState, useEffect } from 'react';
 
 ```typescript
 // ❌ SSE CAUSE - Stripe error crashes page
-const subscription = await stripe.subscriptions.retrieve(id);
+const subscription = await stripe.subscriptions.retrieve(id)
 
 // ✅ FIX - Wrap in try-catch
 try {
-  const subscription = await stripe.subscriptions.retrieve(id);
+  const subscription = await stripe.subscriptions.retrieve(id)
 } catch (error) {
-  console.error("Stripe error:", error);
-  return null;
+  console.error("Stripe error:", error)
+  return null
 }
 ```
 
@@ -121,15 +123,16 @@ try {
 
 ```typescript
 // ❌ SSE CAUSE - user might be null
-const isPaid = user.stripeCurrentPeriodEnd.getTime() > Date.now();
+const isPaid = user.stripeCurrentPeriodEnd.getTime() > Date.now()
 
 // ✅ FIX - Null check
 const isPaid = user?.stripeCurrentPeriodEnd
   ? user.stripeCurrentPeriodEnd.getTime() > Date.now()
-  : false;
+  : false
 ```
 
 **Detection Regex**:
+
 ```regex
 \.\w+\.\w+\(\)  // Deep method calls without optional chaining
 ```
@@ -154,12 +157,10 @@ src/app/[lang]/s/[subdomain]/(platform)/admin/billing/
 
 ```typescript
 // ❌ SSE CAUSE - undefined + 86400000 = NaN
-const expiry = user.expiryTime?.getTime() + 86_400_000;
+const expiry = user.expiryTime?.getTime() + 86_400_000
 
 // ✅ FIX - Guard the arithmetic
-const expiry = user.expiryTime
-  ? user.expiryTime.getTime() + 86_400_000
-  : null;
+const expiry = user.expiryTime ? user.expiryTime.getTime() + 86_400_000 : null
 ```
 
 ### Category 8: Deep Dictionary Access (MEDIUM)
@@ -168,10 +169,10 @@ const expiry = user.expiryTime
 
 ```typescript
 // ❌ SSE CAUSE - Throws if any level undefined
-const title = dictionary.school.billing.title;
+const title = dictionary.school.billing.title
 
 // ✅ FIX - Optional chaining with fallback
-const title = dictionary?.school?.billing?.title ?? 'Billing';
+const title = dictionary?.school?.billing?.title ?? "Billing"
 ```
 
 ### Category 9: Async Component Import Errors (MEDIUM)
@@ -180,10 +181,10 @@ const title = dictionary?.school?.billing?.title ?? 'Billing';
 
 ```typescript
 // ❌ SSE CAUSE - Wrong dynamic import
-const Component = await import('./client-component');
+const Component = await import("./client-component")
 
 // ✅ FIX - Use next/dynamic for client components
-const Component = dynamic(() => import('./client-component'), { ssr: false });
+const Component = dynamic(() => import("./client-component"), { ssr: false })
 ```
 
 ### Category 10: Server Action Throws (MEDIUM)
@@ -194,13 +195,13 @@ const Component = dynamic(() => import('./client-component'), { ssr: false });
 // ❌ SSE CAUSE - Throw not caught by caller
 "use server"
 export async function deleteItem(id: string) {
-  if (!id) throw new Error("Missing ID");  // Crashes page
+  if (!id) throw new Error("Missing ID") // Crashes page
 }
 
 // ✅ FIX - Return error result
-"use server"
+;("use server")
 export async function deleteItem(id: string) {
-  if (!id) return { success: false, error: "Missing ID" };
+  if (!id) return { success: false, error: "Missing ID" }
 }
 ```
 
@@ -209,12 +210,13 @@ export async function deleteItem(id: string) {
 **Pattern**: Node.js APIs in Edge runtime
 
 ```typescript
+import fs from "fs"
+
 // ❌ SSE CAUSE - fs not available in Edge
-export const runtime = 'edge';
-import fs from 'fs';
+export const runtime = "edge"
 
 // ✅ FIX - Use edge-compatible alternatives or remove runtime
-export const runtime = 'nodejs';
+export const runtime = "nodejs"
 ```
 
 ### Category 12: Prisma Edge Runtime (MEDIUM)
@@ -223,11 +225,11 @@ export const runtime = 'nodejs';
 
 ```typescript
 // ❌ SSE CAUSE - Prisma needs adapter for Edge
-export const runtime = 'edge';
-const data = await db.user.findMany();
+export const runtime = "edge"
+const data = await db.user.findMany()
 
 // ✅ FIX - Use Node.js runtime or configure Prisma Edge
-export const runtime = 'nodejs';
+export const runtime = "nodejs"
 ```
 
 ### Category 13: Missing Environment Variables (MEDIUM)
@@ -236,12 +238,12 @@ export const runtime = 'nodejs';
 
 ```typescript
 // ❌ SSE CAUSE - Undefined env var
-const apiKey = process.env.STRIPE_SECRET_KEY;
-stripe.setApiKey(apiKey);  // Fails if undefined
+const apiKey = process.env.STRIPE_SECRET_KEY
+stripe.setApiKey(apiKey) // Fails if undefined
 
 // ✅ FIX - Check and throw meaningful error
-const apiKey = process.env.STRIPE_SECRET_KEY;
-if (!apiKey) throw new Error("STRIPE_SECRET_KEY not configured");
+const apiKey = process.env.STRIPE_SECRET_KEY
+if (!apiKey) throw new Error("STRIPE_SECRET_KEY not configured")
 ```
 
 ### Category 14: Redirect After Response (LOW)
@@ -289,6 +291,7 @@ export default async function Page() {
 ### 2. Component Chain Analysis
 
 For each route:
+
 1. Read `page.tsx` (entry point)
 2. Extract all imports
 3. Recursively analyze imported files
@@ -297,6 +300,7 @@ For each route:
 ### 3. Pattern Detection
 
 Run all 15 detection patterns against:
+
 - Route files (page.tsx, layout.tsx, loading.tsx)
 - Imported components
 - Server actions
@@ -305,6 +309,7 @@ Run all 15 detection patterns against:
 ### 4. Auto-Fix Application
 
 Apply automatic fixes where safe:
+
 - Add missing "use client"
 - Add error.tsx boundaries
 - Replace browser APIs with throws
@@ -411,6 +416,7 @@ Detailed report: .claude/reports/sse-scan-2025-12-01.md
 ## Integration
 
 ### Pre-commit Hook
+
 ```json
 {
   "hooks": {
@@ -420,12 +426,14 @@ Detailed report: .claude/reports/sse-scan-2025-12-01.md
 ```
 
 ### CI/CD
+
 ```yaml
 - name: SSE Scan
   run: claude "Run sse-scanner --full --fail-on-critical"
 ```
 
 ### With Other Commands
+
 ```bash
 /diagnose-sse /route   # Uses this skill
 /scan-errors           # Includes SSE patterns

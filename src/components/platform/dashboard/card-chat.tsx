@@ -4,18 +4,9 @@ import * as React from "react"
 import { ArrowUpIcon, CheckIcon, PlusIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import {
   Command,
   CommandEmpty,
@@ -157,7 +148,7 @@ export function CardsChat() {
               ])
               setInput("")
             }}
-            className="relative w-full flex gap-2"
+            className="relative flex w-full gap-2"
           >
             <Input
               id="message"

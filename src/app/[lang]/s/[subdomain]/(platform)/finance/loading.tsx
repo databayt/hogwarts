@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonPageNavWide } from "@/components/ui/skeleton-page-nav"
 import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonPageNavWide } from "@/components/ui/skeleton-page-nav"
 
 export default function FinanceLoading() {
   return (

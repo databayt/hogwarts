@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useSidebar } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar"
 
 interface ProfileHeaderProps {
   role: "student" | "teacher" | "staff" | "parent"
@@ -8,11 +8,11 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
-  const { state, open, openMobile, isMobile } = useSidebar();
-  
+  const { state, open, openMobile, isMobile } = useSidebar()
+
   // Determine if we should use mobile layout
-  const useMobileLayout = isMobile || (open && !isMobile);
-  
+  const useMobileLayout = isMobile || (open && !isMobile)
+
   const getRoleSpecificContent = () => {
     switch (role) {
       case "student":
@@ -30,7 +30,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
             { name: "CS", color: "#39cefd" },
             { name: "Chem", color: "#a259ff" },
             { name: "Bio", color: "#26a641" },
-          ]
+          ],
         }
       case "teacher":
         return {
@@ -40,7 +40,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
             { name: "Math", color: "#659ad3" },
             { name: "Adv", color: "#1572b6" },
             { name: "Calc", color: "#f24e1e" },
-          ]
+          ],
         }
       case "staff":
         return {
@@ -50,7 +50,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
             { name: "Admin", color: "#659ad3" },
             { name: "HR", color: "#1572b6" },
             { name: "Finance", color: "#f24e1e" },
-          ]
+          ],
         }
       case "parent":
         return {
@@ -60,13 +60,13 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
             { name: "Child1", color: "#659ad3" },
             { name: "Child2", color: "#1572b6" },
             { name: "Support", color: "#f24e1e" },
-          ]
+          ],
         }
       default:
         return {
           greeting: "Hi 👋, I'm Unknown",
           subtitle: "Unknown Role",
-          subjects: []
+          subjects: [],
         }
     }
   }
@@ -74,30 +74,30 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
   const roleContent = getRoleSpecificContent()
 
   return (
-    <div className=" rounded-lg py-6">
+    <div className="rounded-lg py-6">
       <div className="mb-6">
         <h2 className="mb-2">{roleContent.greeting}</h2>
         <p className="text-muted-foreground mb-4">{roleContent.subtitle}</p>
 
-        <ul className="space-y-2 muted">
+        <ul className="muted space-y-2">
           <li className="flex items-center">
-            <span className="text-[#39d353] me-2">📖</span>
+            <span className="me-2 text-[#39d353]">📖</span>
             Currently studying Advanced Mathematics and Computer Science.
           </li>
           <li className="flex items-center">
-            <span className="text-[#39d353] me-2">🎯</span>
+            <span className="me-2 text-[#39d353]">🎯</span>
             Preparing for Engineering entrance exams
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffffff] me-2">💡</span>
+            <span className="me-2 text-[#ffffff]">💡</span>
             Ask me about Science projects or coding assignments.
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffa000] me-2">🤝</span>
+            <span className="me-2 text-[#ffa000]">🤝</span>
             Looking to collaborate on school tech projects & study groups
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffa000] me-2">⚡</span>
+            <span className="me-2 text-[#ffa000]">⚡</span>
             Fun fact: I love building apps and participating in science fairs.
           </li>
         </ul>
@@ -109,7 +109,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
           {roleContent.subjects.map((subject, index) => (
             <div
               key={index}
-              className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+              className="flex h-12 w-12 items-center justify-center rounded-lg text-xs font-bold text-white"
               style={{ backgroundColor: subject.color }}
             >
               {subject.name}
@@ -118,38 +118,40 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
         </div>
       </div>
 
-      <div className={`grid gap-6 ${useMobileLayout ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
+      <div
+        className={`grid gap-6 ${useMobileLayout ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"}`}
+      >
         {/* Academic Performance */}
         <div>
           <h5 className="mb-3">Subject Performance</h5>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#26a641] me-2"></div>
+                <div className="me-2 h-3 w-3 rounded-full bg-[#26a641]"></div>
                 <span className="muted">Mathematics 95%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#1f6feb] me-2"></div>
+                <div className="me-2 h-3 w-3 rounded-full bg-[#1f6feb]"></div>
                 <span className="muted">Computer Science 92%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#a259ff] me-2"></div>
+                <div className="me-2 h-3 w-3 rounded-full bg-[#a259ff]"></div>
                 <span className="muted">Physics 88%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#ffa000] me-2"></div>
+                <div className="me-2 h-3 w-3 rounded-full bg-[#ffa000]"></div>
                 <span className="muted">Chemistry 85%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#f24e1e] me-2"></div>
+                <div className="me-2 h-3 w-3 rounded-full bg-[#f24e1e]"></div>
                 <span className="muted">English 82%</span>
               </div>
             </div>
@@ -159,7 +161,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
         {/* Recent Projects */}
         <div>
           <h5 className="mb-3">📚 Recent Projects</h5>
-          <div className="space-y-2 muted">
+          <div className="muted space-y-2">
             <div>
               <a href="#" className="text-[#1f6feb] hover:underline">
                 Solar System Model

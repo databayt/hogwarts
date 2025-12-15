@@ -1,7 +1,6 @@
-import Link from "next/link"
 import Image from "next/image"
-import { Bell, ChevronDown, Plus, Star } from "lucide-react"
-import { GitFork } from "lucide-react"
+import Link from "next/link"
+import { Bell, ChevronDown, GitFork, Plus, Star } from "lucide-react"
 
 export default function GitHubProfile() {
   return (
@@ -11,7 +10,14 @@ export default function GitHubProfile() {
         <div className="mx-auto flex max-w-screen-2xl items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link href="/public">
-              <svg height="32" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="32" className="fill-white">
+              <svg
+                height="32"
+                aria-hidden="true"
+                viewBox="0 0 16 16"
+                version="1.1"
+                width="32"
+                className="fill-white"
+              >
                 <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
               </svg>
             </Link>
@@ -30,27 +36,42 @@ export default function GitHubProfile() {
             <nav className="hidden md:flex">
               <ul className="flex space-x-4 text-sm font-semibold">
                 <li>
-                  <Link href="#" className="text-[#c9d1d9] hover:text-[#f0f6fc]">
+                  <Link
+                    href="#"
+                    className="text-[#c9d1d9] hover:text-[#f0f6fc]"
+                  >
                     Pull requests
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-[#c9d1d9] hover:text-[#f0f6fc]">
+                  <Link
+                    href="#"
+                    className="text-[#c9d1d9] hover:text-[#f0f6fc]"
+                  >
                     Issues
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-[#c9d1d9] hover:text-[#f0f6fc]">
+                  <Link
+                    href="#"
+                    className="text-[#c9d1d9] hover:text-[#f0f6fc]"
+                  >
                     Codespaces
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-[#c9d1d9] hover:text-[#f0f6fc]">
+                  <Link
+                    href="#"
+                    className="text-[#c9d1d9] hover:text-[#f0f6fc]"
+                  >
                     Marketplace
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="text-[#c9d1d9] hover:text-[#f0f6fc]">
+                  <Link
+                    href="#"
+                    className="text-[#c9d1d9] hover:text-[#f0f6fc]"
+                  >
                     Explore
                   </Link>
                 </li>
@@ -67,7 +88,12 @@ export default function GitHubProfile() {
             </button>
             <button className="flex items-center text-[#c9d1d9]">
               <div className="h-5 w-5 overflow-hidden rounded-full border border-[#30363d]">
-                <Image src="/placeholder.svg?height=20&width=20" alt="Profile" width={20} height={20} />
+                <Image
+                  src="/placeholder.svg?height=20&width=20"
+                  alt="Profile"
+                  width={20}
+                  height={20}
+                />
               </div>
               <ChevronDown className="h-3 w-3" />
             </button>
@@ -89,7 +115,7 @@ export default function GitHubProfile() {
                   className="bg-[#6e68c6]"
                 />
               </div>
-              <button className="absolute bottom-2 right-2 rounded-full bg-[#0d1117] p-1 text-[#8b949e]">
+              <button className="absolute right-2 bottom-2 rounded-full bg-[#0d1117] p-1 text-[#8b949e]">
                 <svg
                   aria-hidden="true"
                   height="16"
@@ -104,12 +130,16 @@ export default function GitHubProfile() {
             </div>
 
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-[#f0f6fc]">chirag singla</h1>
+              <h1 className="text-2xl font-bold text-[#f0f6fc]">
+                chirag singla
+              </h1>
               <p className="text-[#8b949e]">chiragsingla177</p>
             </div>
 
             <div>
-              <p className="text-sm">Currently working in KAN LABS, NYC USA as an ML Engineer(Remote)</p>
+              <p className="text-sm">
+                Currently working in KAN LABS, NYC USA as an ML Engineer(Remote)
+              </p>
             </div>
 
             <button className="w-full rounded-md border border-[#30363d] bg-[#21262d] px-3 py-1 text-sm font-semibold text-[#c9d1d9]">
@@ -117,7 +147,10 @@ export default function GitHubProfile() {
             </button>
 
             <div className="flex items-center space-x-2 text-sm">
-              <Link href="#" className="flex items-center text-[#8b949e] hover:text-[#58a6ff]">
+              <Link
+                href="#"
+                className="flex items-center text-[#8b949e] hover:text-[#58a6ff]"
+              >
                 <svg
                   aria-hidden="true"
                   height="16"
@@ -131,7 +164,10 @@ export default function GitHubProfile() {
                 <span className="font-semibold">12</span> followers
               </Link>
               <span>·</span>
-              <Link href="#" className="flex items-center text-[#8b949e] hover:text-[#58a6ff]">
+              <Link
+                href="#"
+                className="flex items-center text-[#8b949e] hover:text-[#58a6ff]"
+              >
                 <span className="font-semibold">3</span> following
               </Link>
             </div>
@@ -147,7 +183,10 @@ export default function GitHubProfile() {
                 <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 16 16">
                   <path d="M7.775 3.275a.75.75 0 0 0 1.06 1.06l1.25-1.25a2 2 0 1 1 2.83 2.83l-2.5 2.5a2 2 0 0 1-2.83 0 .75.75 0 0 0-1.06 1.06 3.5 3.5 0 0 0 4.95 0l2.5-2.5a3.5 3.5 0 0 0-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 1 2.83 0 .75.75 0 0 0 1.06-1.06 3.5 3.5 0 0 0-4.95 0l-2.5 2.5a3.5 3.5 0 0 0 4.95 4.95l1.25-1.25a.75.75 0 0 0-1.06-1.06l-1.25 1.25a2 2 0 0 1-2.83 0z"></path>
                 </svg>
-                <a href="https://neuraltab.co/" className="text-[#58a6ff] hover:underline">
+                <a
+                  href="https://neuraltab.co/"
+                  className="text-[#58a6ff] hover:underline"
+                >
                   https://neuraltab.co/
                 </a>
               </div>
@@ -157,7 +196,13 @@ export default function GitHubProfile() {
               <h2 className="mb-2 font-semibold">Achievements</h2>
               <div className="flex">
                 <div className="h-12 w-12 rounded-full border border-[#30363d] bg-[#161b22] p-2">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       fillRule="evenodd"
                       clipRule="evenodd"
@@ -180,25 +225,61 @@ export default function GitHubProfile() {
                 </div>
               </div>
               <div className="mt-2">
-                <button className="rounded-full bg-[#238636] px-2 py-0.5 text-xs font-medium text-white">Beta</button>
-                <button className="ml-2 text-xs text-[#58a6ff]">Send feedback</button>
+                <button className="rounded-full bg-[#238636] px-2 py-0.5 text-xs font-medium text-white">
+                  Beta
+                </button>
+                <button className="ml-2 text-xs text-[#58a6ff]">
+                  Send feedback
+                </button>
               </div>
             </div>
 
             <div>
               <h2 className="mb-2 font-semibold">Organizations</h2>
               <div className="flex flex-wrap gap-2">
-                <a href="#" className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]">
-                  <Image src="/placeholder.svg?height=32&width=32" alt="Organization" width={32} height={32} />
+                <a
+                  href="#"
+                  className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]"
+                >
+                  <Image
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="Organization"
+                    width={32}
+                    height={32}
+                  />
                 </a>
-                <a href="#" className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]">
-                  <Image src="/placeholder.svg?height=32&width=32" alt="Organization" width={32} height={32} />
+                <a
+                  href="#"
+                  className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]"
+                >
+                  <Image
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="Organization"
+                    width={32}
+                    height={32}
+                  />
                 </a>
-                <a href="#" className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]">
-                  <Image src="/placeholder.svg?height=32&width=32" alt="Organization" width={32} height={32} />
+                <a
+                  href="#"
+                  className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]"
+                >
+                  <Image
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="Organization"
+                    width={32}
+                    height={32}
+                  />
                 </a>
-                <a href="#" className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]">
-                  <Image src="/placeholder.svg?height=32&width=32" alt="Organization" width={32} height={32} />
+                <a
+                  href="#"
+                  className="block h-8 w-8 rounded-md border border-[#30363d] bg-[#161b22]"
+                >
+                  <Image
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="Organization"
+                    width={32}
+                    height={32}
+                  />
                 </a>
               </div>
             </div>
@@ -240,7 +321,9 @@ export default function GitHubProfile() {
                     <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                   </svg>
                   Repositories
-                  <span className="ml-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs">27</span>
+                  <span className="ml-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs">
+                    27
+                  </span>
                 </Link>
                 <Link
                   href="#"
@@ -298,8 +381,9 @@ export default function GitHubProfile() {
               <div className="flex items-start justify-between">
                 <div>
                   <p>
-                    You unlocked new Achievements with private contributions! Show them off by including private
-                    contributions in your Profile.
+                    You unlocked new Achievements with private contributions!
+                    Show them off by including private contributions in your
+                    Profile.
                   </p>
                   <p className="mt-1">
                     In{" "}
@@ -328,7 +412,9 @@ export default function GitHubProfile() {
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-base font-semibold">Pinned</h2>
-                <button className="text-xs text-[#8b949e] hover:text-[#58a6ff]">Customize your pins</button>
+                <button className="text-xs text-[#8b949e] hover:text-[#58a6ff]">
+                  Customize your pins
+                </button>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Pinned Repo 1 */}
@@ -345,7 +431,10 @@ export default function GitHubProfile() {
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
-                      <a href="#" className="font-semibold text-[#58a6ff] hover:underline">
+                      <a
+                        href="#"
+                        className="font-semibold text-[#58a6ff] hover:underline"
+                      >
                         DL-Python
                       </a>
                     </div>
@@ -354,7 +443,9 @@ export default function GitHubProfile() {
                       <span>Public</span>
                     </div>
                   </div>
-                  <p className="mb-2 text-xs text-[#8b949e]">Deep Learning Python Projects</p>
+                  <p className="mb-2 text-xs text-[#8b949e]">
+                    Deep Learning Python Projects
+                  </p>
                   <div className="flex items-center text-xs text-[#8b949e]">
                     <span className="mr-3 flex items-center">
                       <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
@@ -380,7 +471,10 @@ export default function GitHubProfile() {
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
-                      <a href="#" className="font-semibold text-[#58a6ff] hover:underline">
+                      <a
+                        href="#"
+                        className="font-semibold text-[#58a6ff] hover:underline"
+                      >
                         Machine-Learning
                       </a>
                     </div>
@@ -415,7 +509,10 @@ export default function GitHubProfile() {
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
-                      <a href="#" className="font-semibold text-[#58a6ff] hover:underline">
+                      <a
+                        href="#"
+                        className="font-semibold text-[#58a6ff] hover:underline"
+                      >
                         NLP-and-Speech
                       </a>
                     </div>
@@ -424,7 +521,9 @@ export default function GitHubProfile() {
                       <span>Public</span>
                     </div>
                   </div>
-                  <p className="mb-2 text-xs text-[#8b949e]">Code for various NLP and Speech Tasks</p>
+                  <p className="mb-2 text-xs text-[#8b949e]">
+                    Code for various NLP and Speech Tasks
+                  </p>
                   <div className="flex items-center text-xs text-[#8b949e]">
                     <span className="mr-3 flex items-center">
                       <span className="mr-1 h-3 w-3 rounded-full bg-[#3572a5]"></span>
@@ -450,7 +549,10 @@ export default function GitHubProfile() {
                       >
                         <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                       </svg>
-                      <a href="#" className="font-semibold text-[#58a6ff] hover:underline">
+                      <a
+                        href="#"
+                        className="font-semibold text-[#58a6ff] hover:underline"
+                      >
                         determine-algorithms-for-Rep-count
                       </a>
                     </div>
@@ -473,8 +575,12 @@ export default function GitHubProfile() {
             {/* Contribution Activity */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-base font-semibold">29 contributions in the last year</h2>
-                <button className="text-xs text-[#8b949e] hover:text-[#58a6ff]">Contribution settings</button>
+                <h2 className="text-base font-semibold">
+                  29 contributions in the last year
+                </h2>
+                <button className="text-xs text-[#8b949e] hover:text-[#58a6ff]">
+                  Contribution settings
+                </button>
               </div>
 
               {/* Contribution Graph */}
@@ -489,14 +595,21 @@ export default function GitHubProfile() {
                           .fill(0)
                           .map((_, j) => {
                             // Randomly add some green squares to simulate contributions
-                            const intensity = Math.random() > 0.9 ? Math.floor(Math.random() * 4) : 0
+                            const intensity =
+                              Math.random() > 0.9
+                                ? Math.floor(Math.random() * 4)
+                                : 0
                             let bgColor = "#161b22"
                             if (intensity === 1) bgColor = "#0e4429"
                             if (intensity === 2) bgColor = "#006d32"
                             if (intensity === 3) bgColor = "#26a641"
 
                             return (
-                              <div key={j} className="h-3 w-3 rounded-sm" style={{ backgroundColor: bgColor }}></div>
+                              <div
+                                key={j}
+                                className="h-3 w-3 rounded-sm"
+                                style={{ backgroundColor: bgColor }}
+                              ></div>
                             )
                           })}
                       </div>
@@ -535,7 +648,9 @@ export default function GitHubProfile() {
                     </svg>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold">Created 21 commits in 2 repositories</h4>
+                        <h4 className="text-sm font-semibold">
+                          Created 21 commits in 2 repositories
+                        </h4>
                         <button className="text-[#8b949e] hover:text-[#c9d1d9]">
                           <svg
                             aria-hidden="true"
@@ -551,16 +666,26 @@ export default function GitHubProfile() {
                       </div>
                       <div className="mt-1 space-y-2">
                         <div className="flex items-center">
-                          <a href="#" className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline">
+                          <a
+                            href="#"
+                            className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline"
+                          >
                             chiragsingla177/Vector
                           </a>
-                          <span className="rounded-full bg-[#238636] px-2 py-0.5 text-xs text-white">20 commits</span>
+                          <span className="rounded-full bg-[#238636] px-2 py-0.5 text-xs text-white">
+                            20 commits
+                          </span>
                         </div>
                         <div className="flex items-center">
-                          <a href="#" className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline">
+                          <a
+                            href="#"
+                            className="mr-2 text-sm font-semibold text-[#58a6ff] hover:underline"
+                          >
                             chiragsingla177/MorphoU1
                           </a>
-                          <span className="rounded-full bg-[#238636] px-2 py-0.5 text-xs text-white">1 commit</span>
+                          <span className="rounded-full bg-[#238636] px-2 py-0.5 text-xs text-white">
+                            1 commit
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -581,7 +706,9 @@ export default function GitHubProfile() {
                     </svg>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold">Created 1 repository</h4>
+                        <h4 className="text-sm font-semibold">
+                          Created 1 repository
+                        </h4>
                         <div className="text-xs text-[#8b949e]">Mar 13</div>
                       </div>
                       <div className="mt-1 rounded-md border border-[#30363d] p-3">
@@ -597,7 +724,10 @@ export default function GitHubProfile() {
                             >
                               <path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-3.5a.25.25 0 0 1-.25-.25Z"></path>
                             </svg>
-                            <a href="#" className="font-semibold text-[#58a6ff] hover:underline">
+                            <a
+                              href="#"
+                              className="font-semibold text-[#58a6ff] hover:underline"
+                            >
                               chiragsingla177/MorphoU1
                             </a>
                           </div>
@@ -632,7 +762,9 @@ export default function GitHubProfile() {
                     </svg>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold">Opened 2 pull requests in 1 repository</h4>
+                        <h4 className="text-sm font-semibold">
+                          Opened 2 pull requests in 1 repository
+                        </h4>
                         <button className="text-[#8b949e] hover:text-[#c9d1d9]">
                           <svg
                             aria-hidden="true"
@@ -649,7 +781,10 @@ export default function GitHubProfile() {
                       <div className="mt-1 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <a href="#" className="text-sm font-semibold text-[#58a6ff] hover:underline">
+                            <a
+                              href="#"
+                              className="text-sm font-semibold text-[#58a6ff] hover:underline"
+                            >
                               chiragsingla177/Vector
                             </a>
                           </div>
@@ -663,7 +798,10 @@ export default function GitHubProfile() {
                               </div>
                             </div>
                             <div>
-                              <a href="#" className="text-sm font-semibold text-[#58a6ff] hover:underline">
+                              <a
+                                href="#"
+                                className="text-sm font-semibold text-[#58a6ff] hover:underline"
+                              >
                                 Staging
                               </a>
                             </div>
@@ -677,7 +815,10 @@ export default function GitHubProfile() {
                               </div>
                             </div>
                             <div>
-                              <a href="#" className="text-sm font-semibold text-[#58a6ff] hover:underline">
+                              <a
+                                href="#"
+                                className="text-sm font-semibold text-[#58a6ff] hover:underline"
+                              >
                                 Mongo
                               </a>
                             </div>
@@ -704,7 +845,8 @@ export default function GitHubProfile() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-semibold">
-                          Opened their first issue on GitHub in BuilderIO/figma-html
+                          Opened their first issue on GitHub in
+                          BuilderIO/figma-html
                         </h4>
                         <div className="flex items-center">
                           <span className="mr-2 rounded-full bg-[#30363d] px-2 py-0.5 text-xs text-[#8b949e]">
@@ -724,9 +866,12 @@ export default function GitHubProfile() {
                           />
                         </div>
                         <div className="text-center">
-                          <div className="text-sm font-semibold text-[#58a6ff]">First Issue</div>
+                          <div className="text-sm font-semibold text-[#58a6ff]">
+                            First Issue
+                          </div>
                           <p className="mt-1 text-xs text-[#8b949e]">
-                            When importing JSON Files, Layers not structured in Frames
+                            When importing JSON Files, Layers not structured in
+                            Frames
                           </p>
                         </div>
                       </div>

@@ -1,4 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { auth } from "@/auth"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -20,15 +24,17 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
       findFirst: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      invoice: {
-        create: vi.fn(),
-        updateMany: vi.fn(),
-      },
-      payment: {
-        create: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        invoice: {
+          create: vi.fn(),
+          updateMany: vi.fn(),
+        },
+        payment: {
+          create: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -43,10 +49,6 @@ vi.mock("@/auth", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
-import { auth } from "@/auth"
 
 describe("Billing Actions", () => {
   const mockSchoolId = "school-123"
@@ -196,7 +198,9 @@ describe("Billing Actions", () => {
         status: "ACTIVE",
       }
 
-      vi.mocked(db.subscription.create).mockResolvedValue(mockSubscription as any)
+      vi.mocked(db.subscription.create).mockResolvedValue(
+        mockSubscription as any
+      )
 
       await db.subscription.create({
         data: {
@@ -224,7 +228,9 @@ describe("Billing Actions", () => {
         status: "ACTIVE",
       }
 
-      vi.mocked(db.subscription.findFirst).mockResolvedValue(mockSubscription as any)
+      vi.mocked(db.subscription.findFirst).mockResolvedValue(
+        mockSubscription as any
+      )
 
       const subscription = await db.subscription.findFirst({
         where: {

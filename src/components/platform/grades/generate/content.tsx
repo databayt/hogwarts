@@ -1,34 +1,40 @@
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import type { Locale } from "@/components/internationalization/config";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, Sparkles, Plus } from "lucide-react"
-import { BarChart3 } from "lucide-react";
-import Link from "next/link";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
+import Link from "next/link"
+import { BarChart3, BookOpen, FileText, Plus, Sparkles } from "lucide-react"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
 
 interface Props {
-  dictionary: Dictionary;
-  lang: Locale;
+  dictionary: Dictionary
+  lang: Locale
 }
 
 export default async function GenerateContent({ dictionary, lang }: Props) {
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get stats
-  let questionCount = 0;
-  let templateCount = 0;
-  let generatedExamCount = 0;
+  let questionCount = 0
+  let templateCount = 0
+  let generatedExamCount = 0
 
   if (schoolId) {
-    [questionCount, templateCount, generatedExamCount] = await Promise.all([
+    ;[questionCount, templateCount, generatedExamCount] = await Promise.all([
       db.questionBank.count({ where: { schoolId } }),
       db.examTemplate.count({ where: { schoolId } }),
       db.generatedExam.count({ where: { schoolId } }),
-    ]);
+    ])
   }
 
   return (
@@ -43,12 +49,14 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{dictionary.generate.stats.questions}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                {dictionary.generate.stats.questions}
+              </CardTitle>
+              <BookOpen className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{questionCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {dictionary.generate.stats.inQuestionBank}
               </p>
             </CardContent>
@@ -56,12 +64,14 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{dictionary.generate.stats.templates}</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                {dictionary.generate.stats.templates}
+              </CardTitle>
+              <FileText className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{templateCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {dictionary.generate.stats.reusableBlueprints}
               </p>
             </CardContent>
@@ -69,12 +79,14 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{dictionary.generate.stats.generated}</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                {dictionary.generate.stats.generated}
+              </CardTitle>
+              <BarChart3 className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{generatedExamCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {dictionary.generate.stats.examsCreated}
               </p>
             </CardContent>
@@ -94,7 +106,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {dictionary.generate.cards.questionBank.details}
               </p>
               <div className="flex gap-2">
@@ -125,7 +137,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {dictionary.generate.cards.aiGeneration.details}
               </p>
               <Button asChild variant="secondary">
@@ -148,7 +160,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {dictionary.generate.cards.examTemplates.details}
               </p>
               <div className="flex gap-2">
@@ -179,7 +191,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 {dictionary.generate.cards.analytics.details}
               </p>
               <Button asChild variant="outline">
@@ -203,34 +215,40 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
           <CardContent>
             <ol className="space-y-4">
               <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
                   1
                 </div>
                 <div>
-                  <h3 className="font-medium">{dictionary.generate.quickStart.step1.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-medium">
+                    {dictionary.generate.quickStart.step1.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
                     {dictionary.generate.quickStart.step1.description}
                   </p>
                 </div>
               </li>
               <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
                   2
                 </div>
                 <div>
-                  <h3 className="font-medium">{dictionary.generate.quickStart.step2.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-medium">
+                    {dictionary.generate.quickStart.step2.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
                     {dictionary.generate.quickStart.step2.description}
                   </p>
                 </div>
               </li>
               <li className="flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
                   3
                 </div>
                 <div>
-                  <h3 className="font-medium">{dictionary.generate.quickStart.step3.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-medium">
+                    {dictionary.generate.quickStart.step3.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
                     {dictionary.generate.quickStart.step3.description}
                   </p>
                 </div>
@@ -240,5 +258,5 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

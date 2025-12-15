@@ -24,9 +24,9 @@ pnpm db:seed:single academic
 
 All seed data follows a bilingual pattern:
 
-| Language | Usage | Priority |
-|----------|-------|----------|
-| **Arabic (AR)** | Primary display language, RTL | Default |
+| Language         | Usage                               | Priority |
+| ---------------- | ----------------------------------- | -------- |
+| **Arabic (AR)**  | Primary display language, RTL       | Default  |
 | **English (EN)** | Database storage, API compatibility | Fallback |
 
 ### Schema Support
@@ -63,9 +63,10 @@ model Class {
 
 ```typescript
 // In components, select language based on locale
-const displayName = lang === 'ar'
-  ? (item.nameAr || item.name)  // Arabic with English fallback
-  : item.name;                   // English
+const displayName =
+  lang === "ar"
+    ? item.nameAr || item.name // Arabic with English fallback
+    : item.name // English
 ```
 
 ---
@@ -74,29 +75,29 @@ const displayName = lang === 'ar'
 
 Run seeds in order due to dependencies:
 
-| # | Phase | Command | Creates | Depends On |
-|---|-------|---------|---------|------------|
-| 1 | **cleanup** | `pnpm db:seed:single cleanup` | Clears all data | - |
-| 2 | **school** | `pnpm db:seed:single school` | Demo School + branding | - |
-| 3 | **auth** | `pnpm db:seed:single auth` | 4 admin users | school |
-| 4 | **academic** | `pnpm db:seed:single academic` | Year, terms, levels, periods | school |
-| 5 | **departments** | `pnpm db:seed:single departments` | 6 departments, 20 subjects | school |
-| 6 | **classrooms** | `pnpm db:seed:single classrooms` | 17 rooms | school |
-| 7 | **people** | `pnpm db:seed:single people` | 100 teachers, 1000 students, 2000 guardians | school, academic, departments |
-| 8 | **classes** | `pnpm db:seed:single classes` | Class sections + enrollments | people, classrooms, subjects |
-| 9 | **library** | `pnpm db:seed:single library` | Books (AR/EN) | school |
-| 10 | **announcements** | `pnpm db:seed:single announcements` | Announcements | classes |
-| 11 | **events** | `pnpm db:seed:single events` | Calendar events | school |
-| 12 | **fees** | `pnpm db:seed:single fees` | Fee structures | classes, students |
-| 13 | **finance** | `pnpm db:seed:single finance` | Accounts, transactions | users, teachers |
-| 14 | **exams** | `pnpm db:seed:single exams` | Exam schedules | classes, subjects |
-| 15 | **grades** | `pnpm db:seed:single grades` | Student grades | classes, subjects |
-| 16 | **timetable** | `pnpm db:seed:single timetable` | Class schedules | classes, periods |
-| 17 | **stream** | `pnpm db:seed:single stream` | LMS courses | teachers |
-| 18 | **lessons** | `pnpm db:seed:single lessons` | Lesson plans | classes |
-| 19 | **reports** | `pnpm db:seed:single reports` | Student reports | students, subjects |
-| 20 | **attendance** | `pnpm db:seed:single attendance` | Attendance records | classes, students |
-| 21 | **admission** | `pnpm db:seed:single admission` | Applications | admin user |
+| #   | Phase             | Command                             | Creates                                     | Depends On                    |
+| --- | ----------------- | ----------------------------------- | ------------------------------------------- | ----------------------------- |
+| 1   | **cleanup**       | `pnpm db:seed:single cleanup`       | Clears all data                             | -                             |
+| 2   | **school**        | `pnpm db:seed:single school`        | Demo School + branding                      | -                             |
+| 3   | **auth**          | `pnpm db:seed:single auth`          | 4 admin users                               | school                        |
+| 4   | **academic**      | `pnpm db:seed:single academic`      | Year, terms, levels, periods                | school                        |
+| 5   | **departments**   | `pnpm db:seed:single departments`   | 6 departments, 20 subjects                  | school                        |
+| 6   | **classrooms**    | `pnpm db:seed:single classrooms`    | 17 rooms                                    | school                        |
+| 7   | **people**        | `pnpm db:seed:single people`        | 100 teachers, 1000 students, 2000 guardians | school, academic, departments |
+| 8   | **classes**       | `pnpm db:seed:single classes`       | Class sections + enrollments                | people, classrooms, subjects  |
+| 9   | **library**       | `pnpm db:seed:single library`       | Books (AR/EN)                               | school                        |
+| 10  | **announcements** | `pnpm db:seed:single announcements` | Announcements                               | classes                       |
+| 11  | **events**        | `pnpm db:seed:single events`        | Calendar events                             | school                        |
+| 12  | **fees**          | `pnpm db:seed:single fees`          | Fee structures                              | classes, students             |
+| 13  | **finance**       | `pnpm db:seed:single finance`       | Accounts, transactions                      | users, teachers               |
+| 14  | **exams**         | `pnpm db:seed:single exams`         | Exam schedules                              | classes, subjects             |
+| 15  | **grades**        | `pnpm db:seed:single grades`        | Student grades                              | classes, subjects             |
+| 16  | **timetable**     | `pnpm db:seed:single timetable`     | Class schedules                             | classes, periods              |
+| 17  | **stream**        | `pnpm db:seed:single stream`        | LMS courses                                 | teachers                      |
+| 18  | **lessons**       | `pnpm db:seed:single lessons`       | Lesson plans                                | classes                       |
+| 19  | **reports**       | `pnpm db:seed:single reports`       | Student reports                             | students, subjects            |
+| 20  | **attendance**    | `pnpm db:seed:single attendance`    | Attendance records                          | classes, students             |
+| 21  | **admission**     | `pnpm db:seed:single admission`     | Applications                                | admin user                    |
 
 ---
 
@@ -104,23 +105,23 @@ Run seeds in order due to dependencies:
 
 ### School Identity
 
-| Field | English | Arabic |
-|-------|---------|--------|
-| Name | Demo School | مدرسة تجريبية |
-| Domain | demo.databayt.org | - |
-| Motto | Always Forward | إلى الأمام دائماً |
-| Type | Full K-12 School | مدرسة متكاملة (روضة - ثانوي) |
+| Field  | English           | Arabic                       |
+| ------ | ----------------- | ---------------------------- |
+| Name   | Demo School       | مدرسة تجريبية                |
+| Domain | demo.databayt.org | -                            |
+| Motto  | Always Forward    | إلى الأمام دائماً            |
+| Type   | Full K-12 School  | مدرسة متكاملة (روضة - ثانوي) |
 
 ### Location
 
-| Field | English | Arabic |
-|-------|---------|--------|
-| Address | University Street, Khartoum | شارع الجامعة، الخرطوم |
-| City | Khartoum | الخرطوم |
-| State | Khartoum State | ولاية الخرطوم |
-| Country | Sudan | السودان |
-| Timezone | Africa/Khartoum | - |
-| Phone | +249-183-123456 | +٢٤٩-١٨٣-١٢٣٤٥٦ |
+| Field    | English                     | Arabic                |
+| -------- | --------------------------- | --------------------- |
+| Address  | University Street, Khartoum | شارع الجامعة، الخرطوم |
+| City     | Khartoum                    | الخرطوم               |
+| State    | Khartoum State              | ولاية الخرطوم         |
+| Country  | Sudan                       | السودان               |
+| Timezone | Africa/Khartoum             | -                     |
+| Phone    | +249-183-123456             | +٢٤٩-١٨٣-١٢٣٤٥٦       |
 
 ### Configuration
 
@@ -140,21 +141,21 @@ Run seeds in order due to dependencies:
 
 All accounts use password: **1234**
 
-| Role | Email | English | Arabic |
-|------|-------|---------|--------|
-| DEVELOPER | dev@databayt.org | System Developer | مطور النظام |
-| ADMIN | admin@databayt.org | School Admin | مدير المدرسة |
+| Role       | Email                   | English           | Arabic        |
+| ---------- | ----------------------- | ----------------- | ------------- |
+| DEVELOPER  | dev@databayt.org        | System Developer  | مطور النظام   |
+| ADMIN      | admin@databayt.org      | School Admin      | مدير المدرسة  |
 | ACCOUNTANT | accountant@databayt.org | School Accountant | محاسب المدرسة |
-| STAFF | staff@databayt.org | School Staff | موظف المدرسة |
+| STAFF      | staff@databayt.org      | School Staff      | موظف المدرسة  |
 
 ### Role Permissions
 
-| Role | Access | Description (EN) | Description (AR) |
-|------|--------|------------------|------------------|
-| DEVELOPER | All schools | Platform Developer - Full Access | مطور المنصة - صلاحيات كاملة |
-| ADMIN | School-scoped | School Administrator | مدير المدرسة - صلاحيات إدارية |
-| ACCOUNTANT | Finance modules | School Accountant | محاسب المدرسة - صلاحيات مالية |
-| STAFF | Limited | School Staff | موظف المدرسة - صلاحيات محدودة |
+| Role       | Access          | Description (EN)                 | Description (AR)              |
+| ---------- | --------------- | -------------------------------- | ----------------------------- |
+| DEVELOPER  | All schools     | Platform Developer - Full Access | مطور المنصة - صلاحيات كاملة   |
+| ADMIN      | School-scoped   | School Administrator             | مدير المدرسة - صلاحيات إدارية |
+| ACCOUNTANT | Finance modules | School Accountant                | محاسب المدرسة - صلاحيات مالية |
+| STAFF      | Limited         | School Staff                     | موظف المدرسة - صلاحيات محدودة |
 
 ---
 
@@ -162,39 +163,39 @@ All accounts use password: **1234**
 
 ### Year Levels (14 levels, K-12)
 
-| Section | Levels (EN) | Levels (AR) | Students |
-|---------|-------------|-------------|----------|
-| Kindergarten | KG 1, KG 2 | روضة أولى، روضة ثانية | 200 |
-| Primary | Grade 1-6 | الصف الأول - السادس | 460 |
-| Intermediate | Grade 7-9 | الصف السابع - التاسع | 180 |
-| Secondary | Grade 10-12 | الصف العاشر - الثاني عشر | 160 |
+| Section      | Levels (EN) | Levels (AR)              | Students |
+| ------------ | ----------- | ------------------------ | -------- |
+| Kindergarten | KG 1, KG 2  | روضة أولى، روضة ثانية    | 200      |
+| Primary      | Grade 1-6   | الصف الأول - السادس      | 460      |
+| Intermediate | Grade 7-9   | الصف السابع - التاسع     | 180      |
+| Secondary    | Grade 10-12 | الصف العاشر - الثاني عشر | 160      |
 
 **Total: 1000 students** (10x scale for production-realistic demo)
 
 ### Departments (6)
 
-| English | Arabic | Subjects |
-|---------|--------|----------|
-| Languages | اللغات | Arabic, English, French, Reading, Writing |
-| Sciences | العلوم | Mathematics, Science, Physics, Chemistry, Biology |
-| Humanities | العلوم الإنسانية | Social Studies, Geography, History, Civics |
-| Religion | الدين | Islamic Studies, Quran |
-| ICT | تقنية المعلومات | Computer Science |
-| Arts & PE | الفنون والرياضة | Art, Physical Education, Music |
+| English    | Arabic           | Subjects                                          |
+| ---------- | ---------------- | ------------------------------------------------- |
+| Languages  | اللغات           | Arabic, English, French, Reading, Writing         |
+| Sciences   | العلوم           | Mathematics, Science, Physics, Chemistry, Biology |
+| Humanities | العلوم الإنسانية | Social Studies, Geography, History, Civics        |
+| Religion   | الدين            | Islamic Studies, Quran                            |
+| ICT        | تقنية المعلومات  | Computer Science                                  |
+| Arts & PE  | الفنون والرياضة  | Art, Physical Education, Music                    |
 
 ### Periods (Sudanese School Day)
 
-| # | English | Arabic | Time |
-|---|---------|--------|------|
-| 1 | Period 1 | الحصة الأولى | 7:45 - 8:30 |
-| 2 | Period 2 | الحصة الثانية | 8:35 - 9:20 |
-| - | Break | الاستراحة | 9:20 - 9:40 |
-| 3 | Period 3 | الحصة الثالثة | 9:40 - 10:25 |
-| 4 | Period 4 | الحصة الرابعة | 10:30 - 11:15 |
-| 5 | Period 5 | الحصة الخامسة | 11:20 - 12:05 |
-| - | Lunch | الغداء | 12:05 - 12:45 |
-| 6 | Period 6 | الحصة السادسة | 12:45 - 13:30 |
-| 7 | Period 7 | الحصة السابعة | 13:35 - 14:20 |
+| #   | English  | Arabic        | Time          |
+| --- | -------- | ------------- | ------------- |
+| 1   | Period 1 | الحصة الأولى  | 7:45 - 8:30   |
+| 2   | Period 2 | الحصة الثانية | 8:35 - 9:20   |
+| -   | Break    | الاستراحة     | 9:20 - 9:40   |
+| 3   | Period 3 | الحصة الثالثة | 9:40 - 10:25  |
+| 4   | Period 4 | الحصة الرابعة | 10:30 - 11:15 |
+| 5   | Period 5 | الحصة الخامسة | 11:20 - 12:05 |
+| -   | Lunch    | الغداء        | 12:05 - 12:45 |
+| 6   | Period 6 | الحصة السادسة | 12:45 - 13:30 |
+| 7   | Period 7 | الحصة السابعة | 13:35 - 14:20 |
 
 ---
 
@@ -240,37 +241,37 @@ prisma/seeds/
 ```typescript
 // School
 export const DEMO_SCHOOL: {
-  domain: string;
-  nameAr: string;
-  nameEn: string;
+  domain: string
+  nameAr: string
+  nameEn: string
   // ... all school config
 }
 
 // Academic
-export const YEAR_LEVELS: YearLevelData[];    // 14 levels
-export const DEPARTMENTS: DepartmentData[];   // 6 departments
-export const SUBJECTS: SubjectData[];         // 20 subjects
-export const CURRICULUM: Record<string, string[]>;
-export const PERIODS: PeriodData[];           // 9 periods
-export const CLASSROOMS: ClassroomData[];     // 17 rooms
+export const YEAR_LEVELS: YearLevelData[] // 14 levels
+export const DEPARTMENTS: DepartmentData[] // 6 departments
+export const SUBJECTS: SubjectData[] // 20 subjects
+export const CURRICULUM: Record<string, string[]>
+export const PERIODS: PeriodData[] // 9 periods
+export const CLASSROOMS: ClassroomData[] // 17 rooms
 
 // People
-export const TEACHER_DATA: TeacherData[];     // 25 hand-crafted teachers
-export function getAllTeachers();             // 100 teachers (scaled)
-export const MALE_NAMES: { givenAr, givenEn };
-export const FEMALE_NAMES: { givenAr, givenEn };
-export const SURNAMES: { ar, en };
-export const ADMIN_USERS: AdminUserData[];    // 4 admins
+export const TEACHER_DATA: TeacherData[] // 25 hand-crafted teachers
+export function getAllTeachers() // 100 teachers (scaled)
+export const MALE_NAMES: { givenAr; givenEn }
+export const FEMALE_NAMES: { givenAr; givenEn }
+export const SURNAMES: { ar; en }
+export const ADMIN_USERS: AdminUserData[] // 4 admins
 
 // Email System (Personal emails, NOT numbered IDs)
-export const EMAIL_DOMAINS: EmailDomainData[];
-export function generatePersonalEmail(givenName, surname, index);
+export const EMAIL_DOMAINS: EmailDomainData[]
+export function generatePersonalEmail(givenName, surname, index)
 
 // Helpers
-export function getRandomName(gender, index);
-export function findSubjectAr(subjectEn);
-export function findYearLevelAr(levelEn);
-export function getClassName(subject, level, section);
+export function getRandomName(gender, index)
+export function findSubjectAr(subjectEn)
+export function findYearLevelAr(levelEn)
+export function getClassName(subject, level, section)
 ```
 
 ---
@@ -281,14 +282,14 @@ export function getClassName(subject, level, section);
 
 ```typescript
 // prisma/seeds/my-feature.ts
-import type { SeedPrisma } from "./types";
+import type { SeedPrisma } from "./types"
 
 export async function seedMyFeature(
   prisma: SeedPrisma,
-  schoolId: string,
+  schoolId: string
   // ... dependencies
 ) {
-  console.log("🎯 Creating My Feature (Bilingual AR/EN)...");
+  console.log("🎯 Creating My Feature (Bilingual AR/EN)...")
 
   // Create records with bilingual data
   await prisma.myModel.create({
@@ -297,9 +298,9 @@ export async function seedMyFeature(
       nameAr: "الاسم العربي",
       schoolId,
     },
-  });
+  })
 
-  console.log("   ✅ My Feature created");
+  console.log("   ✅ My Feature created")
 }
 ```
 
@@ -308,14 +309,14 @@ export async function seedMyFeature(
 ```typescript
 // prisma/seeds/constants.ts
 export interface MyFeatureData {
-  ar: string;
-  en: string;
+  ar: string
+  en: string
   // ...
 }
 
 export const MY_FEATURE_DATA: MyFeatureData[] = [
-  { ar: "عربي", en: "English", /* ... */ },
-];
+  { ar: "عربي", en: "English" /* ... */ },
+]
 ```
 
 ### 3. Register in Runner
@@ -336,10 +337,10 @@ case "my-feature": {
 
 ```typescript
 // prisma/seeds/index.ts
-import { seedMyFeature } from "./my-feature";
+import { seedMyFeature } from "./my-feature"
 
 // In main()
-await seedMyFeature(prisma, schoolId, /* deps */);
+await seedMyFeature(prisma, schoolId /* deps */)
 ```
 
 ---
@@ -369,11 +370,11 @@ npx prisma db execute --stdin <<< "SELECT domain, name FROM schools"
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| "School not found" | Run `school` phase first |
-| "Duplicate key" | Run `cleanup` first |
-| "Foreign key constraint" | Check dependency order |
+| Issue                     | Solution                   |
+| ------------------------- | -------------------------- |
+| "School not found"        | Run `school` phase first   |
+| "Duplicate key"           | Run `cleanup` first        |
+| "Foreign key constraint"  | Check dependency order     |
 | "Prisma client not found" | Run `pnpm prisma generate` |
 
 ---
@@ -399,13 +400,13 @@ All users are assigned **realistic personal emails** (not numbered IDs):
 
 ### Email Domains
 
-| Domain | Distribution |
-|--------|-------------|
-| gmail.com | 40% |
-| hotmail.com | 25% |
-| outlook.com | 15% |
-| yahoo.com | 15% |
-| sudanet.sd | 5% (local Sudanese) |
+| Domain      | Distribution        |
+| ----------- | ------------------- |
+| gmail.com   | 40%                 |
+| hotmail.com | 25%                 |
+| outlook.com | 15%                 |
+| yahoo.com   | 15%                 |
+| sudanet.sd  | 5% (local Sudanese) |
 
 ### Format
 
@@ -415,14 +416,14 @@ All emails use the format: `firstnamelastname@domain.com`
 
 ## Data Scale
 
-| Entity | Count | Notes |
-|--------|-------|-------|
-| Students | 1000 | ~70 per grade average |
-| Teachers | 100 | 1:10 student-teacher ratio |
-| Guardians | 2000 | 2 per student (father + mother) |
-| Subjects | 20 | Full K-12 curriculum |
-| Classes | 200+ | Multiple sections per subject/grade |
-| Classrooms | 17 | Labs, rooms, special facilities |
+| Entity     | Count | Notes                               |
+| ---------- | ----- | ----------------------------------- |
+| Students   | 1000  | ~70 per grade average               |
+| Teachers   | 100   | 1:10 student-teacher ratio          |
+| Guardians  | 2000  | 2 per student (father + mother)     |
+| Subjects   | 20    | Full K-12 curriculum                |
+| Classes    | 200+  | Multiple sections per subject/grade |
+| Classrooms | 17    | Labs, rooms, special facilities     |
 
 ---
 
@@ -431,6 +432,7 @@ All emails use the format: `firstnamelastname@domain.com`
 The seed system is designed for **development and demo environments**.
 
 For production:
+
 - Never run cleanup on production database
 - Use migrations for schema changes
 - Seed data should be environment-specific

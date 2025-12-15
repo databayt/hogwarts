@@ -23,6 +23,7 @@ Part of the [Exam Block System](../README.md) | [Manage Block README](./README.m
 ### Issue: Multi-Step Form State Lost on Refresh
 
 **Symptoms:**
+
 - User fills Step 1, refreshes page
 - All form data is lost
 - Must start over from beginning
@@ -33,27 +34,27 @@ Part of the [Exam Block System](../README.md) | [Manage Block README](./README.m
 
 ```typescript
 // form.tsx - Add session storage
-import { useEffect } from 'react';
+import { useEffect } from "react"
 
 export function ExamForm() {
   const form = useForm({
-    defaultValues: getInitialValues()
-  });
+    defaultValues: getInitialValues(),
+  })
 
   // Save to session storage on change
   useEffect(() => {
     const subscription = form.watch((values) => {
-      sessionStorage.setItem('exam-form-draft', JSON.stringify(values));
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
+      sessionStorage.setItem("exam-form-draft", JSON.stringify(values))
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
 
   return // ... form JSX
 }
 
 function getInitialValues() {
-  const draft = sessionStorage.getItem('exam-form-draft');
-  return draft ? JSON.parse(draft) : defaultValues;
+  const draft = sessionStorage.getItem("exam-form-draft")
+  return draft ? JSON.parse(draft) : defaultValues
 }
 ```
 
@@ -64,6 +65,7 @@ function getInitialValues() {
 ### Issue: Subject Dropdown Empty After Selecting Class
 
 **Symptoms:**
+
 - User selects a class
 - Subject dropdown remains empty
 - Expected: Subjects filtered by selected class
@@ -71,6 +73,7 @@ function getInitialValues() {
 **Root Cause:** Missing relation or incorrect filtering
 
 **Debugging:**
+
 ```typescript
 // Check class-subject relationship
 const class = await db.class.findUnique({
@@ -94,6 +97,7 @@ WHERE c.id = 'class-id';
 ```
 
 If no subjects found:
+
 1. Subjects must be assigned to classes
 2. Check `Subject` model has `classId` field
 3. Update subject assignment in admin panel
@@ -103,6 +107,7 @@ If no subjects found:
 ### Issue: Validation Error Not Displayed
 
 **Symptoms:**
+
 - Form submission fails silently
 - No error message shown to user
 - Console shows validation error
@@ -143,6 +148,7 @@ export const examSchema = z.object({
 ### Issue: Date Picker Shows Past Dates
 
 **Symptoms:**
+
 - User can select dates in the past
 - Exam created with past date
 - Validation should prevent this
@@ -173,6 +179,7 @@ export const examSchema = z.object({
 ### Issue: Time Conflict Not Detected
 
 **Symptoms:**
+
 - Two exams scheduled for same class at same time
 - No warning shown during creation
 - Causes student confusion
@@ -184,9 +191,9 @@ export const examSchema = z.object({
 ```typescript
 // actions.ts
 export async function createExam(data: ExamFormData) {
-  "use server";
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Check for conflicts
   const conflict = await db.exam.findFirst({
@@ -194,35 +201,35 @@ export async function createExam(data: ExamFormData) {
       schoolId,
       classId: data.classId,
       examDate: data.examDate,
-      status: { not: 'CANCELLED' },
+      status: { not: "CANCELLED" },
       OR: [
         {
           // New exam starts during existing exam
           startTime: { lte: data.startTime },
-          endTime: { gt: data.startTime }
+          endTime: { gt: data.startTime },
         },
         {
           // New exam ends during existing exam
           startTime: { lt: data.endTime },
-          endTime: { gte: data.endTime }
+          endTime: { gte: data.endTime },
         },
         {
           // New exam contains existing exam
           startTime: { gte: data.startTime },
-          endTime: { lte: data.endTime }
-        }
-      ]
+          endTime: { lte: data.endTime },
+        },
+      ],
     },
     include: {
-      subject: { select: { subjectName: true } }
-    }
-  });
+      subject: { select: { subjectName: true } },
+    },
+  })
 
   if (conflict) {
     return {
       success: false,
-      error: `Conflict with ${conflict.subject.subjectName} exam (${conflict.startTime} - ${conflict.endTime})`
-    };
+      error: `Conflict with ${conflict.subject.subjectName} exam (${conflict.startTime} - ${conflict.endTime})`,
+    }
   }
 
   // Create exam...
@@ -236,6 +243,7 @@ export async function createExam(data: ExamFormData) {
 ### Issue: Duration Calculation Shows Negative Value
 
 **Symptoms:**
+
 - User enters start time: "14:00", end time: "11:00"
 - Duration shows -180 minutes
 - Should show validation error
@@ -246,20 +254,22 @@ export async function createExam(data: ExamFormData) {
 
 ```typescript
 // validation.ts
-export const examSchema = z.object({
-  startTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
-  endTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)
-}).refine(
-  (data) => {
-    const start = new Date(`2000-01-01T${data.startTime}`);
-    const end = new Date(`2000-01-01T${data.endTime}`);
-    return end > start;
-  },
-  {
-    message: "End time must be after start time",
-    path: ["endTime"]
-  }
-);
+export const examSchema = z
+  .object({
+    startTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
+    endTime: z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/),
+  })
+  .refine(
+    (data) => {
+      const start = new Date(`2000-01-01T${data.startTime}`)
+      const end = new Date(`2000-01-01T${data.endTime}`)
+      return end > start
+    },
+    {
+      message: "End time must be after start time",
+      path: ["endTime"],
+    }
+  )
 ```
 
 **File Reference:** `validation.ts:1-83`
@@ -269,6 +279,7 @@ export const examSchema = z.object({
 ### Issue: Exam Time Not Showing in Correct Timezone
 
 **Symptoms:**
+
 - User schedules exam for 9:00 AM
 - System shows 2:00 AM in database
 - Different timezone than school location
@@ -278,24 +289,24 @@ export const examSchema = z.object({
 **Solution:** Store times as strings (local time), not UTC
 
 ```typescript
+// Display with school timezone
+import { formatInTimeZone } from "date-fns-tz"
+
 // Store as local time strings
 const exam = await db.exam.create({
   data: {
-    examDate: new Date("2025-03-15"),  // Date only, no time
-    startTime: "09:00",  // Local time string
-    endTime: "11:00",    // Local time string
-    schoolId
-  }
-});
-
-// Display with school timezone
-import { formatInTimeZone } from 'date-fns-tz';
+    examDate: new Date("2025-03-15"), // Date only, no time
+    startTime: "09:00", // Local time string
+    endTime: "11:00", // Local time string
+    schoolId,
+  },
+})
 
 const displayTime = formatInTimeZone(
   exam.examDate,
-  school.timezone || 'UTC',
-  'MMM dd, yyyy'
-);
+  school.timezone || "UTC",
+  "MMM dd, yyyy"
+)
 ```
 
 ---
@@ -305,6 +316,7 @@ const displayTime = formatInTimeZone(
 ### Issue: Marks Greater Than Total Marks Accepted
 
 **Symptoms:**
+
 - Teacher enters 120 marks for 100-mark exam
 - System accepts the invalid value
 - Results show >100% percentage
@@ -354,6 +366,7 @@ export const marksEntrySchema = z.object({
 ### Issue: Student Missing from Marks Entry Roster
 
 **Symptoms:**
+
 - Class has 30 students
 - Marks entry form only shows 28
 - Two students missing from list
@@ -361,40 +374,43 @@ export const marksEntrySchema = z.object({
 **Root Cause:** Students not enrolled in class or query error
 
 **Debugging:**
+
 ```typescript
 // Check class enrollment
 const studentsInClass = await db.studentClass.findMany({
   where: {
     classId: exam.classId,
-    schoolId
+    schoolId,
   },
   include: {
-    student: true
-  }
-});
+    student: true,
+  },
+})
 
-console.log(`Students enrolled: ${studentsInClass.length}`);
+console.log(`Students enrolled: ${studentsInClass.length}`)
 ```
 
 **Solutions:**
 
 1. **Missing enrollment:** Enroll students in class
+
 ```sql
 INSERT INTO student_class (student_id, class_id, school_id)
 VALUES ('student-id', 'class-id', 'school-id');
 ```
 
 2. **Query includes inactive students:**
+
 ```typescript
 const students = await db.studentClass.findMany({
   where: {
     classId: exam.classId,
     schoolId,
     student: {
-      status: 'ACTIVE'  // ✅ Only active students
-    }
-  }
-});
+      status: "ACTIVE", // ✅ Only active students
+    },
+  },
+})
 ```
 
 ---
@@ -402,6 +418,7 @@ const students = await db.studentClass.findMany({
 ### Issue: Grade Not Auto-Calculating
 
 **Symptoms:**
+
 - Marks entered, percentage calculated
 - Letter grade remains empty
 - Expected: Auto-assign based on boundaries
@@ -425,6 +442,7 @@ VALUES
 ```
 
 Then update calculation logic:
+
 ```typescript
 // utils.ts
 export async function calculateGrade(
@@ -435,11 +453,11 @@ export async function calculateGrade(
     where: {
       schoolId,
       minScore: { lte: percentage },
-      maxScore: { gte: percentage }
-    }
-  });
+      maxScore: { gte: percentage },
+    },
+  })
 
-  return boundary?.grade || 'N/A';
+  return boundary?.grade || "N/A"
 }
 ```
 
@@ -450,6 +468,7 @@ export async function calculateGrade(
 ### Issue: Calendar View Loads Slowly
 
 **Symptoms:**
+
 - Calendar takes 5+ seconds to load
 - Browser becomes unresponsive
 - Many exams in date range
@@ -460,20 +479,18 @@ export async function calculateGrade(
 
 ```typescript
 // actions.ts
-export async function getExamsForCalendar(
-  startDate: Date,
-  endDate: Date
-) {
-  "use server";
+export async function getExamsForCalendar(startDate: Date, endDate: Date) {
+  "use server"
 
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Limit date range to 3 months max
-  const maxDays = 90;
-  const daysDiff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+  const maxDays = 90
+  const daysDiff =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
 
   if (daysDiff > maxDays) {
-    throw new Error(`Date range too large. Maximum ${maxDays} days allowed.`);
+    throw new Error(`Date range too large. Maximum ${maxDays} days allowed.`)
   }
 
   return await db.exam.findMany({
@@ -481,8 +498,8 @@ export async function getExamsForCalendar(
       schoolId,
       examDate: {
         gte: startDate,
-        lte: endDate
-      }
+        lte: endDate,
+      },
     },
     select: {
       id: true,
@@ -492,10 +509,10 @@ export async function getExamsForCalendar(
       endTime: true,
       examType: true,
       status: true,
-      class: { select: { name: true } }
+      class: { select: { name: true } },
     },
-    orderBy: { examDate: 'asc' }
-  });
+    orderBy: { examDate: "asc" },
+  })
 }
 ```
 
@@ -506,6 +523,7 @@ export async function getExamsForCalendar(
 ### Issue: Drag-and-Drop Rescheduling Not Working
 
 **Symptoms:**
+
 - User drags exam to new date
 - Exam snaps back to original date
 - No error shown
@@ -515,6 +533,7 @@ export async function getExamsForCalendar(
 **Workaround:** Use edit form to change exam date
 
 **Implementation (Future):**
+
 ```typescript
 // calendar.tsx
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
@@ -546,6 +565,7 @@ function onDragEnd(event) {
 ### Issue: Exam List Loads Slowly (>3 seconds)
 
 **Symptoms:**
+
 - Table shows loading spinner for 3+ seconds
 - Many exams in database
 - Query returns 500+ records
@@ -588,9 +608,9 @@ const exams = await db.exam.findMany({
   include: {
     class: true,
     subject: true,
-    examResults: true
-  }
-});
+    examResults: true,
+  },
+})
 
 // ✅ Fast - Select only needed fields
 const exams = await db.exam.findMany({
@@ -605,9 +625,9 @@ const exams = await db.exam.findMany({
     status: true,
     class: { select: { name: true } },
     subject: { select: { subjectName: true } },
-    _count: { select: { examResults: true } }
-  }
-});
+    _count: { select: { examResults: true } },
+  },
+})
 ```
 
 **Solution 3: Add Indexes**
@@ -626,6 +646,7 @@ model Exam {
 ### Issue: Analytics Dashboard Times Out
 
 **Symptoms:**
+
 - Analytics page loads forever
 - Eventually times out (504 error)
 - Exam has 200+ students
@@ -637,9 +658,10 @@ model Exam {
 ```typescript
 // ❌ Slow - Calculate in app
 const results = await db.examResult.findMany({
-  where: { examId, schoolId }
-});
-const average = results.reduce((sum, r) => sum + r.percentage, 0) / results.length;
+  where: { examId, schoolId },
+})
+const average =
+  results.reduce((sum, r) => sum + r.percentage, 0) / results.length
 
 // ✅ Fast - Calculate in database
 const stats = await db.examResult.aggregate({
@@ -647,8 +669,8 @@ const stats = await db.examResult.aggregate({
   _avg: { percentage: true },
   _max: { percentage: true },
   _min: { percentage: true },
-  _count: true
-});
+  _count: true,
+})
 ```
 
 **File Reference:** `analytics-dashboard.tsx:1-226`
@@ -702,12 +724,13 @@ const stats = await db.examResult.aggregate({
 ### Planned Features
 
 #### 1. Exam Templates (Priority: High)
+
 ```typescript
 // Save exam as template
 export async function saveAsTemplate(examId: string, name: string) {
   const exam = await db.exam.findUnique({
-    where: { id: examId, schoolId }
-  });
+    where: { id: examId, schoolId },
+  })
 
   return await db.examTemplate.create({
     data: {
@@ -717,50 +740,55 @@ export async function saveAsTemplate(examId: string, name: string) {
       duration: exam.duration,
       totalMarks: exam.totalMarks,
       passingMarks: exam.passingMarks,
-      instructions: exam.instructions
-    }
-  });
+      instructions: exam.instructions,
+    },
+  })
 }
 
 // Create exam from template
-export async function createFromTemplate(templateId: string, data: Partial<ExamFormData>) {
+export async function createFromTemplate(
+  templateId: string,
+  data: Partial<ExamFormData>
+) {
   const template = await db.examTemplate.findUnique({
-    where: { id: templateId, schoolId }
-  });
+    where: { id: templateId, schoolId },
+  })
 
   return await createExam({
     ...template,
-    ...data
-  });
+    ...data,
+  })
 }
 ```
 
 #### 2. Bulk Exam Creation (Priority: High)
+
 ```typescript
 // Create exams for multiple classes at once
 export async function bulkCreateExams(
-  examData: Omit<ExamFormData, 'classId'>,
+  examData: Omit<ExamFormData, "classId">,
   classIds: string[]
 ) {
   const exams = await Promise.all(
-    classIds.map(classId =>
+    classIds.map((classId) =>
       createExam({
         ...examData,
-        classId
+        classId,
       })
     )
-  );
+  )
 
-  return exams;
+  return exams
 }
 ```
 
 #### 3. Exam Clone Feature (Priority: Medium)
+
 ```typescript
 export async function cloneExam(examId: string, newClassId: string) {
   const original = await db.exam.findUnique({
-    where: { id: examId, schoolId }
-  });
+    where: { id: examId, schoolId },
+  })
 
   return await db.exam.create({
     data: {
@@ -768,45 +796,48 @@ export async function cloneExam(examId: string, newClassId: string) {
       id: undefined,
       title: `${original.title} (Copy)`,
       classId: newClassId,
-      status: 'PLANNED'
-    }
-  });
+      status: "PLANNED",
+    },
+  })
 }
 ```
 
 #### 4. Automatic Status Updates (Priority: Medium)
+
 ```typescript
 // Cron job to auto-update exam status
 export async function updateExamStatuses() {
-  const now = new Date();
+  const now = new Date()
 
   // Start exams
   await db.exam.updateMany({
     where: {
-      status: 'PLANNED',
-      examDate: { lte: now }
+      status: "PLANNED",
+      examDate: { lte: now },
     },
-    data: { status: 'IN_PROGRESS' }
-  });
+    data: { status: "IN_PROGRESS" },
+  })
 
   // Complete exams
   await db.exam.updateMany({
     where: {
-      status: 'IN_PROGRESS',
+      status: "IN_PROGRESS",
       // endTime passed
     },
-    data: { status: 'COMPLETED' }
-  });
+    data: { status: "COMPLETED" },
+  })
 }
 ```
 
 #### 5. Advanced Conflict Detection (Priority: Low)
+
 - Check teacher availability
 - Check room availability
 - Check student conflicts (multiple exams same day)
 - Suggest alternative times
 
 #### 6. Partial Marks Support (Priority: Low)
+
 ```prisma
 model ExamResult {
   marksObtained Decimal @db.Decimal(5, 2)  // Change from Int
@@ -814,6 +845,7 @@ model ExamResult {
 ```
 
 #### 7. Offline Mode (Priority: Low)
+
 - Service worker caching
 - IndexedDB for local storage
 - Sync when connection restored

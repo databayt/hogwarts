@@ -1,19 +1,27 @@
 "use client"
 
 import * as React from "react"
-import { useSession } from "next-auth/react"
-import { StudentProfileContent } from "../student/content"
-import { TeacherProfileContent } from "../teacher/content"
-import { ParentProfileContent } from "../parent/content"
-import { StaffProfileContent } from "../staff/content"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { CircleAlert, Lock, UserX } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { CircleAlert, Lock, UserX } from "lucide-react"
+import { useSession } from "next-auth/react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { ParentProfileContent } from "../parent/content"
+import { StaffProfileContent } from "../staff/content"
+import { StudentProfileContent } from "../student/content"
+import { TeacherProfileContent } from "../teacher/content"
 import type { FilteredProfileData } from "./types"
 
 interface ProfileDetailContentProps {
@@ -67,13 +75,13 @@ export function ProfileDetailContent({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               This profile is private. Only authorized users can view detailed
               information.
             </p>
             {profileData.username && (
               <div className="flex items-center gap-2">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
                   {profileData.image ? (
                     <img
                       src={profileData.image}
@@ -86,7 +94,7 @@ export function ProfileDetailContent({
                 </div>
                 <div>
                   <p className="font-medium">{profileData.username}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {profileData.role}
                   </p>
                 </div>
@@ -152,9 +160,7 @@ export function ProfileDetailContent({
           <Card>
             <CardHeader>
               <CardTitle>User Profile</CardTitle>
-              <CardDescription>
-                Basic profile information
-              </CardDescription>
+              <CardDescription>Basic profile information</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -214,7 +220,7 @@ export function ProfileDetailLoading() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-48 w-full" />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="lg:col-span-3">
           <Skeleton className="h-96 w-full" />
         </div>

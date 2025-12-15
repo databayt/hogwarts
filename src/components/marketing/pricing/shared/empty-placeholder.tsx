@@ -1,7 +1,7 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "@/lib/utils";
-import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { cn } from "@/lib/utils"
+import { Icons } from "@/components/marketing/pricing/shared/icons"
 
 interface EmptyPlaceholderProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -13,8 +13,8 @@ export function EmptyPlaceholder({
   return (
     <div
       className={cn(
-        "flex flex-1 items-center justify-center rounded-lg border border-dashed p-8 text-center shadow-sm animate-in fade-in-50",
-        className,
+        "animate-in fade-in-50 flex flex-1 items-center justify-center rounded-lg border border-dashed p-8 text-center shadow-sm",
+        className
       )}
       {...props}
     >
@@ -22,16 +22,17 @@ export function EmptyPlaceholder({
         {children}
       </div>
     </div>
-  );
+  )
 }
 
-interface EmptyPlaceholderIconProps
-  extends Partial<React.SVGProps<SVGSVGElement>> {
-  name: keyof typeof Icons;
+interface EmptyPlaceholderIconProps extends Partial<
+  React.SVGProps<SVGSVGElement>
+> {
+  name: keyof typeof Icons
   ref?:
     | ((instance: SVGSVGElement | null) => void)
     | React.RefObject<SVGSVGElement>
-    | null;
+    | null
 }
 
 EmptyPlaceholder.Icon = function EmptyPlaceholderIcon({
@@ -39,36 +40,29 @@ EmptyPlaceholder.Icon = function EmptyPlaceholderIcon({
   className,
   ...props
 }: EmptyPlaceholderIconProps) {
-  const Icon = Icons[name];
+  const Icon = Icons[name]
 
   if (!Icon) {
-    return null;
+    return null
   }
 
   return (
-    <div className="flex size-20 items-center justify-center rounded-full bg-muted">
+    <div className="bg-muted flex size-20 items-center justify-center rounded-full">
       <Icon className={cn("size-10", className)} {...props} />
     </div>
-  );
-};
+  )
+}
 
-interface EmptyPlaceholderTitleProps
-  extends React.HTMLAttributes<HTMLHeadingElement> {}
+interface EmptyPlaceholderTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
 EmptyPlaceholder.Title = function EmptyPlaceholderTitle({
   className,
   ...props
 }: EmptyPlaceholderTitleProps) {
-  return (
-    <h3
-      className={cn("mt-5 font-heading", className)}
-      {...props}
-    />
-  );
-};
+  return <h3 className={cn("font-heading mt-5", className)} {...props} />
+}
 
-interface EmptyPlaceholderDescriptionProps
-  extends React.HTMLAttributes<HTMLParagraphElement> {}
+interface EmptyPlaceholderDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
 EmptyPlaceholder.Description = function EmptyPlaceholderDescription({
   className,
@@ -77,10 +71,10 @@ EmptyPlaceholder.Description = function EmptyPlaceholderDescription({
   return (
     <p
       className={cn(
-        "mb-5 mt-1.5 text-center leading-6 text-muted-foreground",
-        className,
+        "text-muted-foreground mt-1.5 mb-5 text-center leading-6",
+        className
       )}
       {...props}
     />
-  );
-};
+  )
+}

@@ -1,42 +1,59 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from '@/components/ui/use-toast';
-import { Barcode, Scan, CreditCard, Users, Settings, CircleAlert } from "lucide-react";
-import { BarcodeScanner } from './barcode-scanner';
-import { StudentCards } from './student-cards';
-import { useAttendanceContext } from '../core/attendance-context';
-import { AttendanceStats } from '../core/attendance-stats';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
+import React, { useEffect, useState } from "react"
+import {
+  Barcode,
+  CircleAlert,
+  CreditCard,
+  Scan,
+  Settings,
+  Users,
+} from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "@/components/ui/use-toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import { useAttendanceContext } from "../core/attendance-context"
+import { AttendanceStats } from "../core/attendance-stats"
+import { BarcodeScanner } from "./barcode-scanner"
+import { StudentCards } from "./student-cards"
 
 interface BarcodeAttendanceContentProps {
-  dictionary?: Dictionary;
-  locale?: string;
-  schoolId: string;
+  dictionary?: Dictionary
+  locale?: string
+  schoolId: string
 }
 
 export default function BarcodeAttendanceContent({
   dictionary,
-  locale = 'en',
-  schoolId
+  locale = "en",
+  schoolId,
 }: BarcodeAttendanceContentProps) {
-  const [activeTab, setActiveTab] = useState<'scan' | 'cards' | 'manage'>('scan');
+  const [activeTab, setActiveTab] = useState<"scan" | "cards" | "manage">(
+    "scan"
+  )
   const {
     selectedClass,
     selectedDate,
     attendance,
     stats,
     fetchAttendance,
-    setCurrentMethod
-  } = useAttendanceContext();
+    setCurrentMethod,
+  } = useAttendanceContext()
 
   useEffect(() => {
-    setCurrentMethod('BARCODE');
-  }, [setCurrentMethod]);
+    setCurrentMethod("BARCODE")
+  }, [setCurrentMethod])
 
   useEffect(() => {
     if (selectedClass && selectedDate) {
@@ -44,17 +61,17 @@ export default function BarcodeAttendanceContent({
         schoolId,
         classId: selectedClass,
         dateFrom: selectedDate,
-        dateTo: selectedDate
-      });
+        dateTo: selectedDate,
+      })
     }
-  }, [selectedClass, selectedDate, schoolId, fetchAttendance]);
+  }, [selectedClass, selectedDate, schoolId, fetchAttendance])
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-100 rounded-lg">
+          <div className="rounded-lg bg-orange-100 p-3">
             <Barcode className="h-6 w-6 text-orange-600" />
           </div>
           <div>
@@ -65,7 +82,7 @@ export default function BarcodeAttendanceContent({
           </div>
         </div>
         <Badge variant="outline" className="text-orange-600">
-          <Barcode className="h-3 w-3 mr-1" />
+          <Barcode className="mr-1 h-3 w-3" />
           Barcode Mode
         </Badge>
       </div>
@@ -83,15 +100,15 @@ export default function BarcodeAttendanceContent({
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scan">
-            <Scan className="h-4 w-4 mr-2" />
+            <Scan className="mr-2 h-4 w-4" />
             Scan Cards
           </TabsTrigger>
           <TabsTrigger value="cards">
-            <CreditCard className="h-4 w-4 mr-2" />
+            <CreditCard className="mr-2 h-4 w-4" />
             Card Management
           </TabsTrigger>
           <TabsTrigger value="manage">
-            <Users className="h-4 w-4 mr-2" />
+            <Users className="mr-2 h-4 w-4" />
             Recent Scans
           </TabsTrigger>
         </TabsList>
@@ -103,13 +120,14 @@ export default function BarcodeAttendanceContent({
               <CardHeader>
                 <CardTitle>No Class Selected</CardTitle>
                 <CardDescription>
-                  Please select a class from the dropdown above to start scanning
+                  Please select a class from the dropdown above to start
+                  scanning
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-4">
-                  <CircleAlert className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
+                <div className="py-4 text-center">
+                  <CircleAlert className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
+                  <p className="text-muted-foreground text-sm">
                     Select a class to continue
                   </p>
                 </div>
@@ -122,7 +140,7 @@ export default function BarcodeAttendanceContent({
                 toast({
                   title: "Card Scanned",
                   description: `Attendance marked for student ${data.studentId}`,
-                });
+                })
               }}
               dictionary={dictionary}
               locale={locale}
@@ -149,44 +167,56 @@ export default function BarcodeAttendanceContent({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {attendance.filter(r => r.method === 'BARCODE').length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+              {attendance.filter((r) => r.method === "BARCODE").length === 0 ? (
+                <div className="py-8 text-center">
+                  <Users className="text-muted-foreground mx-auto mb-3 h-12 w-12" />
                   <p className="text-muted-foreground">
                     No barcode scans recorded yet
                   </p>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-muted-foreground mt-2 text-sm">
                     Start scanning student ID cards
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {attendance
-                    .filter(record => record.method === 'BARCODE')
-                    .map(record => (
+                    .filter((record) => record.method === "BARCODE")
+                    .map((record) => (
                       <div
                         key={record.id}
-                        className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary"
+                        className="bg-secondary flex items-center justify-between rounded-lg px-3 py-2"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
                             <span className="text-sm font-medium text-orange-600">
-                              {record.studentName?.charAt(0) || 'S'}
+                              {record.studentName?.charAt(0) || "S"}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">{record.studentName || 'Student'}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Card: {record.deviceId || 'Unknown'}
+                            <p className="font-medium">
+                              {record.studentName || "Student"}
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                              Card: {record.deviceId || "Unknown"}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant={record.status === 'PRESENT' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={
+                              record.status === "PRESENT"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {record.status}
                           </Badge>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString() : ''}
+                          <p className="text-muted-foreground mt-1 text-xs">
+                            {record.checkInTime
+                              ? new Date(
+                                  record.checkInTime
+                                ).toLocaleTimeString()
+                              : ""}
                           </p>
                         </div>
                       </div>
@@ -206,13 +236,13 @@ export default function BarcodeAttendanceContent({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-secondary rounded-lg">
+                <div className="bg-secondary rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
-                  <p className="text-sm text-muted-foreground">Total Scans</p>
+                  <p className="text-muted-foreground text-sm">Total Scans</p>
                 </div>
-                <div className="text-center p-4 bg-secondary rounded-lg">
+                <div className="bg-secondary rounded-lg p-4 text-center">
                   <p className="text-2xl font-bold">0</p>
-                  <p className="text-sm text-muted-foreground">Failed Scans</p>
+                  <p className="text-muted-foreground text-sm">Failed Scans</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -234,5 +264,5 @@ export default function BarcodeAttendanceContent({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

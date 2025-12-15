@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
-import { toast } from "@/components/ui/use-toast"
+
 import socketService from "@/lib/websocket/socket-service"
-import type { NotificationDTO } from "./types"
+import { toast } from "@/components/ui/use-toast"
+
+import { markAllNotificationsAsRead, markNotificationAsRead } from "./actions"
 import { NOTIFICATION_TYPE_CONFIG } from "./config"
-import { markNotificationAsRead, markAllNotificationsAsRead } from "./actions"
+import type { NotificationDTO } from "./types"
 
 interface UseNotificationsOptions {
   autoConnect?: boolean
@@ -93,33 +95,32 @@ export function useNotifications(
     setIsConnected(false)
   }, [session])
 
-  const markAsRead = useCallback(
-    async (notificationId: string) => {
-      try {
-        // Optimistic update - updates UI immediately for better UX
-        setRecentNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n
-          )
+  const markAsRead = useCallback(async (notificationId: string) => {
+    try {
+      // Optimistic update - updates UI immediately for better UX
+      setRecentNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId
+            ? { ...n, read: true, readAt: new Date().toISOString() }
+            : n
         )
-        setUnreadCount((prev) => Math.max(0, prev - 1))
+      )
+      setUnreadCount((prev) => Math.max(0, prev - 1))
 
-        // Send to server via Socket.IO for real-time propagation to other tabs
-        socketService.markNotificationRead(notificationId)
+      // Send to server via Socket.IO for real-time propagation to other tabs
+      socketService.markNotificationRead(notificationId)
 
-        // Also call server action for persistence - reliability fallback if Socket.IO fails
-        const result = await markNotificationAsRead({ notificationId })
-        if (!result.success) {
-          console.error("Failed to mark notification as read:", result.error)
-          // Revert optimistic update if persistence fails
-          setUnreadCount((prev) => prev + 1)
-        }
-      } catch (error) {
-        console.error("Error marking notification as read:", error)
+      // Also call server action for persistence - reliability fallback if Socket.IO fails
+      const result = await markNotificationAsRead({ notificationId })
+      if (!result.success) {
+        console.error("Failed to mark notification as read:", result.error)
+        // Revert optimistic update if persistence fails
+        setUnreadCount((prev) => prev + 1)
       }
-    },
-    []
-  )
+    } catch (error) {
+      console.error("Error marking notification as read:", error)
+    }
+  }, [])
 
   const markAllAsRead = useCallback(async () => {
     if (!session?.user?.id) return
@@ -127,7 +128,11 @@ export function useNotifications(
     try {
       // Optimistic update
       setRecentNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() }))
+        prev.map((n) => ({
+          ...n,
+          read: true,
+          readAt: new Date().toISOString(),
+        }))
       )
       const previousCount = unreadCount
       setUnreadCount(0)
@@ -208,7 +213,8 @@ export function useNotifications(
             title: notification.title,
             description: notification.body,
             // @ts-ignore - variant exists
-            variant: notification.priority === "urgent" ? "destructive" : "default",
+            variant:
+              notification.priority === "urgent" ? "destructive" : "default",
           })
         }
 

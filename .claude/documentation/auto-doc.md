@@ -9,6 +9,7 @@ Comprehensive system for automatically generating and maintaining documentation 
 ## Components
 
 ### 1. API Documentation Generator
+
 Automatically generates API documentation from server actions and route handlers.
 
 ```typescript
@@ -21,6 +22,7 @@ Automatically generates API documentation from server actions and route handlers
 ```
 
 ### 2. Component Documentation
+
 Generates documentation for React components:
 
 ```typescript
@@ -33,63 +35,81 @@ Generates documentation for React components:
 ```
 
 ### 3. README Generator
+
 Maintains feature-specific README files:
 
 ```markdown
 # Feature: Student Management
 
 ## Overview
+
 [Auto-generated from content.tsx header comments]
 
 ## API Endpoints
+
 [Generated from actions.ts]
 
 ## Components
+
 [Component hierarchy and relationships]
 
 ## Database Schema
+
 [Relevant Prisma models]
 
 ## Testing
+
 [Test coverage and important tests]
 ```
 
 ### 4. Changelog Automation
+
 Tracks changes automatically:
 
 ```markdown
 ## [2024-01-15] - abc123
+
 ### Added
+
 - Student search functionality (STORY-005)
+
 ### Changed
+
 - Improved query performance
+
 ### Fixed
+
 - Multi-tenant scoping issue
 ```
 
 ## Triggers
 
 ### On File Change
+
 When specific files change, regenerate docs:
 
 ```javascript
 const docTriggers = {
-  'actions.ts': 'api-docs',
-  'content.tsx': 'component-docs',
-  'validation.ts': 'schema-docs',
-  'schema.prisma': 'database-docs',
-  '*.test.tsx': 'test-docs'
+  "actions.ts": "api-docs",
+  "content.tsx": "component-docs",
+  "validation.ts": "schema-docs",
+  "schema.prisma": "database-docs",
+  "*.test.tsx": "test-docs",
 }
 ```
 
 ### On Commit
+
 Post-commit hook updates:
+
 - Changelog
 - Coverage reports
 - Metrics dashboard
 
 ### On Build
+
 Pre-build documentation validation:
+
 - Check for missing docs
 - Verify examples compile
 - Update API references
@@ -122,36 +142,54 @@ docs/
 ## Template System
 
 ### API Template
-```markdown
+
+````markdown
 # {{endpoint}}
 
 ## Method: {{method}}
 
 ### Description
+
 {{description}}
 
 ### Parameters
+
 {{#parameters}}
+
 - `{{name}}`: {{type}} - {{description}}
-{{/parameters}}
+  {{/parameters}}
 
 ### Returns
+
 ```typescript
-{{returnType}}
+{
+  {
+    returnType
+  }
+}
 ```
+````
 
 ### Example
+
 ```typescript
-{{example}}
+{
+  {
+    example
+  }
+}
 ```
 
 ### Multi-Tenant Requirements
+
 - Requires `schoolId` in context
 - Scoped to current tenant
 
 ### Error Handling
+
 {{errorCases}}
-```
+
+````
 
 ### Component Template
 ```markdown
@@ -163,19 +201,27 @@ docs/
 ## Props
 ```typescript
 {{propsInterface}}
-```
+````
 
 ## Usage
+
 ```tsx
-{{usageExample}}
+{
+  {
+    usageExample
+  }
+}
 ```
 
 ## Dependencies
+
 {{dependencies}}
 
 ## Test Coverage
+
 {{coverage}}%
-```
+
+````
 
 ## Generation Process
 
@@ -189,21 +235,23 @@ async function parseSourceFile(file: string) {
     comments: extractComments(ast)
   }
 }
-```
+````
 
 ### 2. Extract Metadata
+
 ```typescript
 function extractMetadata(parsed) {
   return {
     description: parsed.comments.header,
-    parameters: parsed.functions.map(f => f.params),
-    returns: parsed.functions.map(f => f.returnType),
-    examples: parsed.comments.examples
+    parameters: parsed.functions.map((f) => f.params),
+    returns: parsed.functions.map((f) => f.returnType),
+    examples: parsed.comments.examples,
   }
 }
 ```
 
 ### 3. Generate Documentation
+
 ```typescript
 function generateDocs(metadata, template) {
   return template.render(metadata)
@@ -211,6 +259,7 @@ function generateDocs(metadata, template) {
 ```
 
 ### 4. Write Documentation
+
 ```typescript
 async function writeDocs(content, path) {
   await fs.writeFile(path, content)
@@ -222,12 +271,14 @@ async function writeDocs(content, path) {
 ## Validation
 
 ### Documentation Linting
+
 - Check for broken links
 - Verify code examples compile
 - Ensure consistent formatting
 - Validate API signatures
 
 ### Coverage Requirements
+
 - All public APIs documented
 - All components have usage examples
 - All features have README files
@@ -236,16 +287,19 @@ async function writeDocs(content, path) {
 ## Integration Points
 
 ### VS Code Extension
+
 - IntelliSense for documented APIs
 - Hover documentation
 - Go to documentation
 
 ### CI/CD Pipeline
+
 - Documentation generation on push
 - Documentation deployment to docs site
 - Breaking change detection
 
 ### Search Index
+
 - Auto-index all documentation
 - Full-text search capability
 - Tag-based navigation
@@ -253,6 +307,7 @@ async function writeDocs(content, path) {
 ## Metrics
 
 Track documentation health:
+
 ```json
 {
   "coverage": {
@@ -276,21 +331,25 @@ Track documentation health:
 ## Commands
 
 ### Generate All Docs
+
 ```bash
 /docs generate-all
 ```
 
 ### Update Specific Feature
+
 ```bash
 /docs update students
 ```
 
 ### Validate Documentation
+
 ```bash
 /docs validate
 ```
 
 ### Build Search Index
+
 ```bash
 /docs index-rebuild
 ```
@@ -308,15 +367,19 @@ Track documentation health:
 ## Output Formats
 
 ### Markdown (Default)
+
 For GitHub, documentation sites
 
 ### JSON
+
 For API consumers, search indexes
 
 ### HTML
+
 For static documentation sites
 
 ### PDF
+
 For offline documentation
 
 ## Configuration

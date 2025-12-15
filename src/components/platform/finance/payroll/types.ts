@@ -4,7 +4,7 @@
  * Feature-based sub-block for payroll processing
  */
 
-import type { PayrollRun, SalarySlip } from '@prisma/client'
+import type { PayrollRun, SalarySlip } from "@prisma/client"
 
 // Extended types with relations
 export type PayrollRunWithRelations = PayrollRun & {

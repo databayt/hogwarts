@@ -1,17 +1,19 @@
 "use server"
 
-import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
+
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
+
+import type { YearLevelDetail, YearLevelRow } from "./types"
 import {
+  getYearLevelsSchema,
   yearLevelCreateSchema,
   yearLevelUpdateSchema,
-  getYearLevelsSchema,
   type YearLevelCreateInput,
   type YearLevelUpdateInput,
 } from "./validation"
-import type { YearLevelRow, YearLevelDetail } from "./types"
 
 // ============================================================================
 // Types
@@ -45,7 +47,10 @@ export async function createYearLevel(
     })
 
     if (existingName) {
-      return { success: false, error: `Level "${parsed.levelName}" already exists` }
+      return {
+        success: false,
+        error: `Level "${parsed.levelName}" already exists`,
+      }
     }
 
     // Check for duplicate level order
@@ -55,7 +60,10 @@ export async function createYearLevel(
     })
 
     if (existingOrder) {
-      return { success: false, error: `Level order ${parsed.levelOrder} is already used` }
+      return {
+        success: false,
+        error: `Level order ${parsed.levelOrder} is already used`,
+      }
     }
 
     const row = await db.yearLevel.create({
@@ -81,7 +89,8 @@ export async function createYearLevel(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create year level",
+      error:
+        error instanceof Error ? error.message : "Failed to create year level",
     }
   }
 }
@@ -116,7 +125,10 @@ export async function updateYearLevel(
       })
 
       if (duplicateName) {
-        return { success: false, error: `Level "${rest.levelName}" already exists` }
+        return {
+          success: false,
+          error: `Level "${rest.levelName}" already exists`,
+        }
       }
     }
 
@@ -128,14 +140,19 @@ export async function updateYearLevel(
       })
 
       if (duplicateOrder) {
-        return { success: false, error: `Level order ${rest.levelOrder} is already used` }
+        return {
+          success: false,
+          error: `Level order ${rest.levelOrder} is already used`,
+        }
       }
     }
 
     const data: Record<string, unknown> = {}
     if (typeof rest.levelName !== "undefined") data.levelName = rest.levelName
-    if (typeof rest.levelNameAr !== "undefined") data.levelNameAr = rest.levelNameAr || null
-    if (typeof rest.levelOrder !== "undefined") data.levelOrder = rest.levelOrder
+    if (typeof rest.levelNameAr !== "undefined")
+      data.levelNameAr = rest.levelNameAr || null
+    if (typeof rest.levelOrder !== "undefined")
+      data.levelOrder = rest.levelOrder
 
     await db.yearLevel.updateMany({ where: { id, schoolId }, data })
 
@@ -153,14 +170,15 @@ export async function updateYearLevel(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update year level",
+      error:
+        error instanceof Error ? error.message : "Failed to update year level",
     }
   }
 }
 
-export async function deleteYearLevel(
-  input: { id: string }
-): Promise<ActionResponse<void>> {
+export async function deleteYearLevel(input: {
+  id: string
+}): Promise<ActionResponse<void>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -208,7 +226,8 @@ export async function deleteYearLevel(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to delete year level",
+      error:
+        error instanceof Error ? error.message : "Failed to delete year level",
     }
   }
 }
@@ -217,9 +236,9 @@ export async function deleteYearLevel(
 // Queries
 // ============================================================================
 
-export async function getYearLevel(
-  input: { id: string }
-): Promise<ActionResponse<YearLevelDetail | null>> {
+export async function getYearLevel(input: {
+  id: string
+}): Promise<ActionResponse<YearLevelDetail | null>> {
   try {
     const { schoolId } = await getTenantContext()
     if (!schoolId) {
@@ -245,7 +264,8 @@ export async function getYearLevel(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch year level",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch year level",
     }
   }
 }
@@ -315,14 +335,22 @@ export async function getYearLevels(
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch year levels",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch year levels",
     }
   }
 }
 
 // Get all year levels for dropdown select
 export async function getYearLevelOptions(): Promise<
-  ActionResponse<Array<{ id: string; levelName: string; levelNameAr: string | null; levelOrder: number }>>
+  ActionResponse<
+    Array<{
+      id: string
+      levelName: string
+      levelNameAr: string | null
+      levelOrder: number
+    }>
+  >
 > {
   try {
     const { schoolId } = await getTenantContext()
@@ -347,7 +375,10 @@ export async function getYearLevelOptions(): Promise<
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch year level options",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch year level options",
     }
   }
 }

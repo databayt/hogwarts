@@ -1,12 +1,37 @@
 "use client"
 
-import { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
+import { useMemo, useState } from "react"
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Minus,
+  Search,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -14,21 +39,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import {
-  Clock,
-  Users,
-  Search,
-  AlertTriangle,
-  CheckCircle,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Calendar,
-} from 'lucide-react'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
-import type { Locale } from '@/components/internationalization/config'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/table"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 // ============================================================================
 // Types
@@ -52,7 +65,7 @@ interface TeacherScheduleData {
     totalPeriods: number
     classCount: number
     subjectCount: number
-    workloadStatus: 'UNDERUTILIZED' | 'NORMAL' | 'OVERLOAD'
+    workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
   }
 }
 
@@ -66,7 +79,7 @@ interface WorkloadConfig {
 interface Props {
   teachers: TeacherScheduleData[]
   workloadConfig: WorkloadConfig
-  dictionary?: Dictionary['school']
+  dictionary?: Dictionary["school"]
   lang: Locale
 }
 
@@ -80,20 +93,20 @@ function getInitials(givenName: string, surname: string): string {
 
 function getWorkloadColor(status: string): string {
   switch (status) {
-    case 'UNDERUTILIZED':
-      return 'text-yellow-600 bg-yellow-100'
-    case 'OVERLOAD':
-      return 'text-red-600 bg-red-100'
+    case "UNDERUTILIZED":
+      return "text-yellow-600 bg-yellow-100"
+    case "OVERLOAD":
+      return "text-red-600 bg-red-100"
     default:
-      return 'text-green-600 bg-green-100'
+      return "text-green-600 bg-green-100"
   }
 }
 
 function getWorkloadIcon(status: string) {
   switch (status) {
-    case 'UNDERUTILIZED':
+    case "UNDERUTILIZED":
       return <TrendingDown className="h-4 w-4" />
-    case 'OVERLOAD':
+    case "OVERLOAD":
       return <TrendingUp className="h-4 w-4" />
     default:
       return <Minus className="h-4 w-4" />
@@ -108,50 +121,61 @@ function calculateProgress(periods: number, config: WorkloadConfig): number {
 // Component
 // ============================================================================
 
-export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, lang }: Props) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [workloadFilter, setWorkloadFilter] = useState<string>('all')
+export function TeacherScheduleContent({
+  teachers,
+  workloadConfig,
+  dictionary,
+  lang,
+}: Props) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [workloadFilter, setWorkloadFilter] = useState<string>("all")
 
   const t = {
-    title: lang === 'ar' ? 'جدول المعلمين والأعباء' : 'Teacher Schedules & Workload',
-    subtitle: lang === 'ar' ? 'عرض جداول المعلمين وتوزيع الأعباء التعليمية' : 'View teacher schedules and workload distribution',
-    search: lang === 'ar' ? 'البحث...' : 'Search teachers...',
-    all: lang === 'ar' ? 'الكل' : 'All',
-    active: lang === 'ar' ? 'نشط' : 'Active',
-    onLeave: lang === 'ar' ? 'في إجازة' : 'On Leave',
-    underutilized: lang === 'ar' ? 'أقل من الطاقة' : 'Underutilized',
-    normal: lang === 'ar' ? 'طبيعي' : 'Normal',
-    overload: lang === 'ar' ? 'زيادة في الحمل' : 'Overloaded',
-    teacher: lang === 'ar' ? 'المعلم' : 'Teacher',
-    department: lang === 'ar' ? 'القسم' : 'Department',
-    periods: lang === 'ar' ? 'الحصص' : 'Periods',
-    classes: lang === 'ar' ? 'الفصول' : 'Classes',
-    subjects: lang === 'ar' ? 'المواد' : 'Subjects',
-    status: lang === 'ar' ? 'الحالة' : 'Status',
-    workload: lang === 'ar' ? 'عبء العمل' : 'Workload',
-    summary: lang === 'ar' ? 'ملخص' : 'Summary',
-    totalTeachers: lang === 'ar' ? 'إجمالي المعلمين' : 'Total Teachers',
-    avgPeriods: lang === 'ar' ? 'متوسط الحصص' : 'Avg. Periods',
-    periodsPerWeek: lang === 'ar' ? 'حصة/أسبوع' : 'periods/week',
-    config: lang === 'ar' ? 'إعدادات العبء' : 'Workload Config',
-    min: lang === 'ar' ? 'الحد الأدنى' : 'Minimum',
-    max: lang === 'ar' ? 'الحد الأقصى' : 'Maximum',
-    threshold: lang === 'ar' ? 'حد الزيادة' : 'Overload Threshold',
-    noTeachers: lang === 'ar' ? 'لا يوجد معلمون' : 'No teachers found',
+    title:
+      lang === "ar" ? "جدول المعلمين والأعباء" : "Teacher Schedules & Workload",
+    subtitle:
+      lang === "ar"
+        ? "عرض جداول المعلمين وتوزيع الأعباء التعليمية"
+        : "View teacher schedules and workload distribution",
+    search: lang === "ar" ? "البحث..." : "Search teachers...",
+    all: lang === "ar" ? "الكل" : "All",
+    active: lang === "ar" ? "نشط" : "Active",
+    onLeave: lang === "ar" ? "في إجازة" : "On Leave",
+    underutilized: lang === "ar" ? "أقل من الطاقة" : "Underutilized",
+    normal: lang === "ar" ? "طبيعي" : "Normal",
+    overload: lang === "ar" ? "زيادة في الحمل" : "Overloaded",
+    teacher: lang === "ar" ? "المعلم" : "Teacher",
+    department: lang === "ar" ? "القسم" : "Department",
+    periods: lang === "ar" ? "الحصص" : "Periods",
+    classes: lang === "ar" ? "الفصول" : "Classes",
+    subjects: lang === "ar" ? "المواد" : "Subjects",
+    status: lang === "ar" ? "الحالة" : "Status",
+    workload: lang === "ar" ? "عبء العمل" : "Workload",
+    summary: lang === "ar" ? "ملخص" : "Summary",
+    totalTeachers: lang === "ar" ? "إجمالي المعلمين" : "Total Teachers",
+    avgPeriods: lang === "ar" ? "متوسط الحصص" : "Avg. Periods",
+    periodsPerWeek: lang === "ar" ? "حصة/أسبوع" : "periods/week",
+    config: lang === "ar" ? "إعدادات العبء" : "Workload Config",
+    min: lang === "ar" ? "الحد الأدنى" : "Minimum",
+    max: lang === "ar" ? "الحد الأقصى" : "Maximum",
+    threshold: lang === "ar" ? "حد الزيادة" : "Overload Threshold",
+    noTeachers: lang === "ar" ? "لا يوجد معلمون" : "No teachers found",
   }
 
   // Filter teachers
   const filteredTeachers = useMemo(() => {
-    return teachers.filter(teacher => {
+    return teachers.filter((teacher) => {
       const fullName = `${teacher.givenName} ${teacher.surname}`.toLowerCase()
-      const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+      const matchesSearch =
+        fullName.includes(searchTerm.toLowerCase()) ||
         teacher.emailAddress.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const matchesStatus = statusFilter === 'all' ||
-        teacher.employmentStatus === statusFilter
+      const matchesStatus =
+        statusFilter === "all" || teacher.employmentStatus === statusFilter
 
-      const matchesWorkload = workloadFilter === 'all' ||
+      const matchesWorkload =
+        workloadFilter === "all" ||
         teacher.workload.workloadStatus === workloadFilter
 
       return matchesSearch && matchesStatus && matchesWorkload
@@ -161,14 +185,24 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
   // Calculate summary stats
   const stats = useMemo(() => {
     const totalTeachers = filteredTeachers.length
-    const totalPeriods = filteredTeachers.reduce((sum, t) => sum + t.workload.totalPeriods, 0)
-    const underutilized = filteredTeachers.filter(t => t.workload.workloadStatus === 'UNDERUTILIZED').length
-    const normal = filteredTeachers.filter(t => t.workload.workloadStatus === 'NORMAL').length
-    const overloaded = filteredTeachers.filter(t => t.workload.workloadStatus === 'OVERLOAD').length
+    const totalPeriods = filteredTeachers.reduce(
+      (sum, t) => sum + t.workload.totalPeriods,
+      0
+    )
+    const underutilized = filteredTeachers.filter(
+      (t) => t.workload.workloadStatus === "UNDERUTILIZED"
+    ).length
+    const normal = filteredTeachers.filter(
+      (t) => t.workload.workloadStatus === "NORMAL"
+    ).length
+    const overloaded = filteredTeachers.filter(
+      (t) => t.workload.workloadStatus === "OVERLOAD"
+    ).length
 
     return {
       totalTeachers,
-      avgPeriods: totalTeachers > 0 ? Math.round(totalPeriods / totalTeachers) : 0,
+      avgPeriods:
+        totalTeachers > 0 ? Math.round(totalPeriods / totalTeachers) : 0,
       underutilized,
       normal,
       overloaded,
@@ -184,15 +218,17 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.totalTeachers}</p>
+                <p className="text-muted-foreground text-sm">
+                  {t.totalTeachers}
+                </p>
                 <p className="text-2xl font-bold">{stats.totalTeachers}</p>
               </div>
-              <Users className="h-8 w-8 text-muted-foreground" />
+              <Users className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -201,10 +237,15 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">{t.avgPeriods}</p>
-                <p className="text-2xl font-bold">{stats.avgPeriods} <span className="text-sm font-normal text-muted-foreground">{t.periodsPerWeek}</span></p>
+                <p className="text-muted-foreground text-sm">{t.avgPeriods}</p>
+                <p className="text-2xl font-bold">
+                  {stats.avgPeriods}{" "}
+                  <span className="text-muted-foreground text-sm font-normal">
+                    {t.periodsPerWeek}
+                  </span>
+                </p>
               </div>
-              <Clock className="h-8 w-8 text-muted-foreground" />
+              <Clock className="text-muted-foreground h-8 w-8" />
             </div>
           </CardContent>
         </Card>
@@ -212,18 +253,24 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">{t.workload}</p>
+              <p className="text-muted-foreground text-sm">{t.workload}</p>
               <div className="flex gap-2">
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                  <TrendingDown className="h-3 w-3 me-1" />
+                <Badge
+                  variant="outline"
+                  className="bg-yellow-100 text-yellow-800"
+                >
+                  <TrendingDown className="me-1 h-3 w-3" />
                   {stats.underutilized}
                 </Badge>
-                <Badge variant="outline" className="bg-green-100 text-green-800">
-                  <CheckCircle className="h-3 w-3 me-1" />
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 text-green-800"
+                >
+                  <CheckCircle className="me-1 h-3 w-3" />
                   {stats.normal}
                 </Badge>
                 <Badge variant="outline" className="bg-red-100 text-red-800">
-                  <AlertTriangle className="h-3 w-3 me-1" />
+                  <AlertTriangle className="me-1 h-3 w-3" />
                   {stats.overloaded}
                 </Badge>
               </div>
@@ -234,11 +281,18 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">{t.config}</p>
-              <div className="text-xs space-y-1">
-                <p>{t.min}: <strong>{workloadConfig.minPeriodsPerWeek}</strong></p>
-                <p>{t.max}: <strong>{workloadConfig.maxPeriodsPerWeek}</strong></p>
-                <p>{t.threshold}: <strong>{workloadConfig.overloadThreshold}</strong></p>
+              <p className="text-muted-foreground text-sm">{t.config}</p>
+              <div className="space-y-1 text-xs">
+                <p>
+                  {t.min}: <strong>{workloadConfig.minPeriodsPerWeek}</strong>
+                </p>
+                <p>
+                  {t.max}: <strong>{workloadConfig.maxPeriodsPerWeek}</strong>
+                </p>
+                <p>
+                  {t.threshold}:{" "}
+                  <strong>{workloadConfig.overloadThreshold}</strong>
+                </p>
               </div>
             </div>
           </CardContent>
@@ -248,9 +302,9 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder={t.search}
                 value={searchTerm}
@@ -305,31 +359,43 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={teacher.profilePhotoUrl || undefined} />
+                          <AvatarImage
+                            src={teacher.profilePhotoUrl || undefined}
+                          />
                           <AvatarFallback className="text-xs">
                             {getInitials(teacher.givenName, teacher.surname)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{teacher.givenName} {teacher.surname}</p>
-                          <p className="text-xs text-muted-foreground">{teacher.emailAddress}</p>
+                          <p className="font-medium">
+                            {teacher.givenName} {teacher.surname}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {teacher.emailAddress}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {teacher.teacherDepartments && teacher.teacherDepartments.length > 0 ? (
+                      {teacher.teacherDepartments &&
+                      teacher.teacherDepartments.length > 0 ? (
                         <span className="text-sm">
-                          {lang === 'ar'
-                            ? teacher.teacherDepartments[0].department.departmentNameAr || teacher.teacherDepartments[0].department.departmentName
-                            : teacher.teacherDepartments[0].department.departmentName
-                          }
+                          {lang === "ar"
+                            ? teacher.teacherDepartments[0].department
+                                .departmentNameAr ||
+                              teacher.teacherDepartments[0].department
+                                .departmentName
+                            : teacher.teacherDepartments[0].department
+                                .departmentName}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-medium">{teacher.workload.totalPeriods}</span>
+                      <span className="font-medium">
+                        {teacher.workload.totalPeriods}
+                      </span>
                     </TableCell>
                     <TableCell className="text-center">
                       <span>{teacher.workload.classCount}</span>
@@ -338,38 +404,54 @@ export function TeacherScheduleContent({ teachers, workloadConfig, dictionary, l
                       <span>{teacher.workload.subjectCount}</span>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1 w-32">
+                      <div className="w-32 space-y-1">
                         <Progress
-                          value={calculateProgress(teacher.workload.totalPeriods, workloadConfig)}
+                          value={calculateProgress(
+                            teacher.workload.totalPeriods,
+                            workloadConfig
+                          )}
                           className={cn(
                             "h-2",
-                            teacher.workload.workloadStatus === 'OVERLOAD' && "[&>div]:bg-red-500",
-                            teacher.workload.workloadStatus === 'UNDERUTILIZED' && "[&>div]:bg-yellow-500",
-                            teacher.workload.workloadStatus === 'NORMAL' && "[&>div]:bg-green-500"
+                            teacher.workload.workloadStatus === "OVERLOAD" &&
+                              "[&>div]:bg-red-500",
+                            teacher.workload.workloadStatus ===
+                              "UNDERUTILIZED" && "[&>div]:bg-yellow-500",
+                            teacher.workload.workloadStatus === "NORMAL" &&
+                              "[&>div]:bg-green-500"
                           )}
                         />
-                        <p className="text-xs text-muted-foreground">
-                          {teacher.workload.totalPeriods}/{workloadConfig.maxPeriodsPerWeek}
+                        <p className="text-muted-foreground text-xs">
+                          {teacher.workload.totalPeriods}/
+                          {workloadConfig.maxPeriodsPerWeek}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={cn("gap-1", getWorkloadColor(teacher.workload.workloadStatus))}
+                        className={cn(
+                          "gap-1",
+                          getWorkloadColor(teacher.workload.workloadStatus)
+                        )}
                       >
                         {getWorkloadIcon(teacher.workload.workloadStatus)}
-                        {teacher.workload.workloadStatus === 'UNDERUTILIZED' && t.underutilized}
-                        {teacher.workload.workloadStatus === 'NORMAL' && t.normal}
-                        {teacher.workload.workloadStatus === 'OVERLOAD' && t.overload}
+                        {teacher.workload.workloadStatus === "UNDERUTILIZED" &&
+                          t.underutilized}
+                        {teacher.workload.workloadStatus === "NORMAL" &&
+                          t.normal}
+                        {teacher.workload.workloadStatus === "OVERLOAD" &&
+                          t.overload}
                       </Badge>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <TableCell
+                    colSpan={7}
+                    className="text-muted-foreground py-8 text-center"
+                  >
+                    <Calendar className="mx-auto mb-2 h-12 w-12 opacity-50" />
                     <p>{t.noTeachers}</p>
                   </TableCell>
                 </TableRow>

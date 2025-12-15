@@ -6,19 +6,20 @@ The Classes feature empowers school administrators to organize students into gra
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/classes` | Class List | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/classes/new` | Create Class | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/classes/[id]` | Class Detail | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/classes/[id]/edit` | Edit Class | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/classes/[id]/roster` | Student Roster | ✅ Ready |
+| URL                                                      | Page             | Status         |
+| -------------------------------------------------------- | ---------------- | -------------- |
+| `/[lang]/s/[subdomain]/(platform)/classes`               | Class List       | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/classes/new`           | Create Class     | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]`          | Class Detail     | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/edit`     | Edit Class       | ✅ Ready       |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/roster`   | Student Roster   | ✅ Ready       |
 | `/[lang]/s/[subdomain]/(platform)/classes/[id]/teachers` | Subject Teachers | **🔴 BLOCKED** |
-| `/[lang]/s/[subdomain]/(platform)/classes/[id]/schedule` | Timetable | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/classes/[id]/schedule` | Timetable        | ✅ Ready       |
 
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📚 Create classes (grade sections like Grade 1A, Grade 2B)
 - 👥 Assign students to classes (many-to-many enrollment)
 - 👨‍🏫 Assign teachers to classes **← PARTIAL** (homeroom works, subject teachers incomplete)
@@ -31,6 +32,7 @@ The Classes feature empowers school administrators to organize students into gra
 - 🔄 Batch operations for student enrollment
 
 ### What Teachers Can View
+
 - ✅ View classes they are assigned to teach
 - ✅ See complete student roster for their classes
 - ✅ Access class schedule and timetable
@@ -39,6 +41,7 @@ The Classes feature empowers school administrators to organize students into gra
 - ❌ Cannot modify class structure (admin-only)
 
 ### What Students Can View
+
 - ✅ See their own class assignment
 - ✅ View classmates (optional based on school settings)
 - ✅ Access class timetable
@@ -46,6 +49,7 @@ The Classes feature empowers school administrators to organize students into gra
 - ❌ Cannot view other classes
 
 ### What Parents Can View
+
 - ✅ View their child's class
 - ✅ See class teachers and subjects
 - ✅ Access class schedule
@@ -53,6 +57,7 @@ The Classes feature empowers school administrators to organize students into gra
 - ❌ Cannot view full class roster (privacy)
 
 ### Current Implementation Status
+
 **🔴 BLOCKED - Subject Teacher Assignment Incomplete**
 **Completion:** 85%
 
@@ -60,17 +65,19 @@ The Classes feature empowers school administrators to organize students into gra
 
 ## Critical Blocker: Teacher-Class Assignment
 
-| Property | Value |
-|----------|-------|
-| **URL** | `/classes/[id]/teachers` |
+| Property          | Value                                               |
+| ----------------- | --------------------------------------------------- |
+| **URL**           | `/classes/[id]/teachers`                            |
 | **Current State** | Homeroom teacher works, subject teachers incomplete |
-| **Impact** | Cannot assign specific subject teachers to classes |
+| **Impact**        | Cannot assign specific subject teachers to classes  |
 
 **What Works:**
+
 - Homeroom teacher assignment via `teacherId` field
 - Teacher dropdown in class form
 
 **What's Missing:**
+
 - `assignSubjectTeacher(classId, subjectId, teacherId)` server action
 - `removeSubjectTeacher(classId, subjectId)` server action
 - Teacher availability validation (conflict detection)
@@ -78,12 +85,14 @@ The Classes feature empowers school administrators to organize students into gra
 - Multiple teachers per subject (co-teaching)
 
 **Files to Create/Modify:**
+
 - `src/components/platform/classes/subject-teachers.tsx` - UI component
 - `src/components/platform/classes/actions.ts` - Add subject teacher actions
 
 ---
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Homeroom teacher assignment
 - ✅ Student enrollment (many-to-many via StudentClass)
@@ -95,15 +104,18 @@ The Classes feature empowers school administrators to organize students into gra
 - ✅ Timetable integration
 
 **Blocked:**
+
 - 🔴 **Subject teacher assignment** ← MVP blocker (homeroom only, not subject teachers)
 - 🔴 Teacher availability validation
 
 **In Progress:**
+
 - 🚧 Class performance analytics
 - 🚧 Attendance summary per class
 - 🚧 Grade distribution charts
 
 **Planned:**
+
 - ⏸️ Seating arrangement management
 - ⏸️ Class behavior tracking
 - ⏸️ Parent-teacher communication per class
@@ -114,6 +126,7 @@ The Classes feature empowers school administrators to organize students into gra
 ## Admin Workflows
 
 ### 1. Create a New Class
+
 **Prerequisites:** Subjects, teachers, classrooms, and terms already configured
 
 1. Navigate to `/classes`
@@ -133,9 +146,11 @@ The Classes feature empowers school administrators to organize students into gra
 6. Success toast appears, table refreshes
 
 ### 2. Enroll Students in Class
+
 **Prerequisites:** Students already created, class exists
 
 **Single Student Enrollment:**
+
 1. Navigate to student detail page
 2. Click "Enroll in Class"
 3. Select class from dropdown
@@ -143,6 +158,7 @@ The Classes feature empowers school administrators to organize students into gra
 5. Student appears in class roster
 
 **Bulk Enrollment:**
+
 1. Navigate to class detail page
 2. Click "Enroll Students"
 3. Select multiple students from list (checkboxes)
@@ -152,6 +168,7 @@ The Classes feature empowers school administrators to organize students into gra
 7. Success message shows X students enrolled
 
 **From Students List:**
+
 1. Select multiple students via checkboxes
 2. Click "Bulk Actions" → "Enroll in Class"
 3. Choose target class
@@ -159,7 +176,9 @@ The Classes feature empowers school administrators to organize students into gra
 5. All selected students added to class
 
 ### 3. Assign Teachers to Class
+
 **Homeroom Teacher:**
+
 1. Open class detail or edit form
 2. Navigate to "Teacher Assignment" section
 3. Select homeroom teacher from dropdown
@@ -167,6 +186,7 @@ The Classes feature empowers school administrators to organize students into gra
 5. Teacher becomes primary contact for class
 
 **Subject Teachers:**
+
 1. Open class detail page
 2. Scroll to "Subject Teachers" section
 3. Click "Add Subject Teacher"
@@ -176,18 +196,22 @@ The Classes feature empowers school administrators to organize students into gra
 7. Teacher can now teach that subject to this class
 
 **Multiple Subjects:**
+
 - Repeat for each subject the class studies
 - A class typically has 5-10 different subject teachers
 - System prevents duplicate subject assignments
 
 ### 4. Manage Class Capacity
+
 **Set Capacity:**
+
 1. Edit class
 2. Update "Capacity" field (e.g., 30 students)
 3. Save changes
 4. System enforces limit during enrollment
 
 **Capacity Indicators:**
+
 - Class list shows enrollment count (e.g., 25/30)
 - Visual indicators:
   - Green: < 80% capacity
@@ -196,12 +220,14 @@ The Classes feature empowers school administrators to organize students into gra
 - Enrollment blocked when at capacity
 
 **Increase Capacity:**
+
 1. Edit class
 2. Increase capacity number
 3. Save
 4. Additional students can now enroll
 
 ### 5. View Class Roster
+
 1. Navigate to class detail page
 2. View "Students" tab
 3. See complete list of enrolled students:
@@ -213,7 +239,9 @@ The Classes feature empowers school administrators to organize students into gra
 5. Use for attendance sheets, seating charts, etc.
 
 ### 6. Manage Class Schedule
+
 **View Schedule:**
+
 1. Open class detail page
 2. Click "Timetable" tab
 3. See weekly schedule:
@@ -223,17 +251,21 @@ The Classes feature empowers school administrators to organize students into gra
    - Classroom assignments
 
 **Modify Schedule:**
+
 - Schedule managed via Timetable feature
 - Conflicts detected automatically
 - Changes update across students and teachers
 
 ### 7. Search and Filter Classes
+
 **Quick Search:**
+
 1. Use search box in toolbar
 2. Type class name (e.g., "Grade 1")
 3. Results update as you type
 
 **Advanced Filtering:**
+
 1. Click "Subject" dropdown → Select specific subject
 2. Click "Teacher" dropdown → Filter by homeroom teacher
 3. Click "Term" dropdown → Select academic term
@@ -242,7 +274,9 @@ The Classes feature empowers school administrators to organize students into gra
 6. URL updates with filter state (shareable)
 
 ### 8. Update Class Information
+
 **Edit Class:**
+
 1. Find class in table
 2. Click row actions (three dots)
 3. Select "Edit"
@@ -254,6 +288,7 @@ The Classes feature empowers school administrators to organize students into gra
 7. System validates and updates
 
 **Change Homeroom Teacher:**
+
 1. Edit class
 2. Select new teacher from dropdown
 3. Save
@@ -261,7 +296,9 @@ The Classes feature empowers school administrators to organize students into gra
 5. Previous teacher retains access if teaching a subject
 
 ### 9. Transfer Students Between Classes
+
 **Individual Transfer:**
+
 1. Open student detail page
 2. Navigate to "Class Enrollment" section
 3. Click "Change Class"
@@ -270,6 +307,7 @@ The Classes feature empowers school administrators to organize students into gra
 6. Student removed from old class, added to new class
 
 **Bulk Transfer:**
+
 1. Navigate to source class detail page
 2. Select students to transfer (checkboxes)
 3. Click "Transfer Students"
@@ -279,7 +317,9 @@ The Classes feature empowers school administrators to organize students into gra
 7. Updates StudentClass relationships
 
 ### 10. Delete or Archive Class
+
 **Archive Class (End of Term):**
+
 1. Edit class
 2. Change status to "Inactive" or "Archived"
 3. Save
@@ -288,6 +328,7 @@ The Classes feature empowers school administrators to organize students into gra
 6. Students can still view past class in history
 
 **Delete Class:**
+
 1. Find class in table
 2. Click row actions → "Delete"
 3. Confirmation dialog warns:
@@ -303,6 +344,7 @@ The Classes feature empowers school administrators to organize students into gra
 ## Integration with Other Features
 
 ### Links to Students
+
 - StudentClass many-to-many relationship
 - Enrollment creates bidirectional link
 - Students see their class on profile
@@ -310,6 +352,7 @@ The Classes feature empowers school administrators to organize students into gra
 - Capacity limits enforced during enrollment
 
 ### Links to Teachers
+
 - Homeroom teacher assigned per class
 - Subject teachers assigned per subject
 - Teacher dashboard shows assigned classes
@@ -317,12 +360,14 @@ The Classes feature empowers school administrators to organize students into gra
 - Teachers access student rosters for their classes
 
 ### Links to Subjects
+
 - Each class linked to primary subject (e.g., Math class)
 - Subject teachers teach specific subjects to class
 - Subject-specific assessments and assignments
 - Curriculum mapping per subject
 
 ### Links to Timetable
+
 - Class schedule defined in timetable slots
 - Day/period/subject/teacher/classroom assignments
 - Conflict detection prevents double-booking
@@ -330,36 +375,42 @@ The Classes feature empowers school administrators to organize students into gra
 - Changes to timetable update class schedule
 
 ### Links to Classrooms
+
 - Physical classroom assigned per class
 - Classroom capacity vs. class size validation
 - Classroom availability checked in timetable
 - Classroom resources available to class
 
 ### Links to Attendance
+
 - Attendance taken per class per period
 - Class roster used for attendance marking
 - Attendance summaries calculated per class
 - Absence alerts sent to homeroom teacher
 
 ### Links to Assignments
+
 - Assignments created for specific classes
 - All students in class receive assignment
 - Class-level grading and analytics
 - Assignment completion rates per class
 
 ### Links to Exams
+
 - Exams scheduled for classes
 - All students in class take exam
 - Class average and performance metrics
 - Grade distribution per class
 
 ### Links to Announcements
+
 - Announcements can target specific classes
 - Class-specific notifications
 - Important updates to class students and parents
 - Homeroom teacher can create class announcements
 
 ### Links to Lessons
+
 - Lesson plans created per class
 - Subject-specific lesson content
 - Class schedule determines lesson timing
@@ -389,10 +440,12 @@ The component follows the standardized file pattern:
 ## Features
 
 ### Multi-step Form
+
 - **Step 1**: Basic Information (class name, subject, teacher)
 - **Step 2**: Schedule & Location (term, start/end periods, classroom)
 
 ### Data Management
+
 - Create new classes
 - Edit existing classes
 - Delete classes
@@ -400,11 +453,13 @@ The component follows the standardized file pattern:
 - Search and filter by name, subject, teacher, and term
 
 ### Validation
+
 - Client-side validation with Zod schemas
 - Server-side validation for all mutations
 - Multi-tenant safety with `schoolId` scoping
 
 ### Table Features
+
 - Sortable columns
 - Filterable data
 - Pagination
@@ -413,6 +468,7 @@ The component follows the standardized file pattern:
 ## Database Schema
 
 Classes are stored with the following fields:
+
 - `id` - Unique identifier
 - `schoolId` - Multi-tenant identifier
 - `name` - Class name
@@ -451,37 +507,44 @@ The component is used in the platform dashboard at `/dashboard/classes` and auto
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

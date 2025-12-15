@@ -1,8 +1,8 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { SkeletonStats } from '@/components/ui/skeleton-stats'
-import { SkeletonChart } from '@/components/ui/skeleton-chart'
-import { SkeletonListCompact } from '@/components/ui/skeleton-list'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonChart } from "@/components/ui/skeleton-chart"
+import { SkeletonListCompact } from "@/components/ui/skeleton-list"
+import { SkeletonStats } from "@/components/ui/skeleton-stats"
 
 export default function BankingLoading() {
   return (

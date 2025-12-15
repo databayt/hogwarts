@@ -1,5 +1,7 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
+
 import type { BaseComponentProps, BaseVariant } from "./types"
 
 interface MetricChipProps extends BaseComponentProps {

@@ -14,7 +14,7 @@ export const DEFAULT_QUOTA = {
   uploadsPerDay: 1000,
   maxFiles: 10000,
   warningThreshold: 0.8, // 80%
-} as const;
+} as const
 
 /**
  * Quota tiers for different subscription plans
@@ -52,6 +52,6 @@ export const QUOTA_TIERS = {
     uploadsPerDay: 5000,
     maxFiles: 100000,
   },
-} as const;
+} as const
 
-export type QuotaTier = keyof typeof QUOTA_TIERS;
+export type QuotaTier = keyof typeof QUOTA_TIERS

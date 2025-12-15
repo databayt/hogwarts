@@ -32,7 +32,7 @@ export function CodeCollapsibleWrapper({
       {...props}
     >
       <CollapsibleTrigger asChild>
-        <div className="absolute top-1.5 end-9 z-10 flex items-center">
+        <div className="absolute end-9 top-1.5 z-10 flex items-center">
           <Button
             variant="ghost"
             size="sm"

@@ -15,6 +15,7 @@ model: sonnet
 ## Core Responsibilities
 
 ### Git Workflow Design
+
 - **Branching Strategy**: Git Flow, GitHub Flow, trunk-based development
 - **Merge Management**: Conflict resolution, merge vs rebase policies
 - **History Management**: Clean commit history, squash vs merge
@@ -22,12 +23,14 @@ model: sonnet
 - **Team Collaboration**: Branch protection, review workflows
 
 ### Hook Management
+
 - **Pre-commit**: Linting, formatting, tests
 - **Commit-msg**: Conventional commit enforcement
 - **Pre-push**: Build verification, test suite
 - **Post-merge**: Dependency updates, database migrations
 
 ### Workflow Goals
+
 - Reduced merge conflicts (target: 67% reduction)
 - Decreased PR review time (target: <4 hours)
 - Clean commit history (conventional commits)
@@ -72,6 +75,7 @@ Hotfix Flow:
 ```
 
 **Branch Types**:
+
 - `main` - Production code (protected)
 - `develop` - Development/staging code (protected)
 - `feature/*` - New features (e.g., `feature/attendance-tracking`)
@@ -80,6 +84,7 @@ Hotfix Flow:
 - `release/*` - Release candidates (e.g., `release/1.5.0`)
 
 **Branch Protection Rules**:
+
 ```yaml
 # main branch
 - Require PR reviews (2 approvals)
@@ -134,6 +139,7 @@ git push origin --delete feature/attendance-tracking
 ## Conventional Commits
 
 **Format**:
+
 ```
 <type>(<scope>): <subject>
 
@@ -143,6 +149,7 @@ git push origin --delete feature/attendance-tracking
 ```
 
 **Types**:
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation changes
@@ -155,6 +162,7 @@ git push origin --delete feature/attendance-tracking
 - `revert` - Revert previous commit
 
 **Examples**:
+
 ```bash
 # Feature
 git commit -m "feat(students): Add bulk attendance marking
@@ -206,6 +214,7 @@ pnpm add -D lint-staged
 ### Hook Configuration
 
 **.husky/pre-commit**:
+
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -225,6 +234,7 @@ echo "✅ Pre-commit checks passed!"
 ```
 
 **.husky/commit-msg**:
+
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -234,6 +244,7 @@ pnpm exec commitlint --edit $1
 ```
 
 **.husky/pre-push**:
+
 ```bash
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -250,17 +261,12 @@ echo "✅ Pre-push checks passed!"
 ```
 
 **package.json**:
+
 ```json
 {
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --write",
-      "eslint --fix",
-      "vitest related --run"
-    ],
-    "*.{json,md,mdx}": [
-      "prettier --write"
-    ],
+    "*.{ts,tsx}": ["prettier --write", "eslint --fix", "vitest related --run"],
+    "*.{json,md,mdx}": ["prettier --write"],
     "prisma/schema.prisma": [
       "prisma format",
       "node scripts/check-tenant-safety.js"
@@ -270,43 +276,44 @@ echo "✅ Pre-push checks passed!"
 ```
 
 **commitlint.config.js**:
+
 ```javascript
 module.exports = {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   rules: {
-    'type-enum': [
+    "type-enum": [
       2,
-      'always',
+      "always",
       [
-        'feat',
-        'fix',
-        'docs',
-        'style',
-        'refactor',
-        'perf',
-        'test',
-        'chore',
-        'ci',
-        'revert',
+        "feat",
+        "fix",
+        "docs",
+        "style",
+        "refactor",
+        "perf",
+        "test",
+        "chore",
+        "ci",
+        "revert",
       ],
     ],
-    'scope-enum': [
+    "scope-enum": [
       2,
-      'always',
+      "always",
       [
-        'students',
-        'teachers',
-        'attendance',
-        'auth',
-        'api',
-        'db',
-        'ui',
-        'build',
-        'deps',
+        "students",
+        "teachers",
+        "attendance",
+        "auth",
+        "api",
+        "db",
+        "ui",
+        "build",
+        "deps",
       ],
     ],
-    'subject-case': [2, 'always', 'sentence-case'],
-    'body-max-line-length': [2, 'always', 100],
+    "subject-case": [2, "always", "sentence-case"],
+    "body-max-line-length": [2, "always", 100],
   },
 }
 ```
@@ -370,6 +377,7 @@ git push origin feature/my-feature --force-with-lease
 ### Common Conflict Patterns
 
 **Pattern 1: Lock file conflicts**:
+
 ```bash
 # Always regenerate lock files
 git checkout --ours pnpm-lock.yaml  # or --theirs
@@ -379,6 +387,7 @@ git rebase --continue
 ```
 
 **Pattern 2: Schema conflicts**:
+
 ```bash
 # Prisma schema conflicts
 # Resolve manually, then:
@@ -395,6 +404,7 @@ git rebase --continue
 ### Rebase vs Merge
 
 **Use Rebase When**:
+
 - Feature branch rebasing onto develop (clean history)
 - Local commits not yet pushed
 - Want linear history
@@ -404,6 +414,7 @@ git rebase develop
 ```
 
 **Use Merge When**:
+
 - Merging to main/develop (preserve PR context)
 - Collaborative branches (multiple developers)
 - Want to preserve exact history
@@ -554,16 +565,17 @@ Co-authored-by: Claude <noreply@anthropic.com>"
 ## Multi-Tenant Safety Checks (Custom Hook)
 
 **scripts/check-tenant-safety.js**:
+
 ```javascript
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs")
+const path = require("path")
 
 // Check Prisma schema for tenant safety
 function checkPrismaSchema() {
-  const schemaPath = path.join(__dirname, '../prisma/schema.prisma')
-  const schema = fs.readFileSync(schemaPath, 'utf-8')
+  const schemaPath = path.join(__dirname, "../prisma/schema.prisma")
+  const schema = fs.readFileSync(schemaPath, "utf-8")
 
   // Check for models without schoolId
   const models = schema.match(/model\s+\w+\s*{[^}]+}/g) || []
@@ -574,54 +586,63 @@ function checkPrismaSchema() {
     const modelName = model.match(/model\s+(\w+)/)[1]
 
     // Skip models that don't need schoolId
-    const skipModels = ['User', 'Account', 'Session', 'VerificationToken']
+    const skipModels = ["User", "Account", "Session", "VerificationToken"]
     if (skipModels.includes(modelName)) return
 
     // Check if model has schoolId field
-    if (!model.includes('schoolId')) {
+    if (!model.includes("schoolId")) {
       violations.push(`❌ Model ${modelName} missing schoolId field`)
     }
   })
 
   if (violations.length > 0) {
-    console.error('\n🔒 Multi-tenant safety violations:\n')
+    console.error("\n🔒 Multi-tenant safety violations:\n")
     violations.forEach((v) => console.error(v))
-    console.error('\n')
+    console.error("\n")
     process.exit(1)
   }
 
-  console.log('✅ Prisma schema multi-tenant safety checks passed')
+  console.log("✅ Prisma schema multi-tenant safety checks passed")
 }
 
 // Check server actions for tenant safety
 function checkServerActions() {
   // Find all actions.ts files
-  const actionsFiles = findFiles('src', 'actions.ts')
+  const actionsFiles = findFiles("src", "actions.ts")
 
   const violations = []
 
   actionsFiles.forEach((file) => {
-    const content = fs.readFileSync(file, 'utf-8')
+    const content = fs.readFileSync(file, "utf-8")
 
     // Check for database queries without schoolId
-    const queries = content.match(/db\.\w+\.(findMany|findUnique|findFirst|create|update|delete|upsert)/g) || []
+    const queries =
+      content.match(
+        /db\.\w+\.(findMany|findUnique|findFirst|create|update|delete|upsert)/g
+      ) || []
 
     queries.forEach((query) => {
       // Simple heuristic: Check if schoolId is mentioned near the query
       const queryIndex = content.indexOf(query)
-      const contextBefore = content.slice(Math.max(0, queryIndex - 200), queryIndex)
+      const contextBefore = content.slice(
+        Math.max(0, queryIndex - 200),
+        queryIndex
+      )
       const contextAfter = content.slice(queryIndex, queryIndex + 200)
 
-      if (!contextBefore.includes('schoolId') && !contextAfter.includes('schoolId')) {
+      if (
+        !contextBefore.includes("schoolId") &&
+        !contextAfter.includes("schoolId")
+      ) {
         violations.push(`❌ ${file}: Query "${query}" may be missing schoolId`)
       }
     })
   })
 
   if (violations.length > 0) {
-    console.warn('\n⚠️ Potential multi-tenant safety issues:\n')
+    console.warn("\n⚠️ Potential multi-tenant safety issues:\n")
     violations.forEach((v) => console.warn(v))
-    console.warn('\nPlease verify these queries include schoolId scoping\n')
+    console.warn("\nPlease verify these queries include schoolId scoping\n")
     // Don't fail, just warn
   }
 }
@@ -654,6 +675,7 @@ checkServerActions()
 ## Agent Collaboration
 
 **Works closely with**:
+
 - `/agents/git-github` - GitHub-specific operations (PRs, issues)
 - `/agents/test` - Pre-commit testing
 - `/agents/security` - Security checks in hooks
@@ -665,6 +687,7 @@ checkServerActions()
 ## Workflow vs git-github
 
 **This agent (workflow)**: Pure Git workflow management
+
 - Branching strategies (Git Flow, GitHub Flow)
 - Merge conflict resolution
 - Git hooks (pre-commit, commit-msg, pre-push)
@@ -673,6 +696,7 @@ checkServerActions()
 - Team collaboration patterns
 
 **git-github agent**: GitHub-specific operations
+
 - Pull request creation/management
 - Issue tracking
 - GitHub CLI operations
@@ -681,6 +705,7 @@ checkServerActions()
 - GitHub-specific automation
 
 **When to use which**:
+
 - Use **workflow** for: Git operations, branching, hooks, history management
 - Use **git-github** for: PRs, issues, reviews, GitHub-specific tasks
 
@@ -716,6 +741,7 @@ checkServerActions()
 ## Success Metrics
 
 **Target Achievements**:
+
 - Merge conflicts reduced by 67%
 - PR review time: <4 hours average
 - Automation coverage: 90%+

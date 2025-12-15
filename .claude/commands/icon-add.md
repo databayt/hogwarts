@@ -26,7 +26,9 @@ All icons must comply with:
 ## Task Workflow
 
 ### 1. Gather Requirements
+
 Ask the user:
+
 - Icon purpose/description
 - Which category (Hands/People/Objects/Abstract/Letters/Scenes)
 - Icon source (file path, URL, or AI generation)
@@ -35,16 +37,19 @@ Ask the user:
 ### 2. Validate Icon Source
 
 If **file path provided**:
+
 - Use Read tool to validate SVG structure
 - Check compliance with design system
 - Flag any violations
 
 If **URL provided**:
+
 - Use WebFetch tool to retrieve icon
 - Validate downloaded SVG
 - Check compliance
 
 If **AI generation requested**:
+
 - Use browser MCP or suggest using design tools
 - Guide user through generation process
 - Ensure output matches design system
@@ -74,8 +79,8 @@ export const iconRegistry: IconRegistry = {
     path: "/icons/{SemanticName}.svg",
     keywords: ["{keyword1}", "{keyword2}", "{keyword3}"],
     viewBox: "{viewBox}",
-    verified: true
-  }
+    verified: true,
+  },
 }
 ```
 
@@ -101,3 +106,4 @@ Assistant: I've validated the icon. It needs these adjustments:
 
 I'll make these adjustments and save as "Hands-Gesture-06.svg"
 [Performs adjustments, saves file, updates registry]
+```

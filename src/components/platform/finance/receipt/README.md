@@ -9,24 +9,28 @@ The Receipt module automatically generates receipts for payments, provides recei
 ## Key Features
 
 ### 1. Automatic Receipt Generation
+
 - Auto-generate on payment confirmation
 - Sequential receipt numbering
 - QR code for verification
 - Digital signature support
 
 ### 2. Receipt Formats
+
 - **Digital Receipt**: PDF format with QR code
 - **Email Receipt**: HTML email with PDF attachment
 - **Printed Receipt**: Thermal printer compatible
 - **SMS Receipt**: Text message with receipt number
 
 ### 3. Receipt Types
+
 - Fee payment receipts
 - Donation receipts (tax-deductible)
 - Expense reimbursement receipts
 - Refund receipts
 
 ### 4. Receipt Management
+
 - Search and filter receipts
 - Reprint receipts
 - Void receipts (with audit trail)
@@ -35,6 +39,7 @@ The Receipt module automatically generates receipts for payments, provides recei
 ## Data Model
 
 ### Receipt
+
 ```typescript
 {
   id: string
@@ -59,9 +64,11 @@ The Receipt module automatically generates receipts for payments, provides recei
 ### Receipt Generation
 
 #### `generateReceiptWithRBAC(paymentId)`
+
 **Permissions Required:** `receipt:create`
 
 **Example:**
+
 ```typescript
 const result = await generateReceiptWithRBAC(paymentId)
 
@@ -75,17 +82,24 @@ if (result.success && result.data) {
 ### Receipt Operations
 
 #### `reprintReceiptWithRBAC(receiptId)`
+
 Regenerates PDF for an existing receipt.
 
 #### `voidReceiptWithRBAC(receiptId, reason)`
+
 Voids a receipt (does not delete, marks as void).
 
 **Example:**
+
 ```typescript
-await voidReceiptWithRBAC(receiptId, "Payment reversed due to insufficient funds")
+await voidReceiptWithRBAC(
+  receiptId,
+  "Payment reversed due to insufficient funds"
+)
 ```
 
 #### `getReceiptByNumberWithRBAC(receiptNumber)`
+
 Retrieves receipt by receipt number.
 
 ## Receipt Template
@@ -141,11 +155,11 @@ Retrieves receipt by receipt number.
 
 ## RBAC
 
-| Role | View | Create | Void | Reprint |
-|------|------|--------|------|---------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ |
-| **GUARDIAN** | ✅ (own) | ❌ | ❌ | ✅ (own) |
+| Role           | View     | Create | Void | Reprint  |
+| -------------- | -------- | ------ | ---- | -------- |
+| **ADMIN**      | ✅       | ✅     | ✅   | ✅       |
+| **ACCOUNTANT** | ✅       | ✅     | ✅   | ✅       |
+| **GUARDIAN**   | ✅ (own) | ❌     | ❌   | ✅ (own) |
 
 ## Support
 

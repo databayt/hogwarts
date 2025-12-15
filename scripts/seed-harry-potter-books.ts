@@ -8,19 +8,19 @@
  * Usage: npx tsx scripts/seed-harry-potter-books.ts
  */
 
-import { PrismaClient } from "@prisma/client";
-import ImageKit from "imagekit";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "fs"
+import * as path from "path"
+import { PrismaClient } from "@prisma/client"
+import ImageKit from "imagekit"
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
 // ImageKit configuration
 const imagekit = new ImageKit({
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
   urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-});
+})
 
 // Harry Potter books data
 const harryPotterBooks = [
@@ -89,58 +89,60 @@ const harryPotterBooks = [
     totalCopies: 5,
     localFile: "half-blood prince.png",
   },
-];
+]
 
 async function uploadToImageKit(
   filePath: string,
   fileName: string
 ): Promise<string> {
-  const fileBuffer = fs.readFileSync(filePath);
-  const base64File = fileBuffer.toString("base64");
+  const fileBuffer = fs.readFileSync(filePath)
+  const base64File = fileBuffer.toString("base64")
 
   const response = await imagekit.upload({
     file: base64File,
     fileName: fileName.replace(/[^a-zA-Z0-9.-]/g, "-"),
     folder: "hogwarts/library/books",
     useUniqueFileName: true,
-  });
+  })
 
-  console.log(`Uploaded: ${fileName} -> ${response.url}`);
-  return response.url;
+  console.log(`Uploaded: ${fileName} -> ${response.url}`)
+  return response.url
 }
 
 async function main() {
-  console.log("Starting Harry Potter books seeding...\n");
+  console.log("Starting Harry Potter books seeding...\n")
 
   // Get the demo school for seeding
   const school = await prisma.school.findFirst({
     where: {
       OR: [{ domain: "demo" }, { domain: "hogwarts" }],
     },
-  });
+  })
 
   if (!school) {
-    console.error("No demo or hogwarts school found. Please seed schools first.");
-    process.exit(1);
+    console.error(
+      "No demo or hogwarts school found. Please seed schools first."
+    )
+    process.exit(1)
   }
 
-  console.log(`Using school: ${school.name} (${school.domain})\n`);
+  console.log(`Using school: ${school.name} (${school.domain})\n`)
 
-  const booksDir = path.join(process.cwd(), "public", "books");
+  const booksDir = path.join(process.cwd(), "public", "books")
 
   for (const book of harryPotterBooks) {
     try {
-      const filePath = path.join(booksDir, book.localFile);
+      const filePath = path.join(booksDir, book.localFile)
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        console.error(`File not found: ${filePath}`);
-        continue;
+        console.error(`File not found: ${filePath}`)
+        continue
       }
 
       // Upload to ImageKit
-      console.log(`Uploading ${book.title}...`);
-      const coverUrl = await uploadToImageKit(filePath, book.localFile);
+      console.log(`Uploading ${book.title}...`)
+      const coverUrl = await uploadToImageKit(filePath, book.localFile)
 
       // Check if book already exists
       const existingBook = await prisma.book.findFirst({
@@ -148,7 +150,7 @@ async function main() {
           title: book.title,
           schoolId: school.id,
         },
-      });
+      })
 
       if (existingBook) {
         // Update existing book
@@ -160,8 +162,8 @@ async function main() {
             description: book.description,
             summary: book.summary,
           },
-        });
-        console.log(`Updated: ${book.title}\n`);
+        })
+        console.log(`Updated: ${book.title}\n`)
       } else {
         // Create new book
         await prisma.book.create({
@@ -178,22 +180,22 @@ async function main() {
             availableCopies: book.totalCopies,
             schoolId: school.id,
           },
-        });
-        console.log(`Created: ${book.title}\n`);
+        })
+        console.log(`Created: ${book.title}\n`)
       }
     } catch (error) {
-      console.error(`Error processing ${book.title}:`, error);
+      console.error(`Error processing ${book.title}:`, error)
     }
   }
 
-  console.log("\nHarry Potter books seeding complete!");
+  console.log("\nHarry Potter books seeding complete!")
 }
 
 main()
   .catch((e) => {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

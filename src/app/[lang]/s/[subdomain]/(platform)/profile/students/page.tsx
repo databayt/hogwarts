@@ -1,8 +1,8 @@
-import { StudentDirectoryContent } from '@/components/platform/profile/student/directory'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { StudentDirectoryContent } from "@/components/platform/profile/student/directory"
 
-export const metadata = { title: 'Student Profiles' }
+export const metadata = { title: "Student Profiles" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

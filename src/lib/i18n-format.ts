@@ -32,7 +32,7 @@
  *   because Intl.NumberFormat doesn't handle file size units.
  */
 
-import { Locale, localeConfig } from '@/components/internationalization/config';
+import { Locale, localeConfig } from "@/components/internationalization/config"
 
 /**
  * Formats a number as currency based on the locale
@@ -50,16 +50,16 @@ export function formatCurrency(
   options?: Intl.NumberFormatOptions
 ): string {
   if (value === null || value === undefined) {
-    return formatCurrency(0, locale, options);
+    return formatCurrency(0, locale, options)
   }
 
-  const currency = localeConfig[locale].currency;
+  const currency = localeConfig[locale].currency
 
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency,
     ...options,
-  }).format(value);
+  }).format(value)
 }
 
 /**
@@ -78,23 +78,25 @@ export function formatDate(
   options?: Intl.DateTimeFormatOptions
 ): string {
   if (!date) {
-    return '';
+    return ""
   }
 
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const dateObj = typeof date === "string" ? new Date(date) : date
 
   if (isNaN(dateObj.getTime())) {
-    return '';
+    return ""
   }
 
   // If no options provided, use a default format that respects locale
   const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  };
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }
 
-  return new Intl.DateTimeFormat(locale, options || defaultOptions).format(dateObj);
+  return new Intl.DateTimeFormat(locale, options || defaultOptions).format(
+    dateObj
+  )
 }
 
 /**
@@ -113,24 +115,26 @@ export function formatDateTime(
   options?: Intl.DateTimeFormatOptions
 ): string {
   if (!date) {
-    return '';
+    return ""
   }
 
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const dateObj = typeof date === "string" ? new Date(date) : date
 
   if (isNaN(dateObj.getTime())) {
-    return '';
+    return ""
   }
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  };
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }
 
-  return new Intl.DateTimeFormat(locale, options || defaultOptions).format(dateObj);
+  return new Intl.DateTimeFormat(locale, options || defaultOptions).format(
+    dateObj
+  )
 }
 
 /**
@@ -149,10 +153,10 @@ export function formatNumber(
   options?: Intl.NumberFormatOptions
 ): string {
   if (value === null || value === undefined) {
-    return formatNumber(0, locale, options);
+    return formatNumber(0, locale, options)
   }
 
-  return new Intl.NumberFormat(locale, options).format(value);
+  return new Intl.NumberFormat(locale, options).format(value)
 }
 
 /**
@@ -172,18 +176,18 @@ export function formatPercentage(
   options?: Intl.NumberFormatOptions & { useRawValue?: boolean }
 ): string {
   if (value === null || value === undefined) {
-    return formatPercentage(0, locale, options);
+    return formatPercentage(0, locale, options)
   }
 
-  const { useRawValue, ...intlOptions } = options || {};
-  const numericValue = useRawValue ? value / 100 : value;
+  const { useRawValue, ...intlOptions } = options || {}
+  const numericValue = useRawValue ? value / 100 : value
 
   return new Intl.NumberFormat(locale, {
-    style: 'percent',
+    style: "percent",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
     ...intlOptions,
-  }).format(numericValue);
+  }).format(numericValue)
 }
 
 /**
@@ -202,45 +206,47 @@ export function formatRelativeTime(
   baseDate: Date = new Date()
 ): string {
   if (!date) {
-    return '';
+    return ""
   }
 
-  const targetDate = typeof date === 'string' ? new Date(date) : date;
+  const targetDate = typeof date === "string" ? new Date(date) : date
 
   if (isNaN(targetDate.getTime())) {
-    return '';
+    return ""
   }
 
-  const diffInSeconds = Math.floor((targetDate.getTime() - baseDate.getTime()) / 1000);
-  const absDiff = Math.abs(diffInSeconds);
+  const diffInSeconds = Math.floor(
+    (targetDate.getTime() - baseDate.getTime()) / 1000
+  )
+  const absDiff = Math.abs(diffInSeconds)
 
   // Define time units in seconds
   const units: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
-    { unit: 'year', seconds: 31536000 },
-    { unit: 'month', seconds: 2592000 },
-    { unit: 'week', seconds: 604800 },
-    { unit: 'day', seconds: 86400 },
-    { unit: 'hour', seconds: 3600 },
-    { unit: 'minute', seconds: 60 },
-    { unit: 'second', seconds: 1 },
-  ];
+    { unit: "year", seconds: 31536000 },
+    { unit: "month", seconds: 2592000 },
+    { unit: "week", seconds: 604800 },
+    { unit: "day", seconds: 86400 },
+    { unit: "hour", seconds: 3600 },
+    { unit: "minute", seconds: 60 },
+    { unit: "second", seconds: 1 },
+  ]
 
   // Find the appropriate unit
   for (const { unit, seconds } of units) {
     if (absDiff >= seconds) {
-      const value = Math.floor(diffInSeconds / seconds);
+      const value = Math.floor(diffInSeconds / seconds)
       return new Intl.RelativeTimeFormat(locale, {
-        numeric: 'auto',
-        style: 'long',
-      }).format(value, unit);
+        numeric: "auto",
+        style: "long",
+      }).format(value, unit)
     }
   }
 
   // If less than a second
   return new Intl.RelativeTimeFormat(locale, {
-    numeric: 'auto',
-    style: 'long',
-  }).format(0, 'second');
+    numeric: "auto",
+    style: "long",
+  }).format(0, "second")
 }
 
 /**
@@ -261,33 +267,36 @@ export function formatDateRange(
   options?: Intl.DateTimeFormatOptions
 ): string {
   if (!startDate || !endDate) {
-    return '';
+    return ""
   }
 
-  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate
 
   if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return '';
+    return ""
   }
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  };
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }
 
   try {
     // WHY @ts-ignore: formatRange exists in modern browsers but TypeScript
     // lib.dom.d.ts doesn't include it yet. Will be resolved in future TS versions.
     // @ts-ignore - formatRange is available but TypeScript might not recognize it
-    return new Intl.DateTimeFormat(locale, options || defaultOptions).formatRange(start, end);
+    return new Intl.DateTimeFormat(
+      locale,
+      options || defaultOptions
+    ).formatRange(start, end)
   } catch {
     // GOTCHA: formatRange not supported in Safari < 14.1, Node < 16.7
     // Fallback concatenates individual dates with en-dash separator
-    const formattedStart = formatDate(start, locale, options);
-    const formattedEnd = formatDate(end, locale, options);
-    return `${formattedStart} – ${formattedEnd}`;
+    const formattedStart = formatDate(start, locale, options)
+    const formattedEnd = formatDate(end, locale, options)
+    return `${formattedStart} – ${formattedEnd}`
   }
 }
 
@@ -312,24 +321,25 @@ export function formatFileSize(
   decimals: number = 2
 ): string {
   if (bytes === null || bytes === undefined || bytes === 0) {
-    return locale === 'ar' ? '٠ بايت' : '0 Bytes';
+    return locale === "ar" ? "٠ بايت" : "0 Bytes"
   }
 
-  const k = 1024; // Binary prefix (KiB = 1024, not 1000)
-  const dm = decimals < 0 ? 0 : decimals;
+  const k = 1024 // Binary prefix (KiB = 1024, not 1000)
+  const dm = decimals < 0 ? 0 : decimals
   // WHY NOT Intl: No standard API for file size units
   // Manual translations maintained here
-  const sizes = locale === 'ar'
-    ? ['بايت', 'كيلوبايت', 'ميجابايت', 'جيجابايت', 'تيرابايت']
-    : ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes =
+    locale === "ar"
+      ? ["بايت", "كيلوبايت", "ميجابايت", "جيجابايت", "تيرابايت"]
+      : ["Bytes", "KB", "MB", "GB", "TB"]
 
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const value = bytes / Math.pow(k, i);
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const value = bytes / Math.pow(k, i)
 
   return `${formatNumber(value, locale, {
     minimumFractionDigits: dm,
-    maximumFractionDigits: dm
-  })} ${sizes[i]}`;
+    maximumFractionDigits: dm,
+  })} ${sizes[i]}`
 }
 
 /**
@@ -348,14 +358,14 @@ export function formatCompactNumber(
   options?: Intl.NumberFormatOptions
 ): string {
   if (value === null || value === undefined) {
-    return formatCompactNumber(0, locale, options);
+    return formatCompactNumber(0, locale, options)
   }
 
   return new Intl.NumberFormat(locale, {
-    notation: 'compact',
-    compactDisplay: 'short',
+    notation: "compact",
+    compactDisplay: "short",
     ...options,
-  }).format(value);
+  }).format(value)
 }
 
 /**
@@ -382,53 +392,57 @@ export function formatDuration(
   milliseconds: number | null | undefined,
   locale: Locale
 ): string {
-  if (milliseconds === null || milliseconds === undefined || milliseconds === 0) {
-    return locale === 'ar' ? '٠ ثانية' : '0 seconds';
+  if (
+    milliseconds === null ||
+    milliseconds === undefined ||
+    milliseconds === 0
+  ) {
+    return locale === "ar" ? "٠ ثانية" : "0 seconds"
   }
 
-  const seconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  const seconds = Math.floor(milliseconds / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
 
-  const parts: string[] = [];
+  const parts: string[] = []
 
   if (days > 0) {
     parts.push(
-      locale === 'ar'
-        ? `${formatNumber(days, locale)} ${days === 1 ? 'يوم' : 'أيام'}`
-        : `${days} ${days === 1 ? 'day' : 'days'}`
-    );
+      locale === "ar"
+        ? `${formatNumber(days, locale)} ${days === 1 ? "يوم" : "أيام"}`
+        : `${days} ${days === 1 ? "day" : "days"}`
+    )
   }
 
   if (hours % 24 > 0) {
-    const h = hours % 24;
+    const h = hours % 24
     parts.push(
-      locale === 'ar'
-        ? `${formatNumber(h, locale)} ${h === 1 ? 'ساعة' : 'ساعات'}`
-        : `${h} ${h === 1 ? 'hour' : 'hours'}`
-    );
+      locale === "ar"
+        ? `${formatNumber(h, locale)} ${h === 1 ? "ساعة" : "ساعات"}`
+        : `${h} ${h === 1 ? "hour" : "hours"}`
+    )
   }
 
   if (minutes % 60 > 0) {
-    const m = minutes % 60;
+    const m = minutes % 60
     parts.push(
-      locale === 'ar'
-        ? `${formatNumber(m, locale)} ${m === 1 ? 'دقيقة' : 'دقائق'}`
-        : `${m} ${m === 1 ? 'minute' : 'minutes'}`
-    );
+      locale === "ar"
+        ? `${formatNumber(m, locale)} ${m === 1 ? "دقيقة" : "دقائق"}`
+        : `${m} ${m === 1 ? "minute" : "minutes"}`
+    )
   }
 
   if (seconds % 60 > 0 && days === 0 && hours === 0) {
-    const s = seconds % 60;
+    const s = seconds % 60
     parts.push(
-      locale === 'ar'
-        ? `${formatNumber(s, locale)} ${s === 1 ? 'ثانية' : 'ثوان'}`
-        : `${s} ${s === 1 ? 'second' : 'seconds'}`
-    );
+      locale === "ar"
+        ? `${formatNumber(s, locale)} ${s === 1 ? "ثانية" : "ثوان"}`
+        : `${s} ${s === 1 ? "second" : "seconds"}`
+    )
   }
 
-  return parts.join(locale === 'ar' ? '، ' : ', ');
+  return parts.join(locale === "ar" ? "، " : ", ")
 }
 
 /**
@@ -444,14 +458,14 @@ export function formatDuration(
 export function formatList(
   items: string[],
   locale: Locale,
-  type: 'conjunction' | 'disjunction' | 'unit' = 'conjunction'
+  type: "conjunction" | "disjunction" | "unit" = "conjunction"
 ): string {
   if (!items || items.length === 0) {
-    return '';
+    return ""
   }
 
   return new Intl.ListFormat(locale, {
-    style: 'long',
+    style: "long",
     type,
-  }).format(items);
+  }).format(items)
 }

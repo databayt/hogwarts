@@ -1,7 +1,7 @@
 "use client"
 
-import { MobileNav, type NavItem } from "@/components/template/mobile-nav"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { MobileNav, type NavItem } from "@/components/template/mobile-nav"
 
 interface SiteMobileNavProps {
   items: NavItem[]
@@ -9,7 +9,11 @@ interface SiteMobileNavProps {
   locale: string
 }
 
-export function SiteMobileNav({ items, dictionary, locale }: SiteMobileNavProps) {
+export function SiteMobileNav({
+  items,
+  dictionary,
+  locale,
+}: SiteMobileNavProps) {
   return (
     <MobileNav
       items={items}

@@ -2,8 +2,14 @@ import { z } from "zod"
 
 // Base schema for score range (grading scale) - without refinement
 export const scoreRangeBaseSchema = z.object({
-  minScore: z.number().min(0, "Minimum score must be at least 0").max(100, "Maximum score is 100"),
-  maxScore: z.number().min(0, "Minimum score must be at least 0").max(100, "Maximum score is 100"),
+  minScore: z
+    .number()
+    .min(0, "Minimum score must be at least 0")
+    .max(100, "Maximum score is 100"),
+  maxScore: z
+    .number()
+    .min(0, "Minimum score must be at least 0")
+    .max(100, "Maximum score is 100"),
   grade: z.string().min(1, "Grade is required").max(10, "Grade is too long"),
 })
 
@@ -17,20 +23,23 @@ export const scoreRangeCreateSchema = scoreRangeBaseSchema.refine(
 )
 
 // Update schema - extend base first, then refine
-export const scoreRangeUpdateSchema = scoreRangeBaseSchema.extend({
-  id: z.string().min(1, "Required"),
-}).partial({ minScore: true, maxScore: true, grade: true }).refine(
-  (data) => {
-    if (data.maxScore !== undefined && data.minScore !== undefined) {
-      return data.maxScore >= data.minScore
+export const scoreRangeUpdateSchema = scoreRangeBaseSchema
+  .extend({
+    id: z.string().min(1, "Required"),
+  })
+  .partial({ minScore: true, maxScore: true, grade: true })
+  .refine(
+    (data) => {
+      if (data.maxScore !== undefined && data.minScore !== undefined) {
+        return data.maxScore >= data.minScore
+      }
+      return true
+    },
+    {
+      message: "Maximum score must be greater than or equal to minimum score",
+      path: ["maxScore"],
     }
-    return true
-  },
-  {
-    message: "Maximum score must be greater than or equal to minimum score",
-    path: ["maxScore"],
-  }
-)
+  )
 
 // List schema
 export const sortItemSchema = z.object({

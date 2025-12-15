@@ -5,17 +5,41 @@
 
 "use client"
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BookOpen, FileText, Users, Calendar, ExternalLink, Download, Search, ListFilter, Plus, Pencil, ChevronRight, Quote, TrendingUp, Globe, Lock, LockOpen, BookMarked, Newspaper, Video, Presentation, GraduationCap } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
-import type { TeacherProfile } from '../../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+import React, { useState } from "react"
+import { format } from "date-fns"
+import {
+  BookMarked,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Download,
+  ExternalLink,
+  FileText,
+  Globe,
+  GraduationCap,
+  ListFilter,
+  Lock,
+  LockOpen,
+  Newspaper,
+  Pencil,
+  Plus,
+  Presentation,
+  Quote,
+  Search,
+  TrendingUp,
+  Users,
+  Video,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { TeacherProfile } from "../../types"
 
 // ============================================================================
 // Types
@@ -24,13 +48,21 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface PublicationsTabProps {
   profile: TeacherProfile
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   isOwner?: boolean
   className?: string
 }
 
-type PublicationType = 'journal' | 'conference' | 'book' | 'chapter' | 'thesis' | 'report' | 'article' | 'presentation'
-type PublicationStatus = 'published' | 'accepted' | 'submitted' | 'draft'
+type PublicationType =
+  | "journal"
+  | "conference"
+  | "book"
+  | "chapter"
+  | "thesis"
+  | "report"
+  | "article"
+  | "presentation"
+type PublicationStatus = "published" | "accepted" | "submitted" | "draft"
 
 interface Publication {
   id: string
@@ -73,105 +105,119 @@ interface ResearchMetrics {
 
 const mockPublications: Publication[] = [
   {
-    id: 'pub-1',
-    title: 'Machine Learning Applications in Adaptive Educational Systems: A Comprehensive Survey',
-    type: 'journal',
-    authors: ['Sarah Johnson', 'John Smith', 'Emily Chen'],
-    journal: 'IEEE Transactions on Learning Technologies',
-    publisher: 'IEEE',
+    id: "pub-1",
+    title:
+      "Machine Learning Applications in Adaptive Educational Systems: A Comprehensive Survey",
+    type: "journal",
+    authors: ["Sarah Johnson", "John Smith", "Emily Chen"],
+    journal: "IEEE Transactions on Learning Technologies",
+    publisher: "IEEE",
     year: 2023,
     month: 6,
-    volume: '16',
-    issue: '3',
-    pages: '234-251',
-    doi: '10.1109/TLT.2023.123456',
-    url: 'https://doi.org/10.1109/TLT.2023.123456',
-    abstract: 'This paper presents a comprehensive survey of machine learning applications in adaptive educational systems...',
-    keywords: ['machine learning', 'adaptive learning', 'educational technology', 'artificial intelligence'],
+    volume: "16",
+    issue: "3",
+    pages: "234-251",
+    doi: "10.1109/TLT.2023.123456",
+    url: "https://doi.org/10.1109/TLT.2023.123456",
+    abstract:
+      "This paper presents a comprehensive survey of machine learning applications in adaptive educational systems...",
+    keywords: [
+      "machine learning",
+      "adaptive learning",
+      "educational technology",
+      "artificial intelligence",
+    ],
     citations: 45,
     downloads: 1250,
-    status: 'published',
+    status: "published",
     isOpenAccess: true,
-    impactFactor: 4.2
+    impactFactor: 4.2,
   },
   {
-    id: 'pub-2',
-    title: 'Deep Learning for Student Performance Prediction: A Systematic Literature Review',
-    type: 'journal',
-    authors: ['Sarah Johnson', 'Michael Brown'],
-    journal: 'Computers & Education',
-    publisher: 'Elsevier',
+    id: "pub-2",
+    title:
+      "Deep Learning for Student Performance Prediction: A Systematic Literature Review",
+    type: "journal",
+    authors: ["Sarah Johnson", "Michael Brown"],
+    journal: "Computers & Education",
+    publisher: "Elsevier",
     year: 2023,
     month: 3,
-    volume: '194',
-    pages: '104-118',
-    doi: '10.1016/j.compedu.2023.104718',
+    volume: "194",
+    pages: "104-118",
+    doi: "10.1016/j.compedu.2023.104718",
     citations: 32,
     downloads: 890,
-    status: 'published',
+    status: "published",
     isOpenAccess: false,
-    impactFactor: 11.8
+    impactFactor: 11.8,
   },
   {
-    id: 'pub-3',
-    title: 'Gamification in Computer Science Education: Impact on Student Engagement and Learning Outcomes',
-    type: 'conference',
-    authors: ['Sarah Johnson', 'Lisa Wang', 'David Miller'],
-    conference: 'ACM SIGCSE Technical Symposium',
-    publisher: 'ACM',
+    id: "pub-3",
+    title:
+      "Gamification in Computer Science Education: Impact on Student Engagement and Learning Outcomes",
+    type: "conference",
+    authors: ["Sarah Johnson", "Lisa Wang", "David Miller"],
+    conference: "ACM SIGCSE Technical Symposium",
+    publisher: "ACM",
     year: 2022,
     month: 10,
-    pages: '567-574',
-    doi: '10.1145/3478431.3499309',
-    url: 'https://dl.acm.org/doi/10.1145/3478431.3499309',
+    pages: "567-574",
+    doi: "10.1145/3478431.3499309",
+    url: "https://dl.acm.org/doi/10.1145/3478431.3499309",
     citations: 28,
     downloads: 650,
-    status: 'published',
-    isOpenAccess: true
+    status: "published",
+    isOpenAccess: true,
   },
   {
-    id: 'pub-4',
-    title: 'Practical Machine Learning for Educators',
-    type: 'book',
-    authors: ['Sarah Johnson'],
-    publisher: 'O\'Reilly Media',
+    id: "pub-4",
+    title: "Practical Machine Learning for Educators",
+    type: "book",
+    authors: ["Sarah Johnson"],
+    publisher: "O'Reilly Media",
     year: 2022,
     month: 8,
-    pages: '450',
-    url: 'https://www.oreilly.com/library/view/practical-machine-learning',
+    pages: "450",
+    url: "https://www.oreilly.com/library/view/practical-machine-learning",
     citations: 15,
     downloads: 2300,
-    status: 'published',
-    isOpenAccess: false
+    status: "published",
+    isOpenAccess: false,
   },
   {
-    id: 'pub-5',
-    title: 'Blockchain Technology in Academic Credential Verification: A Case Study',
-    type: 'report',
-    authors: ['Sarah Johnson', 'Alex Thompson'],
-    publisher: 'EdTech Research Institute',
+    id: "pub-5",
+    title:
+      "Blockchain Technology in Academic Credential Verification: A Case Study",
+    type: "report",
+    authors: ["Sarah Johnson", "Alex Thompson"],
+    publisher: "EdTech Research Institute",
     year: 2024,
     month: 1,
     citations: 5,
     downloads: 180,
-    status: 'published',
-    isOpenAccess: true
+    status: "published",
+    isOpenAccess: true,
   },
   {
-    id: 'pub-6',
-    title: 'Neural Networks for Automated Essay Scoring: Challenges and Opportunities',
-    type: 'journal',
-    authors: ['Sarah Johnson', 'Robert Chen', 'Maria Garcia'],
-    journal: 'AI in Education',
+    id: "pub-6",
+    title:
+      "Neural Networks for Automated Essay Scoring: Challenges and Opportunities",
+    type: "journal",
+    authors: ["Sarah Johnson", "Robert Chen", "Maria Garcia"],
+    journal: "AI in Education",
     year: 2024,
-    status: 'accepted',
-    isOpenAccess: true
-  }
+    status: "accepted",
+    isOpenAccess: true,
+  },
 ]
 
 const mockMetrics: ResearchMetrics = {
   totalPublications: mockPublications.length,
-  totalCitations: mockPublications.reduce((sum, p) => sum + (p.citations || 0), 0),
+  totalCitations: mockPublications.reduce(
+    (sum, p) => sum + (p.citations || 0),
+    0
+  ),
   hIndex: 8,
   i10Index: 5,
   citationsPerYear: [
@@ -179,15 +225,17 @@ const mockMetrics: ResearchMetrics = {
     { year: 2021, count: 25 },
     { year: 2022, count: 48 },
     { year: 2023, count: 72 },
-    { year: 2024, count: 18 }
+    { year: 2024, count: 18 },
   ],
-  topCitedPapers: mockPublications.filter(p => p.citations && p.citations > 20),
+  topCitedPapers: mockPublications.filter(
+    (p) => p.citations && p.citations > 20
+  ),
   collaborators: [
-    { name: 'John Smith', count: 8 },
-    { name: 'Emily Chen', count: 6 },
-    { name: 'Michael Brown', count: 5 },
-    { name: 'Lisa Wang', count: 4 }
-  ]
+    { name: "John Smith", count: 8 },
+    { name: "Emily Chen", count: 6 },
+    { name: "Michael Brown", count: 5 },
+    { name: "Lisa Wang", count: 4 },
+  ],
 }
 
 // ============================================================================
@@ -197,69 +245,88 @@ const mockMetrics: ResearchMetrics = {
 export function PublicationsTab({
   profile,
   dictionary,
-  lang = 'en',
+  lang = "en",
   isOwner = false,
-  className
+  className,
 }: PublicationsTabProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedType, setSelectedType] = useState<PublicationType | 'all'>('all')
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>('all')
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedType, setSelectedType] = useState<PublicationType | "all">(
+    "all"
+  )
+  const [selectedYear, setSelectedYear] = useState<number | "all">("all")
 
   const { professionalInfo } = profile
   const publications = professionalInfo.publications || []
 
   // Filter publications
-  const filteredPublications = mockPublications.filter(pub => {
-    const matchesSearch = searchTerm === '' ||
+  const filteredPublications = mockPublications.filter((pub) => {
+    const matchesSearch =
+      searchTerm === "" ||
       pub.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pub.authors.some(author => author.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      pub.keywords?.some(keyword => keyword.toLowerCase().includes(searchTerm.toLowerCase()))
+      pub.authors.some((author) =>
+        author.toLowerCase().includes(searchTerm.toLowerCase())
+      ) ||
+      pub.keywords?.some((keyword) =>
+        keyword.toLowerCase().includes(searchTerm.toLowerCase())
+      )
 
-    const matchesType = selectedType === 'all' || pub.type === selectedType
-    const matchesYear = selectedYear === 'all' || pub.year === selectedYear
+    const matchesType = selectedType === "all" || pub.type === selectedType
+    const matchesYear = selectedYear === "all" || pub.year === selectedYear
 
     return matchesSearch && matchesType && matchesYear
   })
 
   // Get unique years for filter
-  const years = [...new Set(mockPublications.map(p => p.year))].sort((a, b) => b - a)
+  const years = [...new Set(mockPublications.map((p) => p.year))].sort(
+    (a, b) => b - a
+  )
 
   const getPublicationIcon = (type: PublicationType) => {
     switch (type) {
-      case 'journal': return <BookOpen className="h-4 w-4" />
-      case 'conference': return <Presentation className="h-4 w-4" />
-      case 'book': return <BookMarked className="h-4 w-4" />
-      case 'chapter': return <FileText className="h-4 w-4" />
-      case 'thesis': return <GraduationCap className="h-4 w-4" />
-      case 'report': return <Newspaper className="h-4 w-4" />
-      case 'article': return <FileText className="h-4 w-4" />
-      case 'presentation': return <Video className="h-4 w-4" />
-      default: return <FileText className="h-4 w-4" />
+      case "journal":
+        return <BookOpen className="h-4 w-4" />
+      case "conference":
+        return <Presentation className="h-4 w-4" />
+      case "book":
+        return <BookMarked className="h-4 w-4" />
+      case "chapter":
+        return <FileText className="h-4 w-4" />
+      case "thesis":
+        return <GraduationCap className="h-4 w-4" />
+      case "report":
+        return <Newspaper className="h-4 w-4" />
+      case "article":
+        return <FileText className="h-4 w-4" />
+      case "presentation":
+        return <Video className="h-4 w-4" />
+      default:
+        return <FileText className="h-4 w-4" />
     }
   }
 
-  const formatAuthors = (authors: string[], currentAuthor: string = 'Sarah Johnson') => {
+  const formatAuthors = (
+    authors: string[],
+    currentAuthor: string = "Sarah Johnson"
+  ) => {
     return authors.map((author, index) => (
       <span key={index}>
-        {author === currentAuthor ? (
-          <strong>{author}</strong>
-        ) : (
-          author
-        )}
-        {index < authors.length - 1 && ', '}
+        {author === currentAuthor ? <strong>{author}</strong> : author}
+        {index < authors.length - 1 && ", "}
       </span>
     ))
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Research Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="p-4">
             <div className="text-center">
-              <p className="text-2xl font-bold">{mockMetrics.totalPublications}</p>
-              <p className="text-xs text-muted-foreground">Publications</p>
+              <p className="text-2xl font-bold">
+                {mockMetrics.totalPublications}
+              </p>
+              <p className="text-muted-foreground text-xs">Publications</p>
             </div>
           </CardContent>
         </Card>
@@ -268,7 +335,7 @@ export function PublicationsTab({
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold">{mockMetrics.totalCitations}</p>
-              <p className="text-xs text-muted-foreground">Citations</p>
+              <p className="text-muted-foreground text-xs">Citations</p>
             </div>
           </CardContent>
         </Card>
@@ -277,7 +344,7 @@ export function PublicationsTab({
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold">{mockMetrics.hIndex}</p>
-              <p className="text-xs text-muted-foreground">h-index</p>
+              <p className="text-muted-foreground text-xs">h-index</p>
             </div>
           </CardContent>
         </Card>
@@ -286,7 +353,7 @@ export function PublicationsTab({
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold">{mockMetrics.i10Index}</p>
-              <p className="text-xs text-muted-foreground">i10-index</p>
+              <p className="text-muted-foreground text-xs">i10-index</p>
             </div>
           </CardContent>
         </Card>
@@ -295,9 +362,9 @@ export function PublicationsTab({
           <CardContent className="p-4">
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {mockPublications.filter(p => p.isOpenAccess).length}
+                {mockPublications.filter((p) => p.isOpenAccess).length}
               </p>
-              <p className="text-xs text-muted-foreground">Open Access</p>
+              <p className="text-muted-foreground text-xs">Open Access</p>
             </div>
           </CardContent>
         </Card>
@@ -306,14 +373,14 @@ export function PublicationsTab({
       {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-base">
             <span className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Research Publications
             </span>
             {isOwner && (
               <Button size="sm" variant="outline">
-                <Plus className="h-3 w-3 mr-1" />
+                <Plus className="mr-1 h-3 w-3" />
                 Add Publication
               </Button>
             )}
@@ -323,7 +390,7 @@ export function PublicationsTab({
           {/* Search Bar */}
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search publications..."
                 value={searchTerm}
@@ -337,11 +404,13 @@ export function PublicationsTab({
           </div>
 
           {/* Filters */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             <select
-              className="px-3 py-1 text-sm border rounded-md"
+              className="rounded-md border px-3 py-1 text-sm"
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value as PublicationType | 'all')}
+              onChange={(e) =>
+                setSelectedType(e.target.value as PublicationType | "all")
+              }
             >
               <option value="all">All Types</option>
               <option value="journal">Journal Articles</option>
@@ -355,13 +424,19 @@ export function PublicationsTab({
             </select>
 
             <select
-              className="px-3 py-1 text-sm border rounded-md"
+              className="rounded-md border px-3 py-1 text-sm"
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              onChange={(e) =>
+                setSelectedYear(
+                  e.target.value === "all" ? "all" : parseInt(e.target.value)
+                )
+              }
             >
               <option value="all">All Years</option>
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
           </div>
@@ -370,7 +445,7 @@ export function PublicationsTab({
 
       {/* Publications List */}
       <Tabs defaultValue="list" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 md:w-[400px]">
           <TabsTrigger value="list">List View</TabsTrigger>
           <TabsTrigger value="citations">By Citations</TabsTrigger>
           <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
@@ -378,37 +453,42 @@ export function PublicationsTab({
 
         <TabsContent value="list" className="space-y-4">
           {filteredPublications.map((pub) => (
-            <Card key={pub.id} className="hover:shadow-md transition-shadow">
+            <Card key={pub.id} className="transition-shadow hover:shadow-md">
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-muted">
+                  <div className="bg-muted rounded-lg p-2">
                     {getPublicationIcon(pub.type)}
                   </div>
                   <div className="flex-1">
                     {/* Title and Status */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-semibold hover:text-primary transition-colors">
+                        <h4 className="hover:text-primary font-semibold transition-colors">
                           {pub.url ? (
-                            <a href={pub.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            <a
+                              href={pub.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
                               {pub.title}
                             </a>
                           ) : (
                             pub.title
                           )}
                         </h4>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="mt-1 flex items-center gap-2">
                           <Badge variant="secondary" className="text-xs">
                             {pub.type}
                           </Badge>
-                          {pub.status !== 'published' && (
+                          {pub.status !== "published" && (
                             <Badge variant="outline" className="text-xs">
                               {pub.status}
                             </Badge>
                           )}
                           {pub.isOpenAccess && (
                             <Badge variant="default" className="text-xs">
-                              <LockOpen className="h-3 w-3 mr-1" />
+                              <LockOpen className="mr-1 h-3 w-3" />
                               Open Access
                             </Badge>
                           )}
@@ -422,7 +502,11 @@ export function PublicationsTab({
                         )}
                         {pub.doi && (
                           <Button variant="ghost" size="sm" asChild>
-                            <a href={`https://doi.org/${pub.doi}`} target="_blank" rel="noopener noreferrer">
+                            <a
+                              href={`https://doi.org/${pub.doi}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               <ExternalLink className="h-3 w-3" />
                             </a>
                           </Button>
@@ -436,17 +520,16 @@ export function PublicationsTab({
                     </div>
 
                     {/* Authors */}
-                    <p className="text-sm mt-2">
-                      {formatAuthors(pub.authors)}
-                    </p>
+                    <p className="mt-2 text-sm">{formatAuthors(pub.authors)}</p>
 
                     {/* Publication Details */}
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-1 text-sm">
                       {pub.journal && `${pub.journal}. `}
                       {pub.conference && `${pub.conference}. `}
                       {pub.publisher && `${pub.publisher}. `}
                       {pub.year}
-                      {pub.month && `, ${format(new Date(pub.year, pub.month - 1), 'MMMM')}`}
+                      {pub.month &&
+                        `, ${format(new Date(pub.year, pub.month - 1), "MMMM")}`}
                       {pub.volume && `, Vol. ${pub.volume}`}
                       {pub.issue && `(${pub.issue})`}
                       {pub.pages && `, pp. ${pub.pages}`}
@@ -454,7 +537,7 @@ export function PublicationsTab({
 
                     {/* DOI */}
                     {pub.doi && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1 text-xs">
                         DOI: {pub.doi}
                       </p>
                     )}
@@ -462,10 +545,10 @@ export function PublicationsTab({
                     {/* Abstract (collapsible) */}
                     {pub.abstract && (
                       <details className="mt-3">
-                        <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                        <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-sm">
                           View Abstract
                         </summary>
-                        <p className="text-sm mt-2 p-3 bg-muted/50 rounded-lg">
+                        <p className="bg-muted/50 mt-2 rounded-lg p-3 text-sm">
                           {pub.abstract}
                         </p>
                       </details>
@@ -473,9 +556,13 @@ export function PublicationsTab({
 
                     {/* Keywords */}
                     {pub.keywords && pub.keywords.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
+                      <div className="mt-3 flex flex-wrap gap-1">
                         {pub.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {keyword}
                           </Badge>
                         ))}
@@ -483,7 +570,7 @@ export function PublicationsTab({
                     )}
 
                     {/* Metrics */}
-                    <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                    <div className="text-muted-foreground mt-3 flex items-center gap-4 text-xs">
                       {pub.citations !== undefined && (
                         <span className="flex items-center gap-1">
                           <Quote className="h-3 w-3" />
@@ -510,7 +597,7 @@ export function PublicationsTab({
           ))}
 
           {filteredPublications.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-muted-foreground py-8 text-center">
               No publications found matching your criteria
             </div>
           )}
@@ -525,18 +612,20 @@ export function PublicationsTab({
             <CardContent>
               {/* Citation trend chart would go here */}
               <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-muted-foreground text-sm">
                   Citations per year (last 5 years)
                 </div>
                 {mockMetrics.citationsPerYear.map((item) => (
                   <div key={item.year} className="flex items-center gap-2">
-                    <span className="text-sm font-medium w-12">{item.year}</span>
-                    <div className="flex-1 bg-muted rounded-full h-6 relative">
+                    <span className="w-12 text-sm font-medium">
+                      {item.year}
+                    </span>
+                    <div className="bg-muted relative h-6 flex-1 rounded-full">
                       <div
-                        className="absolute inset-y-0 left-0 bg-primary rounded-full flex items-center justify-end pr-2"
+                        className="bg-primary absolute inset-y-0 left-0 flex items-center justify-end rounded-full pr-2"
                         style={{ width: `${(item.count / 100) * 100}%` }}
                       >
-                        <span className="text-xs text-primary-foreground font-medium">
+                        <span className="text-primary-foreground text-xs font-medium">
                           {item.count}
                         </span>
                       </div>
@@ -550,17 +639,22 @@ export function PublicationsTab({
           {/* Top Cited Papers */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Most Cited Publications</CardTitle>
+              <CardTitle className="text-base">
+                Most Cited Publications
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {mockMetrics.topCitedPapers.map((pub, index) => (
-                <div key={pub.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                <div
+                  key={pub.id}
+                  className="bg-muted/50 flex items-start gap-3 rounded-lg p-3"
+                >
+                  <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold">
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-sm">{pub.title}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-sm font-medium">{pub.title}</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
                       {pub.year} • {pub.citations} citations
                     </p>
                   </div>
@@ -573,7 +667,7 @@ export function PublicationsTab({
         <TabsContent value="collaborators" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Users className="h-4 w-4" />
                 Research Collaborators
               </CardTitle>
@@ -581,14 +675,19 @@ export function PublicationsTab({
             <CardContent>
               <div className="space-y-3">
                 {mockMetrics.collaborators.map((collaborator) => (
-                  <div key={collaborator.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div
+                    key={collaborator.name}
+                    className="bg-muted/50 flex items-center justify-between rounded-lg p-3"
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="h-4 w-4 text-primary" />
+                      <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                        <Users className="text-primary h-4 w-4" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm">{collaborator.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-medium">
+                          {collaborator.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
                           {collaborator.count} joint publications
                         </p>
                       </div>
@@ -608,7 +707,7 @@ export function PublicationsTab({
               <CardTitle className="text-base">Collaboration Network</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground">
+              <div className="bg-muted/50 text-muted-foreground flex h-64 items-center justify-center rounded-lg">
                 Network visualization would appear here
               </div>
             </CardContent>

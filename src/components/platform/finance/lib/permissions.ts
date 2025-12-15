@@ -9,43 +9,44 @@
  * - Granular permissions (fine-tuning)
  */
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { UserRole } from '@prisma/client'
+import { auth } from "@/auth"
+import { UserRole } from "@prisma/client"
+
+import { db } from "@/lib/db"
 
 /**
  * Finance modules that can have permissions
  */
 export type FinanceModule =
-  | 'invoice'
-  | 'receipt'
-  | 'banking'
-  | 'fees'
-  | 'salary'
-  | 'payroll'
-  | 'timesheet'
-  | 'wallet'
-  | 'budget'
-  | 'expenses'
-  | 'accounts'
-  | 'reports'
+  | "invoice"
+  | "receipt"
+  | "banking"
+  | "fees"
+  | "salary"
+  | "payroll"
+  | "timesheet"
+  | "wallet"
+  | "budget"
+  | "expenses"
+  | "accounts"
+  | "reports"
 
 /**
  * Actions that can be performed on finance modules
  */
 export type FinanceAction =
-  | 'view'
-  | 'create'
-  | 'edit'
-  | 'delete'
-  | 'approve'
-  | 'process'
-  | 'export'
+  | "view"
+  | "create"
+  | "edit"
+  | "delete"
+  | "approve"
+  | "process"
+  | "export"
 
 /**
  * Roles with default finance access
  */
-const FINANCE_ADMIN_ROLES: UserRole[] = ['ADMIN', 'ACCOUNTANT', 'DEVELOPER']
+const FINANCE_ADMIN_ROLES: UserRole[] = ["ADMIN", "ACCOUNTANT", "DEVELOPER"]
 
 /**
  * Check if user has permission to perform action on module
@@ -85,7 +86,7 @@ export async function checkFinancePermission(
     if (!user) return false
 
     // Developers can access everything
-    if (user.role === 'DEVELOPER') return true
+    if (user.role === "DEVELOPER") return true
 
     // Check if user belongs to this school
     if (user.schoolId !== schoolId) return false
@@ -107,7 +108,7 @@ export async function checkFinancePermission(
 
     return !!permission
   } catch (error) {
-    console.error('Error checking finance permission:', error)
+    console.error("Error checking finance permission:", error)
     return false
   }
 }
@@ -185,7 +186,15 @@ export async function getUserModulePermissions(
 
     // Admins have all permissions
     if (FINANCE_ADMIN_ROLES.includes(user.role)) {
-      return ['view', 'create', 'edit', 'delete', 'approve', 'process', 'export']
+      return [
+        "view",
+        "create",
+        "edit",
+        "delete",
+        "approve",
+        "process",
+        "export",
+      ]
     }
 
     // Get granular permissions
@@ -200,7 +209,7 @@ export async function getUserModulePermissions(
 
     return permissions.map((p) => p.action as FinanceAction)
   } catch (error) {
-    console.error('Error getting user module permissions:', error)
+    console.error("Error getting user module permissions:", error)
     return []
   }
 }
@@ -229,7 +238,7 @@ export async function grantFinancePermission(
       grantedBy,
       schoolId,
       module,
-      'approve' // Approve action implies can manage permissions
+      "approve" // Approve action implies can manage permissions
     )
 
     if (!canGrant) return false
@@ -246,7 +255,7 @@ export async function grantFinancePermission(
 
     return true
   } catch (error) {
-    console.error('Error granting finance permission:', error)
+    console.error("Error granting finance permission:", error)
     return false
   }
 }
@@ -275,7 +284,7 @@ export async function revokeFinancePermission(
       revokedBy,
       schoolId,
       module,
-      'approve'
+      "approve"
     )
 
     if (!canRevoke) return false
@@ -294,7 +303,7 @@ export async function revokeFinancePermission(
 
     return true
   } catch (error) {
-    console.error('Error revoking finance permission:', error)
+    console.error("Error revoking finance permission:", error)
     return false
   }
 }
@@ -319,7 +328,7 @@ export async function hasFinanceRole(
     if (!user) return false
     return roles.includes(user.role)
   } catch (error) {
-    console.error('Error checking finance role:', error)
+    console.error("Error checking finance role:", error)
     return false
   }
 }
@@ -332,37 +341,37 @@ export async function hasFinanceRole(
 export const FinancePermissions = {
   // Invoice permissions
   canViewInvoices: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'invoice', 'view'),
+    checkFinancePermission(userId, schoolId, "invoice", "view"),
   canCreateInvoices: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'invoice', 'create'),
+    checkFinancePermission(userId, schoolId, "invoice", "create"),
   canEditInvoices: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'invoice', 'edit'),
+    checkFinancePermission(userId, schoolId, "invoice", "edit"),
 
   // Payroll permissions
   canViewPayroll: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'payroll', 'view'),
+    checkFinancePermission(userId, schoolId, "payroll", "view"),
   canProcessPayroll: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'payroll', 'process'),
+    checkFinancePermission(userId, schoolId, "payroll", "process"),
   canApprovePayroll: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'payroll', 'approve'),
+    checkFinancePermission(userId, schoolId, "payroll", "approve"),
 
   // Expense permissions
   canViewExpenses: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'expenses', 'view'),
+    checkFinancePermission(userId, schoolId, "expenses", "view"),
   canCreateExpenses: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'expenses', 'create'),
+    checkFinancePermission(userId, schoolId, "expenses", "create"),
   canApproveExpenses: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'expenses', 'approve'),
+    checkFinancePermission(userId, schoolId, "expenses", "approve"),
 
   // Accounts permissions (accounting system)
   canViewAccounts: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'accounts', 'view'),
+    checkFinancePermission(userId, schoolId, "accounts", "view"),
   canEditAccounts: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'accounts', 'edit'),
+    checkFinancePermission(userId, schoolId, "accounts", "edit"),
 
   // Reports permissions
   canViewReports: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'reports', 'view'),
+    checkFinancePermission(userId, schoolId, "reports", "view"),
   canExportReports: (userId: string, schoolId: string) =>
-    checkFinancePermission(userId, schoolId, 'reports', 'export'),
+    checkFinancePermission(userId, schoolId, "reports", "export"),
 }

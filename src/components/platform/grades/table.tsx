@@ -1,46 +1,58 @@
-"use client";
+"use client"
 
-import { useMemo, useState, useCallback, useTransition } from "react";
-import { DataTable } from "@/components/table/data-table";
-import { useDataTable } from "@/components/table/use-data-table";
-import { resultColumns, type ResultRow } from "./columns";
-import { useModal } from "@/components/atom/modal/context";
-import Modal from "@/components/atom/modal/modal";
-import { ResultCreateForm } from "@/components/platform/grades/form";
-import { getResults, getResultsCSV, deleteResult } from "./actions";
-import { usePlatformView } from "@/hooks/use-platform-view";
-import { usePlatformData } from "@/hooks/use-platform-data";
+import { useCallback, useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
+import { ClipboardCheck, TrendingUp } from "lucide-react"
+
+import { usePlatformData } from "@/hooks/use-platform-data"
+import { usePlatformView } from "@/hooks/use-platform-view"
+import { useModal } from "@/components/atom/modal/context"
+import Modal from "@/components/atom/modal/modal"
 import {
-  PlatformToolbar,
+  confirmDeleteDialog,
+  DeleteToast,
+  ErrorToast,
+} from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { ResultCreateForm } from "@/components/platform/grades/form"
+import {
   GridCard,
   GridContainer,
   GridEmptyState,
-} from "@/components/platform/shared";
-import { ClipboardCheck, TrendingUp } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
+  PlatformToolbar,
+} from "@/components/platform/shared"
+import { DataTable } from "@/components/table/data-table"
+import { useDataTable } from "@/components/table/use-data-table"
+
+import { deleteResult, getResults, getResultsCSV } from "./actions"
+import { resultColumns, type ResultRow } from "./columns"
 
 interface ResultsTableProps {
-  initialData: ResultRow[];
-  total: number;
-  dictionary: Dictionary["school"]["grades"];
-  lang: Locale;
-  perPage?: number;
+  initialData: ResultRow[]
+  total: number
+  dictionary: Dictionary["school"]["grades"]
+  lang: Locale
+  perPage?: number
 }
 
-export function ResultsTable({ initialData, total, dictionary, lang, perPage = 20 }: ResultsTableProps) {
-  const router = useRouter();
-  const { openModal } = useModal();
-  const [isPending, startTransition] = useTransition();
-  const t = dictionary;
+export function ResultsTable({
+  initialData,
+  total,
+  dictionary,
+  lang,
+  perPage = 20,
+}: ResultsTableProps) {
+  const router = useRouter()
+  const { openModal } = useModal()
+  const [isPending, startTransition] = useTransition()
+  const t = dictionary
 
   // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+  const { view, toggleView } = usePlatformView({ defaultView: "table" })
 
   // Search state
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState("")
 
   // Data management with optimistic updates
   const {
@@ -56,50 +68,65 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getResults(params);
+      const result = await getResults(params)
       if (result.success) {
-        return { rows: result.data.rows as ResultRow[], total: result.data.total };
+        return {
+          rows: result.data.rows as ResultRow[],
+          total: result.data.total,
+        }
       }
-      return { rows: [], total: 0 };
+      return { rows: [], total: 0 }
     },
     filters: searchValue ? { studentName: searchValue } : undefined,
-  });
+  })
 
   // Handle search
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value)
+      startTransition(() => {
+        router.refresh()
+      })
+    },
+    [router]
+  )
 
   // Handle delete with optimistic update (must be before columns useMemo)
-  const handleDelete = useCallback(async (result: ResultRow) => {
-    try {
-      const ok = await confirmDeleteDialog(t.deleteResultConfirm.replace("{studentName}", result.studentName));
-      if (!ok) return;
+  const handleDelete = useCallback(
+    async (result: ResultRow) => {
+      try {
+        const ok = await confirmDeleteDialog(
+          t.deleteResultConfirm.replace("{studentName}", result.studentName)
+        )
+        if (!ok) return
 
-      // Optimistic remove
-      optimisticRemove(result.id);
+        // Optimistic remove
+        optimisticRemove(result.id)
 
-      const res = await deleteResult({ id: result.id });
-      if (res.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast(t.failedToUpdate);
+        const res = await deleteResult({ id: result.id })
+        if (res.success) {
+          DeleteToast()
+        } else {
+          // Revert on error
+          refresh()
+          ErrorToast(t.failedToUpdate)
+        }
+      } catch (e) {
+        refresh()
+        ErrorToast(e instanceof Error ? e.message : t.failedToUpdate)
       }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : t.failedToUpdate);
-    }
-  }, [optimisticRemove, refresh, t]);
+    },
+    [optimisticRemove, refresh, t]
+  )
 
   // Generate columns on the client side with hooks and callbacks
-  const columns = useMemo(() => resultColumns(t, lang, {
-    onDelete: handleDelete,
-  }), [t, lang, handleDelete]);
+  const columns = useMemo(
+    () =>
+      resultColumns(t, lang, {
+        onDelete: handleDelete,
+      }),
+    [t, lang, handleDelete]
+  )
 
   // Table instance
   const { table } = useDataTable<ResultRow>({
@@ -117,38 +144,58 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
         maxScore: false,
         createdAt: false,
       },
-    }
-  });
+    },
+  })
 
   // Handle edit
-  const handleEdit = useCallback((id: string) => {
-    openModal(id);
-  }, [openModal]);
+  const handleEdit = useCallback(
+    (id: string) => {
+      openModal(id)
+    },
+    [openModal]
+  )
 
   // Handle view
-  const handleView = useCallback((id: string) => {
-    router.push(`/grades/${id}`);
-  }, [router]);
+  const handleView = useCallback(
+    (id: string) => {
+      router.push(`/grades/${id}`)
+    },
+    [router]
+  )
 
   // Export CSV wrapper
-  const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    const result = await getResultsCSV(filters);
-    if (result.success) {
-      return result.data;
-    }
-    return "";
-  }, []);
+  const handleExportCSV = useCallback(
+    async (filters?: Record<string, unknown>) => {
+      const result = await getResultsCSV(filters)
+      if (result.success) {
+        return result.data
+      }
+      return ""
+    },
+    []
+  )
 
   // Get grade color
   const getGradeColor = (grade: string) => {
-    const gradeMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      "A+": "default", "A": "default", "A-": "default",
-      "B+": "secondary", "B": "secondary", "B-": "secondary",
-      "C+": "outline", "C": "outline", "C-": "outline",
-      "D+": "destructive", "D": "destructive", "F": "destructive",
-    };
-    return { label: grade, variant: gradeMap[grade] || "outline" };
-  };
+    const gradeMap: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
+      "A+": "default",
+      A: "default",
+      "A-": "default",
+      "B+": "secondary",
+      B: "secondary",
+      "B-": "secondary",
+      "C+": "outline",
+      C: "outline",
+      "C-": "outline",
+      "D+": "destructive",
+      D: "destructive",
+      F: "destructive",
+    }
+    return { label: grade, variant: gradeMap[grade] || "outline" }
+  }
 
   // Toolbar translations
   const toolbarTranslations = {
@@ -158,7 +205,7 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     export: "Export",
     exportCSV: t.exportCSV || "Export CSV",
     exporting: "Exporting...",
-  };
+  }
 
   return (
     <>
@@ -199,8 +246,8 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
                   .map((n) => n[0])
                   .join("")
                   .substring(0, 2)
-                  .toUpperCase();
-                const gradeBadge = getGradeColor(result.grade);
+                  .toUpperCase()
+                const gradeBadge = getGradeColor(result.grade)
 
                 return (
                   <GridCard
@@ -226,8 +273,14 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
                       },
                     ]}
                     actions={[
-                      { label: t.viewGrade || "View", onClick: () => handleView(result.id) },
-                      { label: t.editGrade || "Edit", onClick: () => handleEdit(result.id) },
+                      {
+                        label: t.viewGrade || "View",
+                        onClick: () => handleView(result.id),
+                      },
+                      {
+                        label: t.editGrade || "Edit",
+                        onClick: () => handleEdit(result.id),
+                      },
                       {
                         label: t.deleteGrade || "Delete",
                         onClick: () => handleDelete(result),
@@ -237,18 +290,18 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
                     actionsLabel={t.actions}
                     onClick={() => handleView(result.id)}
                   />
-                );
+                )
               })}
             </GridContainer>
           )}
 
           {/* Load more for grid view */}
           {hasMore && (
-            <div className="flex justify-center mt-4">
+            <div className="mt-4 flex justify-center">
               <button
                 onClick={loadMore}
                 disabled={isLoading}
-                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
               >
                 {isLoading ? "Loading..." : "Load More"}
               </button>
@@ -257,7 +310,9 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
         </>
       )}
 
-      <Modal content={<ResultCreateForm dictionary={t} onSuccess={refresh} />} />
+      <Modal
+        content={<ResultCreateForm dictionary={t} onSuccess={refresh} />}
+      />
     </>
-  );
+  )
 }

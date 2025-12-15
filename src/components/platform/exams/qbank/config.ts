@@ -3,7 +3,7 @@ import {
   DifficultyLevel,
   QuestionSource,
   QuestionType,
-} from "@prisma/client";
+} from "@prisma/client"
 
 // Question Types Configuration
 export const QUESTION_TYPES = [
@@ -42,7 +42,7 @@ export const QUESTION_TYPES = [
     icon: "BookOpen",
     supportsAutoGrading: false,
   },
-] as const;
+] as const
 
 // Difficulty Levels Configuration
 export const DIFFICULTY_LEVELS = [
@@ -67,7 +67,7 @@ export const DIFFICULTY_LEVELS = [
     color: "red" as const,
     points: 3,
   },
-] as const;
+] as const
 
 // Bloom's Taxonomy Levels Configuration
 export const BLOOM_LEVELS = [
@@ -76,13 +76,7 @@ export const BLOOM_LEVELS = [
     value: BloomLevel.REMEMBER,
     level: 1,
     description: "Recall facts and basic concepts",
-    examples: [
-      "Define...",
-      "List...",
-      "Identify...",
-      "Name...",
-      "State...",
-    ],
+    examples: ["Define...", "List...", "Identify...", "Name...", "State..."],
     color: "#E3F2FD" as const,
   },
   {
@@ -155,7 +149,7 @@ export const BLOOM_LEVELS = [
     ],
     color: "#2196F3" as const,
   },
-] as const;
+] as const
 
 // Question Source Configuration
 export const QUESTION_SOURCES = [
@@ -177,14 +171,14 @@ export const QUESTION_SOURCES = [
     description: "Imported from external source",
     icon: "Upload",
   },
-] as const;
+] as const
 
 // Default Points by Difficulty
 export const DEFAULT_POINTS_BY_DIFFICULTY = {
   [DifficultyLevel.EASY]: 1,
   [DifficultyLevel.MEDIUM]: 2,
   [DifficultyLevel.HARD]: 3,
-} as const;
+} as const
 
 // Default Points by Question Type
 export const DEFAULT_POINTS_BY_TYPE = {
@@ -193,7 +187,7 @@ export const DEFAULT_POINTS_BY_TYPE = {
   [QuestionType.FILL_BLANK]: 2,
   [QuestionType.SHORT_ANSWER]: 3,
   [QuestionType.ESSAY]: 5,
-} as const;
+} as const
 
 // Time Estimates (in minutes)
 export const DEFAULT_TIME_ESTIMATES = {
@@ -202,7 +196,7 @@ export const DEFAULT_TIME_ESTIMATES = {
   [QuestionType.FILL_BLANK]: 2,
   [QuestionType.SHORT_ANSWER]: 5,
   [QuestionType.ESSAY]: 15,
-} as const;
+} as const
 
 // Template Distribution Defaults
 export const DEFAULT_TEMPLATE_DISTRIBUTION = {
@@ -216,7 +210,7 @@ export const DEFAULT_TEMPLATE_DISTRIBUTION = {
     [DifficultyLevel.MEDIUM]: 2,
     [DifficultyLevel.HARD]: 0,
   },
-} as const;
+} as const
 
 // Template Bloom Distribution Defaults
 export const DEFAULT_BLOOM_DISTRIBUTION = {
@@ -226,7 +220,7 @@ export const DEFAULT_BLOOM_DISTRIBUTION = {
   [BloomLevel.ANALYZE]: 1,
   [BloomLevel.EVALUATE]: 0,
   [BloomLevel.CREATE]: 0,
-} as const;
+} as const
 
 // AI Generation Prompts
 export const AI_GENERATION_PROMPTS = {
@@ -293,7 +287,7 @@ Return the question in this exact JSON format:
   "gradingRubric": "Rubric with criteria: Structure (20%), Content (40%), Analysis (30%), Conclusion (10%)",
   "explanation": "What the essay should address"
 }`,
-} as const;
+} as const
 
 // Exam Generation Settings
 export const EXAM_GENERATION_SETTINGS = {
@@ -304,7 +298,7 @@ export const EXAM_GENERATION_SETTINGS = {
   maxDuration: 480, // 8 hours
   allowDuplicateQuestions: false,
   defaultRandomization: false,
-} as const;
+} as const
 
 // Analytics Settings
 export const ANALYTICS_SETTINGS = {
@@ -318,51 +312,53 @@ export const ANALYTICS_SETTINGS = {
     [DifficultyLevel.MEDIUM]: { min: 50, max: 79 },
     [DifficultyLevel.HARD]: { min: 0, max: 49 },
   },
-} as const;
+} as const
 
 // Helper Functions
 export function getQuestionTypeConfig(type: QuestionType) {
-  return QUESTION_TYPES.find((qt) => qt.value === type);
+  return QUESTION_TYPES.find((qt) => qt.value === type)
 }
 
 export function getDifficultyLevelConfig(difficulty: DifficultyLevel) {
-  return DIFFICULTY_LEVELS.find((dl) => dl.value === difficulty);
+  return DIFFICULTY_LEVELS.find((dl) => dl.value === difficulty)
 }
 
 export function getBloomLevelConfig(bloomLevel: BloomLevel) {
-  return BLOOM_LEVELS.find((bl) => bl.value === bloomLevel);
+  return BLOOM_LEVELS.find((bl) => bl.value === bloomLevel)
 }
 
 export function getQuestionSourceConfig(source: QuestionSource) {
-  return QUESTION_SOURCES.find((qs) => qs.value === source);
+  return QUESTION_SOURCES.find((qs) => qs.value === source)
 }
 
 export function calculateDefaultPoints(
   type: QuestionType,
   difficulty: DifficultyLevel
 ) {
-  const basePoints = DEFAULT_POINTS_BY_TYPE[type];
+  const basePoints = DEFAULT_POINTS_BY_TYPE[type]
   const difficultyMultiplier =
     difficulty === DifficultyLevel.EASY
       ? 1
       : difficulty === DifficultyLevel.MEDIUM
         ? 1.5
-        : 2;
-  return Math.round(basePoints * difficultyMultiplier);
+        : 2
+  return Math.round(basePoints * difficultyMultiplier)
 }
 
-export function estimateExamDuration(questions: {
-  questionType: QuestionType;
-  difficulty: DifficultyLevel;
-}[]) {
+export function estimateExamDuration(
+  questions: {
+    questionType: QuestionType
+    difficulty: DifficultyLevel
+  }[]
+) {
   return questions.reduce((total, q) => {
-    const baseTime = DEFAULT_TIME_ESTIMATES[q.questionType];
+    const baseTime = DEFAULT_TIME_ESTIMATES[q.questionType]
     const difficultyMultiplier =
       q.difficulty === DifficultyLevel.EASY
         ? 1
         : q.difficulty === DifficultyLevel.MEDIUM
           ? 1.2
-          : 1.5;
-    return total + baseTime * difficultyMultiplier;
-  }, 0);
+          : 1.5
+    return total + baseTime * difficultyMultiplier
+  }, 0)
 }

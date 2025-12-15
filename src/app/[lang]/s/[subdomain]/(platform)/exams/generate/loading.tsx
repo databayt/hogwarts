@@ -1,8 +1,8 @@
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonFormGrid } from "@/components/ui/skeleton-form"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonFormGrid } from "@/components/ui/skeleton-form"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function Loading() {
   return (

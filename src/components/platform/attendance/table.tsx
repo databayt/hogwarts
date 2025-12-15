@@ -1,18 +1,32 @@
-"use client";
+"use client"
 
-import * as React from 'react'
-import { DataTable } from '@/components/table/data-table'
-import { DataTableToolbar } from '@/components/table/data-table-toolbar'
-import { useDataTable } from '@/components/table/use-data-table'
-import { ColumnDef } from '@tanstack/react-table'
+import * as React from "react"
+import { ColumnDef } from "@tanstack/react-table"
 
-export type AttendanceRow = { studentId: string; name: string; status: 'present' | 'absent' | 'late' }
+import { DataTable } from "@/components/table/data-table"
+import { DataTableToolbar } from "@/components/table/data-table-toolbar"
+import { useDataTable } from "@/components/table/use-data-table"
 
-export function AttendanceTable({ data, columns, onChangeStatus }: { data: AttendanceRow[]; columns: ColumnDef<AttendanceRow, unknown>[]; onChangeStatus?: (studentId: string, status: AttendanceRow['status']) => void }) {
+export type AttendanceRow = {
+  studentId: string
+  name: string
+  status: "present" | "absent" | "late"
+}
+
+export function AttendanceTable({
+  data,
+  columns,
+  onChangeStatus,
+}: {
+  data: AttendanceRow[]
+  columns: ColumnDef<AttendanceRow, unknown>[]
+  onChangeStatus?: (studentId: string, status: AttendanceRow["status"]) => void
+}) {
   const result = useDataTable<AttendanceRow>({ data, columns, pageCount: -1 })
   const table = (result as unknown as { table: unknown }).table as any
-  (table.options as unknown as { meta?: Record<string, unknown> }).meta = {
-    ...((table.options as unknown as { meta?: Record<string, unknown> }).meta ?? {}),
+  ;(table.options as unknown as { meta?: Record<string, unknown> }).meta = {
+    ...((table.options as unknown as { meta?: Record<string, unknown> }).meta ??
+      {}),
     onChangeStatus,
   }
   return (
@@ -21,6 +35,3 @@ export function AttendanceTable({ data, columns, onChangeStatus }: { data: Atten
     </DataTable>
   )
 }
-
-
-

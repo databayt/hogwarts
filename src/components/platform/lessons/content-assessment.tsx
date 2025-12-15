@@ -1,16 +1,23 @@
-"use client";
+"use client"
 
-import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { lessonCreateSchema } from "./validation";
-import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { type UseFormReturn } from "react-hook-form"
+import { z } from "zod"
 
-import { LessonFormStepProps } from "./types";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
+
+import { LessonFormStepProps } from "./types"
+import { lessonCreateSchema } from "./validation"
 
 export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
   return (
-    <div className="space-y-4 w-full">
+    <div className="w-full space-y-4">
       <FormField
         control={form.control}
         name="objectives"
@@ -18,11 +25,11 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
           <FormItem>
             <FormLabel>Learning Objectives</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="What will students learn in this lesson?" 
+              <Textarea
+                placeholder="What will students learn in this lesson?"
                 className="min-h-[100px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -37,11 +44,11 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
           <FormItem>
             <FormLabel>Required Materials</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="What materials, books, or resources are needed?" 
+              <Textarea
+                placeholder="What materials, books, or resources are needed?"
                 className="min-h-[100px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -56,11 +63,11 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
           <FormItem>
             <FormLabel>Lesson Activities</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Describe the main activities and structure of the lesson" 
+              <Textarea
+                placeholder="Describe the main activities and structure of the lesson"
                 className="min-h-[120px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -75,11 +82,11 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
           <FormItem>
             <FormLabel>Assessment & Evaluation</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="How will you assess student understanding and progress?" 
+              <Textarea
+                placeholder="How will you assess student understanding and progress?"
                 className="min-h-[100px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -94,11 +101,11 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
           <FormItem>
             <FormLabel>Additional Notes</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Any additional notes, reminders, or special instructions" 
+              <Textarea
+                placeholder="Any additional notes, reminders, or special instructions"
                 className="min-h-[100px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />
@@ -106,5 +113,5 @@ export function ContentAssessmentStep({ form, isView }: LessonFormStepProps) {
         )}
       />
     </div>
-  );
+  )
 }

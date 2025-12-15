@@ -1,27 +1,28 @@
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { notFound } from "next/navigation";
-import { Zap } from "lucide-react";
+import { notFound } from "next/navigation"
+import { Zap } from "lucide-react"
 
-export const metadata = { title: "Bulk Marking" };
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+export const metadata = { title: "Bulk Marking" }
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string; id: string }>;
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function BulkMarkingPage({ params }: Props) {
-  const { lang, id: examId } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id: examId } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return notFound();
+    return notFound()
   }
 
   const exam = await db.exam.findUnique({
@@ -35,13 +36,13 @@ export default async function BulkMarkingPage({ params }: Props) {
         },
       },
     },
-  });
+  })
 
   if (!exam) {
-    return notFound();
+    return notFound()
   }
 
-  const d = dictionary?.marking;
+  const d = dictionary?.marking
 
   return (
     <PageContainer>
@@ -60,18 +61,20 @@ export default async function BulkMarkingPage({ params }: Props) {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              {d?.bulkMarkingDescription || "Grade multiple student submissions at once using automated marking rules."}
+              {d?.bulkMarkingDescription ||
+                "Grade multiple student submissions at once using automated marking rules."}
             </p>
             <div className="space-y-2">
               <p className="text-sm font-medium">
                 {d?.examStats || "Exam Statistics"}:
               </p>
-              <ul className="text-sm text-muted-foreground space-y-1">
+              <ul className="text-muted-foreground space-y-1 text-sm">
                 <li>
                   • {d?.totalMarks || "Total Marks"}: {exam.totalMarks}
                 </li>
                 <li>
-                  • {d?.totalResults || "Total Results"}: {exam._count.examResults}
+                  • {d?.totalResults || "Total Results"}:{" "}
+                  {exam._count.examResults}
                 </li>
               </ul>
             </div>
@@ -83,5 +86,5 @@ export default async function BulkMarkingPage({ params }: Props) {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

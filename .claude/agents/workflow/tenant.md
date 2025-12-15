@@ -13,38 +13,41 @@ model: sonnet
 ## Critical Multi-Tenant Rules
 
 ### Rule #1: ALWAYS Include schoolId
+
 Every database operation MUST be scoped by `schoolId`:
 
 ```typescript
 // ✅ CORRECT - Always include schoolId
 const students = await db.student.findMany({
   where: {
-    schoolId: session.user.schoolId,  // REQUIRED
-    status: 'ACTIVE'
-  }
+    schoolId: session.user.schoolId, // REQUIRED
+    status: "ACTIVE",
+  },
 })
 
 // ❌ WRONG - Missing schoolId (CRITICAL SECURITY ISSUE)
 const students = await db.student.findMany({
   where: {
-    status: 'ACTIVE'  // This returns ALL schools' students!
-  }
+    status: "ACTIVE", // This returns ALL schools' students!
+  },
 })
 ```
 
 ### Rule #2: Get schoolId from Session Only
+
 ```typescript
 // ✅ CORRECT - schoolId from authenticated session
 const session = await auth()
 const schoolId = session?.user?.schoolId
 
 // ❌ WRONG - Never trust client-provided schoolId
-const schoolId = req.body.schoolId  // NEVER DO THIS
+const schoolId = req.body.schoolId // NEVER DO THIS
 const schoolId = req.query.schoolId // NEVER DO THIS
-const schoolId = formData.get('schoolId') // NEVER DO THIS
+const schoolId = formData.get("schoolId") // NEVER DO THIS
 ```
 
 ### Rule #3: Validate Tenant Access
+
 ```typescript
 // Before accessing any resource
 async function canAccessResource(
@@ -56,11 +59,11 @@ async function canAccessResource(
     where: {
       id: resourceId,
       schoolId, // Must match user's schoolId
-    }
+    },
   })
 
   if (!resource) {
-    throw new Error('Resource not found or access denied')
+    throw new Error("Resource not found or access denied")
   }
 
   return resource
@@ -70,6 +73,7 @@ async function canAccessResource(
 ## Database Schema Patterns
 
 ### Every Business Model Includes schoolId
+
 ```prisma
 model Student {
   id        String   @id @default(cuid())
@@ -85,6 +89,7 @@ model Student {
 ```
 
 ### Compound Unique Constraints
+
 ```prisma
 model Class {
   id        String @id @default(cuid())
@@ -98,6 +103,7 @@ model Class {
 ```
 
 ### Relations Must Respect Boundaries
+
 ```prisma
 model StudentClass {
   id        String @id @default(cuid())
@@ -117,12 +123,14 @@ model StudentClass {
 ## Server Action Patterns
 
 ### Safe Server Action Template
+
 ```typescript
 "use server"
 
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
-import { z } from 'zod'
+import { auth } from "@/auth"
+import { z } from "zod"
+
+import { db } from "@/lib/db"
 
 const schema = z.object({
   name: z.string().min(1),
@@ -133,7 +141,7 @@ export async function createStudent(formData: FormData) {
   // 1. Get session and schoolId
   const session = await auth()
   if (!session?.user?.schoolId) {
-    throw new Error('Unauthorized')
+    throw new Error("Unauthorized")
   }
   const schoolId = session.user.schoolId
 
@@ -145,22 +153,20 @@ export async function createStudent(formData: FormData) {
     data: {
       ...data,
       schoolId, // ALWAYS include
-    }
+    },
   })
 
   // 4. Revalidate
-  revalidatePath('/students')
+  revalidatePath("/students")
 
   return student
 }
 ```
 
 ### Safe Update Pattern
+
 ```typescript
-export async function updateStudent(
-  id: string,
-  formData: FormData
-) {
+export async function updateStudent(id: string, formData: FormData) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
 
@@ -169,11 +175,11 @@ export async function updateStudent(
     where: {
       id,
       schoolId, // Must belong to user's school
-    }
+    },
   })
 
   if (!existing) {
-    throw new Error('Student not found or access denied')
+    throw new Error("Student not found or access denied")
   }
 
   // Safe to update
@@ -186,6 +192,7 @@ export async function updateStudent(
 ```
 
 ### Safe Delete Pattern
+
 ```typescript
 export async function deleteStudent(id: string) {
   const session = await auth()
@@ -196,20 +203,21 @@ export async function deleteStudent(id: string) {
     where: {
       id,
       schoolId,
-    }
+    },
   })
 
   if (result.count === 0) {
-    throw new Error('Student not found or access denied')
+    throw new Error("Student not found or access denied")
   }
 
-  revalidatePath('/students')
+  revalidatePath("/students")
 }
 ```
 
 ## Query Patterns
 
 ### List Query
+
 ```typescript
 // Always filter by schoolId first
 const students = await db.student.findMany({
@@ -217,26 +225,27 @@ const students = await db.student.findMany({
     schoolId,
     ...(search && {
       OR: [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ]
-    })
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ],
+    }),
   },
   include: {
     yearLevel: true,
     classes: {
       include: {
         class: true,
-      }
-    }
+      },
+    },
   },
-  orderBy: { createdAt: 'desc' },
+  orderBy: { createdAt: "desc" },
   take: 20,
   skip: (page - 1) * 20,
 })
 ```
 
 ### Single Item Query
+
 ```typescript
 // Include schoolId even for "unique" lookups
 const student = await db.student.findFirst({
@@ -247,25 +256,26 @@ const student = await db.student.findFirst({
   include: {
     guardian: true,
     classes: true,
-  }
+  },
 })
 
 if (!student) {
   // Don't reveal if exists in another school
-  throw new Error('Student not found')
+  throw new Error("Student not found")
 }
 ```
 
 ### Aggregate Queries
+
 ```typescript
 // Count must be scoped
 const totalStudents = await db.student.count({
-  where: { schoolId }
+  where: { schoolId },
 })
 
 // Group by must be scoped
 const studentsByGrade = await db.student.groupBy({
-  by: ['yearLevelId'],
+  by: ["yearLevelId"],
   where: { schoolId },
   _count: true,
 })
@@ -274,30 +284,32 @@ const studentsByGrade = await db.student.groupBy({
 ## Cross-Tenant Operations
 
 ### Platform Admin Access (DEVELOPER role)
+
 ```typescript
 // Only DEVELOPER role can access cross-tenant
-if (session.user.role === 'DEVELOPER') {
+if (session.user.role === "DEVELOPER") {
   // Can query without schoolId filter
   const allSchools = await db.school.findMany()
 } else {
   // Regular users are restricted
   const school = await db.school.findUnique({
-    where: { id: session.user.schoolId }
+    where: { id: session.user.schoolId },
   })
 }
 ```
 
 ### Subdomain Routing
+
 ```typescript
 // middleware.ts
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl
-  const hostname = req.headers.get('host')
+  const hostname = req.headers.get("host")
 
   // Extract subdomain
-  const subdomain = hostname?.split('.')[0]
+  const subdomain = hostname?.split(".")[0]
 
-  if (subdomain && subdomain !== 'www') {
+  if (subdomain && subdomain !== "www") {
     // Rewrite to tenant-specific route
     url.pathname = `/s/${subdomain}${url.pathname}`
     return NextResponse.rewrite(url)
@@ -308,12 +320,14 @@ export async function middleware(req: NextRequest) {
 ## Validation Checklist
 
 ### Model Validation
+
 - [ ] All business models have `schoolId` field
 - [ ] Unique constraints include `schoolId`
 - [ ] Indexes on `schoolId` for performance
 - [ ] Relations respect tenant boundaries
 
 ### Query Validation
+
 - [ ] Every `findMany` includes `schoolId`
 - [ ] Every `findFirst` includes `schoolId`
 - [ ] Every `findUnique` verified with `schoolId`
@@ -322,6 +336,7 @@ export async function middleware(req: NextRequest) {
 - [ ] Aggregates filtered by `schoolId`
 
 ### Server Action Validation
+
 - [ ] schoolId from session only
 - [ ] Never trust client schoolId
 - [ ] Verify ownership before mutations
@@ -329,6 +344,7 @@ export async function middleware(req: NextRequest) {
 - [ ] Error messages don't leak data
 
 ### API Route Validation
+
 - [ ] Extract schoolId from session
 - [ ] Validate tenant access
 - [ ] Scope all queries
@@ -337,22 +353,24 @@ export async function middleware(req: NextRequest) {
 ## Common Violations
 
 ### Violation: Missing schoolId in Query
+
 ```typescript
 // ❌ VIOLATION - Returns all schools' data
 const classes = await db.class.findMany({
-  where: { subjectId }
+  where: { subjectId },
 })
 
 // ✅ FIX
 const classes = await db.class.findMany({
-  where: { subjectId, schoolId }
+  where: { subjectId, schoolId },
 })
 ```
 
 ### Violation: Client-Provided schoolId
+
 ```typescript
 // ❌ VIOLATION - Trusts user input
-const schoolId = formData.get('schoolId')
+const schoolId = formData.get("schoolId")
 
 // ✅ FIX
 const session = await auth()
@@ -360,28 +378,29 @@ const schoolId = session?.user?.schoolId
 ```
 
 ### Violation: Cross-Tenant Reference
+
 ```typescript
 // ❌ VIOLATION - Could link to another school's class
 await db.studentClass.create({
   data: {
     studentId,
-    classId: formData.get('classId'), // Unverified!
-    schoolId
-  }
+    classId: formData.get("classId"), // Unverified!
+    schoolId,
+  },
 })
 
 // ✅ FIX - Verify class belongs to school
 const classExists = await db.class.findFirst({
-  where: { id: classId, schoolId }
+  where: { id: classId, schoolId },
 })
-if (!classExists) throw new Error('Invalid class')
+if (!classExists) throw new Error("Invalid class")
 ```
 
 ## Testing Multi-Tenant Safety
 
 ```typescript
-describe('Multi-tenant safety', () => {
-  it('should not return other school data', async () => {
+describe("Multi-tenant safety", () => {
+  it("should not return other school data", async () => {
     const school1 = await createSchool()
     const school2 = await createSchool()
 
@@ -402,6 +421,7 @@ describe('Multi-tenant safety', () => {
 ## Emergency Response
 
 If tenant isolation is breached:
+
 1. Immediately disable affected endpoints
 2. Audit all recent queries
 3. Identify scope of exposure

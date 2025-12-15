@@ -4,19 +4,14 @@ import * as React from "react"
 import { IconCheck, IconCopy, IconTerminal } from "@tabler/icons-react"
 
 import { useConfig } from "@/hooks/use-config"
-import { copyToClipboardWithMeta } from "@/components/docs/copy-button"
 import { Button } from "@/components/ui/button"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { copyToClipboardWithMeta } from "@/components/docs/copy-button"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>
@@ -39,7 +34,8 @@ export function CodeBlockCommand({
 
   const copyText = dictionary?.docs?.copy || "Copy"
   const copiedText = dictionary?.docs?.copied || "Copied"
-  const copyToClipboardText = dictionary?.docs?.copyToClipboard || "Copy to Clipboard"
+  const copyToClipboardText =
+    dictionary?.docs?.copyToClipboard || "Copy to Clipboard"
 
   React.useEffect(() => {
     if (hasCopied) {
@@ -128,7 +124,7 @@ export function CodeBlockCommand({
             data-slot="copy-button"
             size="icon"
             variant="ghost"
-            className="absolute top-2 end-2 z-10 size-7 opacity-70 hover:opacity-100 focus-visible:opacity-100"
+            className="absolute end-2 top-2 z-10 size-7 opacity-70 hover:opacity-100 focus-visible:opacity-100"
             onClick={copyCommand}
           >
             <span className="sr-only">{copyText}</span>

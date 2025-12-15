@@ -3,9 +3,9 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/ui/accordion"
 
-import { HeaderSection } from "../../atom/header-section";
+import { HeaderSection } from "../../atom/header-section"
 
 const pricingFaqData = [
   {
@@ -38,7 +38,7 @@ const pricingFaqData = [
     answer:
       "We offer a 14-day free trial for both the Pro Monthly and Pro Annual plans. It's a great way to experience all the features before committing to a paid subscription.",
   },
-];
+]
 
 export function PricingFaq() {
   return (
@@ -62,5 +62,5 @@ export function PricingFaq() {
         ))}
       </Accordion>
     </section>
-  );
+  )
 }

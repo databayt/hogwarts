@@ -6,12 +6,12 @@ The Announcements feature enables administrators to broadcast important messages
 
 ### URLs Handled by This Block
 
-| URL | Page | Status |
-|-----|------|--------|
-| `/[lang]/s/[subdomain]/(platform)/announcements` | Announcements List | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/announcements/new` | Create Announcement | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/announcements/[id]` | View Announcement | ✅ Ready |
-| `/[lang]/s/[subdomain]/(platform)/announcements/[id]/edit` | Edit Announcement | ✅ Ready |
+| URL                                                        | Page                | Status   |
+| ---------------------------------------------------------- | ------------------- | -------- |
+| `/[lang]/s/[subdomain]/(platform)/announcements`           | Announcements List  | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/new`       | Create Announcement | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/[id]`      | View Announcement   | ✅ Ready |
+| `/[lang]/s/[subdomain]/(platform)/announcements/[id]/edit` | Edit Announcement   | ✅ Ready |
 
 **Status:** ✅ Production-Ready MVP (85%)
 **Last Updated:** 2025-12-14
@@ -19,6 +19,7 @@ The Announcements feature enables administrators to broadcast important messages
 ### What Admins Can Do
 
 **Core Capabilities:**
+
 - 📢 Create school-wide announcements
 - 🎯 Target specific audiences (classes, roles)
 - 📅 Schedule announcements
@@ -27,26 +28,31 @@ The Announcements feature enables administrators to broadcast important messages
 - 🔔 Send push notifications
 
 ### What Teachers Can Do
+
 - ✅ Create class announcements
 - ✅ Send messages to their students
 - ✅ View school announcements
 - ❌ Cannot create school-wide announcements
 
 ### What Students Can View
+
 - ✅ View school announcements
 - ✅ View class announcements
 - ✅ Mark as read
 - ❌ Cannot create announcements
 
 ### What Parents Can View
+
 - ✅ View school announcements
 - ✅ View class announcements (if child enrolled)
 - ❌ Cannot create announcements
 
 ### Current Implementation Status
+
 **Production-Ready MVP ✅**
 
 **Completed:**
+
 - ✅ CRUD operations with validation
 - ✅ Multi-step form (information → scope)
 - ✅ Scope targeting (SCHOOL, CLASS, ROLE)
@@ -54,6 +60,7 @@ The Announcements feature enables administrators to broadcast important messages
 - ✅ Multi-tenant isolation (schoolId scoping)
 
 **Planned:**
+
 - ⏸️ Read receipts tracking
 - ⏸️ Push notifications
 - ⏸️ Email notifications
@@ -64,6 +71,7 @@ The Announcements feature enables administrators to broadcast important messages
 ## Admin Workflows
 
 ### 1. Create School-Wide Announcement
+
 1. Navigate to `/announcements`
 2. Click "Create Announcement"
 3. Fill in details:
@@ -75,12 +83,14 @@ The Announcements feature enables administrators to broadcast important messages
 5. All users see announcement
 
 ### 2. Target Specific Class
+
 1. Create announcement
 2. Set scope to CLASS
 3. Select class from dropdown
 4. Only students/parents of that class see it
 
 ### 3. Target by Role
+
 1. Create announcement
 2. Set scope to ROLE
 3. Select role (TEACHER, STUDENT, PARENT)
@@ -91,11 +101,13 @@ The Announcements feature enables administrators to broadcast important messages
 ## Integration with Other Features
 
 ### Links to Classes
+
 - Class-specific announcements
 - Visible to enrolled students
 - Parents of class students notified
 
 ### Links to Dashboard
+
 - Recent announcements widget
 - Unread count badge
 - Quick announcement creation
@@ -124,10 +136,12 @@ The component follows the standardized file pattern:
 ## Features
 
 ### Multi-step Form
+
 - **Step 1**: Basic Information (title, body)
 - **Step 2**: Scope & Publishing (scope, class/role selection, publish status)
 
 ### Data Management
+
 - Create new announcements
 - Edit existing announcements
 - Delete announcements
@@ -136,12 +150,14 @@ The component follows the standardized file pattern:
 - Search and filter by title, scope, and publish status
 
 ### Validation
+
 - Client-side validation with Zod schemas
 - Server-side validation for all mutations
 - Multi-tenant safety with `schoolId` scoping
 - Conditional validation for scope-specific fields
 
 ### Table Features
+
 - Sortable columns
 - Filterable data
 - Pagination
@@ -150,6 +166,7 @@ The component follows the standardized file pattern:
 ## Database Schema
 
 Announcements are stored with the following fields:
+
 - `id` - Unique identifier
 - `schoolId` - Multi-tenant identifier
 - `title` - Announcement title
@@ -187,37 +204,44 @@ The component is used in the platform dashboard at `/dashboard/announcements` an
 This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
 
 ### Core Framework
+
 - **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
 - **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
 - **TypeScript** - Strict mode for type safety
 
 ### Database & ORM
+
 - **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
 - **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
 
 ### Forms & Validation
+
 - **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
 - **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
 
 ### UI Components
+
 - **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
 - **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
 - **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
 
 ### Server Actions Pattern
+
 All mutations follow the standard server action pattern:
+
 ```typescript
 "use server"
 export async function performAction(input: FormData) {
   const { schoolId } = await getTenantContext()
   const validated = schema.parse(input)
   await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
+  revalidatePath("/feature-path")
   return { success: true }
 }
 ```
 
 ### Key Features
+
 - **Multi-Tenant Isolation**: All queries scoped by `schoolId`
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
 - **Server-Side Operations**: Mutations via Next.js Server Actions

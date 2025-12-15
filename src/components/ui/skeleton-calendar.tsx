@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 /**
  * SkeletonCalendar Component
@@ -44,18 +44,18 @@ export function SkeletonCalendar({
     <div className={cn("overflow-x-auto rounded-xl border", className)}>
       <div className="min-w-full">
         {/* Header row - Days */}
-        <div className="flex border-b bg-muted/50">
+        <div className="bg-muted/50 flex border-b">
           {showTime && (
-            <div className="flex items-center justify-center border-r p-4 w-[100px]">
+            <div className="flex w-[100px] items-center justify-center border-r p-4">
               <Skeleton className="h-4 w-16" />
             </div>
           )}
           {Array.from({ length: days }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 border-r p-4 last:border-r-0 min-w-[120px]"
+              className="min-w-[120px] flex-1 border-r p-4 last:border-r-0"
             >
-              <Skeleton className="h-4 w-16 mx-auto" />
+              <Skeleton className="mx-auto h-4 w-16" />
             </div>
           ))}
         </div>
@@ -64,15 +64,15 @@ export function SkeletonCalendar({
         {Array.from({ length: periods }).map((_, rowIndex) => (
           <div key={rowIndex} className="flex border-b last:border-b-0">
             {showTime && (
-              <div className="flex flex-col items-center justify-center border-r p-4 w-[100px]">
-                <Skeleton className="h-4 w-12 mb-1" />
+              <div className="flex w-[100px] flex-col items-center justify-center border-r p-4">
+                <Skeleton className="mb-1 h-4 w-12" />
                 <Skeleton className="h-3 w-20" />
               </div>
             )}
             {Array.from({ length: days }).map((_, colIndex) => (
               <div
                 key={colIndex}
-                className="flex-1 border-r p-4 last:border-r-0 min-w-[120px] min-h-[80px]"
+                className="min-h-[80px] min-w-[120px] flex-1 border-r p-4 last:border-r-0"
               >
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-3/4" />
@@ -137,7 +137,7 @@ export function SkeletonMonthCalendar({ className }: { className?: string }) {
       <div className="grid grid-cols-7 border-b">
         {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="border-r p-2 last:border-r-0">
-            <Skeleton className="h-4 w-8 mx-auto" />
+            <Skeleton className="mx-auto h-4 w-8" />
           </div>
         ))}
       </div>
@@ -145,10 +145,7 @@ export function SkeletonMonthCalendar({ className }: { className?: string }) {
       {/* Date cells */}
       <div className="grid grid-cols-7">
         {Array.from({ length: 35 }).map((_, i) => (
-          <div
-            key={i}
-            className="border-r border-b p-2 h-20 last:border-r-0"
-          >
+          <div key={i} className="h-20 border-r border-b p-2 last:border-r-0">
             <Skeleton className="h-4 w-6" />
           </div>
         ))}

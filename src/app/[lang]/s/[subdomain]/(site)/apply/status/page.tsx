@@ -1,42 +1,48 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
-import StatusTrackerContent from "@/components/site/admission/status/status-tracker-content";
+import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+
+import { getSchoolBySubdomain } from "@/lib/subdomain-actions"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import StatusTrackerContent from "@/components/site/admission/status/status-tracker-content"
 
 interface StatusPageProps {
-  params: Promise<{ lang: Locale; subdomain: string }>;
-  searchParams: Promise<{ token?: string }>;
+  params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<{ token?: string }>
 }
 
-export async function generateMetadata({ params }: StatusPageProps): Promise<Metadata> {
-  const { subdomain } = await params;
-  const schoolResult = await getSchoolBySubdomain(subdomain);
+export async function generateMetadata({
+  params,
+}: StatusPageProps): Promise<Metadata> {
+  const { subdomain } = await params
+  const schoolResult = await getSchoolBySubdomain(subdomain)
 
   if (!schoolResult.success || !schoolResult.data) {
-    return { title: "Application Status" };
+    return { title: "Application Status" }
   }
 
   return {
     title: `Application Status - ${schoolResult.data.name}`,
     description: `Check your application status at ${schoolResult.data.name}.`,
-  };
+  }
 }
 
-export default async function StatusPage({ params, searchParams }: StatusPageProps) {
-  const { lang, subdomain } = await params;
-  const { token } = await searchParams;
-  const dictionary = await getDictionary(lang);
-  const schoolResult = await getSchoolBySubdomain(subdomain);
+export default async function StatusPage({
+  params,
+  searchParams,
+}: StatusPageProps) {
+  const { lang, subdomain } = await params
+  const { token } = await searchParams
+  const dictionary = await getDictionary(lang)
+  const schoolResult = await getSchoolBySubdomain(subdomain)
 
   if (!schoolResult.success || !schoolResult.data) {
-    notFound();
+    notFound()
   }
 
   return (
     <div className="min-h-screen py-8">
-      <div className="container max-w-2xl mx-auto px-4">
+      <div className="container mx-auto max-w-2xl px-4">
         <StatusTrackerContent
           school={schoolResult.data}
           dictionary={dictionary}
@@ -46,5 +52,5 @@ export default async function StatusPage({ params, searchParams }: StatusPagePro
         />
       </div>
     </div>
-  );
+  )
 }

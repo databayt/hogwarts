@@ -1,27 +1,40 @@
-"use client";
+"use client"
 
 /**
  * All invoices view component
  *
  * Displays a grid or list of all invoices with filtering and sorting options.
  */
+import { useState } from "react"
+import {
+  FileText,
+  Grid3x3,
+  List,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react"
 
-import { useState } from "react";
-import { InvoiceCard, InvoiceCompactCard } from "./card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Grid3x3, List, SlidersHorizontal, FileText } from "lucide-react";
-import type { InvoiceWithSchool, InvoiceFilters, InvoiceStatus } from "./types";
-import { INVOICE_STATUSES } from "./config";
-import { sortInvoices } from "./util";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+import { InvoiceCard, InvoiceCompactCard } from "./card"
+import { INVOICE_STATUSES } from "./config"
+import type { InvoiceFilters, InvoiceStatus, InvoiceWithSchool } from "./types"
+import { sortInvoices } from "./util"
 
 interface AllInvoicesProps {
-  invoices: InvoiceWithSchool[];
-  defaultView?: "grid" | "list";
-  showFilters?: boolean;
-  onInvoiceClick?: (invoiceId: string) => void;
-  onMarkPaid?: (invoiceId: string) => void;
+  invoices: InvoiceWithSchool[]
+  defaultView?: "grid" | "list"
+  showFilters?: boolean
+  onInvoiceClick?: (invoiceId: string) => void
+  onMarkPaid?: (invoiceId: string) => void
 }
 
 /**
@@ -34,44 +47,56 @@ export function AllInvoices({
   onInvoiceClick,
   onMarkPaid,
 }: AllInvoicesProps) {
-  const [view, setView] = useState<"grid" | "list">(defaultView);
+  const [view, setView] = useState<"grid" | "list">(defaultView)
   const [filters, setFilters] = useState<InvoiceFilters>({
     search: "",
     number: "",
     tenantName: "",
     status: "",
-  });
-  const [sortField, setSortField] = useState<"number" | "tenantName" | "amount" | "createdAt">("createdAt");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  })
+  const [sortField, setSortField] = useState<
+    "number" | "tenantName" | "amount" | "createdAt"
+  >("createdAt")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   // Filter invoices
   const filteredInvoices = invoices.filter((invoice) => {
     // Global search filter
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
+      const searchLower = filters.search.toLowerCase()
       const matchesSearch =
         invoice.stripeInvoiceId.toLowerCase().includes(searchLower) ||
-        invoice.school.name.toLowerCase().includes(searchLower);
-      if (!matchesSearch) return false;
+        invoice.school.name.toLowerCase().includes(searchLower)
+      if (!matchesSearch) return false
     }
 
     // Number filter
-    if (filters.number && !invoice.stripeInvoiceId.toLowerCase().includes(filters.number.toLowerCase())) {
-      return false;
+    if (
+      filters.number &&
+      !invoice.stripeInvoiceId
+        .toLowerCase()
+        .includes(filters.number.toLowerCase())
+    ) {
+      return false
     }
 
     // Tenant name filter
-    if (filters.tenantName && !invoice.school.name.toLowerCase().includes(filters.tenantName.toLowerCase())) {
-      return false;
+    if (
+      filters.tenantName &&
+      !invoice.school.name
+        .toLowerCase()
+        .includes(filters.tenantName.toLowerCase())
+    ) {
+      return false
     }
 
     // Status filter
     if (filters.status && invoice.status !== filters.status) {
-      return false;
+      return false
     }
 
-    return true;
-  });
+    return true
+  })
 
   // Sort invoices
   const sortedInvoices = sortInvoices(
@@ -83,7 +108,7 @@ export function AllInvoices({
     })),
     sortField,
     sortDirection
-  );
+  )
 
   return (
     <div className="space-y-4">
@@ -91,7 +116,7 @@ export function AllInvoices({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h3>All Invoices</h3>
-          <span className="rounded-full bg-muted px-2 py-1">
+          <span className="bg-muted rounded-full px-2 py-1">
             <small>{sortedInvoices.length}</small>
           </span>
         </div>
@@ -117,18 +142,22 @@ export function AllInvoices({
       {showFilters && (
         <div className="grid gap-4 md:grid-cols-5">
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <Input
               placeholder="Search invoices..."
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
               className="ps-9"
             />
           </div>
 
           <Select
             value={filters.status}
-            onValueChange={(value) => setFilters({ ...filters, status: value as "" | InvoiceStatus })}
+            onValueChange={(value) =>
+              setFilters({ ...filters, status: value as "" | InvoiceStatus })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
@@ -146,7 +175,9 @@ export function AllInvoices({
           <Input
             placeholder="Filter by tenant..."
             value={filters.tenantName}
-            onChange={(e) => setFilters({ ...filters, tenantName: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, tenantName: e.target.value })
+            }
           />
 
           <Select
@@ -154,10 +185,10 @@ export function AllInvoices({
             onValueChange={(value) => {
               const [field, direction] = value.split("-") as [
                 "number" | "tenantName" | "amount" | "createdAt",
-                "asc" | "desc"
-              ];
-              setSortField(field);
-              setSortDirection(direction);
+                "asc" | "desc",
+              ]
+              setSortField(field)
+              setSortDirection(direction)
             }}
           >
             <SelectTrigger>
@@ -181,11 +212,11 @@ export function AllInvoices({
       {/* Empty state */}
       {sortedInvoices.length === 0 && (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8">
-          <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-            <FileText className="size-10 text-muted-foreground" />
+          <div className="bg-muted flex size-20 items-center justify-center rounded-full">
+            <FileText className="text-muted-foreground size-10" />
           </div>
           <h4 className="mt-4">No invoices found</h4>
-          <p className="muted mt-2 text-center max-w-sm">
+          <p className="muted mt-2 max-w-sm text-center">
             {filters.search || filters.tenantName || filters.status
               ? "Try adjusting your filters to find what you're looking for."
               : "Invoices will appear here once they are created."}
@@ -194,7 +225,14 @@ export function AllInvoices({
             <Button
               variant="outline"
               className="mt-4"
-              onClick={() => setFilters({ search: "", number: "", tenantName: "", status: "" })}
+              onClick={() =>
+                setFilters({
+                  search: "",
+                  number: "",
+                  tenantName: "",
+                  status: "",
+                })
+              }
             >
               Clear filters
             </Button>
@@ -221,12 +259,16 @@ export function AllInvoices({
       {view === "list" && sortedInvoices.length > 0 && (
         <div className="space-y-2">
           {sortedInvoices.map((invoice) => (
-            <div key={invoice.id} onClick={() => onInvoiceClick?.(invoice.id)} className="cursor-pointer">
+            <div
+              key={invoice.id}
+              onClick={() => onInvoiceClick?.(invoice.id)}
+              className="cursor-pointer"
+            >
               <InvoiceCompactCard invoice={invoice} />
             </div>
           ))}
         </div>
       )}
     </div>
-  );
+  )
 }

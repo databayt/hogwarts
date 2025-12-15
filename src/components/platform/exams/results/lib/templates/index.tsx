@@ -1,12 +1,13 @@
 // PDF Templates Registry
 
-import React from "react";
-import { ClassicTemplate } from "./classic";
-import { ModernTemplate } from "./modern";
-import { MinimalTemplate } from "./minimal";
-import type { PDFResultData, PDFTemplate } from "../../types";
+import React from "react"
 
-export { ClassicTemplate, ModernTemplate, MinimalTemplate };
+import type { PDFResultData, PDFTemplate } from "../../types"
+import { ClassicTemplate } from "./classic"
+import { MinimalTemplate } from "./minimal"
+import { ModernTemplate } from "./modern"
+
+export { ClassicTemplate, ModernTemplate, MinimalTemplate }
 
 /**
  * Get template component by name
@@ -16,17 +17,20 @@ export function getTemplate(template: PDFTemplate) {
     classic: ClassicTemplate,
     modern: ModernTemplate,
     minimal: MinimalTemplate,
-  };
+  }
 
-  return templates[template];
+  return templates[template]
 }
 
 /**
  * Render template with data
  */
-export function renderTemplate(template: PDFTemplate, data: PDFResultData): React.ReactElement {
-  const TemplateComponent = getTemplate(template);
-  return React.createElement(TemplateComponent, { data });
+export function renderTemplate(
+  template: PDFTemplate,
+  data: PDFResultData
+): React.ReactElement {
+  const TemplateComponent = getTemplate(template)
+  return React.createElement(TemplateComponent, { data })
 }
 
 /**
@@ -70,7 +74,7 @@ export function getAllTemplates() {
       ],
       bestFor: "Quick reports and internal use",
     },
-  ];
+  ]
 }
 
 /**
@@ -81,7 +85,7 @@ export function getTemplatePreview(template: PDFTemplate): string {
     classic: "/templates/classic-preview.png",
     modern: "/templates/modern-preview.png",
     minimal: "/templates/minimal-preview.png",
-  };
+  }
 
-  return previews[template];
+  return previews[template]
 }

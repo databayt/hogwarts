@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 
 export default function ExamsLoading() {
   return (

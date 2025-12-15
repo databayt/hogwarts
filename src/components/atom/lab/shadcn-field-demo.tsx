@@ -3,7 +3,13 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
 /**
@@ -21,12 +27,12 @@ import { Textarea } from "@/components/ui/textarea"
  */
 export function ShadcnFieldDemo() {
   return (
-    <div className="w-full max-w-md rounded-lg border border-border bg-card p-6">
+    <div className="border-border bg-card w-full max-w-md rounded-lg border p-6">
       <form className="space-y-6">
         {/* Payment Method Section */}
         <fieldset className="space-y-4">
           <legend className="text-sm font-medium">Payment Method</legend>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Enter your payment details below.
           </p>
 
@@ -112,7 +118,7 @@ export function ShadcnFieldDemo() {
             <Checkbox id="same-as-shipping" defaultChecked />
             <label
               htmlFor="same-as-shipping"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
               Same as shipping address
             </label>

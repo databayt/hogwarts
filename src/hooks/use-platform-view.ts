@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { useQueryState, parseAsStringEnum } from "nuqs";
-import { useCallback } from "react";
+import { useCallback } from "react"
+import { parseAsStringEnum, useQueryState } from "nuqs"
 
-export type ViewMode = "table" | "grid";
+export type ViewMode = "table" | "grid"
 
 interface UsePlatformViewOptions {
-  defaultView?: ViewMode;
-  storageKey?: string;
+  defaultView?: ViewMode
+  storageKey?: string
 }
 
 /**
  * Hook for managing platform view mode (table/grid) with URL persistence
  */
 export function usePlatformView(options: UsePlatformViewOptions = {}) {
-  const { defaultView = "table" } = options;
+  const { defaultView = "table" } = options
 
   const [view, setView] = useQueryState(
     "view",
@@ -24,19 +24,19 @@ export function usePlatformView(options: UsePlatformViewOptions = {}) {
         history: "replace",
         shallow: true,
       })
-  );
+  )
 
   const toggleView = useCallback(() => {
-    setView((prev) => (prev === "table" ? "grid" : "table"));
-  }, [setView]);
+    setView((prev) => (prev === "table" ? "grid" : "table"))
+  }, [setView])
 
   const setTableView = useCallback(() => {
-    setView("table");
-  }, [setView]);
+    setView("table")
+  }, [setView])
 
   const setGridView = useCallback(() => {
-    setView("grid");
-  }, [setView]);
+    setView("grid")
+  }, [setView])
 
   return {
     view,
@@ -46,5 +46,5 @@ export function usePlatformView(options: UsePlatformViewOptions = {}) {
     setGridView,
     isTable: view === "table",
     isGrid: view === "grid",
-  };
+  }
 }

@@ -11,24 +11,28 @@ model: sonnet
 ## Review Categories
 
 ### 1. Component Design
+
 - Single Responsibility Principle
 - Composition over inheritance
 - Props interface design
 - Component reusability
 
 ### 2. Performance
+
 - Unnecessary re-renders
 - Memoization opportunities
 - Bundle size impact
 - Code splitting potential
 
 ### 3. Best Practices
+
 - Hooks rules compliance
 - State management patterns
 - Error boundary usage
 - Testing coverage
 
 ### 4. Accessibility
+
 - ARIA attributes
 - Keyboard navigation
 - Screen reader support
@@ -37,22 +41,23 @@ model: sonnet
 ## Component Review Checklist
 
 ### Structure & Organization
+
 ```typescript
 // ✅ Good Component Structure
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: "primary" | "secondary"
+  size?: "sm" | "md" | "lg"
   disabled?: boolean
   onClick?: () => void
   children: React.ReactNode
 }
 
 export function Button({
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   disabled = false,
   onClick,
-  children
+  children,
 }: ButtonProps) {
   // Component logic
 }
@@ -64,6 +69,7 @@ function MyComponent() {
 ```
 
 ### State Management
+
 ```typescript
 // ✅ Good - Colocated state
 function TodoList() {
@@ -89,13 +95,14 @@ function Parent() {
 ```
 
 ### Effect Usage
+
 ```typescript
 // ✅ Good - Effect with cleanup
 useEffect(() => {
   const controller = new AbortController()
 
-  fetch('/api/data', { signal: controller.signal })
-    .then(res => res.json())
+  fetch("/api/data", { signal: controller.signal })
+    .then((res) => res.json())
     .then(setData)
 
   return () => controller.abort()
@@ -118,6 +125,7 @@ const fullName = `${firstName} ${lastName}`
 ## Performance Patterns
 
 ### Memoization Review
+
 ```typescript
 // ✅ Good - Expensive calculation memoized
 const expensiveResult = useMemo(() => {
@@ -137,6 +145,7 @@ const handleSubmit = useCallback((data: FormData) => {
 ```
 
 ### Component Memoization
+
 ```typescript
 // ✅ Good - Heavy component memoized
 const HeavyComponent = memo(({ data }) => {
@@ -152,6 +161,7 @@ const List = memo(({ items }) => {
 ```
 
 ### List Rendering
+
 ```typescript
 // ✅ Good - Stable keys
 {items.map(item => (
@@ -175,6 +185,7 @@ const List = memo(({ items }) => {
 ## Hook Patterns Review
 
 ### Custom Hooks
+
 ```typescript
 // ✅ Good - Reusable logic extracted
 function useDebounce<T>(value: T, delay: number): T {
@@ -192,40 +203,44 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // ✅ Good - Follows naming convention
-function useAuth() { // starts with 'use'
+function useAuth() {
+  // starts with 'use'
   // auth logic
 }
 
 // ❌ Bad - Not a hook
-function getUser() { // doesn't start with 'use'
+function getUser() {
+  // doesn't start with 'use'
   const [user] = useState() // Error: hooks in non-hook
 }
 ```
 
 ### State Updates
+
 ```typescript
 // ✅ Good - Functional update for derived state
-setCount(prev => prev + 1)
+setCount((prev) => prev + 1)
 
 // ❌ Bad - Stale closure
 setCount(count + 1) // count might be stale
 
 // ✅ Good - Batch updates (automatic in React 18+)
-setName('John')
+setName("John")
 setAge(30) // Both batched
 
 // ✅ Good - Single state for related data
-const [user, setUser] = useState({ name: '', age: 0 })
+const [user, setUser] = useState({ name: "", age: 0 })
 
 // ❌ Bad - Multiple states for related data
-const [userName, setUserName] = useState('')
+const [userName, setUserName] = useState("")
 const [userAge, setUserAge] = useState(0)
-const [userEmail, setUserEmail] = useState('')
+const [userEmail, setUserEmail] = useState("")
 ```
 
 ## Accessibility Review
 
 ### Interactive Elements
+
 ```typescript
 // ✅ Good - Accessible button
 <button
@@ -245,6 +260,7 @@ const [userEmail, setUserEmail] = useState('')
 ```
 
 ### Form Accessibility
+
 ```typescript
 // ✅ Good - Labeled form fields
 <label htmlFor="email">Email</label>
@@ -266,6 +282,7 @@ const [userEmail, setUserEmail] = useState('')
 ```
 
 ### Focus Management
+
 ```typescript
 // ✅ Good - Focus trap in modal
 function Modal({ isOpen, onClose, children }) {
@@ -293,6 +310,7 @@ function Modal({ isOpen, onClose, children }) {
 ## Common Issues & Fixes
 
 ### Issue: Infinite Re-render
+
 ```typescript
 // ❌ Problem
 function Component() {
@@ -310,6 +328,7 @@ useEffect(() => {
 ```
 
 ### Issue: Memory Leak
+
 ```typescript
 // ❌ Problem
 useEffect(() => {
@@ -330,6 +349,7 @@ useEffect(() => {
 ```
 
 ### Issue: Stale Props in Callback
+
 ```typescript
 // ❌ Problem
 function Component({ value }) {
@@ -350,27 +370,33 @@ const handleClick = useCallback(() => {
 ## React Code Review
 
 ### Summary
+
 - Components Reviewed: X
 - Issues Found: Y
 - Performance Improvements: Z
 
 ### Critical Issues
+
 1. Memory leak in useEffect (line X)
 2. Missing error boundary (component Y)
 
 ### Performance Suggestions
+
 1. Memoize expensive calculation (line X)
 2. Add virtualization to list (component Y)
 
 ### Accessibility Issues
+
 1. Missing ARIA labels (component X)
 2. No keyboard navigation (component Y)
 
 ### Best Practice Violations
+
 1. useEffect with missing dependencies
 2. Index as key in dynamic list
 
 ### Recommendations
+
 1. Add error boundaries
 2. Implement code splitting
 3. Add performance monitoring
@@ -379,6 +405,7 @@ const handleClick = useCallback(() => {
 ## Review Checklist
 
 ### Component Quality
+
 - [ ] Single responsibility
 - [ ] Props properly typed
 - [ ] Error boundaries present
@@ -386,6 +413,7 @@ const handleClick = useCallback(() => {
 - [ ] Error states handled
 
 ### Performance
+
 - [ ] No unnecessary re-renders
 - [ ] Memoization used appropriately
 - [ ] Lists have stable keys
@@ -393,6 +421,7 @@ const handleClick = useCallback(() => {
 - [ ] Code splitting considered
 
 ### Hooks
+
 - [ ] Rules of Hooks followed
 - [ ] Custom hooks extracted
 - [ ] Dependencies correct
@@ -400,6 +429,7 @@ const handleClick = useCallback(() => {
 - [ ] No infinite loops
 
 ### Accessibility
+
 - [ ] Semantic HTML used
 - [ ] ARIA attributes present
 - [ ] Keyboard navigable

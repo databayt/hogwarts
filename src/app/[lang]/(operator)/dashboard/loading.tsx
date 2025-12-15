@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function DashboardLoading() {
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Header skeleton */}
       <div>
-        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="mb-2 h-8 w-48" />
         <Skeleton className="h-4 w-96" />
       </div>
 
@@ -18,7 +18,7 @@ export default function DashboardLoading() {
               <Skeleton className="h-4 w-24" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-20 mb-1" />
+              <Skeleton className="mb-1 h-8 w-20" />
               <Skeleton className="h-3 w-32" />
             </CardContent>
           </Card>
@@ -45,7 +45,7 @@ export default function DashboardLoading() {
             <div key={i} className="flex items-center gap-4">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1">
-                <Skeleton className="h-4 w-48 mb-1" />
+                <Skeleton className="mb-1 h-4 w-48" />
                 <Skeleton className="h-3 w-32" />
               </div>
             </div>
@@ -53,5 +53,5 @@ export default function DashboardLoading() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

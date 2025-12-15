@@ -4,15 +4,16 @@
  * Each announcement has English and Arabic versions with fallback support
  */
 
-import { AnnouncementScope } from "@prisma/client";
-import type { SeedPrisma, ClassRef } from "./types";
+import { AnnouncementScope } from "@prisma/client"
+
+import type { ClassRef, SeedPrisma } from "./types"
 
 export async function seedAnnouncements(
   prisma: SeedPrisma,
   schoolId: string,
   classes: ClassRef[]
 ): Promise<void> {
-  console.log("📢 Creating bilingual announcements (Comboni School)...");
+  console.log("📢 Creating bilingual announcements (Comboni School)...")
 
   const announcements = [
     {
@@ -367,26 +368,28 @@ Safety is everyone's responsibility.`,
       scope: AnnouncementScope.school,
       published: false,
     },
-  ];
+  ]
 
-  let createdCount = 0;
-  let skippedCount = 0;
+  let createdCount = 0
+  let skippedCount = 0
 
   for (const ann of announcements) {
     // Check if announcement already exists (by titleEn + schoolId)
     const existing = await prisma.announcement.findFirst({
       where: { schoolId, titleEn: ann.titleEn },
-    });
+    })
 
     if (!existing) {
       await prisma.announcement.create({
         data: { schoolId, ...ann },
-      });
-      createdCount++;
+      })
+      createdCount++
     } else {
-      skippedCount++;
+      skippedCount++
     }
   }
 
-  console.log(`   ✅ Announcements: ${createdCount} new, ${skippedCount} already existed\n`);
+  console.log(
+    `   ✅ Announcements: ${createdCount} new, ${skippedCount} already existed\n`
+  )
 }

@@ -1,12 +1,55 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo } from 'react';
-import { format, startOfWeek, endOfWeek, isToday, isTomorrow, isPast } from 'date-fns';
-import { Users, Calendar, TrendingUp, Award, Clock, CircleAlert, ChevronRight, BookOpen, FileText, DollarSign, Bell, User, School } from "lucide-react"
-import { BarChart3 } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useMemo, useState } from "react"
+import {
+  endOfWeek,
+  format,
+  isPast,
+  isToday,
+  isTomorrow,
+  startOfWeek,
+} from "date-fns"
+import {
+  Award,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  CircleAlert,
+  Clock,
+  DollarSign,
+  FileText,
+  School,
+  TrendingUp,
+  User,
+  Users,
+} from "lucide-react"
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,97 +57,90 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
-  LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, Area, AreaChart
-} from 'recharts';
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Child {
-  id: string;
-  givenName: string;
-  surname: string;
-  yearLevel: string;
-  class: string;
-  profileImageUrl?: string;
+  id: string
+  givenName: string
+  surname: string
+  yearLevel: string
+  class: string
+  profileImageUrl?: string
   attendance: {
-    present: number;
-    absent: number;
-    late: number;
-    percentage: number;
-  };
+    present: number
+    absent: number
+    late: number
+    percentage: number
+  }
   grades: {
-    average: number;
-    trend: 'up' | 'down' | 'stable';
+    average: number
+    trend: "up" | "down" | "stable"
     subjects: Array<{
-      name: string;
-      grade: number;
-      previousGrade: number;
-    }>;
-  };
+      name: string
+      grade: number
+      previousGrade: number
+    }>
+  }
   assignments: {
-    pending: number;
-    submitted: number;
-    overdue: number;
+    pending: number
+    submitted: number
+    overdue: number
     upcoming: Array<{
-      id: string;
-      title: string;
-      subject: string;
-      dueDate: Date;
-    }>;
-  };
+      id: string
+      title: string
+      subject: string
+      dueDate: Date
+    }>
+  }
   exams: {
     upcoming: Array<{
-      id: string;
-      title: string;
-      subject: string;
-      date: Date;
-      time: string;
-    }>;
+      id: string
+      title: string
+      subject: string
+      date: Date
+      time: string
+    }>
     recent: Array<{
-      id: string;
-      title: string;
-      subject: string;
-      score: number;
-      total: number;
-    }>;
-  };
+      id: string
+      title: string
+      subject: string
+      score: number
+      total: number
+    }>
+  }
   fees: {
-    paid: number;
-    pending: number;
-    nextDue: Date | null;
-  };
+    paid: number
+    pending: number
+    nextDue: Date | null
+  }
 }
 
 interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  date: Date;
-  priority: 'low' | 'medium' | 'high';
-  category: string;
+  id: string
+  title: string
+  content: string
+  date: Date
+  priority: "low" | "medium" | "high"
+  category: string
 }
 
 interface ParentDashboardProps {
-  parentId: string;
-  children: Child[];
-  announcements: Announcement[];
-  onChildSelect?: (childId: string) => void;
-  onViewDetails?: (type: string, childId: string) => void;
+  parentId: string
+  children: Child[]
+  announcements: Announcement[]
+  onChildSelect?: (childId: string) => void
+  onViewDetails?: (type: string, childId: string) => void
 }
 
 export function ParentDashboard({
@@ -114,69 +150,84 @@ export function ParentDashboard({
   onChildSelect,
   onViewDetails,
 }: ParentDashboardProps) {
-  const [selectedChildId, setSelectedChildId] = useState<string>(children[0]?.id || '');
-  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'term'>('month');
+  const [selectedChildId, setSelectedChildId] = useState<string>(
+    children[0]?.id || ""
+  )
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "week" | "month" | "term"
+  >("month")
 
   const selectedChild = useMemo(() => {
-    return children.find(c => c.id === selectedChildId) || children[0];
-  }, [selectedChildId, children]);
+    return children.find((c) => c.id === selectedChildId) || children[0]
+  }, [selectedChildId, children])
 
   // Performance data for charts
   const performanceData = useMemo(() => {
-    if (!selectedChild) return [];
+    if (!selectedChild) return []
 
-    return selectedChild.grades.subjects.map(subject => ({
+    return selectedChild.grades.subjects.map((subject) => ({
       subject: subject.name,
       current: subject.grade,
       previous: subject.previousGrade,
       improvement: subject.grade - subject.previousGrade,
-    }));
-  }, [selectedChild]);
+    }))
+  }, [selectedChild])
 
   // Attendance chart data
   const attendanceData = useMemo(() => {
-    if (!selectedChild) return [];
+    if (!selectedChild) return []
 
     return [
-      { name: 'Present', value: selectedChild.attendance.present, fill: '#10b981' },
-      { name: 'Absent', value: selectedChild.attendance.absent, fill: '#ef4444' },
-      { name: 'Late', value: selectedChild.attendance.late, fill: '#f59e0b' },
-    ];
-  }, [selectedChild]);
+      {
+        name: "Present",
+        value: selectedChild.attendance.present,
+        fill: "#10b981",
+      },
+      {
+        name: "Absent",
+        value: selectedChild.attendance.absent,
+        fill: "#ef4444",
+      },
+      { name: "Late", value: selectedChild.attendance.late, fill: "#f59e0b" },
+    ]
+  }, [selectedChild])
 
   // Grade trend data
   const gradeTrendData = useMemo(() => {
     // Mock data for demonstration - would come from API
     return [
-      { month: 'Sep', average: 78 },
-      { month: 'Oct', average: 82 },
-      { month: 'Nov', average: 85 },
-      { month: 'Dec', average: 83 },
-      { month: 'Jan', average: 87 },
-      { month: 'Feb', average: selectedChild?.grades.average || 0 },
-    ];
-  }, [selectedChild]);
+      { month: "Sep", average: 78 },
+      { month: "Oct", average: 82 },
+      { month: "Nov", average: 85 },
+      { month: "Dec", average: 83 },
+      { month: "Jan", average: 87 },
+      { month: "Feb", average: selectedChild?.grades.average || 0 },
+    ]
+  }, [selectedChild])
 
   const handleChildChange = (childId: string) => {
-    setSelectedChildId(childId);
-    onChildSelect?.(childId);
-  };
+    setSelectedChildId(childId)
+    onChildSelect?.(childId)
+  }
 
   const getGradeColor = (grade: number) => {
-    if (grade >= 90) return 'text-green-600';
-    if (grade >= 80) return 'text-blue-600';
-    if (grade >= 70) return 'text-yellow-600';
-    if (grade >= 60) return 'text-orange-600';
-    return 'text-red-600';
-  };
+    if (grade >= 90) return "text-green-600"
+    if (grade >= 80) return "text-blue-600"
+    if (grade >= 70) return "text-yellow-600"
+    if (grade >= 60) return "text-orange-600"
+    return "text-red-600"
+  }
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "high":
+        return "bg-red-100 text-red-800"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
-  };
+  }
 
   if (!selectedChild) {
     return (
@@ -185,7 +236,7 @@ export function ParentDashboard({
           <p className="text-muted-foreground">No children data available</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -195,31 +246,36 @@ export function ParentDashboard({
         <Card>
           <CardHeader>
             <CardTitle>Select Child</CardTitle>
-            <CardDescription>View dashboard for a specific child</CardDescription>
+            <CardDescription>
+              View dashboard for a specific child
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="w-full">
               <div className="flex gap-4">
-                {children.map(child => (
+                {children.map((child) => (
                   <button
                     key={child.id}
                     onClick={() => handleChildChange(child.id)}
                     className={cn(
-                      "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors min-w-[120px]",
+                      "flex min-w-[120px] flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors",
                       selectedChildId === child.id
                         ? "border-primary bg-primary/5"
-                        : "border-transparent hover:border-muted-foreground/20"
+                        : "hover:border-muted-foreground/20 border-transparent"
                     )}
                   >
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={child.profileImageUrl} />
                       <AvatarFallback>
-                        {child.givenName[0]}{child.surname[0]}
+                        {child.givenName[0]}
+                        {child.surname[0]}
                       </AvatarFallback>
                     </Avatar>
                     <div className="text-center">
                       <p className="font-medium">{child.givenName}</p>
-                      <p className="text-sm text-muted-foreground">{child.yearLevel}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {child.yearLevel}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -231,25 +287,30 @@ export function ParentDashboard({
       )}
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Overall Grade</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-2">
-              <span className={cn("text-3xl font-bold", getGradeColor(selectedChild.grades.average))}>
+              <span
+                className={cn(
+                  "text-3xl font-bold",
+                  getGradeColor(selectedChild.grades.average)
+                )}
+              >
                 {selectedChild.grades.average}%
               </span>
-              {selectedChild.grades.trend === 'up' && (
+              {selectedChild.grades.trend === "up" && (
                 <Badge variant="outline" className="text-green-600">
-                  <TrendingUp className="h-3 w-3 me-1" />
+                  <TrendingUp className="me-1 h-3 w-3" />
                   Improving
                 </Badge>
               )}
-              {selectedChild.grades.trend === 'down' && (
+              {selectedChild.grades.trend === "down" && (
                 <Badge variant="outline" className="text-red-600">
-                  <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
+                  <TrendingUp className="mr-1 h-3 w-3 rotate-180" />
                   Declining
                 </Badge>
               )}
@@ -266,7 +327,10 @@ export function ParentDashboard({
               <span className="text-3xl font-bold">
                 {selectedChild.attendance.percentage}%
               </span>
-              <Progress value={selectedChild.attendance.percentage} className="h-2" />
+              <Progress
+                value={selectedChild.attendance.percentage}
+                className="h-2"
+              />
             </div>
           </CardContent>
         </Card>
@@ -277,7 +341,9 @@ export function ParentDashboard({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-              <span className="text-3xl font-bold">{selectedChild.assignments.pending}</span>
+              <span className="text-3xl font-bold">
+                {selectedChild.assignments.pending}
+              </span>
               {selectedChild.assignments.overdue > 0 && (
                 <Badge variant="destructive">
                   {selectedChild.assignments.overdue} overdue
@@ -297,8 +363,8 @@ export function ParentDashboard({
                 ${selectedChild.fees.pending}
               </span>
               {selectedChild.fees.nextDue && (
-                <p className="text-xs text-muted-foreground">
-                  Due {format(selectedChild.fees.nextDue, 'MMM dd')}
+                <p className="text-muted-foreground text-xs">
+                  Due {format(selectedChild.fees.nextDue, "MMM dd")}
                 </p>
               )}
             </div>
@@ -307,7 +373,7 @@ export function ParentDashboard({
       </div>
 
       {/* Performance Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Grade Trend Chart */}
         <Card>
           <CardHeader>
@@ -319,8 +385,8 @@ export function ParentDashboard({
               <AreaChart data={gradeTrendData}>
                 <defs>
                   <linearGradient id="colorGrade" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -349,7 +415,12 @@ export function ParentDashboard({
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={performanceData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="subject" angle={-45} textAnchor="end" height={70} />
+                <XAxis
+                  dataKey="subject"
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
+                />
                 <YAxis domain={[0, 100]} />
                 <Tooltip />
                 <Legend />
@@ -363,7 +434,7 @@ export function ParentDashboard({
 
       {/* Detailed Tabs */}
       <Tabs defaultValue="assignments" className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="exams">Exams</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
@@ -375,46 +446,59 @@ export function ParentDashboard({
             <CardHeader>
               <CardTitle>Upcoming Assignments</CardTitle>
               <CardDescription>
-                {selectedChild.assignments.upcoming.length} assignments due this week
+                {selectedChild.assignments.upcoming.length} assignments due this
+                week
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {selectedChild.assignments.upcoming.slice(0, 5).map(assignment => (
-                  <div key={assignment.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{assignment.title}</p>
-                      <p className="text-sm text-muted-foreground">{assignment.subject}</p>
+                {selectedChild.assignments.upcoming
+                  .slice(0, 5)
+                  .map((assignment) => (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-medium">{assignment.title}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {assignment.subject}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge
+                          variant={
+                            isPast(assignment.dueDate)
+                              ? "destructive"
+                              : "outline"
+                          }
+                        >
+                          {isToday(assignment.dueDate) && "Due Today"}
+                          {isTomorrow(assignment.dueDate) && "Due Tomorrow"}
+                          {!isToday(assignment.dueDate) &&
+                            !isTomorrow(assignment.dueDate) &&
+                            format(assignment.dueDate, "MMM dd")}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <Badge
-                        variant={isPast(assignment.dueDate) ? "destructive" : "outline"}
-                      >
-                        {isToday(assignment.dueDate) && "Due Today"}
-                        {isTomorrow(assignment.dueDate) && "Due Tomorrow"}
-                        {!isToday(assignment.dueDate) && !isTomorrow(assignment.dueDate) &&
-                          format(assignment.dueDate, 'MMM dd')}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardContent>
             <CardFooter>
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => onViewDetails?.('assignments', selectedChild.id)}
+                onClick={() => onViewDetails?.("assignments", selectedChild.id)}
               >
                 View All Assignments
-                <ChevronRight className="h-4 w-4 ms-2" />
+                <ChevronRight className="ms-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>
         </TabsContent>
 
         <TabsContent value="exams" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Upcoming Exams */}
             <Card>
               <CardHeader>
@@ -422,17 +506,24 @@ export function ParentDashboard({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {selectedChild.exams.upcoming.map(exam => (
-                    <div key={exam.id} className="flex items-center justify-between">
+                  {selectedChild.exams.upcoming.map((exam) => (
+                    <div
+                      key={exam.id}
+                      className="flex items-center justify-between"
+                    >
                       <div>
                         <p className="font-medium">{exam.title}</p>
-                        <p className="text-sm text-muted-foreground">{exam.subject}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {exam.subject}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
-                          {format(exam.date, 'MMM dd')}
+                          {format(exam.date, "MMM dd")}
                         </p>
-                        <p className="text-xs text-muted-foreground">{exam.time}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {exam.time}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -447,17 +538,27 @@ export function ParentDashboard({
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {selectedChild.exams.recent.map(exam => (
-                    <div key={exam.id} className="flex items-center justify-between">
+                  {selectedChild.exams.recent.map((exam) => (
+                    <div
+                      key={exam.id}
+                      className="flex items-center justify-between"
+                    >
                       <div>
                         <p className="font-medium">{exam.title}</p>
-                        <p className="text-sm text-muted-foreground">{exam.subject}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {exam.subject}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className={cn("font-bold", getGradeColor((exam.score / exam.total) * 100))}>
+                        <p
+                          className={cn(
+                            "font-bold",
+                            getGradeColor((exam.score / exam.total) * 100)
+                          )}
+                        >
                           {exam.score}/{exam.total}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {((exam.score / exam.total) * 100).toFixed(0)}%
                         </p>
                       </div>
@@ -473,36 +574,43 @@ export function ParentDashboard({
           <Card>
             <CardHeader>
               <CardTitle>Attendance Overview</CardTitle>
-              <CardDescription>Current term attendance statistics</CardDescription>
+              <CardDescription>
+                Current term attendance statistics
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="mb-6 grid grid-cols-3 gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600">
                     {selectedChild.attendance.present}
                   </p>
-                  <p className="text-sm text-muted-foreground">Days Present</p>
+                  <p className="text-muted-foreground text-sm">Days Present</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-red-600">
                     {selectedChild.attendance.absent}
                   </p>
-                  <p className="text-sm text-muted-foreground">Days Absent</p>
+                  <p className="text-muted-foreground text-sm">Days Absent</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-yellow-600">
                     {selectedChild.attendance.late}
                   </p>
-                  <p className="text-sm text-muted-foreground">Days Late</p>
+                  <p className="text-muted-foreground text-sm">Days Late</p>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Attendance Rate</span>
-                  <span className="font-medium">{selectedChild.attendance.percentage}%</span>
+                  <span className="font-medium">
+                    {selectedChild.attendance.percentage}%
+                  </span>
                 </div>
-                <Progress value={selectedChild.attendance.percentage} className="h-3" />
+                <Progress
+                  value={selectedChild.attendance.percentage}
+                  className="h-3"
+                />
               </div>
             </CardContent>
           </Card>
@@ -516,7 +624,7 @@ export function ParentDashboard({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {announcements.map(announcement => (
+                {announcements.map((announcement) => (
                   <div key={announcement.id} className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -529,13 +637,13 @@ export function ParentDashboard({
                             {announcement.priority}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-muted-foreground mt-1 text-sm">
                           {announcement.content}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{format(announcement.date, 'MMM dd, yyyy')}</span>
+                    <div className="text-muted-foreground flex items-center gap-4 text-xs">
+                      <span>{format(announcement.date, "MMM dd, yyyy")}</span>
                       <span>{announcement.category}</span>
                     </div>
                     <Separator />
@@ -547,5 +655,5 @@ export function ParentDashboard({
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

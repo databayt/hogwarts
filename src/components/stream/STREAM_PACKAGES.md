@@ -15,6 +15,7 @@ pnpm install @tiptap/react @tiptap/starter-kit @tiptap/extension-text-align @tip
 ## Core Dependencies
 
 ### Rich Text Editor
+
 Used for course descriptions and lesson content.
 
 ```json
@@ -33,6 +34,7 @@ Used for course descriptions and lesson content.
 ---
 
 ### File Upload & Storage
+
 AWS S3-compatible storage for course images and videos.
 
 ```json
@@ -44,11 +46,13 @@ AWS S3-compatible storage for course images and videos.
 ```
 
 **Purpose**:
+
 - `@aws-sdk/client-s3`: S3 client for uploading/downloading files
 - `@aws-sdk/s3-request-presigner`: Generate presigned URLs for secure uploads
 - `react-dropzone`: Drag-and-drop file upload interface
 
 **Storage Providers Supported**:
+
 - AWS S3
 - Tigris (Fly.io)
 - Cloudflare R2
@@ -57,6 +61,7 @@ AWS S3-compatible storage for course images and videos.
 ---
 
 ### Payment Processing
+
 Stripe integration for course enrollment payments.
 
 ```json
@@ -66,6 +71,7 @@ Stripe integration for course enrollment payments.
 ```
 
 **Purpose**:
+
 - Create payment sessions
 - Handle webhooks
 - Process refunds
@@ -74,6 +80,7 @@ Stripe integration for course enrollment payments.
 ---
 
 ### Drag & Drop
+
 For organizing chapters and lessons in course structure.
 
 ```json
@@ -90,6 +97,7 @@ For organizing chapters and lessons in course structure.
 ---
 
 ### Analytics & Charts
+
 For admin dashboard statistics.
 
 ```json
@@ -103,6 +111,7 @@ For admin dashboard statistics.
 ---
 
 ### Security & Rate Limiting
+
 Protect API routes from abuse.
 
 ```json
@@ -114,6 +123,7 @@ Protect API routes from abuse.
 ```
 
 **Purpose**:
+
 - Rate limiting on course creation
 - Bot detection
 - IP-based access control
@@ -130,6 +140,7 @@ Protect API routes from abuse.
 ```
 
 **Purpose**:
+
 - `slugify`: Generate URL-friendly slugs from course titles
 - `canvas-confetti`: Celebration animation when course is created
 
@@ -140,6 +151,7 @@ Protect API routes from abuse.
 These packages are likely already installed if you're using shadcn/ui and Next.js:
 
 ### UI Components
+
 ```json
 {
   "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -161,6 +173,7 @@ These packages are likely already installed if you're using shadcn/ui and Next.j
 ```
 
 ### Form Handling
+
 ```json
 {
   "react-hook-form": "^7.56.4",
@@ -170,6 +183,7 @@ These packages are likely already installed if you're using shadcn/ui and Next.j
 ```
 
 ### Styling
+
 ```json
 {
   "tailwindcss": "^4",
@@ -180,6 +194,7 @@ These packages are likely already installed if you're using shadcn/ui and Next.j
 ```
 
 ### Icons
+
 ```json
 {
   "lucide-react": "^0.511.0",
@@ -188,6 +203,7 @@ These packages are likely already installed if you're using shadcn/ui and Next.j
 ```
 
 ### Notifications
+
 ```json
 {
   "sonner": "^2.0.4"
@@ -218,39 +234,43 @@ These are already in your project but listed here for reference:
 These enhance the experience but aren't strictly required:
 
 ### Email Notifications
+
 ```json
 {
   "resend": "^4.5.2"
 }
 ```
+
 **Purpose**: Send enrollment confirmations, course updates, completion certificates
 
 ### Internationalization
+
 ```json
 {
   "negotiator": "^0.6.3",
   "@formatjs/intl-localematcher": "^0.5.4"
 }
 ```
+
 **Purpose**: Multi-language support for course content
 
 ---
 
 ## Package Purpose Summary
 
-| Category | Packages | Purpose |
-|----------|----------|---------|
-| **Core** | Next.js, React, Prisma | Framework & Database |
-| **Auth** | AuthJS/NextAuth | User authentication |
-| **Content** | Tiptap, HTML Parser | Rich text editing |
-| **Storage** | AWS SDK | File uploads (images/videos) |
-| **Payments** | Stripe | Course enrollment payments |
-| **UI** | Radix UI, shadcn/ui | Component library |
-| **Forms** | React Hook Form, Zod | Form handling & validation |
-| **Drag & Drop** | DND Kit | Course structure organization |
-| **Analytics** | Recharts | Admin dashboard charts |
-| **Security** | Arcjet | Rate limiting & bot protection |
-| **Utils** | Slugify, Confetti | URL slugs & celebrations |
+| Category        | Packages               | Purpose                        |
+| --------------- | ---------------------- | ------------------------------ |
+| **Core**        | Next.js, React, Prisma | Framework & Database           |
+| **Auth**        | AuthJS/NextAuth        | User authentication            |
+| **Content**     | Tiptap, HTML Parser    | Rich text editing              |
+| **Storage**     | AWS SDK                | File uploads (images/videos)   |
+| **Payments**    | Stripe                 | Course enrollment payments     |
+| **UI**          | Radix UI, shadcn/ui    | Component library              |
+| **Forms**       | React Hook Form, Zod   | Form handling & validation     |
+| **Drag & Drop** | DND Kit                | Course structure organization  |
+| **Analytics**   | Recharts               | Admin dashboard charts         |
+| **Security**    | Arcjet                 | Rate limiting & bot protection |
+| **Utils**       | Slugify, Confetti      | URL slugs & celebrations       |
 
 ---
 
@@ -349,15 +369,15 @@ You should see version numbers for all packages without errors.
 
 Estimated bundle size impact of Stream module:
 
-| Package | Size (gzipped) |
-|---------|----------------|
-| Tiptap | ~80 KB |
-| AWS SDK | ~120 KB (tree-shakeable) |
-| Stripe | ~15 KB (server-side) |
-| DND Kit | ~30 KB |
-| Recharts | ~90 KB |
-| Arcjet | ~25 KB |
-| Total | **~360 KB** |
+| Package  | Size (gzipped)           |
+| -------- | ------------------------ |
+| Tiptap   | ~80 KB                   |
+| AWS SDK  | ~120 KB (tree-shakeable) |
+| Stripe   | ~15 KB (server-side)     |
+| DND Kit  | ~30 KB                   |
+| Recharts | ~90 KB                   |
+| Arcjet   | ~25 KB                   |
+| Total    | **~360 KB**              |
 
 **Note**: Most packages are lazy-loaded or only used in admin panels, minimizing impact on student-facing pages.
 
@@ -368,6 +388,7 @@ Estimated bundle size impact of Stream module:
 ### Issue: Package Installation Fails
 
 **Solution**:
+
 ```bash
 # Clear pnpm cache
 pnpm store prune
@@ -382,6 +403,7 @@ pnpm install
 ### Issue: Type Errors After Installation
 
 **Solution**:
+
 ```bash
 # Regenerate types
 pnpm prisma generate
@@ -394,6 +416,7 @@ pnpm prisma generate
 
 **Solution**:
 Most peer dependency warnings can be ignored. If you see critical errors, use:
+
 ```bash
 pnpm install --legacy-peer-deps
 ```
@@ -421,13 +444,13 @@ pnpm update @tiptap/react
 
 If you prefer different packages, here are alternatives:
 
-| Current Package | Alternative | Notes |
-|----------------|-------------|-------|
-| Tiptap | Lexical, Slate | Tiptap is most battle-tested |
-| AWS SDK | Uploadthing | Simpler but less flexible |
-| Stripe | Lemonsqueezy | If Stripe not available in region |
-| Recharts | Chart.js, Victory | Similar features |
-| DND Kit | React Beautiful DND | DND Kit is more modern |
+| Current Package | Alternative         | Notes                             |
+| --------------- | ------------------- | --------------------------------- |
+| Tiptap          | Lexical, Slate      | Tiptap is most battle-tested      |
+| AWS SDK         | Uploadthing         | Simpler but less flexible         |
+| Stripe          | Lemonsqueezy        | If Stripe not available in region |
+| Recharts        | Chart.js, Victory   | Similar features                  |
+| DND Kit         | React Beautiful DND | DND Kit is more modern            |
 
 ---
 

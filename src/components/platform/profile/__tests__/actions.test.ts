@@ -1,4 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { auth } from "@/auth"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -7,11 +11,13 @@ vi.mock("@/lib/db", () => ({
       findFirst: vi.fn(),
       findUnique: vi.fn(),
     },
-    $transaction: vi.fn((callback) => callback({
-      user: {
-        update: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((callback) =>
+      callback({
+        user: {
+          update: vi.fn(),
+        },
+      })
+    ),
   },
 }))
 
@@ -26,10 +32,6 @@ vi.mock("@/auth", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }))
-
-import { db } from "@/lib/db"
-import { getTenantContext } from "@/lib/tenant-context"
-import { auth } from "@/auth"
 
 describe("Profile Actions", () => {
   const mockSchoolId = "school-123"
@@ -63,7 +65,10 @@ describe("Profile Actions", () => {
       }
 
       vi.mocked(db.user.findFirst).mockResolvedValue(mockUser as any)
-      vi.mocked(db.user.update).mockResolvedValue({ ...mockUser, name: "John Updated" } as any)
+      vi.mocked(db.user.update).mockResolvedValue({
+        ...mockUser,
+        name: "John Updated",
+      } as any)
 
       // Verify user belongs to school before update
       await db.user.findFirst({

@@ -1,12 +1,14 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { StatValue } from "./stat-value"
-import { StatLabel } from "./stat-label"
+
 import { Sparkline } from "./sparkline"
+import { StatLabel } from "./stat-label"
+import { StatValue } from "./stat-value"
 import { TrendBadge } from "./trend-badge"
 import type { BaseVariant, CardSize, TrendData } from "./types"
 
@@ -100,7 +102,7 @@ export function MetricCard({
     <Card
       className={cn(
         "transition-colors",
-        isInteractive && "cursor-pointer hover:bg-accent/50",
+        isInteractive && "hover:bg-accent/50 cursor-pointer",
         className
       )}
       onClick={onClick}

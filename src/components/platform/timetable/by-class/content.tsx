@@ -1,26 +1,47 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useTransition } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Clock, Users, MapPin, TriangleAlert, RefreshCw, BookOpen } from "lucide-react"
-import { cn } from '@/lib/utils'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { useEffect, useState, useTransition } from "react"
 import {
-  getTermsForSelection,
-  getClassesForSelection,
-  getTimetableByClass
-} from '../actions'
+  BookOpen,
+  Clock,
+  MapPin,
+  RefreshCw,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { type Dictionary } from "@/components/internationalization/dictionaries"
+
+import {
+  getClassesForSelection,
+  getTermsForSelection,
+  getTimetableByClass,
+} from "../actions"
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 interface Props {
   searchParams: Promise<Record<string, string | string[] | undefined>>
-  dictionary: Dictionary['school']
+  dictionary: Dictionary["school"]
 }
 
 type SlotData = {
@@ -51,10 +72,12 @@ export default function TimetableByClassContent({ dictionary }: Props) {
 
   const [terms, setTerms] = useState<{ id: string; label: string }[]>([])
   const [classes, setClasses] = useState<{ id: string; label: string }[]>([])
-  const [selectedTerm, setSelectedTerm] = useState<string>('')
-  const [selectedClass, setSelectedClass] = useState<string>('')
+  const [selectedTerm, setSelectedTerm] = useState<string>("")
+  const [selectedClass, setSelectedClass] = useState<string>("")
 
-  const [timetableData, setTimetableData] = useState<ClassTimetableData | null>(null)
+  const [timetableData, setTimetableData] = useState<ClassTimetableData | null>(
+    null
+  )
 
   // Load terms on mount
   useEffect(() => {
@@ -83,18 +106,20 @@ export default function TimetableByClassContent({ dictionary }: Props) {
         setSelectedTerm(fetchedTerms[0].id)
       }
     } catch (err) {
-      setError('Failed to load terms')
+      setError("Failed to load terms")
     }
   }
 
   const loadClasses = async (termId: string) => {
     try {
-      const { classes: fetchedClasses } = await getClassesForSelection({ termId })
+      const { classes: fetchedClasses } = await getClassesForSelection({
+        termId,
+      })
       setClasses(fetchedClasses)
-      setSelectedClass('')
+      setSelectedClass("")
       setTimetableData(null)
     } catch (err) {
-      setError('Failed to load classes')
+      setError("Failed to load classes")
     }
   }
 
@@ -105,28 +130,38 @@ export default function TimetableByClassContent({ dictionary }: Props) {
         const data = await getTimetableByClass({
           termId: selectedTerm,
           classId: selectedClass,
-          weekOffset: 0
+          weekOffset: 0,
         })
         setTimetableData(data as ClassTimetableData)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load timetable')
+        setError(
+          err instanceof Error ? err.message : "Failed to load timetable"
+        )
       }
     })
   }
 
-  const getSlot = (dayOfWeek: number, periodId: string): SlotData | undefined => {
-    return timetableData?.slots.find(s => s.dayOfWeek === dayOfWeek && s.periodId === periodId)
+  const getSlot = (
+    dayOfWeek: number,
+    periodId: string
+  ): SlotData | undefined => {
+    return timetableData?.slots.find(
+      (s) => s.dayOfWeek === dayOfWeek && s.periodId === periodId
+    )
   }
 
   const formatTime = (date: Date) => {
     const d = new Date(date)
-    return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`
+    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`
   }
 
   // ListFilter to teaching periods only
-  const teachingPeriods = timetableData?.periods.filter(
-    p => !p.name.toLowerCase().includes('break') && !p.name.toLowerCase().includes('lunch')
-  ) || []
+  const teachingPeriods =
+    timetableData?.periods.filter(
+      (p) =>
+        !p.name.toLowerCase().includes("break") &&
+        !p.name.toLowerCase().includes("lunch")
+    ) || []
 
   return (
     <div className="space-y-6">
@@ -134,10 +169,11 @@ export default function TimetableByClassContent({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            {d?.byClass?.title || 'Timetable by Class'}
+            {d?.byClass?.title || "Timetable by Class"}
           </CardTitle>
           <CardDescription>
-            {d?.byClass?.description || 'View timetables filtered by class section'}
+            {d?.byClass?.description ||
+              "View timetables filtered by class section"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -150,7 +186,7 @@ export default function TimetableByClassContent({ dictionary }: Props) {
                   <SelectValue placeholder="Select term" />
                 </SelectTrigger>
                 <SelectContent>
-                  {terms.map(term => (
+                  {terms.map((term) => (
                     <SelectItem key={term.id} value={term.id}>
                       {term.label}
                     </SelectItem>
@@ -161,12 +197,16 @@ export default function TimetableByClassContent({ dictionary }: Props) {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Class</label>
-              <Select value={selectedClass} onValueChange={setSelectedClass} disabled={!selectedTerm}>
+              <Select
+                value={selectedClass}
+                onValueChange={setSelectedClass}
+                disabled={!selectedTerm}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classes.map(cls => (
+                  {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.label}
                     </SelectItem>
@@ -177,8 +217,15 @@ export default function TimetableByClassContent({ dictionary }: Props) {
 
             {selectedClass && (
               <div className="flex items-end">
-                <Button variant="outline" size="sm" onClick={loadTimetable} disabled={isPending}>
-                  <RefreshCw className={cn("h-4 w-4 me-2", isPending && "animate-spin")} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadTimetable}
+                  disabled={isPending}
+                >
+                  <RefreshCw
+                    className={cn("me-2 h-4 w-4", isPending && "animate-spin")}
+                  />
                   Refresh
                 </Button>
               </div>
@@ -195,10 +242,12 @@ export default function TimetableByClassContent({ dictionary }: Props) {
 
           {/* Class Info */}
           {timetableData?.classInfo && (
-            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-              <BookOpen className="h-8 w-8 text-primary" />
+            <div className="bg-muted flex items-center gap-4 rounded-lg p-4">
+              <BookOpen className="text-primary h-8 w-8" />
               <div>
-                <h3 className="font-semibold text-lg">{timetableData.classInfo.name}</h3>
+                <h3 className="text-lg font-semibold">
+                  {timetableData.classInfo.name}
+                </h3>
                 <p className="text-muted-foreground text-sm">
                   {timetableData.slots.length} scheduled periods per week
                 </p>
@@ -215,18 +264,18 @@ export default function TimetableByClassContent({ dictionary }: Props) {
 
           {/* Timetable Grid */}
           {!isPending && timetableData && teachingPeriods.length > 0 && (
-            <div className="overflow-x-auto border rounded-lg">
+            <div className="overflow-x-auto rounded-lg border">
               <table className="w-full">
                 <thead>
                   <tr className="bg-muted">
-                    <th className="p-3 text-start border-e">
+                    <th className="border-e p-3 text-start">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
                         <span>Period</span>
                       </div>
                     </th>
-                    {timetableData.workingDays.map(day => (
-                      <th key={day} className="p-3 text-center min-w-[140px]">
+                    {timetableData.workingDays.map((day) => (
+                      <th key={day} className="min-w-[140px] p-3 text-center">
                         {DAY_LABELS[day]}
                       </th>
                     ))}
@@ -235,27 +284,37 @@ export default function TimetableByClassContent({ dictionary }: Props) {
                 <tbody>
                   {teachingPeriods.map((period, idx) => (
                     <tr key={period.id} className="border-t">
-                      <td className="p-3 bg-muted/50 border-e">
+                      <td className="bg-muted/50 border-e p-3">
                         <div className="font-medium">{period.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatTime(period.startTime)} - {formatTime(period.endTime)}
+                        <div className="text-muted-foreground text-xs">
+                          {formatTime(period.startTime)} -{" "}
+                          {formatTime(period.endTime)}
                         </div>
                       </td>
-                      {timetableData.workingDays.map(day => {
+                      {timetableData.workingDays.map((day) => {
                         const slot = getSlot(day, period.id)
                         return (
-                          <td key={`${day}-${period.id}`} className="p-2 border-e">
+                          <td
+                            key={`${day}-${period.id}`}
+                            className="border-e p-2"
+                          >
                             {slot ? (
-                              <div className="p-2 bg-primary/10 rounded-md space-y-1">
-                                <div className="font-medium text-sm">{slot.subject}</div>
-                                <div className="text-xs text-muted-foreground">{slot.teacher}</div>
+                              <div className="bg-primary/10 space-y-1 rounded-md p-2">
+                                <div className="text-sm font-medium">
+                                  {slot.subject}
+                                </div>
+                                <div className="text-muted-foreground text-xs">
+                                  {slot.teacher}
+                                </div>
                                 <Badge variant="outline" className="text-xs">
-                                  <MapPin className="h-3 w-3 me-1" />
+                                  <MapPin className="me-1 h-3 w-3" />
                                   {slot.room}
                                 </Badge>
                               </div>
                             ) : (
-                              <div className="p-2 text-center text-muted-foreground text-sm">-</div>
+                              <div className="text-muted-foreground p-2 text-center text-sm">
+                                -
+                              </div>
                             )}
                           </td>
                         )
@@ -268,17 +327,19 @@ export default function TimetableByClassContent({ dictionary }: Props) {
           )}
 
           {/* Empty State */}
-          {!isPending && selectedClass && (!timetableData || timetableData.slots.length === 0) && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No timetable data found for this class</p>
-            </div>
-          )}
+          {!isPending &&
+            selectedClass &&
+            (!timetableData || timetableData.slots.length === 0) && (
+              <div className="text-muted-foreground py-12 text-center">
+                <Users className="mx-auto mb-4 h-12 w-12 opacity-50" />
+                <p>No timetable data found for this class</p>
+              </div>
+            )}
 
           {/* No Selection */}
           {!selectedClass && !isPending && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <div className="text-muted-foreground py-12 text-center">
+              <Users className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p>Select a class to view its timetable</p>
             </div>
           )}

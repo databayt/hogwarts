@@ -1,4 +1,4 @@
-# Internationalization 
+# Internationalization
 
 **Feature-Based i18n Architecture for New & Existing Projects**
 
@@ -47,8 +47,8 @@ components/internationalization/
 ├── middleware.ts               # Locale detection logic
 ├── dictionaries.ts             # Dictionary loading
 ├── use-locale.ts               # URL switching utility
-├── en.json                     # English transliation 
-└── ar.json                     # Arabic transliation 
+├── en.json                     # English transliation
+└── ar.json                     # Arabic transliation
 ```
 
 ### Data Flow
@@ -102,7 +102,7 @@ src/
 │       ├── use-locale.ts     # URL switching hook
 │       ├── en.json                        # English translations
 │       └── ar.json                        # Arabic translations
-                        
+
 ```
 
 ## Implementation Guide
@@ -121,34 +121,34 @@ Create `src/components/internationalization/config.ts`:
 
 ```typescript
 export const i18n = {
-  defaultLocale: 'en',
-  locales: ['en', 'ar'], // Add your supported locales
-} as const;
+  defaultLocale: "en",
+  locales: ["en", "ar"], // Add your supported locales
+} as const
 
-export type Locale = (typeof i18n)['locales'][number];
+export type Locale = (typeof i18n)["locales"][number]
 
 // Locale metadata for enhanced functionality
 export const localeConfig = {
-  'en': {
-    name: 'English',
-    nativeName: 'English',
-    dir: 'ltr',
-    flag: '🇺🇸',
-    dateFormat: 'MM/dd/yyyy',
-    currency: 'USD',
+  en: {
+    name: "English",
+    nativeName: "English",
+    dir: "ltr",
+    flag: "🇺🇸",
+    dateFormat: "MM/dd/yyyy",
+    currency: "USD",
   },
-  'ar': {
-    name: 'Arabic',
-    nativeName: 'العربية',
-    dir: 'rtl',
-    flag: '🇸🇦',
-    dateFormat: 'dd/MM/yyyy',
-    currency: 'SAR',
+  ar: {
+    name: "Arabic",
+    nativeName: "العربية",
+    dir: "rtl",
+    flag: "🇸🇦",
+    dateFormat: "dd/MM/yyyy",
+    currency: "SAR",
   },
-} as const;
+} as const
 
 export function isRTL(locale: Locale): boolean {
-  return localeConfig[locale]?.dir === 'rtl';
+  return localeConfig[locale]?.dir === "rtl"
 }
 ```
 
@@ -157,52 +157,53 @@ export function isRTL(locale: Locale): boolean {
 Create `src/components/internationalization/middleware.ts`:
 
 ```typescript
-import { match } from '@formatjs/intl-localematcher';
-import Negotiator from 'negotiator';
-import { type NextRequest, NextResponse } from 'next/server';
-import { i18n } from './config';
+import { NextResponse, type NextRequest } from "next/server"
+import { match } from "@formatjs/intl-localematcher"
+import Negotiator from "negotiator"
+
+import { i18n } from "./config"
 
 function getLocale(request: NextRequest) {
   // Get Accept-Language header
   const headers = {
-    'accept-language': request.headers.get('accept-language') ?? '',
-  };
-  
+    "accept-language": request.headers.get("accept-language") ?? "",
+  }
+
   // Use negotiator to parse preferred languages
-  const languages = new Negotiator({ headers }).languages();
-  
+  const languages = new Negotiator({ headers }).languages()
+
   // Match against supported locales
-  return match(languages, i18n.locales, i18n.defaultLocale);
+  return match(languages, i18n.locales, i18n.defaultLocale)
 }
 
 export function localizationMiddleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
+  const { pathname } = request.nextUrl
+
   // Check if pathname already has a locale
   const pathnameHasLocale = i18n.locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
+  )
 
   // If locale exists in URL, continue
   if (pathnameHasLocale) {
-    return NextResponse.next();
+    return NextResponse.next()
   }
 
   // Get best matching locale
-  const locale = getLocale(request);
-  
+  const locale = getLocale(request)
+
   // Redirect to localized URL
-  request.nextUrl.pathname = `/${locale}${pathname}`;
-  const response = NextResponse.redirect(request.nextUrl);
-  
+  request.nextUrl.pathname = `/${locale}${pathname}`
+  const response = NextResponse.redirect(request.nextUrl)
+
   // Set cookie for future visits
-  response.cookies.set('NEXT_LOCALE', locale, {
+  response.cookies.set("NEXT_LOCALE", locale, {
     maxAge: 365 * 24 * 60 * 60, // 1 year
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
-  
-  return response;
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  })
+
+  return response
 }
 ```
 
@@ -211,26 +212,29 @@ export function localizationMiddleware(request: NextRequest) {
 Create `src/components/internationalization/dictionaries.ts`:
 
 ```typescript
-import "server-only";
-import type { Locale } from "./config";
+import "server-only"
+
+import type { Locale } from "./config"
 
 // We enumerate all dictionaries here for better linting and typescript support
 const dictionaries = {
-  "en": () => import("./en.json").then((module) => module.default),
-  "ar": () => import("./ar.json").then((module) => module.default),
-} as const;
+  en: () => import("./en.json").then((module) => module.default),
+  ar: () => import("./ar.json").then((module) => module.default),
+} as const
 
 export const getDictionary = async (locale: Locale) => {
   try {
-    return await (dictionaries[locale]?.() ?? dictionaries["en"]());
+    return await (dictionaries[locale]?.() ?? dictionaries["en"]())
   } catch (error) {
-    console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    return await dictionaries["en"]();
+    console.warn(
+      `Failed to load dictionary for locale: ${locale}. Falling back to en.`
+    )
+    return await dictionaries["en"]()
   }
-};
+}
 
 // Type helper for component props
-export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
+export type Dictionary = Awaited<ReturnType<typeof getDictionary>>
 ```
 
 ### Step 5: Create URL Switching Hook
@@ -238,30 +242,35 @@ export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 Create `src/components/internationalization/use-locale.ts`:
 
 ```typescript
-'use client';
+"use client"
 
-import { usePathname } from 'next/navigation';
-import type { Locale } from './config';
-import { i18n } from './config';
+import { usePathname } from "next/navigation"
+
+import type { Locale } from "./config"
+import { i18n } from "./config"
 
 export function useSwitchLocaleHref() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   return function switchLocaleHref(targetLocale: Locale): string {
     // Extract current locale from pathname
-    const currentLocale = i18n.locales.find(locale => 
-      pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-    );
+    const currentLocale = i18n.locales.find(
+      (locale) =>
+        pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    )
 
     if (!currentLocale) {
       // If no current locale detected, prepend target locale
-      return `/${targetLocale}${pathname}`;
+      return `/${targetLocale}${pathname}`
     }
 
     // Replace current locale with target locale
-    const newPathname = pathname.replace(`/${currentLocale}`, `/${targetLocale}`);
-    return newPathname;
-  };
+    const newPathname = pathname.replace(
+      `/${currentLocale}`,
+      `/${targetLocale}`
+    )
+    return newPathname
+  }
 }
 ```
 
@@ -270,16 +279,17 @@ export function useSwitchLocaleHref() {
 Create/Update `src/middleware.ts`:
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { localizationMiddleware } from './components/internationalization/middleware';
+import { NextRequest } from "next/server"
+
+import { localizationMiddleware } from "./components/internationalization/middleware"
 
 // Matcher ignoring `/_next/`, `/api/`, and static files
 export const config = {
-  matcher: ['/((?!api|_next|_static|favicon.ico|.*\\.[a-zA-Z0-9]+$).*)'],
-};
+  matcher: ["/((?!api|_next|_static|favicon.ico|.*\\.[a-zA-Z0-9]+$).*)"],
+}
 
 export function middleware(request: NextRequest) {
-  return localizationMiddleware(request);
+  return localizationMiddleware(request)
 }
 ```
 
@@ -392,16 +402,16 @@ import { type Locale, localeConfig } from "@/components/internationalization/i18
 import "../globals.css";
 
 // Configure fonts
-const inter = Inter({ 
-  subsets: ['latin'], 
+const inter = Inter({
+  subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap' 
+  display: 'swap'
 });
 
-const rubik = Rubik({ 
-  subsets: ['arabic', 'latin'], 
+const rubik = Rubik({
+  subsets: ['arabic', 'latin'],
   variable: '--font-rubik',
-  display: 'swap' 
+  display: 'swap'
 });
 
 export async function generateMetadata({
@@ -411,7 +421,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const dictionary = await getDictionary(lang);
   const config = localeConfig[lang];
-  
+
   return {
     title: dictionary.metadata.title,
     description: dictionary.metadata.description,
@@ -437,7 +447,7 @@ export default async function LocaleLayout({
 }) {
   const config = localeConfig[lang];
   const isRTL = config.dir === 'rtl';
-  
+
   return (
     <html lang={lang} dir={config.dir}>
       <body
@@ -477,22 +487,22 @@ export default async function HomePage({
       <div className="mb-4">
         <LanguageSwitcher currentLocale={lang} />
       </div>
-      
+
       <h1 className="text-3xl font-bold mb-4">
         {dictionary.landing.welcome}
       </h1>
-      
+
       <p className="text-lg text-gray-600 mb-8">
         Current locale: {lang}
       </p>
-      
+
       <p className="mb-8">
         This text is rendered on the server: {dictionary.landing.subtitle}
       </p>
-      
-      <CounterComponent 
+
+      <CounterComponent
         dictionary={dictionary.counter}
-        params={{ lang }} 
+        params={{ lang }}
       />
     </div>
   );
@@ -528,11 +538,10 @@ Replace all existing imports:
 
 ```typescript
 // ❌ Old imports
-import { getDictionary } from '@/lib/dictionaries';
-import { useTranslations } from '@/lib/use-translations';
-
+import { getDictionary } from "@/lib/dictionaries"
+import { useTranslations } from "@/lib/use-translations"
 // ✅ New imports
-import { getDictionary } from '@/components/internationalization/dictionaries';
+import { getDictionary } from "@/components/internationalization/dictionaries"
 ```
 
 ### Step 5: Restructure App Directory
@@ -644,14 +653,14 @@ export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
       {i18n.locales.map((locale) => {
         const config = localeConfig[locale];
         const isActive = locale === currentLocale;
-        
+
         return (
           <Link
             key={locale}
             href={getSwitchLocaleHref(locale)}
             className={`px-3 py-1 rounded ${
-              isActive 
-                ? 'bg-blue-500 text-white' 
+              isActive
+                ? 'bg-blue-500 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
             }`}
           >
@@ -688,7 +697,7 @@ export function ComplexComponent({ dictionary, params }: Props) {
         <a href={`/${params.lang}`}>{dictionary.navigation.home}</a>
         <a href={`/${params.lang}/about`}>{dictionary.navigation.about}</a>
       </nav>
-      
+
       <main>
         <button>{dictionary.auth.signIn}</button>
         <p>{dictionary.common.loading}</p>
@@ -705,17 +714,17 @@ export function ComplexComponent({ dictionary, params }: Props) {
 ```typescript
 // For very large applications, you can split dictionaries
 const dictionaries = {
-  "en": {
-    common: () => import("./en/common.json").then(m => m.default),
-    auth: () => import("./en/auth.json").then(m => m.default),
-    dashboard: () => import("./en/lab.json").then(m => m.default),
+  en: {
+    common: () => import("./en/common.json").then((m) => m.default),
+    auth: () => import("./en/auth.json").then((m) => m.default),
+    dashboard: () => import("./en/lab.json").then((m) => m.default),
   },
   // ... other locales
-} as const;
+} as const
 
 export const getDictionarySection = async (locale: Locale, section: string) => {
-  return dictionaries[locale]?.[section]?.() ?? dictionaries["en"][section]();
-};
+  return dictionaries[locale]?.[section]?.() ?? dictionaries["en"][section]()
+}
 ```
 
 ### Custom Locale Detection
@@ -724,24 +733,24 @@ export const getDictionarySection = async (locale: Locale, section: string) => {
 // Enhanced locale detection with custom logic
 function getLocale(request: NextRequest): Locale {
   // 1. Check URL parameter
-  const searchParams = request.nextUrl.searchParams;
-  const urlLocale = searchParams.get('lang');
+  const searchParams = request.nextUrl.searchParams
+  const urlLocale = searchParams.get("lang")
   if (urlLocale && i18n.locales.includes(urlLocale as Locale)) {
-    return urlLocale as Locale;
+    return urlLocale as Locale
   }
 
   // 2. Check cookie
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value
   if (cookieLocale && i18n.locales.includes(cookieLocale as Locale)) {
-    return cookieLocale as Locale;
+    return cookieLocale as Locale
   }
 
   // 3. Use negotiator for Accept-Language header
   const headers = {
-    'accept-language': request.headers.get('accept-language') ?? '',
-  };
-  const languages = new Negotiator({ headers }).languages();
-  return match(languages, i18n.locales, i18n.defaultLocale) as Locale;
+    "accept-language": request.headers.get("accept-language") ?? "",
+  }
+  const languages = new Negotiator({ headers }).languages()
+  return match(languages, i18n.locales, i18n.defaultLocale) as Locale
 }
 ```
 
@@ -752,33 +761,36 @@ function getLocale(request: NextRequest): Locale {
 export async function generateMetadata({
   params: { lang },
 }: {
-  params: { lang: Locale };
+  params: { lang: Locale }
 }): Promise<Metadata> {
-  const dictionary = await getDictionary(lang);
-  const config = localeConfig[lang];
-  
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://databayt.com';
-  
+  const dictionary = await getDictionary(lang)
+  const config = localeConfig[lang]
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://databayt.com"
+
   return {
     title: dictionary.metadata.title,
     description: dictionary.metadata.description,
     alternates: {
       canonical: `${baseUrl}/${lang}`,
-      languages: Object.keys(localeConfig).reduce((acc, locale) => ({
-        ...acc,
-        [locale]: `${baseUrl}/${locale}`,
-      }), { 'x-default': `${baseUrl}/en` }),
+      languages: Object.keys(localeConfig).reduce(
+        (acc, locale) => ({
+          ...acc,
+          [locale]: `${baseUrl}/${locale}`,
+        }),
+        { "x-default": `${baseUrl}/en` }
+      ),
     },
     openGraph: {
       title: dictionary.metadata.title,
       description: dictionary.metadata.description,
       locale: lang,
-      alternateLocale: i18n.locales.filter(l => l !== lang),
+      alternateLocale: i18n.locales.filter((l) => l !== lang),
     },
     other: {
-      'accept-language': lang,
+      "accept-language": lang,
     },
-  };
+  }
 }
 ```
 
@@ -836,10 +848,10 @@ export function ClientComponent() {
 }
 
 // ✅ CORRECT: Pass dictionary as props
-export function ClientComponent({ 
-  dictionary 
-}: { 
-  dictionary: Awaited<ReturnType<typeof getDictionary>>['common'] 
+export function ClientComponent({
+  dictionary
+}: {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>['common']
 }) {
   return <button>{dictionary.clickMe}</button>;
 }
@@ -917,6 +929,7 @@ This document establishes the **mandatory v2.0 internationalization standard** f
 ### Success Metrics
 
 This v2.0 standardization enables:
+
 - New project i18n setup in under 1 hour
 - Existing project migration in under 1 day
 - Zero configuration drift between projects

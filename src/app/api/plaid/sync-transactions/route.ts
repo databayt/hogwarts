@@ -31,19 +31,20 @@
  * - Rate limits: 250 requests/minute, batch processing recommended
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
-import { auth } from '@/auth'
-import { db } from '@/lib/db'
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { Configuration, PlaidApi, PlaidEnvironments } from "plaid"
+
+import { db } from "@/lib/db"
 
 // Initialize Plaid client with environment-specific configuration
 // Uses PLAID_ENV to switch between sandbox/development/production
 const configuration = new Configuration({
-  basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
+  basePath: PlaidEnvironments[process.env.PLAID_ENV || "sandbox"],
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
-      'PLAID-SECRET': process.env.PLAID_SECRET,
+      "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
+      "PLAID-SECRET": process.env.PLAID_SECRET,
     },
   },
 })
@@ -55,10 +56,7 @@ export async function POST(request: NextRequest) {
     const session = await auth()
 
     if (!session?.user || !session.user.schoolId) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const schoolId = session.user.schoolId
@@ -75,7 +73,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         transactions: {
-          orderBy: { date: 'desc' },
+          orderBy: { date: "desc" },
           take: 1,
         },
       },
@@ -83,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     if (!bankAccount) {
       return NextResponse.json(
-        { error: 'Bank account not found' },
+        { error: "Bank account not found" },
         { status: 404 }
       )
     }
@@ -92,13 +90,14 @@ export async function POST(request: NextRequest) {
     // WHY: Incremental sync reduces Plaid API calls and processing time
     // Falls back to 1 month ago if no previous transactions (first sync)
     const now = new Date()
-    const startDate = bankAccount.transactions[0]?.date ||
+    const startDate =
+      bankAccount.transactions[0]?.date ||
       new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
 
     const transactionsResponse = await plaidClient.transactionsGet({
       access_token: bankAccount.accessToken,
-      start_date: startDate.toISOString().split('T')[0],
-      end_date: now.toISOString().split('T')[0],
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: now.toISOString().split("T")[0],
     })
 
     // Filter out existing transactions to prevent duplicates
@@ -108,15 +107,17 @@ export async function POST(request: NextRequest) {
         bankAccountId: bankAccount.id,
         schoolId,
         accountId: {
-          in: transactionsResponse.data.transactions.map(t => t.transaction_id),
+          in: transactionsResponse.data.transactions.map(
+            (t) => t.transaction_id
+          ),
         },
       },
       select: { accountId: true },
     })
 
-    const existingIds = new Set(existingTransactionIds.map(t => t.accountId))
+    const existingIds = new Set(existingTransactionIds.map((t) => t.accountId))
     const newTransactions = transactionsResponse.data.transactions.filter(
-      t => !existingIds.has(t.transaction_id)
+      (t) => !existingIds.has(t.transaction_id)
     )
 
     // Store new transactions
@@ -129,9 +130,9 @@ export async function POST(request: NextRequest) {
         amount: Math.abs(transaction.amount),
         date: new Date(transaction.date),
         paymentChannel: transaction.payment_channel,
-        category: transaction.category?.[0] || 'Other',
+        category: transaction.category?.[0] || "Other",
         subcategory: transaction.category?.[1],
-        type: transaction.amount > 0 ? 'debit' : 'credit',
+        type: transaction.amount > 0 ? "debit" : "credit",
         pending: transaction.pending,
         merchantName: transaction.merchant_name,
       }))
@@ -161,13 +162,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Transactions synced successfully',
+      message: "Transactions synced successfully",
       newTransactions: newTransactions.length,
     })
   } catch (error) {
-    console.error('Error syncing transactions:', error)
+    console.error("Error syncing transactions:", error)
     return NextResponse.json(
-      { error: 'Failed to sync transactions' },
+      { error: "Failed to sync transactions" },
       { status: 500 }
     )
   }

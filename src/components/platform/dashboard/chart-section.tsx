@@ -1,10 +1,16 @@
 "use client"
 
-import { SectionHeading } from "./section-heading"
-import { InteractiveBarChart, type InteractiveBarChartData } from "./chart-interactive-bar"
+import {
+  AreaChartStacked,
+  type AreaChartStackedData,
+} from "./chart-area-stacked"
+import {
+  InteractiveBarChart,
+  type InteractiveBarChartData,
+} from "./chart-interactive-bar"
 import { RadialTextChart } from "./chart-radial-text"
-import { AreaChartStacked, type AreaChartStackedData } from "./chart-area-stacked"
 import type { DashboardRole } from "./resource-usage-section"
+import { SectionHeading } from "./section-heading"
 
 // ============================================================================
 // TYPES
@@ -79,7 +85,7 @@ function generateBarChartData(months: number = 3): InteractiveBarChartData[] {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
     data.push({
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString().split("T")[0],
       primary: Math.floor(Math.random() * 400) + 100,
       secondary: Math.floor(Math.random() * 300) + 80,
     })
@@ -411,7 +417,11 @@ export interface StaticChartSectionProps {
 /**
  * Static version of ChartSection for server-side rendering.
  */
-export function StaticChartSection({ role, data, className }: StaticChartSectionProps) {
+export function StaticChartSection({
+  role,
+  data,
+  className,
+}: StaticChartSectionProps) {
   const chartData = data || defaultDataByRole[role] || defaultDataByRole.ADMIN
   const sectionTitle = getChartSectionTitle(role)
 

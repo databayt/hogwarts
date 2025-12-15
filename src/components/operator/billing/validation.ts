@@ -1,4 +1,8 @@
-import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
 
 export const billingSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -7,26 +11,8 @@ export const billingSearchParams = createSearchParamsCache({
   number: parseAsString.withDefault(""),
   tenantName: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
-});
+})
 
-export type GetBillingSearch = Awaited<ReturnType<typeof billingSearchParams.parse>>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export type GetBillingSearch = Awaited<
+  ReturnType<typeof billingSearchParams.parse>
+>

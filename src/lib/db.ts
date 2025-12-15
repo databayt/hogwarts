@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"
 
 /**
  * Prisma Client Singleton - Database Connection Management
@@ -21,25 +21,28 @@ import { PrismaClient } from "@prisma/client";
  */
 
 // Get connection string from environment variables
-const connectionString = process.env.DATABASE_URL as string;
+const connectionString = process.env.DATABASE_URL as string
 
-const globalForPrisma = global as unknown as { db: PrismaClient };
+const globalForPrisma = global as unknown as { db: PrismaClient }
 
 // Use existing instance if available, otherwise create new
-export const db = globalForPrisma.db || new PrismaClient();
+export const db = globalForPrisma.db || new PrismaClient()
 
 // Only attach to global in development (prevents HMR connection exhaustion)
-if (process.env.NODE_ENV !== "production") globalForPrisma.db = db;
+if (process.env.NODE_ENV !== "production") globalForPrisma.db = db
 
 // For debugging Prisma issues (simplified for Edge Runtime)
 export function debugPrismaEngine() {
   try {
-    console.log("Prisma connection URL:", connectionString?.substring(0, 20) + "...");
-    console.log("NODE_ENV:", process.env.NODE_ENV);
-    
-    return { status: "ok" };
+    console.log(
+      "Prisma connection URL:",
+      connectionString?.substring(0, 20) + "..."
+    )
+    console.log("NODE_ENV:", process.env.NODE_ENV)
+
+    return { status: "ok" }
   } catch (error) {
-    console.error("Failed to debug Prisma engine:", error);
-    return { error: error?.toString() };
+    console.error("Failed to debug Prisma engine:", error)
+    return { error: error?.toString() }
   }
 }

@@ -1,28 +1,30 @@
 # Role-Based Students Page Views
 
 ## Overview
+
 How each user role will see the `/students` page differently.
 
 ---
 
 ## Role Views Summary
 
-| Role | Students Page View | Data Access | Actions |
-|------|-------------------|-------------|---------|
-| **ADMIN** | Full data table | All students in school | View, Edit, Delete, Import, Export, Bulk |
-| **DEVELOPER** | Full data table | All students in school | View, Edit, Delete, Import, Export, Bulk |
-| **PRINCIPAL** | Full data table | All students in school | View only, Statistics |
-| **TEACHER** | Class-filtered table | Only students in their classes | View, Mark Attendance, Enter Grades |
-| **STUDENT** | Own profile redirect | Own record only | View own profile |
-| **GUARDIAN** | Children cards | Only linked children | View children profiles, Pay fees |
-| **ACCOUNTANT** | Fee-focused table | All students + fee data | View, Process Payments |
-| **STAFF** | Read-only table | All students | View only |
+| Role           | Students Page View   | Data Access                    | Actions                                  |
+| -------------- | -------------------- | ------------------------------ | ---------------------------------------- |
+| **ADMIN**      | Full data table      | All students in school         | View, Edit, Delete, Import, Export, Bulk |
+| **DEVELOPER**  | Full data table      | All students in school         | View, Edit, Delete, Import, Export, Bulk |
+| **PRINCIPAL**  | Full data table      | All students in school         | View only, Statistics                    |
+| **TEACHER**    | Class-filtered table | Only students in their classes | View, Mark Attendance, Enter Grades      |
+| **STUDENT**    | Own profile redirect | Own record only                | View own profile                         |
+| **GUARDIAN**   | Children cards       | Only linked children           | View children profiles, Pay fees         |
+| **ACCOUNTANT** | Fee-focused table    | All students + fee data        | View, Process Payments                   |
+| **STAFF**      | Read-only table      | All students                   | View only                                |
 
 ---
 
 ## Detailed Views by Role
 
 ### 1. ADMIN / DEVELOPER View
+
 **Full Access Control Panel**
 
 ```
@@ -42,6 +44,7 @@ How each user role will see the `/students` page differently.
 ```
 
 **Features:**
+
 - Full CRUD operations
 - Bulk actions (delete, export, status change)
 - Import from CSV/Excel
@@ -52,6 +55,7 @@ How each user role will see the `/students` page differently.
 ---
 
 ### 2. PRINCIPAL View
+
 **Executive Overview**
 
 ```
@@ -74,6 +78,7 @@ How each user role will see the `/students` page differently.
 ```
 
 **Features:**
+
 - Statistics cards at top
 - Read-only access
 - Academic focus (attendance, GPA)
@@ -83,6 +88,7 @@ How each user role will see the `/students` page differently.
 ---
 
 ### 3. TEACHER View
+
 **My Students**
 
 ```
@@ -102,6 +108,7 @@ How each user role will see the `/students` page differently.
 ```
 
 **Features:**
+
 - Only students in teacher's assigned classes
 - Quick attendance marking
 - Grade entry shortcuts
@@ -112,6 +119,7 @@ How each user role will see the `/students` page differently.
 ---
 
 ### 4. STUDENT View
+
 **Redirect to Own Profile**
 
 ```
@@ -126,6 +134,7 @@ Student sees their own profile with:
 ```
 
 **Behavior:**
+
 - `/students` → redirects to `/students/{ownId}`
 - Cannot see other students
 - Self-service features only
@@ -133,6 +142,7 @@ Student sees their own profile with:
 ---
 
 ### 5. GUARDIAN View
+
 **My Children**
 
 ```
@@ -153,6 +163,7 @@ Student sees their own profile with:
 ```
 
 **Features:**
+
 - Card layout for each child
 - Key metrics at glance
 - Fee payment shortcuts
@@ -163,6 +174,7 @@ Student sees their own profile with:
 ---
 
 ### 6. ACCOUNTANT View
+
 **Fee Collection Dashboard**
 
 ```
@@ -186,6 +198,7 @@ Student sees their own profile with:
 ```
 
 **Features:**
+
 - Fee-centric columns
 - Payment processing
 - Receipt generation
@@ -196,6 +209,7 @@ Student sees their own profile with:
 ---
 
 ### 7. STAFF View
+
 **Student Directory**
 
 ```
@@ -213,6 +227,7 @@ Student sees their own profile with:
 ```
 
 **Features:**
+
 - Read-only directory
 - Basic info only
 - Emergency contacts
@@ -223,36 +238,36 @@ Student sees their own profile with:
 
 ## Column Visibility Matrix
 
-| Column | Admin | Principal | Teacher | Guardian | Accountant | Staff |
-|--------|-------|-----------|---------|----------|------------|-------|
-| Photo | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Name | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Class | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Status | ✓ | ✓ | ✓ | - | ✓ | ✓ |
-| Attendance | ✓ | ✓ | ✓ | ✓ | - | - |
-| GPA/Grades | ✓ | ✓ | ✓ | ✓ | - | - |
-| Total Fees | ✓ | - | - | ✓ | ✓ | - |
-| Paid Amount | ✓ | - | - | ✓ | ✓ | - |
-| Balance | ✓ | - | - | ✓ | ✓ | - |
-| Contact | ✓ | ✓ | ✓ | - | - | ✓ |
-| Actions | Full | View | Limited | View | Payment | View |
+| Column      | Admin | Principal | Teacher | Guardian | Accountant | Staff |
+| ----------- | ----- | --------- | ------- | -------- | ---------- | ----- |
+| Photo       | ✓     | ✓         | ✓       | ✓        | ✓          | ✓     |
+| Name        | ✓     | ✓         | ✓       | ✓        | ✓          | ✓     |
+| Class       | ✓     | ✓         | ✓       | ✓        | ✓          | ✓     |
+| Status      | ✓     | ✓         | ✓       | -        | ✓          | ✓     |
+| Attendance  | ✓     | ✓         | ✓       | ✓        | -          | -     |
+| GPA/Grades  | ✓     | ✓         | ✓       | ✓        | -          | -     |
+| Total Fees  | ✓     | -         | -       | ✓        | ✓          | -     |
+| Paid Amount | ✓     | -         | -       | ✓        | ✓          | -     |
+| Balance     | ✓     | -         | -       | ✓        | ✓          | -     |
+| Contact     | ✓     | ✓         | ✓       | -        | -          | ✓     |
+| Actions     | Full  | View      | Limited | View     | Payment    | View  |
 
 ---
 
 ## Action Permissions Matrix
 
-| Action | Admin | Developer | Principal | Teacher | Guardian | Accountant | Staff |
-|--------|-------|-----------|-----------|---------|----------|------------|-------|
-| View All | ✓ | ✓ | ✓ | Class | Children | ✓ | ✓ |
-| View Profile | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Edit Student | ✓ | ✓ | - | - | - | - | - |
-| Delete Student | ✓ | ✓ | - | - | - | - | - |
-| Import | ✓ | ✓ | - | - | - | - | - |
-| Export | ✓ | ✓ | ✓ | Class | - | ✓ | - |
-| Mark Attendance | ✓ | ✓ | - | ✓ | - | - | - |
-| Enter Grades | ✓ | ✓ | - | ✓ | - | - | - |
-| Process Payment | ✓ | ✓ | - | - | ✓ | ✓ | - |
-| Send Message | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
+| Action          | Admin | Developer | Principal | Teacher | Guardian | Accountant | Staff |
+| --------------- | ----- | --------- | --------- | ------- | -------- | ---------- | ----- |
+| View All        | ✓     | ✓         | ✓         | Class   | Children | ✓          | ✓     |
+| View Profile    | ✓     | ✓         | ✓         | ✓       | ✓        | ✓          | ✓     |
+| Edit Student    | ✓     | ✓         | -         | -       | -        | -          | -     |
+| Delete Student  | ✓     | ✓         | -         | -       | -        | -          | -     |
+| Import          | ✓     | ✓         | -         | -       | -        | -          | -     |
+| Export          | ✓     | ✓         | ✓         | Class   | -        | ✓          | -     |
+| Mark Attendance | ✓     | ✓         | -         | ✓       | -        | -          | -     |
+| Enter Grades    | ✓     | ✓         | -         | ✓       | -        | -          | -     |
+| Process Payment | ✓     | ✓         | -         | -       | ✓        | ✓          | -     |
+| Send Message    | ✓     | ✓         | ✓         | ✓       | ✓        | -          | -     |
 
 ---
 
@@ -282,6 +297,7 @@ src/components/platform/students/
 ## Data Filtering by Role
 
 ### Teacher
+
 ```typescript
 // Only students in teacher's classes
 where: {
@@ -293,6 +309,7 @@ where: {
 ```
 
 ### Guardian
+
 ```typescript
 // Only linked children
 where: {
@@ -304,21 +321,22 @@ where: {
 ```
 
 ### Student
+
 ```typescript
 // Redirect to own profile
 const student = await db.student.findFirst({
-  where: { userId, schoolId }
-});
-redirect(`/students/${student.id}`);
+  where: { userId, schoolId },
+})
+redirect(`/students/${student.id}`)
 ```
 
 ---
 
 ## Empty States by Role
 
-| Role | Empty State Message |
-|------|-------------------|
-| Teacher | "No students assigned to your classes yet" |
-| Guardian | "No children linked to your account" |
-| Accountant | "No students with pending fees" |
-| Admin | "No students enrolled yet. Click + Add to register students" |
+| Role       | Empty State Message                                          |
+| ---------- | ------------------------------------------------------------ |
+| Teacher    | "No students assigned to your classes yet"                   |
+| Guardian   | "No children linked to your account"                         |
+| Accountant | "No students with pending fees"                              |
+| Admin      | "No students enrolled yet. Click + Add to register students" |

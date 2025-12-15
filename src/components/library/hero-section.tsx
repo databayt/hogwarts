@@ -1,33 +1,38 @@
-"use client";
+"use client"
 
-import { buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { LibraryAnimation } from "./library-animation";
+import Link from "next/link"
+
+import { buttonVariants } from "@/components/ui/button"
+
+import { LibraryAnimation } from "./library-animation"
 
 interface HeroSectionProps {
   dictionary?: {
     library?: {
-      title?: string;
-      subtitle?: string;
+      title?: string
+      subtitle?: string
       navigation?: {
-        browse?: string;
-        myBooks?: string;
-      };
+        browse?: string
+        myBooks?: string
+      }
       myProfile?: {
-        title?: string;
-      };
-    };
-  };
-  lang?: string;
+        title?: string
+      }
+    }
+  }
+  lang?: string
 }
 
-export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps) {
-  const isRTL = lang === "ar";
+export function LibraryHeroSection({
+  dictionary,
+  lang = "en",
+}: HeroSectionProps) {
+  const isRTL = lang === "ar"
 
   return (
     <section className="relative">
       <div
-        className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-12 ${
+        className={`flex flex-col items-center gap-8 lg:flex-row lg:gap-12 ${
           isRTL ? "lg:flex-row-reverse" : ""
         }`}
       >
@@ -37,16 +42,16 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
             isRTL ? "items-end text-right" : "items-start text-left"
           } lg:items-start lg:text-left`}
         >
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter leading-none">
+          <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
             Revelio
             <br />
-            <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
+            <span className="mt-2 block text-3xl font-semibold md:text-4xl lg:text-5xl">
               Unlock hidden.
             </span>
           </h1>
 
           <div
-            className={`flex flex-col sm:flex-row gap-4 ${
+            className={`flex flex-col gap-4 sm:flex-row ${
               isRTL ? "sm:flex-row-reverse" : ""
             }`}
           >
@@ -72,10 +77,10 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
         </div>
 
         {/* Animated Book */}
-        <div className="shrink-0 -ml-5">
-          <LibraryAnimation className="w-64 lg:w-80 h-64 lg:h-80" />
+        <div className="-ml-5 shrink-0">
+          <LibraryAnimation className="h-64 w-64 lg:h-80 lg:w-80" />
         </div>
       </div>
     </section>
-  );
+  )
 }

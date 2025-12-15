@@ -1,8 +1,8 @@
-import WalletContent from '@/components/platform/finance/wallet/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import WalletContent from "@/components/platform/finance/wallet/content"
 
-export const metadata = { title: 'Dashboard: Wallet Management' }
+export const metadata = { title: "Dashboard: Wallet Management" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

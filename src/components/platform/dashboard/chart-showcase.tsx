@@ -1,3 +1,6 @@
+import { type Locale } from "@/components/internationalization/config"
+import { type getDictionary } from "@/components/internationalization/dictionaries"
+
 import { AreaChartStacked } from "./chart-area-stacked"
 import { BarChartMixed } from "./chart-bar-mixed"
 import { InteractiveBarChart } from "./chart-interactive-bar"
@@ -8,15 +11,16 @@ import { RadialShapeChart } from "./chart-radial-shape"
 import { RadialStackedChart } from "./chart-radial-stacked"
 import { RadialTextChart } from "./chart-radial-text"
 import { DashboardHeader } from "./header"
-import { type Locale } from "@/components/internationalization/config"
-import { type getDictionary } from "@/components/internationalization/dictionaries"
 
 interface ChartsContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
   lang: Locale
 }
 
-export default function ChartsContent({ dictionary, lang }: ChartsContentProps) {
+export default function ChartsContent({
+  dictionary,
+  lang,
+}: ChartsContentProps) {
   return (
     <>
       <DashboardHeader heading="Charts" text="List of charts by shadcn-ui." />

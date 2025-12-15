@@ -3,27 +3,29 @@
  * Combines student tracking and admin live map views
  */
 
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { GeoTracker } from './geo-tracker'
-import { GeoLiveMap } from './geo-live-map'
-import { GeofenceForm } from './geofence-form'
-import { getGeofences, getLiveStudentLocations } from './actions'
+import { redirect } from "next/navigation"
+import { auth } from "@/auth"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { getGeofences, getLiveStudentLocations } from "./actions"
+import { GeoLiveMap } from "./geo-live-map"
+import { GeoTracker } from "./geo-tracker"
+import { GeofenceForm } from "./geofence-form"
 
 export async function GeofenceContent() {
   const session = await auth()
 
   if (!session?.user?.schoolId) {
-    redirect('/auth/signin')
+    redirect("/auth/signin")
   }
 
   const schoolId = session.user.schoolId
   const role = session.user.role
 
   // Determine user permissions
-  const isStudent = role === 'STUDENT'
-  const canManage = role === 'ADMIN' || role === 'TEACHER'
+  const isStudent = role === "STUDENT"
+  const canManage = role === "ADMIN" || role === "TEACHER"
 
   // Fetch initial data for admin/teacher view
   let initialGeofences: any[] = []
@@ -56,17 +58,14 @@ export async function GeofenceContent() {
       {isStudent && (
         <div className="space-y-4">
           <GeoTracker />
-          <div className="rounded-lg border p-4 text-sm text-muted-foreground">
-            <p className="font-medium mb-2">How it works:</p>
-            <ul className="list-disc list-inside space-y-1">
+          <div className="text-muted-foreground rounded-lg border p-4 text-sm">
+            <p className="mb-2 font-medium">How it works:</p>
+            <ul className="list-inside list-disc space-y-1">
+              <li>Enable location tracking by clicking "Start Tracking"</li>
+              <li>Your location is securely submitted every 30 seconds</li>
               <li>
-                Enable location tracking by clicking "Start Tracking"
-              </li>
-              <li>
-                Your location is securely submitted every 30 seconds
-              </li>
-              <li>
-                When you enter school grounds, attendance is automatically marked
+                When you enter school grounds, attendance is automatically
+                marked
               </li>
               <li>
                 Your location data is kept for 30 days for privacy compliance
@@ -107,46 +106,50 @@ export async function GeofenceContent() {
               {initialGeofences.map((geofence) => (
                 <div
                   key={geofence.id}
-                  className="rounded-lg border p-4 space-y-2"
+                  className="space-y-2 rounded-lg border p-4"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="font-medium">{geofence.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {geofence.type.replace('_', ' ')}
+                      <p className="text-muted-foreground text-sm">
+                        {geofence.type.replace("_", " ")}
                       </p>
                     </div>
                     <div
                       className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: geofence.color || '#3b82f6' }}
+                      style={{ backgroundColor: geofence.color || "#3b82f6" }}
                     />
                   </div>
-                  {geofence.centerLat && geofence.centerLon && geofence.radiusMeters && (
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p>
-                        Center: {geofence.centerLat.toFixed(4)},{' '}
-                        {geofence.centerLon.toFixed(4)}
-                      </p>
-                      <p>Radius: {geofence.radiusMeters}m</p>
-                    </div>
-                  )}
+                  {geofence.centerLat &&
+                    geofence.centerLon &&
+                    geofence.radiusMeters && (
+                      <div className="text-muted-foreground space-y-1 text-xs">
+                        <p>
+                          Center: {geofence.centerLat.toFixed(4)},{" "}
+                          {geofence.centerLon.toFixed(4)}
+                        </p>
+                        <p>Radius: {geofence.radiusMeters}m</p>
+                      </div>
+                    )}
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-block h-2 w-2 rounded-full ${
-                        geofence.isActive ? 'bg-green-500' : 'bg-gray-300'
+                        geofence.isActive ? "bg-green-500" : "bg-gray-300"
                       }`}
                     />
                     <span className="text-xs">
-                      {geofence.isActive ? 'Active' : 'Inactive'}
+                      {geofence.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
                 </div>
               ))}
 
               {initialGeofences.length === 0 && (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
+                <div className="text-muted-foreground col-span-full py-12 text-center">
                   <p>No geofences created yet</p>
-                  <p className="text-sm">Click "Create Geofence" to get started</p>
+                  <p className="text-sm">
+                    Click "Create Geofence" to get started
+                  </p>
                 </div>
               )}
             </div>
@@ -155,8 +158,11 @@ export async function GeofenceContent() {
       )}
 
       {!isStudent && !canManage && (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>Geofence tracking is only available for students, teachers, and administrators</p>
+        <div className="text-muted-foreground py-12 text-center">
+          <p>
+            Geofence tracking is only available for students, teachers, and
+            administrators
+          </p>
         </div>
       )}
     </div>

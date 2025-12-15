@@ -3,8 +3,14 @@
  * Consolidates query logic to eliminate duplication and improve maintainability
  */
 
+import {
+  NotificationChannel,
+  NotificationPriority,
+  NotificationType,
+  Prisma,
+} from "@prisma/client"
+
 import { db } from "@/lib/db"
-import { Prisma, NotificationType, NotificationPriority, NotificationChannel } from "@prisma/client"
 
 // ============================================================================
 // Types
@@ -133,12 +139,20 @@ export function buildNotificationWhere(
   }
 
   // Type filter
-  if (filters.type && Object.values(NotificationType).includes(filters.type as NotificationType)) {
+  if (
+    filters.type &&
+    Object.values(NotificationType).includes(filters.type as NotificationType)
+  ) {
     where.type = filters.type as NotificationType
   }
 
   // Priority filter
-  if (filters.priority && Object.values(NotificationPriority).includes(filters.priority as NotificationPriority)) {
+  if (
+    filters.priority &&
+    Object.values(NotificationPriority).includes(
+      filters.priority as NotificationPriority
+    )
+  ) {
     where.priority = filters.priority as NotificationPriority
   }
 
@@ -188,10 +202,7 @@ export function buildNotificationOrderBy(
   }
 
   // Default: unread first, then by created date descending
-  return [
-    { read: Prisma.SortOrder.asc },
-    { createdAt: Prisma.SortOrder.desc },
-  ]
+  return [{ read: Prisma.SortOrder.asc }, { createdAt: Prisma.SortOrder.desc }]
 }
 
 /**
@@ -225,10 +236,7 @@ export async function getNotificationsList(
 ) {
   const where = buildNotificationWhere(schoolId, userId, params)
   const orderBy = buildNotificationOrderBy(params.sort)
-  const { skip, take } = buildPagination(
-    params.page ?? 1,
-    params.perPage ?? 20
-  )
+  const { skip, take } = buildPagination(params.page ?? 1, params.perPage ?? 20)
 
   // Execute queries in parallel for better performance
   const [rows, count] = await Promise.all([
@@ -302,22 +310,27 @@ export async function getNotificationStats(schoolId: string, userId: string) {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-  const [total, unread, today, thisWeek, byType, byPriority] = await Promise.all([
-    db.notification.count({ where }),
-    db.notification.count({ where: { ...where, read: false } }),
-    db.notification.count({ where: { ...where, createdAt: { gte: todayStart } } }),
-    db.notification.count({ where: { ...where, createdAt: { gte: weekStart } } }),
-    db.notification.groupBy({
-      by: ["type"],
-      where,
-      _count: true,
-    }),
-    db.notification.groupBy({
-      by: ["priority"],
-      where,
-      _count: true,
-    }),
-  ])
+  const [total, unread, today, thisWeek, byType, byPriority] =
+    await Promise.all([
+      db.notification.count({ where }),
+      db.notification.count({ where: { ...where, read: false } }),
+      db.notification.count({
+        where: { ...where, createdAt: { gte: todayStart } },
+      }),
+      db.notification.count({
+        where: { ...where, createdAt: { gte: weekStart } },
+      }),
+      db.notification.groupBy({
+        by: ["type"],
+        where,
+        _count: true,
+      }),
+      db.notification.groupBy({
+        by: ["priority"],
+        where,
+        _count: true,
+      }),
+    ])
 
   return {
     total,

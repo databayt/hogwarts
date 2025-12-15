@@ -35,18 +35,19 @@
  * - Consider caching in production for large prompt libraries
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from "fs"
+import path from "path"
+
 import type {
   Prompt,
   PromptCategory,
-  PromptsByCategory,
   PromptParserResult,
-} from '@/components/docs/prompt-types';
+  PromptsByCategory,
+} from "@/components/docs/prompt-types"
 
-const CLAUDE_DIR = path.join(process.cwd(), '.claude');
-const AGENTS_DIR = path.join(CLAUDE_DIR, 'agents');
-const COMMANDS_DIR = path.join(CLAUDE_DIR, 'commands');
+const CLAUDE_DIR = path.join(process.cwd(), ".claude")
+const AGENTS_DIR = path.join(CLAUDE_DIR, "agents")
+const COMMANDS_DIR = path.join(CLAUDE_DIR, "commands")
 
 /**
  * Extract variables from prompt content
@@ -55,7 +56,7 @@ const COMMANDS_DIR = path.join(CLAUDE_DIR, 'commands');
  * Example: /component <name> shows users need to provide name
  */
 function extractVariables(content: string): string[] {
-  const variables = new Set<string>();
+  const variables = new Set<string>()
 
   // WHY: Support multiple bracket styles for different use cases
   // <variable> = angle brackets (agent parameters)
@@ -64,157 +65,151 @@ function extractVariables(content: string): string[] {
   // $N = positional args
 
   // Match <variable>
-  const angleBrackets = content.match(/<([a-zA-Z_-]+)>/g);
+  const angleBrackets = content.match(/<([a-zA-Z_-]+)>/g)
   if (angleBrackets) {
-    angleBrackets.forEach((match) => variables.add(match));
+    angleBrackets.forEach((match) => variables.add(match))
   }
 
   // Match [variable]
-  const squareBrackets = content.match(/\[([a-zA-Z_-]+)\]/g);
+  const squareBrackets = content.match(/\[([a-zA-Z_-]+)\]/g)
   if (squareBrackets) {
-    squareBrackets.forEach((match) => variables.add(match));
+    squareBrackets.forEach((match) => variables.add(match))
   }
 
   // Match {variable}
-  const curlyBraces = content.match(/\{([a-zA-Z_-]+)\}/g);
+  const curlyBraces = content.match(/\{([a-zA-Z_-]+)\}/g)
   if (curlyBraces) {
-    curlyBraces.forEach((match) => variables.add(match));
+    curlyBraces.forEach((match) => variables.add(match))
   }
 
   // Match $1, $2, etc.
-  const dollarVars = content.match(/\$\d+/g);
+  const dollarVars = content.match(/\$\d+/g)
   if (dollarVars) {
-    dollarVars.forEach((match) => variables.add(match));
+    dollarVars.forEach((match) => variables.add(match))
   }
 
-  return Array.from(variables).sort();
+  return Array.from(variables).sort()
 }
 
 /**
  * Categorize prompt based on filename and content
  */
-function categorizePrompt(
-  filename: string,
-  content: string
-): PromptCategory {
-  const lower = filename.toLowerCase() + ' ' + content.toLowerCase();
+function categorizePrompt(filename: string, content: string): PromptCategory {
+  const lower = filename.toLowerCase() + " " + content.toLowerCase()
 
   if (
-    lower.includes('component') ||
-    lower.includes('react') ||
-    lower.includes('ui')
+    lower.includes("component") ||
+    lower.includes("react") ||
+    lower.includes("ui")
   ) {
-    return 'Components';
+    return "Components"
   }
   if (
-    lower.includes('database') ||
-    lower.includes('prisma') ||
-    lower.includes('migration')
+    lower.includes("database") ||
+    lower.includes("prisma") ||
+    lower.includes("migration")
   ) {
-    return 'Database';
+    return "Database"
   }
-  if (lower.includes('test') || lower.includes('vitest')) {
-    return 'Testing';
+  if (lower.includes("test") || lower.includes("vitest")) {
+    return "Testing"
   }
   if (
-    lower.includes('api') ||
-    lower.includes('server') ||
-    lower.includes('action')
+    lower.includes("api") ||
+    lower.includes("server") ||
+    lower.includes("action")
   ) {
-    return 'API';
+    return "API"
   }
   if (
-    lower.includes('security') ||
-    lower.includes('auth') ||
-    lower.includes('multi-tenant')
+    lower.includes("security") ||
+    lower.includes("auth") ||
+    lower.includes("multi-tenant")
   ) {
-    return 'Security';
+    return "Security"
   }
-  if (lower.includes('i18n') || lower.includes('translation')) {
-    return 'i18n';
+  if (lower.includes("i18n") || lower.includes("translation")) {
+    return "i18n"
   }
-  if (lower.includes('git') || lower.includes('github')) {
-    return 'Git';
+  if (lower.includes("git") || lower.includes("github")) {
+    return "Git"
+  }
+  if (lower.includes("performance") || lower.includes("optimization")) {
+    return "Performance"
   }
   if (
-    lower.includes('performance') ||
-    lower.includes('optimization')
+    lower.includes("architecture") ||
+    lower.includes("pattern") ||
+    lower.includes("orchestrate")
   ) {
-    return 'Performance';
-  }
-  if (
-    lower.includes('architecture') ||
-    lower.includes('pattern') ||
-    lower.includes('orchestrate')
-  ) {
-    return 'Architecture';
+    return "Architecture"
   }
 
-  return 'General';
+  return "General"
 }
 
 /**
  * Extract tags from content
  */
 function extractTags(content: string, category: string): string[] {
-  const tags = new Set<string>([category.toLowerCase()]);
+  const tags = new Set<string>([category.toLowerCase()])
 
   const keywords = [
-    'nextjs',
-    'react',
-    'prisma',
-    'typescript',
-    'tailwind',
-    'server action',
-    'multi-tenant',
-    'i18n',
-    'rtl',
-    'auth',
-    'security',
-    'performance',
-    'testing',
-    'vitest',
-    'playwright',
-    'git',
-    'github',
-  ];
+    "nextjs",
+    "react",
+    "prisma",
+    "typescript",
+    "tailwind",
+    "server action",
+    "multi-tenant",
+    "i18n",
+    "rtl",
+    "auth",
+    "security",
+    "performance",
+    "testing",
+    "vitest",
+    "playwright",
+    "git",
+    "github",
+  ]
 
   keywords.forEach((keyword) => {
     if (content.toLowerCase().includes(keyword)) {
-      tags.add(keyword);
+      tags.add(keyword)
     }
-  });
+  })
 
-  return Array.from(tags).sort();
+  return Array.from(tags).sort()
 }
 
 /**
  * Parse frontmatter from markdown file
  */
 function parseFrontmatter(content: string): {
-  frontmatter: Record<string, unknown>;
-  body: string;
+  frontmatter: Record<string, unknown>
+  body: string
 } {
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-  const match = content.match(frontmatterRegex);
+  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/
+  const match = content.match(frontmatterRegex)
 
   if (!match) {
-    return { frontmatter: {}, body: content };
+    return { frontmatter: {}, body: content }
   }
 
-  const [, frontmatterText, body] = match;
-  const frontmatter: Record<string, unknown> = {};
+  const [, frontmatterText, body] = match
+  const frontmatter: Record<string, unknown> = {}
 
-  frontmatterText.split('\n').forEach((line) => {
-    const [key, ...valueParts] = line.split(':');
+  frontmatterText.split("\n").forEach((line) => {
+    const [key, ...valueParts] = line.split(":")
     if (key && valueParts.length > 0) {
-      const value = valueParts.join(':').trim();
+      const value = valueParts.join(":").trim()
       frontmatter[key.trim()] =
-        value === 'true' ? true : value === 'false' ? false : value;
+        value === "true" ? true : value === "false" ? false : value
     }
-  });
+  })
 
-  return { frontmatter, body };
+  return { frontmatter, body }
 }
 
 /**
@@ -224,22 +219,22 @@ function extractUsageExample(content: string): string | undefined {
   // Look for "Key Patterns" or "Example" sections
   const patternsMatch = content.match(
     /## Key Patterns\n\n([\s\S]*?)(?=\n## |$)/
-  );
+  )
   if (patternsMatch) {
     // Get first code block
-    const codeBlockMatch = patternsMatch[1].match(/```[\s\S]*?```/);
+    const codeBlockMatch = patternsMatch[1].match(/```[\s\S]*?```/)
     if (codeBlockMatch) {
-      return codeBlockMatch[0];
+      return codeBlockMatch[0]
     }
   }
 
   // Look for any code block
-  const codeBlockMatch = content.match(/```[\s\S]*?```/);
+  const codeBlockMatch = content.match(/```[\s\S]*?```/)
   if (codeBlockMatch) {
-    return codeBlockMatch[0];
+    return codeBlockMatch[0]
   }
 
-  return undefined;
+  return undefined
 }
 
 /**
@@ -247,23 +242,23 @@ function extractUsageExample(content: string): string | undefined {
  */
 function parseAgentFile(filePath: string): Prompt | null {
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const filename = path.basename(filePath, '.md');
+    const content = fs.readFileSync(filePath, "utf-8")
+    const filename = path.basename(filePath, ".md")
 
     // Extract title
-    const titleMatch = content.match(/^# (.+)$/m);
-    const name = titleMatch ? titleMatch[1] : filename;
+    const titleMatch = content.match(/^# (.+)$/m)
+    const name = titleMatch ? titleMatch[1] : filename
 
     // Extract description (specialization line)
-    const descMatch = content.match(/\*\*Specialization\*\*:\s*(.+)$/m);
+    const descMatch = content.match(/\*\*Specialization\*\*:\s*(.+)$/m)
     const description = descMatch
       ? descMatch[1]
-      : 'Specialized agent for ' + filename;
+      : "Specialized agent for " + filename
 
-    const category = categorizePrompt(filename, content);
-    const variables = extractVariables(content);
-    const tags = extractTags(content, category);
-    const usageExample = extractUsageExample(content);
+    const category = categorizePrompt(filename, content)
+    const variables = extractVariables(content)
+    const tags = extractTags(content, category)
+    const usageExample = extractUsageExample(content)
 
     return {
       id: filename,
@@ -274,12 +269,12 @@ function parseAgentFile(filePath: string): Prompt | null {
       variables,
       usageExample,
       tags,
-      source: 'agent',
+      source: "agent",
       filePath,
-    };
+    }
   } catch (error) {
-    console.error(`Error parsing agent file ${filePath}:`, error);
-    return null;
+    console.error(`Error parsing agent file ${filePath}:`, error)
+    return null
   }
 }
 
@@ -288,22 +283,21 @@ function parseAgentFile(filePath: string): Prompt | null {
  */
 function parseCommandFile(filePath: string): Prompt | null {
   try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const filename = path.basename(filePath, '.md');
+    const content = fs.readFileSync(filePath, "utf-8")
+    const filename = path.basename(filePath, ".md")
 
-    const { frontmatter, body } = parseFrontmatter(content);
+    const { frontmatter, body } = parseFrontmatter(content)
 
-    const name = `/${filename}`;
+    const name = `/${filename}`
     const description =
-      (frontmatter.description as string) ||
-      'Command for ' + filename;
+      (frontmatter.description as string) || "Command for " + filename
 
-    const category = categorizePrompt(filename, body);
-    const variables = extractVariables(body);
-    const tags = extractTags(body, category);
+    const category = categorizePrompt(filename, body)
+    const variables = extractVariables(body)
+    const tags = extractTags(body, category)
 
     // Use the full body as usage example for commands
-    const usageExample = body.trim();
+    const usageExample = body.trim()
 
     return {
       id: `command-${filename}`,
@@ -314,12 +308,12 @@ function parseCommandFile(filePath: string): Prompt | null {
       variables,
       usageExample,
       tags,
-      source: 'command',
+      source: "command",
       filePath,
-    };
+    }
   } catch (error) {
-    console.error(`Error parsing command file ${filePath}:`, error);
-    return null;
+    console.error(`Error parsing command file ${filePath}:`, error)
+    return null
   }
 }
 
@@ -327,73 +321,73 @@ function parseCommandFile(filePath: string): Prompt | null {
  * Get all prompts from .claude/ directory
  */
 export function getAllPrompts(): PromptParserResult {
-  const prompts: Prompt[] = [];
+  const prompts: Prompt[] = []
 
   // Parse agent files
   if (fs.existsSync(AGENTS_DIR)) {
     const agentFiles = fs
       .readdirSync(AGENTS_DIR)
-      .filter((file) => file.endsWith('.md'));
+      .filter((file) => file.endsWith(".md"))
 
     agentFiles.forEach((file) => {
-      const filePath = path.join(AGENTS_DIR, file);
-      const prompt = parseAgentFile(filePath);
+      const filePath = path.join(AGENTS_DIR, file)
+      const prompt = parseAgentFile(filePath)
       if (prompt) {
-        prompts.push(prompt);
+        prompts.push(prompt)
       }
-    });
+    })
   }
 
   // Parse command files
   if (fs.existsSync(COMMANDS_DIR)) {
     const commandFiles = fs
       .readdirSync(COMMANDS_DIR)
-      .filter((file) => file.endsWith('.md'));
+      .filter((file) => file.endsWith(".md"))
 
     commandFiles.forEach((file) => {
-      const filePath = path.join(COMMANDS_DIR, file);
-      const prompt = parseCommandFile(filePath);
+      const filePath = path.join(COMMANDS_DIR, file)
+      const prompt = parseCommandFile(filePath)
       if (prompt) {
-        prompts.push(prompt);
+        prompts.push(prompt)
       }
-    });
+    })
   }
 
   // Group by category
-  const promptsByCategory: PromptsByCategory = {};
+  const promptsByCategory: PromptsByCategory = {}
   prompts.forEach((prompt) => {
     if (!promptsByCategory[prompt.category]) {
-      promptsByCategory[prompt.category] = [];
+      promptsByCategory[prompt.category] = []
     }
-    promptsByCategory[prompt.category].push(prompt);
-  });
+    promptsByCategory[prompt.category].push(prompt)
+  })
 
   // Get unique categories
   const categories = Array.from(
     new Set(prompts.map((p) => p.category))
-  ).sort() as PromptCategory[];
+  ).sort() as PromptCategory[]
 
   return {
     prompts,
     promptsByCategory,
     categories,
-  };
+  }
 }
 
 /**
  * Get prompt by ID
  */
 export function getPromptById(id: string): Prompt | null {
-  const { prompts } = getAllPrompts();
-  return prompts.find((p) => p.id === id) || null;
+  const { prompts } = getAllPrompts()
+  return prompts.find((p) => p.id === id) || null
 }
 
 /**
  * Search prompts by query
  */
 export function searchPrompts(query: string): Prompt[] {
-  const { prompts } = getAllPrompts();
-  const lowerQuery = query.toLowerCase();
+  const { prompts } = getAllPrompts()
+  const lowerQuery = query.toLowerCase()
 
   return prompts.filter(
     (prompt) =>
@@ -401,5 +395,5 @@ export function searchPrompts(query: string): Prompt[] {
       prompt.description.toLowerCase().includes(lowerQuery) ||
       prompt.tags.some((tag) => tag.includes(lowerQuery)) ||
       prompt.content.toLowerCase().includes(lowerQuery)
-  );
+  )
 }

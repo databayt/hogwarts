@@ -1,28 +1,29 @@
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Pencil } from "lucide-react";
-import { notFound } from "next/navigation";
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Pencil } from "lucide-react"
 
-export const metadata = { title: "Template Details" };
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+export const metadata = { title: "Template Details" }
 
 interface Props {
-  params: Promise<{ lang: Locale; subdomain: string; id: string }>;
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
 }
 
 export default async function TemplateDetailPage({ params }: Props) {
-  const { lang, id } = await params;
-  const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext();
+  const { lang, id } = await params
+  const dictionary = await getDictionary(lang)
+  const { schoolId } = await getTenantContext()
 
   if (!schoolId) {
-    return notFound();
+    return notFound()
   }
 
   const template = await db.examTemplate.findUnique({
@@ -30,13 +31,13 @@ export default async function TemplateDetailPage({ params }: Props) {
     include: {
       subject: { select: { subjectName: true } },
     },
-  });
+  })
 
   if (!template) {
-    return notFound();
+    return notFound()
   }
 
-  const d = dictionary?.school?.exams?.generate;
+  const d = dictionary?.school?.exams?.generate
 
   return (
     <PageContainer>
@@ -57,32 +58,44 @@ export default async function TemplateDetailPage({ params }: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{d?.subject || "Subject"}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {d?.subject || "Subject"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">{template.subject?.subjectName}</p>
+              <p className="text-lg font-semibold">
+                {template.subject?.subjectName}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{d?.duration || "Duration"}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {d?.duration || "Duration"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">{template.duration} minutes</p>
+              <p className="text-lg font-semibold">
+                {template.duration} minutes
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{d?.totalMarks || "Total Marks"}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {d?.totalMarks || "Total Marks"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold">{template.totalMarks.toString()}</p>
+              <p className="text-lg font-semibold">
+                {template.totalMarks.toString()}
+              </p>
             </CardContent>
           </Card>
         </div>
       </div>
     </PageContainer>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { StaffDirectoryContent } from '@/components/platform/profile/staff/directory'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { StaffDirectoryContent } from "@/components/platform/profile/staff/directory"
 
-export const metadata = { title: 'Staff Directory' }
+export const metadata = { title: "Staff Directory" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

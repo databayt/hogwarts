@@ -7,34 +7,34 @@
  * - Monitor cache performance
  */
 
-import { db } from "@/lib/db";
 import {
-  invalidateCache,
-  warmCache,
   gradeBoundaryCache,
+  invalidateCache,
+  questionAnalyticsCache,
   schoolBrandingCache,
   schoolCache,
-  questionAnalyticsCache,
-} from "@/lib/cache/exam-cache";
+  warmCache,
+} from "@/lib/cache/exam-cache"
+import { db } from "@/lib/db"
 
 /**
  * Invalidate grade boundaries cache when boundaries are updated
  */
 export async function onGradeBoundaryUpdate(schoolId: string) {
-  invalidateCache.gradeBoundaries(schoolId);
+  invalidateCache.gradeBoundaries(schoolId)
 
   // Optionally pre-load new data
   const boundaries = await db.gradeBoundary.findMany({
     where: { schoolId },
     orderBy: { minScore: "desc" },
-  });
+  })
 
   if (boundaries.length > 0) {
     gradeBoundaryCache.set(
       `grade-boundaries:${schoolId}`,
       boundaries,
       60 * 60 * 1000 // 1 hour TTL for updated data
-    );
+    )
   }
 }
 
@@ -42,8 +42,8 @@ export async function onGradeBoundaryUpdate(schoolId: string) {
  * Invalidate school branding cache when branding is updated
  */
 export async function onSchoolBrandingUpdate(schoolId: string) {
-  invalidateCache.schoolBranding(schoolId);
-  invalidateCache.school(schoolId);
+  invalidateCache.schoolBranding(schoolId)
+  invalidateCache.school(schoolId)
 
   // Optionally pre-load new data
   const [school, branding] = await Promise.all([
@@ -53,14 +53,14 @@ export async function onSchoolBrandingUpdate(schoolId: string) {
     db.schoolBranding.findUnique({
       where: { schoolId },
     }),
-  ]);
+  ])
 
   if (school) {
     schoolCache.set(
       `school:${schoolId}`,
       school,
       2 * 60 * 60 * 1000 // 2 hours TTL
-    );
+    )
   }
 
   if (branding) {
@@ -68,7 +68,7 @@ export async function onSchoolBrandingUpdate(schoolId: string) {
       `school-branding:${schoolId}`,
       branding,
       2 * 60 * 60 * 1000 // 2 hours TTL
-    );
+    )
   }
 }
 
@@ -78,7 +78,7 @@ export async function onSchoolBrandingUpdate(schoolId: string) {
  */
 export async function warmExamCaches(schoolId: string) {
   try {
-    await warmCache.preload(schoolId, db);
+    await warmCache.preload(schoolId, db)
 
     // Additionally, preload recent exam analytics
     const recentExams = await db.exam.findMany({
@@ -90,23 +90,23 @@ export async function warmExamCaches(schoolId: string) {
       },
       select: { id: true },
       take: 10,
-    });
+    })
 
     // Pre-calculate and cache analytics for recent exams
     for (const exam of recentExams) {
-      const analytics = await calculateExamAnalytics(exam.id, schoolId);
+      const analytics = await calculateExamAnalytics(exam.id, schoolId)
       if (analytics) {
         questionAnalyticsCache.set(
           `exam-analytics:${schoolId}:${exam.id}`,
           analytics,
           30 * 60 * 1000 // 30 minutes TTL for analytics
-        );
+        )
       }
     }
 
-    console.log(`Cache warmed for school: ${schoolId}`);
+    console.log(`Cache warmed for school: ${schoolId}`)
   } catch (error) {
-    console.error(`Failed to warm cache for school ${schoolId}:`, error);
+    console.error(`Failed to warm cache for school ${schoolId}:`, error)
   }
 }
 
@@ -120,14 +120,14 @@ export function getCacheStats() {
     school: schoolCache.getStats(),
     questionAnalytics: questionAnalyticsCache.getStats(),
     timestamp: new Date().toISOString(),
-  };
+  }
 }
 
 /**
  * Clear all caches for a school (use sparingly)
  */
 export function clearSchoolCaches(schoolId: string) {
-  invalidateCache.all(schoolId);
+  invalidateCache.all(schoolId)
 }
 
 /**
@@ -153,17 +153,20 @@ async function calculateExamAnalytics(examId: string, schoolId: string) {
         },
       },
     },
-  });
+  })
 
-  if (!exam) return null;
+  if (!exam) return null
 
   // Calculate question-level analytics
-  const questionStats = new Map<string, {
-    attempted: number;
-    correct: number;
-    totalPoints: number;
-    maxPoints: number;
-  }>();
+  const questionStats = new Map<
+    string,
+    {
+      attempted: number
+      correct: number
+      totalPoints: number
+      maxPoints: number
+    }
+  >()
 
   exam.markingResults.forEach((result) => {
     const stats = questionStats.get(result.questionId) || {
@@ -171,22 +174,22 @@ async function calculateExamAnalytics(examId: string, schoolId: string) {
       correct: 0,
       totalPoints: 0,
       maxPoints: 0,
-    };
-
-    stats.attempted++;
-    if (Number(result.pointsAwarded) === Number(result.maxPoints)) {
-      stats.correct++;
     }
-    stats.totalPoints += Number(result.pointsAwarded);
-    stats.maxPoints = Number(result.maxPoints);
 
-    questionStats.set(result.questionId, stats);
-  });
+    stats.attempted++
+    if (Number(result.pointsAwarded) === Number(result.maxPoints)) {
+      stats.correct++
+    }
+    stats.totalPoints += Number(result.pointsAwarded)
+    stats.maxPoints = Number(result.maxPoints)
+
+    questionStats.set(result.questionId, stats)
+  })
 
   // Calculate overall analytics
   const passedCount = exam.examResults.filter(
     (r) => r.marksObtained >= exam.passingMarks
-  ).length;
+  ).length
 
   return {
     examId,
@@ -203,5 +206,5 @@ async function calculateExamAnalytics(examId: string, schoolId: string) {
         successRate: (stats.correct / stats.attempted) * 100,
       })
     ),
-  };
+  }
 }

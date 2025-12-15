@@ -9,6 +9,7 @@ The Reports module provides powerful financial reporting and analytics tools for
 ## Key Features
 
 ### 1. Standard Financial Reports
+
 - Income Statement (Profit & Loss)
 - Balance Sheet
 - Cash Flow Statement
@@ -16,6 +17,7 @@ The Reports module provides powerful financial reporting and analytics tools for
 - General Ledger Report
 
 ### 2. Custom Report Builder
+
 - Drag-and-drop report designer
 - Custom date ranges
 - Filter by department, category, account
@@ -23,6 +25,7 @@ The Reports module provides powerful financial reporting and analytics tools for
 - Schedule automated report generation
 
 ### 3. Data Visualization
+
 - Interactive charts and graphs
 - Trend analysis
 - Comparative analysis (year-over-year)
@@ -30,6 +33,7 @@ The Reports module provides powerful financial reporting and analytics tools for
 - Export to PDF, Excel, CSV
 
 ### 4. Analytics & Insights
+
 - Revenue analysis
 - Expense analysis
 - Cash flow forecasting
@@ -37,6 +41,7 @@ The Reports module provides powerful financial reporting and analytics tools for
 - Key performance indicators (KPIs)
 
 ### 5. Compliance Reports
+
 - Tax reports
 - Audit reports
 - Grant reporting
@@ -46,9 +51,11 @@ The Reports module provides powerful financial reporting and analytics tools for
 ## Standard Reports
 
 ### 1. Income Statement
+
 Shows revenue, expenses, and net income for a period.
 
 **Structure:**
+
 ```
 REVENUE
 ├── Tuition Fees
@@ -71,19 +78,22 @@ NET INCOME = TOTAL REVENUE - TOTAL EXPENSES
 ```
 
 **Example:**
+
 ```typescript
 const result = await generateIncomeStatementWithRBAC({
   startDate: new Date("2024-01-01"),
   endDate: new Date("2024-12-31"),
   compareWithPriorYear: true,
-  groupBy: "quarter"
+  groupBy: "quarter",
 })
 ```
 
 ### 2. Balance Sheet
+
 Shows assets, liabilities, and equity at a specific date.
 
 **Structure:**
+
 ```
 ASSETS
 ├── Current Assets
@@ -111,32 +121,38 @@ TOTAL ASSETS = LIABILITIES + EQUITY
 ```
 
 ### 3. Cash Flow Statement
+
 Shows cash inflows and outflows.
 
 **Categories:**
+
 - **Operating Activities:** Day-to-day operations
 - **Investing Activities:** Asset purchases/sales
 - **Financing Activities:** Loans, equity
 
 **Example:**
+
 ```typescript
 const result = await generateCashFlowStatementWithRBAC({
   startDate: new Date("2024-01-01"),
   endDate: new Date("2024-12-31"),
-  method: "INDIRECT" // or "DIRECT"
+  method: "INDIRECT", // or "DIRECT"
 })
 ```
 
 ### 4. Budget vs Actual Report
+
 Compares budgeted amounts with actual spending.
 
 **Columns:**
+
 - Budget
 - Actual
 - Variance ($ and %)
 - Forecast
 
 **Example Output:**
+
 ```
 Category         | Budget    | Actual   | Variance  | %
 Salaries         | $500,000  | $485,000 | $15,000   | +3%  ✅
@@ -145,9 +161,11 @@ Technology       | $50,000   | $48,500  | $1,500    | +3%  ✅
 ```
 
 ### 5. General Ledger Report
+
 Detailed list of all transactions by account.
 
 **Columns:**
+
 - Date
 - Account
 - Description
@@ -156,6 +174,7 @@ Detailed list of all transactions by account.
 - Balance
 
 **Filters:**
+
 - Date range
 - Account type
 - Transaction type
@@ -188,13 +207,14 @@ const result = await generateCustomReportWithRBAC({
   accounts: ["revenue_tuition", "revenue_fees", "revenue_events"],
   groupBy: "month",
   compareWith: "prior_year",
-  format: "excel"
+  format: "excel",
 })
 ```
 
 ## Data Models
 
 ### Report
+
 ```typescript
 {
   id: string
@@ -211,6 +231,7 @@ const result = await generateCustomReportWithRBAC({
 ```
 
 ### Report Types
+
 ```typescript
 enum ReportType {
   INCOME_STATEMENT
@@ -226,6 +247,7 @@ enum ReportType {
 ```
 
 ### Report Schedule
+
 ```typescript
 {
   frequency: "daily" | "weekly" | "monthly" | "quarterly" | "annually"
@@ -241,11 +263,13 @@ enum ReportType {
 ### Standard Report Generation
 
 #### `generateIncomeStatementWithRBAC(params)`
+
 Generates income statement (P&L report).
 
 **Permissions Required:** `reports:view`
 
 **Returns:**
+
 ```typescript
 {
   period: { start: Date; end: Date }
@@ -276,16 +300,19 @@ Generates income statement (P&L report).
 ```
 
 #### `generateBalanceSheetWithRBAC(params)`
+
 Generates balance sheet report.
 
 **Permissions Required:** `reports:view`
 
 #### `generateCashFlowStatementWithRBAC(params)`
+
 Generates cash flow statement.
 
 **Permissions Required:** `reports:view`
 
 #### `generateBudgetVsActualReportWithRBAC(params)`
+
 Generates budget variance report.
 
 **Permissions Required:** `reports:view`
@@ -293,11 +320,13 @@ Generates budget variance report.
 ### Custom Report Generation
 
 #### `generateCustomReportWithRBAC(params)`
+
 Generates custom report based on parameters.
 
 **Permissions Required:** `reports:create`
 
 **Example:**
+
 ```typescript
 const result = await generateCustomReportWithRBAC({
   name: "Q4 Department Spending",
@@ -305,35 +334,39 @@ const result = await generateCustomReportWithRBAC({
   endDate: new Date("2024-12-31"),
   groupBy: "department",
   accounts: ["expense_*"], // Wildcard for all expense accounts
-  format: "pdf"
+  format: "pdf",
 })
 ```
 
 ### Report Scheduling
 
 #### `scheduleReportWithRBAC(reportId, schedule)`
+
 Schedules automatic report generation.
 
 **Permissions Required:** `reports:create`
 
 **Example:**
+
 ```typescript
 const result = await scheduleReportWithRBAC(reportId, {
   frequency: "monthly",
   dayOfMonth: 1,
   recipients: ["cfo@school.edu", "principal@school.edu"],
-  format: "pdf"
+  format: "pdf",
 })
 ```
 
 ### Report Export
 
 #### `exportReportWithRBAC(reportId, format)`
+
 Exports report to specified format.
 
 **Permissions Required:** `reports:export`
 
 **Supported Formats:**
+
 - **PDF**: Professional formatted report with charts
 - **Excel**: Editable spreadsheet with formulas
 - **CSV**: Raw data for external analysis
@@ -342,42 +375,46 @@ Exports report to specified format.
 ## Financial Metrics & KPIs
 
 ### Revenue Metrics
+
 ```typescript
 {
   totalRevenue: number
-  revenueGrowth: number        // % change from prior period
+  revenueGrowth: number // % change from prior period
   revenuePerStudent: number
-  tuitionRealization: number   // % of billed tuition collected
-  averageRevenue: number       // per month/quarter
+  tuitionRealization: number // % of billed tuition collected
+  averageRevenue: number // per month/quarter
 }
 ```
 
 ### Expense Metrics
+
 ```typescript
 {
   totalExpenses: number
   expenseGrowth: number
   expensePerStudent: number
-  salaryToRevenue: number      // % of revenue spent on salaries
-  operatingMargin: number      // (Revenue - Expenses) / Revenue
+  salaryToRevenue: number // % of revenue spent on salaries
+  operatingMargin: number // (Revenue - Expenses) / Revenue
 }
 ```
 
 ### Cash Flow Metrics
+
 ```typescript
 {
   cashBalance: number
   operatingCashFlow: number
-  daysOfCash: number           // Days the school can operate with current cash
-  burnRate: number             // Monthly cash consumption
+  daysOfCash: number // Days the school can operate with current cash
+  burnRate: number // Monthly cash consumption
 }
 ```
 
 ### Efficiency Metrics
+
 ```typescript
 {
-  accountsReceivableDays: number  // Average collection time
-  accountsPayableDays: number     // Average payment time
+  accountsReceivableDays: number // Average collection time
+  accountsPayableDays: number // Average payment time
   inventoryTurnover: number
   assetUtilization: number
 }
@@ -386,6 +423,7 @@ Exports report to specified format.
 ## Workflow
 
 ### Monthly Reporting Cycle
+
 ```
 1. Month End Close (Day 1-3)
    - Review all transactions
@@ -415,26 +453,31 @@ Exports report to specified format.
 ## Integration with Other Modules
 
 ### Accounts Module
+
 - Pulls data from journal entries
 - Uses chart of accounts structure
 - Applies accounting rules
 
 ### Budget Module
+
 - Compares actual vs budget
 - Shows variance percentages
 - Tracks budget utilization
 
 ### Fees Module
+
 - Revenue recognition
 - Accounts receivable aging
 - Collection rate analysis
 
 ### Payroll Module
+
 - Salary expense categorization
 - Benefit cost allocation
 - Labor cost analysis
 
 ### Banking Module
+
 - Cash balance reporting
 - Bank reconciliation data
 - Transaction categorization
@@ -443,44 +486,49 @@ Exports report to specified format.
 
 ### Permissions
 
-| Role | View | Create | Edit | Export | Schedule | Delete |
-|------|------|--------|------|--------|----------|--------|
-| **ADMIN** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ACCOUNTANT** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TEACHER** | ✅ (dept) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STAFF** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **STUDENT** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **GUARDIAN** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Role           | View      | Create | Edit | Export | Schedule | Delete |
+| -------------- | --------- | ------ | ---- | ------ | -------- | ------ |
+| **ADMIN**      | ✅        | ✅     | ✅   | ✅     | ✅       | ✅     |
+| **ACCOUNTANT** | ✅        | ✅     | ✅   | ✅     | ✅       | ✅     |
+| **TEACHER**    | ✅ (dept) | ❌     | ❌   | ❌     | ❌       | ❌     |
+| **STAFF**      | ❌        | ❌     | ❌   | ❌     | ❌       | ❌     |
+| **STUDENT**    | ❌        | ❌     | ❌   | ❌     | ❌       | ❌     |
+| **GUARDIAN**   | ❌        | ❌     | ❌   | ❌     | ❌       | ❌     |
 
 **Note:** Department heads can view reports for their departments only.
 
 ## Best Practices
 
 ### 1. Timely Reporting
+
 - Close books within 5 days of month end
 - Generate reports by day 10
 - Review and distribute by day 15
 - Maintain consistent schedule
 
 ### 2. Data Quality
+
 - Reconcile all accounts monthly
 - Investigate unusual variances (>10%)
 - Document all adjustments
 - Review aging reports weekly
 
 ### 3. Report Design
+
 - Use consistent formats
 - Include comparison periods
 - Highlight key metrics
 - Add visual aids (charts, graphs)
 
 ### 4. Distribution
+
 - Send to right stakeholders
 - Use executive summaries
 - Protect sensitive information
 - Archive all versions
 
 ### 5. Analysis
+
 - Don't just report numbers - analyze trends
 - Provide context for variances
 - Make actionable recommendations
@@ -489,9 +537,11 @@ Exports report to specified format.
 ## Troubleshooting
 
 ### Report Data Mismatch
+
 **Issue:** Report totals don't match accounting system
 
 **Solution:**
+
 - Verify date ranges match
 - Check account filters
 - Review journal entry postings
@@ -499,9 +549,11 @@ Exports report to specified format.
 - Regenerate report
 
 ### Slow Report Generation
+
 **Issue:** Reports take >2 minutes to generate
 
 **Solution:**
+
 - Limit date range
 - Reduce number of accounts
 - Use pre-aggregated data
@@ -509,9 +561,11 @@ Exports report to specified format.
 - Optimize database queries
 
 ### Export Failed
+
 **Issue:** Cannot export report to Excel/PDF
 
 **Solution:**
+
 - Check file size limits
 - Verify export permissions
 - Try different format

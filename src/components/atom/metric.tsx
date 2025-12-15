@@ -2,7 +2,6 @@
 "use client"
 
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
-import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 import {
   Card,
@@ -17,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 const data = [
   {
@@ -73,17 +73,18 @@ interface CardsMetricProps {
 
 export function CardsMetric({ dictionary }: CardsMetricProps) {
   return (
-    <Card className="shadow-none border">
+    <Card className="border shadow-none">
       <CardHeader className="space-y-1">
         <CardTitle className="text-base font-semibold">
           {dictionary?.cards?.metric?.title || "Exercise Minutes"}
         </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
-          {dictionary?.cards?.metric?.description || "Your exercise minutes are ahead of where you normally are."}
+        <CardDescription className="text-muted-foreground text-sm">
+          {dictionary?.cards?.metric?.description ||
+            "Your exercise minutes are ahead of where you normally are."}
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
-        <ChartContainer config={chartConfig} className="w-full h-[200px]">
+        <ChartContainer config={chartConfig} className="h-[200px] w-full">
           <LineChart
             accessibilityLayer
             data={data}

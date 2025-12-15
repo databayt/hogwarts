@@ -136,7 +136,14 @@
   },
   "iconSystem": {
     "designSystem": "anthropic",
-    "categories": ["Hands", "People", "Objects", "Abstract", "Letters", "Scenes"],
+    "categories": [
+      "Hands",
+      "People",
+      "Objects",
+      "Abstract",
+      "Letters",
+      "Scenes"
+    ],
     "namingConvention": "{Category}-{Description}.svg",
     "outputDir": "public/icons",
     "registryPath": "src/components/icons/registry.ts"

@@ -1,7 +1,8 @@
-import { Suspense } from "react";
-import { LoginForm } from "@/components/auth/login/form";
-import { getDictionary } from "@/components/internationalization/dictionaries";
-import { type Locale } from "@/components/internationalization/config";
+import { Suspense } from "react"
+
+import { LoginForm } from "@/components/auth/login/form"
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
 
 interface Props {
   params: Promise<{ lang: Locale }>
@@ -15,7 +16,7 @@ const LoginPage = async ({ params }: Props) => {
     <Suspense fallback={<div className="h-10" />}>
       <LoginForm dictionary={dictionary} />
     </Suspense>
-  );
+  )
 }
 
-export default LoginPage;
+export default LoginPage

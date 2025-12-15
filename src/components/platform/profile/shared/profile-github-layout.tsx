@@ -6,35 +6,57 @@
 
 "use client"
 
-import React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { MapPin, Mail, Phone, Link, Calendar, Users, Award, PencilLine, Share2, EllipsisVertical, UserPlus, MessageSquare, CircleCheck, Star, Eye, Github, Linkedin, Twitter, Facebook, Instagram, Youtube, Globe } from "lucide-react"
-import { format } from 'date-fns'
-import { cn } from '@/lib/utils'
+import React from "react"
+import { format } from "date-fns"
+import {
+  Award,
+  Calendar,
+  CircleCheck,
+  EllipsisVertical,
+  Eye,
+  Facebook,
+  Github,
+  Globe,
+  Instagram,
+  Link,
+  Linkedin,
+  Mail,
+  MapPin,
+  MessageSquare,
+  PencilLine,
+  Phone,
+  Share2,
+  Star,
+  Twitter,
+  UserPlus,
+  Users,
+  Youtube,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import type {
-  BaseProfile,
-  ConnectionStatus
-} from '../types'
-import { UserProfileType } from '../types'
-import type { Dictionary } from '@/components/internationalization/dictionaries'
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+import type { BaseProfile, ConnectionStatus } from "../types"
+import { UserProfileType } from "../types"
 
 // ============================================================================
 // Types
@@ -43,7 +65,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface ProfileGitHubLayoutProps {
   profile: BaseProfile
   dictionary?: Dictionary
-  lang?: 'ar' | 'en'
+  lang?: "ar" | "en"
   isOwner?: boolean
   connectionStatus?: ConnectionStatus
   onEdit?: () => void
@@ -62,24 +84,23 @@ interface ProfileGitHubLayoutProps {
 export function ProfileGitHubLayout({
   profile,
   dictionary,
-  lang = 'en',
+  lang = "en",
   isOwner = false,
-  connectionStatus = 'none',
+  connectionStatus = "none",
   onEdit,
   onConnect,
   onMessage,
   onShare,
   onFollow,
   className,
-  children
+  children,
 }: ProfileGitHubLayoutProps) {
-
   // Get initials from display name
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2)
   }
@@ -87,13 +108,13 @@ export function ProfileGitHubLayout({
   // Get user type badge color
   const getUserTypeBadgeColor = (type: UserProfileType) => {
     const colors = {
-      [UserProfileType.STUDENT]: 'bg-chart-1',
-      [UserProfileType.TEACHER]: 'bg-chart-2',
-      [UserProfileType.PARENT]: 'bg-chart-3',
-      [UserProfileType.STAFF]: 'bg-chart-4',
-      [UserProfileType.ADMIN]: 'bg-chart-5'
+      [UserProfileType.STUDENT]: "bg-chart-1",
+      [UserProfileType.TEACHER]: "bg-chart-2",
+      [UserProfileType.PARENT]: "bg-chart-3",
+      [UserProfileType.STAFF]: "bg-chart-4",
+      [UserProfileType.ADMIN]: "bg-chart-5",
     }
-    return colors[type] || 'bg-primary'
+    return colors[type] || "bg-primary"
   }
 
   // Get social icon component
@@ -105,7 +126,7 @@ export function ProfileGitHubLayout({
       facebook: <Facebook className="h-4 w-4" />,
       instagram: <Instagram className="h-4 w-4" />,
       youtube: <Youtube className="h-4 w-4" />,
-      website: <Globe className="h-4 w-4" />
+      website: <Globe className="h-4 w-4" />,
     }
     return icons[platform] || <Link className="h-4 w-4" />
   }
@@ -114,20 +135,15 @@ export function ProfileGitHubLayout({
   const renderConnectionButton = () => {
     if (isOwner) {
       return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          className="w-full"
-        >
-          <PencilLine className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={onEdit} className="w-full">
+          <PencilLine className="mr-2 h-4 w-4" />
           Edit Profile
         </Button>
       )
     }
 
     switch (connectionStatus) {
-      case 'connected':
+      case "connected":
         return (
           <Button
             variant="secondary"
@@ -135,22 +151,17 @@ export function ProfileGitHubLayout({
             onClick={onMessage}
             className="w-full"
           >
-            <MessageSquare className="h-4 w-4 mr-2" />
+            <MessageSquare className="mr-2 h-4 w-4" />
             Message
           </Button>
         )
-      case 'pending':
+      case "pending":
         return (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled
-            className="w-full"
-          >
+          <Button variant="outline" size="sm" disabled className="w-full">
             Request Sent
           </Button>
         )
-      case 'requested':
+      case "requested":
         return (
           <Button
             variant="default"
@@ -158,7 +169,7 @@ export function ProfileGitHubLayout({
             onClick={onConnect}
             className="w-full"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
+            <UserPlus className="mr-2 h-4 w-4" />
             Accept
           </Button>
         )
@@ -170,7 +181,7 @@ export function ProfileGitHubLayout({
             onClick={onConnect}
             className="w-full"
           >
-            <UserPlus className="h-4 w-4 mr-2" />
+            <UserPlus className="mr-2 h-4 w-4" />
             Connect
           </Button>
         )
@@ -178,42 +189,46 @@ export function ProfileGitHubLayout({
   }
 
   return (
-    <div className={cn('grid grid-cols-1 lg:grid-cols-[296px_1fr] gap-6', className)}>
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-6 lg:grid-cols-[296px_1fr]",
+        className
+      )}
+    >
       {/* Left Sidebar - Profile Info */}
       <aside className="-mt-4 lg:-mt-8">
         {/* Avatar and Name */}
         <div className="space-y-4">
           <div className="relative">
-            <Avatar className="h-[296px] w-[296px] border-2 border-muted">
-              <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
-              <AvatarFallback className="text-6xl bg-muted">
+            <Avatar className="border-muted h-[296px] w-[296px] border-2">
+              <AvatarImage
+                src={profile.avatar || undefined}
+                alt={profile.displayName}
+              />
+              <AvatarFallback className="bg-muted text-6xl">
                 {getInitials(profile.displayName)}
               </AvatarFallback>
             </Avatar>
             {profile.isOnline && (
-              <div className="absolute bottom-8 right-8 h-10 w-10 bg-green-500 rounded-full border-4 border-background" />
+              <div className="border-background absolute right-8 bottom-8 h-10 w-10 rounded-full border-4 bg-green-500" />
             )}
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold leading-none">
+            <h1 className="text-2xl leading-none font-semibold">
               {profile.displayName}
             </h1>
-            <p className="text-xl text-muted-foreground">
-              {profile.email?.split('@')[0] || profile.type.toLowerCase()}
+            <p className="text-muted-foreground text-xl">
+              {profile.email?.split("@")[0] || profile.type.toLowerCase()}
             </p>
           </div>
         </div>
 
         {/* Bio */}
-        {profile.bio && (
-          <p className="text-base mt-4 mb-4">
-            {profile.bio}
-          </p>
-        )}
+        {profile.bio && <p className="mt-4 mb-4 text-base">{profile.bio}</p>}
 
         {/* Action Buttons */}
-        <div className="space-y-2 my-4">
+        <div className="my-4 space-y-2">
           {isOwner ? (
             <Button
               variant="secondary"
@@ -226,25 +241,29 @@ export function ProfileGitHubLayout({
             <>
               <div className="flex gap-2">
                 <Button
-                  variant={connectionStatus === 'connected' ? 'secondary' : 'default'}
+                  variant={
+                    connectionStatus === "connected" ? "secondary" : "default"
+                  }
                   className="flex-1"
-                  onClick={connectionStatus === 'connected' ? onMessage : onConnect}
+                  onClick={
+                    connectionStatus === "connected" ? onMessage : onConnect
+                  }
                 >
-                  {connectionStatus === 'connected' ? (
+                  {connectionStatus === "connected" ? (
                     <>
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="mr-2 h-4 w-4" />
                       Message
                     </>
-                  ) : connectionStatus === 'pending' ? (
-                    'Pending'
-                  ) : connectionStatus === 'requested' ? (
+                  ) : connectionStatus === "pending" ? (
+                    "Pending"
+                  ) : connectionStatus === "requested" ? (
                     <>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                      <UserPlus className="mr-2 h-4 w-4" />
                       Accept
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                      <UserPlus className="mr-2 h-4 w-4" />
                       Follow
                     </>
                   )}
@@ -257,12 +276,10 @@ export function ProfileGitHubLayout({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={onShare}>
-                      <Share2 className="h-4 w-4 mr-2" />
+                      <Share2 className="mr-2 h-4 w-4" />
                       Share profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      Copy profile link
-                    </DropdownMenuItem>
+                    <DropdownMenuItem>Copy profile link</DropdownMenuItem>
                     {!isOwner && (
                       <>
                         <DropdownMenuSeparator />
@@ -279,62 +296,69 @@ export function ProfileGitHubLayout({
         </div>
 
         {/* Followers/Following */}
-        <div className="flex items-center gap-2 text-sm my-4">
-          <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="my-4 flex items-center gap-2 text-sm">
+          <Users className="text-muted-foreground h-4 w-4" />
           <a href="#" className="hover:text-primary">
-            <span className="font-semibold">{profile.activityStats.totalConnections}</span>
+            <span className="font-semibold">
+              {profile.activityStats.totalConnections}
+            </span>
             <span className="text-muted-foreground"> followers</span>
           </a>
           <span className="text-muted-foreground">·</span>
           <a href="#" className="hover:text-primary">
-            <span className="font-semibold">{Math.floor(profile.activityStats.totalConnections * 0.7)}</span>
+            <span className="font-semibold">
+              {Math.floor(profile.activityStats.totalConnections * 0.7)}
+            </span>
             <span className="text-muted-foreground"> following</span>
           </a>
         </div>
 
         {/* Contact Info */}
-        <div className="space-y-1 text-sm my-4">
+        <div className="my-4 space-y-1 text-sm">
           {profile.city && profile.settings.showLocation && (
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <MapPin className="text-muted-foreground h-4 w-4" />
               <span>
                 {[profile.city, profile.state, profile.country]
                   .filter(Boolean)
-                  .join(', ')}
+                  .join(", ")}
               </span>
             </div>
           )}
           {profile.email && profile.settings.showEmail && (
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <a href={`mailto:${profile.email}`} className="hover:text-primary hover:underline">
+              <Mail className="text-muted-foreground h-4 w-4" />
+              <a
+                href={`mailto:${profile.email}`}
+                className="hover:text-primary hover:underline"
+              >
                 {profile.email}
               </a>
             </div>
           )}
           {profile.socialLinks?.website && (
             <div className="flex items-center gap-2">
-              <Link className="h-4 w-4 text-muted-foreground" />
+              <Link className="text-muted-foreground h-4 w-4" />
               <a
                 href={profile.socialLinks.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-primary hover:underline truncate"
+                className="hover:text-primary truncate hover:underline"
               >
-                {profile.socialLinks.website.replace(/^https?:\/\//, '')}
+                {profile.socialLinks.website.replace(/^https?:\/\//, "")}
               </a>
             </div>
           )}
           {profile.socialLinks?.twitter && (
             <div className="flex items-center gap-2">
-              <Twitter className="h-4 w-4 text-muted-foreground" />
+              <Twitter className="text-muted-foreground h-4 w-4" />
               <a
                 href={profile.socialLinks.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-primary hover:underline"
               >
-                @{profile.socialLinks.twitter.split('/').pop()}
+                @{profile.socialLinks.twitter.split("/").pop()}
               </a>
             </div>
           )}
@@ -345,7 +369,7 @@ export function ProfileGitHubLayout({
         {/* Achievements Section */}
         <div className="space-y-3">
           <h2 className="text-base font-semibold">Achievements</h2>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -369,7 +393,9 @@ export function ProfileGitHubLayout({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="font-semibold">Active Contributor</p>
-                    <p className="text-xs">{profile.activityStats.contributionStreak} day streak</p>
+                    <p className="text-xs">
+                      {profile.activityStats.contributionStreak} day streak
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -400,13 +426,17 @@ export function ProfileGitHubLayout({
         {/* Organizations Section */}
         <div className="space-y-3">
           <h2 className="text-base font-semibold">Organizations</h2>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80">
-              <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=org1`} />
+              <AvatarImage
+                src={`https://api.dicebear.com/7.x/shapes/svg?seed=org1`}
+              />
               <AvatarFallback className="text-xs">O1</AvatarFallback>
             </Avatar>
             <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80">
-              <AvatarImage src={`https://api.dicebear.com/7.x/shapes/svg?seed=org2`} />
+              <AvatarImage
+                src={`https://api.dicebear.com/7.x/shapes/svg?seed=org2`}
+              />
               <AvatarFallback className="text-xs">O2</AvatarFallback>
             </Avatar>
           </div>
@@ -414,9 +444,7 @@ export function ProfileGitHubLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0">
-        {children}
-      </main>
+      <main className="min-w-0 flex-1">{children}</main>
     </div>
   )
 }

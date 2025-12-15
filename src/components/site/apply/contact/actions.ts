@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { contactSchema, type ContactSchemaType } from './validation';
+import { contactSchema, type ContactSchemaType } from "./validation"
 
 export interface SaveContactResult {
-  success: boolean;
-  data?: ContactSchemaType;
-  error?: string;
+  success: boolean
+  data?: ContactSchemaType
+  error?: string
 }
 
 export async function saveContactStep(
@@ -13,22 +13,22 @@ export async function saveContactStep(
 ): Promise<SaveContactResult> {
   try {
     // Validate data
-    const validatedData = contactSchema.parse(data);
+    const validatedData = contactSchema.parse(data)
 
     return {
       success: true,
-      data: validatedData
-    };
+      data: validatedData,
+    }
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        error: error.message
-      };
+        error: error.message,
+      }
     }
     return {
       success: false,
-      error: 'Validation failed'
-    };
+      error: "Validation failed",
+    }
   }
 }

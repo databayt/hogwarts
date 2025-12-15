@@ -8,6 +8,7 @@
 ## Current Status
 
 **Production-Ready Features ✅**
+
 - [x] CRUD operations for lessons
 - [x] Class (Course Section) linking with auto teacher/subject assignment
 - [x] Lesson content management (objectives, materials, activities, assessment)
@@ -16,6 +17,7 @@
 - [x] Date/time scheduling with validation
 
 **Course Management Enhancements ✅**
+
 - [x] Evaluation types support (Normal, GPA, CWA, CCE)
 - [x] Course codes and credit hours
 - [x] Course prerequisite hierarchy
@@ -28,6 +30,7 @@
 ## Enhancement Items Completed
 
 ### Phase 1: Database Schema ✅
+
 - [x] Created Lesson model with LessonStatus enum
 - [x] Added EvaluationType enum (Normal, GPA, CWA, CCE)
 - [x] Enhanced Class model with course management fields
@@ -35,6 +38,7 @@
 - [x] Configured proper indexes for performance
 
 ### Phase 2: Core Functionality ✅
+
 - [x] Updated lesson actions to use new Prisma model
 - [x] Removed direct teacher/subject assignment (inherited from Class)
 - [x] Updated validation schemas
@@ -42,6 +46,7 @@
 - [x] Updated lesson content display with proper relations
 
 ### Phase 3: Evaluation System ✅
+
 - [x] Created evaluation type configuration (`src/lib/evaluation-types.ts`)
 - [x] GPA calculation helpers
 - [x] Weighted average (CWA) calculation
@@ -53,6 +58,7 @@
 ## Remaining Enhancement Items
 
 ### Priority 2 Features 🟡
+
 - [ ] Resource attachments (file upload)
 - [ ] Link to timetable slots
 - [ ] Learning objectives framework
@@ -61,6 +67,7 @@
 - [ ] Progress tracking dashboard
 
 ### Additional Features
+
 - [ ] Collaborative lesson planning
 - [ ] Lesson sharing between teachers
 - [ ] Standards alignment
@@ -76,6 +83,7 @@
 This feature uses the platform's standard technology stack (see [Platform ISSUE.md](../ISSUE.md#technology-stack--version-requirements) for complete details):
 
 ### Core Stack
+
 - **Next.js 15.4+** with App Router and Server Components
 - **React 19+** with Server Actions and new hooks
 - **TypeScript 5.x** in strict mode
@@ -83,6 +91,7 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **Prisma ORM 6.14+** for type-safe database access
 
 ### UI & Forms
+
 - **shadcn/ui** components built on Radix UI primitives
 - **Tailwind CSS 4** with OKLCH colors
 - **React Hook Form 7.61+** for form state management
@@ -90,18 +99,21 @@ This feature uses the platform's standard technology stack (see [Platform ISSUE.
 - **TanStack Table 8.21+** for data tables
 
 ### Authentication & Security
+
 - **NextAuth.js v5** with JWT sessions
 - Multi-tenant isolation via `schoolId` scoping
 - CSRF protection and secure cookie handling
 - Type-safe environment variables
 
 ### Development & Testing
+
 - **Vitest 2.0+** for unit testing
 - **Playwright 1.55+** for E2E testing
 - **ESLint + Prettier** for code quality
 - **pnpm 9.x** as package manager
 
 ### Key Patterns
+
 - **Server Actions**: All mutations use "use server" directive
 - **Multi-Tenant**: Every query scoped by `schoolId` from session
 - **Type Safety**: End-to-end TypeScript with Prisma + Zod

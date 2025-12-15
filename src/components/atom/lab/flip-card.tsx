@@ -1,8 +1,10 @@
-'use client'
+"use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
+
 import type { CardSize } from "./types"
 
 interface FlipCardProps {
@@ -86,21 +88,21 @@ export function FlipCard({
     >
       <div
         className={cn(
-          "relative w-full h-full transition-transform duration-500 transform-style-3d",
+          "transform-style-3d relative h-full w-full transition-transform duration-500",
           !clickToFlip && "group-hover:rotate-y-180",
           clickToFlip && isFlipped && "rotate-y-180"
         )}
       >
         {/* Front */}
-        <Card className="absolute w-full h-full backface-hidden">
-          <CardContent className="flex items-center justify-center h-full p-6">
+        <Card className="absolute h-full w-full backface-hidden">
+          <CardContent className="flex h-full items-center justify-center p-6">
             {front}
           </CardContent>
         </Card>
 
         {/* Back */}
-        <Card className="absolute w-full h-full backface-hidden rotate-y-180">
-          <CardContent className="flex items-center justify-center h-full p-6">
+        <Card className="absolute h-full w-full rotate-y-180 backface-hidden">
+          <CardContent className="flex h-full items-center justify-center p-6">
             {back}
           </CardContent>
         </Card>

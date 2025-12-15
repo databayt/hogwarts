@@ -1,27 +1,28 @@
-"use client";
+"use client"
 
-import { useState, useMemo } from "react";
-import { BookCoverImage } from "@/components/ui/imagekit-image";
-import Image from "next/image";
+import { useMemo, useState } from "react"
+import Image from "next/image"
+
+import { BookCoverImage } from "@/components/ui/imagekit-image"
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface BookCoverProps {
-  coverUrl?: string | null;
-  coverColor?: string | null;
-  title: string;
-  author: string;
-  width?: number;
-  height?: number;
-  priority?: boolean;
-  className?: string;
-  textSize?: "sm" | "md" | "lg";
+  coverUrl?: string | null
+  coverColor?: string | null
+  title: string
+  author: string
+  width?: number
+  height?: number
+  priority?: boolean
+  className?: string
+  textSize?: "sm" | "md" | "lg"
   /** Use ImageKit transformations for optimization */
-  useImageKit?: boolean;
+  useImageKit?: boolean
   /** ImageKit preset (thumbnail, card, detail, original) */
-  preset?: "thumbnail" | "card" | "detail" | "original";
+  preset?: "thumbnail" | "card" | "detail" | "original"
 }
 
 // ============================================================================
@@ -41,38 +42,39 @@ export function BookCover({
   useImageKit = true,
   preset = "card",
 }: BookCoverProps) {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState(false)
 
   const textSizeClasses = {
     sm: { title: "text-sm", author: "text-xs" },
     md: { title: "text-base", author: "text-sm" },
     lg: { title: "text-lg", author: "text-sm" },
-  };
+  }
 
   // Check if the URL is from ImageKit
   const isImageKitUrl = useMemo(() => {
-    if (!coverUrl) return false;
+    if (!coverUrl) return false
     return (
-      coverUrl.includes("ik.imagekit.io") ||
-      coverUrl.startsWith("hogwarts/")
-    );
-  }, [coverUrl]);
+      coverUrl.includes("ik.imagekit.io") || coverUrl.startsWith("hogwarts/")
+    )
+  }, [coverUrl])
 
   // Fallback content when no image or error
   const FallbackContent = () => (
-    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-      <p className={`font-bold text-white line-clamp-3 ${textSizeClasses[textSize].title}`}>
+    <div className="flex h-full flex-col items-center justify-center p-4 text-center">
+      <p
+        className={`line-clamp-3 font-bold text-white ${textSizeClasses[textSize].title}`}
+      >
         {title}
       </p>
-      <p className={`text-white/70 mt-1 ${textSizeClasses[textSize].author}`}>
+      <p className={`mt-1 text-white/70 ${textSizeClasses[textSize].author}`}>
         {author}
       </p>
     </div>
-  );
+  )
 
   // Show fallback if no URL or image error
   if (!coverUrl || imageError) {
-    return <FallbackContent />;
+    return <FallbackContent />
   }
 
   // Use ImageKit component for ImageKit URLs when enabled
@@ -85,11 +87,11 @@ export function BookCover({
         height={height}
         preset={preset}
         priority={priority}
-        className={`w-full h-full object-cover ${className}`}
+        className={`h-full w-full object-cover ${className}`}
         onError={() => setImageError(true)}
         fallback={<FallbackContent />}
       />
-    );
+    )
   }
 
   // Fallback to regular Image for non-ImageKit URLs
@@ -99,9 +101,9 @@ export function BookCover({
       alt={title}
       width={width}
       height={height}
-      className={`w-full h-full object-cover ${className}`}
+      className={`h-full w-full object-cover ${className}`}
       priority={priority}
       onError={() => setImageError(true)}
     />
-  );
+  )
 }

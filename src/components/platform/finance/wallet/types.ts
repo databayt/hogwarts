@@ -2,9 +2,10 @@
  * Wallet Module - Type Definitions
  */
 
-import type { WalletType, TransactionType } from '@prisma/client'
-import type { walletSchema, walletTransactionSchema } from './validation'
-import type { z } from 'zod'
+import type { TransactionType, WalletType } from "@prisma/client"
+import type { z } from "zod"
+
+import type { walletSchema, walletTransactionSchema } from "./validation"
 
 export type WalletInput = z.infer<typeof walletSchema>
 export type WalletTransactionInput = z.infer<typeof walletTransactionSchema>

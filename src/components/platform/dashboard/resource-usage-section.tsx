@@ -1,9 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { DetailedUsageTable, type UsageResource } from "@/components/billingsdk/detailed-usage-table"
-import { SectionHeading } from "./section-heading"
+
+import {
+  DetailedUsageTable,
+  type UsageResource,
+} from "@/components/billingsdk/detailed-usage-table"
+
 import { getResourceUsageByRole } from "./actions"
+import { SectionHeading } from "./section-heading"
 
 // ============================================================================
 // TYPES
@@ -126,8 +131,14 @@ const defaultResourcesByRole: Record<DashboardRole, UsageResource[]> = {
  * @example
  * <ResourceUsageSection role="STUDENT" />
  */
-export function ResourceUsageSection({ role, className, sectionTitle }: ResourceUsageSectionProps) {
-  const [resources, setResources] = useState<UsageResource[]>(defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN)
+export function ResourceUsageSection({
+  role,
+  className,
+  sectionTitle,
+}: ResourceUsageSectionProps) {
+  const [resources, setResources] = useState<UsageResource[]>(
+    defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
+  )
   const [isLoading, setIsLoading] = useState(true)
 
   // Use provided title or derive from role
@@ -161,11 +172,7 @@ export function ResourceUsageSection({ role, className, sectionTitle }: Resource
   return (
     <section className={className}>
       <SectionHeading title={title} />
-      <DetailedUsageTable
-        resources={resources}
-        title=""
-        description=""
-      />
+      <DetailedUsageTable resources={resources} title="" description="" />
     </section>
   )
 }
@@ -191,17 +198,14 @@ export function StaticResourceUsageSection({
   className,
   sectionTitle,
 }: StaticResourceUsageSectionProps) {
-  const data = resources || defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
+  const data =
+    resources || defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
   const title = sectionTitle || getResourceTitleByRole(role)
 
   return (
     <section className={className}>
       <SectionHeading title={title} />
-      <DetailedUsageTable
-        resources={data}
-        title=""
-        description=""
-      />
+      <DetailedUsageTable resources={data} title="" description="" />
     </section>
   )
 }

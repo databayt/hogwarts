@@ -28,16 +28,15 @@ import {
 
 export const description = "An interactive area chart"
 
-
 interface IChartInvoice {
-    chartData : any;
-    chartConfig : ChartConfig
+  chartData: any
+  chartConfig: ChartConfig
 }
 
-export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
+export function ChartInvoice({ chartData, chartConfig }: IChartInvoice) {
   const [timeRange, setTimeRange] = React.useState("90d")
 
-  const filteredData = chartData?.filter((item : any) => {
+  const filteredData = chartData?.filter((item: any) => {
     const date = new Date(item.date)
     const referenceDate = new Date("2024-06-30")
     let daysToSubtract = 90
@@ -52,14 +51,14 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
   })
 
   return (
-    <Card className="p-0 col-span-2">
-        {/* <CardHeader>
+    <Card className="col-span-2 p-0">
+      {/* <CardHeader>
 
         </CardHeader> */}
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-80 lg:h-96 w-full"
+          className="aspect-auto h-80 w-full lg:h-96"
         >
           <AreaChart data={filteredData}>
             <defs>
@@ -123,7 +122,7 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
               fill="url(#fillPaidRevenue)"
               stroke="var(--color-paidRevenue)"
               stackId="a"
-               name="Paid Revenue"
+              name="Paid Revenue"
             />
             <Area
               dataKey="totalRevenue"
@@ -133,7 +132,7 @@ export function ChartInvoice({chartData,chartConfig} : IChartInvoice) {
               stackId="a"
               name="Total Revenue"
             />
-            <ChartLegend content={<ChartLegendContent   />} />
+            <ChartLegend content={<ChartLegendContent />} />
           </AreaChart>
         </ChartContainer>
       </CardContent>

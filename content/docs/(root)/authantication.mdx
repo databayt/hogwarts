@@ -102,6 +102,7 @@ Student → school.databayt.org/login → Google/Facebook → Profile Setup
 ```
 
 **Benefits**:
+
 - No admin work required
 - Users verify their own email automatically
 - Streamlined experience
@@ -116,6 +117,7 @@ Admin → Import CSV → Bulk creation with roles → Send credentials
 ```
 
 **Benefits**:
+
 - Full admin control over who joins
 - Pre-assigned roles
 - Works for users without email access
@@ -129,6 +131,7 @@ Admin → Generate invite link → User clicks → OAuth or Credentials → Link
 ```
 
 **Benefits**:
+
 - Controlled onboarding
 - Pre-assigned roles
 - Combines admin control with user convenience
@@ -142,6 +145,7 @@ Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
 ```
 
 **Benefits**:
+
 - Easy to share (print, announce, etc.)
 - No individual invitations needed
 - Admin sets default role
@@ -150,14 +154,14 @@ Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
 
 ### Core Files
 
-| File | Purpose |
-|------|---------|
-| `src/auth.ts` | NextAuth configuration, JWT callbacks, session management |
-| `src/auth.config.ts` | OAuth provider configurations |
-| `src/middleware.ts` | Route protection, subdomain detection |
-| `src/routes.ts` | Public/protected route definitions |
-| `src/lib/tenant-context.ts` | School context retrieval |
-| `src/lib/school-access.ts` | School ownership and access control |
+| File                        | Purpose                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| `src/auth.ts`               | NextAuth configuration, JWT callbacks, session management |
+| `src/auth.config.ts`        | OAuth provider configurations                             |
+| `src/middleware.ts`         | Route protection, subdomain detection                     |
+| `src/routes.ts`             | Public/protected route definitions                        |
+| `src/lib/tenant-context.ts` | School context retrieval                                  |
+| `src/lib/school-access.ts`  | School ownership and access control                       |
 
 ### Component Structure
 
@@ -192,9 +196,9 @@ session.user = {
 ### Tenant Context
 
 ```typescript
-import { getTenantContext } from "@/lib/tenant-context";
+import { getTenantContext } from "@/lib/tenant-context"
 
-const { schoolId, role, isPlatformAdmin } = await getTenantContext();
+const { schoolId, role, isPlatformAdmin } = await getTenantContext()
 // Priority: impersonation cookie → subdomain → session
 ```
 
@@ -245,16 +249,16 @@ import { UserRole } from "@prisma/client";
 ### Multi-Tenant Queries
 
 ```typescript
-import { getTenantContext } from "@/lib/tenant-context";
+import { getTenantContext } from "@/lib/tenant-context"
 
 export async function getStudents() {
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
-  if (!schoolId) throw new Error("No school context");
+  if (!schoolId) throw new Error("No school context")
 
   return db.student.findMany({
-    where: { schoolId }  // ALWAYS include schoolId!
-  });
+    where: { schoolId }, // ALWAYS include schoolId!
+  })
 }
 ```
 
@@ -320,14 +324,14 @@ cookies: {
 
 ### OAuth vs Credentials
 
-| Scenario | Recommended Method |
-|----------|-------------------|
-| Students self-registering | OAuth (Google/Facebook) |
-| Teachers self-registering | OAuth (Google/Facebook) |
-| Admin creating accounts | Credentials (bulk import) |
-| Users without email | Credentials (admin-created) |
-| Quick onboarding | OAuth |
-| Full admin control | Credentials |
+| Scenario                  | Recommended Method          |
+| ------------------------- | --------------------------- |
+| Students self-registering | OAuth (Google/Facebook)     |
+| Teachers self-registering | OAuth (Google/Facebook)     |
+| Admin creating accounts   | Credentials (bulk import)   |
+| Users without email       | Credentials (admin-created) |
+| Quick onboarding          | OAuth                       |
+| Full admin control        | Credentials                 |
 
 **Recommendation**: Offer both options and let schools choose their preferred workflow.
 
@@ -343,19 +347,21 @@ cookies: {
 ### Common Patterns
 
 **Always include schoolId in queries**:
+
 ```typescript
 // Good
-db.student.findMany({ where: { schoolId, grade: "10" } });
+db.student.findMany({ where: { schoolId, grade: "10" } })
 
 // Bad - breaks tenant isolation!
-db.student.findMany({ where: { grade: "10" } });
+db.student.findMany({ where: { grade: "10" } })
 ```
 
 **Check role before sensitive operations**:
+
 ```typescript
-const { role } = await getTenantContext();
+const { role } = await getTenantContext()
 if (role !== "ADMIN" && role !== "DEVELOPER") {
-  throw new Error("Insufficient permissions");
+  throw new Error("Insufficient permissions")
 }
 ```
 
@@ -364,39 +370,47 @@ if (role !== "ADMIN" && role !== "DEVELOPER") {
 ### OAuth Issues
 
 **redirect_uri_mismatch**: Callback URL in provider console doesn't match application
+
 - Verify exact URL including protocol and port
 - No trailing slashes
 
 **access_denied**: User denied permission or app misconfigured
+
 - Check OAuth consent screen
 - Verify required scopes
 
 ### Session Issues
 
 **User not persisting**: Cookie not being set
+
 - Check domain configuration
 - Verify AUTH_SECRET is set
 
 **Role not updating**: Session not refreshed
+
 - Force session refresh after role change
 - Check JWT callback
 
 ### Multi-Tenant Issues
 
 **Wrong school context**: Query returning other school's data
+
 - Always include schoolId in where clause
 - Use getTenantContext()
 
 ## Roadmap
 
 ### Immediate (P0)
+
 1. **Remove debug logging** - Clean up console.log statements in production
 
 ### Short-term (P1)
+
 2. **Invitation system** - Schools invite users with pre-assigned roles
 3. **School join codes** - Simple codes like "HOGWARTS-2024" for easy joining
 
 ### Medium-term (P1)
+
 4. **Bulk user creation** - CSV import for students/teachers
 
 ## Testing
@@ -405,13 +419,13 @@ if (role !== "ADMIN" && role !== "DEVELOPER") {
 
 The authentication module has **123 unit tests** covering:
 
-| Test File | Tests | Description |
-|-----------|-------|-------------|
-| `validation.test.ts` | 49 | Zod schema validation for all auth forms |
-| `user.test.ts` | 22 | User utilities and multi-tenant safety |
-| `tokens.test.ts` | 16 | Token generation (2FA, password reset, verification) |
-| `login/action.test.ts` | 24 | Login flow with 2FA and smart redirect |
-| `join/action.test.ts` | 12 | Registration and multi-tenant isolation |
+| Test File              | Tests | Description                                          |
+| ---------------------- | ----- | ---------------------------------------------------- |
+| `validation.test.ts`   | 49    | Zod schema validation for all auth forms             |
+| `user.test.ts`         | 22    | User utilities and multi-tenant safety               |
+| `tokens.test.ts`       | 16    | Token generation (2FA, password reset, verification) |
+| `login/action.test.ts` | 24    | Login flow with 2FA and smart redirect               |
+| `join/action.test.ts`  | 12    | Registration and multi-tenant isolation              |
 
 ### Running Auth Tests
 

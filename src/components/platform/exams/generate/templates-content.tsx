@@ -1,21 +1,23 @@
-import { TemplatesTable } from "./table";
-import type { ExamTemplateRow } from "./columns";
-import { SearchParams } from "nuqs/server";
-import { templateSearchParams } from "./list-params";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import type { Locale } from "@/components/internationalization/config";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { calculateTotalQuestions } from "./utils";
-import type { Prisma } from "@prisma/client";
-import type { TemplateDistribution } from "./types";
+import type { Prisma } from "@prisma/client"
+import { SearchParams } from "nuqs/server"
+
+import { db } from "@/lib/db"
+import { getTenantContext } from "@/lib/tenant-context"
+import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
+import { Shell as PageContainer } from "@/components/table/shell"
+
+import type { ExamTemplateRow } from "./columns"
+import { templateSearchParams } from "./list-params"
+import { TemplatesTable } from "./table"
+import type { TemplateDistribution } from "./types"
+import { calculateTotalQuestions } from "./utils"
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  dictionary: Dictionary;
-  lang: Locale;
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary
+  lang: Locale
 }
 
 export default async function TemplatesContent({
@@ -23,16 +25,18 @@ export default async function TemplatesContent({
   dictionary,
   lang,
 }: Props) {
-  const sp = await templateSearchParams.parse(await searchParams);
-  const { schoolId } = await getTenantContext();
-  let data: ExamTemplateRow[] = [];
-  let total = 0;
+  const sp = await templateSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+  let data: ExamTemplateRow[] = []
+  let total = 0
 
   if (schoolId) {
     const where: Prisma.ExamTemplateWhereInput = {
       schoolId, // CRITICAL: Multi-tenant scope
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
-      ...(sp.isActive !== undefined && sp.isActive !== null ? { isActive: sp.isActive } : {}),
+      ...(sp.isActive !== undefined && sp.isActive !== null
+        ? { isActive: sp.isActive }
+        : {}),
       ...(sp.search
         ? {
             name: {
@@ -41,14 +45,18 @@ export default async function TemplatesContent({
             },
           }
         : {}),
-    };
+    }
 
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
     const orderBy: Prisma.ExamTemplateOrderByWithRelationInput[] =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? [{ [sp.sort[0]]: sp.sort[1] === "desc" ? "desc" : "asc" } as Prisma.ExamTemplateOrderByWithRelationInput]
-        : [{ createdAt: "desc" }];
+        ? [
+            {
+              [sp.sort[0]]: sp.sort[1] === "desc" ? "desc" : "asc",
+            } as Prisma.ExamTemplateOrderByWithRelationInput,
+          ]
+        : [{ createdAt: "desc" }]
 
     const [rows, count] = await Promise.all([
       db.examTemplate.findMany({
@@ -71,7 +79,7 @@ export default async function TemplatesContent({
         },
       }),
       db.examTemplate.count({ where }),
-    ]);
+    ])
 
     data = rows.map((t) => ({
       id: t.id,
@@ -79,12 +87,14 @@ export default async function TemplatesContent({
       subjectName: t.subject?.subjectName || "Unknown",
       duration: t.duration,
       totalMarks: Number(t.totalMarks),
-      totalQuestions: calculateTotalQuestions(t.distribution as TemplateDistribution),
+      totalQuestions: calculateTotalQuestions(
+        t.distribution as TemplateDistribution
+      ),
       isActive: t.isActive,
       timesUsed: t._count.generatedExams,
       createdAt: t.createdAt.toISOString(),
-    }));
-    total = count;
+    }))
+    total = count
   }
 
   return (
@@ -92,10 +102,17 @@ export default async function TemplatesContent({
       <div className="flex flex-1 flex-col gap-4">
         <PageHeadingSetter
           title={dictionary?.generate?.templates?.title || "Exam Templates"}
-          description={dictionary?.generate?.templates?.description || "Create reusable exam blueprints with question distribution rules"}
+          description={
+            dictionary?.generate?.templates?.description ||
+            "Create reusable exam blueprints with question distribution rules"
+          }
         />
-        <TemplatesTable initialData={data} total={total} dictionary={dictionary} />
+        <TemplatesTable
+          initialData={data}
+          total={total}
+          dictionary={dictionary}
+        />
       </div>
     </PageContainer>
-  );
+  )
 }

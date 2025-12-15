@@ -1,4 +1,8 @@
-import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString,
+} from "nuqs/server"
 
 export const domainsSearchParams = createSearchParamsCache({
   page: parseAsInteger.withDefault(1),
@@ -7,22 +11,8 @@ export const domainsSearchParams = createSearchParamsCache({
   schoolName: parseAsString.withDefault(""),
   domain: parseAsString.withDefault(""),
   status: parseAsString.withDefault(""),
-});
+})
 
-export type GetDomainsSearch = Awaited<ReturnType<typeof domainsSearchParams.parse>>;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export type GetDomainsSearch = Awaited<
+  ReturnType<typeof domainsSearchParams.parse>
+>

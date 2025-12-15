@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -21,12 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createTermSchema } from "./validation"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
 import { createTerm, updateTerm } from "./actions"
 import type { Term } from "./types"
-import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { createTermSchema } from "./validation"
 
 interface TermFormProps {
   open: boolean
@@ -48,7 +50,10 @@ export function TermForm({
   dictionary,
 }: TermFormProps) {
   // Academic dictionary - fallback to empty for now
-  const dict = (dictionary?.school as Record<string, unknown>)?.academic as Record<string, string> | undefined ?? {}
+  const dict =
+    ((dictionary?.school as Record<string, unknown>)?.academic as
+      | Record<string, string>
+      | undefined) ?? {}
   const [isPending, setIsPending] = React.useState(false)
 
   const {
@@ -64,7 +69,9 @@ export function TermForm({
       ? {
           yearId,
           termNumber: editingTerm.termNumber.toString(),
-          startDate: new Date(editingTerm.startDate).toISOString().split("T")[0],
+          startDate: new Date(editingTerm.startDate)
+            .toISOString()
+            .split("T")[0],
           endDate: new Date(editingTerm.endDate).toISOString().split("T")[0],
         }
       : {
@@ -84,14 +91,15 @@ export function TermForm({
         reset({
           yearId,
           termNumber: editingTerm.termNumber.toString(),
-          startDate: new Date(editingTerm.startDate).toISOString().split("T")[0],
+          startDate: new Date(editingTerm.startDate)
+            .toISOString()
+            .split("T")[0],
           endDate: new Date(editingTerm.endDate).toISOString().split("T")[0],
         })
       } else {
         // Find next available term number
-        const nextTermNumber = [1, 2, 3, 4].find(
-          (n) => !existingTermNumbers.includes(n)
-        ) || 1
+        const nextTermNumber =
+          [1, 2, 3, 4].find((n) => !existingTermNumbers.includes(n)) || 1
         reset({
           yearId,
           termNumber: nextTermNumber.toString(),
@@ -102,7 +110,12 @@ export function TermForm({
     }
   }, [editingTerm, open, reset, yearId, existingTermNumbers])
 
-  const onSubmit = async (data: { yearId: string; termNumber: string; startDate: string; endDate: string }) => {
+  const onSubmit = async (data: {
+    yearId: string
+    termNumber: string
+    startDate: string
+    endDate: string
+  }) => {
     setIsPending(true)
 
     try {
@@ -121,7 +134,9 @@ export function TermForm({
       }
 
       if (result.success) {
-        toast.success(result.message || (editingTerm ? "Term updated" : "Term created"))
+        toast.success(
+          result.message || (editingTerm ? "Term updated" : "Term created")
+        )
         onOpenChange(false)
         onSuccess()
       } else {
@@ -136,7 +151,9 @@ export function TermForm({
 
   // Available term numbers (1-4, excluding existing ones unless editing)
   const availableTermNumbers = [1, 2, 3, 4].filter(
-    (n) => !existingTermNumbers.includes(n) || (editingTerm && n === editingTerm.termNumber)
+    (n) =>
+      !existingTermNumbers.includes(n) ||
+      (editingTerm && n === editingTerm.termNumber)
   )
 
   return (
@@ -145,8 +162,8 @@ export function TermForm({
         <DialogHeader>
           <DialogTitle>
             {editingTerm
-              ? (dict.editTerm || "Edit Term")
-              : (dict.addTerm || "Add Term")}
+              ? dict.editTerm || "Edit Term"
+              : dict.addTerm || "Add Term"}
           </DialogTitle>
           <DialogDescription>
             {dict.termFormDescription ||
@@ -154,7 +171,12 @@ export function TermForm({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit as unknown as Parameters<typeof handleSubmit>[0])} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(
+            onSubmit as unknown as Parameters<typeof handleSubmit>[0]
+          )}
+          className="space-y-4"
+        >
           <input type="hidden" {...register("yearId")} />
 
           <div className="space-y-2">
@@ -165,7 +187,9 @@ export function TermForm({
               value={termNumber as string}
               onValueChange={(value) => setValue("termNumber", value)}
             >
-              <SelectTrigger className={errors.termNumber ? "border-destructive" : ""}>
+              <SelectTrigger
+                className={errors.termNumber ? "border-destructive" : ""}
+              >
                 <SelectValue placeholder={dict.selectTerm || "Select term"} />
               </SelectTrigger>
               <SelectContent>
@@ -177,7 +201,9 @@ export function TermForm({
               </SelectContent>
             </Select>
             {errors.termNumber && (
-              <p className="text-xs text-destructive">{errors.termNumber.message}</p>
+              <p className="text-destructive text-xs">
+                {errors.termNumber.message}
+              </p>
             )}
           </div>
 
@@ -193,14 +219,14 @@ export function TermForm({
                 className={errors.startDate ? "border-destructive" : ""}
               />
               {errors.startDate && (
-                <p className="text-xs text-destructive">{errors.startDate.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.startDate.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">
-                {dict.endDate || "End Date"}
-              </Label>
+              <Label htmlFor="endDate">{dict.endDate || "End Date"}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -208,7 +234,9 @@ export function TermForm({
                 className={errors.endDate ? "border-destructive" : ""}
               />
               {errors.endDate && (
-                <p className="text-xs text-destructive">{errors.endDate.message}</p>
+                <p className="text-destructive text-xs">
+                  {errors.endDate.message}
+                </p>
               )}
             </div>
           </div>
@@ -225,8 +253,8 @@ export function TermForm({
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editingTerm
-                ? (dict.saveChanges || "Save Changes")
-                : (dict.addTerm || "Add Term")}
+                ? dict.saveChanges || "Save Changes"
+                : dict.addTerm || "Add Term"}
             </Button>
           </DialogFooter>
         </form>

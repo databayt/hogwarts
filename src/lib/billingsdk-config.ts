@@ -5,78 +5,78 @@
  * Used by all BillingSDK components in the platform billing page.
  */
 
-import { env } from "@/env.mjs";
+import { env } from "@/env.mjs"
 
 // ========== BillingSDK Interfaces ==========
 
 export interface Plan {
-  id: string;
-  title: string;
-  description: string;
-  highlight?: boolean;
-  type?: "monthly" | "yearly";
-  currency?: string;
-  monthlyPrice: string;
-  yearlyPrice: string;
-  buttonText: string;
-  badge?: string;
+  id: string
+  title: string
+  description: string
+  highlight?: boolean
+  type?: "monthly" | "yearly"
+  currency?: string
+  monthlyPrice: string
+  yearlyPrice: string
+  buttonText: string
+  badge?: string
   features: {
-    name: string;
-    icon: string;
-    iconColor?: string;
-  }[];
+    name: string
+    icon: string
+    iconColor?: string
+  }[]
   stripeIds?: {
-    monthly: string | null;
-    yearly: string | null;
-  };
+    monthly: string | null
+    yearly: string | null
+  }
   limits?: {
-    students: number;
-    teachers: number;
-    classes: number;
-    storage: number;
-  };
+    students: number
+    teachers: number
+    classes: number
+    storage: number
+  }
 }
 
 export interface CurrentPlan {
-  plan: Plan;
-  type: "monthly" | "yearly" | "custom";
-  price?: string;
-  nextBillingDate: string;
-  paymentMethod: string;
-  status: "active" | "inactive" | "past_due" | "cancelled";
+  plan: Plan
+  type: "monthly" | "yearly" | "custom"
+  price?: string
+  nextBillingDate: string
+  paymentMethod: string
+  status: "active" | "inactive" | "past_due" | "cancelled"
 }
 
 export interface InvoiceItem {
-  id: string;
-  date: string;
-  amount: string;
-  status: "paid" | "refunded" | "open" | "void";
-  invoiceUrl?: string;
-  description?: string;
+  id: string
+  date: string
+  amount: string
+  status: "paid" | "refunded" | "open" | "void"
+  invoiceUrl?: string
+  description?: string
 }
 
 export interface UsageResource {
-  name: string;
-  used: number;
-  limit: number;
-  percentage?: number;
-  unit: string;
+  name: string
+  used: number
+  limit: number
+  percentage?: number
+  unit: string
 }
 
 export interface ChargeItem {
-  id: string;
-  description: string;
-  amount: string;
-  date: string;
-  type: "prorated" | "recurring" | "one-time";
+  id: string
+  description: string
+  amount: string
+  date: string
+  type: "prorated" | "recurring" | "one-time"
 }
 
 export interface PaymentCard {
-  id: string;
-  last4: string;
-  brand: string;
-  expiry: string;
-  primary: boolean;
+  id: string
+  last4: string
+  brand: string
+  expiry: string
+  primary: boolean
 }
 
 // ========== Hogwarts Plans Configuration ==========
@@ -212,8 +212,14 @@ export const plans: Plan[] = [
       },
     ],
     stripeIds: {
-      monthly: env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID ?? env.NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID ?? null,
-      yearly: env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID ?? env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID ?? null,
+      monthly:
+        env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PLAN_ID ??
+        env.NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID ??
+        null,
+      yearly:
+        env.NEXT_PUBLIC_STRIPE_BUSINESS_YEARLY_PLAN_ID ??
+        env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID ??
+        null,
     },
     limits: {
       students: -1, // unlimited
@@ -222,7 +228,7 @@ export const plans: Plan[] = [
       storage: 50000, // 50GB
     },
   },
-];
+]
 
 // ========== Helper Functions ==========
 
@@ -230,23 +236,26 @@ export const plans: Plan[] = [
  * Get plan by ID
  */
 export function getPlanById(planId: string): Plan | undefined {
-  return plans.find((p) => p.id === planId);
+  return plans.find((p) => p.id === planId)
 }
 
 /**
  * Get plan index in array
  */
 export function getPlanIndex(planId: string): number {
-  return plans.findIndex((p) => p.id === planId);
+  return plans.findIndex((p) => p.id === planId)
 }
 
 /**
  * Format price for display
  */
-export function formatPlanPrice(price: string | number, currency = "$"): string {
-  if (price === "0" || price === 0) return "Free";
-  if (typeof price === "string" && isNaN(Number(price))) return price;
-  return `${currency}${price}`;
+export function formatPlanPrice(
+  price: string | number,
+  currency = "$"
+): string {
+  if (price === "0" || price === 0) return "Free"
+  if (typeof price === "string" && isNaN(Number(price))) return price
+  return `${currency}${price}`
 }
 
 /**
@@ -254,12 +263,12 @@ export function formatPlanPrice(price: string | number, currency = "$"): string 
  */
 export function getYearlySavings(monthlyPrice: number): number {
   // 20% savings for annual billing
-  return 20;
+  return 20
 }
 
 /**
  * Get monthly equivalent of yearly price
  */
 export function getMonthlyFromYearly(yearlyPrice: number): number {
-  return Math.round(yearlyPrice / 12);
+  return Math.round(yearlyPrice / 12)
 }

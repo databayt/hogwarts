@@ -73,12 +73,12 @@ Personalized greeting with class count:
 
 **4-column responsive grid**:
 
-| Metric | Icon | Color Logic |
-|--------|------|-------------|
-| Today's Classes | BookOpen | Blue |
-| Total Students | Users | Purple |
-| Pending Grading | FileText | Red if >5, else orange |
-| Attendance Due | CheckCircle | Amber if >0, else green |
+| Metric          | Icon        | Color Logic             |
+| --------------- | ----------- | ----------------------- |
+| Today's Classes | BookOpen    | Blue                    |
+| Total Students  | Users       | Purple                  |
+| Pending Grading | FileText    | Red if >5, else orange  |
+| Attendance Due  | CheckCircle | Amber if >0, else green |
 
 ```tsx
 <MetricCard
@@ -95,19 +95,22 @@ Personalized greeting with class count:
 2-column span card with `ScheduleItem` components:
 
 ```tsx
-{data.todaysClasses.map((cls, index) => (
-  <ScheduleItem
-    key={cls.id}
-    time={cls.time}
-    title={cls.name}
-    subtitle={`Room ${cls.room} • ${cls.students} students`}
-    badge={index === 0 ? "Next" : undefined}
-    isActive={index === 0}
-  />
-))}
+{
+  data.todaysClasses.map((cls, index) => (
+    <ScheduleItem
+      key={cls.id}
+      time={cls.time}
+      title={cls.name}
+      subtitle={`Room ${cls.room} • ${cls.students} students`}
+      badge={index === 0 ? "Next" : undefined}
+      isActive={index === 0}
+    />
+  ))
+}
 ```
 
 Features:
+
 - Time display
 - Class name
 - Room and student count
@@ -144,7 +147,7 @@ const activityData = [
     target: totalStudents,
     unit: "total",
   },
-];
+]
 ```
 
 ## Weekly Activity Chart
@@ -165,43 +168,63 @@ Bar chart showing classes per day:
 List with due date indicators:
 
 ```tsx
-{pendingAssignments.map((assignment) => {
-  const dueDate = new Date(assignment.dueDate);
-  const isOverdue = dueDate < new Date();
-  const isDueToday = isToday(dueDate);
-  const isDueTomorrow = isTomorrow(dueDate);
+{
+  pendingAssignments.map((assignment) => {
+    const dueDate = new Date(assignment.dueDate)
+    const isOverdue = dueDate < new Date()
+    const isDueToday = isToday(dueDate)
+    const isDueTomorrow = isTomorrow(dueDate)
 
-  return (
-    <div className="flex items-center justify-between p-3 rounded-lg border">
-      <div>
-        <p className="font-medium">{assignment.title}</p>
-        <p className="text-sm text-muted-foreground">
-          {assignment.className} • {assignment.submissionsCount} submissions
-        </p>
+    return (
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div>
+          <p className="font-medium">{assignment.title}</p>
+          <p className="text-muted-foreground text-sm">
+            {assignment.className} • {assignment.submissionsCount} submissions
+          </p>
+        </div>
+        <Badge
+          variant={
+            isOverdue ? "destructive" : isDueToday ? "default" : "outline"
+          }
+        >
+          {isOverdue
+            ? "Overdue"
+            : isDueToday
+              ? "Due Today"
+              : format(dueDate, "MMM d")}
+        </Badge>
       </div>
-      <Badge variant={isOverdue ? "destructive" : isDueToday ? "default" : "outline"}>
-        {isOverdue ? "Overdue" : isDueToday ? "Due Today" : format(dueDate, "MMM d")}
-      </Badge>
-    </div>
-  );
-})}
+    )
+  })
+}
 ```
 
 ## Class Performance Summary
 
 Performance by class with status badges:
 
-| Grade Range | Badge Style |
-|-------------|-------------|
-| >= 80% | Default (emerald) |
-| >= 60% | Secondary |
-| < 60% | Destructive |
+| Grade Range | Badge Style       |
+| ----------- | ----------------- |
+| >= 80%      | Default (emerald) |
+| >= 60%      | Secondary         |
+| < 60%       | Destructive       |
 
 ```tsx
 <Badge
-  variant={cls.average >= 80 ? "default" : cls.average >= 60 ? "secondary" : "destructive"}
+  variant={
+    cls.average >= 80
+      ? "default"
+      : cls.average >= 60
+        ? "secondary"
+        : "destructive"
+  }
 >
-  {cls.average >= 80 ? "Excellent" : cls.average >= 60 ? "Good" : "Needs Attention"}
+  {cls.average >= 80
+    ? "Excellent"
+    : cls.average >= 60
+      ? "Good"
+      : "Needs Attention"}
 </Badge>
 ```
 
@@ -210,9 +233,15 @@ Performance by class with status badges:
 Task list with countdown:
 
 ```tsx
-const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+const daysLeft = Math.ceil(
+  (dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+)
 
-<Badge variant={daysLeft <= 2 ? "destructive" : daysLeft <= 7 ? "secondary" : "outline"}>
+;<Badge
+  variant={
+    daysLeft <= 2 ? "destructive" : daysLeft <= 7 ? "secondary" : "outline"
+  }
+>
   {daysLeft <= 0 ? "Today" : daysLeft === 1 ? "1 day" : `${daysLeft} days`}
 </Badge>
 ```
@@ -223,9 +252,17 @@ const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 
 
 ```tsx
 <div className="grid gap-6 md:grid-cols-4">
-  <StatBlock value={todaysClasses.length} label="Classes Today" color="primary" />
+  <StatBlock
+    value={todaysClasses.length}
+    label="Classes Today"
+    color="primary"
+  />
   <StatBlock value={totalStudents} label="Total Students" color="blue" />
-  <StatBlock value={pendingAssignments.length} label="Assignments" color="purple" />
+  <StatBlock
+    value={pendingAssignments.length}
+    label="Assignments"
+    color="purple"
+  />
   <StatBlock value={avgPerformance} label="Avg Performance" color="emerald" />
 </div>
 ```
@@ -234,11 +271,11 @@ const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 
 
 3 progress trackers:
 
-| Card | Current | Total |
-|------|---------|-------|
-| Grading Progress | Graded assignments | Total assignments |
-| Attendance Taken | Classes with attendance | Total classes |
-| Term Progress | Current week | Total weeks |
+| Card             | Current                 | Total             |
+| ---------------- | ----------------------- | ----------------- |
+| Grading Progress | Graded assignments      | Total assignments |
+| Attendance Taken | Classes with attendance | Total classes     |
+| Term Progress    | Current week            | Total weeks       |
 
 ## Data Fetching
 
@@ -263,14 +300,14 @@ const data = await getTeacherDashboardData();
 
 6 actions for TEACHER role:
 
-| Action | Icon | Destination |
-|--------|------|-------------|
-| Attendance | Users | /attendance/mark |
-| Grades | FileText | /grades/enter |
-| Assignments | BookOpen | /assignments/create |
-| Messages | MessageSquare | /messages |
-| Timetable | Calendar | /timetable |
-| Lessons | ClipboardList | /lessons |
+| Action      | Icon          | Destination         |
+| ----------- | ------------- | ------------------- |
+| Attendance  | Users         | /attendance/mark    |
+| Grades      | FileText      | /grades/enter       |
+| Assignments | BookOpen      | /assignments/create |
+| Messages    | MessageSquare | /messages           |
+| Timetable   | Calendar      | /timetable          |
+| Lessons     | ClipboardList | /lessons            |
 
 ## Error Handling
 
@@ -278,9 +315,9 @@ Comprehensive try-catch with user feedback:
 
 ```tsx
 try {
-  data = await getTeacherDashboardData();
+  data = await getTeacherDashboardData()
 } catch (error) {
-  console.error("[TeacherDashboard] Error:", error);
+  console.error("[TeacherDashboard] Error:", error)
   return (
     <Card>
       <CardContent className="p-6">
@@ -288,7 +325,7 @@ try {
         <p>Please try refreshing the page.</p>
       </CardContent>
     </Card>
-  );
+  )
 }
 ```
 
@@ -306,12 +343,12 @@ const dashDict = dictionary?.teacherDashboard || {
 
 ## File Locations
 
-| File | Purpose |
-|------|---------|
-| `dashboards/teacher-dashboard.tsx` | Dashboard component |
-| `dashboards/actions.ts` | `getTeacherDashboardData()` |
-| `widgets/index.tsx` | Widget components |
-| `widgets/dashboard-charts.tsx` | Chart components |
+| File                               | Purpose                     |
+| ---------------------------------- | --------------------------- |
+| `dashboards/teacher-dashboard.tsx` | Dashboard component         |
+| `dashboards/actions.ts`            | `getTeacherDashboardData()` |
+| `widgets/index.tsx`                | Widget components           |
+| `widgets/dashboard-charts.tsx`     | Chart components            |
 
 ## Related
 

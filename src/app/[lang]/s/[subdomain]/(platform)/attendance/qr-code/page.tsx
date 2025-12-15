@@ -1,10 +1,11 @@
-import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
-import QRCodeAttendanceContent from '@/components/platform/attendance/qr-code/content'
-import { getDictionary } from '@/components/internationalization/dictionaries'
-import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
+import { auth } from "@/auth"
 
-export const metadata = { title: 'Dashboard: QR Code Attendance' }
+import { type Locale } from "@/components/internationalization/config"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import { AttendanceProvider } from "@/components/platform/attendance/core/attendance-context"
+import QRCodeAttendanceContent from "@/components/platform/attendance/qr-code/content"
+
+export const metadata = { title: "Dashboard: QR Code Attendance" }
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>

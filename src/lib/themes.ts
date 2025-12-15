@@ -3,10 +3,13 @@
  * This provides CSS custom properties for theming
  */
 
-export function getThemeStyles(theme: string, isDark: boolean): React.CSSProperties {
+export function getThemeStyles(
+  theme: string,
+  isDark: boolean
+): React.CSSProperties {
   // Return empty styles - the components will use the default Tailwind/shadcn theming
   // This is a compatibility layer for BillingSDK components
-  return {};
+  return {}
 }
 
 export const themes = {
@@ -14,6 +17,6 @@ export const themes = {
     light: {},
     dark: {},
   },
-};
+}
 
-export type ThemeName = keyof typeof themes;
+export type ThemeName = keyof typeof themes

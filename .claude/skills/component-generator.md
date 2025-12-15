@@ -5,6 +5,7 @@
 ## Generation Philosophy
 
 Every component must be:
+
 1. **Copy-paste ready** - Self-contained, no hidden dependencies
 2. **Accessible by default** - WCAG 2.1 AA compliance
 3. **Themeable** - 100% semantic token adoption
@@ -20,7 +21,7 @@ Every component must be:
 ```typescript
 // Parse requirements
 interface Requirements {
-  type: 'form' | 'display' | 'layout' | 'navigation' | 'feedback'
+  type: "form" | "display" | "layout" | "navigation" | "feedback"
   features: string[]
   variants: string[]
   accessibility: AccessibilityRequirements
@@ -29,6 +30,7 @@ interface Requirements {
 ```
 
 **Example Analysis:**
+
 - User requests: "Create a pricing card with three tiers"
 - Type: `display`
 - Features: [pricing, tiers, comparison, CTA buttons]
@@ -38,17 +40,17 @@ interface Requirements {
 
 ### Step 2: Radix Primitive Selection
 
-| Component Need | Radix Primitive |
-|---|---|
-| Modal/Dialog | `@radix-ui/react-dialog` |
-| Dropdown | `@radix-ui/react-dropdown-menu` |
-| Tooltip | `@radix-ui/react-tooltip` |
-| Select | `@radix-ui/react-select` |
-| Checkbox | `@radix-ui/react-checkbox` |
-| Tabs | `@radix-ui/react-tabs` |
-| Accordion | `@radix-ui/react-accordion` |
-| Slider | `@radix-ui/react-slider` |
-| Switch | `@radix-ui/react-switch` |
+| Component Need | Radix Primitive                 |
+| -------------- | ------------------------------- |
+| Modal/Dialog   | `@radix-ui/react-dialog`        |
+| Dropdown       | `@radix-ui/react-dropdown-menu` |
+| Tooltip        | `@radix-ui/react-tooltip`       |
+| Select         | `@radix-ui/react-select`        |
+| Checkbox       | `@radix-ui/react-checkbox`      |
+| Tabs           | `@radix-ui/react-tabs`          |
+| Accordion      | `@radix-ui/react-accordion`     |
+| Slider         | `@radix-ui/react-slider`        |
+| Switch         | `@radix-ui/react-switch`        |
 | No interaction | No primitive (pure composition) |
 
 ### Step 3: File Structure Creation
@@ -66,14 +68,22 @@ src/components/[category]/[component-name]/
 
 #### Base Template
 
-```tsx
+````tsx
 "use client"
 
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import { useDictionary } from "@/components/internationalization/use-dictionary"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { useDictionary } from "@/components/internationalization/use-dictionary"
 
 // ============================================================================
 // Types
@@ -174,7 +184,7 @@ export function ComponentName({
       className={cn(
         "relative inline-flex items-center justify-center",
         "rounded-md transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
         "disabled:pointer-events-none disabled:opacity-50",
         sizeStyles[size],
         variantStyles[variant],
@@ -194,7 +204,7 @@ export function ComponentName({
     </div>
   )
 }
-```
+````
 
 ### Step 5: Accessibility Implementation
 
@@ -320,110 +330,115 @@ const isMobile = useMediaQuery('(max-width: 640px)')
 
 ```tsx
 // [component-name].test.tsx
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { ComponentName } from './component-name'
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
-describe('ComponentName', () => {
+import { ComponentName } from "./component-name"
+
+describe("ComponentName", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  describe('Rendering', () => {
-    it('renders with default props', () => {
+  describe("Rendering", () => {
+    it("renders with default props", () => {
       render(<ComponentName>Test Content</ComponentName>)
-      expect(screen.getByText('Test Content')).toBeInTheDocument()
+      expect(screen.getByText("Test Content")).toBeInTheDocument()
     })
 
-    it('applies variant styles correctly', () => {
+    it("applies variant styles correctly", () => {
       render(<ComponentName variant="destructive">Test</ComponentName>)
-      const element = screen.getByText('Test')
-      expect(element).toHaveClass('bg-destructive')
+      const element = screen.getByText("Test")
+      expect(element).toHaveClass("bg-destructive")
     })
 
-    it('applies size styles correctly', () => {
+    it("applies size styles correctly", () => {
       render(<ComponentName size="lg">Test</ComponentName>)
-      const element = screen.getByText('Test')
-      expect(element).toHaveClass('h-12')
+      const element = screen.getByText("Test")
+      expect(element).toHaveClass("h-12")
     })
   })
 
-  describe('States', () => {
-    it('shows loading state', () => {
+  describe("States", () => {
+    it("shows loading state", () => {
       render(<ComponentName loading>Test</ComponentName>)
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
 
-    it('handles disabled state', () => {
+    it("handles disabled state", () => {
       render(<ComponentName disabled>Test</ComponentName>)
-      const element = screen.getByText('Test')
-      expect(element).toHaveAttribute('aria-disabled', 'true')
+      const element = screen.getByText("Test")
+      expect(element).toHaveAttribute("aria-disabled", "true")
     })
   })
 
-  describe('Interactions', () => {
-    it('handles click events', async () => {
+  describe("Interactions", () => {
+    it("handles click events", async () => {
       const onClick = vi.fn()
       const user = userEvent.setup()
 
       render(<ComponentName onClick={onClick}>Click Me</ComponentName>)
-      await user.click(screen.getByText('Click Me'))
+      await user.click(screen.getByText("Click Me"))
 
       expect(onClick).toHaveBeenCalledTimes(1)
     })
 
-    it('prevents clicks when disabled', async () => {
+    it("prevents clicks when disabled", async () => {
       const onClick = vi.fn()
       const user = userEvent.setup()
 
-      render(<ComponentName onClick={onClick} disabled>Click</ComponentName>)
-      await user.click(screen.getByText('Click'))
+      render(
+        <ComponentName onClick={onClick} disabled>
+          Click
+        </ComponentName>
+      )
+      await user.click(screen.getByText("Click"))
 
       expect(onClick).not.toHaveBeenCalled()
     })
   })
 
-  describe('Accessibility', () => {
-    it('has proper ARIA attributes', () => {
+  describe("Accessibility", () => {
+    it("has proper ARIA attributes", () => {
       render(<ComponentName aria-label="Test Label">Content</ComponentName>)
-      expect(screen.getByLabelText('Test Label')).toBeInTheDocument()
+      expect(screen.getByLabelText("Test Label")).toBeInTheDocument()
     })
 
-    it('supports keyboard navigation', async () => {
+    it("supports keyboard navigation", async () => {
       const onKeyDown = vi.fn()
       render(<ComponentName onKeyDown={onKeyDown}>Test</ComponentName>)
 
-      const element = screen.getByText('Test')
-      fireEvent.keyDown(element, { key: 'Enter' })
+      const element = screen.getByText("Test")
+      fireEvent.keyDown(element, { key: "Enter" })
 
       expect(onKeyDown).toHaveBeenCalled()
     })
 
-    it('manages focus correctly', () => {
+    it("manages focus correctly", () => {
       render(<ComponentName>Test</ComponentName>)
-      const element = screen.getByText('Test')
+      const element = screen.getByText("Test")
 
       element.focus()
       expect(element).toHaveFocus()
     })
   })
 
-  describe('Internationalization', () => {
-    it('uses dictionary for text', () => {
+  describe("Internationalization", () => {
+    it("uses dictionary for text", () => {
       // Mock dictionary hook
-      vi.mock('@/components/internationalization/use-dictionary', () => ({
+      vi.mock("@/components/internationalization/use-dictionary", () => ({
         useDictionary: () => ({
           dictionary: {
             ui: {
-              loading: 'جاري التحميل...'
-            }
-          }
-        })
+              loading: "جاري التحميل...",
+            },
+          },
+        }),
       }))
 
       render(<ComponentName loading>Test</ComponentName>)
-      expect(screen.getByText('جاري التحميل...')).toBeInTheDocument()
+      expect(screen.getByText("جاري التحميل...")).toBeInTheDocument()
     })
   })
 })
@@ -434,6 +449,7 @@ describe('ComponentName', () => {
 Before marking component complete:
 
 ### 1. Semantic Tokens
+
 - [ ] Zero hardcoded colors
 - [ ] No `bg-white`, `bg-gray-*`, `text-black` classes
 - [ ] No `dark:*` mode classes
@@ -441,6 +457,7 @@ Before marking component complete:
 - [ ] Variants use semantic token system
 
 ### 2. Semantic HTML
+
 - [ ] No `<div className="text-*">` for text
 - [ ] Use `<h1>`-`<h6>` for headings
 - [ ] Use `<p>` for paragraphs
@@ -448,6 +465,7 @@ Before marking component complete:
 - [ ] Use `<button>` not `<div onClick>`
 
 ### 3. Accessibility
+
 - [ ] All interactive elements have ARIA labels
 - [ ] Keyboard navigation implemented
 - [ ] Focus management working
@@ -456,18 +474,21 @@ Before marking component complete:
 - [ ] Touch targets ≥ 44x44px
 
 ### 4. Internationalization
+
 - [ ] No hardcoded strings
 - [ ] All text uses `dictionary.*`
 - [ ] Fallback values provided
 - [ ] RTL layout support
 
 ### 5. TypeScript
+
 - [ ] Strict mode compliant
 - [ ] All props typed
 - [ ] No `any` types
 - [ ] Proper interfaces
 
 ### 6. Testing
+
 - [ ] 95%+ coverage
 - [ ] All variants tested
 - [ ] Edge cases covered
@@ -475,6 +496,7 @@ Before marking component complete:
 - [ ] Interactions tested
 
 ### 7. Documentation
+
 - [ ] JSDoc comments complete
 - [ ] Usage examples provided
 - [ ] Props documented
@@ -483,9 +505,10 @@ Before marking component complete:
 ## Common Patterns
 
 ### Form Component
+
 ```tsx
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 const schema = z.object({
@@ -499,27 +522,24 @@ export function FormComponent() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* Fields */}
-      </form>
+      <form onSubmit={form.handleSubmit(onSubmit)}>{/* Fields */}</form>
     </Form>
   )
 }
 ```
 
 ### Data Display Component
+
 ```tsx
 export function DataDisplay({ data }: { data: Item[] }) {
   return (
     <div className="space-y-4">
-      {data.map(item => (
+      {data.map((item) => (
         <Card key={item.id}>
           <CardHeader>
             <CardTitle>{item.title}</CardTitle>
           </CardHeader>
-          <CardContent>
-            {item.description}
-          </CardContent>
+          <CardContent>{item.description}</CardContent>
         </Card>
       ))}
     </div>
@@ -528,8 +548,14 @@ export function DataDisplay({ data }: { data: Item[] }) {
 ```
 
 ### Modal Component
+
 ```tsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export function ModalComponent({ open, onOpenChange }: ModalProps) {
   return (
@@ -548,6 +574,7 @@ export function ModalComponent({ open, onOpenChange }: ModalProps) {
 ## Success Criteria
 
 A component is complete when:
+
 - ✅ All quality checklist items passed
 - ✅ Tests achieve 95%+ coverage
 - ✅ Documentation complete with examples

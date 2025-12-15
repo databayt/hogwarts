@@ -9,6 +9,7 @@
 This document tracks the migration of **71 scattered file implementations** to the unified File Block at `src/components/platform/file/`.
 
 The unified File Block is **complete** with:
+
 - Upload module with multi-tenant support
 - Export module (CSV, Excel, PDF)
 - Import module with validation
@@ -27,6 +28,7 @@ Migration should be done **incrementally** by feature area. The unified module p
 ## Migration Status
 
 ### Legend
+
 - [ ] Not started
 - [~] In progress
 - [x] Completed
@@ -37,15 +39,18 @@ Migration should be done **incrementally** by feature area. The unified module p
 ## Phase 1: Core Utilities (High Priority)
 
 ### CSV/Excel Export Utilities
+
 - [ ] `/src/lib/csv-export.ts` → Use `@/components/file` export module
 - [ ] `/src/components/export/export-utils.ts` → Merge into unified export module
 - [ ] `/src/components/table/lib/export.ts` → Use unified export utilities
 
 ### CSV/Excel Import Utilities
+
 - [ ] `/src/lib/csv-import.ts` → Use `@/components/file` import module
 - [ ] `/src/lib/import-parser.ts` → Merge parsing logic into unified module
 
 ### Upload Utilities
+
 - [ ] `/src/lib/file-upload.ts` → Use `@/components/file` upload module
 
 ---
@@ -53,29 +58,36 @@ Migration should be done **incrementally** by feature area. The unified module p
 ## Phase 2: Feature-Specific Exports
 
 ### Student Module
+
 - [ ] `/src/components/platform/students/export-button.tsx` → Use `ExportButton`
 
 ### Teacher Module
+
 - [ ] `/src/components/platform/teachers/export-button.tsx` → Use `ExportButton`
 
 ### Class Module
+
 - [ ] `/src/components/platform/classes/export-button.tsx` → Use `ExportButton`
 
 ### Assignment Module
+
 - [ ] `/src/components/platform/assignments/export-button.tsx` → Use `ExportButton`
 
 ### Exam Module
+
 - [ ] `/src/components/platform/exams/manage/export-button.tsx` → Use `ExportButton`
 - [ ] `/src/components/platform/exams/manage/actions/export.ts` → Server action refactor
 - [ ] `/src/components/platform/exams/qbank/actions/import-export.ts` → Use unified import/export
 - [ ] `/src/components/platform/exams/results/actions/csv-import-export.ts` → Use unified import/export
 
 ### Attendance Module
+
 - [ ] `/src/components/platform/attendance/reports/export-button.tsx` → Use `ExportButton`
 - [ ] `/src/components/platform/attendance/reports/pdf-generator.tsx` → Use `generateReport`
 - [ ] `/src/components/platform/attendance/reports/excel-generator.ts` → Use unified export
 
 ### Announcement Module
+
 - [ ] `/src/components/platform/announcements/export.ts` → Use unified export
 
 ---
@@ -83,9 +95,11 @@ Migration should be done **incrementally** by feature area. The unified module p
 ## Phase 3: Legacy Upload System (Deprecate)
 
 ### Old file-upload Directory
+
 The entire `/src/components/file-upload/` directory should be deprecated after migration:
 
 **To deprecate:**
+
 - [-] `/src/components/file-upload/hooks/use-file-upload.ts`
 - [-] `/src/components/file-upload/hooks/use-imagekit-upload.ts`
 - [-] `/src/components/file-upload/config/file-types.ts`
@@ -150,22 +164,20 @@ The entire `/src/components/file-upload/` directory should be deprecated after m
 ### Replacing Export Buttons
 
 **Before:**
+
 ```tsx
 import { ExportButton } from "@/components/export"
 import { convertToCSV, downloadFile } from "@/components/export/export-utils"
 
-<ExportButton
-  data={students}
-  filename="students"
-  columns={COLUMNS}
-/>
+;<ExportButton data={students} filename="students" columns={COLUMNS} />
 ```
 
 **After:**
+
 ```tsx
 import { ExportButton } from "@/components/file"
 
-<ExportButton
+;<ExportButton
   data={students}
   columns={STUDENT_EXPORT_COLUMNS}
   filename="students"
@@ -176,12 +188,14 @@ import { ExportButton } from "@/components/file"
 ### Replacing File Uploaders
 
 **Before:**
+
 ```tsx
 import { FileUploader } from "@/components/file-upload/file-uploader"
 import { useFileUpload } from "@/components/file-upload/hooks/use-file-upload"
 ```
 
 **After:**
+
 ```tsx
 import { FileUploader, useUpload } from "@/components/file"
 ```
@@ -189,12 +203,14 @@ import { FileUploader, useUpload } from "@/components/file"
 ### Replacing Import Components
 
 **Before:**
+
 ```tsx
-import { parseExcelData, parseCsvData } from "@/lib/import-parser"
 import { importStudents } from "@/lib/csv-import"
+import { parseCsvData, parseExcelData } from "@/lib/import-parser"
 ```
 
 **After:**
+
 ```tsx
 import { FileImporter, useImport } from "@/components/file"
 ```
@@ -203,15 +219,15 @@ import { FileImporter, useImport } from "@/components/file"
 
 ## File Counts by Directory
 
-| Directory | Files | Action |
-|-----------|-------|--------|
-| `/src/components/file-upload/` | 30 | Deprecate entirely |
-| `/src/lib/` | 4 | Migrate utilities |
-| `/src/components/export/` | 3 | Merge into file block |
-| `/src/components/platform/*/export*` | 12 | Update imports |
-| `/src/components/platform/*/import*` | 5 | Update imports |
-| `/src/components/operator/` | 3 | Update imports |
-| **Total** | **57** | |
+| Directory                            | Files  | Action                |
+| ------------------------------------ | ------ | --------------------- |
+| `/src/components/file-upload/`       | 30     | Deprecate entirely    |
+| `/src/lib/`                          | 4      | Migrate utilities     |
+| `/src/components/export/`            | 3      | Merge into file block |
+| `/src/components/platform/*/export*` | 12     | Update imports        |
+| `/src/components/platform/*/import*` | 5      | Update imports        |
+| `/src/components/operator/`          | 3      | Update imports        |
+| **Total**                            | **57** |                       |
 
 ---
 
@@ -232,15 +248,15 @@ After migration, verify:
 
 ## Timeline
 
-| Phase | Priority | Estimated Effort |
-|-------|----------|------------------|
-| Phase 1: Core Utilities | High | 2-3 hours |
-| Phase 2: Feature Exports | Medium | 3-4 hours |
-| Phase 3: Legacy Cleanup | Low | 1 hour |
-| Phase 4: Operator Components | Medium | 1 hour |
-| Phase 5: PDF/Print | Medium | 2 hours |
-| Phase 6: Miscellaneous | Low | 1 hour |
-| **Total** | | **10-12 hours** |
+| Phase                        | Priority | Estimated Effort |
+| ---------------------------- | -------- | ---------------- |
+| Phase 1: Core Utilities      | High     | 2-3 hours        |
+| Phase 2: Feature Exports     | Medium   | 3-4 hours        |
+| Phase 3: Legacy Cleanup      | Low      | 1 hour           |
+| Phase 4: Operator Components | Medium   | 1 hour           |
+| Phase 5: PDF/Print           | Medium   | 2 hours          |
+| Phase 6: Miscellaneous       | Low      | 1 hour           |
+| **Total**                    |          | **10-12 hours**  |
 
 ---
 

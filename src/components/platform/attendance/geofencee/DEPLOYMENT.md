@@ -101,16 +101,19 @@
 #### Connection String
 
 **Format**:
+
 ```
 DATABASE_URL="postgresql://<user>:<password>@<host>.neon.tech/<database>?sslmode=require"
 ```
 
 **Example**:
+
 ```
 DATABASE_URL="postgresql://hogwarts_user:abc123@ep-cool-mountain-123456.us-east-2.aws.neon.tech/hogwarts?sslmode=require"
 ```
 
 **Pooling** (optional for serverless):
+
 ```
 DATABASE_POOLING_URL="postgresql://<user>:<password>@<host>-pooler.neon.tech/<database>?sslmode=require"
 ```
@@ -119,12 +122,12 @@ DATABASE_POOLING_URL="postgresql://<user>:<password>@<host>-pooler.neon.tech/<da
 
 Navigate to: **Vercel Dashboard → Project → Settings → Environment Variables**
 
-| Variable | Value | Environment |
-|----------|-------|-------------|
-| `DATABASE_URL` | `postgresql://...` | Production, Preview, Development |
-| `CRON_SECRET` | Generate with `openssl rand -base64 32` | Production only |
-| `NEXT_PUBLIC_GEOFENCE_ENABLED` | `false` (initially) | Production |
-| `NODE_ENV` | `production` | Production |
+| Variable                       | Value                                   | Environment                      |
+| ------------------------------ | --------------------------------------- | -------------------------------- |
+| `DATABASE_URL`                 | `postgresql://...`                      | Production, Preview, Development |
+| `CRON_SECRET`                  | Generate with `openssl rand -base64 32` | Production only                  |
+| `NEXT_PUBLIC_GEOFENCE_ENABLED` | `false` (initially)                     | Production                       |
+| `NODE_ENV`                     | `production`                            | Production                       |
 
 **Feature Flag**: Set `NEXT_PUBLIC_GEOFENCE_ENABLED=false` initially for gradual rollout.
 
@@ -146,6 +149,7 @@ Navigate to: **Vercel Dashboard → Project → Settings → Environment Variabl
 **Schedule**: Daily at 2:00 AM UTC (cleanup old location traces)
 
 **Verification**:
+
 ```bash
 # After deployment, check cron logs in Vercel Dashboard
 # Navigate to: Deployments → [Latest] → Functions → /api/cron/cleanup-locations
@@ -177,6 +181,7 @@ cat prisma/migrations/<timestamp>_add_geo_attendance/migration.sql
 ```
 
 **Expected Contents**:
+
 - CREATE TABLE statements (geo_fences, location_traces, geo_attendance_events)
 - CREATE INDEX statements (GiST, BRIN, B-tree)
 - CREATE FUNCTION (notify_geofence_event)
@@ -282,6 +287,7 @@ git push origin staging
 #### Step 2: Automatic Deployment (Vercel)
 
 Vercel automatically deploys `staging` branch to preview URL:
+
 - **URL**: `https://hogwarts-git-staging-your-team.vercel.app`
 
 #### Step 3: Verify Staging Deployment
@@ -295,6 +301,7 @@ vercel ls
 ```
 
 **Manual Verification**:
+
 1. Open staging URL
 2. Login as admin
 3. Navigate to `/admin/attendance/geofences`
@@ -319,6 +326,7 @@ BASE_URL=https://hogwarts-git-staging-your-team.vercel.app pnpm test:e2e
 #### Step 1: Feature Flag (Initially Disabled)
 
 Set environment variable in Vercel:
+
 ```
 NEXT_PUBLIC_GEOFENCE_ENABLED=false
 ```
@@ -334,6 +342,7 @@ git push origin main
 ```
 
 Vercel automatically deploys to production:
+
 - **URL**: `https://ed.databayt.org`
 
 #### Step 3: Verify Production Deployment (Feature Hidden)
@@ -348,9 +357,10 @@ Vercel automatically deploys to production:
 **Day 1-2: Pilot School (1 school, 100 students)**
 
 1. Enable feature flag for pilot school only:
+
    ```typescript
    // In middleware or feature flag service
-   const PILOT_SCHOOLS = ['school_cm5a1b2c3d4e5f6g7h8i9']
+   const PILOT_SCHOOLS = ["school_cm5a1b2c3d4e5f6g7h8i9"]
 
    function isGeofenceEnabled(schoolId: string) {
      return PILOT_SCHOOLS.includes(schoolId)
@@ -386,6 +396,7 @@ Vercel automatically deploys to production:
 **Day 8+: Full Rollout (All Schools)**
 
 1. Set environment variable globally:
+
    ```
    NEXT_PUBLIC_GEOFENCE_ENABLED=true
    ```
@@ -442,6 +453,7 @@ curl -X POST https://ed.databayt.org/api/geo/location \
 #### WebSocket Server
 
 **Option 1: wscat**
+
 ```bash
 # Install wscat
 npm install -g wscat
@@ -455,10 +467,11 @@ wscat -c wss://ed.databayt.org/api/geo/ws
 ```
 
 **Option 2: Browser Console**
+
 ```javascript
-const ws = new WebSocket('wss://ed.databayt.org/api/geo/ws')
-ws.onopen = () => console.log('Connected')
-ws.onmessage = (e) => console.log('Message:', JSON.parse(e.data))
+const ws = new WebSocket("wss://ed.databayt.org/api/geo/ws")
+ws.onopen = () => console.log("Connected")
+ws.onmessage = (e) => console.log("Message:", JSON.parse(e.data))
 
 // Expected output:
 // Connected
@@ -483,10 +496,12 @@ curl https://ed.databayt.org/api/cron/cleanup-locations \
 #### Monitoring Dashboards
 
 **Sentry**: https://sentry.io/organizations/your-org/projects/hogwarts
+
 - [ ] No new errors related to geofencing
 - [ ] Error rate < 1%
 
 **Vercel Analytics**: https://vercel.com/your-team/hogwarts/analytics
+
 - [ ] `/api/geo/location` endpoint shows requests
 - [ ] p95 latency < 200ms
 - [ ] No 5xx errors
@@ -498,6 +513,7 @@ curl https://ed.databayt.org/api/cron/cleanup-locations \
 ### Trigger Conditions
 
 Rollback immediately if:
+
 - ✅ Error rate > 1% for 5+ minutes
 - ✅ p95 latency > 500ms for 5+ minutes
 - ✅ Database CPU > 90% for 10+ minutes
@@ -508,6 +524,7 @@ Rollback immediately if:
 #### Step 1: Disable Feature Flag
 
 **Option A: Environment Variable (Instant)**
+
 ```bash
 # Vercel Dashboard
 # Settings → Environment Variables → Edit NEXT_PUBLIC_GEOFENCE_ENABLED
@@ -516,6 +533,7 @@ Rollback immediately if:
 ```
 
 **Option B: Code-Level Flag (Requires Redeployment)**
+
 ```typescript
 // src/lib/feature-flags.ts
 export const GEOFENCE_ENABLED = false // Set to false
@@ -542,6 +560,7 @@ git push origin main
 #### Step 3: Communicate to Users
 
 **Email Template**:
+
 ```
 Subject: Temporary Service Maintenance - Geofence Attendance
 
@@ -578,6 +597,7 @@ Engineering Team
 ### Database Rollback (If Migration Failed)
 
 **Option A: Restore from Neon Branch**
+
 ```bash
 # Neon Console → Branches → Select backup branch
 # Promote to main
@@ -585,6 +605,7 @@ Engineering Team
 ```
 
 **Option B: Revert Migration (Safer)**
+
 ```bash
 # Identify migration to revert
 pnpm prisma migrate status
@@ -621,17 +642,18 @@ pnpm prisma migrate deploy
 **File**: `sentry.client.config.ts` (already exists)
 
 Add geofence-specific tags:
+
 ```typescript
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   environment: process.env.NODE_ENV,
   beforeSend(event) {
     // Tag geofence-related errors
-    if (event.request?.url?.includes('/api/geo/')) {
-      event.tags = { ...event.tags, module: 'geofencing' }
+    if (event.request?.url?.includes("/api/geo/")) {
+      event.tags = { ...event.tags, module: "geofencing" }
     }
     return event
-  }
+  },
 })
 ```
 
@@ -662,8 +684,10 @@ export async function processGeofenceEvents(...) {
 ### Vercel Analytics
 
 **Enable**:
+
 1. Vercel Dashboard → Project → Analytics → Enable
 2. Add to `app/layout.tsx`:
+
    ```typescript
    import { Analytics } from '@vercel/analytics/react'
 
@@ -680,11 +704,12 @@ export async function processGeofenceEvents(...) {
    ```
 
 **Custom Events**:
-```typescript
-import { track } from '@vercel/analytics'
 
-track('geofence_created', { type: 'SCHOOL_GROUNDS' })
-track('location_submitted', { accuracy: 10 })
+```typescript
+import { track } from "@vercel/analytics"
+
+track("geofence_created", { type: "SCHOOL_GROUNDS" })
+track("location_submitted", { accuracy: 10 })
 ```
 
 ### Database Performance Monitoring
@@ -730,6 +755,7 @@ ORDER BY idx_scan DESC;
 **Vercel Integrations → Slack**
 
 Create alerts for:
+
 1. **Error Rate > 1%**
    - Notification: Slack #alerts channel
    - Action: Page on-call engineer

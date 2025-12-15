@@ -1,6 +1,8 @@
 import * as React from "react"
+
 import { cn } from "@/lib/utils"
-import type { BaseComponentProps, ComponentSize, BaseVariant } from "./types"
+
+import type { BaseComponentProps, BaseVariant, ComponentSize } from "./types"
 
 interface IconWrapperProps extends BaseComponentProps {
   /**
@@ -53,7 +55,7 @@ export function IconWrapper({
   return (
     <div
       className={cn(
-        "inline-flex items-center justify-center rounded-lg shrink-0",
+        "inline-flex shrink-0 items-center justify-center rounded-lg",
         sizeStyles[size],
         variantStyles[variant],
         className

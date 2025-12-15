@@ -10,6 +10,7 @@ workflow: ui-factory-flowchart
 **🎯 Purpose**: Guided, step-by-step component creation with zero-tolerance quality enforcement
 
 **🚀 What this does**:
+
 - Walks you through component creation with interactive prompts
 - Enforces accessibility, i18n, and quality standards at each step
 - Blocks progression until validation passes
@@ -88,6 +89,7 @@ Initialize interactive prompt system with:
 **Prompt**: "What type of component are you creating?"
 
 **Options**:
+
 1. **UI Primitive** - Base component from shadcn/ui (Button, Input, Card, etc.)
 2. **Atom/Composite** - Composed component using 2+ UI primitives
 3. **Feature Component** - Business logic component with server actions
@@ -96,6 +98,7 @@ Initialize interactive prompt system with:
 **Validation**: Must select one option
 
 **Next Step**:
+
 - UI Primitive → Primitive Selection (Step 2a)
 - Atom/Feature → Component Name (Step 2b)
 - Page → Page Route (Step 2c)
@@ -107,6 +110,7 @@ Initialize interactive prompt system with:
 **Prompt**: "Which primitive are you adding from shadcn/ui registry?"
 
 **Common Options**:
+
 - Button - Interactive button with variants
 - Card - Container for content
 - Input - Form input field
@@ -133,6 +137,7 @@ Initialize interactive prompt system with:
 **Placeholder**: `MultiStepForm`
 
 **Validation Rules**:
+
 1. Must be PascalCase (e.g., `MultiStepForm`, `PricingCard`)
 2. Must not already exist in:
    - `src/components/ui/{name}.tsx`
@@ -141,6 +146,7 @@ Initialize interactive prompt system with:
 3. Must be 3-50 characters
 
 **Examples**:
+
 - ✅ `MultiStepForm`
 - ✅ `PricingCard`
 - ✅ `FileUpload`
@@ -159,10 +165,12 @@ Initialize interactive prompt system with:
 **Placeholder**: `students/profile`
 
 **Validation Rules**:
+
 1. Must be lowercase with hyphens and slashes only
 2. Must not already exist in: `src/app/[lang]/s/[subdomain]/(platform)/{route}/page.tsx`
 
 **Examples**:
+
 - ✅ `students/profile`
 - ✅ `settings/billing`
 - ✅ `dashboard/analytics`
@@ -179,6 +187,7 @@ Initialize interactive prompt system with:
 **Prompt**: "Select component requirements (press Space to select, Enter to confirm):"
 
 **Options** (multi-select):
+
 - [ ] Form Validation (Zod) - Implies: Zod schema file
 - [ ] Server Actions - Implies: Multi-tenant safety checks
 - [ ] Data Table (@tanstack/react-table) - Implies: Column definitions
@@ -201,6 +210,7 @@ Initialize interactive prompt system with:
 **Description**: "Select interactive primitives for accessibility"
 
 **Options** (multi-select):
+
 - [ ] Dialog - Modals, alerts
 - [ ] Dropdown Menu - Action menus
 - [ ] Popover - Contextual content
@@ -226,6 +236,7 @@ Initialize interactive prompt system with:
 **Description**: "WCAG 2.1 AA compliance - this is non-negotiable"
 
 **Checklist** (all required):
+
 - [ ] **ARIA labels defined** for all interactive elements
 - [ ] **Keyboard navigation implemented** (Enter, Space, Arrows, Escape, Tab)
 - [ ] **Focus management and focus trap** (for modals/dialogs)
@@ -236,6 +247,7 @@ Initialize interactive prompt system with:
 **Validation**: **ALL items must be checked** to proceed
 
 **Blocking Behavior**:
+
 ```
 If ANY item is unchecked:
 ❌ Cannot proceed to next step
@@ -254,6 +266,7 @@ Please review and confirm all items, or exit the wizard.
 **Prompt**: "Does this component display text to users?"
 
 **Options**:
+
 - Yes, it displays text → **Requires dictionary keys**
 - No, it's purely structural → **Skip to next step**
 
@@ -266,16 +279,19 @@ Please review and confirm all items, or exit the wizard.
 **Description**: "Keys must exist in dictionaries.ts for both Arabic and English"
 
 **Validation Rules**:
+
 1. Must be alphanumeric with dots, commas, underscores only
 2. **Keys must exist in dictionary** at `src/components/internationalization/dictionaries.ts`
 
 **Examples**:
+
 - ✅ `ui.save,ui.cancel`
 - ✅ `forms.stepNext,forms.stepPrev,forms.submit`
 - ❌ `ui.newKey` (doesn't exist in dictionary - must add first)
 - ❌ `ui save cancel` (spaces not allowed)
 
 **Blocking Behavior**:
+
 ```
 If key doesn't exist:
 ❌ Cannot proceed to next step
@@ -303,6 +319,7 @@ Suggested existing keys:
 **Action**: Automatically invoke test generation
 
 **Process**:
+
 ```
 🔨 Generating tests...
 
@@ -495,6 +512,7 @@ Options:
 **Action**: Automatically create git commit with conventional message
 
 **Commit Message Template**:
+
 ```
 feat(ui): add {ComponentName} {componentType}
 
@@ -506,6 +524,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 **Process**:
+
 ```
 📝 Creating git commit...
 
@@ -545,6 +564,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ### **Step 11: Completion Summary**
 
 **Display**:
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ COMPONENT GENERATION COMPLETE
@@ -592,26 +612,31 @@ Next Steps:
 ## Key Features
 
 ### ✅ Zero-Tolerance Quality
+
 - **7 quality gates** must pass before commit
 - **Auto-fix** for 60-95% of violations
 - **Blocking** on critical/high severity issues
 
 ### ✅ TDD Enforced
+
 - Tests generated **BEFORE** implementation
 - **95%+ coverage** target
 - Unit, integration, accessibility, and E2E tests
 
 ### ✅ Accessibility First
+
 - **WCAG 2.1 AA** compliance mandatory
 - **Cannot proceed** without confirming all requirements
 - Automated accessibility testing with axe-core
 
 ### ✅ i18n Built-in
+
 - **Dictionary validation** prevents hardcoded strings
 - **RTL/LTR support** automatic
 - Arabic and English translations required
 
 ### ✅ Multi-Agent Orchestration
+
 - **6 specialized agents** work in sequence
 - shadcn → react → typescript → tailwind → i18n → ui-factory
 - Each agent contributes specific expertise
@@ -620,25 +645,27 @@ Next Steps:
 
 ## Comparison: Interactive vs Standard Workflow
 
-| Aspect | Standard (`/ui-generate`) | Interactive (`/ui-interactive`) |
-|--------|--------------------------|--------------------------------|
-| **Guidance** | One-shot prompt | Step-by-step wizard |
-| **Validation** | Post-generation | At each step (blocking) |
-| **Accessibility** | Validated after | Confirmed before generation |
-| **i18n** | Validated after | Confirmed before generation |
-| **TDD** | Optional | Enforced (tests first) |
-| **Auto-Fix** | Manual | Automatic |
-| **Time** | 1 minute | 3-5 minutes |
-| **Quality Score** | 85-95/100 | 95-100/100 |
-| **Learning Curve** | Steep | Guided |
+| Aspect             | Standard (`/ui-generate`) | Interactive (`/ui-interactive`) |
+| ------------------ | ------------------------- | ------------------------------- |
+| **Guidance**       | One-shot prompt           | Step-by-step wizard             |
+| **Validation**     | Post-generation           | At each step (blocking)         |
+| **Accessibility**  | Validated after           | Confirmed before generation     |
+| **i18n**           | Validated after           | Confirmed before generation     |
+| **TDD**            | Optional                  | Enforced (tests first)          |
+| **Auto-Fix**       | Manual                    | Automatic                       |
+| **Time**           | 1 minute                  | 3-5 minutes                     |
+| **Quality Score**  | 85-95/100                 | 95-100/100                      |
+| **Learning Curve** | Steep                     | Guided                          |
 
 **Recommendation**: Use interactive mode for:
+
 - Learning the component generation process
 - Ensuring zero quality violations
 - Complex components with many requirements
 - When you want enforced standards
 
 Use standard mode for:
+
 - Quick, simple components
 - Experienced developers familiar with standards
 - When you'll fix violations manually
@@ -744,21 +771,24 @@ Use standard mode for:
 **Cause**: Key doesn't exist in dictionaries.ts
 
 **Solution**:
+
 1. Exit wizard
 2. Add key to `src/components/internationalization/dictionaries.ts`:
+
    ```typescript
    export const dictionary_en = {
      ui: {
-       newKey: "New Value"
-     }
+       newKey: "New Value",
+     },
    }
 
    export const dictionary_ar = {
      ui: {
-       newKey: "قيمة جديدة"
-     }
+       newKey: "قيمة جديدة",
+     },
    }
    ```
+
 3. Restart wizard
 
 ### Issue: "Component already exists"
@@ -766,6 +796,7 @@ Use standard mode for:
 **Cause**: Name conflicts with existing component
 
 **Solution**:
+
 1. Choose a different name, OR
 2. Delete existing component if outdated
 
@@ -774,6 +805,7 @@ Use standard mode for:
 **Cause**: Not all accessibility items checked
 
 **Solution**:
+
 1. Review and confirm ALL 6 items
 2. This is mandatory for WCAG 2.1 AA compliance
 3. If you cannot confirm, component cannot be generated
@@ -783,6 +815,7 @@ Use standard mode for:
 **Cause**: Component violates quality standards
 
 **Solution**:
+
 1. Review auto-fix suggestions
 2. Apply manual fixes if auto-fix fails
 3. Re-run validation
@@ -802,6 +835,7 @@ Use standard mode for:
 ## Configuration
 
 The interactive workflow is configured in:
+
 - `.claude/workflows/ui-factory-flowchart.json` - State machine definition
 - `.claude/skills/interactive-prompts.md` - Prompt patterns
 - `.claude/agents/ui-factory.md` - Agent logic

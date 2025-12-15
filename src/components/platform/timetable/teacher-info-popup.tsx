@@ -1,15 +1,27 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef, type KeyboardEvent, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
-import { cn } from "@/lib/utils"
-import { useMediaQuery } from './use-media-query';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
+import { useMediaQuery } from "./use-media-query"
 
 interface TeacherInfoPopupProps {
   subject: string
@@ -18,7 +30,12 @@ interface TeacherInfoPopupProps {
   children: React.ReactNode
 }
 
-export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }: TeacherInfoPopupProps) {
+export function TeacherInfoPopup({
+  subject,
+  onSave,
+  initialInfo = "",
+  children,
+}: TeacherInfoPopupProps) {
   const [teacherInfo, setTeacherInfo] = useState(initialInfo)
   const [isOpen, setIsOpen] = useState(false)
   const [error, setError] = useState("")
@@ -71,7 +88,9 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
 
   const TeacherInfoForm = (
     <div className="grid gap-2">
-      <Label htmlFor="teacher" className="dark:text-neutral-200">Teacher name</Label>
+      <Label htmlFor="teacher" className="dark:text-neutral-200">
+        Teacher name
+      </Label>
       <Input
         ref={inputRef}
         id="teacher"
@@ -80,7 +99,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
         onKeyDown={handleKeyDown}
         maxLength={10}
         className={cn(
-          "h-8 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder-neutral-400",
+          "h-8 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-400",
           error && "border-red-500 dark:border-red-500"
         )}
       />
@@ -93,8 +112,10 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   const content = (
     <>
       <div className="space-y-2">
-        <h4 className="font-medium leading-none dark:text-neutral-100">Edit teacher info</h4>
-        <p className="text-sm text-muted-foreground dark:text-neutral-400">
+        <h4 className="leading-none font-medium dark:text-neutral-100">
+          Edit teacher info
+        </h4>
+        <p className="text-muted-foreground text-sm dark:text-neutral-400">
           Enter info for {subject}. It will be stored in your browser.
         </p>
       </div>
@@ -106,9 +127,11 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
     return (
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{children}</DrawerTrigger>
-        <DrawerContent className="h-[40%] dark:bg-neutral-900 dark:border-neutral-800">
+        <DrawerContent className="h-[40%] dark:border-neutral-800 dark:bg-neutral-900">
           <DrawerHeader>
-            <DrawerTitle className="dark:text-neutral-100">Edit teacher info</DrawerTitle>
+            <DrawerTitle className="dark:text-neutral-100">
+              Edit teacher info
+            </DrawerTitle>
             <DrawerDescription className="dark:text-neutral-400">
               Enter info for {subject}. It will be stored in your browser.
             </DrawerDescription>
@@ -116,7 +139,11 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
           <div className="px-4 pb-4">
             {TeacherInfoForm}
             <div className="mt-4">
-              <Button onClick={handleSave} disabled={teacherInfo.length > 4} className="w-full">
+              <Button
+                onClick={handleSave}
+                disabled={teacherInfo.length > 4}
+                className="w-full"
+              >
                 Save
               </Button>
             </div>
@@ -131,7 +158,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className={cn(
-          "w-80 dark:bg-neutral-900 dark:border-neutral-800",
+          "w-80 dark:border-neutral-800 dark:bg-neutral-900",
           "data-[state=open]:animate-slideUpAndFade data-[state=open]:duration-300",
           "data-[state=closed]:animate-fadeOut data-[state=closed]:duration-200"
         )}

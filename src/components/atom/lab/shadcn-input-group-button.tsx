@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { InfoIcon, Star } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,7 +30,7 @@ export function ShadcnInputGroupButton() {
       <Label htmlFor="input-secure" className="sr-only">
         Input Secure
       </Label>
-      <div className="relative flex items-center rounded-full border border-border">
+      <div className="border-border relative flex items-center rounded-full border">
         <div className="flex items-center pl-2">
           <Popover>
             <PopoverTrigger asChild>
@@ -42,7 +43,11 @@ export function ShadcnInputGroupButton() {
                 <InfoIcon className="size-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" alignOffset={10} className="rounded-xl text-sm">
+            <PopoverContent
+              align="start"
+              alignOffset={10}
+              className="rounded-xl text-sm"
+            >
               <p className="font-medium">Your connection is not secure.</p>
               <p className="text-muted-foreground">
                 You should not enter any sensitive information on this site.
@@ -50,7 +55,7 @@ export function ShadcnInputGroupButton() {
             </PopoverContent>
           </Popover>
         </div>
-        <span className="pl-2 text-sm text-muted-foreground">https://</span>
+        <span className="text-muted-foreground pl-2 text-sm">https://</span>
         <Input
           id="input-secure"
           className="flex-1 border-0 bg-transparent focus-visible:ring-0"
