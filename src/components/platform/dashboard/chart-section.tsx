@@ -1,12 +1,9 @@
 "use client"
 
-import * as React from "react"
-import { useEffect, useState } from "react"
 import { SectionHeading } from "./section-heading"
 import { InteractiveBarChart, type InteractiveBarChartData } from "./chart-interactive-bar"
 import { RadialTextChart } from "./chart-radial-text"
 import { AreaChartStacked, type AreaChartStackedData } from "./chart-area-stacked"
-import { getChartDataByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
 
 // ============================================================================
@@ -362,30 +359,9 @@ const defaultDataByRole: Record<DashboardRole, RoleChartData> = {
  * RadialTextChart & AreaChartStacked (2-column grid).
  */
 export function ChartSection({ role, className }: ChartSectionProps) {
-  const [data, setData] = useState<RoleChartData>(
-    defaultDataByRole[role] || defaultDataByRole.ADMIN
-  )
-  const [isLoading, setIsLoading] = useState(true)
-
+  // Use default data based on role (API data is in legacy format)
+  const data = defaultDataByRole[role] || defaultDataByRole.ADMIN
   const sectionTitle = getChartSectionTitle(role)
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const result = await getChartDataByRole(role)
-        if (result && typeof result === "object") {
-          setData(result as RoleChartData)
-        }
-      } catch (error) {
-        console.error("Error fetching chart data:", error)
-        // Keep default data on error
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [role])
 
   return (
     <section className={className}>
