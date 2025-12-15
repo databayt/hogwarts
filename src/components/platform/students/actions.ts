@@ -449,8 +449,9 @@ export async function getStudents(
         : [{ createdAt: "desc" }]
 
     // Execute queries in parallel
+    const studentModel = getModelOrThrow("student")
     const [rows, count] = await Promise.all([
-      (db as any).student.findMany({
+      studentModel.findMany({
         where,
         orderBy,
         skip,
@@ -469,7 +470,7 @@ export async function getStudents(
           },
         },
       }),
-      (db as any).student.count({ where }),
+      studentModel.count({ where }),
     ])
 
     // Map results
@@ -525,11 +526,6 @@ export async function getStudentsCSV(
     // Parse and validate input
     const sp = getStudentsSchema.parse(input ?? {})
 
-    // Check if student model exists
-    if (!(db as any).student) {
-      return { success: true, data: "" }
-    }
-
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -551,7 +547,8 @@ export async function getStudentsCSV(
     }
 
     // Fetch ALL students matching filters (no pagination for export)
-    const students = await (db as any).student.findMany({
+    const studentModel = getModelOrThrow("student")
+    const students = await studentModel.findMany({
       where,
       relationLoadStrategy: "join",
       include: {
@@ -684,11 +681,6 @@ export async function getStudentsExportData(
     // Parse and validate input
     const sp = getStudentsSchema.parse(input ?? {})
 
-    // Check if student model exists
-    if (!(db as any).student) {
-      return { success: true, data: [] }
-    }
-
     // Build where clause with filters
     const where: any = {
       schoolId,
@@ -710,7 +702,8 @@ export async function getStudentsExportData(
     }
 
     // Fetch ALL students matching filters (no pagination for export)
-    const students = await (db as any).student.findMany({
+    const studentModel = getModelOrThrow("student")
+    const students = await studentModel.findMany({
       where,
       relationLoadStrategy: "join",
       include: {
@@ -833,9 +826,12 @@ export async function registerStudent(
     // Process guardian data first if provided
     const guardianIds = []
     if (input.guardians && input.guardians.length > 0) {
+      const guardianModel = getModelOrThrow("guardian")
+      const guardianPhoneNumberModel = getModelOrThrow("guardianPhoneNumber")
+
       for (const guardian of input.guardians) {
         // Check if guardian already exists by email
-        let guardianRecord = await (db as any).guardian.findFirst({
+        let guardianRecord = await guardianModel.findFirst({
           where: {
             schoolId,
             emailAddress: guardian.email,
@@ -844,7 +840,7 @@ export async function registerStudent(
 
         if (!guardianRecord) {
           // Create new guardian
-          guardianRecord = await (db as any).guardian.create({
+          guardianRecord = await guardianModel.create({
             data: {
               schoolId,
               givenName: guardian.givenName,
@@ -855,7 +851,7 @@ export async function registerStudent(
 
           // Add phone number if provided
           if (guardian.mobileNumber) {
-            await (db as any).guardianPhoneNumber.create({
+            await guardianPhoneNumberModel.create({
               data: {
                 schoolId,
                 guardianId: guardianRecord.id,
@@ -950,8 +946,9 @@ export async function registerStudent(
     }
 
     // Generate GR Number if not provided
+    const studentModel = getModelOrThrow("student")
     if (!studentData.grNumber) {
-      const lastStudent = await (db as any).student.findFirst({
+      const lastStudent = await studentModel.findFirst({
         where: { schoolId },
         orderBy: { createdAt: "desc" },
         select: { grNumber: true },
@@ -970,7 +967,7 @@ export async function registerStudent(
     }
 
     // Create the student record
-    const student = await (db as any).student.create({
+    const student = await studentModel.create({
       data: studentData,
     })
 

@@ -1,12 +1,12 @@
 import { cookies } from "next/headers"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import NextAuth from "next-auth"
 import { getToken } from "next-auth/jwt"
 
 import { validateAuthConfig } from "@/lib/auth-config-validator"
 import { authLogger } from "@/lib/auth-logger"
 import { db } from "@/lib/db"
+import { MultiTenantPrismaAdapter } from "@/lib/multi-tenant-prisma-adapter"
 
 import authConfig from "./auth.config"
 
@@ -76,7 +76,7 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: MultiTenantPrismaAdapter(db),
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours

@@ -383,7 +383,8 @@ export async function upsertTimetableSlot(input: unknown) {
   }
 
   // Upsert by unique composite (class at day/period)
-  const row = await (db as any).timetable.upsert({
+  const timetableModel = getModelOrThrow("timetable")
+  const row = await timetableModel.upsert({
     where: {
       schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
         schoolId,
@@ -421,7 +422,8 @@ export async function upsertSchoolWeekConfig(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  const row = await (db as any).schoolWeekConfig.upsert({
+  const schoolWeekConfigModel = getModelOrThrow("schoolWeekConfig")
+  const row = await schoolWeekConfigModel.upsert({
     where: {
       schoolId_termId: {
         schoolId,
@@ -472,13 +474,15 @@ export async function suggestFreeSlots(input: unknown) {
 
   const { config } = await getScheduleConfig({ termId: validatedInput.termId })
 
-  const term = await (db as any).term.findFirst({
+  const termModel = getModelOrThrow("term")
+  const term = await termModel.findFirst({
     where: { id: validatedInput.termId, schoolId },
     select: { yearId: true },
   })
   if (!term) return { suggestions: [] }
 
-  const periods = await (db as any).period.findMany({
+  const periodModel = getModelOrThrow("period")
+  const periods = await periodModel.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
     select: { id: true, name: true },
@@ -488,7 +492,8 @@ export async function suggestFreeSlots(input: unknown) {
   if (validatedInput.teacherId) where.teacherId = validatedInput.teacherId
   if (validatedInput.classId) where.classId = validatedInput.classId
 
-  const occupied = await (db as any).timetable.findMany({
+  const timetableModel = getModelOrThrow("timetable")
+  const occupied = await timetableModel.findMany({
     where,
     select: { dayOfWeek: true, periodId: true },
   })
@@ -553,7 +558,8 @@ export async function getScheduleConfig(
   if (!schoolId) throw new Error("Missing school context")
 
   // Try per-term config then school default
-  const cfg = await (db as any).schoolWeekConfig?.findFirst({
+  const schoolWeekConfigModel = getModel("schoolWeekConfig")
+  const cfg = await schoolWeekConfigModel?.findFirst({
     where: {
       schoolId,
       OR: [{ termId: validatedInput?.termId }, { termId: null }],
@@ -602,13 +608,15 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   const days = config.workingDays
 
   // Determine yearId to fetch periods
-  const term = await (db as any).term.findFirst({
+  const termModel = getModelOrThrow("term")
+  const term = await termModel.findFirst({
     where: { id: validatedInput.termId, schoolId },
     select: { yearId: true },
   })
   if (!term) throw new Error("Invalid term")
 
-  const periods = await (db as any).period.findMany({
+  const periodModel = getModelOrThrow("period")
+  const periods = await periodModel.findMany({
     where: { schoolId, yearId: term.yearId },
     orderBy: { startTime: "asc" },
     select: { id: true, name: true, startTime: true, endTime: true },
@@ -636,7 +644,8 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
     const studentId = session?.user?.id
     if (studentId) {
       // Get student's class
-      const student = await (db as any).student?.findFirst({
+      const studentModel = getModel("student")
+      const student = await studentModel?.findFirst({
         where: { id: studentId, schoolId },
         select: { classId: true },
       })
@@ -652,7 +661,8 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
       whereBase.teacherId = validatedInput.view.teacherId
   }
 
-  const rows = await (db as any).timetable.findMany({
+  const timetableModel = getModelOrThrow("timetable")
+  const rows = await timetableModel.findMany({
     where: whereBase,
     select: {
       dayOfWeek: true,
