@@ -75,6 +75,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import { arrayToCSV } from "@/components/file"
 import {
@@ -126,14 +127,16 @@ export async function createStudent(
 
     if (normalizedUserId) {
       // Ensure the referenced user exists to avoid FK violation
-      const user = await (db as any).user.findFirst({
+      const userModel = getModelOrThrow("user")
+      const user = await userModel.findFirst({
         where: { id: normalizedUserId },
       })
       if (!user) {
         normalizedUserId = null
       } else {
         // Check if this userId is already being used by ANY student (global unique constraint)
-        const existingStudent = await (db as any).student.findFirst({
+        const studentModel = getModelOrThrow("student")
+        const existingStudent = await studentModel.findFirst({
           where: {
             userId: normalizedUserId,
           },
@@ -145,7 +148,8 @@ export async function createStudent(
     }
 
     // Create student record
-    const row = await (db as any).student.create({
+    const studentModel = getModelOrThrow("student")
+    const row = await studentModel.create({
       data: {
         schoolId,
         givenName: parsed.givenName,
@@ -216,12 +220,14 @@ export async function updateStudent(
     if (typeof rest.userId !== "undefined") {
       const trimmed = rest.userId?.trim()
       if (trimmed) {
-        const user = await (db as any).user.findFirst({
+        const userModel = getModelOrThrow("user")
+        const user = await userModel.findFirst({
           where: { id: trimmed },
         })
         if (user) {
           // Check if this userId is already being used by ANY other student (global unique constraint)
-          const existingStudent = await (db as any).student.findFirst({
+          const studentModel = getModelOrThrow("student")
+          const existingStudent = await studentModel.findFirst({
             where: {
               userId: trimmed,
               NOT: { id }, // Exclude current student
@@ -245,7 +251,8 @@ export async function updateStudent(
     }
 
     // Update student (using updateMany for tenant safety)
-    await (db as any).student.updateMany({ where: { id, schoolId }, data })
+    const studentModel = getModelOrThrow("student")
+    await studentModel.updateMany({ where: { id, schoolId }, data })
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
@@ -291,7 +298,8 @@ export async function deleteStudent(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete student (using deleteMany for tenant safety)
-    await (db as any).student.deleteMany({ where: { id, schoolId } })
+    const studentModel = getModelOrThrow("student")
+    await studentModel.deleteMany({ where: { id, schoolId } })
 
     // Revalidate cache
     revalidatePath(STUDENTS_PATH)
@@ -340,13 +348,9 @@ export async function getStudent(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Check if student model exists
-    if (!(db as any).student) {
-      return { success: true, data: null }
-    }
-
     // Fetch student record
-    const student = await (db as any).student.findFirst({
+    const studentModel = getModelOrThrow("student")
+    const student = await studentModel.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
@@ -413,11 +417,6 @@ export async function getStudents(
 
     // Parse and validate input
     const sp = getStudentsSchema.parse(input ?? {})
-
-    // Check if student model exists
-    if (!(db as any).student) {
-      return { success: true, data: { rows: [], total: 0 } }
-    }
 
     // Build where clause
     const where: any = {

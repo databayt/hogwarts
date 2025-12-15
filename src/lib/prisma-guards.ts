@@ -50,6 +50,9 @@ export type KnownModelName =
   | "studentGuardian"
   | "student"
   | "studentClass"
+  | "studentBatch"
+  | "studentDocument"
+  | "healthRecord"
   | "teacher"
   | "teacherPhoneNumber"
   | "teacherQualification"
@@ -73,6 +76,18 @@ export type KnownModelName =
   | "timetableSlot"
   | "workloadConfig"
   | "user"
+  | "timetable"
+  | "term"
+  | "period"
+  | "classroom"
+  | "schoolWeekConfig"
+  | "teacherConstraint"
+  | "teacherUnavailableBlock"
+  | "roomConstraint"
+  | "timetableTemplate"
+  | "templateApplication"
+  | "questionBank"
+  | "department"
 
 /**
  * Type-safe model accessor

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-import { db } from "@/lib/db"
+import { getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 import {
   getSubjectsSchema,
@@ -34,7 +34,8 @@ export async function createSubject(
 
     const parsed = subjectCreateSchema.parse(input)
 
-    const row = await (db as any).subject.create({
+    const subjectModel = getModelOrThrow("subject")
+    const row = await subjectModel.create({
       data: {
         schoolId,
         subjectName: parsed.subjectName,
@@ -74,8 +75,10 @@ export async function updateSubject(
     const parsed = subjectUpdateSchema.parse(input)
     const { id, ...rest } = parsed
 
+    const subjectModel = getModelOrThrow("subject")
+
     // Verify subject exists
-    const existing = await (db as any).subject.findFirst({
+    const existing = await subjectModel.findFirst({
       where: { id, schoolId },
       select: { id: true },
     })
@@ -90,7 +93,7 @@ export async function updateSubject(
     if (typeof rest.departmentId !== "undefined")
       data.departmentId = rest.departmentId
 
-    await (db as any).subject.updateMany({ where: { id, schoolId }, data })
+    await subjectModel.updateMany({ where: { id, schoolId }, data })
 
     revalidatePath("/subjects")
     return { success: true, data: undefined }
@@ -123,8 +126,16 @@ export async function deleteSubject(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
+    const subjectModel = getModelOrThrow("subject")
+    const teacherSubjectExpertiseModel = getModelOrThrow(
+      "teacherSubjectExpertise"
+    )
+    const classModel = getModelOrThrow("class")
+    const examModel = getModelOrThrow("exam")
+    const questionBankModel = getModelOrThrow("questionBank")
+
     // Verify subject exists
-    const existing = await (db as any).subject.findFirst({
+    const existing = await subjectModel.findFirst({
       where: { id, schoolId },
       select: { id: true, subjectName: true },
     })
@@ -138,9 +149,7 @@ export async function deleteSubject(input: {
     // ============================================================================
 
     // 1. Check if any teachers have expertise in this subject
-    const teacherExpertiseCount = await (
-      db as any
-    ).teacherSubjectExpertise.count({
+    const teacherExpertiseCount = await teacherSubjectExpertiseModel.count({
       where: { subjectId: id, schoolId },
     })
     if (teacherExpertiseCount > 0) {
@@ -151,7 +160,7 @@ export async function deleteSubject(input: {
     }
 
     // 2. Check if any classes are teaching this subject
-    const classCount = await (db as any).class.count({
+    const classCount = await classModel.count({
       where: { subjectId: id, schoolId },
     })
     if (classCount > 0) {
@@ -162,7 +171,7 @@ export async function deleteSubject(input: {
     }
 
     // 3. Check if any exams are associated with this subject
-    const examCount = await (db as any).exam.count({
+    const examCount = await examModel.count({
       where: { subjectId: id, schoolId },
     })
     if (examCount > 0) {
@@ -173,7 +182,7 @@ export async function deleteSubject(input: {
     }
 
     // 4. Check if any question banks are associated with this subject
-    const questionBankCount = await (db as any).questionBank.count({
+    const questionBankCount = await questionBankModel.count({
       where: { subjectId: id, schoolId },
     })
     if (questionBankCount > 0) {
@@ -184,7 +193,7 @@ export async function deleteSubject(input: {
     }
 
     // All checks passed - safe to delete
-    await (db as any).subject.deleteMany({ where: { id, schoolId } })
+    await subjectModel.deleteMany({ where: { id, schoolId } })
 
     revalidatePath("/subjects")
     return { success: true, data: undefined }
@@ -230,11 +239,9 @@ export async function getSubject(input: {
 
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    if (!(db as any).subject) {
-      return { success: true, data: null }
-    }
+    const subjectModel = getModelOrThrow("subject")
 
-    const subject = await (db as any).subject.findFirst({
+    const subject = await subjectModel.findFirst({
       where: { id, schoolId },
       select: {
         id: true,
@@ -284,9 +291,7 @@ export async function getSubjects(
 
     const sp = getSubjectsSchema.parse(input ?? {})
 
-    if (!(db as any).subject) {
-      return { success: true, data: { rows: [], total: 0 } }
-    }
+    const subjectModel = getModelOrThrow("subject")
 
     const where: any = {
       schoolId,
@@ -304,7 +309,7 @@ export async function getSubjects(
         : [{ createdAt: "desc" }]
 
     const [rows, count] = await Promise.all([
-      (db as any).subject.findMany({
+      subjectModel.findMany({
         where,
         orderBy,
         skip,
@@ -318,7 +323,7 @@ export async function getSubjects(
           },
         },
       }),
-      (db as any).subject.count({ where }),
+      subjectModel.count({ where }),
     ])
 
     const mapped: SubjectListResult[] = (rows as Array<any>).map((s) => ({

@@ -98,44 +98,33 @@ export const {
   trustHost: true, // Required for OAuth in production (Vercel proxies)
   logger: {
     error(code, ...message: unknown[]) {
-      console.error("[AUTH ERROR]", code)
-      // Deep log the error and its cause chain for debugging
-      if (message && message.length > 0) {
-        const err = message[0]
-        // Log the full error object
-        console.error("[AUTH ERROR FULL]", err)
+      // Extract all error details into a single object for Vercel logs
+      const extractErrorDetails = (
+        obj: unknown,
+        depth = 0
+      ): Record<string, unknown> => {
+        if (depth > 5 || !obj || typeof obj !== "object") return {}
+        const errObj = obj as Record<string, unknown>
+        const details: Record<string, unknown> = {}
 
-        // Try to extract and log the cause chain
-        const extractCause = (obj: unknown, depth = 0): void => {
-          if (depth > 5) return // Prevent infinite loops
-          if (!obj || typeof obj !== "object") return
+        if (errObj.type) details.type = errObj.type
+        if (errObj.name) details.name = errObj.name
+        if (errObj.message) details.message = errObj.message
+        if (errObj.code) details.code = errObj.code
+        if (errObj.meta) details.meta = errObj.meta
 
-          const errObj = obj as Record<string, unknown>
-
-          // Log error type if available
-          if (errObj.type) {
-            console.error(`[AUTH ERROR TYPE (depth ${depth})]`, errObj.type)
-          }
-
-          // Log error name and message if it's an Error-like object
-          if (errObj.name || errObj.message) {
-            console.error(`[AUTH ERROR DETAILS (depth ${depth})]`, {
-              name: errObj.name,
-              message: errObj.message,
-              code: errObj.code,
-              meta: errObj.meta,
-            })
-          }
-
-          // Recurse into cause if present
-          if (errObj.cause) {
-            console.error(`[AUTH ERROR CAUSE (depth ${depth})]`, errObj.cause)
-            extractCause(errObj.cause, depth + 1)
-          }
+        if (errObj.cause && typeof errObj.cause === "object") {
+          details.cause = extractErrorDetails(errObj.cause, depth + 1)
         }
 
-        extractCause(err, 0)
+        return details
       }
+
+      const errorDetails = message[0] ? extractErrorDetails(message[0]) : {}
+      console.error(
+        "[AUTH ERROR DETAILED]",
+        JSON.stringify({ code, ...errorDetails }, null, 2)
+      )
     },
     warn(code, ...message: unknown[]) {
       console.warn("[AUTH WARN]", code, message)

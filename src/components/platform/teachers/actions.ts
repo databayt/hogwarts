@@ -372,7 +372,8 @@ export async function deleteTeacher(input: {
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
     // Delete teacher (using deleteMany for tenant safety)
-    await (db as any).teacher.deleteMany({ where: { id, schoolId } })
+    const teacherModel = getModelOrThrow("teacher")
+    await teacherModel.deleteMany({ where: { id, schoolId } })
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH)
@@ -421,13 +422,9 @@ export async function getTeacher(input: {
     // Parse and validate input
     const { id } = z.object({ id: z.string().min(1) }).parse(input)
 
-    // Check if teacher model exists
-    if (!(db as any).teacher) {
-      return { success: true, data: null }
-    }
-
     // Fetch teacher with all related data
-    const teacher = await (db as any).teacher.findFirst({
+    const teacherModel = getModelOrThrow("teacher")
+    const teacher = await teacherModel.findFirst({
       where: { id, schoolId },
       include: {
         phoneNumbers: {
@@ -562,8 +559,9 @@ export async function getTeacherWorkload(input: {
     const { teacherId, termId } = input
 
     // Get teacher's timetable slots
+    const timetableSlotModel = getModelOrThrow("timetableSlot")
     const timetableSlots =
-      (await (db as any).timetableSlot?.findMany?.({
+      (await timetableSlotModel.findMany({
         where: {
           schoolId,
           teacherId,
@@ -577,7 +575,8 @@ export async function getTeacherWorkload(input: {
       })) || []
 
     // Get workload config for school
-    const workloadConfig = (await (db as any).workloadConfig?.findUnique?.({
+    const workloadConfigModel = getModelOrThrow("workloadConfig")
+    const workloadConfig = (await workloadConfigModel.findUnique({
       where: { schoolId },
     })) || {
       minPeriodsPerWeek: 15,
@@ -654,12 +653,8 @@ export async function getTeachers(
     // Parse and validate input
     const sp = getTeachersSchema.parse(input ?? {})
 
-    // Check if teacher model exists
-    if (!(db as any).teacher) {
-      return { success: true, data: { rows: [], total: 0 } }
-    }
-
     // Build where clause
+    const teacherModel = getModelOrThrow("teacher")
     const where: any = {
       schoolId,
       ...(sp.name
@@ -694,8 +689,8 @@ export async function getTeachers(
 
     // Execute queries in parallel
     const [rows, count] = await Promise.all([
-      (db as any).teacher.findMany({ where, orderBy, skip, take }),
-      (db as any).teacher.count({ where }),
+      teacherModel.findMany({ where, orderBy, skip, take }),
+      teacherModel.count({ where }),
     ])
 
     // Map results
@@ -748,12 +743,8 @@ export async function getTeachersCSV(
     // Parse and validate input
     const sp = getTeachersSchema.parse(input ?? {})
 
-    // Check if teacher model exists
-    if (!(db as any).teacher) {
-      return { success: true, data: "" }
-    }
-
     // Build where clause with filters
+    const teacherModel = getModelOrThrow("teacher")
     const where: any = {
       schoolId,
       ...(sp.name
@@ -777,7 +768,7 @@ export async function getTeachersCSV(
     }
 
     // Fetch ALL teachers matching filters (no pagination for export)
-    const teachers = await (db as any).teacher.findMany({
+    const teachers = await teacherModel.findMany({
       where,
       include: {
         user: {
@@ -901,13 +892,9 @@ export async function getSubjectsForExpertise(): Promise<
       return { success: false, error: "Missing school context" }
     }
 
-    // Check if subject model exists
-    if (!(db as any).subject) {
-      return { success: true, data: { subjects: [], byDepartment: {} } }
-    }
-
     // Fetch all subjects with their departments
-    const subjects = await (db as any).subject.findMany({
+    const subjectModel = getModelOrThrow("subject")
+    const subjects = await subjectModel.findMany({
       where: { schoolId },
       include: {
         department: {
@@ -1007,12 +994,8 @@ export async function getTeachersExportData(
     // Parse and validate input
     const sp = getTeachersSchema.parse(input ?? {})
 
-    // Check if teacher model exists
-    if (!(db as any).teacher) {
-      return { success: true, data: [] }
-    }
-
     // Build where clause with filters
+    const teacherModel = getModelOrThrow("teacher")
     const where: any = {
       schoolId,
       ...(sp.name
@@ -1036,7 +1019,7 @@ export async function getTeachersExportData(
     }
 
     // Fetch ALL teachers matching filters (no pagination for export)
-    const teachers = await (db as any).teacher.findMany({
+    const teachers = await teacherModel.findMany({
       where,
       include: {
         user: {

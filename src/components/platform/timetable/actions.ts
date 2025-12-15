@@ -63,6 +63,7 @@
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
+import { getModel, getModelOrThrow } from "@/lib/prisma-guards"
 import { getTenantContext } from "@/lib/tenant-context"
 
 import {
@@ -110,11 +111,12 @@ export async function detectTimetableConflicts(input?: unknown) {
   })
 
   // If new Timetable model exists, perform slot-based conflict checks first
-  if ((db as any).timetable) {
+  const timetableModel = getModel("timetable")
+  if (timetableModel) {
     const where: any = { schoolId }
     if (validatedInput?.termId) where.termId = validatedInput.termId
 
-    const slots = await (db as any).timetable.findMany({
+    const slots = await timetableModel.findMany({
       where,
       select: {
         dayOfWeek: true,
@@ -187,13 +189,14 @@ export async function detectTimetableConflicts(input?: unknown) {
     return { conflicts }
   }
 
-  if (!(db as any).class || !(db as any).period)
-    return { conflicts: [] as Conflict[] }
+  const classModel = getModel("class")
+  const periodModel = getModel("period")
+  if (!classModel || !periodModel) return { conflicts: [] as Conflict[] }
 
   const where: { schoolId: string; termId?: string } = { schoolId }
   if (validatedInput?.termId) where.termId = validatedInput.termId
 
-  const classes = await (db as any).class.findMany({
+  const classes = await classModel.findMany({
     where,
     select: {
       id: true,
@@ -264,10 +267,10 @@ export async function getTermsForSelection() {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  if (!(db as any).term)
-    return { terms: [] as Array<{ id: string; label: string }> }
+  const termModel = getModel("term")
+  if (!termModel) return { terms: [] as Array<{ id: string; label: string }> }
 
-  const rows = await (db as any).term.findMany({
+  const rows = await termModel.findMany({
     where: { schoolId },
     orderBy: { startDate: "desc" },
     select: { id: true, termNumber: true },
@@ -288,8 +291,9 @@ export async function getClassesForSelection(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  if ((db as any).timetable && validatedInput?.termId) {
-    const rows = await (db as any).timetable.findMany({
+  const timetableModel = getModel("timetable")
+  if (timetableModel && validatedInput?.termId) {
+    const rows = await timetableModel.findMany({
       where: { schoolId, termId: validatedInput.termId },
       select: { class: { select: { id: true, name: true } } },
       distinct: ["classId"],
@@ -300,8 +304,9 @@ export async function getClassesForSelection(input: unknown) {
   }
 
   // Fallback: list classes by term
-  if ((db as any).class && validatedInput?.termId) {
-    const rows = await (db as any).class.findMany({
+  const classModel = getModel("class")
+  if (classModel && validatedInput?.termId) {
+    const rows = await classModel.findMany({
       where: { schoolId, termId: validatedInput.termId },
       select: { id: true, name: true },
     })
@@ -321,8 +326,9 @@ export async function getTeachersForSelection(input: unknown) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error("Missing school context")
 
-  if ((db as any).timetable && validatedInput?.termId) {
-    const rows = await (db as any).timetable.findMany({
+  const timetableModel = getModel("timetable")
+  if (timetableModel && validatedInput?.termId) {
+    const rows = await timetableModel.findMany({
       where: { schoolId, termId: validatedInput.termId },
       select: {
         teacher: { select: { id: true, givenName: true, surname: true } },
@@ -339,8 +345,9 @@ export async function getTeachersForSelection(input: unknown) {
     }
   }
 
-  if ((db as any).teacher) {
-    const rows = await (db as any).teacher.findMany({
+  const teacherModel = getModel("teacher")
+  if (teacherModel) {
+    const rows = await teacherModel.findMany({
       where: { schoolId },
       select: { id: true, givenName: true, surname: true },
     })
