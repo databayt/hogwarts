@@ -60,7 +60,7 @@ interface GridCardProps {
   children?: React.ReactNode
 }
 
-export function GridCard({
+function GridCardInner({
   title,
   subtitle,
   avatarUrl,
@@ -173,6 +173,8 @@ export function GridCard({
     </Card>
   )
 }
+
+export const GridCard = React.memo(GridCardInner)
 
 /**
  * Grid container component

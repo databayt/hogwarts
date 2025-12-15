@@ -41,37 +41,11 @@ export default {
         }
       },
     }),
-    // Facebook provider - Let NextAuth handle redirect_uri automatically
-    // Specify userinfo to request email and profile picture fields
+    // Facebook provider - Minimal configuration, let NextAuth handle OAuth flow
+    // IMPORTANT: In Live mode, Facebook requires exact redirect_uri match
     Facebook({
-      clientId: env.FACEBOOK_CLIENT_ID || "",
-      clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      authorization: {
-        params: {
-          scope: "email public_profile",
-        },
-      },
-      // Specify userinfo endpoint with required fields
-      userinfo: {
-        url: "https://graph.facebook.com/me",
-        params: {
-          fields: "id,name,email,picture.width(250).height(250)",
-        },
-      },
-      profile(profile) {
-        console.log(
-          "[Facebook OAuth] Raw profile:",
-          JSON.stringify(profile, null, 2)
-        )
-        return {
-          id: profile.id,
-          name: profile.name || "Facebook User",
-          username: profile.name || "Facebook User",
-          email: profile.email || `${profile.id}@facebook.com`,
-          image: profile.picture?.data?.url || null,
-          emailVerified: new Date(),
-        }
-      },
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
     }),
     Credentials({
       async authorize(credentials) {
@@ -123,6 +97,7 @@ export default {
 // Debug logging for loaded providers
 console.log("Auth config - Providers loaded:", {
   google: !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET,
-  facebook: !!env.FACEBOOK_CLIENT_ID && !!env.FACEBOOK_CLIENT_SECRET,
+  facebook:
+    !!process.env.FACEBOOK_CLIENT_ID && !!process.env.FACEBOOK_CLIENT_SECRET,
   credentials: true,
 })

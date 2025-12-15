@@ -20,7 +20,11 @@ interface KPICardProps {
   onClick?: () => void
 }
 
-export function KPICard({ kpi, className, onClick }: KPICardProps) {
+export const KPICard = React.memo(function KPICard({
+  kpi,
+  className,
+  onClick,
+}: KPICardProps) {
   const getColorClass = (color?: string) => {
     switch (color) {
       case "blue":
@@ -193,4 +197,4 @@ export function KPICard({ kpi, className, onClick }: KPICardProps) {
       />
     </Card>
   )
-}
+})
