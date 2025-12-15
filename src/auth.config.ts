@@ -40,24 +40,15 @@ export default {
         };
       },
     }),
-    // Facebook provider - Full config with explicit API version and URLs
+    // Facebook provider - Let NextAuth handle URLs automatically (fixes Live mode)
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
+      // Only override scope - NextAuth handles redirect_uri from NEXTAUTH_URL
       authorization: {
-        url: "https://www.facebook.com/v18.0/dialog/oauth",
         params: {
           scope: "email public_profile",
-          redirect_uri: process.env.NEXTAUTH_URL
-            ? `${process.env.NEXTAUTH_URL}/api/auth/callback/facebook`
-            : undefined
         }
-      },
-      token: {
-        url: "https://graph.facebook.com/v18.0/oauth/access_token"
-      },
-      userinfo: {
-        url: "https://graph.facebook.com/me?fields=id,name,email,picture.width(250).height(250)"
       },
       profile(profile) {
         console.log("[Facebook OAuth] Raw profile:", JSON.stringify(profile, null, 2));
