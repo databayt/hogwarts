@@ -6,6 +6,7 @@ import { AlertCircle } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import { FormHeading, FormLayout } from "@/components/form"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { LocationForm } from "./form"
@@ -34,20 +35,13 @@ export default function LocationContent({ dictionary }: Props) {
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
-          {/* Left side - Text content skeleton */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-96" />
-            </div>
+        <FormLayout>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-full max-w-sm" />
           </div>
-
-          {/* Right side - Form skeleton */}
-          <div className="space-y-6">
-            <Skeleton className="h-[300px] w-full rounded-lg" />
-          </div>
-        </div>
+          <Skeleton className="h-[300px] w-full rounded-lg" />
+        </FormLayout>
       </div>
     )
   }
@@ -66,27 +60,20 @@ export default function LocationContent({ dictionary }: Props) {
   return (
     <div className="space-y-8">
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
-          {/* Left side - Text content */}
-          <div className="space-y-3 sm:space-y-4">
-            <h1 className="text-3xl font-bold">
-              {dict.whereIsYourSchool || "Where's your school located?"}
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              {dict.schoolLocationDescription ||
-                "Your school's address will be visible to parents and staff members."}
-            </p>
-          </div>
-
-          {/* Right side - Form */}
-          <div>
-            <LocationForm
-              schoolId={schoolId}
-              initialData={locationData || undefined}
-              dictionary={dictionary}
-            />
-          </div>
-        </div>
+        <FormLayout>
+          <FormHeading
+            title={dict.whereIsYourSchool || "Where's your school located?"}
+            description={
+              dict.schoolLocationDescription ||
+              "Your school's address will be visible to parents and staff members."
+            }
+          />
+          <LocationForm
+            schoolId={schoolId}
+            initialData={locationData || undefined}
+            dictionary={dictionary}
+          />
+        </FormLayout>
       </div>
     </div>
   )

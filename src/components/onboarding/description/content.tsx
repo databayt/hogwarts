@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { FormHeading, FormLayout } from "@/components/form"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 
 import { DescriptionForm } from "./form"
@@ -54,43 +55,16 @@ export default function DescriptionContent({ dictionary }: Props) {
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
-          {/* Left side - Text content skeleton */}
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-
-            {/* Preview card skeleton */}
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <div className="space-y-3 rounded-lg border p-4">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-28" />
-              </div>
-            </div>
+        <FormLayout>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-full max-w-sm" />
           </div>
-
-          {/* Right side - Form skeleton */}
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-48" />
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-40" />
-              <div className="grid grid-cols-2 gap-3">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
-        </div>
+        </FormLayout>
       </div>
     )
   }
@@ -98,30 +72,25 @@ export default function DescriptionContent({ dictionary }: Props) {
   return (
     <div className="space-y-8">
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
-          {/* Left side - Text content */}
-          <div className="space-y-3 sm:space-y-4">
-            <h1 className="text-3xl font-bold">
-              {dict.describeEducationModel || "Describe your school's"}
-              <br />
-              {dict.educationModel || "education model"}
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              {dict.selectSchoolTypeDescription ||
-                "Select the type that best describes your school's educational approach and governance structure."}
-            </p>
-          </div>
-
-          {/* Right side - Form */}
-          <div>
-            <DescriptionForm
-              schoolId={schoolId}
-              initialData={descriptionData || undefined}
-              onTypeSelect={setSelectedType}
-              dictionary={dictionary}
-            />
-          </div>
-        </div>
+        <FormLayout>
+          <FormHeading
+            title={
+              (dict.describeEducationModel || "Describe your school's") +
+              "\n" +
+              (dict.educationModel || "education model")
+            }
+            description={
+              dict.selectSchoolTypeDescription ||
+              "Select the type that best describes your school's educational approach and governance structure."
+            }
+          />
+          <DescriptionForm
+            schoolId={schoolId}
+            initialData={descriptionData || undefined}
+            onTypeSelect={setSelectedType}
+            dictionary={dictionary}
+          />
+        </FormLayout>
       </div>
     </div>
   )

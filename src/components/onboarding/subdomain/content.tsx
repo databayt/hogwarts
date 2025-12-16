@@ -14,6 +14,7 @@ import { checkSubdomainAvailability } from "@/lib/subdomain-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { FormHeading, FormLayout } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { reserveSubdomainForSchool } from "@/components/onboarding/actions"
@@ -156,34 +157,11 @@ export default function SubdomainContent(props: Props) {
   return (
     <div className="">
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
-          {/* Left side - Text content */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3>
-              Choose your school's
-              <br />
-              subdomain
-            </h3>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              This will be your school's unique web address. Students and staff
-              will access your school at{" "}
-              <span className="bg-muted rounded px-2 py-1 font-mono text-sm">
-                {subdomain || "yourschool"}.databayt.org
-              </span>
-            </p>
-
-            {/* Subdomain preview */}
-            {subdomain && (
-              <div className="bg-muted mt-4 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4" />
-                  <span className="font-mono">{subdomain}.databayt.org</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right side - Input and suggestions */}
+        <FormLayout split="30/70">
+          <FormHeading
+            title={"Choose your school's\nsubdomain"}
+            description={`This will be your school's unique web address. Students and staff will access your school at ${subdomain || "yourschool"}.databayt.org`}
+          />
           <div className="space-y-4">
             {/* Subdomain input */}
             <div className="space-y-2">
@@ -266,7 +244,7 @@ export default function SubdomainContent(props: Props) {
               )}
             </Button>
           </div>
-        </div>
+        </FormLayout>
       </div>
     </div>
   )

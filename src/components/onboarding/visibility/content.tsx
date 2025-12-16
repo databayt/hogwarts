@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { FormHeading, FormLayout } from "@/components/form"
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 import { useLocale } from "@/components/internationalization/use-locale"
@@ -42,24 +43,18 @@ const VisibilityContent = (props: Props) => {
   return (
     <div className="">
       <div className="">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5 lg:gap-16">
-          {/* Left column - Title and description */}
-          <div className="space-y-3 sm:space-y-4 lg:col-span-2">
-            <h1 className="text-3xl font-bold">
-              {dict.visibilityPageTitle ||
-                "Choose your school's information visibility"}
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              {dict.visibilityPageDescription ||
-                "This determines what information is shared with parents and students."}{" "}
-              <button className="text-foreground underline hover:no-underline">
-                {dict.joinLearnMore || "Learn more"}
-              </button>
-            </p>
-          </div>
-
-          {/* Right column - Guest options */}
-          <div className="space-y-3 sm:space-y-4 lg:col-span-3">
+        <FormLayout split="30/70">
+          <FormHeading
+            title={
+              dict.visibilityPageTitle ||
+              "Choose your school's information visibility"
+            }
+            description={
+              dict.visibilityPageDescription ||
+              "This determines what information is shared with parents and students."
+            }
+          />
+          <div className="space-y-3 sm:space-y-4">
             {guestOptions.map((option) => (
               <button
                 key={option.id}
@@ -104,7 +99,7 @@ const VisibilityContent = (props: Props) => {
               </button>
             ))}
           </div>
-        </div>
+        </FormLayout>
       </div>
     </div>
   )

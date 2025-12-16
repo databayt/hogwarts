@@ -42,6 +42,8 @@ export { FormStepHeader } from "./header"
 export { FormStepNavigation } from "./navigation"
 export { FormStepProgress } from "./progress"
 export { FormSuccess } from "./success"
+export { FormLayout } from "./layout"
+export { FormHeading } from "./heading"
 
 // Modal integration
 export { ModalMultiStepForm } from "./modal"

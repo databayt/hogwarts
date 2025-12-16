@@ -196,6 +196,24 @@ export interface FormStepContainerProps {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full"
 }
 
+/** Split layout props - two-column responsive layout */
+export interface SplitLayoutProps {
+  children: React.ReactNode
+  className?: string
+  split?: "50/50" | "30/70"
+  gap?: "sm" | "md" | "lg"
+  align?: "start" | "center" | "end"
+}
+
+/** Heading props - title + description with RTL support */
+export interface FormHeadingProps {
+  title: string
+  description?: string
+  className?: string
+  titleClassName?: string
+  descriptionClassName?: string
+}
+
 // =============================================================================
 // FIELD TYPES
 // =============================================================================

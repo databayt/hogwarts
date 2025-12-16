@@ -11,6 +11,7 @@ import {
   FileUploader,
   type UploadedFileResult,
 } from "@/components/file"
+import { FormHeading, FormLayout } from "@/components/form"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
 import { useListing } from "@/components/onboarding/use-listing"
 
@@ -84,20 +85,15 @@ export default function BrandingContent({ dictionary }: Props) {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-2">
-        {/* Left side - Text content */}
-        <div className="space-y-3 sm:space-y-4">
-          <h1 className="text-3xl font-bold">
-            {dict.schoolBranding || "Upload your school logo"}
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            {dict.brandingDescription ||
-              "Add your school's logo to personalize your platform. This is optional - you can always add it later."}
-          </p>
-        </div>
-
-        {/* Right side - Simple Logo Upload */}
-        <div className="lg:justify-self-end">
+      <FormLayout>
+        <FormHeading
+          title={dict.schoolBranding || "Upload your school logo"}
+          description={
+            dict.brandingDescription ||
+            "Add your school's logo to personalize your platform. This is optional - you can always add it later."
+          }
+        />
+        <div>
           {!logo && !showUploader ? (
             <div
               onClick={() => setShowUploader(true)}
@@ -154,7 +150,7 @@ export default function BrandingContent({ dictionary }: Props) {
             </div>
           )}
         </div>
-      </div>
+      </FormLayout>
     </div>
   )
 }

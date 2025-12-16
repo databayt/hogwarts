@@ -7,6 +7,7 @@ import { Globe } from "lucide-react"
 import { generateSubdomain } from "@/lib/subdomain"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { FORM_LIMITS } from "@/components/onboarding/config.client"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
@@ -93,37 +94,17 @@ export default function TitleContent({ dictionary }: Props) {
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-20">
-          {/* Left side - Text content skeleton */}
-          <div className="w-full space-y-6 lg:max-w-md">
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-
-            {/* Form skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-
-            {/* Subdomain preview skeleton */}
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-8 w-48" />
-            </div>
+        <FormLayout>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-full max-w-sm" />
           </div>
-
-          {/* Right side - Card skeleton */}
-          <div className="w-full space-y-4 lg:max-w-md">
-            <Skeleton className="h-32 w-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-4 w-48" />
           </div>
-        </div>
+        </FormLayout>
       </div>
     )
   }
@@ -131,34 +112,25 @@ export default function TitleContent({ dictionary }: Props) {
   return (
     <div className={`space-y-8 ${isRTL ? "rtl" : "ltr"}`}>
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-20">
-          {/* Left side - Text content */}
-          <div
-            className={`w-full space-y-3 sm:space-y-4 lg:max-w-md ${isRTL ? "text-right" : "text-left"}`}
-          >
-            <h1 className="text-3xl font-bold">
-              {dict.whatsYourSchoolName || "What's your school's name?"}
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              {dict.schoolNameDescription ||
-                "This will be your school's official name in the system."}
-            </p>
-          </div>
-
-          {/* Right side - Form */}
-          <div className="w-full lg:max-w-md">
-            <TitleForm
-              ref={titleFormRef}
-              schoolId={schoolId}
-              initialData={{
-                title: currentTitle,
-                subdomain: titleData?.subdomain || "",
-              }}
-              onTitleChange={handleTitleChange}
-              dictionary={dictionary}
-            />
-          </div>
-        </div>
+        <FormLayout>
+          <FormHeading
+            title={dict.whatsYourSchoolName || "What's your school's name?"}
+            description={
+              dict.schoolNameDescription ||
+              "This will be your school's official name in the system."
+            }
+          />
+          <TitleForm
+            ref={titleFormRef}
+            schoolId={schoolId}
+            initialData={{
+              title: currentTitle,
+              subdomain: titleData?.subdomain || "",
+            }}
+            onTitleChange={handleTitleChange}
+            dictionary={dictionary}
+          />
+        </FormLayout>
       </div>
     </div>
   )
