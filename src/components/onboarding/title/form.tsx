@@ -186,7 +186,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                 </FormLabel>
                 <FormControl>
                   <div
-                    className="border-input focus-within:border-ring flex max-w-xs items-center rounded-lg border transition-colors"
+                    className="border-input focus-within:border-ring flex w-full items-center rounded-lg border transition-colors"
                     dir="ltr"
                   >
                     <Input
