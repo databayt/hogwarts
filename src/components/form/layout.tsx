@@ -46,23 +46,28 @@ export function FormLayout({
 }: SplitLayoutProps) {
   const childArray = React.Children.toArray(children)
 
-  const leftWidth = split === "30/70" ? "lg:w-[30%]" : "lg:w-[48%]"
-  const rightWidth = split === "30/70" ? "lg:w-[65%]" : "lg:w-[48%]"
+  // Use flex-basis for proper edge-to-edge layout with justify-between
+  const leftBasis = split === "30/70" ? "lg:basis-[35%]" : "lg:basis-[45%]"
+  const rightBasis = split === "30/70" ? "lg:basis-[60%]" : "lg:basis-[45%]"
 
   return (
     <div
       className={cn(
-        "flex flex-col lg:flex-row lg:justify-between",
+        "flex w-full flex-col lg:flex-row lg:justify-between",
         gapClasses[gap],
         alignClasses[align],
         className
       )}
     >
       {childArray[0] && (
-        <div className={cn("w-full", leftWidth)}>{childArray[0]}</div>
+        <div className={cn("w-full lg:w-auto lg:shrink-0", leftBasis)}>
+          {childArray[0]}
+        </div>
       )}
       {childArray[1] && (
-        <div className={cn("w-full", rightWidth)}>{childArray[1]}</div>
+        <div className={cn("w-full lg:w-auto lg:shrink-0", rightBasis)}>
+          {childArray[1]}
+        </div>
       )}
     </div>
   )

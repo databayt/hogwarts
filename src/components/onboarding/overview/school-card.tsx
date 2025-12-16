@@ -75,7 +75,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
 
   return (
     <Card
-      className="hover:border-foreground/50 bg-card hover:bg-accent min-h-[50px] cursor-pointer rounded-lg border py-2 shadow-none transition-all hover:shadow-none sm:min-h-[60px] sm:py-3"
+      className="hover:border-foreground/50 bg-card hover:bg-accent min-h-[50px] cursor-pointer rounded-lg border py-3 shadow-none transition-all hover:shadow-none sm:min-h-[60px] sm:py-4"
       onClick={handleClick}
     >
       <CardContent className="flex items-center px-2 py-0 sm:px-3">
