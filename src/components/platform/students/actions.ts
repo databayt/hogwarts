@@ -974,7 +974,8 @@ export async function registerStudent(
     // Create guardian relationships
     if (guardianIds.length > 0) {
       // Get or create guardian type
-      let guardianType = await (db as any).guardianType.findFirst({
+      const guardianTypeModel = getModelOrThrow("guardianType")
+      let guardianType = await guardianTypeModel.findFirst({
         where: {
           schoolId,
           name: "Parent",
@@ -982,7 +983,7 @@ export async function registerStudent(
       })
 
       if (!guardianType) {
-        guardianType = await (db as any).guardianType.create({
+        guardianType = await guardianTypeModel.create({
           data: {
             schoolId,
             name: "Parent",
@@ -991,8 +992,9 @@ export async function registerStudent(
       }
 
       // Create student-guardian relationships
+      const studentGuardianModel = getModelOrThrow("studentGuardian")
       for (const guardian of guardianIds) {
-        await (db as any).studentGuardian.create({
+        await studentGuardianModel.create({
           data: {
             schoolId,
             studentId: student.id,
@@ -1006,9 +1008,10 @@ export async function registerStudent(
 
     // Save documents if provided
     if (input.documents && input.documents.length > 0) {
+      const studentDocumentModel = getModelOrThrow("studentDocument")
       for (const doc of input.documents) {
         if (doc.fileUrl) {
-          await (db as any).studentDocument.create({
+          await studentDocumentModel.create({
             data: {
               schoolId,
               studentId: student.id,
@@ -1027,9 +1030,10 @@ export async function registerStudent(
 
     // Save health records/vaccinations if provided
     if (input.vaccinations && input.vaccinations.length > 0) {
+      const healthRecordModel = getModelOrThrow("healthRecord")
       for (const vaccination of input.vaccinations) {
         if (vaccination.name) {
-          await (db as any).healthRecord.create({
+          await healthRecordModel.create({
             data: {
               schoolId,
               studentId: student.id,
@@ -1050,7 +1054,8 @@ export async function registerStudent(
     // Enroll in class/batch if provided
     if (input.classId) {
       // Capacity validation - check if class has available spots
-      const classData = await (db as any).class.findFirst({
+      const classModel = getModelOrThrow("class")
+      const classData = await classModel.findFirst({
         where: { id: input.classId, schoolId },
         select: {
           id: true,
@@ -1079,7 +1084,8 @@ export async function registerStudent(
         }
       }
 
-      await (db as any).studentClass.create({
+      const studentClassModel = getModelOrThrow("studentClass")
+      await studentClassModel.create({
         data: {
           schoolId,
           studentId: student.id,
@@ -1091,7 +1097,8 @@ export async function registerStudent(
     }
 
     if (input.batchId) {
-      await (db as any).studentBatch.create({
+      const studentBatchModel = getModelOrThrow("studentBatch")
+      await studentBatchModel.create({
         data: {
           schoolId,
           studentId: student.id,

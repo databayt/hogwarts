@@ -17,6 +17,41 @@ import type { Prisma, PrismaClient } from "@prisma/client"
 import { vi } from "vitest"
 
 /**
+ * Create a mock Prisma model with all standard methods
+ *
+ * This is required for getModelOrThrow in prisma-guards.ts which checks
+ * for the presence of 'findFirst' method to validate a model exists.
+ *
+ * @example
+ * ```ts
+ * vi.mock('@/lib/db', () => ({
+ *   db: {
+ *     event: createMockModel(),
+ *     attendance: createMockModel(),
+ *     ...
+ *   }
+ * }))
+ * ```
+ */
+export function createMockModel() {
+  return {
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    createMany: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
+    deleteMany: vi.fn(),
+    count: vi.fn(),
+    aggregate: vi.fn(),
+    upsert: vi.fn(),
+    groupBy: vi.fn(),
+  }
+}
+
+/**
  * Mock Prisma Client
  *
  * Provides a mock Prisma client with all models.

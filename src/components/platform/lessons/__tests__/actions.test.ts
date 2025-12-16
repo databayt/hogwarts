@@ -14,15 +14,19 @@ vi.mock("@/lib/db", () => ({
   db: {
     lesson: {
       create: vi.fn(),
-      updateMany: vi.fn(),
-      deleteMany: vi.fn(),
+      findFirst: vi.fn(),
       findMany: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
       count: vi.fn(),
     },
     $transaction: vi.fn((callback) =>
       callback({
         lesson: {
           create: vi.fn(),
+          findFirst: vi.fn(),
           updateMany: vi.fn(),
           deleteMany: vi.fn(),
         },
@@ -57,22 +61,18 @@ describe("Lesson Actions", () => {
       const mockLesson = {
         id: "lesson-1",
         title: "Introduction to Algebra",
-        subjectId: "subject-1",
+        classId: "class-1",
         schoolId: mockSchoolId,
       }
 
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          lesson: {
-            create: vi.fn().mockResolvedValue(mockLesson),
-          },
-        }
-        return callback(tx)
-      })
+      vi.mocked(db.lesson.create).mockResolvedValue(mockLesson as any)
 
       const result = await createLesson({
         title: "Introduction to Algebra",
-        subjectId: "subject-1",
+        classId: "class-1",
+        lessonDate: new Date(Date.now() + 86400000), // Tomorrow
+        startTime: "09:00",
+        endTime: "10:00",
       })
 
       expect(result.success).toBe(true)
@@ -88,7 +88,10 @@ describe("Lesson Actions", () => {
 
       const result = await createLesson({
         title: "Lesson",
-        subjectId: "subject-1",
+        classId: "class-1",
+        lessonDate: new Date(Date.now() + 86400000), // Tomorrow
+        startTime: "09:00",
+        endTime: "10:00",
       })
 
       expect(result.success).toBe(false)
@@ -97,14 +100,16 @@ describe("Lesson Actions", () => {
 
   describe("updateLesson", () => {
     it("updates lesson with schoolId scope", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          lesson: {
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock lesson exists
+      vi.mocked(db.lesson.findFirst).mockResolvedValue({
+        id: "lesson-1",
+        schoolId: mockSchoolId,
+      } as any)
+      // Mock update success
+      vi.mocked(db.lesson.update).mockResolvedValue({
+        id: "lesson-1",
+        title: "Advanced Algebra",
+      } as any)
 
       const result = await updateLesson({
         id: "lesson-1",
@@ -113,30 +118,75 @@ describe("Lesson Actions", () => {
 
       expect(result.success).toBe(true)
     })
+
+    it("prevents updating lesson from different school", async () => {
+      // Mock lesson not found in this school
+      vi.mocked(db.lesson.findFirst).mockResolvedValue(null)
+
+      const result = await updateLesson({
+        id: "lesson-from-other-school",
+        title: "Hacked Lesson",
+      })
+
+      expect(result.success).toBe(false)
+    })
   })
 
   describe("deleteLesson", () => {
     it("deletes lesson with schoolId scope", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          lesson: {
-            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock lesson exists
+      vi.mocked(db.lesson.findFirst).mockResolvedValue({
+        id: "lesson-1",
+        schoolId: mockSchoolId,
+      } as any)
+      // Mock delete success
+      vi.mocked(db.lesson.delete).mockResolvedValue({
+        id: "lesson-1",
+      } as any)
 
       const result = await deleteLesson({ id: "lesson-1" })
 
       expect(result.success).toBe(true)
     })
+
+    it("prevents deleting lesson from different school", async () => {
+      // Mock lesson not found in this school
+      vi.mocked(db.lesson.findFirst).mockResolvedValue(null)
+
+      const result = await deleteLesson({ id: "lesson-from-other-school" })
+
+      expect(result.success).toBe(false)
+    })
   })
 
   describe("getLessons", () => {
     it("fetches lessons scoped to schoolId", async () => {
+      const now = new Date()
       const mockLessons = [
-        { id: "1", title: "Lesson 1", schoolId: mockSchoolId },
-        { id: "2", title: "Lesson 2", schoolId: mockSchoolId },
+        {
+          id: "1",
+          title: "Lesson 1",
+          schoolId: mockSchoolId,
+          status: "DRAFT",
+          lessonDate: now,
+          startTime: "09:00",
+          endTime: "10:00",
+          createdAt: now,
+          updatedAt: now,
+          class: { id: "c1", className: "Math 101" },
+        },
+        {
+          id: "2",
+          title: "Lesson 2",
+          schoolId: mockSchoolId,
+          status: "PUBLISHED",
+          lessonDate: now,
+          startTime: "10:00",
+          endTime: "11:00",
+          createdAt: now,
+          updatedAt: now,
+          class: { id: "c2", className: "English 101" },
+        },
       ]
 
       vi.mocked(db.lesson.findMany).mockResolvedValue(mockLessons as any)
@@ -145,6 +195,7 @@ describe("Lesson Actions", () => {
       const result = await getLessons({})
 
       expect(result.success).toBe(true)
+      expect(result.data?.rows).toHaveLength(2)
     })
   })
 })

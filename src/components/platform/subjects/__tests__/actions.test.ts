@@ -10,7 +10,7 @@ import {
   updateSubject,
 } from "../actions"
 
-// Mock dependencies
+// Mock dependencies - need all models that actions use via getModelOrThrow
 vi.mock("@/lib/db", () => ({
   db: {
     subject: {
@@ -21,6 +21,29 @@ vi.mock("@/lib/db", () => ({
       deleteMany: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
+    },
+    teacherSubjectExpertise: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+    },
+    class: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      updateMany: vi.fn(),
+      count: vi.fn(),
+    },
+    exam: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      count: vi.fn(),
+    },
+    questionBank: {
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      deleteMany: vi.fn(),
       count: vi.fn(),
     },
     $transaction: vi.fn((callback) =>
@@ -63,24 +86,16 @@ describe("Subject Actions", () => {
     it("creates subject with schoolId for multi-tenant isolation", async () => {
       const mockSubject = {
         id: "subject-1",
-        name: "Mathematics",
-        code: "MATH101",
+        subjectName: "Mathematics",
         schoolId: mockSchoolId,
       }
 
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            create: vi.fn().mockResolvedValue(mockSubject),
-            findFirst: vi.fn().mockResolvedValue(null),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock direct db.subject.create (used via getModelOrThrow)
+      vi.mocked(db.subject.create).mockResolvedValue(mockSubject as any)
 
       const result = await createSubject({
-        name: "Mathematics",
-        code: "MATH101",
+        subjectName: "Mathematics",
+        departmentId: "dept-1",
       })
 
       expect(result.success).toBe(true)
@@ -95,31 +110,8 @@ describe("Subject Actions", () => {
       })
 
       const result = await createSubject({
-        name: "Mathematics",
-        code: "MATH101",
-      })
-
-      expect(result.success).toBe(false)
-    })
-
-    it("prevents duplicate subject codes within same school", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            create: vi
-              .fn()
-              .mockRejectedValue(new Error("Unique constraint failed")),
-            findFirst: vi
-              .fn()
-              .mockResolvedValue({ id: "existing", code: "MATH101" }),
-          },
-        }
-        return callback(tx)
-      })
-
-      const result = await createSubject({
-        name: "Math",
-        code: "MATH101",
+        subjectName: "Mathematics",
+        departmentId: "dept-1",
       })
 
       expect(result.success).toBe(false)
@@ -130,42 +122,30 @@ describe("Subject Actions", () => {
     it("updates subject with schoolId scope", async () => {
       const mockSubject = {
         id: "subject-1",
-        name: "Advanced Mathematics",
+        subjectName: "Advanced Mathematics",
         schoolId: mockSchoolId,
       }
 
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
-            findFirst: vi.fn().mockResolvedValue(mockSubject),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock subject exists
+      vi.mocked(db.subject.findFirst).mockResolvedValue(mockSubject as any)
+      // Mock update success
+      vi.mocked(db.subject.update).mockResolvedValue(mockSubject as any)
 
       const result = await updateSubject({
         id: "subject-1",
-        name: "Advanced Mathematics",
+        subjectName: "Advanced Mathematics",
       })
 
       expect(result.success).toBe(true)
     })
 
     it("prevents updating subject from different school", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-            findFirst: vi.fn().mockResolvedValue(null),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock subject not found in this school
+      vi.mocked(db.subject.findFirst).mockResolvedValue(null)
 
       const result = await updateSubject({
         id: "subject-from-other-school",
-        name: "Hacked Subject",
+        subjectName: "Hacked Subject",
       })
 
       expect(result.success).toBe(false)
@@ -174,14 +154,21 @@ describe("Subject Actions", () => {
 
   describe("deleteSubject", () => {
     it("deletes subject with schoolId scope", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock subject exists
+      vi.mocked(db.subject.findFirst).mockResolvedValue({
+        id: "subject-1",
+        subjectName: "Mathematics",
+        schoolId: mockSchoolId,
+      } as any)
+      // Mock no dependencies
+      vi.mocked(db.teacherSubjectExpertise.count).mockResolvedValue(0)
+      vi.mocked(db.class.count).mockResolvedValue(0)
+      vi.mocked(db.exam.count).mockResolvedValue(0)
+      vi.mocked(db.questionBank.count).mockResolvedValue(0)
+      // Mock successful delete
+      vi.mocked(db.subject.delete).mockResolvedValue({
+        id: "subject-1",
+      } as any)
 
       const result = await deleteSubject({ id: "subject-1" })
 
@@ -189,14 +176,8 @@ describe("Subject Actions", () => {
     })
 
     it("prevents deleting subject from different school", async () => {
-      vi.mocked(db.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          subject: {
-            deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
-          },
-        }
-        return callback(tx)
-      })
+      // Mock subject not found in this school
+      vi.mocked(db.subject.findFirst).mockResolvedValue(null)
 
       const result = await deleteSubject({ id: "subject-from-other-school" })
 
@@ -206,14 +187,30 @@ describe("Subject Actions", () => {
 
   describe("getSubjects", () => {
     it("fetches subjects scoped to schoolId", async () => {
+      const now = new Date()
       const mockSubjects = [
         {
           id: "1",
-          name: "Mathematics",
-          code: "MATH101",
+          subjectName: "Mathematics",
+          subjectNameAr: null,
           schoolId: mockSchoolId,
+          departmentId: "dept-1",
+          createdAt: now,
+          updatedAt: now,
+          department: { id: "dept-1", departmentName: "Science" },
+          _count: { teachers: 2, classes: 3 },
         },
-        { id: "2", name: "English", code: "ENG101", schoolId: mockSchoolId },
+        {
+          id: "2",
+          subjectName: "English",
+          subjectNameAr: null,
+          schoolId: mockSchoolId,
+          departmentId: "dept-2",
+          createdAt: now,
+          updatedAt: now,
+          department: { id: "dept-2", departmentName: "Languages" },
+          _count: { teachers: 1, classes: 2 },
+        },
       ]
 
       vi.mocked(db.subject.findMany).mockResolvedValue(mockSubjects as any)
@@ -222,7 +219,7 @@ describe("Subject Actions", () => {
       const result = await getSubjects({})
 
       expect(result.success).toBe(true)
-      expect(result.data).toHaveLength(2)
+      expect(result.data?.rows).toHaveLength(2)
     })
 
     it("applies department filter with schoolId", async () => {

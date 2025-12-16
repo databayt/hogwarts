@@ -7,6 +7,398 @@ description: "Multi-tenant authentication for school management with OAuth and C
 
 Our authentication system is built on Next.js App Router with Auth.js (NextAuth v5), specifically designed for multi-tenant school management. It supports OAuth providers (Google, Facebook), email/password credentials, two-factor authentication, and seamless cross-subdomain single sign-on.
 
+## Complete Authentication Flow
+
+This section maps **every possible way** a user can enter, authenticate, and exit the platform across all user types and entry points.
+
+### User Types & Their Journeys
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         WHO ARE YOU? → WHERE DO YOU GO?                          │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  👨‍💻 DEVELOPER (Platform Admin)                                                  │
+│  └── Any login → Platform Admin Dashboard (all schools access)                  │
+│                                                                                  │
+│  🏫 SCHOOL OWNER/PRINCIPAL (New)                                                 │
+│  └── "Get Started" → Login/Join → Onboarding (16 steps) → School Created        │
+│                                                                                  │
+│  👨‍🎓 POTENTIAL CLIENT (Student/Parent applying)                                   │
+│  └── School Page → "Apply" → Login/Join → Application Form → Submitted          │
+│                                                                                  │
+│  👩‍🏫 EXISTING MEMBER (Student/Teacher/Staff/Admin)                                │
+│  └── School Login → Dashboard (role-specific view)                              │
+│                                                                                  │
+│  👤 VISITOR (Just browsing)                                                      │
+│  └── Marketing pages (no auth required)                                         │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Master Authentication Flowchart
+
+```
+                                    ┌─────────────────────┐
+                                    │     USER ARRIVES    │
+                                    └──────────┬──────────┘
+                                               │
+                    ┌──────────────────────────┼──────────────────────────┐
+                    │                          │                          │
+                    ▼                          ▼                          ▼
+        ┌───────────────────┐      ┌───────────────────┐      ┌───────────────────┐
+        │  MARKETING SITE   │      │   SCHOOL SITE     │      │  DIRECT PLATFORM  │
+        │ ed.databayt.org   │      │ {school}.databayt │      │  ACCESS ATTEMPT   │
+        └─────────┬─────────┘      └─────────┬─────────┘      └─────────┬─────────┘
+                  │                          │                          │
+    ┌─────────────┼─────────────┐            │                          │
+    │             │             │            │                          │
+    ▼             ▼             ▼            ▼                          ▼
+┌───────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐              ┌─────────────┐
+│Browse │   │  Login  │   │   Get   │   │ School  │              │  Protected  │
+│ Only  │   │ Button  │   │ Started │   │  Page   │              │    Route    │
+└───────┘   └────┬────┘   └────┬────┘   └────┬────┘              └──────┬──────┘
+    │            │             │             │                          │
+    │            │             │             │                          │
+    ▼            │             │             │                          │
+  [EXIT]         │             │             │                          │
+  No auth        │             │             │                          │
+  needed         ▼             ▼             ▼                          ▼
+           ┌─────────────────────────────────────────────────────────────────┐
+           │                      LOGIN / JOIN PAGE                          │
+           │                                                                 │
+           │   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐        │
+           │   │   Google    │    │  Facebook   │    │ Credentials │        │
+           │   │   OAuth     │    │   OAuth     │    │ Email/Pass  │        │
+           │   └──────┬──────┘    └──────┬──────┘    └──────┬──────┘        │
+           │          │                  │                  │               │
+           │          └──────────────────┼──────────────────┘               │
+           │                             │                                  │
+           └─────────────────────────────┼──────────────────────────────────┘
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │  AUTHENTICATION     │
+                              │  (OAuth or Creds)   │
+                              └──────────┬──────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+              ┌───────────┐        ┌───────────┐        ┌───────────┐
+              │   NEW     │        │ EXISTING  │        │   AUTH    │
+              │   USER    │        │   USER    │        │  FAILED   │
+              └─────┬─────┘        └─────┬─────┘        └─────┬─────┘
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+           ┌─────────────────┐   ┌─────────────────┐   ┌─────────────┐
+           │ User Created    │   │ Session Created │   │ Error Page  │
+           │ schoolId: null  │   │ Fetch user data │   │ Try again   │
+           └────────┬────────┘   └────────┬────────┘   └─────────────┘
+                    │                     │
+                    │                     │
+                    ▼                     ▼
+           ┌─────────────────────────────────────────────────────────────┐
+           │                    REDIRECT DECISION                        │
+           │                                                             │
+           │  ┌─────────────────────────────────────────────────────┐   │
+           │  │ Q1: Is user DEVELOPER?                              │   │
+           │  │     YES → Platform Admin Dashboard                  │   │
+           │  │     NO  → Continue                                  │   │
+           │  └─────────────────────────────────────────────────────┘   │
+           │                             │                               │
+           │                             ▼                               │
+           │  ┌─────────────────────────────────────────────────────┐   │
+           │  │ Q2: Does user have schoolId?                        │   │
+           │  │     NO  → Onboarding (create/join school)           │   │
+           │  │     YES → Continue                                  │   │
+           │  └─────────────────────────────────────────────────────┘   │
+           │                             │                               │
+           │                             ▼                               │
+           │  ┌─────────────────────────────────────────────────────┐   │
+           │  │ Q3: Was there a callback URL stored?                │   │
+           │  │     YES → Return to original destination            │   │
+           │  │     NO  → School dashboard                          │   │
+           │  └─────────────────────────────────────────────────────┘   │
+           │                                                             │
+           └─────────────────────────────────────────────────────────────┘
+                                         │
+                                         │
+       ┌─────────────────────────────────┼─────────────────────────────────┐
+       │                                 │                                 │
+       ▼                                 ▼                                 ▼
+┌─────────────────┐           ┌─────────────────────┐           ┌─────────────────┐
+│  PLATFORM ADMIN │           │     ONBOARDING      │           │ SCHOOL DASHBOARD │
+│   DASHBOARD     │           │                     │           │                  │
+│                 │           │  16-step wizard:    │           │  Role-specific:  │
+│  • All schools  │           │  • School info      │           │  • ADMIN: Full   │
+│  • Impersonate  │           │  • Branding         │           │  • TEACHER: Class│
+│  • Analytics    │           │  • Calendar         │           │  • STUDENT: My   │
+│  • Settings     │           │  • Import data      │           │  • GUARDIAN: Kids│
+│                 │           │                     │           │  • STAFF: Limited│
+└────────┬────────┘           └──────────┬──────────┘           └────────┬────────┘
+         │                               │                               │
+         │                               ▼                               │
+         │                    ┌─────────────────────┐                    │
+         │                    │  School Created     │                    │
+         │                    │  User → ADMIN role  │                    │
+         │                    │  Redirect to school │                    │
+         │                    └──────────┬──────────┘                    │
+         │                               │                               │
+         └───────────────────────────────┼───────────────────────────────┘
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │   ACTIVE SESSION    │
+                              │   User is working   │
+                              └──────────┬──────────┘
+                                         │
+                                         │
+                              ┌──────────┴──────────┐
+                              │                     │
+                              ▼                     ▼
+                    ┌─────────────────┐   ┌─────────────────┐
+                    │   LOGOUT VIA    │   │  SESSION EXPIRES│
+                    │   User Action   │   │  (24 hours)     │
+                    └────────┬────────┘   └────────┬────────┘
+                             │                     │
+                             ▼                     ▼
+                    ┌─────────────────────────────────────┐
+                    │           LOGGED OUT                │
+                    │                                     │
+                    │  Redirect to: /login               │
+                    │  (with callbackUrl if applicable)   │
+                    └─────────────────────────────────────┘
+```
+
+### Entry Points Inventory
+
+| #   | Entry Point   | Location            | Trigger      | Requires Auth? | Destination                             |
+| --- | ------------- | ------------------- | ------------ | -------------- | --------------------------------------- |
+| 1   | "Get Started" | Marketing hero      | Button click | YES            | Onboarding → School creation            |
+| 2   | "Login"       | Marketing header    | Button click | YES            | Dashboard (if has school) or Onboarding |
+| 3   | "Apply Now"   | School public page  | Button click | YES            | Application form                        |
+| 4   | "Sign In"     | School login page   | Button click | YES            | School dashboard                        |
+| 5   | Direct URL    | Any protected route | URL access   | YES            | Original page (after auth)              |
+| 6   | Avatar menu   | Platform header     | Click        | Already authed | Profile/Settings/Logout                 |
+
+### Logout Points Inventory
+
+| #   | Logout Point    | Location         | Component        | Redirect After                 |
+| --- | --------------- | ---------------- | ---------------- | ------------------------------ |
+| 1   | Avatar dropdown | Platform header  | `UserButton`     | `/login`                       |
+| 2   | Settings page   | Account settings | Logout button    | `/login`                       |
+| 3   | Session expiry  | Automatic        | JWT timeout      | `/login?callbackUrl={current}` |
+| 4   | Sign out action | Any page         | `signOut()` call | `/login` or custom             |
+
+### Detailed User Journeys
+
+#### Journey 1: School Owner Creating a School
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ JOURNEY: Principal/Owner → Get Started → Create School                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Visit: ed.databayt.org                                                   │
+│     └── Sees marketing page with pricing, features                           │
+│                                                                              │
+│  2. Click: "Get Started" (hero button)                                       │
+│     └── Route: /onboarding (PROTECTED)                                       │
+│     └── Middleware: No session → redirect to /login                          │
+│                                                                              │
+│  3. Redirected: /login?callbackUrl=/onboarding                               │
+│     └── Callback URL preserved in cookie                                     │
+│                                                                              │
+│  4. Choose: Google OAuth                                                     │
+│     └── Redirect to Google consent                                           │
+│     └── "Continue as {name}"                                                 │
+│                                                                              │
+│  5. Callback: /api/auth/callback/google                                      │
+│     └── Adapter: Creates User with schoolId: null                            │
+│     └── Creates Account linked to User                                       │
+│                                                                              │
+│  6. Redirect Decision:                                                       │
+│     └── User has no schoolId → /onboarding                                   │
+│     └── Callback URL matches → proceed to onboarding                         │
+│                                                                              │
+│  7. Onboarding: 16-step wizard                                               │
+│     └── School name, subdomain                                               │
+│     └── Branding (logo, colors)                                              │
+│     └── Academic year setup                                                  │
+│     └── Import existing data (optional)                                      │
+│                                                                              │
+│  8. Complete: School created                                                 │
+│     └── User.schoolId = new school ID                                        │
+│     └── User.role = ADMIN                                                    │
+│     └── Redirect: {subdomain}.databayt.org/dashboard                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Journey 2: Parent Applying to a School
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ JOURNEY: Parent → School Public Page → Apply for Child                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Visit: hogwarts.databayt.org (school's public page)                      │
+│     └── Sees school info, programs, application info                         │
+│                                                                              │
+│  2. Click: "Apply Now" or "Start Application"                                │
+│     └── Route: /apply (or /admission)                                        │
+│     └── May be protected or have partial form                                │
+│                                                                              │
+│  3. Application Form (Step 1):                                               │
+│     └── Basic info collected (no auth yet)                                   │
+│     └── "To save your application, please sign in"                           │
+│                                                                              │
+│  4. Click: "Sign in to continue"                                             │
+│     └── Redirect: /login?callbackUrl=/apply&step=2                           │
+│                                                                              │
+│  5. Choose: Facebook OAuth                                                   │
+│     └── Redirect to Facebook                                                 │
+│     └── "Continue as {name}"                                                 │
+│                                                                              │
+│  6. Callback: /api/auth/callback/facebook                                    │
+│     └── Adapter: Creates or finds User                                       │
+│     └── User may not have schoolId yet (applicant status)                    │
+│                                                                              │
+│  7. Return to: /apply?step=2                                                 │
+│     └── Application synced to user account                                   │
+│     └── Can save progress, return later                                      │
+│                                                                              │
+│  8. Complete Application:                                                    │
+│     └── Application submitted                                                │
+│     └── User gets APPLICANT status for this school                           │
+│     └── Redirect: /apply/confirmation                                        │
+│                                                                              │
+│  9. Later (if accepted):                                                     │
+│     └── Admin enrolls student                                                │
+│     └── User.schoolId = school ID                                            │
+│     └── User.role = GUARDIAN (or STUDENT)                                    │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Journey 3: Existing Teacher Returning
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ JOURNEY: Teacher → Login → Dashboard                                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Visit: hogwarts.databayt.org/login                                       │
+│     └── Or direct to /dashboard (redirected to /login)                       │
+│                                                                              │
+│  2. Choose: Google OAuth (same as before)                                    │
+│     └── "Continue as {name}"                                                 │
+│                                                                              │
+│  3. Callback: /api/auth/callback/google                                      │
+│     └── Adapter: getUserByAccount() finds existing Account                   │
+│     └── Returns linked User with schoolId                                    │
+│                                                                              │
+│  4. Redirect Decision:                                                       │
+│     └── User has schoolId = hogwarts                                         │
+│     └── Current subdomain = hogwarts (matches)                               │
+│     └── Redirect: /dashboard                                                 │
+│                                                                              │
+│  5. Dashboard:                                                               │
+│     └── Role = TEACHER                                                       │
+│     └── Sees: Classes, Lessons, Attendance, Grades                           │
+│     └── Does NOT see: Admin settings, Finance, Staff management              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Journey 4: Developer Accessing Platform
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ JOURNEY: Developer → Any Login → Platform Admin                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Visit: Any login page (ed.databayt.org or any school)                    │
+│                                                                              │
+│  2. Login: Credentials or OAuth                                              │
+│     └── User has role = DEVELOPER                                            │
+│                                                                              │
+│  3. Redirect Decision:                                                       │
+│     └── Check role first (before schoolId check)                             │
+│     └── DEVELOPER → Platform admin dashboard                                 │
+│                                                                              │
+│  4. Platform Admin Dashboard:                                                │
+│     └── List of ALL schools                                                  │
+│     └── Can impersonate any school (set cookie)                              │
+│     └── Platform analytics                                                   │
+│     └── Global settings                                                      │
+│                                                                              │
+│  5. Impersonation:                                                           │
+│     └── Click "View as" on any school                                        │
+│     └── Cookie set: impersonate-school={schoolId}                            │
+│     └── Redirect: {school}.databayt.org/dashboard                            │
+│     └── Sees school as ADMIN would see it                                    │
+│                                                                              │
+│  6. Exit Impersonation:                                                      │
+│     └── Click "Exit impersonation" banner                                    │
+│     └── Cookie cleared                                                       │
+│     └── Return to platform admin                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Journey 5: Student Accessing from Wrong School
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ JOURNEY: Student → Wrong School Domain → Access Denied                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. User is student at: hogwarts                                             │
+│     └── User.schoolId = hogwarts-id                                          │
+│                                                                              │
+│  2. Accidentally visits: beauxbatons.databayt.org/dashboard                  │
+│                                                                              │
+│  3. Middleware:                                                              │
+│     └── Subdomain = beauxbatons                                              │
+│     └── User.schoolId = hogwarts (mismatch!)                                 │
+│                                                                              │
+│  4. Access Check:                                                            │
+│     └── User does NOT belong to beauxbatons                                  │
+│     └── Result: FORBIDDEN                                                    │
+│                                                                              │
+│  5. Options:                                                                 │
+│     A) Show error page: "You don't have access to this school"              │
+│     B) Offer: "Go to your school" → redirect to hogwarts                     │
+│     C) Offer: "Request access" → send request to beauxbatons admin           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Current Implementation Status
+
+| Feature                   | Status         | Notes                                   |
+| ------------------------- | -------------- | --------------------------------------- |
+| OAuth Login (Google)      | ✅ Working     | Profile callback, multi-tenant adapter  |
+| OAuth Login (Facebook)    | ✅ Working     | Fixed with custom adapter               |
+| Credentials Login         | ✅ Working     | Email verification required             |
+| Get Started → Onboarding  | ✅ Working     | Protected route, callback URL preserved |
+| School Dashboard Redirect | ✅ Working     | Based on schoolId lookup                |
+| Developer Platform Access | ⚠️ Partial     | Needs dedicated dashboard               |
+| Application Flow          | 🔲 Not Started | Admission module in progress            |
+| School Join Codes         | 🔲 Not Started | Planned feature                         |
+| Invitation System         | 🔲 Not Started | Planned feature                         |
+| Impersonation Mode        | ⚠️ Partial     | Cookie-based, needs UI                  |
+
+### Recommended Improvements
+
+1. **Unified Entry Point**: Single login page that detects context and routes appropriately
+2. **Better Error Pages**: Clear messaging when access is denied with actionable options
+3. **School Switcher**: For users who belong to multiple schools
+4. **Remember School**: Cookie to remember last accessed school
+5. **Guest Application**: Allow starting applications without auth, require auth to submit
+
 ## Multi-Tenant Architecture
 
 The authentication system is designed from the ground up for multi-tenant school management:
@@ -154,17 +546,18 @@ Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
 
 ### Core Files
 
-| File                               | Purpose                                                   |
-| ---------------------------------- | --------------------------------------------------------- |
-| `src/auth.ts`                      | NextAuth configuration, JWT callbacks, session management |
-| `src/auth.config.ts`               | OAuth provider configurations with profile logging        |
-| `src/middleware.ts`                | Route protection, subdomain detection                     |
-| `src/routes.ts`                    | Public/protected route definitions                        |
-| `src/lib/tenant-context.ts`        | School context retrieval                                  |
-| `src/lib/school-access.ts`         | School ownership and access control                       |
-| `src/lib/auth-logger.ts`           | Centralized auth logging utility                          |
-| `src/lib/auth-config-validator.ts` | Environment configuration validation                      |
-| `src/app/api/debug-auth/route.ts`  | Debug endpoint for checking auth state                    |
+| File                                     | Purpose                                                   |
+| ---------------------------------------- | --------------------------------------------------------- |
+| `src/auth.ts`                            | NextAuth configuration, JWT callbacks, session management |
+| `src/auth.config.ts`                     | OAuth provider configurations with profile logging        |
+| `src/lib/multi-tenant-prisma-adapter.ts` | Custom Prisma adapter for multi-tenant OAuth              |
+| `src/middleware.ts`                      | Route protection, subdomain detection                     |
+| `src/routes.ts`                          | Public/protected route definitions                        |
+| `src/lib/tenant-context.ts`              | School context retrieval                                  |
+| `src/lib/school-access.ts`               | School ownership and access control                       |
+| `src/lib/auth-logger.ts`                 | Centralized auth logging utility                          |
+| `src/lib/auth-config-validator.ts`       | Environment configuration validation                      |
+| `src/app/api/debug-auth/route.ts`        | Debug endpoint for checking auth state                    |
 
 ### Component Structure
 
@@ -204,6 +597,252 @@ import { getTenantContext } from "@/lib/tenant-context"
 const { schoolId, role, isPlatformAdmin } = await getTenantContext()
 // Priority: impersonation cookie → subdomain → session
 ```
+
+## Multi-Tenant Prisma Adapter
+
+The standard Prisma adapter from `@auth/prisma-adapter` doesn't support multi-tenant schemas with composite unique constraints. Our User model uses:
+
+```prisma
+@@unique([email, schoolId])  // Same email allowed across different schools
+```
+
+This causes the standard adapter to fail because it queries `findUnique({ where: { email } })` which requires a simple `@unique email` constraint.
+
+### Custom Adapter Solution
+
+We use a custom `MultiTenantPrismaAdapter` that overrides key methods:
+
+```typescript
+import { MultiTenantPrismaAdapter } from "@/lib/multi-tenant-prisma-adapter"
+
+export const { auth, signIn, signOut } = NextAuth({
+  adapter: MultiTenantPrismaAdapter(db),
+  // ...
+})
+```
+
+### How It Works
+
+| Method             | Standard Adapter                    | Multi-Tenant Adapter                              |
+| ------------------ | ----------------------------------- | ------------------------------------------------- |
+| `getUserByEmail`   | `findUnique({ where: { email } })`  | `findFirst({ where: { email, schoolId: null } })` |
+| `createUser`       | Creates user without school context | Creates with `schoolId: null` explicitly          |
+| `getUserByAccount` | Standard lookup                     | Handles composite constraints                     |
+| `linkAccount`      | Standard linking                    | Logs for debugging                                |
+
+### OAuth User Lifecycle
+
+1. **OAuth Callback**: User authenticates with Google/Facebook
+2. **Adapter Check**: `getUserByEmail` looks for existing user with `schoolId: null`
+3. **Create/Link**: New users created with `schoolId: null`, existing users linked
+4. **Onboarding**: User goes through onboarding to join/create a school
+5. **School Assignment**: `schoolId` updated when user joins a school
+
+This allows the same email to exist in multiple schools while OAuth users start in a "limbo" state until onboarded.
+
+## Login Scenarios & Redirects
+
+Understanding where users end up after login is critical for the multi-tenant experience. Here are all the possible scenarios:
+
+### Scenario Matrix
+
+| User State     | Entry Point                 | Has School?     | Redirect Destination              |
+| -------------- | --------------------------- | --------------- | --------------------------------- |
+| New OAuth user | `ed.databayt.org/login`     | No              | `/onboarding` (create school)     |
+| New OAuth user | `school.databayt.org/login` | No              | `/onboarding` or join flow        |
+| Existing user  | `ed.databayt.org/login`     | Yes             | `{school}.databayt.org/dashboard` |
+| Existing user  | `school.databayt.org/login` | Yes (same)      | `/dashboard`                      |
+| Existing user  | `other.databayt.org/login`  | Yes (different) | Error or join flow                |
+| DEVELOPER role | Any login                   | N/A             | Platform admin dashboard          |
+
+### Detailed Flow Diagrams
+
+#### Scenario 1: New User on Marketing Site
+
+```
+User visits: ed.databayt.org
+     │
+     ▼
+┌─────────────────┐
+│   Login Page    │ ◄── "Get Started" or "Login"
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐     ┌─────────────────┐
+│  OAuth (Google/ │ or  │   Credentials   │
+│    Facebook)    │     │  (Email/Pass)   │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         └───────────┬───────────┘
+                     ▼
+         ┌─────────────────────┐
+         │ User created with   │
+         │ schoolId: null      │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │    Onboarding       │ ◄── 16-step wizard
+         │ (Create new school) │
+         └──────────┬──────────┘
+                    │
+                    ▼
+         ┌─────────────────────────────┐
+         │ School created, user is     │
+         │ ADMIN, redirect to:         │
+         │ {school}.databayt.org       │
+         └─────────────────────────────┘
+```
+
+#### Scenario 2: Existing User with School
+
+```
+User visits: ed.databayt.org/login
+     │
+     ▼
+┌─────────────────┐
+│   Login Page    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Authenticate   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ JWT callback checks:                     │
+│ - User has schoolId? YES                 │
+│ - Look up school domain from DB          │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│ Redirect callback:                       │
+│ → {school-subdomain}.databayt.org/dash   │
+└─────────────────────────────────────────┘
+```
+
+#### Scenario 3: User Logging into Specific School
+
+```
+User visits: hogwarts.databayt.org/login
+     │
+     ▼
+┌─────────────────────────────────────────┐
+│ Middleware extracts subdomain: hogwarts │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────┐
+│  Authenticate   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ Check: Does user belong to this school? │
+├─────────────────────────────────────────┤
+│ YES → /dashboard                        │
+│ NO  → Error or "Request Access" page    │
+└─────────────────────────────────────────┘
+```
+
+#### Scenario 4: OAuth User Returning
+
+```
+Returning OAuth user visits any login
+     │
+     ▼
+┌─────────────────┐
+│ OAuth Provider  │ ◄── "Continue as {name}"
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ Adapter: getUserByAccount()             │
+│ → Finds existing Account record         │
+│ → Returns linked User                   │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│ User has schoolId?                      │
+├─────────────────────────────────────────┤
+│ YES → Redirect to school dashboard      │
+│ NO  → Redirect to onboarding            │
+└─────────────────────────────────────────┘
+```
+
+### Redirect Logic Implementation
+
+The redirect logic is handled in `src/auth.ts` in the `redirect` callback:
+
+```typescript
+callbacks: {
+  async redirect({ url, baseUrl }) {
+    // 1. Check for stored callback URL (from OAuth flow)
+    const callbackUrl = cookies.get("auth-callback-url")
+    if (callbackUrl) {
+      // Clear cookie and use stored URL
+      return callbackUrl
+    }
+
+    // 2. If user has schoolId, redirect to their school
+    const session = await auth()
+    if (session?.user?.schoolId) {
+      const schoolDomain = await getSchoolDomain(session.user.schoolId)
+      if (schoolDomain) {
+        return constructSchoolUrl(schoolDomain, "/dashboard")
+      }
+    }
+
+    // 3. No school - send to onboarding
+    return `${baseUrl}/onboarding`
+  }
+}
+```
+
+### Cookie-Based Callback URL Preservation
+
+OAuth flows redirect through external providers, losing the original URL. We preserve it using an httpOnly cookie:
+
+```typescript
+// Before OAuth redirect (in social.tsx)
+document.cookie = `auth-callback-url=${window.location.href}; path=/; secure; samesite=lax`
+
+// After OAuth callback (in redirect callback)
+const callbackUrl = cookies.get("auth-callback-url")
+if (callbackUrl) {
+  cookies.delete("auth-callback-url")
+  return callbackUrl
+}
+```
+
+### Edge Cases & Error States
+
+| Scenario                       | Behavior                                         |
+| ------------------------------ | ------------------------------------------------ |
+| OAuth provider denies access   | Redirect to `/error?error=access_denied`         |
+| OAuth returns no email         | Redirect to `/error?error=OAuthAccountNotLinked` |
+| User's school was deleted      | Redirect to `/error` with "School not found"     |
+| Session expired mid-navigation | Redirect to `/login?callbackUrl={current}`       |
+| DEVELOPER accessing any school | Allowed via impersonation cookie                 |
+| User banned from school        | `Forbidden` error on school routes               |
+
+### Role-Based Dashboard Routing
+
+After successful login, users see different dashboards based on role:
+
+| Role       | Dashboard View                       |
+| ---------- | ------------------------------------ |
+| DEVELOPER  | Platform admin with school selector  |
+| ADMIN      | School management + all modules      |
+| TEACHER    | Classes, lessons, grades, attendance |
+| STUDENT    | My classes, assignments, grades      |
+| GUARDIAN   | Children's progress, communication   |
+| ACCOUNTANT | Finance modules only                 |
+| STAFF      | Limited operational views            |
+| USER       | Profile only (needs role assignment) |
 
 ## Usage
 
@@ -506,6 +1145,7 @@ Common causes:
 2. **Debug endpoint** - `/api/debug-auth` for checking auth state
 3. **Configuration validation** - Environment vars validated at startup
 4. **OAuth profile logging** - Google & Facebook callbacks log profile data
+5. **Multi-tenant Prisma adapter** - Custom adapter handles `@@unique([email, schoolId])` constraint for OAuth
 
 ### Short-term (P1)
 
@@ -545,13 +1185,13 @@ pnpm test src/components/auth/__tests__ --watch
 
 ### Known Issues (Documented in Tests)
 
-The test suite explicitly documents multi-tenant safety issues:
+The test suite documents multi-tenant considerations:
 
-1. **`getUserByEmail` not tenant-scoped** - Returns any user with email regardless of school
-2. **OAuth users created without schoolId** - New OAuth users exist in limbo until onboarding
-3. **Registration lacks school context** - Users created without multi-tenant isolation
+1. ~~**`getUserByEmail` not tenant-scoped**~~ - **FIXED**: Custom `MultiTenantPrismaAdapter` queries with `{ email, schoolId: null }` for OAuth users
+2. **OAuth users created without schoolId** - By design: New OAuth users exist in limbo until onboarding completes
+3. **Registration lacks school context** - By design: Users join schools through onboarding or invitation flow
 
-See [ISSUE.md](/src/components/auth/ISSUE.md) for current test status and required fixes.
+See [ISSUE.md](/src/components/auth/ISSUE.md) for current test status.
 
 ## Related Documentation
 

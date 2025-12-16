@@ -12,16 +12,23 @@ export default defineConfig({
     // Explicit alias resolution for test files (excluded from tsconfig.json)
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // Mock Next.js server modules that don't work in Vitest
+      "next/server": path.resolve(__dirname, "./src/test/mocks/next-server.ts"),
     },
   },
   test: {
     globals: true,
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
+    setupFiles: ["./src/test/setup.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
     },
     css: false,
+    // Deps configuration for problematic modules
+    deps: {
+      inline: ["next-auth"],
+    },
   },
 })
