@@ -93,9 +93,9 @@ export default function TitleContent({ dictionary }: Props) {
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
+        <div className="flex flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-20">
           {/* Left side - Text content skeleton */}
-          <div className="space-y-6">
+          <div className="w-full space-y-6 lg:max-w-md">
             <div className="space-y-4">
               <Skeleton className="h-8 w-64" />
               <Skeleton className="h-4 w-96" />
@@ -116,7 +116,7 @@ export default function TitleContent({ dictionary }: Props) {
           </div>
 
           {/* Right side - Card skeleton */}
-          <div className="space-y-4">
+          <div className="w-full space-y-4 lg:max-w-md">
             <Skeleton className="h-32 w-full" />
             <div className="space-y-2">
               <Skeleton className="h-4 w-32" />
@@ -131,10 +131,10 @@ export default function TitleContent({ dictionary }: Props) {
   return (
     <div className={`space-y-8 ${isRTL ? "rtl" : "ltr"}`}>
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
+        <div className="flex flex-col items-start gap-6 lg:flex-row lg:justify-between lg:gap-20">
           {/* Left side - Text content */}
           <div
-            className={`space-y-3 sm:space-y-4 ${isRTL ? "text-right" : "text-left"}`}
+            className={`w-full space-y-3 sm:space-y-4 lg:max-w-md ${isRTL ? "text-right" : "text-left"}`}
           >
             <h1 className="text-3xl font-bold">
               {dict.whatsYourSchoolName || "What's your school's name?"}
@@ -146,7 +146,7 @@ export default function TitleContent({ dictionary }: Props) {
           </div>
 
           {/* Right side - Form */}
-          <div>
+          <div className="w-full lg:max-w-md">
             <TitleForm
               ref={titleFormRef}
               schoolId={schoolId}

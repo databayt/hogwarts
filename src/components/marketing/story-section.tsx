@@ -9,17 +9,21 @@ interface StorySectionProps {
 }
 
 export default function StorySection({ dictionary }: StorySectionProps) {
-  const { containerRef, videoRef } = useVideoScrollControl({
-    threshold: 0.4,
-    fadeInDuration: 600,
-    fadeOutDuration: 300,
-    targetVolume: 0.7,
-  })
+  const { containerRef, videoRef, visibilityRatio, isInView } =
+    useVideoScrollControl({
+      playThreshold: 0.2,
+      fullVolumeThreshold: 0.6,
+      targetVolume: 0.7,
+      progressiveVolume: true,
+    })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dict = (dictionary?.marketing as any)?.storySection || {
     quote: "When schools automate the mundane, what do educators focus on?",
   }
+
+  // Calculate opacity based on visibility for smooth fade effect
+  const videoOpacity = Math.min(1, 0.7 + visibilityRatio * 0.3)
 
   return (
     <section className="py-16 md:py-24">
@@ -28,13 +32,21 @@ export default function StorySection({ dictionary }: StorySectionProps) {
         <div
           ref={containerRef}
           className="relative overflow-hidden rounded-lg bg-[#2C2418] lg:col-span-2"
+          style={{
+            opacity: videoOpacity,
+            transition: "opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
         >
           <video
             ref={videoRef}
-            className="aspect-video w-full object-cover"
+            className="aspect-video w-full object-cover transition-transform duration-500 ease-in-out"
+            style={{
+              transform: isInView ? "scale(1)" : "scale(1.02)",
+            }}
             loop
             muted
             playsInline
+            preload="auto"
           >
             <source src="/story.mp4" type="video/mp4" />
             Your browser does not support the video tag.

@@ -78,7 +78,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
       className="hover:border-foreground/50 bg-card hover:bg-accent min-h-[50px] cursor-pointer rounded-lg border py-2 shadow-none transition-all hover:shadow-none sm:min-h-[60px] sm:py-3"
       onClick={handleClick}
     >
-      <CardContent className="flex items-center px-2 sm:px-3">
+      <CardContent className="flex items-center px-2 py-0 sm:px-3">
         <div className="flex flex-1 items-center space-x-2">
           <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md sm:h-10 sm:w-10">
             {getStatusIcon()}

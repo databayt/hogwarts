@@ -606,9 +606,12 @@ export const {
               cookieName: "oauth_callback_intended",
               fullValue: oauthCallbackCookie.value,
             })
-            // Clear the cookie after use
-            cookieStore.delete("oauth_callback_intended")
-            log("🗑️ Deleted oauth_callback_intended cookie")
+            // NOTE: We do NOT delete the cookie here because:
+            // 1. The redirect callback is triggered multiple times during OAuth flow
+            // 2. We can't reliably detect when we're "done" with OAuth
+            // 3. The cookie has a 15-minute expiry (set in store-callback route)
+            // 4. This ensures the callback URL is available for the final redirect
+            log("⏳ Cookie preserved (will expire naturally after 15 minutes)")
           } else {
             log("❌ Method 0 - No oauth_callback_intended cookie found")
             // Check if any cookies start with oauth

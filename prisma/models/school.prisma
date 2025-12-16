@@ -141,6 +141,7 @@ model School {
   applicationSessions ApplicationSession[]
   admissionSettings   AdmissionSettings?
   admissionOTPs       AdmissionOTP[]
+  visits              Visit[]
 
   // Fees relations
   feeStructures           FeeStructure[]

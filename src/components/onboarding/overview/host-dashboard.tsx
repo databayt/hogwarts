@@ -51,9 +51,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
       {/* Finish school setup section */}
       {hasInProgressSchools && (
         <div className="space-y-2 sm:space-y-3">
-          <h5 className="text-base font-semibold sm:text-lg">
-            {dict.completeSetup || "Complete your school setup"}
-          </h5>
+          <h5>{dict.completeSetup || "Complete your school"}</h5>
 
           <div className="space-y-2">
             {draftSchools.map((school) => (

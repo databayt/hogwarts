@@ -29,12 +29,6 @@
       },
       "description": "GitHub repositories, issues, and pull requests"
     },
-    "browser": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@executeautomation/playwright-mcp-server"],
-      "description": "Browser automation and web scraping"
-    },
     "stripe": {
       "type": "http",
       "url": "https://mcp.stripe.com",

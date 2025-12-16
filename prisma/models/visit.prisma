@@ -1,0 +1,32 @@
+// Visit Model
+// For scheduling school visits and tours
+
+model Visit {
+  id          String      @id @default(cuid())
+  schoolId    String
+  date        DateTime
+  startTime   String      // "09:00"
+  endTime     String      // "10:00"
+  visitorName String
+  email       String
+  phone       String?
+  purpose     String
+  visitors    Int         @default(1)
+  status      VisitStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([date])
+  @@index([status])
+}
+
+enum VisitStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}

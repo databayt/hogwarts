@@ -21,7 +21,7 @@ const Time = ({ dictionary }: TimeProps) => {
         height="h-[280px] md:h-[240px]"
         containerClassName="!w-full rounded-xl overflow-hidden"
       >
-        <div className="absolute inset-0 z-50 flex items-center">
+        <div className="absolute inset-0 z-40 flex items-center">
           <div className="flex w-full flex-col items-center justify-between gap-8 px-8 md:flex-row md:px-16">
             <div className="flex flex-col text-center md:text-start">
               <h2 className="font-heading mb-3 text-5xl font-black tracking-tight text-white md:text-7xl">

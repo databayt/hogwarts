@@ -57,3 +57,5 @@ build.log
 "]*"
 build-analysis-report.md
 .env*.local
+
+certificates

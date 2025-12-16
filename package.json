@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:https": "next dev --turbopack --experimental-https",
     "dev:next": "next dev --turbopack",
     "dev:ws": "node server.js",
     "dev:full": "node server.js",
@@ -121,6 +122,7 @@
     "html2canvas": "^1.4.1",
     "i18next": "^25.7.2",
     "imagekit": "^6.0.0",
+    "input-otp": "^1.4.2",
     "jotai": "^2.15.2",
     "jsbarcode": "^3.12.1",
     "jspdf": "^3.0.3",
