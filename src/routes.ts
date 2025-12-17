@@ -340,6 +340,12 @@ export const roleRoutes: Record<string, Role[]> = {
     "GUARDIAN",
     "DEVELOPER",
   ],
+
+  // ============================================================================
+  // Operator dashboard (DEVELOPER only)
+  // ============================================================================
+  "/operator": ["DEVELOPER"],
+  "/operator/*": ["DEVELOPER"],
 }
 
 /**

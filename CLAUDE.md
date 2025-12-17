@@ -383,63 +383,68 @@ session.user.isPlatformAdmin
 
 ## Development Workflows
 
-### Fully Automatic Mode (Default)
+### Manual Deploy Mode (Default)
 
-**Just describe what you need** - everything else is automatic:
+**Describe what you need** - edits are formatted, push when ready:
 
 ```
 You: "Fix the login validation bug"
      ↓
 Claude: Makes changes
-     ↓ (automatic - no typing needed)
-PostToolUse Hook:
-  1. Prettier formats code
-  2. deploy.sh triggers (background):
-     • Validate: tsc + lint
-     • Build: pnpm build
-     • Commit: auto-generated message
-     • Push: to current branch
-     • Vercel: auto-deploys
+     ↓ (automatic)
+PostToolUse Hook: Prettier formats code
      ↓
-Preview URL ready
+You: "push" (when ready)
+     ↓
+/push command runs:
+  1. TypeScript check
+  2. Lint check (auto-fix)
+  3. Build check
+  4. Show changes
+  5. Commit
+  6. Push
+  7. Show Vercel preview URL
 ```
 
-### Auto-Deploy Hook
+### Push Command
 
-Located at `.claude/hooks/deploy.sh` - triggers after every Edit/Write with:
+Say **"push"** when ready to deploy. Runs full checklist:
 
-- **Debounce**: 60s between deploys (won't spam)
-- **Lock**: Prevents concurrent deploys
-- **Validation**: tsc + lint + build before commit
-- **Bypass**: Uses `--no-verify` to skip redundant hooks
+| Step | Check      | Action on Fail    |
+| ---- | ---------- | ----------------- |
+| 1    | TypeScript | STOP - fix errors |
+| 2    | Lint       | Auto-fix, retry   |
+| 3    | Build      | STOP - fix errors |
+| 4    | Status     | Show changes      |
+| 5    | Commit     | Create commit     |
+| 6    | Push       | Push to remote    |
+| 7    | Monitor    | Show Vercel URL   |
 
-### Manual Commands (When Needed)
+### Other Commands
 
-| Command            | Use Case                     | Time  |
-| ------------------ | ---------------------------- | ----- |
-| `/quick`           | Tiny changes (lint + commit) | ~10s  |
-| `/dev`             | Small changes with tests     | ~30s  |
-| `/deploy`          | Force deploy now             | ~30s  |
-| `/validate`        | Full agent validation        | ~2min |
-| `/ship production` | Production release           | ~5min |
+| Command            | Use Case                   | Time  |
+| ------------------ | -------------------------- | ----- |
+| `push`             | Deploy with full checklist | ~45s  |
+| `/quick`           | Tiny changes (skip build)  | ~10s  |
+| `/dev`             | Small changes with tests   | ~30s  |
+| `/validate`        | Full agent validation      | ~2min |
+| `/ship production` | Production release         | ~5min |
 
 ### For Complex Features
 
 1. **Plan**: `/plan <feature>` - Generate PRD
 2. **Stories**: `/story <feature>` - Create tasks
-3. **Implement**: Just describe each task
-4. **Auto-deploy**: Happens automatically
+3. **Implement**: Describe each task
+4. **Deploy**: Say "push" when ready
 
-### Pre-Commit Hooks (Manual Commits Only)
+### Pre-Commit Hooks
 
-When you manually run `git commit`, these checks run:
+When you run `git commit` (manual or via push), these checks run:
 
 - TypeScript compilation
 - Prisma client sync
 - ESLint validation
 - Test execution
-
-**Note**: Auto-deploy bypasses these (it validates first).
 
 ---
 

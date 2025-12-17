@@ -59,3 +59,5 @@ build-analysis-report.md
 .env*.local
 
 certificates
+# Local SSL certificates
+certificates/

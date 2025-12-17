@@ -95,7 +95,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0; .claude/hooks/deploy.sh 2>/dev/null &"
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
           }
         ]
       },
@@ -104,7 +104,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0; .claude/hooks/deploy.sh 2>/dev/null &"
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
           }
         ]
       },
@@ -124,7 +124,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '🚀 HOGWARTS - FULLY AUTOMATIC MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '🔄 AUTO-DEPLOY ACTIVE:'; echo '  • After edits: Auto-validate + commit + push'; echo '  • Debounce: 60s between deploys'; echo '  • Preview: https://${BRANCH}---hogwarts.vercel.app'; echo ''; echo '📝 Just describe what you need - everything else is automatic'; echo ''; exit 0"
+            "command": "echo '🚀 HOGWARTS - MANUAL DEPLOY MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '📝 WORKFLOW:'; echo '  • Edits: Prettier auto-formats (no push)'; echo '  • When ready: Say \"push\" to deploy'; echo '  • Checklist → Commit → Push → Vercel'; echo ''; exit 0"
           }
         ]
       }
@@ -135,7 +135,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION END - AUTO-DEPLOY CHECK'; echo '═══════════════════════════════════════'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"📝 Found $UNCOMMITTED uncommitted changes\"; echo ''; echo '🚀 Running auto-deploy...'; echo ''; if [ -x .claude/hooks/deploy.sh ]; then .claude/hooks/deploy.sh; else echo '⚠️  Deploy hook not found. Running manual deploy...'; pnpm tsc --noEmit && pnpm lint --fix --quiet && pnpm build && git add -A && git commit -m 'chore: auto-deploy session changes' && git push; fi; else echo '✅ No uncommitted changes'; fi; echo ''; echo '═══════════════════════════════════════'; echo '🚀 Session complete!'; echo '═══════════════════════════════════════'; exit 0"
+            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION END'; echo '═══════════════════════════════════════'; UNCOMMITTED=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' '); if [ \"$UNCOMMITTED\" -gt 0 ]; then echo \"📝 $UNCOMMITTED uncommitted changes\"; echo '💡 Say \"push\" to deploy when ready'; else echo '✅ No uncommitted changes'; fi; echo '═══════════════════════════════════════'; exit 0"
           }
         ]
       }

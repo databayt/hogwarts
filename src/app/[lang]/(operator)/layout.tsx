@@ -4,6 +4,7 @@ import {
   isRTL as checkIsRTL,
   type Locale,
 } from "@/components/internationalization/config"
+import { OperatorAuthGuard } from "@/components/operator/auth/operator-auth-guard"
 import { PageHeadingProvider } from "@/components/platform/context/page-heading-context"
 import { PageHeadingDisplay } from "@/components/platform/context/page-heading-display"
 import SaasHeader from "@/components/template/saas-header/content"
@@ -22,26 +23,28 @@ export default async function OperatorLayout({
   const isRTL = checkIsRTL(lang as Locale)
 
   return (
-    <SidebarProvider>
-      <ModalProvider>
-        <PageHeadingProvider>
-          <div
-            className="flex min-h-svh w-full flex-col"
-            dir={isRTL ? "rtl" : "ltr"}
-          >
-            <SaasHeader />
-            <div className="flex pt-6">
-              <SaasSidebar />
-              <div className="dashboard-container pb-10 transition-[margin] duration-200 ease-in-out">
-                <div className="mb-6">
-                  <PageHeadingDisplay />
+    <OperatorAuthGuard lang={lang as Locale}>
+      <SidebarProvider>
+        <ModalProvider>
+          <PageHeadingProvider>
+            <div
+              className="flex min-h-svh w-full flex-col"
+              dir={isRTL ? "rtl" : "ltr"}
+            >
+              <SaasHeader />
+              <div className="flex pt-6">
+                <SaasSidebar />
+                <div className="dashboard-container pb-10 transition-[margin] duration-200 ease-in-out">
+                  <div className="mb-6">
+                    <PageHeadingDisplay />
+                  </div>
+                  {children}
                 </div>
-                {children}
               </div>
             </div>
-          </div>
-        </PageHeadingProvider>
-      </ModalProvider>
-    </SidebarProvider>
+          </PageHeadingProvider>
+        </ModalProvider>
+      </SidebarProvider>
+    </OperatorAuthGuard>
   )
 }

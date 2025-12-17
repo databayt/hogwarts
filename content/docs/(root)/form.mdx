@@ -1,0 +1,475 @@
+---
+title: "Form Block"
+description: "Centralized form system for building consistent multi-step forms across the application"
+---
+
+## Overview
+
+The **Form Block** is a centralized system for building consistent, accessible multi-step forms. It provides reusable field components, step management, analytics tracking, and persistence - all integrated with `react-hook-form` and Zod validation.
+
+### Purpose
+
+- **Developers**: Build consistent forms with minimal boilerplate
+- **Users**: Seamless multi-step experiences with progress tracking
+- **Platform**: Analytics and persistence for form optimization
+
+### Key Features
+
+- Multi-step form state management
+- Integration with `react-hook-form` and Zod
+- Auto-save and persistence to localStorage
+- Analytics tracking for step completion
+- Accessible, consistent field components
+
+---
+
+## Architecture
+
+The form system follows a modular architecture with clear separation of concerns.
+
+### Directory Structure
+
+```
+src/components/form/
+├── index.ts              # Main exports
+├── types.ts              # TypeScript types
+├── README.md             # Documentation
+│
+├── provider.tsx          # Multi-step form provider & hooks
+├── modal.tsx             # Modal wrapper for multi-step forms
+│
+├── text.tsx              # Text input field
+├── number.tsx            # Number input field
+├── select.tsx            # Select dropdown field
+├── textarea.tsx          # Textarea field
+├── checkbox.tsx          # Checkbox field
+├── date.tsx              # Date picker field
+│
+├── container.tsx         # Step container wrapper
+├── header.tsx            # Step header with title/description
+├── navigation.tsx        # Back/Next navigation buttons
+├── progress.tsx          # Progress indicator (linear/dots/numbered)
+├── success.tsx           # Success celebration component
+│
+├── analytics.tsx         # Form analytics hook
+└── persistence.tsx       # Form persistence hook (localStorage)
+```
+
+### Component Categories
+
+| Category   | Components                                           | Purpose                 |
+| ---------- | ---------------------------------------------------- | ----------------------- |
+| Provider   | `MultiStepFormProvider`, hooks                       | State management        |
+| Fields     | `TextField`, `NumberField`, `SelectField`, etc.      | Form inputs             |
+| Layout     | `FormStepContainer`, `FormStepHeader`, `FormSuccess` | Visual structure        |
+| Navigation | `FormStepNavigation`, `FormStepProgress`             | Step control            |
+| Utilities  | `useFormAnalytics`, `useFormPersistence`             | Analytics and auto-save |
+| Modal      | `ModalMultiStepForm`                                 | Complete modal wrapper  |
+
+---
+
+## Core Concepts
+
+### Multi-Step Form Provider
+
+The `MultiStepFormProvider` manages form state across steps:
+
+```tsx
+import {
+  FormStepContainer,
+  FormStepHeader,
+  FormStepNavigation,
+  MultiStepFormProvider,
+  useMultiStepForm,
+} from "@/components/form"
+
+const config = {
+  steps: [
+    { id: "info", title: "Personal Info", fields: ["name", "email"] },
+    { id: "details", title: "Details", fields: ["bio"] },
+    { id: "confirm", title: "Confirm", optional: true },
+  ],
+  validation: {
+    info: infoSchema,
+    details: detailsSchema,
+  },
+}
+
+function MyForm() {
+  return (
+    <MultiStepFormProvider config={config} onSubmit={handleSubmit}>
+      <FormContent />
+    </MultiStepFormProvider>
+  )
+}
+
+function FormContent() {
+  const { currentStep, next, back, isFirstStep, isLastStep } =
+    useMultiStepForm()
+
+  return (
+    <>
+      <FormStepHeader title={steps[currentStep].title} />
+      <FormStepContainer>
+        {currentStep === 0 && <InfoStep />}
+        {currentStep === 1 && <DetailsStep />}
+        {currentStep === 2 && <ConfirmStep />}
+      </FormStepContainer>
+      <FormStepNavigation
+        onBack={back}
+        onNext={next}
+        isFirstStep={isFirstStep}
+        isLastStep={isLastStep}
+      />
+    </>
+  )
+}
+```
+
+### Form Fields
+
+All fields integrate seamlessly with `react-hook-form`:
+
+```tsx
+import { TextField, SelectField, NumberField, DateField } from "@/components/form"
+
+<TextField name="email" label="Email" type="email" required />
+
+<SelectField
+  name="role"
+  label="Role"
+  options={[
+    { value: "teacher", label: "Teacher" },
+    { value: "student", label: "Student" },
+  ]}
+/>
+
+<NumberField name="age" label="Age" min={0} max={120} />
+
+<DateField name="birthDate" label="Birth Date" maxDate={new Date()} />
+```
+
+---
+
+## Possible Flows
+
+The form system supports multiple use cases across the platform.
+
+### 1. SaaS Onboarding (Route-Based)
+
+- **Path**: `/onboarding/[id]/[step]`
+- **Steps**: 14 steps across 3 groups (School, Host, Listing)
+- **Components**: Uses `host-footer.tsx` for navigation
+- **Use Case**: New school registration and setup
+
+### 2. Newcomers Onboarding (Modal)
+
+- **Path**: School marketing page -> "Join Us"
+- **Steps**: Role -> Info -> Verify -> Profile -> Welcome
+- **Components**: `NewcomersModal` with email verification
+- **Use Case**: New users joining an existing school
+
+### 3. Visit Scheduling (Modal)
+
+- **Path**: School marketing page -> "Schedule Visit"
+- **Steps**: Date -> Time -> Info -> Confirm
+- **Components**: `VisitModal` with timetable integration
+- **Use Case**: Parents scheduling school visits
+
+### 4. Admission Application (Modal)
+
+- **Path**: School marketing page -> "Apply Now"
+- **Steps**: Personal -> Contact -> Guardian -> Academic -> Documents -> Review
+- **Use Case**: Student admission process
+
+### 5. Tour Booking (Modal)
+
+- **Path**: Various entry points
+- **Steps**: Similar to Visit but focused on guided tours
+- **Use Case**: Prospective families booking tours
+
+### 6. CRUD Forms (Inline/Modal)
+
+- **Path**: Platform management pages
+- **Examples**: Create student, Update teacher, Add announcement
+- **Use Case**: Administrative data entry
+
+---
+
+## Component Reference
+
+### Provider & Hooks
+
+| Component                    | Description                                   |
+| ---------------------------- | --------------------------------------------- |
+| `MultiStepFormProvider`      | Context provider for multi-step forms         |
+| `useMultiStepForm()`         | Hook to access form state and navigation      |
+| `useMultiStepFormOptional()` | Optional hook (returns null outside provider) |
+| `useFormAnalytics()`         | Analytics tracking hook                       |
+| `useFormPersistence()`       | localStorage persistence hook                 |
+
+### Fields
+
+| Component       | Props                                                         |
+| --------------- | ------------------------------------------------------------- |
+| `TextField`     | name, label, type, placeholder, required, disabled, maxLength |
+| `NumberField`   | name, label, min, max, step, required                         |
+| `SelectField`   | name, label, options, placeholder, required                   |
+| `TextareaField` | name, label, rows, maxLength, required                        |
+| `CheckboxField` | name, label, checkboxLabel, required                          |
+| `DateField`     | name, label, minDate, maxDate, disabledDays                   |
+
+### Layouts
+
+| Component            | Description                        |
+| -------------------- | ---------------------------------- |
+| `FormStepContainer`  | Wrapper with max-width and spacing |
+| `FormStepHeader`     | Step title, description, indicator |
+| `FormStepNavigation` | Back/Next buttons                  |
+| `FormStepProgress`   | Progress bar/dots/numbered         |
+| `FormSuccess`        | Success celebration with confetti  |
+| `ModalMultiStepForm` | Complete modal wrapper             |
+
+---
+
+## Configuration
+
+### Step Configuration
+
+```typescript
+interface FormStep {
+  id: string
+  title: string
+  description?: string
+  icon?: ComponentType
+  fields?: string[] // Fields to validate
+  optional?: boolean // Can be skipped
+}
+```
+
+### Form Configuration
+
+```typescript
+interface MultiStepFormConfig {
+  steps: FormStep[]
+  groups?: FormStepGroup[] // Optional grouping
+  validation?: Record<string, ZodSchema>
+  autoSave?: boolean
+  autoSaveInterval?: number // ms, default 30000
+  persistenceKey?: string // localStorage key
+  analyticsFlowType?: FormFlowType
+}
+```
+
+---
+
+## Examples
+
+### Modal Multi-Step Form
+
+```tsx
+import { FormStepContainer, ModalMultiStepForm } from "@/components/form"
+
+;<ModalMultiStepForm
+  config={formConfig}
+  open={isOpen}
+  onOpenChange={setIsOpen}
+  onComplete={handleComplete}
+  title="Application Form"
+  showCloseConfirmation
+>
+  <FormStepContainer>{/* Step content */}</FormStepContainer>
+</ModalMultiStepForm>
+```
+
+### With Persistence
+
+Auto-save form data to localStorage to prevent data loss:
+
+```tsx
+const persistence = useFormPersistence({
+  key: "draft-form",
+  autoSave: true,
+  autoSaveInterval: 30000,
+})
+
+// Load draft on mount
+useEffect(() => {
+  const draft = persistence.load()
+  if (draft) form.reset(draft)
+}, [])
+```
+
+### With Analytics
+
+Track step completion and form abandonment:
+
+```tsx
+const analytics = useFormAnalytics()
+
+useEffect(() => {
+  analytics.trackStepView("visit", "date-selection")
+}, [currentStep])
+
+const handleNext = async () => {
+  await next()
+  analytics.trackStepComplete("visit", "date-selection")
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Validate Twice
+
+Client-side validation for UX, server-side for security:
+
+```typescript
+// Client: Immediate feedback
+const form = useForm({
+  resolver: zodResolver(stepSchema),
+})
+
+// Server: Security validation
+export async function submitForm(data: FormData) {
+  "use server"
+  const validated = stepSchema.parse(Object.fromEntries(data))
+  // ... process data
+}
+```
+
+### 2. Use Step IDs
+
+Reference steps by ID, not index, for maintainability:
+
+```typescript
+// Good
+const currentStep = steps.find((s) => s.id === "personal-info")
+
+// Avoid
+const currentStep = steps[0]
+```
+
+### 3. Handle Errors Gracefully
+
+Show step-specific error messages:
+
+```tsx
+{
+  errors[currentStep.id] && (
+    <Alert variant="destructive">
+      <AlertTitle>Please fix the following:</AlertTitle>
+      <AlertDescription>
+        <ul>
+          {Object.values(errors[currentStep.id]).map((error) => (
+            <li key={error}>{error}</li>
+          ))}
+        </ul>
+      </AlertDescription>
+    </Alert>
+  )
+}
+```
+
+### 4. Track Analytics
+
+Monitor step completion and abandonment rates:
+
+```typescript
+// Track funnel metrics
+analytics.trackStepView(flowType, stepId)
+analytics.trackStepComplete(flowType, stepId)
+analytics.trackFormAbandonment(flowType, lastStepId)
+```
+
+### 5. Enable Auto-Save
+
+Prevent data loss on complex forms:
+
+```typescript
+const config = {
+  autoSave: true,
+  autoSaveInterval: 30000, // Every 30 seconds
+  persistenceKey: "admission-form-draft",
+}
+```
+
+### 6. Show Appropriate Progress
+
+Use the right progress variant for context:
+
+| Context      | Variant    | Reason                         |
+| ------------ | ---------- | ------------------------------ |
+| Modal forms  | `dots`     | Compact, minimal space usage   |
+| Page forms   | `linear`   | Clear progress visualization   |
+| Long wizards | `numbered` | Shows total steps and position |
+
+---
+
+## Integration with Platform
+
+### Multi-Tenant Scoping
+
+All form submissions include `schoolId`:
+
+```typescript
+export async function submitAdmission(data: FormData) {
+  "use server"
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+
+  if (!schoolId) throw new Error("Unauthorized")
+
+  await db.admission.create({
+    data: {
+      ...validated,
+      schoolId, // Required for tenant isolation
+    },
+  })
+}
+```
+
+### Internationalization
+
+All form labels support i18n:
+
+```tsx
+import { useDictionary } from "@/components/internationalization/use-dictionary"
+
+function PersonalInfoStep() {
+  const { dictionary } = useDictionary()
+
+  return (
+    <TextField
+      name="name"
+      label={dictionary?.form?.name?.label || "Name"}
+      placeholder={dictionary?.form?.name?.placeholder}
+    />
+  )
+}
+```
+
+### Accessibility
+
+Form components follow WCAG 2.1 AA:
+
+- All inputs have associated labels
+- Error messages are announced to screen readers
+- Keyboard navigation works throughout
+- Focus management on step transitions
+
+---
+
+## Related Documentation
+
+- [Onboarding System](/docs/onboarding) - Route-based multi-step flow
+- [Newcomers](/docs/newcomers) - Modal-based onboarding
+- [Validation Patterns](/docs/validation) - Zod schema patterns
+- [Server Actions](/docs/server-actions) - Form submission handling
+
+---
+
+**Last Updated**: December 2024
+**Status**: Production Ready
+**Version**: 1.0.0
