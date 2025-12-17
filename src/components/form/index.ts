@@ -83,6 +83,7 @@ export { DateField } from "./atoms/date"
 export { SwitchField } from "./atoms/switch"
 export { RadioGroupField } from "./atoms/radio-group"
 export { ComboboxField } from "./atoms/combobox"
+export { FileUploadField } from "./atoms/file-upload"
 
 // =============================================================================
 // TEMPLATE (Composed Components)
@@ -107,3 +108,15 @@ export { FormStepProgress } from "./template/progress"
 export { FormSuccess } from "./template/success"
 export { FormLayout } from "./template/layout"
 export { FormHeading } from "./template/heading"
+
+// =============================================================================
+// BRIDGES (Context Integration)
+// =============================================================================
+
+// Bridge hooks for integrating Form Block with existing context systems
+export {
+  useHostBridge,
+  useApplyBridge,
+  useModalBridge,
+  type ModalMode,
+} from "./bridges"
