@@ -9,6 +9,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   LogIn,
+  Rocket,
   School,
   Settings,
   User,
@@ -112,7 +113,11 @@ export const UserButton = ({
 
         {/* Variant-specific menu items */}
         {variant === "marketing" && (
-          <MarketingMenu locale={locale} role={user.role} />
+          <MarketingMenu
+            locale={locale}
+            role={user.role}
+            schoolId={user.schoolId}
+          />
         )}
         {variant === "site" && (
           <SiteMenu locale={locale} subdomain={subdomain} />
@@ -148,35 +153,63 @@ interface MenuProps {
   locale: string
   subdomain?: string
   role?: string
+  schoolId?: string
 }
 
 /**
  * Marketing Menu (SaaS marketing site - ed.databayt.org)
- * - Dashboard (go to operator dashboard)
- * - Schools (manage schools)
- * - Settings
+ * Role-based menu items:
+ * - DEVELOPER: Dashboard (operator), Tenants
+ * - Users with schoolId: My School (go to school dashboard)
+ * - Users without schoolId: Get Started (onboarding)
  */
-function MarketingMenu({ locale, role }: MenuProps) {
-  const isOperator = role === "DEVELOPER" || role === "ADMIN"
+function MarketingMenu({ locale, role, schoolId }: MenuProps) {
+  const isDeveloper = role === "DEVELOPER"
+  const hasSchool = !!schoolId
 
   return (
     <DropdownMenuGroup>
-      <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/o`}>
-          <LayoutDashboard />
-          Dashboard
-        </Link>
-      </DropdownMenuItem>
-      {isOperator && (
+      {/* DEVELOPER: Operator Dashboard */}
+      {isDeveloper && (
+        <>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href={`/${locale}/dashboard`}>
+              <LayoutDashboard />
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href={`/${locale}/tenants`}>
+              <Building2 />
+              Tenants
+            </Link>
+          </DropdownMenuItem>
+        </>
+      )}
+
+      {/* Users with schoolId: Go to their school */}
+      {!isDeveloper && hasSchool && (
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/${locale}/o/schools`}>
-            <Building2 />
-            Schools
+          <Link href={`/${locale}/my-school`}>
+            <School />
+            My School
           </Link>
         </DropdownMenuItem>
       )}
+
+      {/* Users without schoolId (not DEVELOPER): Start onboarding */}
+      {!isDeveloper && !hasSchool && (
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href={`/${locale}/newcomers`}>
+            <Rocket />
+            Get Started
+          </Link>
+        </DropdownMenuItem>
+      )}
+
+      {/* Settings - common to all */}
       <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/o/settings`}>
+        <Link href={`/${locale}/settings`}>
           <Settings />
           Settings
         </Link>
@@ -215,40 +248,40 @@ function SiteMenu({ locale, subdomain }: MenuProps) {
 }
 
 /**
- * SaaS Menu (Operator dashboard - /o/*)
+ * SaaS Menu (Operator dashboard - /(operator)/*)
  * - Profile
  * - Account/Billing
- * - Schools (operators only)
+ * - Tenants (DEVELOPER only)
  * - Settings
  */
 function SaasMenu({ locale, role }: MenuProps) {
-  const isOperator = role === "DEVELOPER" || role === "ADMIN"
+  const isDeveloper = role === "DEVELOPER"
 
   return (
     <DropdownMenuGroup>
       <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/o/profile`}>
+        <Link href={`/${locale}/profile`}>
           <User />
           Profile
           <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
         </Link>
       </DropdownMenuItem>
       <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/o/billing`}>
+        <Link href={`/${locale}/billing`}>
           <CreditCard />
           Billing
         </Link>
       </DropdownMenuItem>
-      {isOperator && (
+      {isDeveloper && (
         <DropdownMenuItem asChild className="cursor-pointer">
-          <Link href={`/${locale}/o/schools`}>
+          <Link href={`/${locale}/tenants`}>
             <Building2 />
-            Schools
+            Tenants
           </Link>
         </DropdownMenuItem>
       )}
       <DropdownMenuItem asChild className="cursor-pointer">
-        <Link href={`/${locale}/o/settings`}>
+        <Link href={`/${locale}/settings`}>
           <Settings />
           Settings
           <DropdownMenuShortcut>⌘,</DropdownMenuShortcut>
