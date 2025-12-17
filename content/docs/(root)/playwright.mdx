@@ -1,0 +1,330 @@
+---
+title: "Playwright"
+description: "E2E testing with Playwright - optimized for headless mode and HTTPS localhost"
+---
+
+## Overview
+
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing with optimizations for headless mode, GPU acceleration, and HTTPS localhost support.
+
+## Installation
+
+Playwright is already configured. To install browsers:
+
+```bash
+pnpm exec playwright install
+```
+
+## Commands
+
+```bash
+pnpm test:e2e              # Run all E2E tests
+pnpm test:e2e:ui           # Run with interactive UI
+pnpm test:e2e:debug        # Debug mode with inspector
+pnpm test:e2e:report       # View HTML test report
+```
+
+### Run Specific Tests
+
+```bash
+pnpm test:e2e --project=chromium     # Chromium only
+pnpm test:e2e --project=firefox      # Firefox only
+pnpm test:e2e --headed               # Show browser window
+pnpm test:e2e tests/login.spec.ts    # Single test file
+```
+
+## Configuration
+
+The configuration is optimized for performance and HTTPS localhost support.
+
+### Full Config
+
+```typescript
+// playwright.config.ts
+import { defineConfig, devices } from "@playwright/test"
+
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  timeout: 30_000,
+
+  use: {
+    baseURL: "https://localhost:3000",
+    ignoreHTTPSErrors: true,
+    headless: true,
+    viewport: { width: 1280, height: 720 },
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "on-first-retry",
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
+
+    // GPU acceleration
+    launchOptions: {
+      args: ["--use-gl=egl", "--disable-dev-shm-usage", "--no-sandbox"],
+    },
+  },
+
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    { name: "mobile-chrome", use: { ...devices["Pixel 5"] } },
+    { name: "mobile-safari", use: { ...devices["iPhone 12"] } },
+  ],
+
+  webServer: {
+    command: "pnpm dev:https",
+    url: "https://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+    ignoreHTTPSErrors: true,
+  },
+})
+```
+
+## Headless Optimizations
+
+### GPU Hardware Acceleration
+
+GPU acceleration reduces test execution time by ~30%.
+
+| Setting                   | Value            | Purpose                        |
+| ------------------------- | ---------------- | ------------------------------ |
+| `--use-gl=egl`            | GPU acceleration | 30% faster rendering           |
+| `--disable-dev-shm-usage` | Memory fix       | Prevents crashes in Docker/CI  |
+| `--no-sandbox`            | CI compatibility | Required for some environments |
+
+### Performance Comparison
+
+| Mode                      | Time per Test | 100 Tests |
+| ------------------------- | ------------- | --------- |
+| Without GPU               | ~1.9s         | ~3m 10s   |
+| With GPU (`--use-gl=egl`) | ~1.3s         | ~2m 10s   |
+
+### Verify GPU Acceleration
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+test("GPU hardware acceleration", async ({ page }) => {
+  await page.goto("chrome://gpu")
+  const featureStatus = page.locator(".feature-status-list")
+  await expect(featureStatus).toContainText("Hardware accelerated")
+})
+```
+
+## HTTPS Localhost
+
+The project uses self-signed certificates for local HTTPS testing.
+
+### Why HTTPS?
+
+- **OAuth providers** require HTTPS callback URLs
+- **Secure cookies** need HTTPS in development
+- **Production parity** for realistic testing
+
+### Setup
+
+Certificates are pre-generated in `./certificates/`:
+
+```
+certificates/
+  localhost+2.pem      # Certificate
+  localhost+2-key.pem  # Private key
+```
+
+### Start HTTPS Server
+
+```bash
+pnpm dev:https   # Starts at https://localhost:3000
+```
+
+### Playwright Config for HTTPS
+
+```typescript
+use: {
+  baseURL: "https://localhost:3000",
+  ignoreHTTPSErrors: true,  // Trust self-signed certs
+}
+```
+
+## Writing Tests
+
+### Basic Test
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+test("homepage has title", async ({ page }) => {
+  await page.goto("/")
+  await expect(page).toHaveTitle(/Hogwarts/)
+})
+```
+
+### Login Flow Test
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+test("login with credentials", async ({ page }) => {
+  await page.goto("/en/login")
+
+  await page.getByRole("textbox", { name: "Email" }).fill("test@example.com")
+  await page.getByRole("textbox", { name: "Password" }).fill("password123")
+  await page.getByRole("button", { name: "Login" }).click()
+
+  await expect(page).toHaveURL(/dashboard/)
+})
+```
+
+### Test with Authentication
+
+```typescript
+import { expect, test } from "@playwright/test"
+
+test.describe("authenticated user", () => {
+  test.beforeEach(async ({ page }) => {
+    // Login before each test
+    await page.goto("/en/login")
+    await page.fill('[name="email"]', "admin@test.com")
+    await page.fill('[name="password"]', "password")
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard")
+  })
+
+  test("can access admin panel", async ({ page }) => {
+    await page.goto("/en/s/demo/admin")
+    await expect(page.locator("h1")).toContainText("Admin")
+  })
+})
+```
+
+## Debugging
+
+### Debug Mode
+
+```bash
+pnpm test:e2e:debug
+```
+
+Opens Playwright Inspector for step-by-step debugging.
+
+### Trace Viewer
+
+View detailed traces of failed tests:
+
+```bash
+pnpm test:e2e:report
+```
+
+### Screenshots and Videos
+
+Automatically captured on failure:
+
+- Screenshots: `test-results/*/screenshot.png`
+- Videos: `test-results/*/video.webm`
+- Traces: `test-results/*/trace.zip`
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+# .github/workflows/playwright.yml
+name: Playwright Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - run: pnpm install
+      - run: pnpm exec playwright install --with-deps
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+## Best Practices
+
+### Do
+
+- Use `getByRole()` for accessible selectors
+- Wait for network idle on navigation
+- Use `test.describe()` for grouping related tests
+- Add `data-testid` for complex elements
+- Run tests in parallel with `fullyParallel: true`
+
+### Avoid
+
+- Hardcoded waits (`page.waitForTimeout`)
+- Fragile CSS selectors
+- Tests that depend on execution order
+- Shared state between tests
+
+## Timeouts
+
+| Setting             | Default | Purpose             |
+| ------------------- | ------- | ------------------- |
+| `timeout`           | 30s     | Global test timeout |
+| `actionTimeout`     | 10s     | Click, fill, etc.   |
+| `navigationTimeout` | 15s     | Page navigation     |
+| `expect.timeout`    | 5s      | Assertion timeout   |
+
+## Browser Projects
+
+| Project         | Device          | Use Case         |
+| --------------- | --------------- | ---------------- |
+| `chromium`      | Desktop Chrome  | Primary testing  |
+| `firefox`       | Desktop Firefox | Cross-browser    |
+| `webkit`        | Desktop Safari  | macOS/iOS compat |
+| `mobile-chrome` | Pixel 5         | Android mobile   |
+| `mobile-safari` | iPhone 12       | iOS mobile       |
+
+## MCP Integration
+
+The Playwright MCP server enables AI-assisted browser automation.
+
+### Available Tools
+
+| Tool                 | Purpose                |
+| -------------------- | ---------------------- |
+| `browser_navigate`   | Go to URL              |
+| `browser_snapshot`   | Get accessibility tree |
+| `browser_click`      | Click element          |
+| `browser_type`       | Type text              |
+| `browser_fill_form`  | Fill multiple fields   |
+| `browser_screenshot` | Capture screenshot     |
+
+### Example Usage
+
+```
+Navigate to https://localhost:3000
+Click the Login button
+Fill email field with test@example.com
+Take a screenshot
+```
+
+## Sources
+
+- [Playwright Documentation](https://playwright.dev/docs/intro)
+- [Playwright TestOptions](https://playwright.dev/docs/api/class-testoptions)
+- [GPU Acceleration for Headless Mode](https://michelkraemer.com/enable-gpu-for-slow-playwright-tests-in-headless-mode/)
+- [Speed Up Headless Browser](https://medium.com/@mikestopcontinues/speed-up-the-headless-browser-in-playwright-112c045669f1)
+- [Headless vs Headed Modes](https://dev.to/johnnyv5g/understanding-headless-vs-headed-modes-in-playwright-a-guide-for-qa-automation-engineers-sdets-4h7e)

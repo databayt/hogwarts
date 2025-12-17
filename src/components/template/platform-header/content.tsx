@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import { Bell, Mail } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -49,6 +49,7 @@ export default function PlatformHeader({
   const { isRTL, locale } = useLocale()
   const role = useCurrentRole() as Role | undefined
   const pathname = usePathname()
+  const params = useParams()
 
   // Prepend locale to href (middleware handles subdomain rewriting)
   const messagesUrl = `/${locale}/messages`
@@ -163,7 +164,10 @@ export default function PlatformHeader({
               <span className="sr-only">Messages</span>
             </Link>
           </Button>
-          <UserButton />
+          <UserButton
+            variant="platform"
+            subdomain={params?.subdomain as string}
+          />
         </div>
       </header>
       <ImpersonationBanner />

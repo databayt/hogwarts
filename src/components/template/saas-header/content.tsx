@@ -115,7 +115,7 @@ export default function SaasHeader() {
             <Mail className="h-4 w-4" />
             <span className="sr-only">Messages</span>
           </Button>
-          <UserButton />
+          <UserButton variant="saas" />
         </div>
       </header>
     </div>

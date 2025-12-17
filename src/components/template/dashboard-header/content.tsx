@@ -26,7 +26,7 @@ export default function DashboardHeader() {
             <span className="sr-only">Messages</span>
           </Button>
           <ModeSwitcher />
-          <UserButton />
+          <UserButton variant="saas" />
         </div>
       </header>
       <ImpersonationBanner />

@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator"
+import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { MobileNav } from "@/components/template/mobile-nav"
 
@@ -60,6 +61,7 @@ export function SiteHeader({ dictionary, locale = "en" }: SiteHeaderProps) {
           <Separator orientation="vertical" className="mx-1" />
           <LangSwitcher />
           <ModeSwitcher />
+          <UserButton variant="marketing" />
         </nav>
       </div>
     </header>

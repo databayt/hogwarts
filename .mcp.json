@@ -105,6 +105,20 @@
       },
       "description": "Component documentation and visual testing - auto-generate stories and capture screenshots"
     },
+    "browser": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--timeout-action",
+        "10000",
+        "--timeout-navigation",
+        "30000"
+      ],
+      "description": "Official Microsoft Playwright MCP - browser automation via accessibility snapshots"
+    },
     "design-system-analyzer": {
       "type": "stdio",
       "command": "npx",

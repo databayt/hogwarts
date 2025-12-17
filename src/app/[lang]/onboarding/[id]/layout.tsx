@@ -258,7 +258,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col px-4 sm:px-8 md:px-12">
+    <div className="flex h-screen flex-col">
       <main className="flex w-full flex-1 items-center pb-20">{children}</main>
       <HostFooter dictionary={dictionary?.school} locale={locale} />
     </div>

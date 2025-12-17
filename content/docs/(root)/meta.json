@@ -25,6 +25,7 @@
     "timetable",
     "---Setup---",
     "localhost",
+    "playwright",
     "seeds",
     "internationalization",
     "authantication",

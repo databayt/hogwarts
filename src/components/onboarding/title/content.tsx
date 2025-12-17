@@ -93,7 +93,7 @@ export default function TitleContent({ dictionary }: Props) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full">
         <FormLayout>
           <div className="space-y-4">
             <Skeleton className="h-8 w-64" />
@@ -110,28 +110,26 @@ export default function TitleContent({ dictionary }: Props) {
   }
 
   return (
-    <div className={`space-y-8 ${isRTL ? "rtl" : "ltr"}`}>
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <FormHeading
-            title={dict.whatsYourSchoolName || "What's your school's name?"}
-            description={
-              dict.schoolNameDescription ||
-              "This will be your school's official name in the system."
-            }
-          />
-          <TitleForm
-            ref={titleFormRef}
-            schoolId={schoolId}
-            initialData={{
-              title: currentTitle,
-              subdomain: titleData?.subdomain || "",
-            }}
-            onTitleChange={handleTitleChange}
-            dictionary={dictionary}
-          />
-        </FormLayout>
-      </div>
+    <div className={`w-full ${isRTL ? "rtl" : "ltr"}`}>
+      <FormLayout>
+        <FormHeading
+          title={dict.whatsYourSchoolName || "What's your school's name?"}
+          description={
+            dict.schoolNameDescription ||
+            "This will be your school's official name in the system."
+          }
+        />
+        <TitleForm
+          ref={titleFormRef}
+          schoolId={schoolId}
+          initialData={{
+            title: currentTitle,
+            subdomain: titleData?.subdomain || "",
+          }}
+          onTitleChange={handleTitleChange}
+          dictionary={dictionary}
+        />
+      </FormLayout>
     </div>
   )
 }

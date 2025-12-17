@@ -1,11 +1,7 @@
 import React from "react"
-import Link from "next/link"
-import { auth } from "@/auth"
 
-import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { LogoutButton } from "@/components/auth/logout-button"
+import { UserButton } from "@/components/auth/user-button"
 import { type Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { LangSwitcher } from "@/components/template/marketing-header/lang-switcher"
@@ -40,8 +36,6 @@ interface SiteHeaderProps {
 }
 
 export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
-  const session = await auth()
-  const isAuthenticated = !!session?.user
   const dictionary = await getDictionary(locale as Locale)
 
   // Transform nav items for MobileNav
@@ -72,26 +66,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
           <LangSwitcher />
           <ModeSwitcher />
           <Separator orientation="vertical" className="mx-1" />
-          {isAuthenticated ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="text-muted-foreground px-4"
-              asChild
-            >
-              <LogoutButton>Logout</LogoutButton>
-            </Button>
-          ) : (
-            <Link
-              href={`/${locale}/login`}
-              className={cn(
-                buttonVariants({ variant: "secondary", size: "sm" }),
-                "text-muted-foreground px-4"
-              )}
-            >
-              Login
-            </Link>
-          )}
+          <UserButton variant="site" subdomain={school.domain} />
         </nav>
       </div>
     </header>

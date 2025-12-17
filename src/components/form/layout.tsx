@@ -53,19 +53,26 @@ export function FormLayout({
   return (
     <div
       className={cn(
-        "flex w-full flex-col lg:flex-row lg:justify-between",
+        "flex w-full flex-col lg:flex-row",
         gapClasses[gap],
         alignClasses[align],
         className
       )}
     >
       {childArray[0] && (
-        <div className={cn("w-full lg:w-auto lg:shrink-0", leftBasis)}>
+        <div
+          className={cn("w-full bg-blue-500 lg:w-auto lg:shrink-0", leftBasis)}
+        >
           {childArray[0]}
         </div>
       )}
       {childArray[1] && (
-        <div className={cn("w-full lg:w-auto lg:shrink-0", rightBasis)}>
+        <div
+          className={cn(
+            "w-full bg-green-500 lg:w-auto lg:shrink-0",
+            rightBasis
+          )}
+        >
           {childArray[1]}
         </div>
       )}

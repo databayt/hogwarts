@@ -1,10 +1,5 @@
-import Link from "next/link"
-import { auth } from "@/auth"
-
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { LogoutButton } from "@/components/auth/logout-button"
+import { UserButton } from "@/components/auth/user-button"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { docsConfig, marketingConfig } from "./config"
@@ -19,13 +14,10 @@ interface MarketingHeaderProps {
   locale?: string
 }
 
-export default async function MarketingHeader({
+export default function MarketingHeader({
   dictionary,
   locale = "en",
 }: MarketingHeaderProps) {
-  const session = await auth()
-  const isAuthenticated = !!session?.user
-
   // Transform nav items for MobileNav
   const navItems = marketingConfig.mainNav.map((item) => ({
     href: item.href,
@@ -61,40 +53,13 @@ export default async function MarketingHeader({
           locale={locale}
         />
         <div className="ms-auto flex items-center gap-2 md:flex-1 md:justify-end">
-          <div className="hidden w-full flex-1 md:flex md:w-auto md:flex-none">
-            {/* Login/Logout instead of CommandMenu */}
-            <div className="mr-4">
-              {isAuthenticated ? (
-                <LogoutButton
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "px-4"
-                  )}
-                >
-                  {dictionary?.auth?.signOut || "Logout"}
-                </LogoutButton>
-              ) : (
-                <Link
-                  href="/login"
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }),
-                    "px-4"
-                  )}
-                >
-                  {dictionary?.auth?.signIn || "Login"}
-                </Link>
-              )}
-            </div>
-          </div>
           <nav className="flex items-center gap-0.5 **:data-[slot=separator]:!h-4">
-            <Separator
-              orientation="vertical"
-              className="mx-1 hidden md:block"
-            />
             <GitHubLink />
             <Separator orientation="vertical" className="mx-1" />
             <LangSwitcher />
             <ModeSwitcher />
+            <Separator orientation="vertical" className="mx-1" />
+            <UserButton variant="marketing" />
           </nav>
         </div>
       </div>
