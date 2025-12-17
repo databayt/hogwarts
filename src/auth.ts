@@ -1091,11 +1091,20 @@ export const {
 
       // Special case: if URL is exactly "/" (home page), respect it (for logout)
       if (url === "/") {
-        const homeUrl = baseUrl
+        // Include locale in redirect to ensure proper routing
+        // Default to 'ar' if no locale can be detected
+        const defaultLocale = "ar"
+        const homeUrl = `${baseUrl}/${defaultLocale}`
         log("🏠 Redirecting to home page (logout):", {
           reason: "URL is exactly /",
           originalUrl: url,
+          locale: defaultLocale,
           finalUrl: homeUrl,
+        })
+        console.log("[AUTH-REDIRECT] 🏠 Logout redirect to homepage:", {
+          url,
+          homeUrl,
+          locale: defaultLocale,
         })
         log("=====================================")
         log("🔄 REDIRECT CALLBACK END")

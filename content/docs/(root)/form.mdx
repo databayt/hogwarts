@@ -1,78 +1,370 @@
 ---
 title: "Form Block"
-description: "Centralized form system for building consistent multi-step forms across the application"
+description: "Generic, reusable form system with atoms, templates, server actions, and React 19 integration"
 ---
 
 ## Overview
 
-The **Form Block** is a centralized system for building consistent, accessible multi-step forms. It provides reusable field components, step management, analytics tracking, and persistence - all integrated with `react-hook-form` and Zod validation.
+The **Form Block** is a centralized, **generic** form system for building consistent forms across the application. It provides atomic field components, composed templates, generic server actions, analytics, and persistence - all integrated with `react-hook-form`, Zod 4, and React 19.
 
-### Purpose
+### Design Principles
 
-- **Developers**: Build consistent forms with minimal boilerplate
-- **Users**: Seamless multi-step experiences with progress tracking
-- **Platform**: Analytics and persistence for form optimization
+- **Generic**: Components work with any data model
+- **Reusable**: Atoms compose into any form flow
+- **Type-safe**: Full TypeScript inference
+- **Server-ready**: Generic action helpers for mutations
+- **Multi-tenant**: Built-in schoolId scoping
 
 ### Key Features
 
-- Multi-step form state management
-- Integration with `react-hook-form` and Zod
-- Auto-save and persistence to localStorage
-- Analytics tracking for step completion
-- Accessible, consistent field components
+- Atomic field components (single-purpose)
+- Composed templates (multi-step, modals)
+- Generic CRUD server actions
+- React 19 integration (useActionState, useFormStatus)
+- Auto-save and persistence
+- Analytics tracking
 
 ---
 
 ## Architecture
 
-The form system follows a modular architecture with clear separation of concerns.
+The form system follows an **atomic design pattern** with clear separation of concerns.
 
 ### Directory Structure
 
 ```
 src/components/form/
-├── index.ts              # Main exports
-├── types.ts              # TypeScript types
-├── README.md             # Documentation
+├── index.ts              # Main exports (backward compatible)
+├── types.ts              # Generic TypeScript types
+├── actions.ts            # Generic server action helpers (NEW)
+├── use-form.ts           # Central hooks file (all hooks merged)
 │
-├── provider.tsx          # Multi-step form provider & hooks
-├── modal.tsx             # Modal wrapper for multi-step forms
+├── atoms/                # Atomic field components (single-purpose)
+│   ├── index.ts          # Atom exports
+│   ├── input.tsx         # Text/email/tel/url input
+│   ├── number.tsx        # Number input with min/max
+│   ├── select.tsx        # Select dropdown
+│   ├── textarea.tsx      # Multi-line text
+│   ├── checkbox.tsx      # Boolean checkbox
+│   ├── date.tsx          # Date picker
+│   ├── switch.tsx        # Toggle switch
+│   ├── radio-group.tsx   # Radio options
+│   └── combobox.tsx      # Searchable select
 │
-├── text.tsx              # Text input field
-├── number.tsx            # Number input field
-├── select.tsx            # Select dropdown field
-├── textarea.tsx          # Textarea field
-├── checkbox.tsx          # Checkbox field
-├── date.tsx              # Date picker field
-│
-├── container.tsx         # Step container wrapper
-├── header.tsx            # Step header with title/description
-├── navigation.tsx        # Back/Next navigation buttons
-├── progress.tsx          # Progress indicator (linear/dots/numbered)
-├── success.tsx           # Success celebration component
-│
-├── analytics.tsx         # Form analytics hook
-└── persistence.tsx       # Form persistence hook (localStorage)
+└── template/             # Composed form templates (molecules + organisms)
+    ├── index.ts          # Template exports
+    │
+    │ # Composed Fields (molecules)
+    ├── field-array.tsx   # Dynamic field list
+    ├── password-field.tsx # Password with strength meter
+    ├── phone-field.tsx   # Phone with country code
+    │
+    │ # Form Structures (organisms)
+    ├── provider.tsx      # Multi-step form provider
+    ├── modal.tsx         # Modal wrapper
+    ├── container.tsx     # Step container
+    ├── header.tsx        # Step header
+    ├── heading.tsx       # Form heading
+    ├── navigation.tsx    # Step navigation
+    ├── progress.tsx      # Progress indicator
+    ├── success.tsx       # Success celebration
+    └── layout.tsx        # Two-column layout
 ```
-
-### Component Categories
-
-| Category   | Components                                           | Purpose                 |
-| ---------- | ---------------------------------------------------- | ----------------------- |
-| Provider   | `MultiStepFormProvider`, hooks                       | State management        |
-| Fields     | `TextField`, `NumberField`, `SelectField`, etc.      | Form inputs             |
-| Layout     | `FormStepContainer`, `FormStepHeader`, `FormSuccess` | Visual structure        |
-| Navigation | `FormStepNavigation`, `FormStepProgress`             | Step control            |
-| Utilities  | `useFormAnalytics`, `useFormPersistence`             | Analytics and auto-save |
-| Modal      | `ModalMultiStepForm`                                 | Complete modal wrapper  |
 
 ---
 
-## Core Concepts
+## Component Roles & Usage
 
-### Multi-Step Form Provider
+### Atoms (Single-Purpose Fields)
 
-The `MultiStepFormProvider` manages form state across steps:
+Atomic field components that work with any form. All integrate with `react-hook-form`.
+
+| Component         | Role                                | Usage Across App                                    |
+| ----------------- | ----------------------------------- | --------------------------------------------------- |
+| `InputField`      | Text/email/password/tel/url input   | Login, registration, profile, search, contact forms |
+| `NumberField`     | Numeric values with min/max         | Age, quantity, prices, scores, capacities           |
+| `SelectField`     | Dropdown selection                  | Roles, statuses, categories, types, subjects        |
+| `TextareaField`   | Multi-line text                     | Descriptions, bios, notes, messages, feedback       |
+| `CheckboxField`   | Boolean toggle                      | Consent, preferences, filters, bulk selection       |
+| `DateField`       | Date picker                         | Birth dates, deadlines, schedules, events           |
+| `SwitchField`     | On/off toggle                       | Settings, notifications, feature flags              |
+| `RadioGroupField` | Single selection from options       | Plan selection, payment methods, priorities         |
+| `ComboboxField`   | Searchable select with autocomplete | Large lists, tags, user search                      |
+
+### Template Components
+
+Composed components that combine atoms into patterns (molecules) or complete structures (organisms).
+
+#### Composed Fields (Molecules)
+
+| Component       | Role                                             | Usage Across App                              |
+| --------------- | ------------------------------------------------ | --------------------------------------------- |
+| `FieldArray`    | Dynamic list of fields with add/remove           | Email lists, phone numbers, addresses, skills |
+| `PasswordField` | Password with visibility toggle + strength meter | Registration, password reset, settings        |
+| `PhoneField`    | Phone input with country code selector           | Contact forms, profiles, emergency contacts   |
+
+#### Form Structures (Organisms)
+
+| Component               | Role                                  | Usage Across App                    |
+| ----------------------- | ------------------------------------- | ----------------------------------- |
+| `MultiStepFormProvider` | Step state management + context       | Onboarding, applications, wizards   |
+| `ModalMultiStepForm`    | Modal wrapper with multi-step support | Quick forms, dialogs, confirmations |
+| `FormStepContainer`     | Step content wrapper                  | Any multi-step flow                 |
+| `FormStepHeader`        | Step title/description                | Guidance in wizards                 |
+| `FormHeading`           | Form heading with icon                | Any form header                     |
+| `FormStepNavigation`    | Back/Next buttons                     | Wizard navigation                   |
+| `FormStepProgress`      | Visual progress indicator             | User orientation                    |
+| `FormSuccess`           | Completion celebration with confetti  | End of successful flows             |
+| `FormLayout`            | Two-column split layout               | Landing pages, detailed forms       |
+
+### Hooks
+
+Reusable form logic extracted into hooks.
+
+| Hook                       | Role                                               | Usage Across App               |
+| -------------------------- | -------------------------------------------------- | ------------------------------ |
+| `useMultiStepForm`         | Access step state and navigation                   | Inside `MultiStepFormProvider` |
+| `useMultiStepFormOptional` | Optional version (returns null outside provider)   | Conditional form contexts      |
+| `useFormAnalytics`         | Track form events (view, complete, error, abandon) | All forms for metrics          |
+| `useFormPersistence`       | Auto-save drafts to localStorage                   | Long forms, prevent data loss  |
+| `useActionStateBridge`     | Bridge React 19 useActionState + react-hook-form   | Server action forms            |
+| `useFormSubmitStatus`      | Loading state from useFormStatus                   | Submit button states           |
+
+### Server Actions
+
+Generic helpers for CRUD operations with multi-tenant safety.
+
+| Helper                | Role                              | Usage Across App              |
+| --------------------- | --------------------------------- | ----------------------------- |
+| `createFormAction`    | Wrap schema + handler into action | Any validated form submission |
+| `createGenericAction` | Generic create with schoolId      | CRUD create operations        |
+| `updateGenericAction` | Generic update with schoolId      | CRUD update operations        |
+| `deleteGenericAction` | Generic delete with schoolId      | CRUD delete operations        |
+| `findGenericAction`   | Generic find with schoolId        | CRUD read operations          |
+| `mapZodErrors`        | Convert Zod errors to form format | Error handling                |
+| `createRevalidator`   | Create path revalidation helper   | Cache invalidation            |
+
+---
+
+## React 19 Integration
+
+### useActionState Bridge
+
+Seamlessly integrate React 19's `useActionState` with `react-hook-form`:
+
+```tsx
+import { useActionStateBridge } from "@/components/form"
+
+const { form, state, isPending, handleSubmit } = useActionStateBridge({
+  schema: studentSchema,
+  action: createStudentAction,
+  defaultValues: { name: "", email: "" },
+  onSuccess: (data) => toast.success("Student created!"),
+  onError: (errors) => console.error(errors),
+})
+
+return (
+  <Form {...form}>
+    <form onSubmit={handleSubmit()}>
+      <InputField name="name" label="Name" required />
+      <InputField name="email" label="Email" type="email" required />
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "Saving..." : "Save"}
+      </Button>
+    </form>
+  </Form>
+)
+```
+
+### How It Works
+
+1. **Client Validation**: `react-hook-form` + Zod validates before submission
+2. **Server Action**: `useActionState` handles the server action lifecycle
+3. **Error Bridging**: Server errors are mapped back to form fields
+4. **Type Safety**: Full TypeScript inference from schema to form
+
+---
+
+## Generic Server Actions
+
+### Creating Form Actions
+
+Use `createFormAction` to wrap any schema + handler:
+
+```tsx
+// actions.ts
+"use server"
+
+import { ActionResponse, createFormAction } from "@/components/form"
+
+import { studentSchema } from "./validation"
+
+export const createStudentAction = createFormAction(
+  studentSchema,
+  async (data, schoolId) => {
+    const student = await db.student.create({
+      data: { ...data, schoolId },
+    })
+    return student
+  }
+)
+```
+
+### Generic CRUD Helpers
+
+```tsx
+import {
+  createGenericAction,
+  deleteGenericAction,
+  updateGenericAction,
+} from "@/components/form"
+
+// Create
+const result = await createGenericAction(
+  db.student,
+  { name: "John", email: "john@school.com" },
+  schoolId,
+  "/students" // revalidate path
+)
+
+// Update
+const result = await updateGenericAction(
+  db.student,
+  studentId,
+  { name: "John Updated" },
+  schoolId,
+  "/students"
+)
+
+// Delete
+const result = await deleteGenericAction(
+  db.student,
+  studentId,
+  schoolId,
+  "/students"
+)
+```
+
+### ActionResponse Type
+
+All actions return a consistent response:
+
+```typescript
+interface ActionResponse<T = unknown> {
+  success: boolean
+  data?: T
+  errors?: Record<string, string[]>
+  message?: string
+}
+```
+
+---
+
+## Field Components
+
+### Basic Usage
+
+All fields integrate with `react-hook-form` context:
+
+```tsx
+import { InputField, SelectField, NumberField, DateField } from "@/components/form"
+
+// Inside a Form provider
+<InputField name="email" label="Email" type="email" required />
+
+<SelectField
+  name="role"
+  label="Role"
+  options={[
+    { value: "teacher", label: "Teacher" },
+    { value: "student", label: "Student" },
+  ]}
+/>
+
+<NumberField name="age" label="Age" min={0} max={120} />
+
+<DateField name="birthDate" label="Birth Date" maxDate={new Date()} />
+```
+
+### New Field Components
+
+#### SwitchField
+
+```tsx
+<SwitchField
+  name="notifications"
+  label="Email Notifications"
+  description="Receive updates via email"
+/>
+```
+
+#### RadioGroupField
+
+```tsx
+<RadioGroupField
+  name="plan"
+  label="Select Plan"
+  options={[
+    { value: "basic", label: "Basic" },
+    { value: "pro", label: "Pro" },
+    { value: "enterprise", label: "Enterprise" },
+  ]}
+  orientation="horizontal"
+/>
+```
+
+#### ComboboxField
+
+```tsx
+<ComboboxField
+  name="country"
+  label="Country"
+  options={countries}
+  searchPlaceholder="Search countries..."
+  emptyMessage="No country found."
+/>
+```
+
+#### PasswordField
+
+```tsx
+<PasswordField
+  name="password"
+  label="Password"
+  showStrengthMeter
+  minLength={8}
+/>
+```
+
+#### PhoneField
+
+```tsx
+<PhoneField
+  name="phone"
+  countryCodeName="phoneCountryCode"
+  label="Phone Number"
+  defaultCountryCode="SA"
+/>
+```
+
+#### FieldArray
+
+```tsx
+<FieldArray
+  name="emails"
+  label="Email Addresses"
+  placeholder="email@example.com"
+  addButtonLabel="Add another email"
+  maxItems={5}
+  minItems={1}
+/>
+```
+
+---
+
+## Multi-Step Forms
+
+### Provider Setup
 
 ```tsx
 import {
@@ -126,145 +418,6 @@ function FormContent() {
 }
 ```
 
-### Form Fields
-
-All fields integrate seamlessly with `react-hook-form`:
-
-```tsx
-import { TextField, SelectField, NumberField, DateField } from "@/components/form"
-
-<TextField name="email" label="Email" type="email" required />
-
-<SelectField
-  name="role"
-  label="Role"
-  options={[
-    { value: "teacher", label: "Teacher" },
-    { value: "student", label: "Student" },
-  ]}
-/>
-
-<NumberField name="age" label="Age" min={0} max={120} />
-
-<DateField name="birthDate" label="Birth Date" maxDate={new Date()} />
-```
-
----
-
-## Possible Flows
-
-The form system supports multiple use cases across the platform.
-
-### 1. SaaS Onboarding (Route-Based)
-
-- **Path**: `/onboarding/[id]/[step]`
-- **Steps**: 14 steps across 3 groups (School, Host, Listing)
-- **Components**: Uses `host-footer.tsx` for navigation
-- **Use Case**: New school registration and setup
-
-### 2. Newcomers Onboarding (Modal)
-
-- **Path**: School marketing page -> "Join Us"
-- **Steps**: Role -> Info -> Verify -> Profile -> Welcome
-- **Components**: `NewcomersModal` with email verification
-- **Use Case**: New users joining an existing school
-
-### 3. Visit Scheduling (Modal)
-
-- **Path**: School marketing page -> "Schedule Visit"
-- **Steps**: Date -> Time -> Info -> Confirm
-- **Components**: `VisitModal` with timetable integration
-- **Use Case**: Parents scheduling school visits
-
-### 4. Admission Application (Modal)
-
-- **Path**: School marketing page -> "Apply Now"
-- **Steps**: Personal -> Contact -> Guardian -> Academic -> Documents -> Review
-- **Use Case**: Student admission process
-
-### 5. Tour Booking (Modal)
-
-- **Path**: Various entry points
-- **Steps**: Similar to Visit but focused on guided tours
-- **Use Case**: Prospective families booking tours
-
-### 6. CRUD Forms (Inline/Modal)
-
-- **Path**: Platform management pages
-- **Examples**: Create student, Update teacher, Add announcement
-- **Use Case**: Administrative data entry
-
----
-
-## Component Reference
-
-### Provider & Hooks
-
-| Component                    | Description                                   |
-| ---------------------------- | --------------------------------------------- |
-| `MultiStepFormProvider`      | Context provider for multi-step forms         |
-| `useMultiStepForm()`         | Hook to access form state and navigation      |
-| `useMultiStepFormOptional()` | Optional hook (returns null outside provider) |
-| `useFormAnalytics()`         | Analytics tracking hook                       |
-| `useFormPersistence()`       | localStorage persistence hook                 |
-
-### Fields
-
-| Component       | Props                                                         |
-| --------------- | ------------------------------------------------------------- |
-| `TextField`     | name, label, type, placeholder, required, disabled, maxLength |
-| `NumberField`   | name, label, min, max, step, required                         |
-| `SelectField`   | name, label, options, placeholder, required                   |
-| `TextareaField` | name, label, rows, maxLength, required                        |
-| `CheckboxField` | name, label, checkboxLabel, required                          |
-| `DateField`     | name, label, minDate, maxDate, disabledDays                   |
-
-### Layouts
-
-| Component            | Description                        |
-| -------------------- | ---------------------------------- |
-| `FormStepContainer`  | Wrapper with max-width and spacing |
-| `FormStepHeader`     | Step title, description, indicator |
-| `FormStepNavigation` | Back/Next buttons                  |
-| `FormStepProgress`   | Progress bar/dots/numbered         |
-| `FormSuccess`        | Success celebration with confetti  |
-| `ModalMultiStepForm` | Complete modal wrapper             |
-
----
-
-## Configuration
-
-### Step Configuration
-
-```typescript
-interface FormStep {
-  id: string
-  title: string
-  description?: string
-  icon?: ComponentType
-  fields?: string[] // Fields to validate
-  optional?: boolean // Can be skipped
-}
-```
-
-### Form Configuration
-
-```typescript
-interface MultiStepFormConfig {
-  steps: FormStep[]
-  groups?: FormStepGroup[] // Optional grouping
-  validation?: Record<string, ZodSchema>
-  autoSave?: boolean
-  autoSaveInterval?: number // ms, default 30000
-  persistenceKey?: string // localStorage key
-  analyticsFlowType?: FormFlowType
-}
-```
-
----
-
-## Examples
-
 ### Modal Multi-Step Form
 
 ```tsx
@@ -282,15 +435,51 @@ import { FormStepContainer, ModalMultiStepForm } from "@/components/form"
 </ModalMultiStepForm>
 ```
 
-### With Persistence
+---
 
-Auto-save form data to localStorage to prevent data loss:
+## Analytics & Persistence
+
+### Form Analytics
+
+Track form events for funnel analysis:
 
 ```tsx
-const persistence = useFormPersistence({
-  key: "draft-form",
+import { useFormAnalytics } from "@/components/form"
+
+const analytics = useFormAnalytics()
+
+// Track step view
+useEffect(() => {
+  analytics.trackStepView("onboarding", "personal-info")
+}, [currentStep])
+
+// Track step completion
+const handleNext = async () => {
+  await next()
+  analytics.trackStepComplete("onboarding", "personal-info")
+}
+
+// Track errors
+analytics.trackStepError("onboarding", "personal-info", "validation_failed")
+
+// Track flow completion
+analytics.trackFlowComplete("onboarding", { userId })
+
+// Track abandonment
+analytics.trackFlowAbandonment("onboarding", "personal-info")
+```
+
+### Form Persistence
+
+Auto-save drafts to prevent data loss:
+
+```tsx
+import { useFormPersistence } from "@/components/form"
+
+const persistence = useFormPersistence<FormData>({
+  key: "admission-draft",
   autoSave: true,
-  autoSaveInterval: 30000,
+  autoSaveInterval: 30000, // 30 seconds
 })
 
 // Load draft on mount
@@ -298,23 +487,15 @@ useEffect(() => {
   const draft = persistence.load()
   if (draft) form.reset(draft)
 }, [])
-```
 
-### With Analytics
+// Manual save
+persistence.save(form.getValues())
 
-Track step completion and form abandonment:
+// Clear draft on successful submission
+persistence.clear()
 
-```tsx
-const analytics = useFormAnalytics()
-
-useEffect(() => {
-  analytics.trackStepView("visit", "date-selection")
-}, [currentStep])
-
-const handleNext = async () => {
-  await next()
-  analytics.trackStepComplete("visit", "date-selection")
-}
+// Check status
+console.log(persistence.isDirty, persistence.lastSaved)
 ```
 
 ---
@@ -323,7 +504,7 @@ const handleNext = async () => {
 
 ### 1. Validate Twice
 
-Client-side validation for UX, server-side for security:
+Client-side for UX, server-side for security:
 
 ```typescript
 // Client: Immediate feedback
@@ -334,130 +515,145 @@ const form = useForm({
 // Server: Security validation
 export async function submitForm(data: FormData) {
   "use server"
-  const validated = stepSchema.parse(Object.fromEntries(data))
+  const validated = stepSchema.safeParse(Object.fromEntries(data))
+  if (!validated.success) {
+    return { success: false, errors: mapZodErrors(validated.error) }
+  }
   // ... process data
 }
 ```
 
-### 2. Use Step IDs
+### 2. Always Include schoolId
 
-Reference steps by ID, not index, for maintainability:
-
-```typescript
-// Good
-const currentStep = steps.find((s) => s.id === "personal-info")
-
-// Avoid
-const currentStep = steps[0]
-```
-
-### 3. Handle Errors Gracefully
-
-Show step-specific error messages:
-
-```tsx
-{
-  errors[currentStep.id] && (
-    <Alert variant="destructive">
-      <AlertTitle>Please fix the following:</AlertTitle>
-      <AlertDescription>
-        <ul>
-          {Object.values(errors[currentStep.id]).map((error) => (
-            <li key={error}>{error}</li>
-          ))}
-        </ul>
-      </AlertDescription>
-    </Alert>
-  )
-}
-```
-
-### 4. Track Analytics
-
-Monitor step completion and abandonment rates:
+For multi-tenant safety:
 
 ```typescript
-// Track funnel metrics
-analytics.trackStepView(flowType, stepId)
-analytics.trackStepComplete(flowType, stepId)
-analytics.trackFormAbandonment(flowType, lastStepId)
-```
-
-### 5. Enable Auto-Save
-
-Prevent data loss on complex forms:
-
-```typescript
-const config = {
-  autoSave: true,
-  autoSaveInterval: 30000, // Every 30 seconds
-  persistenceKey: "admission-form-draft",
-}
-```
-
-### 6. Show Appropriate Progress
-
-Use the right progress variant for context:
-
-| Context      | Variant    | Reason                         |
-| ------------ | ---------- | ------------------------------ |
-| Modal forms  | `dots`     | Compact, minimal space usage   |
-| Page forms   | `linear`   | Clear progress visualization   |
-| Long wizards | `numbered` | Shows total steps and position |
-
----
-
-## Integration with Platform
-
-### Multi-Tenant Scoping
-
-All form submissions include `schoolId`:
-
-```typescript
-export async function submitAdmission(data: FormData) {
+export async function createItem(data: FormData) {
   "use server"
   const session = await auth()
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) throw new Error("Unauthorized")
 
-  await db.admission.create({
-    data: {
-      ...validated,
-      schoolId, // Required for tenant isolation
-    },
+  await db.item.create({
+    data: { ...validated, schoolId }, // Required!
   })
 }
 ```
 
-### Internationalization
+### 3. Use Generic Actions
 
-All form labels support i18n:
+Reduce boilerplate with generic helpers:
+
+```typescript
+// Instead of writing full actions
+export const createStudent = createFormAction(
+  studentSchema,
+  async (data, schoolId) => {
+    return createGenericAction(db.student, data, schoolId, "/students")
+  }
+)
+```
+
+### 4. Handle Errors Gracefully
+
+Bridge server errors to form fields:
 
 ```tsx
-import { useDictionary } from "@/components/internationalization/use-dictionary"
+const { form, state } = useActionStateBridge({
+  schema,
+  action,
+  onError: (errors) => {
+    // Errors already mapped to form fields
+    toast.error("Please fix the errors")
+  },
+})
+```
 
-function PersonalInfoStep() {
-  const { dictionary } = useDictionary()
+### 5. Enable Auto-Save for Long Forms
 
-  return (
-    <TextField
-      name="name"
-      label={dictionary?.form?.name?.label || "Name"}
-      placeholder={dictionary?.form?.name?.placeholder}
-    />
-  )
+Prevent data loss:
+
+```typescript
+const config = {
+  autoSave: true,
+  autoSaveInterval: 30000,
+  persistenceKey: "long-form-draft",
 }
 ```
 
-### Accessibility
+### 6. Track Analytics
 
-Form components follow WCAG 2.1 AA:
+Monitor conversion and abandonment:
 
-- All inputs have associated labels
-- Error messages are announced to screen readers
-- Keyboard navigation works throughout
-- Focus management on step transitions
+```typescript
+// Track every step
+analytics.trackStepView(flowType, stepId)
+analytics.trackStepComplete(flowType, stepId)
+
+// Track on unload
+useEffect(() => {
+  return () => {
+    analytics.trackFlowAbandonment(flowType, currentStepId)
+  }
+}, [])
+```
+
+---
+
+## Import Patterns
+
+### Recommended Imports
+
+```tsx
+// All from main export
+import {
+  CheckboxField,
+  ComboboxField,
+  // Actions
+  createFormAction,
+  createGenericAction,
+  DateField,
+  deleteGenericAction,
+  FieldArray,
+  FormLayout,
+  FormStepContainer,
+  FormStepHeader,
+  FormStepNavigation,
+  FormStepProgress,
+  FormSuccess,
+  // Atoms
+  InputField,
+  mapZodErrors,
+  ModalMultiStepForm,
+  // Templates
+  MultiStepFormProvider,
+  NumberField,
+  PasswordField,
+  PhoneField,
+  RadioGroupField,
+  SelectField,
+  SwitchField,
+  TextareaField,
+  updateGenericAction,
+  useActionStateBridge,
+  // Hooks
+  useFormAnalytics,
+  useFormPersistence,
+  useMultiStepForm,
+  // Types
+  type ActionResponse,
+} from "@/components/form"
+```
+
+### Backward Compatibility
+
+Old imports still work:
+
+```tsx
+// Legacy (still works)
+import { TextField } from "@/components/form" // Alias for InputField
+```
 
 ---
 
@@ -465,11 +661,11 @@ Form components follow WCAG 2.1 AA:
 
 - [Onboarding System](/docs/onboarding) - Route-based multi-step flow
 - [Newcomers](/docs/newcomers) - Modal-based onboarding
-- [Validation Patterns](/docs/validation) - Zod schema patterns
 - [Server Actions](/docs/server-actions) - Form submission handling
+- [Multi-Tenant Safety](/docs/multi-tenant) - schoolId scoping patterns
 
 ---
 
 **Last Updated**: December 2024
 **Status**: Production Ready
-**Version**: 1.0.0
+**Version**: 2.0.0

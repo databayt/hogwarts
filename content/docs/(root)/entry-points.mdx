@@ -1,0 +1,585 @@
+---
+title: "Entry Points"
+description: "Four main entry points architecture - SaaS marketing, operator dashboard, school sites, and school platform"
+---
+
+## Overview
+
+The platform has **four distinct entry points**, each serving different audiences with specific access controls. Understanding these surfaces is critical for development, testing, and user experience design.
+
+```
+                          FOUR ENTRY POINTS
+    ┌──────────────────────────────────────────────────────────────┐
+    │                                                              │
+    │  1. SaaS Marketing (ed.databayt.org)                         │
+    │     └── Public landing for all visitors                      │
+    │     └── "Get Started" → Onboarding                           │
+    │     └── "Login" → Role-based redirect                        │
+    │                                                              │
+    │  2. Operator Dashboard (ed.databayt.org/o/*)                 │
+    │     └── DEVELOPER role only                                  │
+    │     └── Platform management, analytics, billing              │
+    │                                                              │
+    │  3. School Site ({school}.databayt.org)                      │
+    │     └── Public school marketing pages                        │
+    │     └── Prospective students/parents                         │
+    │     └── "Apply" → Admission flow                             │
+    │                                                              │
+    │  4. School Platform ({school}.databayt.org/s/*/platform)     │
+    │     └── Authenticated school management                      │
+    │     └── Role-based access (30+ modules)                      │
+    │     └── ADMIN, TEACHER, STUDENT, GUARDIAN, STAFF             │
+    │                                                              │
+    └──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Entry Point 1: SaaS Marketing Page
+
+**URL**: `https://ed.databayt.org`
+
+**Purpose**: Public landing page for all visitor types including school owners, principals, teachers, students, parents, guests, investors, and contributors.
+
+### Route Structure
+
+```
+src/app/[lang]/(marketing)/
+├── page.tsx              # Homepage with hero, features, pricing
+├── layout.tsx            # Marketing layout with SiteHeader
+├── features/page.tsx     # Features page
+├── pricing/page.tsx      # Pricing plans
+├── blog/page.tsx         # Blog listing
+└── docs/page.tsx         # Documentation
+```
+
+### Key Components
+
+| Component     | Location                                | Purpose                            |
+| ------------- | --------------------------------------- | ---------------------------------- |
+| `SiteHeader`  | `components/template/marketing-header/` | Navigation with Login button       |
+| `Hero`        | `components/marketing/hero/`            | "Get Started" CTA                  |
+| `UserButton`  | `components/auth/user-button.tsx`       | Login/avatar (variant="marketing") |
+| `CommandMenu` | `components/template/marketing-header/` | Quick search                       |
+
+### Call-to-Actions
+
+| CTA           | Location     | Destination   | Auth Required? |
+| ------------- | ------------ | ------------- | -------------- |
+| "Login"       | Header icon  | `/login`      | No             |
+| "Get Started" | Hero section | `/onboarding` | Yes (redirect) |
+| "Join"        | Various      | `/join`       | No             |
+
+### Login Redirect Logic
+
+```typescript
+// src/components/auth/login/action.ts
+if (existingUser.role === "DEVELOPER") {
+  finalRedirectUrl = `/${locale}/dashboard`
+} else {
+  finalRedirectUrl = `/${locale}` // Homepage
+}
+```
+
+| Role       | Redirect After Login   |
+| ---------- | ---------------------- |
+| DEVELOPER  | `/{locale}/dashboard`  |
+| All others | `/{locale}` (homepage) |
+
+### Status
+
+| Feature            | Status  |
+| ------------------ | ------- |
+| Homepage render    | Working |
+| Login button       | Working |
+| Get Started flow   | Working |
+| Pricing page       | Working |
+| Feature comparison | Working |
+| SEO/OG metadata    | Working |
+
+---
+
+## Entry Point 2: Operator Dashboard (SaaS Dashboard)
+
+**URL**: `https://ed.databayt.org/o/*`
+
+**Purpose**: Platform operator dashboard for DEVELOPER role only. Manages all schools, analytics, billing, and platform configuration.
+
+### Route Structure
+
+```
+src/app/[lang]/(operator)/
+├── layout.tsx                 # OperatorAuthGuard wrapper
+├── o/
+│   ├── page.tsx               # Operator dashboard home
+│   ├── analytics/page.tsx     # Platform-wide analytics
+│   ├── billing/page.tsx       # Subscription management
+│   ├── domains/page.tsx       # Domain configuration
+│   ├── tenants/page.tsx       # School/tenant management
+│   ├── schools/page.tsx       # All schools list
+│   ├── profile/page.tsx       # Operator profile
+│   └── settings/page.tsx      # Platform settings
+```
+
+### Access Control
+
+```typescript
+// OperatorAuthGuard (layout.tsx)
+const session = await auth()
+
+if (!session || session.user.role !== "DEVELOPER") {
+  router.push(`/${lang}?access=denied`)
+  return null
+}
+```
+
+**Only DEVELOPER role can access.** All other roles are redirected with access denied.
+
+### Key Components
+
+| Component         | Location                          | Purpose                        |
+| ----------------- | --------------------------------- | ------------------------------ |
+| `OperatorSidebar` | `components/operator/sidebar/`    | Navigation for operator routes |
+| `OperatorHeader`  | `components/operator/header/`     | Operator-specific header       |
+| `UserButton`      | `components/auth/user-button.tsx` | Logout (variant="saas")        |
+| `SchoolsTable`    | `components/operator/schools/`    | All schools data table         |
+
+### Capabilities
+
+| Capability           | Description                              |
+| -------------------- | ---------------------------------------- |
+| All Schools Access   | View and manage all schools on platform  |
+| Impersonation        | "View as" to enter any school as admin   |
+| Platform Analytics   | Usage metrics, revenue, growth           |
+| Billing Management   | Subscriptions, invoices, payment methods |
+| Domain Configuration | Wildcard DNS, SSL provisioning           |
+| Tenant Management    | Activate/deactivate schools              |
+
+### Status
+
+| Feature           | Status      | Notes                     |
+| ----------------- | ----------- | ------------------------- |
+| Dashboard home    | Working     | Basic stats               |
+| Schools list      | Working     | DataTable with actions    |
+| Impersonation     | Partial     | Cookie-based, needs UI    |
+| Analytics         | Placeholder | Needs PostHog integration |
+| Billing           | Placeholder | Needs Stripe integration  |
+| Domain management | Placeholder | Needs Cloudflare API      |
+
+---
+
+## Entry Point 3: School Marketing Page (School Site)
+
+**URL**: `https://{school}.databayt.org`
+
+**Purpose**: Public-facing school pages for prospective students, parents, and community. Each school has its own subdomain.
+
+### Route Structure
+
+```
+src/app/[lang]/s/[subdomain]/(site)/
+├── page.tsx              # School homepage
+├── layout.tsx            # SchoolProvider wrapper
+├── about/page.tsx        # About the school
+├── academic/page.tsx     # Academic programs
+├── admissions/page.tsx   # Admission requirements
+├── apply/page.tsx        # Application form
+├── tour/page.tsx         # Virtual tour
+├── contact/page.tsx      # Contact information
+└── events/page.tsx       # Public events
+```
+
+### Subdomain Routing
+
+Middleware (`src/middleware.ts`) detects subdomain and rewrites to tenant-scoped routes:
+
+```typescript
+// Subdomain detection flow
+hogwarts.databayt.org
+    ↓ (Middleware)
+Extract subdomain: "hogwarts"
+    ↓
+Rewrite to: /[lang]/s/hogwarts/(site)/*
+    ↓
+SchoolProvider loads school context
+```
+
+**URL Patterns**:
+
+| Environment | URL Pattern                  | Internal Route              |
+| ----------- | ---------------------------- | --------------------------- |
+| Production  | `school.databayt.org`        | `/[lang]/s/school/(site)/*` |
+| Preview     | `school---branch.vercel.app` | `/[lang]/s/school/(site)/*` |
+| Development | `school.localhost:3000`      | `/[lang]/s/school/(site)/*` |
+
+### Key Components
+
+| Component      | Location                          | Purpose                |
+| -------------- | --------------------------------- | ---------------------- |
+| `SchoolHeader` | `components/school/site/header/`  | School-branded header  |
+| `SchoolHero`   | `components/school/site/hero/`    | School intro with CTA  |
+| `UserButton`   | `components/auth/user-button.tsx` | Login (variant="site") |
+| `ApplyForm`    | `components/admission/apply/`     | Application submission |
+
+### Call-to-Actions
+
+| CTA              | Destination              | Auth Required? |
+| ---------------- | ------------------------ | -------------- |
+| "Apply Now"      | `/{subdomain}/apply`     | Yes (to save)  |
+| "Schedule Tour"  | `/{subdomain}/tour`      | No             |
+| "Contact Us"     | `/{subdomain}/contact`   | No             |
+| "Go to Platform" | `/{subdomain}/dashboard` | Yes            |
+
+### Public vs Protected
+
+All `(site)` routes are **public** by default:
+
+```typescript
+// src/routes.ts - publicRoutes
+export const publicRoutes = [
+  "/",
+  "/about",
+  "/academic",
+  "/admissions",
+  "/tour",
+  "/contact",
+  "/events",
+  // ...
+]
+```
+
+### Status
+
+| Feature           | Status      | Notes                        |
+| ----------------- | ----------- | ---------------------------- |
+| Subdomain routing | Working     | Middleware handles all cases |
+| School homepage   | Working     | Dynamic content from DB      |
+| About page        | Working     | School description           |
+| Academic programs | Working     | Programs listing             |
+| Apply form        | Partial     | Form works, needs backend    |
+| Virtual tour      | Placeholder | Needs 360 integration        |
+
+---
+
+## Entry Point 4: School Platform (School Dashboard)
+
+**URL**: `https://{school}.databayt.org/dashboard` (and `/s/{subdomain}/(platform)/*`)
+
+**Purpose**: Authenticated school management platform with role-based access to 30+ modules.
+
+### Route Structure
+
+```
+src/app/[lang]/s/[subdomain]/(platform)/
+├── layout.tsx                # PlatformLayout with sidebar
+├── dashboard/page.tsx        # Role-specific dashboard
+├── admin/                    # ADMIN, DEVELOPER only
+│   └── settings/page.tsx
+├── students/                 # ADMIN, TEACHER, STAFF
+│   ├── page.tsx
+│   └── [id]/page.tsx
+├── teachers/                 # ADMIN only
+├── parents/                  # ADMIN, TEACHER, STAFF
+├── subjects/                 # ADMIN, TEACHER
+├── classes/                  # ADMIN, TEACHER
+├── timetable/                # ADMIN, TEACHER
+├── lessons/                  # ADMIN, TEACHER
+├── attendance/               # ADMIN, TEACHER, STAFF
+├── exams/                    # ADMIN, TEACHER
+├── grades/                   # ADMIN, TEACHER
+├── assignments/              # ADMIN, TEACHER
+├── announcements/            # ADMIN, TEACHER, STAFF
+├── events/                   # All authenticated
+├── finance/                  # All authenticated (role-specific views)
+│   ├── fees/
+│   ├── billing/
+│   ├── invoice/
+│   ├── receipt/
+│   ├── banking/
+│   ├── salary/
+│   ├── expenses/
+│   ├── payroll/
+│   ├── budget/
+│   ├── wallet/
+│   └── accounts/
+├── library/                  # All authenticated
+├── profile/                  # All authenticated
+└── settings/                 # ADMIN, DEVELOPER
+```
+
+### Role-Based Access Control
+
+Access is controlled via `roleRoutes` matrix in `src/routes.ts`:
+
+```typescript
+export const roleRoutes: Record<string, Role[]> = {
+  // Admin routes
+  "/admin": ["ADMIN", "DEVELOPER"],
+  "/admin/*": ["ADMIN", "DEVELOPER"],
+  "/settings/*": ["ADMIN", "DEVELOPER"],
+
+  // Academic management
+  "/teachers": ["ADMIN", "DEVELOPER"],
+  "/subjects/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+  "/grades/*": ["ADMIN", "TEACHER", "DEVELOPER"],
+
+  // Student management
+  "/students/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  "/parents/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+  "/attendance/*": ["ADMIN", "TEACHER", "STAFF", "DEVELOPER"],
+
+  // Finance (all authenticated, role-specific views in UI)
+  "/finance/*": [
+    "ADMIN",
+    "TEACHER",
+    "STUDENT",
+    "GUARDIAN",
+    "ACCOUNTANT",
+    "STAFF",
+    "DEVELOPER",
+  ],
+
+  // Student/Guardian self-service
+  "/my-grades": ["STUDENT", "GUARDIAN", "DEVELOPER"],
+  "/my-attendance": ["STUDENT", "GUARDIAN", "DEVELOPER"],
+  "/my-fees": ["STUDENT", "GUARDIAN", "DEVELOPER"],
+}
+```
+
+### Access Check Function
+
+```typescript
+// src/routes.ts
+export function isRouteAllowedForRole(pathname: string, role: Role): boolean {
+  // DEVELOPER has access to everything
+  if (role === "DEVELOPER") return true
+
+  // Check exact match first
+  if (roleRoutes[pathname]) {
+    return roleRoutes[pathname].includes(role)
+  }
+
+  // Check wildcard patterns
+  for (const [pattern, allowedRoles] of Object.entries(roleRoutes)) {
+    if (pattern.endsWith("/*")) {
+      const basePattern = pattern.slice(0, -2)
+      if (pathname.startsWith(basePattern + "/")) {
+        return allowedRoles.includes(role)
+      }
+    }
+  }
+
+  // Default: allow for routes not in matrix
+  return true
+}
+```
+
+### Role-Specific Dashboard Views
+
+| Role       | Dashboard Modules Visible                             |
+| ---------- | ----------------------------------------------------- |
+| DEVELOPER  | All modules + platform admin link                     |
+| ADMIN      | All school modules + settings                         |
+| TEACHER    | Classes, lessons, attendance, grades, assignments     |
+| STUDENT    | My classes, my grades, my attendance, assignments     |
+| GUARDIAN   | Children's progress, fees, communication              |
+| ACCOUNTANT | Finance modules only                                  |
+| STAFF      | Limited operational views (attendance, announcements) |
+
+### Key Components
+
+| Component         | Location                                         | Purpose                           |
+| ----------------- | ------------------------------------------------ | --------------------------------- |
+| `PlatformLayout`  | `app/[lang]/s/[subdomain]/(platform)/layout.tsx` | Main layout with sidebar          |
+| `PlatformSidebar` | `components/template/platform-sidebar/`          | Navigation based on role          |
+| `UserButton`      | `components/auth/user-button.tsx`                | Profile menu (variant="platform") |
+| `RoleGate`        | `components/auth/role-gate.tsx`                  | Conditional rendering by role     |
+
+### Multi-Tenant Safety
+
+**CRITICAL**: All queries MUST include `schoolId`:
+
+```typescript
+// CORRECT - Includes schoolId
+const students = await db.student.findMany({
+  where: { schoolId, yearLevel: "10" },
+})
+
+// WRONG - Breaks tenant isolation
+const students = await db.student.findMany({
+  where: { yearLevel: "10" },
+})
+```
+
+### Status
+
+| Module          | Status  | Notes                        |
+| --------------- | ------- | ---------------------------- |
+| Dashboard       | Working | Role-specific widgets        |
+| Students CRUD   | Working | Full DataTable + forms       |
+| Teachers CRUD   | Working | Full DataTable + forms       |
+| Parents CRUD    | Working | Guardian linking partial     |
+| Attendance      | Working | Daily/weekly views           |
+| Grades          | Partial | Needs grade calculation      |
+| Finance modules | Partial | Basic CRUD, needs Stripe     |
+| Timetable       | Partial | Display works, editor needed |
+| Announcements   | Working | CRUD with targeting          |
+| Events          | Working | Calendar integration         |
+
+---
+
+## Cross-Entry Point Navigation
+
+Users may navigate between entry points based on their role and context:
+
+```
+                    Navigation Between Entry Points
+    ┌──────────────────────────────────────────────────────────────┐
+    │                                                              │
+    │  SaaS Marketing → Login → Onboarding → School Platform       │
+    │       │              │                      ↑                │
+    │       ↓              ↓                      │                │
+    │  Operator Dash  School Site ────────────────┘                │
+    │  (DEVELOPER)    (Any role with school)                       │
+    │                                                              │
+    └──────────────────────────────────────────────────────────────┘
+```
+
+### UserButton Variants
+
+The `UserButton` component adapts its menu based on entry point:
+
+| Variant     | Entry Point        | Menu Items                                 |
+| ----------- | ------------------ | ------------------------------------------ |
+| `marketing` | SaaS Marketing     | Dashboard, Schools (operators), Settings   |
+| `saas`      | Operator Dashboard | Profile, Billing, Schools, Settings        |
+| `site`      | School Site        | Go to Platform, Profile                    |
+| `platform`  | School Platform    | Profile, My Account, School Settings, Help |
+
+---
+
+## Technical Implementation
+
+### Middleware Flow
+
+```typescript
+// src/middleware.ts - Simplified flow
+export async function middleware(request: NextRequest) {
+  const hostname = request.headers.get("host")
+  const subdomain = extractSubdomain(hostname)
+
+  if (subdomain && subdomain !== "ed") {
+    // School subdomain detected
+    // Rewrite: school.databayt.org/about → /en/s/school/about
+    return NextResponse.rewrite(
+      new URL(`/${locale}/s/${subdomain}${pathname}`, request.url)
+    )
+  }
+
+  // Main domain - check auth for protected routes
+  if (isProtectedRoute(pathname)) {
+    const session = await auth()
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+  }
+
+  return NextResponse.next()
+}
+```
+
+### Session Context
+
+```typescript
+// Extended session includes tenant context
+session.user = {
+  id: string
+  email: string
+  role: UserRole
+  schoolId: string | null  // null for new users / DEVELOPER
+  isPlatformAdmin: boolean
+}
+```
+
+### School Context Provider
+
+```typescript
+// src/components/school/school-provider.tsx
+export function SchoolProvider({ subdomain, children }) {
+  const [school, setSchool] = useState(null)
+
+  useEffect(() => {
+    async function loadSchool() {
+      const school = await getSchoolBySubdomain(subdomain)
+      setSchool(school)
+    }
+    loadSchool()
+  }, [subdomain])
+
+  return (
+    <SchoolContext.Provider value={school}>
+      {children}
+    </SchoolContext.Provider>
+  )
+}
+```
+
+---
+
+## Testing Entry Points
+
+### E2E Test Coverage
+
+```typescript
+// e2e/entry-points.spec.ts
+test.describe("Entry Points", () => {
+  test("SaaS marketing loads without auth", async ({ page }) => {
+    await page.goto("https://ed.databayt.org/en")
+    await expect(page.locator("h1")).toContainText("School Automation")
+  })
+
+  test("Operator dashboard requires DEVELOPER", async ({ page }) => {
+    await page.goto("https://ed.databayt.org/en/o")
+    await expect(page).toHaveURL(/\/login/)
+  })
+
+  test("School site loads with subdomain", async ({ page }) => {
+    await page.goto("https://hogwarts.databayt.org/en")
+    await expect(page.locator("h1")).toContainText("Hogwarts")
+  })
+
+  test("School platform requires auth", async ({ page }) => {
+    await page.goto("https://hogwarts.databayt.org/en/dashboard")
+    await expect(page).toHaveURL(/\/login/)
+  })
+})
+```
+
+### Manual Testing Checklist
+
+| Entry Point        | Test                          | Expected                          |
+| ------------------ | ----------------------------- | --------------------------------- |
+| SaaS Marketing     | Visit ed.databayt.org         | Homepage renders                  |
+| SaaS Marketing     | Click Login                   | Redirect to /login                |
+| SaaS Marketing     | Click Get Started             | Redirect to /login (callback URL) |
+| Operator Dashboard | Visit /o as non-DEVELOPER     | Redirect with access denied       |
+| Operator Dashboard | Visit /o as DEVELOPER         | Dashboard renders                 |
+| School Site        | Visit school.databayt.org     | School homepage renders           |
+| School Site        | Click Apply                   | Application form loads            |
+| School Platform    | Visit /dashboard without auth | Redirect to /login                |
+| School Platform    | Visit /dashboard with auth    | Role-appropriate dashboard        |
+| School Platform    | Access /admin as TEACHER      | Access denied or hidden           |
+
+---
+
+## Related Documentation
+
+- [Authentication](/docs/authantication) - Login/logout flows, OAuth, sessions
+- [Onboarding](/docs/onboarding) - School creation wizard
+- [Architecture](/docs/architecture) - Mirror pattern, file structure
+- [Multi-Tenant Safety](/docs/multi-tenant) - schoolId isolation
+
+---
+
+**Last Updated**: December 17, 2024
+**Status**: Production

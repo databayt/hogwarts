@@ -200,6 +200,24 @@ Tested on: **https://ed.databayt.org/en** (2025-12-17)
 | OAuth Buttons | /login                 | Google + Facebook buttons visible          | ✅ Pass |
 | Error Toast   | /login                 | Red error with icon on invalid credentials | ✅ Pass |
 
+### Demo Credentials
+
+For testing and development, the following seed accounts are available:
+
+| Role       | Email                     | Password | Access Level                 |
+| ---------- | ------------------------- | -------- | ---------------------------- |
+| DEVELOPER  | `dev@databayt.org`        | `1234`   | Platform admin (all schools) |
+| ADMIN      | `admin@databayt.org`      | `1234`   | School administrator         |
+| ACCOUNTANT | `accountant@databayt.org` | `1234`   | School finance access        |
+| STAFF      | `staff@databayt.org`      | `1234`   | Limited school access        |
+
+**Notes:**
+
+- DEVELOPER has no schoolId (platform-wide access)
+- All other roles are scoped to the demo school
+- Run `pnpm db:seed` to create these accounts
+- Seed data defined in `prisma/seeds/constants.ts`
+
 ### Implementation Details
 
 **Files Modified:**
