@@ -34,7 +34,7 @@ const stepToIndex = (step: ApplyStep): number => {
   return index >= 0 ? index + 1 : 1
 }
 
-interface ApplicationContextType {
+interface ApplySessionContextType {
   // School/Campaign info
   subdomain: string | null
   campaign: PublicCampaign | null
@@ -67,19 +67,24 @@ interface ApplicationContextType {
   clearError: () => void
 }
 
-const ApplicationContext = createContext<ApplicationContextType | undefined>(
+const ApplySessionContext = createContext<ApplySessionContextType | undefined>(
   undefined
 )
 
-export const useApplication = () => {
-  const context = useContext(ApplicationContext)
+export const useApplySession = () => {
+  const context = useContext(ApplySessionContext)
   if (!context) {
-    throw new Error("useApplication must be used within an ApplicationProvider")
+    throw new Error(
+      "useApplySession must be used within an ApplySessionProvider"
+    )
   }
   return context
 }
 
-interface ApplicationProviderProps {
+// Legacy alias for backward compatibility during migration
+export const useApplication = useApplySession
+
+interface ApplySessionProviderProps {
   children: ReactNode
   initialSubdomain?: string
   initialCampaignId?: string
@@ -88,7 +93,7 @@ interface ApplicationProviderProps {
 
 const STORAGE_KEY = "hogwarts_apply_session"
 
-export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({
+export const ApplySessionProvider: React.FC<ApplySessionProviderProps> = ({
   children,
   initialSubdomain,
   initialCampaignId,
@@ -383,8 +388,11 @@ export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({
   )
 
   return (
-    <ApplicationContext.Provider value={value}>
+    <ApplySessionContext.Provider value={value}>
       {children}
-    </ApplicationContext.Provider>
+    </ApplySessionContext.Provider>
   )
 }
+
+// Legacy alias for backward compatibility during migration
+export const ApplicationProvider = ApplySessionProvider

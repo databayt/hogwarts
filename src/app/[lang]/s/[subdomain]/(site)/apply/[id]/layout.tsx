@@ -4,15 +4,18 @@ import React, { useEffect } from "react"
 import { useParams } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { ADMISSION_CONFIG, FormFooter } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import {
-  ApplicationProvider,
-  useApplication,
+  ApplySessionProvider,
+  useApplySession,
 } from "@/components/site/apply/application-context"
-import ApplyFooter from "@/components/site/apply/apply-footer"
 import ErrorBoundary from "@/components/site/apply/error-boundary"
-import { ApplyValidationProvider } from "@/components/site/apply/validation-context"
+import {
+  ApplyValidationProvider,
+  useApplyValidation,
+} from "@/components/site/apply/validation-context"
 
 interface ApplyLayoutProps {
   children: React.ReactNode
@@ -20,8 +23,8 @@ interface ApplyLayoutProps {
 
 function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   const params = useParams()
-  const { initSession, session } = useApplication()
-  const { isLoading, error } = session
+  const { initSession, session, saveSession } = useApplySession()
+  const { isLoading, error, lastSaved, isSaving } = session
   const { dictionary } = useDictionary()
   const { locale } = useLocale()
   const id = params.id as string
@@ -62,7 +65,14 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
     return (
       <div className="h-screen px-4 sm:px-6 md:px-12">
         <main className="h-screen pt-16">{renderSkeleton()}</main>
-        <ApplyFooter dictionary={dictionary ?? undefined} locale={locale} />
+        <FormFooter
+          config={ADMISSION_CONFIG}
+          basePath={`/${locale}/s/${subdomain}/apply`}
+          dictionary={dict as Record<string, unknown>}
+          locale={locale}
+          useValidation={useApplyValidation}
+          nextDisabled={true}
+        />
       </div>
     )
   }
@@ -98,7 +108,14 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
             </div>
           </div>
         </main>
-        <ApplyFooter dictionary={dictionary ?? undefined} locale={locale} />
+        <FormFooter
+          config={ADMISSION_CONFIG}
+          basePath={`/${locale}/s/${subdomain}/apply`}
+          dictionary={dict as Record<string, unknown>}
+          locale={locale}
+          useValidation={useApplyValidation}
+          nextDisabled={true}
+        />
       </div>
     )
   }
@@ -106,7 +123,19 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   return (
     <div className="flex h-screen flex-col px-4 sm:px-8 md:px-12">
       <main className="flex w-full flex-1 items-center pb-20">{children}</main>
-      <ApplyFooter dictionary={dictionary ?? undefined} locale={locale} />
+      <FormFooter
+        config={ADMISSION_CONFIG}
+        basePath={`/${locale}/s/${subdomain}/apply`}
+        dictionary={dict as Record<string, unknown>}
+        locale={locale}
+        useValidation={useApplyValidation}
+        showSaveStatus={true}
+        lastSaved={lastSaved}
+        isSaving={isSaving}
+        onSave={saveSession}
+        finalLabel={isRTL ? "تقديم الطلب" : "Submit Application"}
+        finalDestination={`/${locale}/s/${subdomain}/apply/${id}/success`}
+      />
     </div>
   )
 }
@@ -114,11 +143,11 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
 export default function ApplyLayout({ children }: ApplyLayoutProps) {
   return (
     <ErrorBoundary>
-      <ApplicationProvider>
+      <ApplySessionProvider>
         <ApplyValidationProvider>
           <ApplyLayoutContent>{children}</ApplyLayoutContent>
         </ApplyValidationProvider>
-      </ApplicationProvider>
+      </ApplySessionProvider>
     </ErrorBoundary>
   )
 }

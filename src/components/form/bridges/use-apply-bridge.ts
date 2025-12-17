@@ -3,14 +3,14 @@
 /**
  * Apply Context Bridge
  *
- * Bridges Form Block with ApplicationContext for admission application flows.
+ * Bridges Form Block with ApplySessionContext for admission application flows.
  * Syncs form data bidirectionally with the application session.
  *
  * **Role**: Bridge hook for Apply system → Form Block integration
  *
  * **Usage**:
  * - Use in apply step components
- * - Auto-syncs form data with ApplicationContext
+ * - Auto-syncs form data with ApplySessionContext
  * - Loads existing data on mount
  * - Marks session dirty on changes
  *
@@ -34,7 +34,7 @@
  */
 import { useCallback, useEffect, useRef } from "react"
 
-import { useApplication } from "@/components/site/apply/application-context"
+import { useApplySession } from "@/components/site/apply/application-context"
 import type { ApplySessionState } from "@/components/site/apply/types"
 
 import { useMultiStepFormOptional } from "../template/provider"
@@ -73,7 +73,7 @@ export function useApplyBridge<T extends ApplyStepKey>(
 ): UseApplyBridgeReturn {
   const { autoSync = true, loadOnMount = true, syncIntervalMs = 1000 } = options
 
-  const { session, updateStepData, getStepData, markDirty } = useApplication()
+  const { session, updateStepData, getStepData, markDirty } = useApplySession()
   const multiStep = useMultiStepFormOptional()
 
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null)
