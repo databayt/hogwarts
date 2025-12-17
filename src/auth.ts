@@ -1103,6 +1103,26 @@ export const {
         return homeUrl
       }
 
+      // Special case: School subdomain logout paths (e.g., /ar/s/school/)
+      // These are explicit redirect targets from context-aware logout
+      const schoolSubdomainMatch = url.match(/^\/([a-z]{2})\/s\/([^/]+)\/?$/)
+      if (schoolSubdomainMatch) {
+        const locale = schoolSubdomainMatch[1]
+        const subdomain = schoolSubdomainMatch[2]
+        const schoolHomeUrl = `${baseUrl}/${locale}/s/${subdomain}/`
+        log("🏫 Redirecting to school homepage (logout):", {
+          reason: "School subdomain logout path",
+          locale,
+          subdomain,
+          originalUrl: url,
+          finalUrl: schoolHomeUrl,
+        })
+        log("=====================================")
+        log("🔄 REDIRECT CALLBACK END")
+        log("=====================================\n")
+        return schoolHomeUrl
+      }
+
       // 🎯 SMART SUBDOMAIN REDIRECT BASED ON USER'S SCHOOL
       log("\n🎯 SMART SUBDOMAIN REDIRECT - Getting user school info...")
       console.log("[AUTH-REDIRECT] 🎯 SMART SUBDOMAIN REDIRECT STARTING", {
