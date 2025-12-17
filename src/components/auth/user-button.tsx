@@ -89,9 +89,9 @@ export const UserButton = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className={cn("size-8", className)}>
-          <Avatar className="size-6">
+          <Avatar className="size-4">
             <AvatarImage src={user.image || ""} alt={displayName} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-medium">
+            <AvatarFallback className="bg-primary text-primary-foreground text-[8px] font-medium">
               {userInitials}
             </AvatarFallback>
           </Avatar>

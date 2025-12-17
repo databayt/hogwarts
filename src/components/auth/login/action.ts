@@ -95,68 +95,30 @@ export const login = async (
     }
   }
 
-  // Smart subdomain redirect: Redirect users to their school's subdomain
+  // Smart redirect based on user role:
+  // - DEVELOPER: Redirect to /dashboard (platform admin)
+  // - Other roles: Redirect to homepage (/)
   let finalRedirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT
 
-  if (existingUser.schoolId && existingUser.role !== "DEVELOPER") {
-    console.log(
-      "[LOGIN-ACTION] 🎯 Implementing smart subdomain redirect for user:",
-      {
-        userId: existingUser.id,
-        email: existingUser.email,
-        schoolId: existingUser.schoolId,
-        role: existingUser.role,
-      }
-    )
+  // Extract locale from callbackUrl or default to 'ar'
+  const locale = callbackUrl?.match(/^\/(ar|en)\//)
+    ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
+    : "ar"
 
-    try {
-      const school = await db.school.findUnique({
-        where: { id: existingUser.schoolId },
-        select: { domain: true },
-      })
-
-      console.log("[LOGIN-ACTION] 🏫 School lookup result:", {
-        schoolId: existingUser.schoolId,
-        domain: school?.domain,
-      })
-
-      if (school?.domain) {
-        const isDev = process.env.NODE_ENV === "development"
-        const subdomain = school.domain
-
-        // Extract locale from callbackUrl or default to 'ar'
-        const locale = callbackUrl?.match(/^\/(ar|en)\//)
-          ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
-          : "ar"
-        const path = `/${locale}/dashboard`
-
-        finalRedirectUrl = isDev
-          ? `http://${subdomain}.localhost:3000${path}`
-          : `https://${subdomain}.databayt.org${path}`
-
-        console.log("[LOGIN-ACTION] ✅ Smart redirect URL constructed:", {
-          subdomain,
-          locale,
-          path,
-          finalUrl: finalRedirectUrl,
-        })
-      }
-    } catch (error) {
-      console.error(
-        "[LOGIN-ACTION] ❌ Error looking up school for redirect:",
-        error
-      )
-      // Fall back to default redirect if school lookup fails
-    }
+  if (existingUser.role === "DEVELOPER") {
+    // DEVELOPER gets dashboard access
+    finalRedirectUrl = `/${locale}/dashboard`
+    console.log("[LOGIN-ACTION] 👑 DEVELOPER - redirecting to dashboard:", {
+      role: existingUser.role,
+      redirectUrl: finalRedirectUrl,
+    })
   } else {
-    console.log(
-      "[LOGIN-ACTION] 👑 Platform admin or no schoolId - using default redirect:",
-      {
-        role: existingUser.role,
-        schoolId: existingUser.schoolId,
-        redirectUrl: finalRedirectUrl,
-      }
-    )
+    // All other users go to homepage
+    finalRedirectUrl = `/${locale}`
+    console.log("[LOGIN-ACTION] 🏠 User - redirecting to homepage:", {
+      role: existingUser.role,
+      redirectUrl: finalRedirectUrl,
+    })
   }
 
   try {
