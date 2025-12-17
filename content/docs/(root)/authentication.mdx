@@ -152,17 +152,68 @@ User visits: /dashboard (protected)
 │                           LOGOUT POINTS                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  1️⃣  USER MENU DROPDOWN                                                     │
-│      └── Click avatar → "Logout" → Clears session → /login                  │
+│  1️⃣  USER MENU DROPDOWN (Context-Aware)                                     │
+│      └── Marketing/Operator → /{locale} (homepage)                          │
+│      └── School Platform → /{locale}/s/{subdomain}/ (school homepage)       │
 │                                                                              │
 │  2️⃣  SESSION EXPIRY                                                         │
 │      └── JWT expires (24 hours) → Next request → /login?callbackUrl={url}   │
 │                                                                              │
 │  3️⃣  PROGRAMMATIC SIGNOUT                                                   │
-│      └── signOut() called → Clears session → /login                         │
+│      └── signOut({ redirect: false }) → Client redirect to context-aware URL│
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+#### Logout Implementation Details
+
+The logout flow uses **client-side redirect** to avoid middleware interference:
+
+```
+User clicks "Logout" in dropdown
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  LogoutButton determines return URL:    │
+│  - Marketing/Operator: /{locale}        │
+│  - School Platform: /{locale}/s/{sub}/  │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│  logout(returnUrl) server action:       │
+│  - Calls signOut({ redirect: false })   │
+│  - Session cookie cleared server-side   │
+│  - Returns returnUrl to client          │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│  Client-side redirect:                  │
+│  window.location.href = returnUrl       │
+│  (Hard navigation ensures fresh state)  │
+└─────────────────────────────────────────┘
+```
+
+**Why client-side redirect?**
+
+When using `signOut({ redirect: true })`, NextAuth's server-side redirect would:
+
+1. Clear the session cookie
+2. Send redirect response to homepage
+3. **Problem**: Middleware sees unauthenticated request to current protected route
+4. Middleware redirects to `/login?callbackUrl={current_route}` before homepage loads
+
+By using `redirect: false` + client-side `window.location.href`:
+
+1. Session cleared server-side
+2. Client navigates directly to homepage
+3. No middleware interference (homepage is public)
+
+**Files:**
+
+- `src/components/auth/logout-button.tsx` - Context-aware URL + client redirect
+- `src/components/auth/logout-action.ts` - Server action with `redirect: false`
 
 ### Test Results (Production)
 
@@ -404,8 +455,8 @@ This section maps **every possible way** a user can enter, authenticate, and exi
                     ┌─────────────────────────────────────┐
                     │           LOGGED OUT                │
                     │                                     │
-                    │  Redirect to: /login               │
-                    │  (with callbackUrl if applicable)   │
+                    │  User action → /{locale} (homepage) │
+                    │  Session expiry → /login?callback   │
                     └─────────────────────────────────────┘
 ```
 
@@ -422,12 +473,13 @@ This section maps **every possible way** a user can enter, authenticate, and exi
 
 ### Logout Points Inventory
 
-| #   | Logout Point    | Location         | Component        | Redirect After                 |
-| --- | --------------- | ---------------- | ---------------- | ------------------------------ |
-| 1   | Avatar dropdown | Platform header  | `UserButton`     | `/login`                       |
-| 2   | Settings page   | Account settings | Logout button    | `/login`                       |
-| 3   | Session expiry  | Automatic        | JWT timeout      | `/login?callbackUrl={current}` |
-| 4   | Sign out action | Any page         | `signOut()` call | `/login` or custom             |
+| #   | Logout Point    | Location         | Component      | Redirect After                      |
+| --- | --------------- | ---------------- | -------------- | ----------------------------------- |
+| 1   | Avatar dropdown | Marketing header | `LogoutButton` | `/{locale}` (homepage)              |
+| 2   | Avatar dropdown | Operator header  | `LogoutButton` | `/{locale}` (homepage)              |
+| 3   | Avatar dropdown | School platform  | `LogoutButton` | `/{locale}/s/{subdomain}/` (school) |
+| 4   | Session expiry  | Automatic        | JWT timeout    | `/login?callbackUrl={current}`      |
+| 5   | Sign out action | Programmatic     | `logout(url)`  | Custom URL (client-side redirect)   |
 
 ### Detailed User Journeys
 
