@@ -7,6 +7,226 @@ description: "Multi-tenant authentication for school management with OAuth and C
 
 Our authentication system is built on Next.js App Router with Auth.js (NextAuth v5), specifically designed for multi-tenant school management. It supports OAuth providers (Google, Facebook), email/password credentials, two-factor authentication, and seamless cross-subdomain single sign-on.
 
+## Login & Logout Flow
+
+This section documents the **four entry points** for authentication and their corresponding flows.
+
+### Entry Points
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           FOUR ENTRY POINTS                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1️⃣  MARKETING HEADER (Login Button)                                        │
+│      └── ed.databayt.org → Header "Login" icon → /login                     │
+│      └── After login: DEVELOPER → /dashboard, Others → / (homepage)         │
+│                                                                              │
+│  2️⃣  GET STARTED (Onboarding)                                               │
+│      └── ed.databayt.org → "Get Started" button → /onboarding               │
+│      └── Requires auth → redirects to /login?callbackUrl=/onboarding        │
+│      └── After login: Continues to onboarding wizard                        │
+│                                                                              │
+│  3️⃣  SCHOOL SUBDOMAIN LOGIN                                                 │
+│      └── {school}.databayt.org/login → School-specific login                │
+│      └── After login: DEVELOPER → /dashboard, Others → / (homepage)         │
+│                                                                              │
+│  4️⃣  PROTECTED ROUTE ACCESS                                                 │
+│      └── Direct URL to protected page (e.g., /dashboard, /profile)          │
+│      └── Middleware redirects to /login?callbackUrl={original_url}          │
+│      └── After login: Returns to original destination                       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Login Flow by Entry Point
+
+#### Entry Point 1: Marketing Header Login
+
+```
+User clicks Login icon in header
+         │
+         ▼
+┌─────────────────────┐
+│   /en/login or      │
+│   /ar/login         │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│         AUTHENTICATION OPTIONS          │
+├─────────────────────────────────────────┤
+│  [Google OAuth]  [Facebook]  [Email]    │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│         REDIRECT DECISION               │
+├─────────────────────────────────────────┤
+│  Role = DEVELOPER?                      │
+│    YES → /{locale}/dashboard            │
+│    NO  → /{locale} (homepage)           │
+└─────────────────────────────────────────┘
+```
+
+#### Entry Point 2: Get Started (Onboarding)
+
+```
+User clicks "Get Started"
+         │
+         ▼
+┌─────────────────────┐
+│   /onboarding       │ ◄── Protected route
+└──────────┬──────────┘
+           │
+           ▼ (No session)
+┌─────────────────────────────────────────┐
+│  Redirect to:                           │
+│  /login?callbackUrl=/onboarding         │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   Authenticate      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   /onboarding       │ ◄── 16-step wizard
+│   (School creation) │
+└─────────────────────┘
+```
+
+#### Entry Point 3: School Subdomain
+
+```
+User visits: school.databayt.org/login
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│   Login page with school context        │
+│   Same OAuth + Credentials options      │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│         REDIRECT DECISION               │
+├─────────────────────────────────────────┤
+│  Role = DEVELOPER?                      │
+│    YES → /{locale}/dashboard            │
+│    NO  → /{locale} (homepage)           │
+└─────────────────────────────────────────┘
+```
+
+#### Entry Point 4: Protected Route
+
+```
+User visits: /dashboard (protected)
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│   Middleware checks session             │
+│   No session? → Store callbackUrl       │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────────────────────────┐
+│   /login?callbackUrl=/dashboard         │
+└──────────┬──────────────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   Authenticate      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│   /dashboard        │ ◄── Original destination
+└─────────────────────┘
+```
+
+### Logout Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           LOGOUT POINTS                                      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1️⃣  USER MENU DROPDOWN                                                     │
+│      └── Click avatar → "Logout" → Clears session → /login                  │
+│                                                                              │
+│  2️⃣  SESSION EXPIRY                                                         │
+│      └── JWT expires (24 hours) → Next request → /login?callbackUrl={url}   │
+│                                                                              │
+│  3️⃣  PROGRAMMATIC SIGNOUT                                                   │
+│      └── signOut() called → Clears session → /login                         │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Test Results (Production)
+
+Tested on: **https://ed.databayt.org/en** (2025-12-17)
+
+| Test Case       | Entry Point | Action                         | Expected                              | Result  |
+| --------------- | ----------- | ------------------------------ | ------------------------------------- | ------- |
+| Homepage Load   | Marketing   | Visit ed.databayt.org/en       | Homepage renders                      | ✅ Pass |
+| Login Button    | Header      | Click Login icon               | Navigate to /en/login                 | ✅ Pass |
+| Login Page      | /en/login   | Page loads                     | Shows Google, Facebook, Email options | ✅ Pass |
+| Invalid Email   | Credentials | Submit non-existent email      | "Email does not exist!" error         | ✅ Pass |
+| Forgot Password | Login page  | Click "Forgot Password?"       | Navigate to /en/reset                 | ✅ Pass |
+| Reset Page      | /en/reset   | Page loads                     | Shows email input + Reset button      | ✅ Pass |
+| Invalid Reset   | Reset page  | Submit non-existent email      | "Email not found!" error              | ✅ Pass |
+| Back to Login   | Reset page  | Click "Back"                   | Navigate to /login                    | ✅ Pass |
+| Join Link       | Login page  | Click "Don't have an account?" | Navigate to /join                     | ✅ Pass |
+
+#### Redirect Behavior Tests
+
+| Role      | Login From      | Expected Redirect      | Status         |
+| --------- | --------------- | ---------------------- | -------------- |
+| DEVELOPER | ed.databayt.org | `/{locale}/dashboard`  | ✅ Implemented |
+| ADMIN     | ed.databayt.org | `/{locale}` (homepage) | ✅ Implemented |
+| TEACHER   | ed.databayt.org | `/{locale}` (homepage) | ✅ Implemented |
+| STUDENT   | ed.databayt.org | `/{locale}` (homepage) | ✅ Implemented |
+| GUARDIAN  | ed.databayt.org | `/{locale}` (homepage) | ✅ Implemented |
+| USER      | ed.databayt.org | `/{locale}` (homepage) | ✅ Implemented |
+
+#### UI Component Tests
+
+| Component     | Location               | Expected                                   | Result  |
+| ------------- | ---------------------- | ------------------------------------------ | ------- |
+| Login Icon    | Header (not logged in) | size-4 LogIn icon in size-8 ghost button   | ✅ Pass |
+| Avatar        | Header (logged in)     | size-4 avatar in size-8 ghost button       | ✅ Pass |
+| OAuth Buttons | /login                 | Google + Facebook buttons visible          | ✅ Pass |
+| Error Toast   | /login                 | Red error with icon on invalid credentials | ✅ Pass |
+
+### Implementation Details
+
+**Files Modified:**
+
+- `src/routes.ts` - `DEFAULT_LOGIN_REDIRECT = "/"`
+- `src/components/auth/login/action.ts` - Role-based redirect logic
+- `src/components/auth/user-button.tsx` - Avatar sizing to match header icons
+
+**Redirect Logic (login/action.ts):**
+
+```typescript
+// Extract locale from callbackUrl or default to 'ar'
+const locale = callbackUrl?.match(/^\/(ar|en)\//)
+  ? callbackUrl.match(/^\/(ar|en)\//)?.[1]
+  : "ar"
+
+if (existingUser.role === "DEVELOPER") {
+  // DEVELOPER gets dashboard access
+  finalRedirectUrl = `/${locale}/dashboard`
+} else {
+  // All other users go to homepage
+  finalRedirectUrl = `/${locale}`
+}
+```
+
+---
+
 ## Complete Authentication Flow
 
 This section maps **every possible way** a user can enter, authenticate, and exit the platform across all user types and entry points.
