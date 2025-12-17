@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import ReactDOM from "react-dom/client"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -14,6 +13,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+// ============================================
+// Configuration
+// ============================================
+const CONFIG = {
+  position: "bottom-right" as const,
+  duration: {
+    success: 2000,
+    error: 4000,
+    info: 3000,
+    delete: 2000,
+  },
+} as const
+
+// ============================================
+// Toast Functions
+// ============================================
 export const SuccessToast = (message: string) => {
   toast.success(message, {
     icon: (
@@ -34,8 +49,8 @@ export const SuccessToast = (message: string) => {
         </svg>
       </div>
     ),
-    duration: 1500,
-    position: "bottom-right",
+    duration: CONFIG.duration.success,
+    position: CONFIG.position,
     style: {
       border: "none",
       padding: "0px",
@@ -49,9 +64,11 @@ export const SuccessToast = (message: string) => {
 
 export const ErrorToast = (message: string) => {
   toast.error(message, {
+    duration: CONFIG.duration.error,
+    position: CONFIG.position,
     style: {
-      background: "rgb(239 68 68)",
-      color: "white",
+      background: "hsl(var(--destructive))",
+      color: "hsl(var(--destructive-foreground))",
       border: "none",
       width: "220px",
       maxWidth: "220px",
@@ -61,9 +78,11 @@ export const ErrorToast = (message: string) => {
 
 export const InfoToast = (message: string) => {
   toast.info(message, {
+    duration: CONFIG.duration.info,
+    position: CONFIG.position,
     style: {
-      background: "rgb(59 130 246)",
-      color: "white",
+      background: "hsl(var(--primary))",
+      color: "hsl(var(--primary-foreground))",
       border: "none",
       width: "220px",
       maxWidth: "220px",
@@ -73,89 +92,79 @@ export const InfoToast = (message: string) => {
 
 export const DeleteToast = (message: string = "Deleted") => {
   toast(message, {
+    duration: CONFIG.duration.delete,
+    position: CONFIG.position,
     style: {
-      background: "rgb(239 68 68)",
-      color: "white",
+      background: "hsl(var(--destructive))",
+      color: "hsl(var(--destructive-foreground))",
       border: "none",
       width: "220px",
       maxWidth: "220px",
-      textAlign: "right",
     },
-    duration: 2000,
-    position: "bottom-right",
   })
 }
 
-// Imperative confirm dialog powered by shadcn/ui Dialog
+// ============================================
+// Confirm Dialog (SSR-Safe Implementation)
+// ============================================
 type ConfirmOptions = {
   title?: string
   description?: string
   confirmText?: string
   cancelText?: string
 }
-type InternalConfirmState = ConfirmOptions & {
+
+type ConfirmState = ConfirmOptions & {
   open: boolean
   resolve?: (v: boolean) => void
 }
 
-let confirmController: {
-  open: (opts: ConfirmOptions & { resolve: (v: boolean) => void }) => void
-} | null = null
+// Global state setter for confirm dialog (lazy initialized)
+let setConfirmState: ((state: ConfirmState) => void) | null = null
 
-function ConfirmDialogRenderer() {
-  const [state, setState] = useState<InternalConfirmState>({
-    open: false,
-    title: undefined,
-    description: undefined,
-    confirmText: undefined,
-    cancelText: undefined,
-    resolve: undefined,
-  })
+function ConfirmDialogPortal() {
+  const [state, setState] = useState<ConfirmState>({ open: false })
 
   useEffect(() => {
-    confirmController = {
-      open: (opts) => {
-        setState({ open: true, ...opts })
-      },
-    }
+    setConfirmState = setState
     return () => {
-      confirmController = null
+      setConfirmState = null
     }
   }, [])
 
-  const onClose = () => {
+  const handleClose = () => {
     setState((s) => ({ ...s, open: false }))
   }
 
-  const onCancel = () => {
+  const handleCancel = () => {
     state.resolve?.(false)
-    onClose()
+    handleClose()
   }
 
-  const onConfirm = () => {
+  const handleConfirm = () => {
     state.resolve?.(true)
-    onClose()
+    handleClose()
   }
 
   return (
     <Dialog
       open={state.open}
-      onOpenChange={(o) => {
-        if (!o) onCancel()
+      onOpenChange={(open) => {
+        if (!open) handleCancel()
       }}
     >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{state.title ?? "Are you sure?"}</DialogTitle>
-          {state.description ? (
+          {state.description && (
             <DialogDescription>{state.description}</DialogDescription>
-          ) : null}
+          )}
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={handleCancel}>
             {state.cancelText ?? "Cancel"}
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+          <Button variant="destructive" onClick={handleConfirm}>
             {state.confirmText ?? "Delete"}
           </Button>
         </DialogFooter>
@@ -164,29 +173,50 @@ function ConfirmDialogRenderer() {
   )
 }
 
-// Ensure a single portal root is mounted on the client
-if (typeof window !== "undefined") {
+// Lazy mount the dialog portal
+let portalMounted = false
+
+function ensurePortalMounted() {
+  if (typeof window === "undefined" || portalMounted) return
+
   const id = "__confirm_dialog_root__"
   let container = document.getElementById(id)
+
   if (!container) {
     container = document.createElement("div")
     container.id = id
     document.body.appendChild(container)
-    ReactDOM.createRoot(container).render(<ConfirmDialogRenderer />)
+
+    // Use React 18 createRoot via dynamic import to avoid SSR issues
+    import("react-dom/client").then(({ createRoot }) => {
+      createRoot(container!).render(<ConfirmDialogPortal />)
+    })
   }
+
+  portalMounted = true
 }
 
 export function confirmDeleteDialog(message?: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const title = "Delete item"
-    const description = message ?? "This action cannot be undone."
-    if (!confirmController) return resolve(false)
-    confirmController.open({
-      title,
-      description,
-      confirmText: "Delete",
-      cancelText: "Cancel",
-      resolve,
-    })
+    ensurePortalMounted()
+
+    // Wait for portal to mount if needed
+    const tryOpen = () => {
+      if (setConfirmState) {
+        setConfirmState({
+          open: true,
+          title: "Delete item",
+          description: message ?? "This action cannot be undone.",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+          resolve,
+        })
+      } else {
+        // Retry after a short delay if portal not ready
+        setTimeout(tryOpen, 50)
+      }
+    }
+
+    tryOpen()
   })
 }
