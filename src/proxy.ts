@@ -109,10 +109,11 @@ export function proxy(req: NextRequest) {
   const url = req.nextUrl.clone()
   const host = req.headers.get("host") || ""
 
-  // Skip static files and API auth routes
+  // Skip static files, API auth routes, and mobile API routes
   if (
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api/auth") ||
+    url.pathname.startsWith("/api/mobile") ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
     return NextResponse.next()
