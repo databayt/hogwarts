@@ -87,7 +87,7 @@ export default function CongratulationsContent(props: Props) {
       )}
 
       {/* Regular content as fallback or when modal is closed */}
-      <div className="mx-auto max-w-4xl py-8">
+      <div>
         {/* Success Header */}
         <div className="mb-8 text-center">
           <div className="bg-chart-2/10 mb-4 inline-flex h-20 w-20 items-center justify-center rounded-full">

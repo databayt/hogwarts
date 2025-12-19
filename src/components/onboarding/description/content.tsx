@@ -54,44 +54,38 @@ export default function DescriptionContent({ dictionary }: Props) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-full max-w-sm" />
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </FormLayout>
-      </div>
+      <FormLayout>
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </FormLayout>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <FormHeading
-            title={
-              (dict.describeEducationModel || "Describe your school's") +
-              "\n" +
-              (dict.educationModel || "education model")
-            }
-            description={
-              dict.selectSchoolTypeDescription ||
-              "Select the type that best describes your school's educational approach and governance structure."
-            }
-          />
-          <DescriptionForm
-            schoolId={schoolId}
-            initialData={descriptionData || undefined}
-            onTypeSelect={setSelectedType}
-            dictionary={dictionary}
-          />
-        </FormLayout>
-      </div>
-    </div>
+    <FormLayout>
+      <FormHeading
+        title={
+          (dict.describeEducationModel || "Describe your school's") +
+          "\n" +
+          (dict.educationModel || "education model")
+        }
+        description={
+          dict.selectSchoolTypeDescription ||
+          "Select the type that best describes your school's educational approach and governance structure."
+        }
+      />
+      <DescriptionForm
+        schoolId={schoolId}
+        initialData={descriptionData || undefined}
+        onTypeSelect={setSelectedType}
+        dictionary={dictionary}
+      />
+    </FormLayout>
   )
 }

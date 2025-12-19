@@ -34,17 +34,17 @@ export function createLocationSchema(dictionary: Dictionary) {
 }
 
 // ============================================================================
-// Legacy Schemas (for backward compatibility - will be deprecated)
+// Main Schema (used with Mapbox autocomplete)
 // ============================================================================
 
 export const locationSchema = z.object({
   address: z.string().min(1, "Address is required").trim(),
-  city: z.string().min(1, "City is required").trim(),
-  state: z.string().min(1, "State is required").trim(),
-  country: z.string().min(1, "Country is required").trim(),
+  city: z.string().optional().default(""),
+  state: z.string().optional().default(""),
+  country: z.string().optional().default(""),
   postalCode: z.string().optional().default(""),
-  latitude: z.number().optional().default(0),
-  longitude: z.number().optional().default(0),
+  latitude: z.number(),
+  longitude: z.number(),
 })
 
 export type LocationFormData = z.infer<typeof locationSchema>

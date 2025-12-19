@@ -1,12 +1,27 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { MapPin } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { type LocationResult } from "@/components/atom/mapbox-autocomplete"
 
 import { type LocationFormData } from "./validation"
+
+// Dynamic import with SSR disabled to avoid Node.js dependencies in Turbopack
+const MapboxAutocomplete = dynamic(
+  () =>
+    import("@/components/atom/mapbox-autocomplete").then(
+      (mod) => mod.MapboxAutocomplete
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-muted/50 h-10 w-full animate-pulse rounded-md" />
+    ),
+  }
+)
 
 interface MapFormProps {
   initialData?: Partial<LocationFormData>
@@ -24,9 +39,9 @@ export function MapForm({
     city: initialData?.city || "",
     state: initialData?.state || "",
     country: initialData?.country || "",
-    postalCode: "", // Always empty for database compatibility
-    latitude: 0, // Always 0 for database compatibility
-    longitude: 0, // Always 0 for database compatibility
+    postalCode: initialData?.postalCode || "",
+    latitude: initialData?.latitude || 0,
+    longitude: initialData?.longitude || 0,
   })
 
   // Update parent component when location data changes
@@ -34,50 +49,64 @@ export function MapForm({
     onLocationChange(locationData)
   }, [locationData, onLocationChange])
 
-  const handleInputChange = (field: keyof LocationFormData, value: string) => {
-    setLocationData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+  const handleLocationSelect = (result: LocationResult) => {
+    setLocationData({
+      address: result.address,
+      city: result.city,
+      state: result.state,
+      country: result.country,
+      postalCode: result.postalCode,
+      latitude: result.latitude,
+      longitude: result.longitude,
+    })
   }
 
   return (
     <Card className="border-0 bg-transparent p-0 shadow-none">
       <div className="grid gap-4">
-        {/* Address */}
-        <Input
-          type="text"
-          placeholder="Street Address (e.g., 123 Main Street)"
-          value={locationData.address}
-          onChange={(e) => handleInputChange("address", e.target.value)}
-          className="w-full"
-        />
-
-        {/* City and State Row */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            type="text"
-            placeholder="City (e.g., New York)"
-            value={locationData.city}
-            onChange={(e) => handleInputChange("city", e.target.value)}
-          />
-
-          <Input
-            type="text"
-            placeholder="State/Province (e.g., NY)"
-            value={locationData.state}
-            onChange={(e) => handleInputChange("state", e.target.value)}
+        {/* Mapbox Autocomplete Search */}
+        <div className="relative">
+          <MapboxAutocomplete
+            value={locationData.address}
+            onSelect={handleLocationSelect}
+            placeholder={
+              dictionary?.onboarding?.searchAddress ||
+              "Search for an address..."
+            }
           />
         </div>
 
-        {/* Country */}
-        <Input
-          type="text"
-          placeholder="Country (e.g., United States)"
-          value={locationData.country}
-          onChange={(e) => handleInputChange("country", e.target.value)}
-          className="w-full"
-        />
+        {/* Show selected location details (read-only) */}
+        {locationData.address && (
+          <div className="bg-muted/50 space-y-3 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <MapPin className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{locationData.address}</p>
+                {(locationData.city ||
+                  locationData.state ||
+                  locationData.country) && (
+                  <p className="text-muted-foreground text-xs">
+                    {[
+                      locationData.city,
+                      locationData.state,
+                      locationData.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                )}
+                {locationData.latitude !== 0 &&
+                  locationData.longitude !== 0 && (
+                    <p className="text-muted-foreground text-xs">
+                      {locationData.latitude.toFixed(6)},{" "}
+                      {locationData.longitude.toFixed(6)}
+                    </p>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   )

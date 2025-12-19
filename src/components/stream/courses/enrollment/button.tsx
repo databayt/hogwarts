@@ -33,15 +33,27 @@ export function EnrollmentButton({
     })
   }
 
+  const isRTL = lang === "ar"
+
   return (
-    <Button onClick={onSubmit} disabled={pending} className="w-full">
+    <Button
+      onClick={onSubmit}
+      disabled={pending}
+      className="h-12 w-full px-8 text-base font-medium"
+      style={{
+        backgroundColor: "#141413",
+        color: "#faf9f5",
+      }}
+    >
       {pending ? (
         <>
           <Loader2 className="size-4 animate-spin" />
-          Loading...
+          {isRTL ? "جاري التحميل..." : "Loading..."}
         </>
+      ) : isRTL ? (
+        "التسجيل في الدورة"
       ) : (
-        "Enroll Now!"
+        "Enroll in Course"
       )}
     </Button>
   )

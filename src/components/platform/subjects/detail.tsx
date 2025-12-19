@@ -9,6 +9,7 @@ import {
   Layers,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -17,12 +18,20 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import { SubjectHero, SubjectHeroSkeleton } from "./hero"
+
 // Type for subject detail - matches the select result from actions.ts
 interface SubjectDetailResult {
   id: string
   schoolId: string
   subjectName: string
+  subjectNameAr?: string | null
   departmentId: string | null
+  department?: {
+    id: string
+    departmentName: string
+    departmentNameAr?: string | null
+  } | null
   createdAt: Date
   updatedAt: Date
 }
@@ -53,14 +62,22 @@ export function SubjectDetailContent({
     errorTitle: isRTL ? "خطأ" : "Error",
     notFound: isRTL ? "المادة غير موجودة" : "Subject not found",
     noDepartment: isRTL ? "غير محدد" : "Not assigned",
+    relatedTopics: isRTL ? "المواضيع المتعلقة" : "Related Topics",
+    noTopics: isRTL ? "لا توجد مواضيع متاحة" : "No topics available",
   }
 
   // Error state
   if (error || !data) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className={cn(isRTL && "flex-row-reverse")}
+        >
+          <ArrowLeft
+            className={cn("h-4 w-4", isRTL ? "ml-2 rotate-180" : "mr-2")}
+          />
           {t.back}
         </Button>
         <Alert variant="destructive">
@@ -72,97 +89,129 @@ export function SubjectDetailContent({
     )
   }
 
+  // Get localized names
+  const displayName =
+    isRTL && data.subjectNameAr ? data.subjectNameAr : data.subjectName
+  const displayDepartment = data.department
+    ? isRTL && data.department.departmentNameAr
+      ? data.department.departmentNameAr
+      : data.department.departmentName
+    : t.noDepartment
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold">{data.subjectName}</h1>
-            <p className="text-muted-foreground text-sm">
-              {new Date(data.createdAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US",
-                {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }
-              )}
-            </p>
-          </div>
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.back()}
+        className={cn(isRTL && "flex-row-reverse")}
+      >
+        <ArrowLeft
+          className={cn("h-4 w-4", isRTL ? "ml-2 rotate-180" : "mr-2")}
+        />
+        {t.back}
+      </Button>
+
+      {/* Hero Section */}
+      <SubjectHero
+        subjectName={data.subjectName}
+        subjectNameAr={data.subjectNameAr}
+        lang={lang}
+      />
+
+      {/* Content Section - Two column layout */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Main Content */}
+        <div className="space-y-4 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                {t.details}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 sm:grid-cols-2">
+                {/* Subject Name */}
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-sm">
+                    {t.subjectName}
+                  </dt>
+                  <dd className="font-medium">{displayName}</dd>
+                </div>
+
+                {/* Department */}
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-sm">
+                    {t.department}
+                  </dt>
+                  <dd>
+                    {data.department ? (
+                      <Badge variant="outline" className="font-normal">
+                        <Layers className="mr-1 h-3 w-3" />
+                        {displayDepartment}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t.noDepartment}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+
+                {/* Created At */}
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-sm">
+                    {t.createdAt}
+                  </dt>
+                  <dd className="flex items-center gap-1 text-sm">
+                    <Calendar className="text-muted-foreground h-3 w-3" />
+                    {new Date(data.createdAt).toLocaleDateString(
+                      isRTL ? "ar-SA" : "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </dd>
+                </div>
+
+                {/* Updated At */}
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground text-sm">
+                    {t.updatedAt}
+                  </dt>
+                  <dd className="flex items-center gap-1 text-sm">
+                    <Calendar className="text-muted-foreground h-3 w-3" />
+                    {new Date(data.updatedAt).toLocaleDateString(
+                      isRTL ? "ar-SA" : "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
         </div>
-        <Badge variant="secondary">
-          <BookOpen className="mr-1 h-3 w-3" />
-          {isRTL ? "مادة" : "Subject"}
-        </Badge>
-      </div>
 
-      {/* Details Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Subject Name Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.subjectName}
-            </CardTitle>
-            <BookOpen className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">{data.subjectName}</div>
-          </CardContent>
-        </Card>
-
-        {/* Department Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t.department}
-            </CardTitle>
-            <Layers className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {data.departmentId ? (
-                <Badge variant="outline">{data.departmentId}</Badge>
-              ) : (
-                <span className="text-muted-foreground">{t.noDepartment}</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Created At Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.createdAt}</CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {new Date(data.createdAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US"
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Updated At Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t.updatedAt}</CardTitle>
-            <Calendar className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">
-              {new Date(data.updatedAt).toLocaleDateString(
-                isRTL ? "ar-SA" : "en-US"
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Sidebar */}
+        <div className="space-y-4">
+          {/* Related Topics placeholder */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{t.relatedTopics}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">{t.noTopics}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
@@ -171,17 +220,20 @@ export function SubjectDetailContent({
 export function SubjectDetailLoading() {
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-10 w-10 rounded" />
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-24" />
+      {/* Back button skeleton */}
+      <Skeleton className="h-9 w-20" />
+
+      {/* Hero skeleton */}
+      <SubjectHeroSkeleton />
+
+      {/* Content skeleton */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Skeleton className="h-64 w-full rounded-lg" />
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
+        <div>
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
       </div>
     </div>
   )

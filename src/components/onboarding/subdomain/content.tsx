@@ -155,97 +155,93 @@ export default function SubdomainContent(props: Props) {
   }
 
   return (
-    <div className="">
-      <div className="mx-auto max-w-6xl">
-        <FormLayout split="30/70">
-          <FormHeading
-            title={"Choose your school's\nsubdomain"}
-            description={`This will be your school's unique web address. Students and staff will access your school at ${subdomain || "yourschool"}.databayt.org`}
-          />
-          <div className="space-y-4">
-            {/* Subdomain input */}
-            <div className="space-y-2">
-              <label htmlFor="subdomain" className="text-sm font-medium">
-                Subdomain
-              </label>
-              <div className="relative">
-                <Input
-                  id="subdomain"
-                  value={subdomain}
-                  onChange={handleSubdomainChange}
-                  placeholder="yourschool"
-                  className="pe-10"
-                />
-                <div className="absolute end-3 top-1/2 -translate-y-1/2 transform">
-                  {getValidationIcon()}
-                </div>
-              </div>
-
-              {/* Validation message */}
-              {subdomain.trim() && (
-                <p
-                  className={`text-xs ${isValid ? "text-green-600" : "text-red-600"}`}
-                >
-                  {getValidationMessage()}
-                </p>
-              )}
-
-              {/* Character count */}
-              <div className="text-muted-foreground text-xs">
-                {subdomain.length}/63 characters
-              </div>
+    <FormLayout split="30/70">
+      <FormHeading
+        title={"Choose your school's\nsubdomain"}
+        description={`This will be your school's unique web address. Students and staff will access your school at ${subdomain || "yourschool"}.databayt.org`}
+      />
+      <div className="space-y-4">
+        {/* Subdomain input */}
+        <div className="space-y-2">
+          <label htmlFor="subdomain" className="text-sm font-medium">
+            Subdomain
+          </label>
+          <div className="relative">
+            <Input
+              id="subdomain"
+              value={subdomain}
+              onChange={handleSubdomainChange}
+              placeholder="yourschool"
+              className="pe-10"
+            />
+            <div className="absolute end-3 top-1/2 -translate-y-1/2 transform">
+              {getValidationIcon()}
             </div>
-
-            {/* Regenerate button */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRegenerate}
-              className="w-full"
-            >
-              <RefreshCw className="me-2 h-4 w-4" />
-              Regenerate from school name
-            </Button>
-
-            {/* Suggestions */}
-            {suggestions.length > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Suggestions</label>
-                <div className="flex flex-wrap gap-2">
-                  {suggestions.map((suggestion, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="hover:bg-primary hover:text-primary-foreground cursor-pointer transition-colors"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Save button */}
-            <Button
-              type="button"
-              onClick={handleSave}
-              disabled={!isValid || isChecking}
-              className="w-full"
-            >
-              {isChecking ? (
-                <>
-                  <RefreshCw className="me-2 h-4 w-4 animate-spin" />
-                  Checking availability...
-                </>
-              ) : (
-                "Save subdomain"
-              )}
-            </Button>
           </div>
-        </FormLayout>
+
+          {/* Validation message */}
+          {subdomain.trim() && (
+            <p
+              className={`text-xs ${isValid ? "text-green-600" : "text-red-600"}`}
+            >
+              {getValidationMessage()}
+            </p>
+          )}
+
+          {/* Character count */}
+          <div className="text-muted-foreground text-xs">
+            {subdomain.length}/63 characters
+          </div>
+        </div>
+
+        {/* Regenerate button */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleRegenerate}
+          className="w-full"
+        >
+          <RefreshCw className="me-2 h-4 w-4" />
+          Regenerate from school name
+        </Button>
+
+        {/* Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Suggestions</label>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="hover:bg-primary hover:text-primary-foreground cursor-pointer transition-colors"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Save button */}
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!isValid || isChecking}
+          className="w-full"
+        >
+          {isChecking ? (
+            <>
+              <RefreshCw className="me-2 h-4 w-4 animate-spin" />
+              Checking availability...
+            </>
+          ) : (
+            "Save subdomain"
+          )}
+        </Button>
       </div>
-    </div>
+    </FormLayout>
   )
 }

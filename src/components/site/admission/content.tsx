@@ -1,6 +1,7 @@
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
+import Footer from "../footer"
 import type { School } from "../types"
 import { AdmissionHero } from "./sections/hero"
 import { AdmissionProcess } from "./sections/process"
@@ -21,6 +22,7 @@ export default function AdmissionContent({ school, dictionary, lang }: Props) {
       <AdmissionValues lang={lang} dictionary={dictionary} />
       <AdmissionProcess lang={lang} dictionary={dictionary} />
       <AdmissionRequirements lang={lang} dictionary={dictionary} />
+      <Footer />
     </main>
   )
 }

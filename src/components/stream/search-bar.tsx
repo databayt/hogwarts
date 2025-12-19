@@ -142,7 +142,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-black/95 backdrop-blur-md"
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-md"
             onClick={() => setIsDropdownOpen(false)}
           />
         )}

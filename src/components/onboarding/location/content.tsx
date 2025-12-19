@@ -34,47 +34,39 @@ export default function LocationContent({ dictionary }: Props) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-full max-w-sm" />
-          </div>
-          <Skeleton className="h-[300px] w-full rounded-lg" />
-        </FormLayout>
-      </div>
+      <FormLayout>
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <Skeleton className="h-[300px] w-full rounded-lg" />
+      </FormLayout>
     )
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <FormHeading
-            title={dict.whereIsYourSchool || "Where's your school located?"}
-            description={
-              dict.schoolLocationDescription ||
-              "Your school's address will be visible to parents and staff members."
-            }
-          />
-          <LocationForm
-            schoolId={schoolId}
-            initialData={locationData || undefined}
-            dictionary={dictionary}
-          />
-        </FormLayout>
-      </div>
-    </div>
+    <FormLayout>
+      <FormHeading
+        title={dict.whereIsYourSchool || "Where's your school located?"}
+        description={
+          dict.schoolLocationDescription ||
+          "Your school's address will be visible to parents and staff members."
+        }
+      />
+      <LocationForm
+        schoolId={schoolId}
+        initialData={locationData || undefined}
+        dictionary={dictionary}
+      />
+    </FormLayout>
   )
 }

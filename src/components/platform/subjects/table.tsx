@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Building2 } from "lucide-react"
+import { BookOpen } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -17,18 +17,17 @@ import {
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
-  GridCard,
   GridContainer,
   GridEmptyState,
   PlatformToolbar,
 } from "@/components/platform/shared"
 import { SubjectCreateForm } from "@/components/platform/subjects/form"
+import { SubjectCard } from "@/components/platform/subjects/subject-card"
 import { DataTable } from "@/components/table/data-table"
 import { useDataTable } from "@/components/table/use-data-table"
 
 import { deleteSubject, getSubjects } from "./actions"
 import {
-  getLocalizedDepartmentName,
   getLocalizedSubjectName,
   getSubjectColumns,
   type SubjectRow,
@@ -105,8 +104,8 @@ function SubjectsTableInner({
     actions: t?.actions || (lang === "ar" ? "إجراءات" : "Actions"),
   }
 
-  // View mode (table/grid)
-  const { view, toggleView } = usePlatformView({ defaultView: "table" })
+  // View mode (table/grid) - default to grid for visual subject cards
+  const { view, toggleView } = usePlatformView({ defaultView: "grid" })
 
   // Search state
   const [searchValue, setSearchValue] = useState("")
@@ -261,60 +260,15 @@ function SubjectsTableInner({
             />
           ) : (
             <GridContainer columns={3}>
-              {data.map((subject) => {
-                const displayName = getLocalizedSubjectName(subject, lang)
-                const displayDepartment = getLocalizedDepartmentName(
-                  subject,
-                  lang
-                )
-                const initials = displayName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-
-                return (
-                  <GridCard
-                    key={subject.id}
-                    title={displayName}
-                    subtitle={displayDepartment}
-                    avatarFallback={initials}
-                    metadata={[
-                      {
-                        label: translations.department,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <Building2 className="h-3 w-3" />
-                            {displayDepartment}
-                          </span>
-                        ),
-                      },
-                      {
-                        label: translations.created,
-                        value: new Date(subject.createdAt).toLocaleDateString(),
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: translations.view,
-                        onClick: () => handleView(subject.id),
-                      },
-                      {
-                        label: translations.edit,
-                        onClick: () => handleEdit(subject.id),
-                      },
-                      {
-                        label: translations.delete,
-                        onClick: () => handleDelete(subject),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={translations.actions}
-                    onClick={() => handleView(subject.id)}
-                  />
-                )
-              })}
+              {data.map((subject) => (
+                <SubjectCard
+                  key={subject.id}
+                  id={subject.id}
+                  name={subject.subjectName}
+                  nameAr={subject.subjectNameAr}
+                  lang={lang}
+                />
+              ))}
             </GridContainer>
           )}
 

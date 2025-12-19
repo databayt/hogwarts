@@ -68,10 +68,60 @@ export async function POST(req: Request) {
   if ((event as { type: string })?.type === "checkout.session.completed") {
     const eventData = event as {
       data: {
-        object: { metadata?: { userId?: string }; subscription?: string }
+        object: {
+          metadata?: {
+            userId?: string
+            courseId?: string
+            enrollmentId?: string
+            schoolId?: string
+          }
+          subscription?: string
+          payment_status?: string
+        }
       }
     }
     const session = eventData.data.object
+
+    // Handle COURSE ENROLLMENT payments (one-time, no subscription)
+    if (
+      session.metadata?.courseId &&
+      session.metadata?.enrollmentId &&
+      !session.subscription
+    ) {
+      // Verify payment was successful
+      if (session.payment_status === "paid") {
+        try {
+          // Activate the enrollment
+          await db.streamEnrollment.update({
+            where: {
+              id: session.metadata.enrollmentId,
+              schoolId: session.metadata.schoolId, // Multi-tenant safety
+            },
+            data: {
+              isActive: true,
+              updatedAt: new Date(),
+            },
+          })
+
+          console.log(
+            `[Webhook] Course enrollment activated: ${session.metadata.enrollmentId}`
+          )
+        } catch (error) {
+          console.error("[Webhook] Failed to activate enrollment:", error)
+          // Don't throw - return 200 so Stripe doesn't retry
+          // The success page verification will handle this
+        }
+      }
+
+      // Return early - this is not a subscription payment
+      return new Response(null, { status: 200 })
+    }
+
+    // Handle SUBSCRIPTION payments (existing logic)
+    if (!session.subscription) {
+      // No subscription, nothing to do for subscription handling
+      return new Response(null, { status: 200 })
+    }
 
     // Retrieve the subscription details from Stripe (cast to lightweight shape to avoid type deps)
     const subscriptionRes = await stripe.subscriptions.retrieve(

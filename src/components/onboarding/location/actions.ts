@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { Decimal } from "@prisma/client/runtime/library"
 import { z } from "zod"
 
 import {
@@ -35,11 +36,19 @@ export async function updateSchoolLocation(
 
     const fullAddress = addressParts.join(", ")
 
-    // Update school location in database
+    // Update school location in database with coordinates
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
       data: {
         address: fullAddress,
+        latitude:
+          validatedData.latitude !== 0
+            ? new Decimal(validatedData.latitude)
+            : null,
+        longitude:
+          validatedData.longitude !== 0
+            ? new Decimal(validatedData.longitude)
+            : null,
         updatedAt: new Date(),
       },
     })
@@ -68,6 +77,8 @@ export async function getSchoolLocation(
       select: {
         id: true,
         address: true,
+        latitude: true,
+        longitude: true,
       },
     })
 
@@ -77,20 +88,20 @@ export async function getSchoolLocation(
 
     // Parse the concatenated address string
     const parsedAddress = {
-      address: "",
+      address: school.address || "",
       city: "",
       state: "",
       country: "",
       postalCode: "",
-      latitude: 0,
-      longitude: 0,
+      latitude: school.latitude ? Number(school.latitude) : 0,
+      longitude: school.longitude ? Number(school.longitude) : 0,
     }
 
-    if (school.address) {
-      // Simple parsing of "address, city, state, country"
+    // Only parse address into components if we don't have coordinates
+    // (backwards compatibility for addresses saved before Mapbox)
+    if (school.address && !school.latitude) {
       const parts = school.address.split(",").map((part) => part.trim())
-      if (parts.length >= 1) {
-        parsedAddress.address = parts[0] || ""
+      if (parts.length >= 4) {
         parsedAddress.city = parts[1] || ""
         parsedAddress.state = parts[2] || ""
         parsedAddress.country = parts[3] || ""

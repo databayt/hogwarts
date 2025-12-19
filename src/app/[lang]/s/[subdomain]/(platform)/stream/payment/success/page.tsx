@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
 import { getDictionary } from "@/components/internationalization/dictionaries"
+import { verifyPaymentAndActivateEnrollment } from "@/components/stream/courses/enrollment/actions"
 import { StreamPaymentSuccessContent } from "@/components/stream/payment/success-content"
 
 interface Props {
@@ -26,10 +27,18 @@ export default async function StreamPaymentSuccessPage({
   params,
   searchParams,
 }: Props) {
-  const { lang, subdomain } = await params
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
   const search = await searchParams
+
+  // Verify payment and activate enrollment server-side
+  let verificationResult = null
+  if (search?.session_id) {
+    verificationResult = await verifyPaymentAndActivateEnrollment(
+      search.session_id
+    )
+  }
 
   return (
     <StreamPaymentSuccessContent
@@ -37,6 +46,7 @@ export default async function StreamPaymentSuccessPage({
       lang={lang}
       schoolId={schoolId}
       sessionId={search?.session_id}
+      verificationResult={verificationResult}
     />
   )
 }

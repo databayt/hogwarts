@@ -32,42 +32,38 @@ export default function CapacityContent({ dictionary }: Props) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl">
-        <FormLayout>
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-full max-w-sm" />
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </FormLayout>
-      </div>
+      <FormLayout>
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      </FormLayout>
     )
   }
 
   return (
-    <div className="w-full">
-      <FormLayout>
-        <FormHeading
-          title={
-            (dict.howManyStudents || "Share some basics about") +
-            "\n" +
-            (dict.aboutYourSchool || "your school")
-          }
-          description={
-            dict.capacityDescription ||
-            "Tell us about your school's capacity and facilities. These numbers will help us configure your system properly."
-          }
-        />
-        <CapacityForm
-          schoolId={schoolId}
-          initialData={capacityData || undefined}
-          dictionary={dictionary}
-        />
-      </FormLayout>
-    </div>
+    <FormLayout>
+      <FormHeading
+        title={
+          (dict.howManyStudents || "Share some basics about") +
+          "\n" +
+          (dict.aboutYourSchool || "your school")
+        }
+        description={
+          dict.capacityDescription ||
+          "Tell us about your school's capacity and facilities. These numbers will help us configure your system properly."
+        }
+      />
+      <CapacityForm
+        schoolId={schoolId}
+        initialData={capacityData || undefined}
+        dictionary={dictionary}
+      />
+    </FormLayout>
   )
 }
