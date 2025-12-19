@@ -27,14 +27,13 @@ interface SubjectCardProps {
 }
 
 /**
- * SubjectCard - ClickView-style image card for subjects grid
+ * SubjectCard - Compact horizontal card for subjects grid
  *
  * Features:
- * - Square aspect ratio with rounded corners
- * - Colorful illustrated subject image
- * - Subject name below image (centered)
+ * - Small image with text in a row
+ * - Rounded corners
  * - Optional badge overlay
- * - Hover scale effect
+ * - Hover effects
  * - RTL support for Arabic names
  */
 function SubjectCardInner({
@@ -52,34 +51,39 @@ function SubjectCardInner({
   return (
     <Link
       href={`/${lang}/subjects/${id}`}
-      className={cn("group block", className)}
+      className={cn(
+        "group hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-2 transition-colors",
+        isRTL && "flex-row-reverse",
+        className
+      )}
     >
-      {/* Image Container - Compact with rounded corners */}
-      <div className="bg-muted relative aspect-[4/3] overflow-hidden rounded-xl">
+      {/* Small Image */}
+      <div className="bg-muted relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
         <Image
           src={imageUrl}
           alt={displayName}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-110"
+          sizes="48px"
         />
 
         {/* Badge overlay (optional) */}
         {badge && (
-          <div className="absolute top-3 right-3">
-            <Badge variant="secondary" className="bg-background/90 text-xs">
+          <div className="absolute -top-1 -right-1">
+            <Badge
+              variant="secondary"
+              className="bg-background/90 h-4 px-1 text-[10px]"
+            >
               {badge}
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Subject Name - Below image, centered */}
-      <div className={cn("mt-2 text-center", isRTL && "text-right")}>
-        <h3 className="text-foreground group-hover:text-primary text-sm font-medium transition-colors">
-          {displayName}
-        </h3>
-      </div>
+      {/* Subject Name - Beside image */}
+      <h3 className="text-foreground group-hover:text-primary text-sm font-medium transition-colors">
+        {displayName}
+      </h3>
     </Link>
   )
 }
@@ -91,11 +95,9 @@ export const SubjectCard = React.memo(SubjectCardInner)
  */
 export function SubjectCardSkeleton() {
   return (
-    <div>
-      <Skeleton className="aspect-[4/3] w-full rounded-xl" />
-      <div className="mt-2 flex justify-center">
-        <Skeleton className="h-4 w-20" />
-      </div>
+    <div className="flex items-center gap-3 rounded-lg border p-2">
+      <Skeleton className="h-12 w-12 flex-shrink-0 rounded-lg" />
+      <Skeleton className="h-4 w-24" />
     </div>
   )
 }
