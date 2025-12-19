@@ -202,12 +202,7 @@ export function Weather({
   })
 
   return (
-    <div
-      className={cn(
-        "flex h-[320px] w-full flex-col justify-between",
-        className
-      )}
-    >
+    <div className={cn("flex w-full flex-col", className)}>
       <div>
         {/* Header with condition */}
         <div className="space-y-1">
@@ -261,7 +256,7 @@ export function Weather({
         </div>
 
         {/* 6-day forecast strip */}
-        <div className="bg-muted/50 mt-3 flex justify-between rounded-lg p-2">
+        <div className="bg-muted/50 mt-3 flex justify-between rounded-lg p-3">
           {forecastData.slice(0, 6).map((item) => (
             <div key={item.day} className="flex flex-col items-center gap-0.5">
               <span className="text-muted-foreground text-xs">{item.day}</span>
