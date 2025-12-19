@@ -18,9 +18,9 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "BarChart",
-          label: "Analytics",
-          description: "View school performance metrics",
-          href: `${baseUrl}/analytics`,
+          label: "School",
+          description: "View school overview",
+          href: `${baseUrl}/school`,
         },
         {
           iconName: "Gear",
@@ -30,15 +30,15 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "FileText",
-          label: "Reports",
-          description: "Generate and view reports",
-          href: `${baseUrl}/reports`,
+          label: "Finance",
+          description: "View financial reports",
+          href: `${baseUrl}/finance`,
         },
         {
           iconName: "Users",
-          label: "Manage Users",
-          description: "Add and manage users",
-          href: `${baseUrl}/admin`,
+          label: "Staff",
+          description: "Manage staff members",
+          href: `${baseUrl}/staff`,
         },
       ]
 
