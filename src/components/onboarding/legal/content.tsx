@@ -191,25 +191,112 @@ const LegalContent = (props: Props) => {
         />
       )}
 
-      <div className="">
-        <div className="">
-          {/* Title at the top */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-3xl font-bold">
-              {dict.shareSafetyDetails || "Share safety details"}
-            </h1>
+      <div>
+        {/* Title at the top */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-3xl font-bold">
+            {dict.shareSafetyDetails || "Share safety details"}
+          </h1>
+        </div>
+
+        {/* Two sections side by side */}
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5 lg:gap-20">
+          {/* Left column - Hosting type */}
+          <div className="lg:col-span-2">
+            <div
+              className={`flex items-center ${isRTL ? "space-x-reverse" : ""} mb-3 space-x-2 sm:mb-4`}
+            >
+              <h5 className="text-foreground">
+                {dict.operationalStatus ||
+                  "What is your school's operational status?"}
+              </h5>
+              <HelpCircle
+                size={16}
+                className="text-muted-foreground sm:h-4.5 sm:w-4.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label
+                className={`flex items-center ${isRTL ? "space-x-reverse" : ""} cursor-pointer space-x-2`}
+              >
+                <input
+                  type="radio"
+                  name="hosting-type"
+                  value="private-individual"
+                  checked={hostingType === "private-individual"}
+                  onChange={(e) => {
+                    console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
+                      from: hostingType,
+                      to: e.target.value,
+                    })
+                    setHostingType(e.target.value)
+                  }}
+                  className="sr-only"
+                />
+                <div
+                  className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                    hostingType === "private-individual"
+                      ? "border-foreground bg-foreground"
+                      : "border-muted-foreground bg-background"
+                  }`}
+                >
+                  {hostingType === "private-individual" && (
+                    <div className="bg-background h-1.5 w-1.5 rounded-full"></div>
+                  )}
+                </div>
+                <small className="text-foreground">
+                  {dict.existingSchoolLicenses ||
+                    "Existing school with valid licenses"}
+                </small>
+              </label>
+
+              <label
+                className={`flex items-center ${isRTL ? "space-x-reverse" : ""} cursor-pointer space-x-2`}
+              >
+                <input
+                  type="radio"
+                  name="hosting-type"
+                  value="business"
+                  checked={hostingType === "business"}
+                  onChange={(e) => {
+                    console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
+                      from: hostingType,
+                      to: e.target.value,
+                    })
+                    setHostingType(e.target.value)
+                  }}
+                  className="sr-only"
+                />
+                <div
+                  className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                    hostingType === "business"
+                      ? "border-foreground bg-foreground"
+                      : "border-muted-foreground bg-background"
+                  }`}
+                >
+                  {hostingType === "business" && (
+                    <div className="bg-background h-1.5 w-1.5 rounded-full"></div>
+                  )}
+                </div>
+                <small className="text-foreground">
+                  {dict.newSchoolRegistration ||
+                    "New school seeking registration"}
+                </small>
+              </label>
+            </div>
           </div>
 
-          {/* Two sections side by side */}
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5 lg:gap-20">
-            {/* Left column - Hosting type */}
-            <div className="lg:col-span-2">
+          {/* Right column - Safety features and important info */}
+          <div className="space-y-3 sm:space-y-4 lg:col-span-3">
+            {/* Safety Features */}
+            <div>
               <div
-                className={`flex items-center ${isRTL ? "space-x-reverse" : ""} mb-3 space-x-2 sm:mb-4`}
+                className={`flex items-center ${isRTL ? "space-x-reverse" : ""} mb-3 space-x-2`}
               >
                 <h5 className="text-foreground">
-                  {dict.operationalStatus ||
-                    "What is your school's operational status?"}
+                  {dict.schoolSafetyFeatures ||
+                    "Does your school have any of these?"}
                 </h5>
                 <HelpCircle
                   size={16}
@@ -218,156 +305,67 @@ const LegalContent = (props: Props) => {
               </div>
 
               <div className="space-y-2">
-                <label
-                  className={`flex items-center ${isRTL ? "space-x-reverse" : ""} cursor-pointer space-x-2`}
-                >
-                  <input
-                    type="radio"
-                    name="hosting-type"
-                    value="private-individual"
-                    checked={hostingType === "private-individual"}
-                    onChange={(e) => {
-                      console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
-                        from: hostingType,
-                        to: e.target.value,
-                      })
-                      setHostingType(e.target.value)
-                    }}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                      hostingType === "private-individual"
-                        ? "border-foreground bg-foreground"
-                        : "border-muted-foreground bg-background"
-                    }`}
+                {safetyOptions.map((option) => (
+                  <label
+                    key={option}
+                    className={`flex cursor-pointer items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
                   >
-                    {hostingType === "private-individual" && (
-                      <div className="bg-background h-1.5 w-1.5 rounded-full"></div>
-                    )}
-                  </div>
-                  <small className="text-foreground">
-                    {dict.existingSchoolLicenses ||
-                      "Existing school with valid licenses"}
-                  </small>
-                </label>
-
-                <label
-                  className={`flex items-center ${isRTL ? "space-x-reverse" : ""} cursor-pointer space-x-2`}
-                >
-                  <input
-                    type="radio"
-                    name="hosting-type"
-                    value="business"
-                    checked={hostingType === "business"}
-                    onChange={(e) => {
-                      console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
-                        from: hostingType,
-                        to: e.target.value,
-                      })
-                      setHostingType(e.target.value)
-                    }}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                      hostingType === "business"
-                        ? "border-foreground bg-foreground"
-                        : "border-muted-foreground bg-background"
-                    }`}
-                  >
-                    {hostingType === "business" && (
-                      <div className="bg-background h-1.5 w-1.5 rounded-full"></div>
-                    )}
-                  </div>
-                  <small className="text-foreground">
-                    {dict.newSchoolRegistration ||
-                      "New school seeking registration"}
-                  </small>
-                </label>
+                    <small className="text-foreground">{option}</small>
+                    <input
+                      type="checkbox"
+                      checked={safetyFeatures.includes(option)}
+                      onChange={() => toggleSafetyFeature(option)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`flex h-4 w-4 items-center justify-center rounded border-2 ${
+                        safetyFeatures.includes(option)
+                          ? "border-foreground bg-foreground"
+                          : "border-muted-foreground bg-background"
+                      }`}
+                    >
+                      {safetyFeatures.includes(option) && (
+                        <svg
+                          className="text-background h-2.5 w-2.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                  </label>
+                ))}
               </div>
             </div>
 
-            {/* Right column - Safety features and important info */}
-            <div className="space-y-3 sm:space-y-4 lg:col-span-3">
-              {/* Safety Features */}
-              <div>
-                <div
-                  className={`flex items-center ${isRTL ? "space-x-reverse" : ""} mb-3 space-x-2`}
-                >
-                  <h5 className="text-foreground">
-                    {dict.schoolSafetyFeatures ||
-                      "Does your school have any of these?"}
-                  </h5>
-                  <HelpCircle
-                    size={16}
-                    className="text-muted-foreground sm:h-4.5 sm:w-4.5"
-                  />
-                </div>
+            <hr className="border-border" />
 
-                <div className="space-y-2">
-                  {safetyOptions.map((option) => (
-                    <label
-                      key={option}
-                      className={`flex cursor-pointer items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}
-                    >
-                      <small className="text-foreground">{option}</small>
-                      <input
-                        type="checkbox"
-                        checked={safetyFeatures.includes(option)}
-                        onChange={() => toggleSafetyFeature(option)}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`flex h-4 w-4 items-center justify-center rounded border-2 ${
-                          safetyFeatures.includes(option)
-                            ? "border-foreground bg-foreground"
-                            : "border-muted-foreground bg-background"
-                        }`}
-                      >
-                        {safetyFeatures.includes(option) && (
-                          <svg
-                            className="text-background h-2.5 w-2.5"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="border-border" />
-
-              {/* Important Information */}
-              <div className="space-y-3">
-                <h6 className="text-foreground">
-                  {dict.importantThingsToKnow || "Important things to know"}
-                </h6>
-                <small className="text-muted-foreground block leading-relaxed">
-                  {dict.complianceNotice || "Be sure to comply with your"}{" "}
-                  <span className="underline">
-                    {dict.localEducationLaws || "local education laws"}
-                  </span>{" "}
-                  {dict.andReviewOur || "and review our"}{" "}
-                  <span className="underline">
-                    {dict.schoolRegistrationGuidelines ||
-                      "school registration guidelines"}
-                  </span>{" "}
-                  {dict.and || "and"}{" "}
-                  <span className="underline">
-                    {dict.feeStructure || "fee structure"}
-                  </span>
-                  .
-                </small>
-              </div>
+            {/* Important Information */}
+            <div className="space-y-3">
+              <h6 className="text-foreground">
+                {dict.importantThingsToKnow || "Important things to know"}
+              </h6>
+              <small className="text-muted-foreground block leading-relaxed">
+                {dict.complianceNotice || "Be sure to comply with your"}{" "}
+                <span className="underline">
+                  {dict.localEducationLaws || "local education laws"}
+                </span>{" "}
+                {dict.andReviewOur || "and review our"}{" "}
+                <span className="underline">
+                  {dict.schoolRegistrationGuidelines ||
+                    "school registration guidelines"}
+                </span>{" "}
+                {dict.and || "and"}{" "}
+                <span className="underline">
+                  {dict.feeStructure || "fee structure"}
+                </span>
+                .
+              </small>
             </div>
           </div>
         </div>

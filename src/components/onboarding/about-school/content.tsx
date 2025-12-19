@@ -32,19 +32,15 @@ export default function AboutSchoolContent({ dictionary }: Props) {
   )
 
   return (
-    <div className="">
-      <div className="w-full">
-        <HostStepHeader
-          stepNumber={1}
-          title={dict.tellUsAboutYourSchool || "Tell us about your school"}
-          description={
-            dict.aboutSchoolDescription ||
-            "In this step, we'll ask you about your school type, location, and student capacity. Then we'll help you set up your academic structure."
-          }
-          illustration={illustration}
-          dictionary={dictionary}
-        />
-      </div>
-    </div>
+    <HostStepHeader
+      stepNumber={1}
+      title={dict.tellUsAboutYourSchool || "Tell us about your school"}
+      description={
+        dict.aboutSchoolDescription ||
+        "In this step, we'll ask you about your school type, location, and student capacity. Then we'll help you set up your academic structure."
+      }
+      illustration={illustration}
+      dictionary={dictionary}
+    />
   )
 }

@@ -54,7 +54,7 @@ export default function PriceContent(props: Props) {
   }
 
   return (
-    <div className="flex w-full flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-6">
       {/* Large price display with edit functionality */}
       <div className="mb-6 flex items-start justify-center">
         <div className="relative flex items-center">

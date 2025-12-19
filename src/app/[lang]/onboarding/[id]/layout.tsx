@@ -223,8 +223,8 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   // Show loading state while fetching school data
   if (isLoading) {
     return (
-      <div className="min-h-screen px-4 sm:px-6 md:px-12">
-        <main className="h-screen pt-16">{renderPageSkeleton()}</main>
+      <div className="pb-20">
+        {renderPageSkeleton()}
         <FormFooter
           config={ONBOARDING_CONFIG}
           basePath="/onboarding"
@@ -240,28 +240,26 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   // Show error state if loading failed
   if (error) {
     return (
-      <div className="min-h-screen px-4 sm:px-6 md:px-12">
-        <main className="flex h-screen items-center justify-center pt-16">
-          <div className="max-w-md text-center">
-            <div className="mb-4 text-6xl">⚠️</div>
-            <h2>{dict.unableToLoadSchool || "Unable to Load School"}</h2>
-            <p className="muted mb-4">{error}</p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => listingId && loadListing(listingId)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors"
-              >
-                {dict.tryAgain || "Try Again"}
-              </button>
-              <button
-                onClick={() => (window.location.href = "/onboarding/overview")}
-                className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-4 py-2 transition-colors"
-              >
-                {dict.backToOverview || "Back to Overview"}
-              </button>
-            </div>
+      <div className="pb-20">
+        <div className="max-w-md text-center">
+          <div className="mb-4 text-6xl">⚠️</div>
+          <h2>{dict.unableToLoadSchool || "Unable to Load School"}</h2>
+          <p className="muted mb-4">{error}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => listingId && loadListing(listingId)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2 transition-colors"
+            >
+              {dict.tryAgain || "Try Again"}
+            </button>
+            <button
+              onClick={() => (window.location.href = "/onboarding/overview")}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-4 py-2 transition-colors"
+            >
+              {dict.backToOverview || "Back to Overview"}
+            </button>
           </div>
-        </main>
+        </div>
         <FormFooter
           config={ONBOARDING_CONFIG}
           basePath="/onboarding"
@@ -275,8 +273,8 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <main className="flex w-full flex-1 items-center pb-20">{children}</main>
+    <div className="pb-20">
+      {children}
       <FormFooter
         config={ONBOARDING_CONFIG}
         basePath="/onboarding"

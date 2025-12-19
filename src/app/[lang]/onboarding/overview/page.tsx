@@ -13,12 +13,10 @@ const OverviewPage = async ({ params }: Props) => {
   const dictionary = await getDictionary(lang)
 
   return (
-    <div className="h-screen overflow-hidden">
-      <StepsOverviewClient
-        dictionary={dictionary.school.onboarding.overview}
-        lang={lang}
-      />
-    </div>
+    <StepsOverviewClient
+      dictionary={dictionary.school.onboarding.overview}
+      lang={lang}
+    />
   )
 }
 
