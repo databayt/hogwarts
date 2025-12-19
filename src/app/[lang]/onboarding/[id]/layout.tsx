@@ -223,7 +223,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   // Show loading state while fetching school data
   if (isLoading) {
     return (
-      <div className="pb-20">
+      <div className="w-full pb-20">
         {renderPageSkeleton()}
         <FormFooter
           config={ONBOARDING_CONFIG}
@@ -240,7 +240,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   // Show error state if loading failed
   if (error) {
     return (
-      <div className="pb-20">
+      <div className="w-full pb-20">
         <div className="max-w-md text-center">
           <div className="mb-4 text-6xl">⚠️</div>
           <h2>{dict.unableToLoadSchool || "Unable to Load School"}</h2>
@@ -273,7 +273,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   }
 
   return (
-    <div className="pb-20">
+    <div className="w-full pb-20">
       {children}
       <FormFooter
         config={ONBOARDING_CONFIG}
