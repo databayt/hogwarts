@@ -259,7 +259,7 @@ function SubjectsTableInner({
               icon={<BookOpen className="h-12 w-12" />}
             />
           ) : (
-            <GridContainer columns={3}>
+            <GridContainer columns={4}>
               {data.map((subject) => (
                 <SubjectCard
                   key={subject.id}

@@ -54,14 +54,14 @@ function SubjectCardInner({
       href={`/${lang}/subjects/${id}`}
       className={cn("group block", className)}
     >
-      {/* Image Container - Square with rounded corners */}
-      <div className="bg-muted relative aspect-square overflow-hidden rounded-2xl">
+      {/* Image Container - Compact with rounded corners */}
+      <div className="bg-muted relative aspect-[4/3] overflow-hidden rounded-xl">
         <Image
           src={imageUrl}
           alt={displayName}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
         />
 
         {/* Badge overlay (optional) */}
@@ -75,8 +75,8 @@ function SubjectCardInner({
       </div>
 
       {/* Subject Name - Below image, centered */}
-      <div className={cn("mt-3 text-center", isRTL && "text-right")}>
-        <h3 className="text-foreground group-hover:text-primary font-medium transition-colors">
+      <div className={cn("mt-2 text-center", isRTL && "text-right")}>
+        <h3 className="text-foreground group-hover:text-primary text-sm font-medium transition-colors">
           {displayName}
         </h3>
       </div>
@@ -92,9 +92,9 @@ export const SubjectCard = React.memo(SubjectCardInner)
 export function SubjectCardSkeleton() {
   return (
     <div>
-      <Skeleton className="aspect-square w-full rounded-2xl" />
-      <div className="mt-3 flex justify-center">
-        <Skeleton className="h-5 w-24" />
+      <Skeleton className="aspect-[4/3] w-full rounded-xl" />
+      <div className="mt-2 flex justify-center">
+        <Skeleton className="h-4 w-20" />
       </div>
     </div>
   )

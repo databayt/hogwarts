@@ -1,18 +1,10 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  BookOpen,
-  Calendar,
-  CircleAlert,
-  Layers,
-} from "lucide-react"
+import { BookOpen, Calendar, CircleAlert, Layers } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Locale } from "@/components/internationalization/config"
@@ -49,11 +41,9 @@ export function SubjectDetailContent({
   dictionary,
   lang,
 }: SubjectDetailContentProps) {
-  const router = useRouter()
   const isRTL = lang === "ar"
 
   const t = {
-    back: isRTL ? "رجوع" : "Back",
     details: isRTL ? "تفاصيل المادة" : "Subject Details",
     subjectName: isRTL ? "اسم المادة" : "Subject Name",
     department: isRTL ? "القسم" : "Department",
@@ -69,23 +59,11 @@ export function SubjectDetailContent({
   // Error state
   if (error || !data) {
     return (
-      <div className="space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className={cn(isRTL && "flex-row-reverse")}
-        >
-          <ArrowLeft
-            className={cn("h-4 w-4", isRTL ? "ml-2 rotate-180" : "mr-2")}
-          />
-          {t.back}
-        </Button>
-        <Alert variant="destructive">
-          <CircleAlert className="h-4 w-4" />
-          <AlertTitle>{t.errorTitle}</AlertTitle>
-          <AlertDescription>{error || t.notFound}</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive">
+        <CircleAlert className="h-4 w-4" />
+        <AlertTitle>{t.errorTitle}</AlertTitle>
+        <AlertDescription>{error || t.notFound}</AlertDescription>
+      </Alert>
     )
   }
 
@@ -100,19 +78,6 @@ export function SubjectDetailContent({
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.back()}
-        className={cn(isRTL && "flex-row-reverse")}
-      >
-        <ArrowLeft
-          className={cn("h-4 w-4", isRTL ? "ml-2 rotate-180" : "mr-2")}
-        />
-        {t.back}
-      </Button>
-
       {/* Hero Section */}
       <SubjectHero
         subjectName={data.subjectName}
@@ -220,9 +185,6 @@ export function SubjectDetailContent({
 export function SubjectDetailLoading() {
   return (
     <div className="space-y-6">
-      {/* Back button skeleton */}
-      <Skeleton className="h-9 w-20" />
-
       {/* Hero skeleton */}
       <SubjectHeroSkeleton />
 
