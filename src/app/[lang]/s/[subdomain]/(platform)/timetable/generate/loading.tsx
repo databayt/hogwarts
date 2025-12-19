@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonCard } from "@/components/atom/loading"
 
 export default function Loading() {
   return (

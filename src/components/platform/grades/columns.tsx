@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
@@ -224,11 +225,6 @@ export const resultColumns = (
     cell: ({ row }) => {
       const result = row.original
       const { openModal } = useModal()
-      const onView = () => {
-        const qs =
-          typeof window !== "undefined" ? window.location.search || "" : ""
-        window.location.href = `/grades/${result.id}${qs}`
-      }
       const onEdit = () => openModal(result.id)
       const onDelete = () => {
         callbacks?.onDelete?.(result)
@@ -244,8 +240,10 @@ export const resultColumns = (
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>
-              {locale === "ar" ? "عرض" : "View"}
+            <DropdownMenuItem asChild>
+              <Link href={`/${locale}/grades/${result.id}`}>
+                {locale === "ar" ? "عرض" : "View"}
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               {locale === "ar" ? "تعديل" : "Edit"}

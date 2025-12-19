@@ -43,3 +43,18 @@ export { FormStepProgress } from "./progress"
 export { FormSuccess } from "./success"
 export { FormLayout } from "./layout"
 export { FormHeading } from "./heading"
+
+// Wizard Validation Context
+export {
+  WizardValidationProvider,
+  useWizardValidation,
+  useWizardValidationOptional,
+  // Backward compatibility aliases
+  HostValidationProvider,
+  useHostValidation,
+  ApplyValidationProvider,
+  useApplyValidation,
+  type WizardFlowType,
+  type WizardValidationContextType,
+  type CustomNavigation,
+} from "./wizard-validation-context"

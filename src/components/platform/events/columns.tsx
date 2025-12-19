@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
@@ -257,12 +258,6 @@ export const getEventColumns = (
         const event = row.original
         const { openModal } = useModal()
 
-        const onView = () => {
-          const qs =
-            typeof window !== "undefined" ? window.location.search || "" : ""
-          window.location.href = `/events/${event.id}${qs}`
-        }
-
         const onEdit = () => openModal(event.id)
 
         const onDelete = () => {
@@ -280,7 +275,9 @@ export const getEventColumns = (
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/${lang}/events/${event.id}`}>{t.view}</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
             </DropdownMenuContent>

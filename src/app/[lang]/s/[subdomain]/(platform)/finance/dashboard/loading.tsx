@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
-import { SkeletonListCompact } from "@/components/ui/skeleton-list"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import {
+  SkeletonChartGrid,
+  SkeletonListCompact,
+  SkeletonStats,
+} from "@/components/atom/loading"
 
 export default function FinanceDashboardLoading() {
   return (

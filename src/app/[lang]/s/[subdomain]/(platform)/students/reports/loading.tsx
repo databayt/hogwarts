@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { SkeletonCard } from "@/components/atom/loading"
 
 export default function StudentsReportsLoading() {
   return (

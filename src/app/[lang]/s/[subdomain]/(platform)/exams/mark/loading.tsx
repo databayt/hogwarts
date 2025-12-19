@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import {
+  SkeletonDataTable,
+  SkeletonPageNav,
+  SkeletonStats,
+} from "@/components/atom/loading"
 
 export default function Loading() {
   return (

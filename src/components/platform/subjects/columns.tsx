@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 
@@ -125,12 +126,6 @@ export const getSubjectColumns = (
         const subject = row.original
         const { openModal } = useModal()
 
-        const onView = () => {
-          const qs =
-            typeof window !== "undefined" ? window.location.search || "" : ""
-          window.location.href = `/subjects/${subject.id}${qs}`
-        }
-
         const onEdit = () => openModal(subject.id)
 
         const onDelete = () => {
@@ -148,7 +143,9 @@ export const getSubjectColumns = (
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/${lang}/subjects/${subject.id}`}>{t.view}</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
             </DropdownMenuContent>

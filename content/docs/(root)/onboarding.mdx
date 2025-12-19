@@ -557,37 +557,47 @@ export function TitleForm() {
 
 ### HostValidationProvider
 
+> **Note**: `HostValidationContext` is now an alias for `WizardValidationContext` from the Form Block.
+> Both imports work identically. New code should import from `@/components/form`.
+>
+> ```tsx
+> // New way (recommended)
+> import {
+>   useWizardValidation,
+>   WizardValidationProvider,
+> } from "@/components/form"
+> // Legacy way (still works)
+> import {
+>   HostValidationProvider,
+>   useHostValidation,
+> } from "@/components/onboarding/host-validation-context"
+> ```
+
 Manages form validation state across steps:
 
 ```typescript
-// host-validation-context.tsx
+// host-validation-context.tsx (now re-exports from form block)
 interface ValidationContextType {
-  validateStep: (step: OnboardingStep) => Promise<boolean>;
-  isStepValid: (step: OnboardingStep) => boolean;
-  validationErrors: Record<string, string[]>;
+  isNextDisabled: boolean
+  enableNext: () => void
+  disableNext: () => void
+  customNavigation?: CustomNavigation
+  setCustomNavigation: (navigation?: CustomNavigation) => void
 }
 
-export function HostValidationProvider({ children }: Props) {
-  const [validationErrors, setValidationErrors] = useState({});
-  const { listing } = useListing();
+// Usage in layout
+;<HostValidationProvider>{children}</HostValidationProvider>
 
-  const validateStep = async (step: OnboardingStep) => {
-    const result = validateStepData(step, listing);
-    if (!result.isValid) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [step]: result.errors
-      }));
-    }
-    return result.isValid;
-  };
+// Usage in step components
+const { enableNext, disableNext } = useHostValidation()
 
-  return (
-    <ValidationContext.Provider value={{ validateStep, validationErrors }}>
-      {children}
-    </ValidationContext.Provider>
-  );
-}
+useEffect(() => {
+  if (form.formState.isValid) {
+    enableNext()
+  } else {
+    disableNext()
+  }
+}, [form.formState.isValid])
 ```
 
 ### useOnboarding Hook

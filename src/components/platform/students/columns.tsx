@@ -147,19 +147,6 @@ export const getStudentColumns = (
       cell: ({ row }) => {
         const student = row.original
         const { openModal } = useModal()
-        const onView = () => {
-          if (!student.userId) {
-            ErrorToast(
-              lang === "ar"
-                ? "هذا الطالب ليس لديه حساب مستخدم"
-                : "This student does not have a user account"
-            )
-            return
-          }
-          const qs =
-            typeof window !== "undefined" ? window.location.search || "" : ""
-          window.location.href = `/profile/${student.userId}${qs}`
-        }
         const onEdit = () => openModal(student.id)
         const onDelete = async () => {
           try {
@@ -198,7 +185,9 @@ export const getStudentColumns = (
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/${lang}/students/${student.id}`}>{t.view}</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonFormSection } from "@/components/ui/skeleton-form"
+import { SkeletonFormSection } from "@/components/atom/loading"
 
 export default function DashboardSettingsLoading() {
   return (

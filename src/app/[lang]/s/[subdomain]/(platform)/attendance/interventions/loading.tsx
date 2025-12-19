@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import { SkeletonDataTable, SkeletonStats } from "@/components/atom/loading"
 
 export default function AttendanceInterventionsLoading() {
   return (

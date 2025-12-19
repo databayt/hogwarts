@@ -1,11 +1,6 @@
 "use client"
 
-import React, {
-  forwardRef,
-  useImperativeHandle,
-  useState,
-  useTransition,
-} from "react"
+import React, { forwardRef, useImperativeHandle, useTransition } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -20,6 +15,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { ErrorToast } from "@/components/atom/toast"
 import { useLocale } from "@/components/internationalization/use-locale"
 
 import { FORM_LIMITS } from "../config.client"
@@ -41,7 +37,6 @@ export interface TitleFormRef {
 export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
   ({ schoolId, initialData, onSuccess, onTitleChange, dictionary }, ref) => {
     const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState<string>("")
     const { isRTL } = useLocale()
     const dict = dictionary?.onboarding || {}
 
@@ -52,6 +47,16 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
         subdomain: initialData?.subdomain || "",
       },
     })
+
+    const getErrorMessage = (error: string): string => {
+      if (error === "SUBDOMAIN_TAKEN") {
+        return (
+          dict.subdomainTaken ||
+          "This subdomain is already taken. Please choose another one."
+        )
+      }
+      return error || dict.unexpectedError || "An unexpected error occurred"
+    }
 
     const saveAndNext = async () => {
       const data = form.getValues()
@@ -64,7 +69,6 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
       return new Promise<void>((resolve, reject) => {
         startTransition(async () => {
           try {
-            setError("")
             console.log("📤 [TITLE FORM] Calling updateSchoolTitle", {
               schoolId,
               title: data.title,
@@ -91,16 +95,19 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                 error: result.error,
                 errors: result.errors,
               })
-              setError(result.error || "Failed to update school name")
+              const errorMessage = getErrorMessage(result.error || "")
+              ErrorToast(errorMessage)
               if (result.errors) {
                 Object.entries(result.errors).forEach(([field, message]) => {
                   form.setError(field as keyof TitleFormData, { message })
                 })
               }
-              reject(new Error(result.error || "Failed to update school name"))
+              reject(new Error(errorMessage))
             }
           } catch (err) {
-            setError(dict.unexpectedError || "An unexpected error occurred")
+            const errorMessage =
+              dict.unexpectedError || "An unexpected error occurred"
+            ErrorToast(errorMessage)
             reject(err)
           }
         })
@@ -134,14 +141,6 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
     return (
       <Form {...form}>
         <div className={`space-y-6 ${isRTL ? "rtl" : "ltr"}`}>
-          {error && (
-            <div
-              className={`text-destructive bg-destructive/10 rounded-md p-3 text-sm ${isRTL ? "text-end" : "text-start"}`}
-            >
-              {error}
-            </div>
-          )}
-
           <FormField
             control={form.control}
             name="title"
@@ -186,7 +185,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                 </FormLabel>
                 <FormControl>
                   <div
-                    className="border-input focus-within:border-ring flex w-full items-center rounded-lg border transition-colors"
+                    className="border-input focus-within:border-ring flex w-full items-center rounded-lg border transition-colors lg:max-w-[70%]"
                     dir="ltr"
                   >
                     <Input

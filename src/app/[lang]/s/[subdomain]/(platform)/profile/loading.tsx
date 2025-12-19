@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonFormSection } from "@/components/ui/skeleton-form"
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
+import { SkeletonFormSection, SkeletonPageNav } from "@/components/atom/loading"
 
 export default function Loading() {
   return (

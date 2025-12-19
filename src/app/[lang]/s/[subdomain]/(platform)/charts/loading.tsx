@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonChart } from "@/components/ui/skeleton-chart"
+import { SkeletonChart } from "@/components/atom/loading"
 
 export default function ChartsLoading() {
   return (

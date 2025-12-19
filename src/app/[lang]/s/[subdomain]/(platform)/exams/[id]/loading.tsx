@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import { SkeletonPageNav, SkeletonStats } from "@/components/atom/loading"
 
 export default function ExamDetailLoading() {
   return (

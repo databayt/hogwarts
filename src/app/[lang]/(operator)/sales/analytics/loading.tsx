@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import { SkeletonChartGrid, SkeletonStats } from "@/components/atom/loading"
 
 export default function Loading() {
   return (

@@ -11,6 +11,7 @@ import {
   ApplySessionProvider,
   useApplySession,
 } from "@/components/site/apply/application-context"
+import { ApplyHeader } from "@/components/site/apply/apply-header"
 import ErrorBoundary from "@/components/site/apply/error-boundary"
 import {
   ApplyValidationProvider,
@@ -122,6 +123,20 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
 
   return (
     <div className="flex h-screen flex-col px-4 sm:px-8 md:px-12">
+      <ApplyHeader
+        backUrl={`/${locale}/s/${subdomain}/apply`}
+        onSave={saveSession}
+        isSaving={isSaving}
+        lastSaved={lastSaved}
+        isRTL={isRTL}
+        dictionary={{
+          saving: isRTL ? "جاري الحفظ..." : "Saving...",
+          lastSaved: isRTL ? "آخر حفظ {time}" : "Last saved {time}",
+          help: isRTL ? "مساعدة" : "Help",
+          save: isRTL ? "حفظ" : "Save",
+          exitApplication: isRTL ? "الخروج من الطلب" : "Exit application",
+        }}
+      />
       <main className="flex w-full flex-1 items-center pb-20">{children}</main>
       <FormFooter
         config={ADMISSION_CONFIG}

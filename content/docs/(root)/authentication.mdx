@@ -217,7 +217,7 @@ By using `redirect: false` + client-side `window.location.href`:
 
 ### Test Results (Production)
 
-Tested on: **https://ed.databayt.org/en** (2025-12-17)
+Tested on: **https://ed.databayt.org/en** (2025-12-17) - Full E2E Test Suite
 
 | Test Case       | Entry Point | Action                         | Expected                              | Result  |
 | --------------- | ----------- | ------------------------------ | ------------------------------------- | ------- |
@@ -250,6 +250,114 @@ Tested on: **https://ed.databayt.org/en** (2025-12-17)
 | Avatar        | Header (logged in)     | size-4 avatar in size-8 ghost button       | ✅ Pass |
 | OAuth Buttons | /login                 | Google + Facebook buttons visible          | ✅ Pass |
 | Error Toast   | /login                 | Red error with icon on invalid credentials | ✅ Pass |
+
+#### OAuth Login Tests (Production)
+
+Tested on: **https://ed.databayt.org/en** (2025-12-17) - Google + Facebook OAuth
+
+##### Google OAuth
+
+| Test Case          | Provider | Action              | Expected                                   | Result  |
+| ------------------ | -------- | ------------------- | ------------------------------------------ | ------- |
+| OAuth Initiation   | Google   | Click Google button | Redirect to Google consent                 | ✅ Pass |
+| PKCE Challenge     | Google   | OAuth URL params    | `code_challenge` + S256 method             | ✅ Pass |
+| Authorization Code | Google   | OAuth response_type | `response_type=code`                       | ✅ Pass |
+| Callback URL       | Google   | OAuth redirect_uri  | `ed.databayt.org/api/auth/callback/google` | ✅ Pass |
+| OIDC Scopes        | Google   | OAuth scope         | `openid profile email`                     | ✅ Pass |
+| Consent Prompt     | Google   | OAuth prompt        | Forces consent screen                      | ✅ Pass |
+
+**Google OAuth URL Parameters:**
+
+```
+client_id: 861303536195-188jq8irdl78cvv5vqo0o9m2il1pqq6n.apps.googleusercontent.com
+code_challenge_method: S256
+response_type: code
+redirect_uri: https://ed.databayt.org/api/auth/callback/google
+scope: openid profile email
+prompt: consent
+access_type: offline
+```
+
+##### Facebook OAuth
+
+| Test Case          | Provider | Action                | Expected                                     | Result  |
+| ------------------ | -------- | --------------------- | -------------------------------------------- | ------- |
+| OAuth Initiation   | Facebook | Click Facebook button | Redirect to Facebook login                   | ✅ Pass |
+| PKCE Challenge     | Facebook | OAuth URL params      | `code_challenge` + S256 method               | ✅ Pass |
+| Authorization Code | Facebook | OAuth response_type   | `response_type=code`                         | ✅ Pass |
+| Callback URL       | Facebook | OAuth redirect_uri    | `ed.databayt.org/api/auth/callback/facebook` | ✅ Pass |
+| Scope              | Facebook | OAuth scope           | `email`                                      | ✅ Pass |
+
+**Facebook OAuth URL Parameters:**
+
+```
+client_id: 1205807928138393
+code_challenge_method: S256
+response_type: code
+redirect_uri: https://ed.databayt.org/api/auth/callback/facebook
+scope: email
+```
+
+#### Credentials Login Tests (Production)
+
+| Test Case       | Action                  | Expected                      | Result  |
+| --------------- | ----------------------- | ----------------------------- | ------- |
+| Valid Login     | dev@databayt.org + 1234 | Redirect to `/en/dashboard`   | ✅ Pass |
+| DEVELOPER Role  | After login             | Access operator dashboard     | ✅ Pass |
+| Session Cookie  | After login             | User menu shows "D" initial   | ✅ Pass |
+| Invalid Email   | nonexistent@email.com   | "Email does not exist!" error | ✅ Pass |
+| Forgot Password | Click link              | Navigate to `/en/reset`       | ✅ Pass |
+
+#### CTA Flow Tests (Production)
+
+| Test Case      | CTA Button     | Action       | Expected                                           | Result  |
+| -------------- | -------------- | ------------ | -------------------------------------------------- | ------- |
+| Get Started    | Hero section   | Click button | Redirect to `/en/login?callbackUrl=/en/onboarding` | ✅ Pass |
+| Live Demo      | Hero section   | Click button | Opens `demo.databayt.org/en` in new tab            | ✅ Pass |
+| Demo Site Load | demo subdomain | Page renders | Full school site with houses, faculty, etc.        | ✅ Pass |
+
+#### Logout Tests (Production)
+
+| Test Case          | Entry Point   | Action                            | Expected                          | Result  |
+| ------------------ | ------------- | --------------------------------- | --------------------------------- | ------- |
+| Credentials Logout | /dashboard    | Click Logout from avatar dropdown | Redirect to `/{locale}` homepage  | ✅ Pass |
+| No callbackUrl     | /dashboard    | After logout                      | URL is `/en` (no `?callbackUrl=`) | ✅ Pass |
+| Session Cleared    | Marketing     | After logout                      | Login link visible in header      | ✅ Pass |
+| Locale Preserved   | /ar/dashboard | Logout                            | Redirects to `/ar`                | ✅ Pass |
+
+#### Multi-Tenant Authorization Tests (Production)
+
+Tested on: **https://demo.databayt.org** (2025-12-17) - School Subdomain Authorization
+
+| Test Case           | User               | Target School | User's School | Expected          | Result  |
+| ------------------- | ------------------ | ------------- | ------------- | ----------------- | ------- |
+| Same-School Access  | admin@databayt.org | demo          | demo          | ✅ Dashboard      | ✅ Pass |
+| DEVELOPER Bypass    | dev@databayt.org   | demo          | null          | ✅ Dashboard      | ✅ Pass |
+| Unauthenticated     | -                  | demo          | -             | ❌ Login redirect | ✅ Pass |
+| Non-Existent School | (any)              | fake          | -             | ❌ 404 Not Found  | ✅ Pass |
+
+**Authorization Flow Verified:**
+
+```
+User Request → Edge Middleware (proxy.ts)
+         ↓
+    JWT Decode → Extract schoolId, role
+         ↓
+    Route Protection (roleRoutes matrix)
+         ↓
+    Platform Layout → getTenantContext() → Resolve subdomain
+         ↓
+    requireSchoolAccess() → user.schoolId === school.id OR isPlatformAdmin?
+         ↓
+    PASS → Dashboard  |  FAIL → /unauthorized or 404
+```
+
+**Key Findings:**
+
+1. **Cross-Subdomain SSO** - Cookie domain `.databayt.org` enables seamless authentication across all subdomains
+2. **DEVELOPER Bypass** - Platform admins (DEVELOPER role) can access any school's dashboard regardless of schoolId
+3. **Unauthenticated Protection** - Protected routes redirect to `/login?callbackUrl={route}`
+4. **Graceful 404** - Non-existent school subdomains return 404 (no data leakage)
 
 ### Demo Credentials
 
@@ -1275,6 +1383,53 @@ cookies: {
 - [x] CSRF protection via NextAuth
 - [x] schoolId isolation on all models
 - [x] Role-based access control
+
+### Best Practices Compliance (Verified 2025-12-17)
+
+#### Security Standards
+
+| Standard                | Status | Implementation                                                           |
+| ----------------------- | ------ | ------------------------------------------------------------------------ |
+| CSRF Protection         | ✅     | State parameter + sameSite cookies (`authjs.csrf-token`, `authjs.state`) |
+| PKCE                    | ✅     | `pkceCodeVerifier` cookie with S256 code challenge method                |
+| Origin Validation       | ✅     | Callback URLs validated against baseUrl origin (auth.ts:761-814)         |
+| XSS Prevention          | ✅     | httpOnly cookies for all tokens (session, csrf, state, nonce)            |
+| Session Security        | ✅     | 24-hour JWT expiry, secure flag in production                            |
+| Authorization Code Flow | ✅     | `response_type=code` (not implicit)                                      |
+
+#### Cookie Security Configuration
+
+| Cookie                      | httpOnly | sameSite | secure | domain (prod)   |
+| --------------------------- | -------- | -------- | ------ | --------------- |
+| `authjs.session-token`      | ✅       | lax      | ✅     | `.databayt.org` |
+| `authjs.csrf-token`         | ✅       | lax      | ✅     | `.databayt.org` |
+| `authjs.pkce.code_verifier` | ✅       | lax      | ✅     | `.databayt.org` |
+| `authjs.state`              | ✅       | lax      | ✅     | `.databayt.org` |
+| `authjs.nonce`              | ✅       | lax      | ✅     | `.databayt.org` |
+| `authjs.callback-url`       | ❌       | lax      | ✅     | `.databayt.org` |
+
+#### Multi-Tenant Patterns
+
+| Pattern                   | Status | Implementation                                                       |
+| ------------------------- | ------ | -------------------------------------------------------------------- |
+| Cross-subdomain SSO       | ✅     | Cookie domain: `.databayt.org` (production only)                     |
+| Tenant Isolation          | ✅     | `schoolId` in JWT, validated in middleware and server actions        |
+| Platform Admin Separation | ✅     | DEVELOPER role → main domain (`ed.databayt.org/dashboard`)           |
+| Callback URL Preservation | ✅     | 5-method fallback (query params → httpOnly cookie → session storage) |
+| Context-aware Logout      | ✅     | `LogoutButton` detects location, routes to appropriate public page   |
+
+#### OAuth Provider Configuration
+
+| Provider | Client ID          | Callback URL                                         | Status    |
+| -------- | ------------------ | ---------------------------------------------------- | --------- |
+| Google   | `861303536195-...` | `https://ed.databayt.org/api/auth/callback/google`   | ✅ Active |
+| Facebook | Configured         | `https://ed.databayt.org/api/auth/callback/facebook` | ✅ Active |
+
+#### References
+
+- [OWASP OAuth 2.0 Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/OAuth2_Cheat_Sheet.html)
+- [Auth.js v5 Documentation](https://authjs.dev/)
+- [RFC 7636 - PKCE](https://datatracker.ietf.org/doc/html/rfc7636)
 
 ### Common Patterns
 

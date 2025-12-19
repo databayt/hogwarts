@@ -13,6 +13,7 @@ import {
   DeleteToast,
   ErrorToast,
 } from "@/components/atom/toast"
+import type { Locale } from "@/components/internationalization/config"
 import { InvoiceCreateForm } from "@/components/platform/finance/invoice/form"
 import { DataTable } from "@/components/table/data-table"
 import { DataTableToolbar } from "@/components/table/data-table-toolbar"
@@ -25,12 +26,14 @@ interface InvoiceTableProps {
   initialData: InvoiceRow[]
   total: number
   perPage?: number
+  lang?: Locale
 }
 
 function InvoiceTableInner({
   initialData,
   total,
   perPage = 20,
+  lang = "en",
 }: InvoiceTableProps) {
   const router = useRouter()
 
@@ -80,10 +83,10 @@ function InvoiceTableInner({
   // Generate columns with callbacks
   const columns = useMemo(
     () =>
-      getInvoiceColumns({
+      getInvoiceColumns(lang, {
         onDelete: handleDelete,
       }),
-    [handleDelete]
+    [lang, handleDelete]
   )
 
   const handleLoadMore = useCallback(async () => {

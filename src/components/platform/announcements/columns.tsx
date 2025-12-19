@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
@@ -156,13 +156,7 @@ export const getAnnouncementColumns = (
       cell: ({ row }) => {
         const announcement = row.original
         const { openModal } = useModal()
-        const router = useRouter()
-        const searchParams = useSearchParams()
 
-        const onView = () => {
-          const qs = searchParams.toString()
-          router.push(`/announcements/${announcement.id}${qs ? `?${qs}` : ""}`)
-        }
         const onEdit = () => openModal(announcement.id)
         const onToggle = () => {
           // Use callback for instant optimistic update
@@ -183,7 +177,11 @@ export const getAnnouncementColumns = (
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/${locale}/announcements/${announcement.id}`}>
+                  {t.view}
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>
                 {locale === "ar" ? "تعديل" : "Edit"}
               </DropdownMenuItem>

@@ -295,6 +295,77 @@ Applications are automatically saved every 30 seconds to prevent data loss:
 
 Parents can resume their application at `/apply/continue` using their email and session token.
 
+### Draft Applications Display
+
+The campaign selector page shows saved draft applications similar to onboarding's draft schools:
+
+```typescript
+// Get draft applications by email
+import { getDraftApplications } from "@/components/site/admission/actions"
+
+const drafts = await getDraftApplications(subdomain, email)
+// Returns: Array of { sessionToken, campaignName, currentStep, studentName, updatedAt }
+```
+
+**Draft Card Display:**
+
+- Campaign name with "Draft" badge
+- Student name (if entered)
+- Current step progress (e.g., "Step 2/6")
+- Last updated time
+- Click to resume
+
+```tsx
+import {
+  ApplicationCard,
+  DraftApplications,
+} from "@/components/site/apply/overview"
+
+;<DraftApplications
+  applications={drafts}
+  onContinue={(token) => router.push(`/apply/continue?token=${token}`)}
+/>
+```
+
+### Apply Header (Escape Pattern)
+
+The application form includes an escape header (mirrors onboarding's `HostHeader`):
+
+```tsx
+import { ApplyHeader } from "@/components/site/apply"
+
+;<ApplyHeader
+  backUrl={`/${locale}/s/${subdomain}/apply`}
+  onSave={saveSession}
+  isSaving={isSaving}
+  lastSaved={lastSaved}
+  isRTL={locale === "ar"}
+/>
+```
+
+**Features:**
+
+- **Exit button (X)**: Returns to campaign selector
+- **Save status**: Shows "Saving..." or "Last saved \{time\}"
+- **Help button**: Opens help modal
+- **Save button**: Manual save trigger
+
+> **Note**: `ApplyValidationContext` is now an alias for `WizardValidationContext` from the Form Block.
+> Both imports work identically. New code should import from `@/components/form`.
+>
+> ```tsx
+> // New way (recommended)
+> import {
+>   useWizardValidation,
+>   WizardValidationProvider,
+> } from "@/components/form"
+> // Legacy way (still works)
+> import {
+>   ApplyValidationProvider,
+>   useApplyValidation,
+> } from "@/components/site/apply/validation-context"
+> ```
+
 ## Status Tracking
 
 ### OTP Verification

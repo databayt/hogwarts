@@ -4,11 +4,14 @@ import React, { useEffect } from "react"
 import { useParams } from "next/navigation"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { FormFooter, ONBOARDING_CONFIG } from "@/components/form/footer"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { ErrorBoundary } from "@/components/onboarding/error-boundary"
-import HostFooter from "@/components/onboarding/host-footer"
-import { HostValidationProvider } from "@/components/onboarding/host-validation-context"
+import {
+  HostValidationProvider,
+  useHostValidation,
+} from "@/components/onboarding/host-validation-context"
 import {
   ListingProvider,
   useListing,
@@ -222,7 +225,14 @@ function HostLayoutContent({ children }: HostLayoutProps) {
     return (
       <div className="min-h-screen px-4 sm:px-6 md:px-12">
         <main className="h-screen pt-16">{renderPageSkeleton()}</main>
-        <HostFooter dictionary={dictionary?.school} locale={locale} />
+        <FormFooter
+          config={ONBOARDING_CONFIG}
+          basePath="/onboarding"
+          dictionary={dictionary?.school?.onboarding}
+          locale={locale}
+          useValidation={useHostValidation}
+          finalLabel={dictionary?.school?.onboarding?.createSchool}
+        />
       </div>
     )
   }
@@ -252,7 +262,14 @@ function HostLayoutContent({ children }: HostLayoutProps) {
             </div>
           </div>
         </main>
-        <HostFooter dictionary={dictionary?.school} locale={locale} />
+        <FormFooter
+          config={ONBOARDING_CONFIG}
+          basePath="/onboarding"
+          dictionary={dictionary?.school?.onboarding}
+          locale={locale}
+          useValidation={useHostValidation}
+          finalLabel={dictionary?.school?.onboarding?.createSchool}
+        />
       </div>
     )
   }
@@ -260,7 +277,14 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   return (
     <div className="flex h-screen flex-col">
       <main className="flex w-full flex-1 items-center pb-20">{children}</main>
-      <HostFooter dictionary={dictionary?.school} locale={locale} />
+      <FormFooter
+        config={ONBOARDING_CONFIG}
+        basePath="/onboarding"
+        dictionary={dictionary?.school?.onboarding}
+        locale={locale}
+        useValidation={useHostValidation}
+        finalLabel={dictionary?.school?.onboarding?.createSchool}
+      />
     </div>
   )
 }

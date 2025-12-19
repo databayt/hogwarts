@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis } from "lucide-react"
 
@@ -13,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
-import { ErrorToast } from "@/components/atom/toast"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
@@ -106,19 +106,6 @@ export const getParentColumns = (
       cell: ({ row }) => {
         const parent = row.original
         const { openModal } = useModal()
-        const onView = () => {
-          if (!parent.userId) {
-            ErrorToast(
-              lang === "ar"
-                ? "هذا الوالد ليس لديه حساب مستخدم"
-                : "This parent does not have a user account"
-            )
-            return
-          }
-          const qs =
-            typeof window !== "undefined" ? window.location.search || "" : ""
-          window.location.href = `/profile/${parent.userId}${qs}`
-        }
         const onEdit = () => openModal(parent.id)
         const onDelete = () => {
           callbacks?.onDelete?.(parent)
@@ -134,7 +121,9 @@ export const getParentColumns = (
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/${lang}/parents/${parent.id}`}>{t.view}</Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
             </DropdownMenuContent>

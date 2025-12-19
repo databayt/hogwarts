@@ -33,6 +33,24 @@ export async function updateSchoolTitle(
 
     const validatedData = titleSchema.parse(data)
 
+    // Check for duplicate subdomain
+    if (validatedData.subdomain) {
+      const existingSchool = await db.school.findFirst({
+        where: {
+          domain: validatedData.subdomain,
+          NOT: { id: schoolId },
+        },
+        select: { id: true, domain: true },
+      })
+
+      if (existingSchool) {
+        return createActionResponse(undefined, {
+          message: "SUBDOMAIN_TAKEN",
+          name: "DuplicateError",
+        })
+      }
+    }
+
     // Update school title in database
     console.log("📝 [UPDATE SCHOOL TITLE] Updating database", {
       schoolId,
@@ -72,6 +90,19 @@ export async function updateSchoolTitle(
         message: "Validation failed",
         name: "ValidationError",
         issues: error.issues,
+      })
+    }
+
+    // Check for Prisma unique constraint violation
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      return createActionResponse(undefined, {
+        message: "SUBDOMAIN_TAKEN",
+        name: "DuplicateError",
       })
     }
 

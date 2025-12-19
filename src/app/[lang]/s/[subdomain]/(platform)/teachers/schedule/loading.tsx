@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonCalendar } from "@/components/ui/skeleton-calendar"
+import { SkeletonCalendar } from "@/components/atom/loading"
 
 export default function TeachersScheduleLoading() {
   return (

@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonDataTable } from "@/components/ui/skeleton-data-table"
-import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
+import { SkeletonDataTable, SkeletonPageNav } from "@/components/atom/loading"
 
 export default function StudentsManageLoading() {
   return (

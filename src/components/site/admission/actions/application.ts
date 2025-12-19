@@ -285,6 +285,77 @@ export async function saveApplicationSession(
 }
 
 /**
+ * Get draft applications by email (for showing saved drafts)
+ */
+export async function getDraftApplications(
+  subdomain: string,
+  email: string
+): Promise<
+  ActionResult<
+    Array<{
+      sessionToken: string
+      campaignId: string | null
+      campaignName: string | null
+      currentStep: number
+      totalSteps: number
+      studentName: string | null
+      updatedAt: Date
+      expiresAt: Date
+    }>
+  >
+> {
+  try {
+    const schoolResult = await getSchoolBySubdomain(subdomain)
+    if (!schoolResult.success || !schoolResult.data) {
+      return { success: false, error: "School not found" }
+    }
+
+    const schoolId = schoolResult.data.id
+    const now = new Date()
+
+    // Get all non-expired, non-converted sessions for this email
+    const sessions = await db.applicationSession.findMany({
+      where: {
+        schoolId,
+        email,
+        expiresAt: { gt: now },
+        convertedToApplicationId: null,
+      },
+      include: {
+        campaign: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    })
+
+    const drafts = sessions.map((session) => {
+      const formData = session.formData as Record<string, unknown>
+      const firstName = (formData?.firstName as string) || null
+      const lastName = (formData?.lastName as string) || null
+      const studentName =
+        firstName && lastName ? `${firstName} ${lastName}` : firstName || null
+
+      return {
+        sessionToken: session.sessionToken,
+        campaignId: session.campaign?.id || null,
+        campaignName: session.campaign?.name || null,
+        currentStep: session.currentStep,
+        totalSteps: 6, // Standard application has 6 steps
+        studentName,
+        updatedAt: session.updatedAt,
+        expiresAt: session.expiresAt,
+      }
+    })
+
+    return { success: true, data: drafts }
+  } catch (error) {
+    console.error("Error fetching draft applications:", error)
+    return { success: false, error: "Failed to fetch draft applications" }
+  }
+}
+
+/**
  * Resume application from session token
  */
 export async function resumeApplicationSession(sessionToken: string): Promise<

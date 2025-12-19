@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import { SkeletonStats } from "@/components/atom/loading"
 
 export default function AnalyticsLoading() {
   return (

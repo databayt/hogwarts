@@ -5,14 +5,15 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  FileText,
   GraduationCap,
 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  DraftApplications,
+  type DraftApplication,
+} from "@/components/site/apply/overview"
 
 import type { School } from "../../types"
 import type { PublicCampaign } from "../types"
@@ -23,6 +24,7 @@ interface Props {
   dictionary: Dictionary
   lang: Locale
   subdomain: string
+  draftApplications?: DraftApplication[]
 }
 
 export default function CampaignSelectorContent({
@@ -31,25 +33,22 @@ export default function CampaignSelectorContent({
   dictionary,
   lang,
   subdomain,
+  draftApplications = [],
 }: Props) {
   const router = useRouter()
   const isRTL = lang === "ar"
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight
+
   const handleStartNew = (campaignId: string) => {
     router.push(`/${lang}/s/${subdomain}/apply/overview?id=${campaignId}`)
   }
 
+  const handleResumeDraft = (sessionToken: string) => {
+    router.push(`/${lang}/s/${subdomain}/apply/continue?token=${sessionToken}`)
+  }
+
   const activeCampaign =
     campaigns.find((c) => c.availableSeats > 0) || campaigns[0]
-
-  // Application info for the draft card
-  const applicationInfo = {
-    campaignName:
-      activeCampaign?.name ||
-      (lang === "ar" ? "القبول 2025-2026" : "Admissions 2025-2026"),
-    step: lang === "ar" ? "المعلومات الشخصية" : "Personal Information",
-    stepNumber: "1/6",
-  }
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-3 px-3 sm:space-y-4 sm:px-4">
@@ -60,42 +59,20 @@ export default function CampaignSelectorContent({
         </h3>
       </div>
 
-      {/* Complete your application section - shows draft like onboarding "Complete your school setup" */}
-      <div className="space-y-2 sm:space-y-3">
-        <p className="text-sm font-medium">
-          {lang === "ar" ? "أكمل طلبك" : "Complete your application"}
-        </p>
-
-        <div className="space-y-2">
-          <Card
-            className="hover:border-foreground/50 bg-card hover:bg-accent cursor-pointer rounded-lg border shadow-none transition-all hover:shadow-none"
-            onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
-          >
-            <CardContent className="flex items-center justify-start gap-3 px-4 py-6 sm:py-8">
-              <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md sm:h-12 sm:w-12">
-                <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div className={isRTL ? "text-right" : "text-left"}>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">
-                    {applicationInfo.campaignName}
-                  </p>
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-100 text-xs text-blue-800"
-                  >
-                    {lang === "ar" ? "مسودة" : "Draft"}
-                  </Badge>
-                </div>
-                <p className="text-muted-foreground mt-0.5 text-xs">
-                  {lang === "ar" ? "الخطوة" : "Step"}{" "}
-                  {applicationInfo.stepNumber} • {applicationInfo.step}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Draft Applications Section - Shows real drafts from database */}
+      {draftApplications.length > 0 && (
+        <DraftApplications
+          applications={draftApplications}
+          onContinue={handleResumeDraft}
+          isRTL={isRTL}
+          dictionary={{
+            completeYourApplication:
+              lang === "ar" ? "أكمل طلبك" : "Complete your application",
+            draft: lang === "ar" ? "مسودة" : "Draft",
+            step: lang === "ar" ? "الخطوة" : "Step",
+          }}
+        />
+      )}
 
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">

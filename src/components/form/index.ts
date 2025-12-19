@@ -108,6 +108,29 @@ export { FormStepProgress } from "./template/progress"
 export { FormSuccess } from "./template/success"
 export { FormLayout } from "./template/layout"
 export { FormHeading } from "./template/heading"
+export {
+  FormFooter,
+  ONBOARDING_CONFIG,
+  ADMISSION_CONFIG,
+  APPLICATION_CONFIG,
+  type StepConfig,
+  type FormFooterProps,
+} from "./footer"
+
+// Wizard Validation Context
+export {
+  WizardValidationProvider,
+  useWizardValidation,
+  useWizardValidationOptional,
+  // Backward compatibility aliases
+  HostValidationProvider,
+  useHostValidation,
+  ApplyValidationProvider,
+  useApplyValidation,
+  type WizardFlowType,
+  type WizardValidationContextType,
+  type CustomNavigation,
+} from "./template/wizard-validation-context"
 
 // =============================================================================
 // BRIDGES (Context Integration)

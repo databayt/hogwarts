@@ -130,6 +130,53 @@ Reusable form logic extracted into hooks.
 | `useActionStateBridge`     | Bridge React 19 useActionState + react-hook-form   | Server action forms            |
 | `useFormSubmitStatus`      | Loading state from useFormStatus                   | Submit button states           |
 
+### Wizard Validation Context
+
+Unified validation for multi-step forms across onboarding and application flows.
+
+| Export                        | Role                                            | Usage Across App         |
+| ----------------------------- | ----------------------------------------------- | ------------------------ |
+| `WizardValidationProvider`    | Context provider for wizard validation          | Onboarding, applications |
+| `useWizardValidation`         | Access validation state and controls            | Inside provider          |
+| `useWizardValidationOptional` | Optional version (returns undefined if outside) | Conditional contexts     |
+| `HostValidationProvider`      | Alias for backward compatibility                | Legacy onboarding code   |
+| `useHostValidation`           | Alias for backward compatibility                | Legacy onboarding code   |
+| `ApplyValidationProvider`     | Alias for backward compatibility                | Legacy application code  |
+| `useApplyValidation`          | Alias for backward compatibility                | Legacy application code  |
+
+```tsx
+import {
+  useWizardValidation,
+  WizardValidationProvider,
+} from "@/components/form"
+
+// In layout
+
+;<WizardValidationProvider flowType="linear">
+  {children}
+</WizardValidationProvider>
+
+// In step components
+const { enableNext, disableNext, isNextDisabled } = useWizardValidation()
+
+// Enable next when form is valid
+useEffect(() => {
+  if (form.formState.isValid) {
+    enableNext()
+  } else {
+    disableNext()
+  }
+}, [form.formState.isValid])
+```
+
+#### Props
+
+| Prop                    | Type                       | Default    | Description                            |
+| ----------------------- | -------------------------- | ---------- | -------------------------------------- |
+| `flowType`              | `"linear" \| "dependency"` | `"linear"` | Linear (sequential) or dependency flow |
+| `dependencies`          | `Record<string, string[]>` | -          | Step dependencies map                  |
+| `initialCompletedSteps` | `string[]`                 | `[]`       | Initially completed steps              |
+
 ### Server Actions
 
 Generic helpers for CRUD operations with multi-tenant safety.

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { Ellipsis, Eye, Pencil, Trash2 } from "lucide-react"
 
@@ -14,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useModal } from "@/components/atom/modal/context"
+import type { Locale } from "@/components/internationalization/config"
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header"
 
 import type { InvoiceRow } from "./types"
@@ -55,6 +57,7 @@ const getStatusBadge = (status: string) => {
 }
 
 export const getInvoiceColumns = (
+  lang?: Locale,
   callbacks?: InvoiceColumnCallbacks
 ): ColumnDef<InvoiceRow>[] => [
   {
@@ -146,12 +149,6 @@ export const getInvoiceColumns = (
       const invoice = row.original
       const { openModal } = useModal()
 
-      const onView = () => {
-        const qs =
-          typeof window !== "undefined" ? window.location.search || "" : ""
-        window.location.href = `/invoice/${invoice.id}${qs}`
-      }
-
       const onEdit = () => openModal(invoice.id)
 
       const onDelete = () => {
@@ -169,9 +166,11 @@ export const getInvoiceColumns = (
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>
-              <Eye className="mr-2 h-4 w-4" />
-              View
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/finance/invoice/${invoice.id}`}>
+                <Eye className="mr-2 h-4 w-4" />
+                View
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>
               <Pencil className="mr-2 h-4 w-4" />

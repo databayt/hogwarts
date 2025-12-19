@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
-import { SkeletonStats } from "@/components/ui/skeleton-stats"
+import { SkeletonCard, SkeletonStats } from "@/components/atom/loading"
 
 export default function PayrollLoading() {
   return (
