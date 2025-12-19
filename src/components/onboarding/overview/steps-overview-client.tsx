@@ -238,10 +238,15 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
         </div>
       </div>
 
-      {/* Bottom Section with HR and Button */}
-      <div className="w-full">
+      {/* Bottom Section - Fixed footer matching FormFooter position */}
+      <footer className="bg-background fixed right-0 bottom-0 left-0">
         <Separator className="w-full" />
-        <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
+        <div
+          className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+        >
+          {/* Empty left side to match FormFooter structure */}
+          <div />
+          {/* Right side - Get Started button */}
           <Button onClick={handleGetStarted} disabled={isCreating}>
             {isCreating ? (
               <>
@@ -253,7 +258,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
             )}
           </Button>
         </div>
-      </div>
+      </footer>
     </div>
   )
 }
