@@ -73,7 +73,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
       ["title", "description", "location", "capacity"].includes(currentPage)
     ) {
       return (
-        <div className="mx-auto max-w-6xl">
+        <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
             <div className="space-y-6">
               <div className="space-y-4">
@@ -98,7 +98,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
     // Branding page
     if (currentPage === "branding") {
       return (
-        <div className="mx-auto max-w-6xl">
+        <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
             <div className="space-y-6">
               <div className="space-y-3">
@@ -122,7 +122,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
     // Import page
     if (currentPage === "import") {
       return (
-        <div className="mx-auto max-w-6xl">
+        <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-20">
             <div className="space-y-3 sm:space-y-4">
               <Skeleton className="h-8 w-64" />

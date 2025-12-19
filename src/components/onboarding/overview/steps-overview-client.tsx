@@ -182,9 +182,9 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
   }
 
   return (
-    <div className={`flex h-full flex-col px-20 ${isRTL ? "rtl" : "ltr"}`}>
+    <div className={`flex h-full w-full flex-col ${isRTL ? "rtl" : "ltr"}`}>
       <div className="flex flex-1 items-center">
-        <div className="mx-auto w-full max-w-7xl">
+        <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
@@ -239,7 +239,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       </div>
 
       {/* Bottom Section with HR and Button */}
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="w-full">
         <Separator className="w-full" />
         <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
           <Button onClick={handleGetStarted} disabled={isCreating}>
