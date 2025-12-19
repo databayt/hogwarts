@@ -268,13 +268,13 @@ function HeroSection({
   weatherData?: WeatherData | null
 }) {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
+    <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
       <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
       <Weather
         current={weatherData?.current}
         forecast={weatherData?.forecast}
         location={weatherData?.location}
-        className="lg:w-[280px]"
+        className="lg:w-[280px] lg:self-end"
       />
     </div>
   )
