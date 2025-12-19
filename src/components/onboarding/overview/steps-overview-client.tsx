@@ -182,7 +182,9 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
   }
 
   return (
-    <div className={`flex h-full w-full flex-col ${isRTL ? "rtl" : "ltr"}`}>
+    <div
+      className={`mx-auto flex h-full w-full max-w-5xl flex-col ${isRTL ? "rtl" : "ltr"}`}
+    >
       <div className="flex flex-1 items-center">
         <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
@@ -238,15 +240,10 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
         </div>
       </div>
 
-      {/* Bottom Section - Fixed footer matching FormFooter position */}
-      <footer className="bg-background fixed right-0 bottom-0 left-0">
+      {/* Bottom Section - respects general padding */}
+      <div className="w-full">
         <Separator className="w-full" />
-        <div
-          className={`flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-        >
-          {/* Empty left side to match FormFooter structure */}
-          <div />
-          {/* Right side - Get Started button */}
+        <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
           <Button onClick={handleGetStarted} disabled={isCreating}>
             {isCreating ? (
               <>
@@ -258,7 +255,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
             )}
           </Button>
         </div>
-      </footer>
+      </div>
     </div>
   )
 }
