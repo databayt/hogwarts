@@ -1,7 +1,47 @@
+import { cn } from "@/lib/utils"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { SectionContainer } from "../shared/section-container"
+
+interface FeatureCardProps {
+  number: string
+  title: string
+  className?: string
+  borderColor?: string
+  strokeColor?: string
+}
+
+function FeatureCard({
+  number,
+  title,
+  className,
+  borderColor = "border-purple-500",
+  strokeColor = "#a855f7",
+}: FeatureCardProps) {
+  return (
+    <div
+      className={cn(
+        "flex aspect-auto flex-col justify-center rounded-2xl border bg-transparent px-6 py-6",
+        borderColor,
+        className
+      )}
+    >
+      <div className="flex flex-col space-y-3">
+        <div
+          className="text-5xl font-bold"
+          style={{
+            WebkitTextStroke: `2px ${strokeColor}`,
+            color: "transparent",
+          }}
+        >
+          {number}
+        </div>
+        <h3 className="text-lg font-semibold">{title}</h3>
+      </div>
+    </div>
+  )
+}
 
 interface AdmissionValuesProps {
   lang: Locale
@@ -15,30 +55,26 @@ export function AdmissionValues({ lang }: AdmissionValuesProps) {
     {
       number: "01",
       title: isRTL ? "التميز الأكاديمي" : "Academic Excellence",
-      description: isRTL
-        ? "معايير أكاديمية عالية مع سجل حافل بنجاح الطلاب وتحقيق أعلى الدرجات"
-        : "High academic standards with proven student success track record and top achievements",
+      borderColor: "border-blue-500",
+      strokeColor: "#3b82f6",
     },
     {
       number: "02",
       title: isRTL ? "منظور عالمي" : "Global Perspective",
-      description: isRTL
-        ? "مناهج دولية وبرامج تبادل ثقافي تعد الطلاب للعالم المعاصر"
-        : "International curriculum and cultural exchange programs preparing students for the modern world",
+      borderColor: "border-cyan-500",
+      strokeColor: "#06b6d4",
     },
     {
       number: "03",
       title: isRTL ? "بيئة رعاية" : "Nurturing Environment",
-      description: isRTL
-        ? "مجتمع داعم يشعر فيه كل طالب بالتقدير والتشجيع على التميز"
-        : "Supportive community where every student feels valued and encouraged to excel",
+      borderColor: "border-teal-500",
+      strokeColor: "#14b8a6",
     },
     {
       number: "04",
       title: isRTL ? "بناء الشخصية" : "Character Development",
-      description: isRTL
-        ? "تعليم قائم على القيم ينمي النزاهة والقيادة والمسؤولية الاجتماعية"
-        : "Values-based education developing integrity, leadership, and social responsibility",
+      borderColor: "border-emerald-500",
+      strokeColor: "#10b981",
     },
   ]
 
@@ -48,19 +84,15 @@ export function AdmissionValues({ lang }: AdmissionValuesProps) {
         {isRTL ? "لماذا تختارنا" : "Why Choose Us"}
       </h2>
 
-      <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-16">
+      <div className="grid grid-cols-2 items-center gap-6 md:grid-cols-2 lg:grid-cols-4">
         {values.map((value) => (
-          <div key={value.number} className="group">
-            <span className="text-muted-foreground/20 group-hover:text-primary/20 mb-4 block text-6xl font-light transition-colors lg:text-7xl">
-              {value.number}
-            </span>
-            <h3 className="font-heading mb-3 text-xl font-semibold">
-              {value.title}
-            </h3>
-            <p className="text-muted-foreground leading-relaxed">
-              {value.description}
-            </p>
-          </div>
+          <FeatureCard
+            key={value.number}
+            number={value.number}
+            title={value.title}
+            borderColor={value.borderColor}
+            strokeColor={value.strokeColor}
+          />
         ))}
       </div>
     </SectionContainer>
