@@ -4,12 +4,6 @@ import React from "react"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { AnthropicIcons } from "@/components/icons/anthropic"
 
 /**
@@ -101,79 +95,50 @@ export function QuickActions({
   className,
 }: QuickActionsProps) {
   return (
-    <TooltipProvider delayDuration={300}>
-      <div className={cn("w-full", className)}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {actions.slice(0, 4).map((action, index) => {
-            // Get icon component from map, fallback to Notebook if not found
-            const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook
-            // Cycle through colors for each card
-            const color = cardColors[index % cardColors.length]
+    <div className={cn("w-full", className)}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {actions.slice(0, 4).map((action, index) => {
+          // Get icon component from map, fallback to Notebook if not found
+          const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook
+          // Cycle through colors for each card
+          const color = cardColors[index % cardColors.length]
 
-            const content = (
-              <div
-                className={cn(
-                  "flex items-center gap-4 rounded-lg p-4",
-                  color.bg
-                )}
+          const content = (
+            <div
+              className={cn("flex items-center gap-4 rounded-lg p-4", color.bg)}
+            >
+              <Icon
+                className={cn("h-6 w-6 flex-shrink-0", color.text)}
+                aria-hidden={true}
+              />
+              <span
+                className={cn("truncate text-base font-semibold", color.text)}
               >
-                <Icon
-                  className={cn("h-6 w-6 flex-shrink-0", color.text)}
-                  aria-hidden={true}
-                />
-                <span
-                  className={cn("truncate text-base font-semibold", color.text)}
-                >
-                  {action.label}
-                </span>
-              </div>
-            )
+                {action.label}
+              </span>
+            </div>
+          )
 
-            const wrappedContent = action.description ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  {action.href ? (
-                    <Link
-                      href={`/${locale}${action.href}`}
-                      className="focus-visible:ring-primary block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <button
-                      onClick={action.onClick}
-                      className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                      type="button"
-                    >
-                      {content}
-                    </button>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-sm">
-                  {action.description}
-                </TooltipContent>
-              </Tooltip>
-            ) : action.href ? (
-              <Link
-                href={`/${locale}${action.href}`}
-                className="focus-visible:ring-primary block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-              >
-                {content}
-              </Link>
-            ) : (
-              <button
-                onClick={action.onClick}
-                className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                type="button"
-              >
-                {content}
-              </button>
-            )
+          const wrappedContent = action.href ? (
+            <Link
+              href={`/${locale}${action.href}`}
+              className="focus-visible:ring-primary block rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+              {content}
+            </Link>
+          ) : (
+            <button
+              onClick={action.onClick}
+              className="focus-visible:ring-primary block w-full rounded-lg text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              type="button"
+            >
+              {content}
+            </button>
+          )
 
-            return <div key={`${action.label}-${index}`}>{wrappedContent}</div>
-          })}
-        </div>
+          return <div key={`${action.label}-${index}`}>{wrappedContent}</div>
+        })}
       </div>
-    </TooltipProvider>
+    </div>
   )
 }

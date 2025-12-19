@@ -1,27 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import {
-  Activity,
-  AlertCircle,
-  Bell,
-  BookOpen,
-  CheckCircle,
-  ChevronRight,
-  CreditCard,
-  Database,
-  FileText,
-  GraduationCap,
-  HardDrive,
-  Server,
-  TrendingDown,
-  TrendingUp,
-  TriangleAlert,
-  UserPlus,
-  Users,
-  Wifi,
-  XCircle,
-} from "lucide-react"
+import { BookOpen, GraduationCap, TriangleAlert, Users } from "lucide-react"
 import {
   Label,
   PolarGrid,
@@ -30,16 +9,7 @@ import {
   RadialBarChart,
 } from "recharts"
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
@@ -64,133 +34,11 @@ import type { WeatherData } from "./weather-actions"
 // TYPES
 // ============================================================================
 
-interface ActivityData {
-  action: string
-  user: string
-  time: string
-  type: string
-}
-
-interface SummaryData {
-  label: string
-  value: string
-}
-
 interface AdminDashboardClientProps {
   locale: string
   subdomain: string
-  userName: string
-  schoolName: string
   quickLookData?: QuickLookData
   weatherData?: WeatherData | null
-  recentActivities: ActivityData[]
-  todaySummary: SummaryData[]
-}
-
-// ============================================================================
-// SECTION: System Health Status
-// ============================================================================
-
-function SystemHealthSection() {
-  const systemStatus = [
-    {
-      name: "Database",
-      status: "operational",
-      icon: Database,
-      latency: "12ms",
-    },
-    {
-      name: "API Server",
-      status: "operational",
-      icon: Server,
-      latency: "45ms",
-    },
-    {
-      name: "Storage",
-      status: "operational",
-      icon: HardDrive,
-      latency: "23ms",
-    },
-    { name: "Network", status: "degraded", icon: Wifi, latency: "156ms" },
-  ]
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "operational":
-        return "text-emerald-500"
-      case "degraded":
-        return "text-amber-500"
-      case "down":
-        return "text-destructive"
-      default:
-        return "text-muted-foreground"
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "operational":
-        return CheckCircle
-      case "degraded":
-        return AlertCircle
-      case "down":
-        return XCircle
-      default:
-        return AlertCircle
-    }
-  }
-
-  const operationalCount = systemStatus.filter(
-    (s) => s.status === "operational"
-  ).length
-
-  return (
-    <section>
-      <div className="flex items-center justify-between">
-        <SectionHeading title="System Health" />
-        <Badge
-          variant={
-            operationalCount === systemStatus.length ? "default" : "secondary"
-          }
-          className={
-            operationalCount === systemStatus.length
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-              : ""
-          }
-        >
-          {operationalCount}/{systemStatus.length} Operational
-        </Badge>
-      </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {systemStatus.map((system) => {
-          const StatusIcon = getStatusIcon(system.status)
-          return (
-            <Card key={system.name} className="p-4">
-              <CardContent className="p-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <system.icon className="text-muted-foreground h-4 w-4" />
-                    <span className="text-sm font-medium">{system.name}</span>
-                  </div>
-                  <StatusIcon
-                    className={cn("h-4 w-4", getStatusColor(system.status))}
-                  />
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs capitalize">
-                    {system.status}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {system.latency}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-    </section>
-  )
 }
 
 // ============================================================================
@@ -386,91 +234,6 @@ function AttendanceSection() {
 }
 
 // ============================================================================
-// SECTION: Recent Activity
-// ============================================================================
-
-const activityIconMap: Record<string, React.ElementType> = {
-  enrollment: UserPlus,
-  payment: CreditCard,
-  announcement: Bell,
-  academic: FileText,
-}
-
-function RecentActivitySection({
-  recentActivities,
-  todaySummary,
-}: {
-  recentActivities: ActivityData[]
-  todaySummary: SummaryData[]
-}) {
-  return (
-    <section>
-      <SectionHeading title="Recent Activity" />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
-            <CardTitle className="text-base">Activity Feed</CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs">
-              See All <ChevronRight className="ml-1 h-3 w-3" />
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4 p-0">
-            {recentActivities.length > 0 ? (
-              recentActivities.map((activity, index) => {
-                const IconComponent = activityIconMap[activity.type] || FileText
-                return (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 rounded-lg border p-3"
-                  >
-                    <div className="bg-muted flex h-8 w-8 items-center justify-center rounded-full">
-                      <IconComponent className="text-muted-foreground h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {activity.user}
-                      </p>
-                    </div>
-                    <span className="text-muted-foreground text-xs whitespace-nowrap">
-                      {activity.time}
-                    </span>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="text-muted-foreground py-8 text-center">
-                <FileText className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                <p className="text-sm">No recent activities</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="p-6">
-          <CardHeader className="p-0 pb-4">
-            <CardTitle className="text-base">Today&apos;s Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 p-0">
-            {todaySummary.map((item) => (
-              <div
-                key={item.label}
-                className="bg-muted/50 flex items-center justify-between rounded-lg p-3"
-              >
-                <span className="text-muted-foreground text-sm">
-                  {item.label}
-                </span>
-                <span className="text-lg font-semibold">{item.value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
 // SECTION: Quick Actions (Using unified component)
 // ============================================================================
 
@@ -505,13 +268,15 @@ function HeroSection({
   weatherData?: WeatherData | null
 }) {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
       <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
-      <Weather
-        current={weatherData?.current}
-        forecast={weatherData?.forecast}
-        location={weatherData?.location}
-      />
+      <div className="max-w-[70%]">
+        <Weather
+          current={weatherData?.current}
+          forecast={weatherData?.forecast}
+          location={weatherData?.location}
+        />
+      </div>
     </div>
   )
 }
@@ -523,12 +288,8 @@ function HeroSection({
 export function AdminDashboardClient({
   locale,
   subdomain,
-  userName,
-  schoolName,
   quickLookData,
   weatherData,
-  recentActivities,
-  todaySummary,
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
@@ -563,17 +324,8 @@ export function AdminDashboardClient({
 
       {/* ============ ADMIN-SPECIFIC SECTIONS ============ */}
 
-      {/* Section 7: System Health */}
-      <SystemHealthSection />
-
       {/* Section 8: Attendance Overview */}
       <AttendanceSection />
-
-      {/* Section 10: Recent Activity */}
-      <RecentActivitySection
-        recentActivities={recentActivities}
-        todaySummary={todaySummary}
-      />
     </div>
   )
 }
