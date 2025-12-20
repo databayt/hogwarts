@@ -1,6 +1,19 @@
 "use server"
 
 // Minimal test action with no imports to diagnose 500 error
+
+// Test getSchoolTitle - same as title/actions.ts but in test-action.ts
+export async function testGetSchoolTitle(schoolId: string) {
+  console.log("🧪 [TEST GET SCHOOL TITLE] Called with schoolId:", schoolId)
+  return {
+    success: true,
+    data: {
+      title: "Test School from test-action.ts",
+      subdomain: "test-subdomain-from-test-action",
+    },
+  }
+}
+
 export async function testMinimalAction() {
   console.log("🧪 [TEST MINIMAL] Called at", new Date().toISOString())
   return {

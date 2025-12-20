@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react"
 
-import { getSchoolTitle, type TitleFormData } from "./actions"
+// TEMPORARILY: Import from test-action.ts to isolate the issue
+// import { getSchoolTitle, type TitleFormData } from "./actions"
+import { testGetSchoolTitle } from "../test-action"
+
+export interface TitleFormData {
+  title: string
+  subdomain?: string
+}
 
 interface UseTitleReturn {
   data: TitleFormData | null
@@ -24,7 +31,8 @@ export function useTitle(schoolId: string): UseTitleReturn {
       setError(null)
 
       console.log("🔍 [USE TITLE] Fetching school title for:", schoolId)
-      const result = await getSchoolTitle(schoolId)
+      // TEMPORARILY: Use test action from test-action.ts
+      const result = await testGetSchoolTitle(schoolId)
       console.log("🔍 [USE TITLE] Result:", result)
 
       if (result.success && result.data) {
