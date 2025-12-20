@@ -140,9 +140,13 @@ export const authLogger = {
   },
 }
 
-// Log that the auth logger is initialized
-authLogger.info("Auth logger initialized", {
-  AUTH_DEBUG,
-  environment: process.env.NODE_ENV,
-  timestamp: timestamp(),
-})
+// Log that the auth logger is initialized (wrapped to prevent module load failures)
+try {
+  authLogger.info("Auth logger initialized", {
+    AUTH_DEBUG,
+    environment: process.env.NODE_ENV,
+    timestamp: timestamp(),
+  })
+} catch {
+  // Silently ignore initialization logging errors
+}

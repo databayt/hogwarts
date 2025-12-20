@@ -12,13 +12,20 @@ import authConfig from "./auth.config"
 
 // ═══════════════════════════════════════════════════════════════════════════
 // STARTUP VALIDATION - Catches config issues BEFORE OAuth fails
+// Wrapped in try-catch to prevent module load failures in edge runtime
 // ═══════════════════════════════════════════════════════════════════════════
-const configValidation = validateAuthConfig()
-if (!configValidation.valid) {
-  authLogger.error("🚨 AUTH CONFIG INVALID - OAuth will fail!", {
-    issues: configValidation.issues,
-    warnings: configValidation.warnings,
-  })
+try {
+  const configValidation = validateAuthConfig()
+  if (!configValidation.valid) {
+    authLogger.error("🚨 AUTH CONFIG INVALID - OAuth will fail!", {
+      issues: configValidation.issues,
+      warnings: configValidation.warnings,
+    })
+  }
+} catch (error) {
+  // Silently handle validation errors to prevent module load failures
+  // This ensures server actions can still be imported even if validation fails
+  console.error("[AUTH] Config validation error (non-fatal):", error)
 }
 
 /**
