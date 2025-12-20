@@ -70,7 +70,7 @@ export async function getOrCreateAnswerKey(
     if (existingKey) {
       return {
         success: true,
-        data: existingKey.answers as AnswerKeyEntry[],
+        data: existingKey.answers as unknown as AnswerKeyEntry[],
       }
     }
 
@@ -90,7 +90,7 @@ export async function getOrCreateAnswerKey(
     }
 
     // Get question IDs from the generated exam
-    const questionIds = (generatedExam.questionIds as string[]) || []
+    const questionIds = ((generatedExam as any).questionIds as string[]) || []
 
     // Fetch questions with their correct answers
     const questions = await db.questionBank.findMany({

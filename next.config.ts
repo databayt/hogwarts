@@ -7,12 +7,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
 
-  // TEMPORARY: Skip TypeScript errors during build
-  // TODO: Fix certificate generation Prisma schema mismatches then remove this
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
   // Optimize package imports for tree-shaking
   experimental: {
     optimizePackageImports: [

@@ -58,12 +58,13 @@ build.log
 build-analysis-report.md
 .env*.local
 
-certificates
+/certificates
 # Local SSL certificates
-certificates/
+/certificates/
 
 # Playwright
 node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+.backup/
