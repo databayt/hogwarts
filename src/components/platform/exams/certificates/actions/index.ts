@@ -7,7 +7,10 @@ export * from "./types"
 
 // Stub action functions
 export async function generateCertificate() {
-  return { success: false, error: "Certificate generation temporarily disabled" }
+  return {
+    success: false,
+    error: "Certificate generation temporarily disabled",
+  }
 }
 
 export async function batchGenerateCertificates() {
@@ -19,7 +22,10 @@ export async function shareCertificate() {
 }
 
 export async function verifyCertificate() {
-  return { success: false, error: "Certificate verification temporarily disabled" }
+  return {
+    success: false,
+    error: "Certificate verification temporarily disabled",
+  }
 }
 
 export async function getCertificateConfigs() {

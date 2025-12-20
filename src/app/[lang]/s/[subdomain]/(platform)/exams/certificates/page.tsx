@@ -13,7 +13,9 @@ interface CertificatesPageProps {
   }>
 }
 
-export default async function CertificatesPage({ params }: CertificatesPageProps) {
+export default async function CertificatesPage({
+  params,
+}: CertificatesPageProps) {
   const { lang } = await params
 
   return <CertificateContent locale={lang} />

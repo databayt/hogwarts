@@ -3,7 +3,6 @@
 /**
  * Certificates Error Boundary
  */
-
 import { useEffect } from "react"
 import { AlertTriangle, RefreshCw } from "lucide-react"
 

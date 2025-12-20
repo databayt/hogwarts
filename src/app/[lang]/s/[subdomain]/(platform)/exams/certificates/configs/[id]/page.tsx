@@ -4,11 +4,9 @@
  */
 
 import { notFound } from "next/navigation"
-
 import { auth } from "@/auth"
 
 import { db } from "@/lib/db"
-
 import type { Locale } from "@/components/internationalization/config"
 import { CertificateConfigForm } from "@/components/platform/exams/certificates/config-form"
 

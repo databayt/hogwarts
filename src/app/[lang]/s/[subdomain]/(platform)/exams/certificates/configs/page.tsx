@@ -4,12 +4,10 @@
  */
 
 import Link from "next/link"
+import { auth } from "@/auth"
 import { Plus } from "lucide-react"
 
-import { auth } from "@/auth"
-
 import { db } from "@/lib/db"
-
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/components/internationalization/config"
 import { CertificateConfigList } from "@/components/platform/exams/certificates/config-list"
