@@ -1,6 +1,8 @@
 import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
+import { canUserAccessSchool, ensureUserSchool } from "@/lib/school-access"
+
 /**
  * Authentication & Authorization Security Layer
  *
@@ -178,10 +180,6 @@ export async function requireSchoolOwnership(
   targetSchoolId: string
 ): Promise<AuthContext> {
   const authContext = await getAuthContext()
-
-  // Import school access functions
-  const { canUserAccessSchool, ensureUserSchool } =
-    await import("@/lib/school-access")
 
   console.log("🔐 [SCHOOL OWNERSHIP CHECK] Starting:", {
     userId: authContext.userId,
