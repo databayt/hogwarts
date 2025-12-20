@@ -149,6 +149,7 @@ interface Props {
     subjectCount: number
     workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD"
   }
+  isOwner?: boolean
 }
 
 // ============================================================================
@@ -237,6 +238,7 @@ export function TeacherDetailContent({
   dictionary,
   lang,
   workload,
+  isOwner = false,
 }: Props) {
   const [activeTab, setActiveTab] = useState("overview")
   const { openModal } = useModal()
@@ -302,16 +304,18 @@ export function TeacherDetailContent({
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openModal(teacher.id)}
-                    >
-                      <Edit className="me-2 h-4 w-4" />
-                      {t.edit}
-                    </Button>
-                  </div>
+                  {isOwner && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openModal(teacher.id)}
+                      >
+                        <Edit className="me-2 h-4 w-4" />
+                        {t.edit}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Status badges */}

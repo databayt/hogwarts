@@ -188,3 +188,100 @@ export const MONTHS = [
 
 // Weekday labels for contribution graph
 export const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+// ============================================================================
+// Contribution Graph Types (Real Data)
+// ============================================================================
+
+// Activity types for different roles
+export type ActivityType =
+  // Student activities
+  | "attendance"
+  | "assignment_submitted"
+  | "exam_completed"
+  | "library_visit"
+  | "club_activity"
+  // Teacher activities
+  | "class_taught"
+  | "grade_published"
+  | "attendance_taken"
+  | "lesson_created"
+  // Parent activities
+  | "portal_login"
+  | "payment_made"
+  | "message_sent"
+  | "event_rsvp"
+  // Staff activities
+  | "task_completed"
+  | "report_generated"
+  | "expense_processed"
+  | "meeting_attended"
+
+// Breakdown of activity types for a given day
+export interface ActivityBreakdown {
+  type: ActivityType
+  count: number
+  label: string
+}
+
+// Enhanced contribution data point with activity breakdown
+export interface ContributionDataPoint {
+  date: string // ISO date string "YYYY-MM-DD"
+  count: number // Total activities for the day
+  level: 0 | 1 | 2 | 3 | 4 // Intensity level
+  activities: ActivityBreakdown[] // Detailed breakdown
+}
+
+// Summary statistics for the contribution graph
+export interface ContributionSummary {
+  activeDays: number
+  longestStreak: number
+  currentStreak: number
+  averagePerDay: number
+  peakDay: { date: string; count: number } | null
+}
+
+// Full contribution graph data
+export interface ContributionGraphData {
+  contributions: ContributionDataPoint[]
+  totalActivities: number
+  year: number
+  role: ProfileRole
+  summary: ContributionSummary
+}
+
+// Parameters for fetching contribution data
+export interface GetContributionDataParams {
+  userId?: string // Optional - defaults to current user
+  year?: number // Optional - defaults to current year
+}
+
+// Result type for contribution data fetching
+export type GetContributionDataResult =
+  | { success: true; data: ContributionGraphData }
+  | { success: false; error: string }
+
+// Activity labels for display
+export const ACTIVITY_LABELS: Record<ActivityType, string> = {
+  // Student
+  attendance: "Attended class",
+  assignment_submitted: "Submitted assignment",
+  exam_completed: "Completed exam",
+  library_visit: "Library visit",
+  club_activity: "Club activity",
+  // Teacher
+  class_taught: "Taught class",
+  grade_published: "Published grade",
+  attendance_taken: "Marked attendance",
+  lesson_created: "Created lesson",
+  // Parent
+  portal_login: "Portal login",
+  payment_made: "Made payment",
+  message_sent: "Sent message",
+  event_rsvp: "Event RSVP",
+  // Staff
+  task_completed: "Completed task",
+  report_generated: "Generated report",
+  expense_processed: "Processed expense",
+  meeting_attended: "Attended meeting",
+}

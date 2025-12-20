@@ -4,8 +4,11 @@ import { useState } from "react"
 
 import {
   testDbAction,
+  testGetSchoolTitle,
   testMinimalAction,
 } from "@/components/onboarding/test-action"
+// TEST: Import from title/actions.ts to isolate the issue
+import { getSchoolTitle as getTitleFromActions } from "@/components/onboarding/title/actions"
 
 export default function TestPage() {
   const [results, setResults] = useState<string[]>([])
@@ -41,11 +44,39 @@ export default function TestPage() {
     }
   }
 
+  const runTestGetSchoolTitle = async () => {
+    setLoading(true)
+    addResult("Running testGetSchoolTitle (from test-action.ts)...")
+    try {
+      const result = await testGetSchoolTitle("test-school-id")
+      addResult(`testGetSchoolTitle result: ${JSON.stringify(result)}`)
+    } catch (error) {
+      addResult(`testGetSchoolTitle error: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const runGetTitleFromActions = async () => {
+    setLoading(true)
+    addResult("Running getSchoolTitle (from title/actions.ts)...")
+    try {
+      const result = await getTitleFromActions("test-school-id")
+      addResult(
+        `getSchoolTitle (title/actions.ts) result: ${JSON.stringify(result)}`
+      )
+    } catch (error) {
+      addResult(`getSchoolTitle (title/actions.ts) error: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-8">
       <h1 className="mb-6 text-2xl font-bold">Server Action Test Page</h1>
 
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex flex-wrap gap-4">
         <button
           onClick={runMinimalTest}
           disabled={loading}
@@ -59,6 +90,20 @@ export default function TestPage() {
           className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:opacity-50"
         >
           Test DB Action
+        </button>
+        <button
+          onClick={runTestGetSchoolTitle}
+          disabled={loading}
+          className="rounded bg-purple-500 px-4 py-2 text-white hover:bg-purple-600 disabled:opacity-50"
+        >
+          Test GetSchoolTitle (test-action.ts)
+        </button>
+        <button
+          onClick={runGetTitleFromActions}
+          disabled={loading}
+          className="rounded bg-orange-500 px-4 py-2 text-white hover:bg-orange-600 disabled:opacity-50"
+        >
+          Test GetSchoolTitle (title/actions.ts)
         </button>
       </div>
 

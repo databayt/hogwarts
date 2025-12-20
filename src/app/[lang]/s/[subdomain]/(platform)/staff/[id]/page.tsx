@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { safeQuery } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
@@ -16,6 +17,9 @@ export default async function StaffDetail({ params }: Props) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) return notFound()
 
+  // Get current session to determine ownership
+  const session = await auth()
+
   // Try to find as teacher first
   let staff = await safeQuery("teacher", (model) =>
     model.findFirst({
@@ -28,6 +32,7 @@ export default async function StaffDetail({ params }: Props) {
         emailAddress: true,
         createdAt: true,
         updatedAt: true,
+        userId: true,
       },
     })
   )
@@ -44,10 +49,14 @@ export default async function StaffDetail({ params }: Props) {
       emailAddress: "staff@school.com",
       createdAt: new Date(),
       updatedAt: new Date(),
+      userId: null,
     }
   }
 
   if (!staff) return notFound()
+
+  // Check if current user is the owner of this profile
+  const isOwner = session?.user?.id === staff.userId
 
   return (
     <ProfileContent
@@ -55,6 +64,8 @@ export default async function StaffDetail({ params }: Props) {
       data={staff}
       dictionary={dictionary}
       lang={lang}
+      isOwner={isOwner}
+      userId={staff.userId || undefined}
     />
   )
 }

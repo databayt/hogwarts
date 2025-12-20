@@ -255,7 +255,9 @@ export async function generateExamPaper(
         configId: config.id,
         versionCode: input.versionCode,
         questionOrder,
-        optionOrder,
+        optionOrder: optionOrder as unknown as Parameters<
+          typeof db.generatedPaper.create
+        >[0]["data"]["optionOrder"],
         generatedBy: userId,
         // pdfUrl would be set after actual PDF generation and upload
       },
@@ -395,7 +397,9 @@ export async function generateAnswerKey(
       data: {
         schoolId,
         generatedExamId: input.generatedExamId,
-        answers,
+        answers: answers as unknown as Parameters<
+          typeof db.examAnswerKey.create
+        >[0]["data"]["answers"],
         generatedBy: userId,
       },
     })

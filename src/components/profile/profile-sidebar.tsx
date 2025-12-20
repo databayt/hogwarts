@@ -45,6 +45,7 @@ import type {
 interface ProfileSidebarProps {
   role: ProfileRole
   data: Record<string, unknown>
+  isOwner?: boolean
 }
 
 // Achievement badge icons mapping
@@ -360,7 +361,11 @@ function formatDate(date: string | Date | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
 }
 
-export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
+export default function ProfileSidebar({
+  role,
+  data,
+  isOwner = false,
+}: ProfileSidebarProps) {
   const { open, isMobile } = useSidebar()
   const useMobileLayout = isMobile || open
   const config = getRoleConfig(role, data)
@@ -406,10 +411,12 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
           in academics and extracurricular activities.
         </p>
 
-        {/* Edit Profile Button - GitHub style */}
-        <Button variant="outline" className="w-full" size="sm">
-          Edit profile
-        </Button>
+        {/* Edit Profile Button - GitHub style (only for owner) */}
+        {isOwner && (
+          <Button variant="outline" className="w-full" size="sm">
+            Edit profile
+          </Button>
+        )}
 
         {/* Stats - GitHub style: "12 followers · 3 following" */}
         <div className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">

@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useTransition } from "react"
+import useSWR from "swr"
 
 import {
   Select,
@@ -9,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
@@ -16,12 +18,28 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-import type { ActivityDataPoint, ProfileRole } from "./types"
+import { getContributionData } from "./contribution-actions"
+import type {
+  ActivityDataPoint,
+  ContributionDataPoint,
+  ContributionGraphData,
+  ProfileRole,
+} from "./types"
+
+// ============================================================================
+// Props
+// ============================================================================
 
 interface ActivityGraphProps {
   role: ProfileRole
-  data?: Record<string, unknown>
+  userId?: string
+  isOwner?: boolean
+  initialData?: ContributionGraphData
 }
+
+// ============================================================================
+// Constants
+// ============================================================================
 
 /**
  * GitHub-inspired Contribution Graph Colors
@@ -30,8 +48,8 @@ interface ActivityGraphProps {
  * authenticity. The colors are defined as CSS custom properties in globals.css
  * and are documented in .claude/skills/ui-validator.md under "Exceptions".
  *
- * Light mode: #ebedf0 → #9be9a8 → #40c463 → #30a14e → #216e39
- * Dark mode:  #161b22 → #0e4429 → #006d32 → #26a641 → #39d353
+ * Light mode: #ebedf0 -> #9be9a8 -> #40c463 -> #30a14e -> #216e39
+ * Dark mode:  #161b22 -> #0e4429 -> #006d32 -> #26a641 -> #39d353
  */
 const LEVEL_STYLES: Record<number, React.CSSProperties> = {
   0: { backgroundColor: "var(--contribution-level-0)" },
@@ -55,15 +73,27 @@ const MONTHS = [
   "Nov",
   "Dec",
 ]
+
 const WEEKDAYS = ["Sun", "", "Mon", "", "Wed", "", "Fri", ""]
 
-// Generate activity data for a year
-function generateActivityData(
-  startDate: Date,
-  endDate: Date,
-  role: ProfileRole
-): ActivityDataPoint[] {
-  const data: ActivityDataPoint[] = []
+const ROLE_LABELS: Record<ProfileRole, string> = {
+  student: "activities",
+  teacher: "activities",
+  parent: "interactions",
+  staff: "tasks",
+}
+
+// ============================================================================
+// Mock Data Generator (Fallback)
+// ============================================================================
+
+function generateMockData(
+  role: ProfileRole,
+  year: number
+): ContributionGraphData {
+  const startDate = new Date(year, 0, 1)
+  const endDate = new Date(year, 11, 31)
+  const contributions: ContributionDataPoint[] = []
   const current = new Date(startDate)
 
   // Adjust start to Sunday of that week
@@ -71,12 +101,11 @@ function generateActivityData(
   current.setDate(current.getDate() - startDayOfWeek)
 
   while (current <= endDate) {
-    // Generate realistic school activity patterns
     const dayOfWeek = current.getDay()
     const month = current.getMonth()
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-    const isSchoolMonth = month >= 8 || month <= 5 // Sep-May is school year
-    const isVacation = month === 6 || month === 7 // Summer vacation
+    const isSchoolMonth = month >= 8 || month <= 5
+    const isVacation = month === 6 || month === 7
 
     let baseIntensity = Math.random()
 
@@ -87,8 +116,8 @@ function generateActivityData(
     // Role-specific patterns
     if (role === "teacher" && dayOfWeek >= 1 && dayOfWeek <= 5)
       baseIntensity *= 1.2
-    if (role === "parent" && dayOfWeek === 3) baseIntensity *= 0.8 // Less on Wednesdays
-    if (role === "student" && dayOfWeek === 2) baseIntensity *= 1.3 // Busy on Tuesdays
+    if (role === "parent" && dayOfWeek === 3) baseIntensity *= 0.8
+    if (role === "student" && dayOfWeek === 2) baseIntensity *= 1.3
 
     let level: 0 | 1 | 2 | 3 | 4 = 0
     if (baseIntensity > 0.8) level = 4
@@ -98,62 +127,39 @@ function generateActivityData(
 
     const count = Math.floor(baseIntensity * 10)
 
-    data.push({
-      date: new Date(current),
+    contributions.push({
+      date: current.toISOString().split("T")[0],
       level,
       count,
-      activities: count > 0 ? generateActivityTypes(role, count) : [],
+      activities: [],
     })
 
     current.setDate(current.getDate() + 1)
   }
 
-  return data
+  const totalActivities = contributions.reduce((sum, c) => sum + c.count, 0)
+
+  return {
+    contributions,
+    totalActivities,
+    year,
+    role,
+    summary: {
+      activeDays: contributions.filter((c) => c.count > 0).length,
+      longestStreak: 0,
+      currentStreak: 0,
+      averagePerDay: 0,
+      peakDay: null,
+    },
+  }
 }
 
-function generateActivityTypes(role: ProfileRole, count: number): string[] {
-  const activityTypes = {
-    student: [
-      "Attended class",
-      "Submitted assignment",
-      "Took quiz",
-      "Library visit",
-      "Club activity",
-    ],
-    teacher: [
-      "Taught class",
-      "Graded work",
-      "Parent meeting",
-      "Department meeting",
-      "Curriculum planning",
-    ],
-    parent: [
-      "Checked grades",
-      "Teacher communication",
-      "Event attendance",
-      "Payment",
-      "Portal login",
-    ],
-    staff: [
-      "Processed request",
-      "Updated records",
-      "Meeting attended",
-      "Report generated",
-      "System update",
-    ],
-  }
+// ============================================================================
+// Helpers
+// ============================================================================
 
-  const types = activityTypes[role] || activityTypes.student
-  const activities: string[] = []
-
-  for (let i = 0; i < Math.min(count, 3); i++) {
-    activities.push(types[Math.floor(Math.random() * types.length)])
-  }
-
-  return activities
-}
-
-function formatDate(date: Date): string {
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
   return date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
@@ -162,31 +168,57 @@ function formatDate(date: Date): string {
   })
 }
 
+function getDateMonth(dateStr: string): number {
+  return new Date(dateStr).getMonth()
+}
+
+// ============================================================================
+// Component
+// ============================================================================
+
 export default function ActivityGraph({
   role = "student",
-  data,
+  userId,
+  isOwner = false,
+  initialData,
 }: ActivityGraphProps) {
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear.toString())
 
-  const activityData = useMemo(() => {
-    const year = parseInt(selectedYear)
-    const startDate = new Date(year, 0, 1)
-    const endDate = new Date(year, 11, 31)
-    return generateActivityData(startDate, endDate, role)
-  }, [selectedYear, role])
+  // Fetch real data with SWR
+  const {
+    data: fetchedData,
+    error,
+    isLoading,
+  } = useSWR(
+    userId ? ["contribution-data", userId, selectedYear] : null,
+    async () => {
+      const result = await getContributionData({
+        userId,
+        year: parseInt(selectedYear),
+      })
+      if (!result.success) throw new Error(result.error)
+      return result.data
+    },
+    {
+      fallbackData: initialData,
+      revalidateOnFocus: false,
+      dedupingInterval: 60000, // 1 minute
+    }
+  )
 
-  // Calculate total contributions
-  const totalContributions = useMemo(() => {
-    return activityData.reduce((sum, day) => sum + day.count, 0)
-  }, [activityData])
+  // Use fetched data, fallback to mock
+  const graphData = useMemo(() => {
+    if (fetchedData) return fetchedData
+    return generateMockData(role, parseInt(selectedYear))
+  }, [fetchedData, role, selectedYear])
 
   // Group data into weeks (columns)
   const weeks = useMemo(() => {
-    const result: ActivityDataPoint[][] = []
-    let currentWeek: ActivityDataPoint[] = []
+    const result: ContributionDataPoint[][] = []
+    let currentWeek: ContributionDataPoint[] = []
 
-    activityData.forEach((day) => {
+    graphData.contributions.forEach((day) => {
       currentWeek.push(day)
       if (currentWeek.length === 7) {
         result.push(currentWeek)
@@ -198,7 +230,7 @@ export default function ActivityGraph({
       // Pad the last week with empty slots
       while (currentWeek.length < 7) {
         currentWeek.push({
-          date: new Date(),
+          date: new Date().toISOString().split("T")[0],
           level: 0,
           count: 0,
           activities: [],
@@ -208,7 +240,7 @@ export default function ActivityGraph({
     }
 
     return result
-  }, [activityData])
+  }, [graphData.contributions])
 
   // Calculate month positions for labels
   const monthPositions = useMemo(() => {
@@ -218,7 +250,7 @@ export default function ActivityGraph({
     weeks.forEach((week, weekIdx) => {
       const firstDayWithData = week.find((d) => d.count >= 0)
       if (firstDayWithData) {
-        const month = firstDayWithData.date.getMonth()
+        const month = getDateMonth(firstDayWithData.date)
         if (month !== lastMonth) {
           positions.push({
             month: MONTHS[month],
@@ -236,11 +268,23 @@ export default function ActivityGraph({
     (currentYear - i).toString()
   )
 
-  const roleLabel = {
-    student: "activities",
-    teacher: "activities",
-    parent: "interactions",
-    staff: "tasks",
+  const roleLabel = ROLE_LABELS[role]
+
+  // Loading state
+  if (isLoading && !graphData) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        <Skeleton className="h-[140px] w-full" />
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -249,7 +293,7 @@ export default function ActivityGraph({
         {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-foreground text-base font-semibold">
-            {totalContributions.toLocaleString()} {roleLabel[role]} in{" "}
+            {graphData.totalActivities.toLocaleString()} {roleLabel} in{" "}
             {selectedYear}
           </h3>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -265,6 +309,13 @@ export default function ActivityGraph({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Error indicator (subtle) */}
+        {error && (
+          <p className="text-muted-foreground text-xs">
+            Unable to load real data. Showing sample activity.
+          </p>
+        )}
 
         {/* Graph Container */}
         <div className="overflow-x-auto pb-2">
@@ -315,8 +366,8 @@ export default function ActivityGraph({
                           <div className="text-sm">
                             <p className="font-semibold">
                               {day.count > 0
-                                ? `${day.count} ${roleLabel[role]}`
-                                : `No ${roleLabel[role]}`}
+                                ? `${day.count} ${roleLabel}`
+                                : `No ${roleLabel}`}
                             </p>
                             <p className="text-muted-foreground">
                               {formatDate(day.date)}
@@ -328,7 +379,7 @@ export default function ActivityGraph({
                                     key={i}
                                     className="text-muted-foreground text-xs"
                                   >
-                                    • {activity}
+                                    • {activity.label} ({activity.count})
                                   </p>
                                 ))}
                               </div>
@@ -347,7 +398,7 @@ export default function ActivityGraph({
         {/* Legend */}
         <div className="text-muted-foreground flex items-center justify-between text-xs">
           <a href="#" className="hover:text-primary transition-colors">
-            Learn how we count {roleLabel[role]}
+            Learn how we count {roleLabel}
           </a>
           <div className="flex items-center gap-1">
             <span>Less</span>

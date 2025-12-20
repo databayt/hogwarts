@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
@@ -15,6 +16,9 @@ export default async function ParentDetail({ params }: Props) {
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
 
+  // Get current session to determine ownership
+  const session = await auth()
+
   const guardianModel = getModel("guardian")
   if (!schoolId || !guardianModel) return notFound()
 
@@ -27,10 +31,14 @@ export default async function ParentDetail({ params }: Props) {
       emailAddress: true,
       createdAt: true,
       updatedAt: true,
+      userId: true,
     },
   })
 
   if (!parent) return notFound()
+
+  // Check if current user is the owner of this profile
+  const isOwner = session?.user?.id === parent.userId
 
   return (
     <ProfileContent
@@ -38,6 +46,8 @@ export default async function ParentDetail({ params }: Props) {
       data={parent}
       dictionary={dictionary}
       lang={lang}
+      isOwner={isOwner}
+      userId={parent.userId || undefined}
     />
   )
 }

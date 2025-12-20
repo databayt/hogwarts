@@ -1,5 +1,13 @@
 import Link from "next/link"
-import { BarChart3, BookOpen, FileText, Plus, Sparkles } from "lucide-react"
+import {
+  BarChart3,
+  BookOpen,
+  FileText,
+  Key,
+  Plus,
+  Printer,
+  Sparkles,
+} from "lucide-react"
 
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -192,6 +200,46 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                 {dictionary.generate.actions.viewAnalytics}
               </Link>
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Exam Paper Print Card */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Printer className="h-5 w-5" />
+              {lang === "ar" ? "طباعة أوراق الامتحان" : "Print Exam Papers"}
+            </CardTitle>
+            <CardDescription>
+              {lang === "ar"
+                ? "إنشاء أوراق امتحان جاهزة للطباعة مع مفاتيح الإجابة"
+                : "Generate print-ready exam papers with answer keys"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              {lang === "ar"
+                ? "قم بتحويل الامتحانات المُنشأة إلى أوراق PDF جاهزة للطباعة. اختر من بين قوالب متعددة، أنشئ نسخًا مختلفة، واطبع مفاتيح الإجابة للمصححين."
+                : "Convert generated exams into print-ready PDF papers. Choose from multiple templates, create different versions, and print answer keys for markers."}
+            </p>
+            <div className="flex gap-2">
+              <Button asChild>
+                <Link href={`/${lang}/exams/generate/list`}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  {lang === "ar"
+                    ? "اختيار امتحان للطباعة"
+                    : "Select Exam to Print"}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href={`/${lang}/exams/generate/list`}>
+                  <Key className="mr-2 h-4 w-4" />
+                  {lang === "ar"
+                    ? "إنشاء مفاتيح الإجابة"
+                    : "Generate Answer Keys"}
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -19,6 +19,14 @@ export {
 // Automated Marking
 export { autoGradeAnswer, autoGradeExam } from "./auto-mark"
 
+// Enhanced Auto-Marking with Answer Key
+export {
+  getOrCreateAnswerKey,
+  autoGradeWithKey,
+  batchAutoGradeWithKey,
+  refreshAnswerKey,
+} from "./auto-mark-with-key"
+
 // AI-Assisted Grading
 export { aiGradeAnswer, batchAIGrade, getAIFeedback } from "./ai-grade"
 

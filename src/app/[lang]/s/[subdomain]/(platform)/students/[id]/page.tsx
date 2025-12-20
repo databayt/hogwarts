@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getModel } from "@/lib/prisma-guards"
 import { type Locale } from "@/components/internationalization/config"
@@ -16,6 +17,9 @@ export default async function StudentDetail({ params }: Props) {
   const { schoolId } = await getTenantContext()
   const studentModel = getModel("student")
   if (!schoolId || !studentModel) return notFound()
+
+  // Get current session to determine ownership
+  const session = await auth()
 
   // Calculate date range for attendance (last 60 days)
   const sixtyDaysAgo = new Date()
@@ -100,9 +104,17 @@ export default async function StudentDetail({ params }: Props) {
 
   if (!student) return notFound()
 
+  // Check if current user is the owner of this profile
+  const isOwner = session?.user?.id === student.userId
+
   return (
     <div className="container py-6">
-      <StudentProfile student={student} dictionary={dictionary} />
+      <StudentProfile
+        student={student}
+        dictionary={dictionary}
+        isOwner={isOwner}
+        userId={student.userId || undefined}
+      />
     </div>
   )
 }

@@ -59,6 +59,8 @@ interface StudentProfileProps {
   student: Student
   dictionary?: any
   onEdit?: () => void
+  isOwner?: boolean
+  userId?: string
 }
 
 const statusColors = {
@@ -83,6 +85,8 @@ export function StudentProfile({
   student,
   dictionary,
   onEdit,
+  isOwner = false,
+  userId,
 }: StudentProfileProps) {
   const [activeTab, setActiveTab] = useState("personal")
 
@@ -174,10 +178,12 @@ export function StudentProfile({
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={onEdit}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Pencil
-                  </Button>
+                  {isOwner && (
+                    <Button variant="outline" size="sm" onClick={onEdit}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">

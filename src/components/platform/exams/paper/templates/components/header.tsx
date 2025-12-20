@@ -114,7 +114,7 @@ export function Header({
 
   const schoolName = isRTL && school.nameAr ? school.nameAr : school.name
   const subjectName = exam.subject.subjectName
-  const className = exam.class.className
+  const className = exam.class.name
 
   return (
     <View style={styles.header}>

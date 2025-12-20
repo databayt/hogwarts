@@ -217,7 +217,7 @@ export default function ProfileContent({
 
           {/* Activity Graph */}
           <div className="border-border rounded-lg border p-6">
-            <ContributionGraph role={role} />
+            <ContributionGraph role={role} userId={userId} isOwner={isOwner} />
           </div>
 
           {/* Contribution Activity Timeline */}
@@ -254,7 +254,7 @@ export default function ProfileContent({
           <div className="flex flex-col gap-6 pb-6">
             {/* Profile Sidebar - Left-aligned when stacked */}
             <div className="flex justify-start">
-              <ProfileSidebar role={role} data={data} />
+              <ProfileSidebar role={role} data={data} isOwner={isOwner} />
             </div>
 
             {/* Main Content - Full width below */}
@@ -267,7 +267,7 @@ export default function ProfileContent({
           <div className="grid grid-cols-1 gap-6 py-6 lg:grid-cols-4">
             {/* Left Sidebar */}
             <div className="lg:col-span-1">
-              <ProfileSidebar role={role} data={data} />
+              <ProfileSidebar role={role} data={data} isOwner={isOwner} />
             </div>
 
             {/* Main Content */}

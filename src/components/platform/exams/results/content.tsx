@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Download, FileBarChart, TrendingUp } from "lucide-react"
+import { Award, Download, FileBarChart, TrendingUp } from "lucide-react"
 import { type SearchParams } from "nuqs/server"
 
 import { db } from "@/lib/db"
@@ -79,12 +79,20 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div></div>
-        <Button asChild>
-          <Link href={`/${lang}/exams/result/analytics`}>
-            <TrendingUp className="mr-2 h-4 w-4" />
-            {r?.actions?.viewAnalytics}
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/${lang}/exams/certificates`}>
+              <Award className="mr-2 h-4 w-4" />
+              {lang === "ar" ? "إدارة الشهادات" : "Manage Certificates"}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/${lang}/exams/result/analytics`}>
+              <TrendingUp className="mr-2 h-4 w-4" />
+              {r?.actions?.viewAnalytics}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {examsWithResults.length === 0 ? (
@@ -119,6 +127,14 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                     <Link href={`/${lang}/exams/result/${exam.id}`}>
                       <FileBarChart className="mr-2 h-4 w-4" />
                       {r?.actions?.viewResults}
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      href={`/${lang}/exams/certificates?examId=${exam.id}`}
+                    >
+                      <Award className="mr-2 h-4 w-4" />
+                      {lang === "ar" ? "الشهادات" : "Certificates"}
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm">

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { auth } from "@/auth"
 
 import { getModel, safeQuery } from "@/lib/prisma-guards"
 import { ModalProvider } from "@/components/atom/modal/context"
@@ -15,6 +16,9 @@ export default async function TeacherDetailPage({ params }: Props) {
   const { lang, id } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
+
+  // Get current session to determine ownership
+  const session = await auth()
 
   const teacherModel = getModel("teacher")
   if (!schoolId || !teacherModel) return notFound()
@@ -102,6 +106,9 @@ export default async function TeacherDetailPage({ params }: Props) {
 
   if (!teacher) return notFound()
 
+  // Check if current user is the owner of this profile
+  const isOwner = session?.user?.id === teacher.userId
+
   // Get workload data using type-safe queries
   let workload:
     | {
@@ -153,6 +160,7 @@ export default async function TeacherDetailPage({ params }: Props) {
         dictionary={dictionary.school}
         lang={lang}
         workload={workload}
+        isOwner={isOwner}
       />
     </ModalProvider>
   )
