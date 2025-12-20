@@ -242,11 +242,11 @@ export function FormFooter({
   const groupCount = Object.keys(config.groups).length
 
   return (
-    <footer className="bg-background fixed right-0 bottom-0 left-0">
+    <footer className="bg-background fixed right-0 bottom-0 left-0 px-4 sm:px-6 md:px-12 lg:px-20">
       {/* Progress bars */}
-      <div dir="ltr">
+      <div dir="ltr" className="mx-auto max-w-5xl">
         <div
-          className="gap-1 px-4 sm:gap-2 sm:px-6 md:px-12 lg:px-20"
+          className="gap-1 sm:gap-2"
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${groupCount}, 1fr)`,
@@ -263,7 +263,7 @@ export function FormFooter({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 md:px-12 lg:px-20 rtl:flex-row-reverse">
+      <div className="mx-auto flex max-w-5xl items-center justify-between py-3 sm:py-4 rtl:flex-row-reverse">
         {/* Left side - Logo, Help, Save */}
         <div className="flex items-center gap-1 rtl:flex-row-reverse">
           {showLogo && (
