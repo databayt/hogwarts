@@ -2,19 +2,21 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Globe } from "lucide-react"
 
 import { generateSubdomain } from "@/lib/subdomain"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FormHeading, FormLayout } from "@/components/form"
 import { useLocale } from "@/components/internationalization/use-locale"
 import { FORM_LIMITS } from "@/components/onboarding/config.client"
 import { useHostValidation } from "@/components/onboarding/host-validation-context"
-import { useListing } from "@/components/onboarding/use-listing"
 
-import { TitleCard } from "./card"
-import { TitleForm, type TitleFormRef } from "./form"
+// TEMPORARILY: Removed useListing to isolate the 500 error
+// import { useListing } from "@/components/onboarding/use-listing"
+
+// TEMPORARILY: Removed TitleCard to simplify
+// import { TitleCard } from "./card"
+// TEMPORARILY: Removed TitleForm to isolate the 500 error (imports from ./actions)
+// import { TitleForm, type TitleFormRef } from "./form"
 import { useTitle } from "./use-title"
 
 interface Props {
@@ -27,41 +29,29 @@ export default function TitleContent({ dictionary }: Props) {
   const schoolId = params.id as string
   const { isRTL } = useLocale()
   const { enableNext, disableNext, setCustomNavigation } = useHostValidation()
-  const titleFormRef = useRef<TitleFormRef>(null)
-  const { listing } = useListing()
-  const { data: titleData, loading } = useTitle(schoolId)
+  // TEMPORARILY: Removed TitleForm ref
+  // const titleFormRef = useRef<TitleFormRef>(null)
+  // TEMPORARILY: Removed useListing
+  // const { listing } = useListing()
+  const { data: titleData, loading, error } = useTitle(schoolId)
   const [generatedSubdomain, setGeneratedSubdomain] = useState<string>("")
   const [currentFormTitle, setCurrentFormTitle] = useState<string>("")
 
   const dict = dictionary?.onboarding || {}
-  const currentTitle =
-    currentFormTitle || titleData?.title || listing?.name || ""
+  // TEMPORARILY: Simplified - removed listing?.name
+  const currentTitle = currentFormTitle || titleData?.title || ""
 
   const handleTitleChange = useCallback((title: string) => {
     setCurrentFormTitle(title)
   }, [])
 
+  // TEMPORARILY: Simplified onNext - just navigate
   const onNext = useCallback(async () => {
-    console.log("🚀 [TITLE CONTENT] onNext called", {
+    console.log("🚀 [TITLE CONTENT] onNext called - MINIMAL VERSION", {
       schoolId,
-      hasFormRef: !!titleFormRef.current,
       timestamp: new Date().toISOString(),
     })
-
-    if (titleFormRef.current) {
-      try {
-        await titleFormRef.current.saveAndNext()
-        console.log("✅ [TITLE CONTENT] saveAndNext completed successfully")
-
-        // Navigate to the next step after successful save
-        console.log("🦭 [TITLE CONTENT] Navigating to description step")
-        router.push(`/onboarding/${schoolId}/description`)
-      } catch (error) {
-        console.error("❌ [TITLE CONTENT] Error during saveAndNext:", error)
-      }
-    } else {
-      console.warn("⚠️ [TITLE CONTENT] No form ref available")
-    }
+    router.push(`/onboarding/${schoolId}/description`)
   }, [schoolId, router])
 
   // Enable/disable next button based on title and set custom navigation
@@ -109,6 +99,24 @@ export default function TitleContent({ dictionary }: Props) {
     )
   }
 
+  // TEMPORARILY: Show error state clearly
+  if (error) {
+    return (
+      <div className="w-full p-8">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+          <h2 className="text-lg font-semibold text-red-800">
+            Error Loading Title
+          </h2>
+          <p className="mt-2 text-red-600">{error}</p>
+          <p className="mt-4 text-sm text-gray-600">
+            Debug: schoolId = {schoolId}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // TEMPORARILY: Minimal render to test if page loads
   return (
     <div className="w-full">
       <FormLayout>
@@ -119,16 +127,22 @@ export default function TitleContent({ dictionary }: Props) {
             "This will be your school's official name in the system."
           }
         />
-        <TitleForm
-          ref={titleFormRef}
-          schoolId={schoolId}
-          initialData={{
-            title: currentTitle,
-            subdomain: titleData?.subdomain || "",
-          }}
-          onTitleChange={handleTitleChange}
-          dictionary={dictionary}
-        />
+        {/* TEMPORARILY: Minimal content instead of TitleForm */}
+        <div className="rounded-lg border p-6">
+          <h3 className="text-lg font-semibold">
+            ✅ Title Page Loaded Successfully!
+          </h3>
+          <p className="mt-2 text-gray-600">School ID: {schoolId}</p>
+          <p className="mt-1 text-gray-600">
+            Title Data: {JSON.stringify(titleData)}
+          </p>
+          <p className="mt-1 text-gray-600">
+            Current Title: {currentTitle || "(none)"}
+          </p>
+          <p className="mt-1 text-gray-600">
+            Generated Subdomain: {generatedSubdomain || "(none)"}
+          </p>
+        </div>
       </FormLayout>
     </div>
   )
