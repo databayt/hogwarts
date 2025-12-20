@@ -7,10 +7,9 @@ import type { QuickAction } from "./quick-actions"
  */
 export function getQuickActionsByRole(
   role: string,
-  subdomain?: string
+  _subdomain?: string
 ): QuickAction[] {
-  const baseUrl = subdomain ? `/s/${subdomain}` : ""
-
+  // Subdomain is handled via domain routing, not path
   switch (role.toUpperCase()) {
     case "ADMIN":
     case "DEVELOPER":
@@ -20,25 +19,25 @@ export function getQuickActionsByRole(
           iconName: "BarChart",
           label: "School",
           description: "View school overview",
-          href: `${baseUrl}/school`,
+          href: "/school",
         },
         {
           iconName: "Gear",
           label: "Settings",
           description: "Configure school settings",
-          href: `${baseUrl}/settings`,
+          href: "/settings",
         },
         {
           iconName: "FileText",
           label: "Finance",
           description: "View financial reports",
-          href: `${baseUrl}/finance`,
+          href: "/finance",
         },
         {
           iconName: "Users",
           label: "Staff",
           description: "Manage staff members",
-          href: `${baseUrl}/staff`,
+          href: "/staff",
         },
       ]
 
@@ -49,25 +48,25 @@ export function getQuickActionsByRole(
           iconName: "BarChart",
           label: "Performance",
           description: "Review school performance",
-          href: `${baseUrl}/analytics`,
+          href: "/school",
         },
         {
           iconName: "Users",
           label: "Staff",
           description: "Manage staff and teachers",
-          href: `${baseUrl}/staff`,
+          href: "/staff",
         },
         {
           iconName: "FileText",
           label: "Reports",
           description: "View and generate reports",
-          href: `${baseUrl}/reports`,
+          href: "/finance",
         },
         {
           iconName: "Announcement",
           label: "Announce",
           description: "Create school announcement",
-          href: `${baseUrl}/announcements/new`,
+          href: "/announcements",
         },
       ]
 
@@ -76,27 +75,27 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "Checklist",
-          label: "Mark Attendance",
+          label: "Attendance",
           description: "Take class attendance",
-          href: `${baseUrl}/attendance/mark`,
+          href: "/attendance",
         },
         {
           iconName: "Pencil",
-          label: "Enter Grades",
+          label: "Grades",
           description: "Record student grades",
-          href: `${baseUrl}/grades/enter`,
+          href: "/grades",
         },
         {
           iconName: "Book",
           label: "Assignments",
           description: "Create or review assignments",
-          href: `${baseUrl}/assignments`,
+          href: "/assignments",
         },
         {
           iconName: "Calendar",
-          label: "My Schedule",
+          label: "Schedule",
           description: "View your timetable",
-          href: `${baseUrl}/timetable`,
+          href: "/lessons",
         },
       ]
 
@@ -107,25 +106,25 @@ export function getQuickActionsByRole(
           iconName: "Book",
           label: "Assignments",
           description: "View pending assignments",
-          href: `${baseUrl}/assignments`,
+          href: "/assignments",
         },
         {
           iconName: "Sparkle",
           label: "My Grades",
           description: "Check your grades",
-          href: `${baseUrl}/grades`,
+          href: "/grades",
         },
         {
           iconName: "Calendar",
           label: "Schedule",
           description: "View class schedule",
-          href: `${baseUrl}/timetable`,
+          href: "/lessons",
         },
         {
           iconName: "Chat",
           label: "Messages",
           description: "Send a message",
-          href: `${baseUrl}/messaging`,
+          href: "/messages",
         },
       ]
 
@@ -136,25 +135,25 @@ export function getQuickActionsByRole(
           iconName: "Users",
           label: "My Children",
           description: "View children's profiles",
-          href: `${baseUrl}/children`,
+          href: "/parents",
         },
         {
           iconName: "Sparkle",
           label: "Grades",
           description: "Check children's grades",
-          href: `${baseUrl}/grades`,
+          href: "/grades",
         },
         {
           iconName: "Checklist",
           label: "Attendance",
           description: "View attendance records",
-          href: `${baseUrl}/attendance`,
+          href: "/attendance",
         },
         {
           iconName: "Chat",
           label: "Contact Teacher",
           description: "Message a teacher",
-          href: `${baseUrl}/messaging/new`,
+          href: "/messages",
         },
       ]
 
@@ -163,27 +162,27 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "Notebook",
-          label: "Create Invoice",
-          description: "Generate new invoice",
-          href: `${baseUrl}/finance/invoice/new`,
+          label: "Invoices",
+          description: "Manage invoices",
+          href: "/finance/invoice",
         },
         {
           iconName: "Notebook",
-          label: "Collect Fees",
+          label: "Fees",
           description: "Record fee payments",
-          href: `${baseUrl}/finance/fees`,
+          href: "/finance/fees",
         },
         {
           iconName: "BarChart",
-          label: "Financial Reports",
+          label: "Finance",
           description: "View financial reports",
-          href: `${baseUrl}/finance/reports`,
+          href: "/finance",
         },
         {
           iconName: "Archive",
           label: "Receipts",
           description: "View and print receipts",
-          href: `${baseUrl}/finance/receipt`,
+          href: "/finance/receipt",
         },
       ]
 
@@ -192,27 +191,27 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "TaskList",
-          label: "My Tasks",
-          description: "View assigned tasks",
-          href: `${baseUrl}/tasks`,
+          label: "Dashboard",
+          description: "View dashboard",
+          href: "/dashboard",
         },
         {
-          iconName: "Notebook",
-          label: "Submit Request",
-          description: "Create a new request",
-          href: `${baseUrl}/requests/new`,
+          iconName: "Announcement",
+          label: "Announcements",
+          description: "View announcements",
+          href: "/announcements",
         },
         {
           iconName: "Calendar",
-          label: "My Schedule",
-          description: "View work schedule",
-          href: `${baseUrl}/schedule`,
+          label: "Events",
+          description: "View events",
+          href: "/events",
         },
         {
           iconName: "Users",
-          label: "Directory",
-          description: "Find staff contacts",
-          href: `${baseUrl}/directory`,
+          label: "Staff",
+          description: "Staff directory",
+          href: "/staff",
         },
       ]
 
@@ -223,25 +222,25 @@ export function getQuickActionsByRole(
           iconName: "Announcement",
           label: "Announcements",
           description: "View announcements",
-          href: `${baseUrl}/announcements`,
+          href: "/announcements",
         },
         {
           iconName: "Chat",
           label: "Messages",
           description: "View messages",
-          href: `${baseUrl}/messaging`,
+          href: "/messages",
         },
         {
           iconName: "Calendar",
           label: "Events",
           description: "View upcoming events",
-          href: `${baseUrl}/events`,
+          href: "/events",
         },
         {
           iconName: "Gear",
           label: "Settings",
           description: "Account settings",
-          href: `${baseUrl}/dashboard/settings`,
+          href: "/settings",
         },
       ]
   }
@@ -253,37 +252,35 @@ export function getQuickActionsByRole(
  */
 export function getSecondaryQuickActions(
   role: string,
-  subdomain?: string
+  _subdomain?: string
 ): QuickAction[] {
-  const baseUrl = subdomain ? `/s/${subdomain}` : ""
-
   switch (role.toUpperCase()) {
     case "ADMIN":
     case "DEVELOPER":
       return [
         {
           iconName: "Announcement",
-          label: "New Announcement",
-          description: "Create announcement",
-          href: `${baseUrl}/announcements/new`,
+          label: "Announcements",
+          description: "View announcements",
+          href: "/announcements",
         },
         {
           iconName: "Calendar",
-          label: "Create Event",
+          label: "Events",
           description: "Schedule school event",
-          href: `${baseUrl}/events/new`,
+          href: "/events",
         },
         {
-          iconName: "Archive",
-          label: "Backup Data",
-          description: "Backup school data",
-          href: `${baseUrl}/settings/backup`,
+          iconName: "Users",
+          label: "Classes",
+          description: "Manage classes",
+          href: "/classes",
         },
         {
-          iconName: "ShieldCheck",
-          label: "Security",
-          description: "Review security settings",
-          href: `${baseUrl}/settings/security`,
+          iconName: "Book",
+          label: "Lessons",
+          description: "View lessons",
+          href: "/lessons",
         },
       ]
 
@@ -291,27 +288,27 @@ export function getSecondaryQuickActions(
       return [
         {
           iconName: "Users",
-          label: "My Classes",
+          label: "Classes",
           description: "View assigned classes",
-          href: `${baseUrl}/classes`,
+          href: "/classes",
         },
         {
           iconName: "Chat",
           label: "Messages",
           description: "Send a message",
-          href: `${baseUrl}/messaging`,
+          href: "/messages",
         },
         {
           iconName: "FileText",
-          label: "Lesson Plans",
+          label: "Lessons",
           description: "View lesson plans",
-          href: `${baseUrl}/lessons`,
+          href: "/lessons",
         },
         {
           iconName: "Gear",
-          label: "Preferences",
+          label: "Settings",
           description: "Account settings",
-          href: `${baseUrl}/dashboard/settings`,
+          href: "/settings",
         },
       ]
 
@@ -321,25 +318,25 @@ export function getSecondaryQuickActions(
           iconName: "Book",
           label: "Library",
           description: "Browse library",
-          href: `${baseUrl}/library`,
+          href: "/library",
         },
         {
           iconName: "Lightning",
           label: "Notifications",
           description: "View notifications",
-          href: `${baseUrl}/notifications`,
+          href: "/notifications",
         },
         {
           iconName: "Calendar",
           label: "Events",
           description: "Upcoming events",
-          href: `${baseUrl}/events`,
+          href: "/events",
         },
         {
           iconName: "Gear",
           label: "Settings",
           description: "Account settings",
-          href: `${baseUrl}/dashboard/settings`,
+          href: "/settings",
         },
       ]
 
@@ -349,13 +346,13 @@ export function getSecondaryQuickActions(
           iconName: "Lightning",
           label: "Notifications",
           description: "View notifications",
-          href: `${baseUrl}/notifications`,
+          href: "/notifications",
         },
         {
           iconName: "Gear",
           label: "Settings",
           description: "Account settings",
-          href: `${baseUrl}/dashboard/settings`,
+          href: "/settings",
         },
       ]
   }
