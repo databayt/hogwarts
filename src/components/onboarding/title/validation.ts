@@ -24,12 +24,18 @@ export function createTitleSchema(dictionary: Dictionary) {
       .trim(),
     subdomain: z
       .string()
-      .min(3, { message: v.get("subdomainMinLength", { min: 3 }) })
-      .max(63, { message: v.maxLength(63) })
-      .regex(/^[a-z0-9-]+$/, { message: v.get("subdomainInvalidChars") })
-      .refine((val) => !val.startsWith("-") && !val.endsWith("-"), {
-        message: v.get("subdomainCannotStartOrEndWithHyphen"),
+      .refine((val) => val === "" || (val.length >= 3 && val.length <= 63), {
+        message: v.get("subdomainMinLength", { min: 3 }),
       })
+      .refine((val) => val === "" || /^[a-z0-9-]+$/.test(val), {
+        message: v.get("subdomainInvalidChars"),
+      })
+      .refine(
+        (val) => val === "" || (!val.startsWith("-") && !val.endsWith("-")),
+        {
+          message: v.get("subdomainCannotStartOrEndWithHyphen"),
+        }
+      )
       .optional(),
   })
 }
@@ -46,11 +52,16 @@ export const titleSchema = z.object({
     .trim(),
   subdomain: z
     .string()
-    .min(3, "Subdomain must be at least 3 characters")
-    .max(63, "Subdomain must be no more than 63 characters")
-    .regex(/^[a-z0-9-]+$/, "Only letters, numbers, and hyphens allowed")
     .refine(
-      (val) => !val.startsWith("-") && !val.endsWith("-"),
+      (val) => val === "" || (val.length >= 3 && val.length <= 63),
+      "Subdomain must be between 3 and 63 characters"
+    )
+    .refine(
+      (val) => val === "" || /^[a-z0-9-]+$/.test(val),
+      "Only letters, numbers, and hyphens allowed"
+    )
+    .refine(
+      (val) => val === "" || (!val.startsWith("-") && !val.endsWith("-")),
       "Cannot start or end with hyphen"
     )
     .optional(),

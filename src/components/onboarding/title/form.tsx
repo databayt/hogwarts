@@ -105,8 +105,11 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
               reject(new Error(errorMessage))
             }
           } catch (err) {
+            console.error("❌ [TITLE FORM] Exception caught:", err)
             const errorMessage =
-              dict.unexpectedError || "An unexpected error occurred"
+              err instanceof Error
+                ? err.message
+                : dict.unexpectedError || "An unexpected error occurred"
             ErrorToast(errorMessage)
             reject(err)
           }
