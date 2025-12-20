@@ -3,7 +3,15 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-import { db } from "@/lib/db"
+// TEMPORARILY: Removed top-level db import to isolate 500 error
+// Using dynamic import inside functions that need db
+// import { db } from "@/lib/db"
+
+// Dynamic db import to avoid module-level initialization issues
+async function getDb() {
+  const { db } = await import("@/lib/db")
+  return db
+}
 
 // Removed logger import to isolate 500 error
 
