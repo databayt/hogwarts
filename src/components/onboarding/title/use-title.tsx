@@ -38,7 +38,7 @@ export function useTitle(schoolId: string): UseTitleReturn {
       if (result.success && result.data) {
         setData(result.data)
       } else {
-        setError(result.error || "Failed to load title")
+        setError((result as any).error || "Failed to load title")
       }
     } catch (err) {
       setError("An unexpected error occurred")

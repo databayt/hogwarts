@@ -119,6 +119,7 @@ export async function createListing(
     }
 
     // Validate domain uniqueness
+    const db = await getDb()
     if (sanitizedData.domain !== `school-${Date.now()}`) {
       const existingDomain = await db.school.findFirst({
         where: { domain: sanitizedData.domain },
@@ -153,6 +154,7 @@ export async function updateListing(
     // TEMPORARILY: Bypass auth to isolate 500 error
     console.log("🧪 [UPDATE LISTING] Bypassing auth temporarily...")
 
+    const db = await getDb()
     const listing = await db.school.update({
       where: { id },
       data: {
@@ -230,6 +232,7 @@ export async function getCurrentUserSchool(): Promise<ActionResponse> {
     }
 
     // Otherwise check database for user's school
+    const db = await getDb()
     const user = await db.user.findUnique({
       where: { id: authContext.userId },
       select: { id: true, schoolId: true, email: true },
@@ -262,6 +265,7 @@ export async function getUserSchools(): Promise<ActionResponse> {
   let authContext: any
   try {
     authContext = await getAuthContextLazy()
+    const db = await getDb()
 
     // Get schools associated with this user
     const schools = await db.school.findMany({
@@ -423,6 +427,7 @@ export async function getSchoolSetupStatus(
   try {
     // Validate user has ownership/access to this school
     await requireSchoolOwnershipLazy(schoolId)
+    const db = await getDb()
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
