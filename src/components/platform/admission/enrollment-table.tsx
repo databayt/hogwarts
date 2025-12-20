@@ -1,12 +1,12 @@
 "use client"
 
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Check, Clock, CreditCard, FileText, UserCheck, X } from "lucide-react"
+import { Clock, CreditCard, FileText, UserCheck } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
@@ -235,73 +235,26 @@ export function EnrollmentTable({
                 t?.enrollment?.noEnrollmentsDescription ||
                 "Selected students will appear here"
               }
-              icon={<UserCheck className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/document.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((enrollment) => {
-                const offerBadge = getOfferBadge(enrollment)
-                return (
-                  <GridCard
-                    key={enrollment.id}
-                    title={enrollment.applicantName}
-                    subtitle={`${enrollment.applicationNumber} - ${enrollment.applyingForClass}`}
-                    avatarFallback={enrollment.applicantName
-                      .substring(0, 2)
-                      .toUpperCase()}
-                    status={offerBadge}
-                    metadata={[
-                      {
-                        label: t?.columns?.meritRank || "Rank",
-                        value: enrollment.meritRank
-                          ? `#${enrollment.meritRank}`
-                          : "-",
-                      },
-                      {
-                        label: t?.columns?.campaign || "Campaign",
-                        value: enrollment.campaignName,
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t?.applications?.viewDetails || "View",
-                        onClick: () => handleView(enrollment.id),
-                      },
-                    ]}
-                    actionsLabel={t?.columns?.actions || "Actions"}
-                    onClick={() => handleView(enrollment.id)}
-                  >
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <Badge
-                        variant={
-                          enrollment.applicationFeePaid ? "default" : "outline"
-                        }
-                        className="gap-1 text-xs"
-                      >
-                        {enrollment.applicationFeePaid ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <X className="h-3 w-3" />
-                        )}
-                        {t?.columns?.fees || "Fees"}
-                      </Badge>
-                      <Badge
-                        variant={
-                          enrollment.hasDocuments ? "default" : "outline"
-                        }
-                        className="gap-1 text-xs"
-                      >
-                        {enrollment.hasDocuments ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <X className="h-3 w-3" />
-                        )}
-                        {t?.columns?.documents || "Docs"}
-                      </Badge>
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((enrollment) => (
+                <GridCard
+                  key={enrollment.id}
+                  icon="/anthropic/document.svg"
+                  title={enrollment.applicantName}
+                  description={enrollment.applyingForClass}
+                  onClick={() => handleView(enrollment.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

@@ -1,12 +1,12 @@
 "use client"
 
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import {
@@ -232,7 +232,7 @@ export function OperatorSalesTable({
           onLoadMore={loadMore}
         />
       ) : (
-        <GridContainer>
+        <>
           {data.length === 0 && !isLoading ? (
             <GridEmptyState
               title={lang === "ar" ? "لا يوجد عملاء محتملين" : "No leads"}
@@ -241,60 +241,46 @@ export function OperatorSalesTable({
                   ? "أنشئ عميلاً محتملاً جديداً"
                   : "Create a new lead to get started"
               }
+              icon={
+                <Image
+                  src="/anthropic/users.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            data.map((lead) => (
-              <GridCard
-                key={lead.id}
-                title={lead.name}
-                subtitle={lead.company || lead.email || undefined}
-                badges={[
-                  getStatusBadge(lead.status),
-                  getPriorityBadge(lead.priority),
-                ]}
-                onClick={() => handleEdit(lead.id)}
-                actions={[
-                  {
-                    label: lang === "ar" ? "تعديل" : "Edit",
-                    onClick: () => handleEdit(lead.id),
-                  },
-                  {
-                    label: lang === "ar" ? "حذف" : "Delete",
-                    onClick: () => handleDelete(lead),
-                    variant: "destructive",
-                  },
-                ]}
-                metadata={[
-                  {
-                    label: dictionary?.table?.score || "Score",
-                    value: String(lead.score),
-                  },
-                  {
-                    label: dictionary?.table?.created || "Created",
-                    value: new Date(lead.createdAt).toLocaleDateString(
-                      lang === "ar" ? "ar-SA" : "en-US"
-                    ),
-                  },
-                ]}
-              />
-            ))
+            <GridContainer columns={4}>
+              {data.map((lead) => (
+                <GridCard
+                  key={lead.id}
+                  icon="/anthropic/users.svg"
+                  title={lead.name}
+                  description={lead.company || lead.email || undefined}
+                  onClick={() => handleEdit(lead.id)}
+                />
+              ))}
+            </GridContainer>
           )}
           {hasMore && !isLoading && (
-            <button
-              onClick={loadMore}
-              className="text-muted-foreground hover:text-foreground col-span-full py-2 text-center text-sm"
-            >
-              {dictionary?.loadMore || "Load More"}
-            </button>
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={loadMore}
+                className="hover:bg-accent rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {dictionary?.loadMore || "Load More"}
+              </button>
+            </div>
           )}
           {isLoading && (
-            <div className="col-span-full flex justify-center py-4">
+            <div className="flex justify-center py-4">
               <span className="text-muted-foreground">
                 {dictionary?.loading || "Loading..."}
               </span>
             </div>
           )}
-        </GridContainer>
+        </>
       )}
 
       <Modal

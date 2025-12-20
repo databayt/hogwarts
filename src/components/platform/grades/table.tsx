@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck, TrendingUp } from "lucide-react"
 
@@ -237,62 +238,26 @@ function ResultsTableInner({
             <GridEmptyState
               title={t.allResults || "All Results"}
               description={t.recordNewResult || "Record a new grade result"}
-              icon={<ClipboardCheck className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/graduation-cap.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((result) => {
-                const initials = result.studentName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                const gradeBadge = getGradeColor(result.grade)
-
-                return (
-                  <GridCard
-                    key={result.id}
-                    title={result.studentName}
-                    subtitle={result.assignmentTitle}
-                    avatarFallback={initials}
-                    status={gradeBadge}
-                    metadata={[
-                      { label: t.class, value: result.className },
-                      {
-                        label: t.score,
-                        value: `${result.score}/${result.maxScore}`,
-                      },
-                      {
-                        label: t.percentage,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" />
-                            {result.percentage.toFixed(1)}%
-                          </span>
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t.viewGrade || "View",
-                        onClick: () => handleView(result.id),
-                      },
-                      {
-                        label: t.editGrade || "Edit",
-                        onClick: () => handleEdit(result.id),
-                      },
-                      {
-                        label: t.deleteGrade || "Delete",
-                        onClick: () => handleDelete(result),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => handleView(result.id)}
-                  />
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((result) => (
+                <GridCard
+                  key={result.id}
+                  icon="/anthropic/graduation-cap.svg"
+                  title={result.studentName}
+                  description={`${result.score}/${result.maxScore} (${result.percentage.toFixed(0)}%)`}
+                  onClick={() => handleView(result.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

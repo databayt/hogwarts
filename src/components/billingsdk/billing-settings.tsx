@@ -2,6 +2,7 @@
 
 import { ChevronDown, CreditCard, Plus } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -266,7 +267,7 @@ export function BillingSettings({
   }
 
   return (
-    <div className={`w-full px-4 sm:px-0 ${className || ""}`}>
+    <div className={cn("w-full", className)}>
       <Card className="mx-auto w-full max-w-2xl">
         <CardHeader className="px-4 sm:px-6">
           <CardTitle>Billing Settings</CardTitle>

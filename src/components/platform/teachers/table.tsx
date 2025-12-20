@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BookOpen, UserCheck, Users, UserX } from "lucide-react"
 
@@ -352,98 +353,26 @@ function TeachersTableInner({
             <GridEmptyState
               title={t.allTeachers}
               description={t.addNewTeacher}
-              icon={<Users className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/users.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((teacher) => {
-                const statusBadge = getStatusBadge(teacher.employmentStatus)
-
-                return (
-                  <GridCard
-                    key={teacher.id}
-                    title={teacher.name}
-                    subtitle={teacher.department || t.noDepartment}
-                    avatarUrl={teacher.profilePhotoUrl || undefined}
-                    avatarFallback={getInitials(teacher.name)}
-                    status={statusBadge}
-                    metadata={[
-                      ...(teacher.emailAddress !== "-"
-                        ? [{ label: t.email, value: teacher.emailAddress }]
-                        : []),
-                      ...(teacher.phone
-                        ? [{ label: t.phone, value: teacher.phone }]
-                        : []),
-                    ]}
-                    actions={[
-                      {
-                        label: t.view,
-                        onClick: () =>
-                          router.push(`/${lang}/teachers/${teacher.id}`),
-                      },
-                      { label: t.edit, onClick: () => handleEdit(teacher) },
-                      {
-                        label:
-                          teacher.employmentStatus === "ACTIVE"
-                            ? t.deactivate
-                            : t.activate,
-                        onClick: () => handleToggleStatus(teacher),
-                      },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(teacher),
-                        variant: "destructive" as const,
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() =>
-                      router.push(`/${lang}/teachers/${teacher.id}`)
-                    }
-                  >
-                    {/* Stats row */}
-                    <div className="mt-3 flex items-center gap-4 border-t pt-3">
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="h-3.5 w-3.5 text-blue-500" />
-                        <span className="text-xs font-medium">
-                          {teacher.subjectCount}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {t.subjects}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-3.5 w-3.5 text-green-500" />
-                        <span className="text-xs font-medium">
-                          {teacher.classCount}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {t.classes}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Account status */}
-                    <div className="mt-2">
-                      <Badge
-                        variant="outline"
-                        className={`text-xs ${teacher.hasAccount ? "border-green-300 text-green-700" : "border-gray-300 text-gray-500"}`}
-                      >
-                        {teacher.hasAccount ? (
-                          <>
-                            <UserCheck className="mr-1 h-3 w-3" />
-                            {t.hasAccount}
-                          </>
-                        ) : (
-                          <>
-                            <UserX className="mr-1 h-3 w-3" />
-                            {t.noAccount}
-                          </>
-                        )}
-                      </Badge>
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((teacher) => (
+                <GridCard
+                  key={teacher.id}
+                  icon="/anthropic/users.svg"
+                  title={teacher.name}
+                  description={teacher.department || t.noDepartment}
+                  onClick={() => router.push(`/${lang}/teachers/${teacher.id}`)}
+                />
+              ))}
             </GridContainer>
           )}
 

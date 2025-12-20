@@ -750,6 +750,17 @@ pnpm test:e2e:report         # Show test report
 
 ---
 
+## Development Environment
+
+**HTTPS Localhost (Required)**
+
+- Always use `https://localhost:3000` for local development
+- Required by Facebook OAuth - HTTP won't work
+- Auth cookies use `__Secure-authjs.session-token` prefix on HTTPS
+- Middleware checks both HTTP and HTTPS cookie names
+
+---
+
 ## Common Gotchas
 
 1. **Server/Client Component Boundaries**

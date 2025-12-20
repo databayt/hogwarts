@@ -1,12 +1,11 @@
 "use client"
 
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { FileText, Mail, Phone } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import {
@@ -170,55 +169,26 @@ export function ApplicationsTable({
                 t?.applications?.noApplicationsDescription ||
                 "Applications will appear here"
               }
-              icon={<FileText className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/document.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((application) => {
-                const statusBadge = getStatusBadge(application.status)
-                return (
-                  <GridCard
-                    key={application.id}
-                    title={application.applicantName}
-                    subtitle={application.applicationNumber}
-                    avatarFallback={application.applicantName
-                      .substring(0, 2)
-                      .toUpperCase()}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t?.columns?.class || "Class",
-                        value: application.applyingForClass,
-                      },
-                      {
-                        label: t?.columns?.campaign || "Campaign",
-                        value: application.campaignName,
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t?.applications?.viewDetails || "View",
-                        onClick: () => handleView(application.id),
-                      },
-                    ]}
-                    actionsLabel={t?.columns?.actions || "Actions"}
-                    onClick={() => handleView(application.id)}
-                  >
-                    <div className="text-muted-foreground mt-2 flex gap-3 text-xs">
-                      <span className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        {application.email}
-                      </span>
-                    </div>
-                    {application.meritRank && (
-                      <Badge variant="secondary" className="mt-2">
-                        {t?.columns?.meritRank || "Rank"}: #
-                        {application.meritRank}
-                      </Badge>
-                    )}
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((application) => (
+                <GridCard
+                  key={application.id}
+                  icon="/anthropic/document.svg"
+                  title={application.applicantName}
+                  description={application.applyingForClass}
+                  onClick={() => handleView(application.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

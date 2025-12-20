@@ -43,7 +43,7 @@ export default function CardsContent({ dictionary, lang }: CardsContentProps) {
             </div>
           </div>
           {/* Two-column grid for form cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
             <div className="flex flex-col gap-4">
               <CardsForms />
               <CardsTeamMembers />

@@ -514,7 +514,7 @@ export function StreamCourseDetailContent({
                 {/* Chapter Description */}
                 {chapter.description && !isExpanded && (
                   <div
-                    className={cn("px-6 pb-6", isRTL && "text-right")}
+                    className="px-6 pb-6 text-start"
                     style={{ color: colors.muted }}
                   >
                     <p className="text-sm">{chapter.description}</p>
@@ -537,10 +537,7 @@ export function StreamCourseDetailContent({
                       >
                         {chapter.description && (
                           <p
-                            className={cn(
-                              "py-4 text-sm",
-                              isRTL && "text-right"
-                            )}
+                            className="py-4 text-start text-sm"
                             style={{ color: colors.muted }}
                           >
                             {chapter.description}
@@ -609,10 +606,7 @@ export function StreamCourseDetailContent({
       {/* Instructor Section */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <h2
-          className={cn(
-            "text-2xl font-semibold sm:text-3xl",
-            isRTL && "text-right"
-          )}
+          className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
           {isRTL ? "المدرب" : "Instructor"}
@@ -634,7 +628,7 @@ export function StreamCourseDetailContent({
               CI
             </div>
           </div>
-          <div className={isRTL ? "text-right" : "text-left"}>
+          <div className="text-start">
             <h3 className="font-semibold" style={{ color: colors.text }}>
               {isRTL ? "مدرب الدورة" : "Course Instructor"}
             </h3>

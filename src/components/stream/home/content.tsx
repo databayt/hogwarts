@@ -202,10 +202,10 @@ export function StreamHomeContent({
         <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16 lg:rtl:flex-row-reverse">
           {/* Text Content */}
           <div className="flex flex-1 flex-col items-start space-y-6 text-start">
-            <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
+            <h1 className="text-4xl leading-none font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
               {dictionary?.home?.title || "Lumos"}
               <br />
-              <span className="mt-2 block text-3xl font-semibold md:text-4xl lg:text-5xl">
+              <span className="mt-2 block text-2xl font-semibold sm:text-3xl md:text-4xl lg:text-5xl">
                 {dictionary?.home?.description || "Shine a light."}
               </span>
             </h1>

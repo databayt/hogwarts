@@ -1,13 +1,11 @@
 "use client"
 
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Building2, Star, Users } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import {
@@ -290,71 +288,26 @@ export function LeadsTable({
             <GridEmptyState
               title={t.leads}
               description={t.addNewLead}
-              icon={<Users className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/users.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((lead) => {
-                const initials = lead.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-
-                return (
-                  <GridCard
-                    key={lead.id}
-                    title={lead.name}
-                    subtitle={lead.company || undefined}
-                    avatarFallback={initials}
-                    status={{
-                      label: t[lead.status as keyof typeof t] || lead.status,
-                      variant: "default",
-                    }}
-                    metadata={[
-                      ...(lead.company
-                        ? [
-                            {
-                              label: isRTL ? "الشركة" : "Company",
-                              value: lead.company,
-                            },
-                          ]
-                        : []),
-                      { label: t.score, value: String(lead.score) },
-                    ]}
-                    actions={[
-                      { label: t.view, onClick: () => handleView(lead) },
-                      { label: t.edit, onClick: () => handleEdit(lead.id) },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(lead),
-                        variant: "destructive" as const,
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => handleView(lead)}
-                  >
-                    <div className="mt-2 flex items-center gap-2">
-                      <Badge
-                        className={cn("text-xs", STATUS_COLORS[lead.status])}
-                      >
-                        {t[lead.status as keyof typeof t] || lead.status}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "gap-1 text-xs",
-                          getScoreColor(lead.score)
-                        )}
-                      >
-                        <Star className="h-3 w-3" />
-                        {lead.score}
-                      </Badge>
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((lead) => (
+                <GridCard
+                  key={lead.id}
+                  icon="/anthropic/users.svg"
+                  title={lead.name}
+                  description={lead.company || undefined}
+                  onClick={() => handleView(lead)}
+                />
+              ))}
             </GridContainer>
           )}
 

@@ -1,12 +1,11 @@
 "use client"
 
 import { useCallback, useDeferredValue, useMemo, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Briefcase, Calendar, Users } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { useModal } from "@/components/atom/modal/context"
 import Modal from "@/components/atom/modal/modal"
 import type { Locale } from "@/components/internationalization/config"
@@ -159,46 +158,26 @@ export function CampaignsTable({
                 t?.campaigns?.createCampaign ||
                 "Create a campaign to get started"
               }
-              icon={<Briefcase className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/document.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((campaign) => {
-                const statusBadge = getStatusBadge(campaign.status)
-                return (
-                  <GridCard
-                    key={campaign.id}
-                    title={campaign.name}
-                    subtitle={campaign.academicYear}
-                    avatarFallback={campaign.name.substring(0, 2).toUpperCase()}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t?.nav?.applications || "Applications",
-                        value: String(campaign.applicationsCount),
-                      },
-                      {
-                        label: t?.campaigns?.totalSeats || "Seats",
-                        value: String(campaign.totalSeats),
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t?.campaigns?.overview || "View",
-                        onClick: () => handleView(campaign.id),
-                      },
-                    ]}
-                    actionsLabel={t?.columns?.actions || "Actions"}
-                    onClick={() => handleView(campaign.id)}
-                  >
-                    <div className="text-muted-foreground mt-2 flex gap-2 text-xs">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(campaign.startDate).toLocaleDateString()} -{" "}
-                      {new Date(campaign.endDate).toLocaleDateString()}
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((campaign) => (
+                <GridCard
+                  key={campaign.id}
+                  icon="/anthropic/document.svg"
+                  title={campaign.name}
+                  description={campaign.academicYear}
+                  onClick={() => handleView(campaign.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

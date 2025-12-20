@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BookOpen, Users } from "lucide-react"
 
@@ -247,55 +248,27 @@ function ClassesTableInner({
             <GridEmptyState
               title={t.allClasses}
               description={t.addNewClass}
-              icon={<BookOpen className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/book-open.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
+            <GridContainer columns={4}>
               {data.map((classItem) => {
                 const displayName = getLocalizedClassName(classItem, lang)
                 const displaySubject = getLocalizedSubjectName(classItem, lang)
-                const initials = displayName
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
 
                 return (
                   <GridCard
                     key={classItem.id}
+                    icon="/anthropic/book-open.svg"
                     title={displayName}
-                    subtitle={displaySubject}
-                    avatarFallback={initials}
-                    metadata={[
-                      { label: t.teacher, value: classItem.teacherName },
-                      { label: t.term, value: classItem.termName },
-                      {
-                        label: t.enrolled,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {classItem.enrolledStudents}/{classItem.maxCapacity}
-                          </span>
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t.viewClass,
-                        onClick: () => handleView(classItem.id),
-                      },
-                      {
-                        label: t.editClass,
-                        onClick: () => handleEdit(classItem.id),
-                      },
-                      {
-                        label: t.deleteClass,
-                        onClick: () => handleDelete(classItem),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
+                    description={displaySubject}
                     onClick={() => handleView(classItem.id)}
                   />
                 )

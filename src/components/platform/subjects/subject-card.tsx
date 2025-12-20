@@ -52,16 +52,15 @@ function SubjectCardInner({
     <Link
       href={`/${lang}/subjects/${id}`}
       className={cn(
-        "group hover:bg-muted/50 flex items-center gap-3 border transition-colors",
-        isRTL ? "flex-row-reverse rounded-r-lg" : "rounded-l-lg",
+        "group hover:bg-muted/50 flex items-center gap-3 rounded-s-lg border transition-colors",
+        isRTL && "flex-row-reverse",
         className
       )}
     >
       {/* Image - rounded on outer edge, sharp on text side */}
       <div
         className={cn(
-          "bg-muted relative h-14 w-14 flex-shrink-0 overflow-hidden",
-          isRTL ? "rounded-r-lg" : "rounded-l-lg"
+          "bg-muted relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-s-lg"
         )}
       >
         <Image
@@ -100,8 +99,8 @@ export const SubjectCard = React.memo(SubjectCardInner)
  */
 export function SubjectCardSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-l-lg border">
-      <Skeleton className="h-14 w-14 flex-shrink-0 rounded-l-lg" />
+    <div className="flex items-center gap-3 rounded-s-lg border">
+      <Skeleton className="h-14 w-14 flex-shrink-0 rounded-s-lg" />
       <Skeleton className="h-4 w-24" />
     </div>
   )

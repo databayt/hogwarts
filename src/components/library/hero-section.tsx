@@ -32,7 +32,7 @@ export function LibraryHeroSection({
       <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12 lg:rtl:flex-row-reverse">
         {/* Text Content */}
         <div className="flex flex-col items-start space-y-6 text-start lg:items-start lg:text-start">
-          <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
+          <h1 className="text-4xl leading-none font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
             Revelio
             <br />
             <span className="mt-2 block text-3xl font-semibold md:text-4xl lg:text-5xl">
@@ -63,8 +63,8 @@ export function LibraryHeroSection({
         </div>
 
         {/* Animated Book */}
-        <div className="-ml-5 shrink-0">
-          <LibraryAnimation className="h-64 w-64 lg:h-80 lg:w-80" />
+        <div className="-ms-5 shrink-0">
+          <LibraryAnimation className="h-48 w-48 sm:h-64 sm:w-64 lg:h-80 lg:w-80" />
         </div>
       </div>
     </section>

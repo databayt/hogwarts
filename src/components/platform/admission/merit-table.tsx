@@ -7,12 +7,12 @@ import {
   useState,
   useTransition,
 } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Award, Clock, RefreshCw, TrendingUp, Users } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
@@ -253,56 +253,26 @@ export function MeritTable({
                 t?.meritList?.noRankedDescription ||
                 "Generate a merit list to see ranked applications"
               }
-              icon={<Award className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/graduation-cap.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((merit) => {
-                const statusBadge = getStatusBadge(merit.status)
-                return (
-                  <GridCard
-                    key={merit.id}
-                    title={merit.applicantName}
-                    subtitle={`#${merit.meritRank} - ${merit.applicationNumber}`}
-                    avatarFallback={`#${merit.meritRank}`}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t?.columns?.score || "Score",
-                        value: merit.meritScore
-                          ? parseFloat(merit.meritScore).toFixed(2)
-                          : "-",
-                      },
-                      {
-                        label: t?.columns?.category || "Category",
-                        value: merit.category || "-",
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t?.meritList?.viewApplication || "View",
-                        onClick: () => handleView(merit.id),
-                      },
-                    ]}
-                    actionsLabel={t?.columns?.actions || "Actions"}
-                    onClick={() => handleView(merit.id)}
-                  >
-                    <div className="mt-2 flex gap-2">
-                      {merit.entranceScore && (
-                        <Badge variant="outline" className="text-xs">
-                          Entrance: {parseFloat(merit.entranceScore).toFixed(1)}
-                        </Badge>
-                      )}
-                      {merit.interviewScore && (
-                        <Badge variant="outline" className="text-xs">
-                          Interview:{" "}
-                          {parseFloat(merit.interviewScore).toFixed(1)}
-                        </Badge>
-                      )}
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((merit) => (
+                <GridCard
+                  key={merit.id}
+                  icon="/anthropic/graduation-cap.svg"
+                  title={merit.applicantName}
+                  description={`#${merit.meritRank}`}
+                  onClick={() => handleView(merit.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

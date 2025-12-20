@@ -24,7 +24,7 @@ export function TeachingHeroSection({
         >
           {/* Hero Image */}
           <div
-            className="relative flex min-h-[180px] min-w-[180px] items-center justify-center rounded-xl bg-pink-500 p-4 md:min-h-[200px] md:min-w-[200px]"
+            className="relative flex min-h-[140px] min-w-[140px] items-center justify-center rounded-xl bg-pink-500 p-4 sm:min-h-[180px] sm:min-w-[180px] md:min-h-[200px] md:min-w-[200px]"
             style={{ backgroundColor: "#D25F87" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -38,7 +38,7 @@ export function TeachingHeroSection({
 
           {/* Text Content */}
           <div className="space-y-3 text-start">
-            <h2 className="text-4xl leading-tight font-bold md:text-5xl">
+            <h2 className="text-3xl leading-tight font-bold sm:text-4xl md:text-5xl">
               {dictionary?.teachingHero?.title || "Come teach with us"}
             </h2>
             <p className="text-muted-foreground max-w-md text-lg">

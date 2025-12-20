@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { BookOpen, Clock, User } from "lucide-react"
 
@@ -272,65 +273,26 @@ function LessonsTableInner({
             <GridEmptyState
               title={t.allLessons}
               description={t.addNewLesson}
-              icon={<BookOpen className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/book-open.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((lesson) => {
-                const initials = lesson.title
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                const statusBadge = getStatusBadge(lesson.status)
-
-                return (
-                  <GridCard
-                    key={lesson.id}
-                    title={lesson.title}
-                    subtitle={lesson.className}
-                    avatarFallback={initials}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t.teacher,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {lesson.teacherName}
-                          </span>
-                        ),
-                      },
-                      { label: t.subject, value: lesson.subjectName },
-                      {
-                        label: t.date,
-                        value: new Date(lesson.lessonDate).toLocaleDateString(
-                          lang === "ar" ? "ar-SA" : "en-US"
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      { label: t.view, onClick: () => handleView(lesson.id) },
-                      { label: t.edit, onClick: () => handleEdit(lesson.id) },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(lesson),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => handleView(lesson.id)}
-                  >
-                    <div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        {lesson.startTime} - {lesson.endTime}
-                      </span>
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((lesson) => (
+                <GridCard
+                  key={lesson.id}
+                  icon="/anthropic/book-open.svg"
+                  title={lesson.title}
+                  description={lesson.subjectName}
+                  onClick={() => handleView(lesson.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

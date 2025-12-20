@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { GraduationCap, User } from "lucide-react"
 
 import { usePlatformData } from "@/hooks/use-platform-data"
 import { usePlatformView } from "@/hooks/use-platform-view"
@@ -353,67 +353,28 @@ function StudentsTableInner({
             <GridEmptyState
               title={t.allStudents}
               description={t.addNewStudent}
-              icon={<GraduationCap className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/users.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((student) => {
-                const statusBadge = getStatusBadge(student.status)
-                const initials = student.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-
-                return (
-                  <GridCard
-                    key={student.id}
-                    title={student.name}
-                    subtitle={
-                      student.className !== "-" ? student.className : undefined
-                    }
-                    avatarFallback={initials}
-                    status={statusBadge}
-                    metadata={[
-                      { label: t.class, value: student.className },
-                      {
-                        label: t.created,
-                        value: new Date(student.createdAt).toLocaleDateString(
-                          lang === "ar" ? "ar-SA" : "en-US"
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      ...(student.userId
-                        ? [
-                            {
-                              label: t.view,
-                              onClick: () => handleView(student),
-                            },
-                          ]
-                        : []),
-                      { label: t.edit, onClick: () => handleEdit(student.id) },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(student),
-                        variant: "destructive" as const,
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => student.userId && handleView(student)}
-                  >
-                    {!student.userId && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <Badge variant="outline" className="gap-1 text-xs">
-                          <User className="h-3 w-3" />
-                          {t.noAccount}
-                        </Badge>
-                      </div>
-                    )}
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((student) => (
+                <GridCard
+                  key={student.id}
+                  icon="/anthropic/users.svg"
+                  title={student.name}
+                  description={
+                    student.className !== "-" ? student.className : undefined
+                  }
+                  onClick={() => handleView(student)}
+                />
+              ))}
             </GridContainer>
           )}
 

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { CircleCheck, CircleX, Mail, Users } from "lucide-react"
 
@@ -262,64 +263,26 @@ function ParentsTableInner({
             <GridEmptyState
               title={t.allParents}
               description={t.addNewParent}
-              icon={<Users className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/users.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((parent) => {
-                const initials = parent.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                const statusBadge = getStatusBadge(parent.status)
-
-                return (
-                  <GridCard
-                    key={parent.id}
-                    title={parent.name}
-                    subtitle={parent.emailAddress}
-                    avatarFallback={initials}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t.email,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {parent.emailAddress}
-                          </span>
-                        ),
-                      },
-                      {
-                        label: t.status,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            {parent.status === "active" ? (
-                              <CircleCheck className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <CircleX className="text-muted-foreground h-3 w-3" />
-                            )}
-                            {parent.status === "active" ? t.active : t.inactive}
-                          </span>
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      { label: t.view, onClick: () => handleView(parent) },
-                      { label: t.edit, onClick: () => handleEdit(parent.id) },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(parent),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => handleView(parent)}
-                  />
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((parent) => (
+                <GridCard
+                  key={parent.id}
+                  icon="/anthropic/users.svg"
+                  title={parent.name}
+                  description={parent.emailAddress}
+                  onClick={() => handleView(parent)}
+                />
+              ))}
             </GridContainer>
           )}
 

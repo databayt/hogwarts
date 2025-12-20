@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useMemo, useState, useTransition } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Calendar, MapPin, Users } from "lucide-react"
 
@@ -265,76 +266,26 @@ function EventsTableInner({
             <GridEmptyState
               title={t.allEvents}
               description={t.addNewEvent}
-              icon={<Calendar className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/category-01.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
-              {data.map((event) => {
-                const initials = event.title
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-                const statusBadge = getStatusBadge(event.status)
-
-                return (
-                  <GridCard
-                    key={event.id}
-                    title={event.title}
-                    subtitle={new Date(event.eventDate).toLocaleDateString()}
-                    avatarFallback={initials}
-                    status={statusBadge}
-                    metadata={[
-                      {
-                        label: t.type,
-                        value: event.eventType.replace("_", " "),
-                      },
-                      {
-                        label: t.location,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.location}
-                          </span>
-                        ),
-                      },
-                      {
-                        label: t.attendees,
-                        value: (
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {event.currentAttendees}
-                            {event.maxAttendees ? `/${event.maxAttendees}` : ""}
-                          </span>
-                        ),
-                      },
-                    ]}
-                    actions={[
-                      { label: t.view, onClick: () => handleView(event.id) },
-                      { label: t.edit, onClick: () => handleEdit(event.id) },
-                      {
-                        label: t.delete,
-                        onClick: () => handleDelete(event),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
-                    onClick={() => handleView(event.id)}
-                  >
-                    <div className="text-muted-foreground mt-2 flex items-center gap-2 text-xs">
-                      <span>
-                        {event.startTime} - {event.endTime}
-                      </span>
-                      {event.isPublic && (
-                        <Badge variant="outline" className="text-xs">
-                          Public
-                        </Badge>
-                      )}
-                    </div>
-                  </GridCard>
-                )
-              })}
+            <GridContainer columns={4}>
+              {data.map((event) => (
+                <GridCard
+                  key={event.id}
+                  icon="/anthropic/category-01.svg"
+                  title={event.title}
+                  description={new Date(event.eventDate).toLocaleDateString()}
+                  onClick={() => handleView(event.id)}
+                />
+              ))}
             </GridContainer>
           )}
 

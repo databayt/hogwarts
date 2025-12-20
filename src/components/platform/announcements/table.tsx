@@ -8,6 +8,7 @@ import {
   useState,
   useTransition,
 } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Megaphone, Pin, Star } from "lucide-react"
 
@@ -324,82 +325,27 @@ function AnnouncementsTableInner({
             <GridEmptyState
               title={t.allAnnouncements}
               description={t.createNewAnnouncement}
-              icon={<Megaphone className="h-12 w-12" />}
+              icon={
+                <Image
+                  src="/anthropic/news.svg"
+                  alt=""
+                  width={48}
+                  height={48}
+                />
+              }
             />
           ) : (
-            <GridContainer columns={3}>
+            <GridContainer columns={4}>
               {data.map((announcement) => {
-                const scopeBadge = getScopeBadge(announcement.scope)
                 const displayTitle = getLocalizedTitle(announcement, lang)
                 return (
                   <GridCard
                     key={announcement.id}
+                    icon="/anthropic/news.svg"
                     title={displayTitle}
-                    subtitle={new Date(
-                      announcement.createdAt
-                    ).toLocaleDateString()}
-                    avatarFallback={displayTitle.substring(0, 2).toUpperCase()}
-                    status={{
-                      label: announcement.published ? t.published : t.draft,
-                      variant: announcement.published ? "default" : "outline",
-                    }}
-                    badges={[
-                      scopeBadge,
-                      ...(announcement.pinned
-                        ? [{ label: "Pinned", variant: "secondary" as const }]
-                        : []),
-                      ...(announcement.featured
-                        ? [{ label: "Featured", variant: "default" as const }]
-                        : []),
-                    ]}
-                    metadata={[
-                      { label: t.scope, value: scopeBadge.label },
-                      {
-                        label: t.created,
-                        value: new Date(
-                          announcement.createdAt
-                        ).toLocaleDateString(),
-                      },
-                    ]}
-                    actions={[
-                      {
-                        label: t.view,
-                        onClick: () => handleView(announcement.id),
-                      },
-                      {
-                        label: lang === "ar" ? "تعديل" : "Edit",
-                        onClick: () => handleEdit(announcement.id),
-                      },
-                      {
-                        label: announcement.published ? t.unpublish : t.publish,
-                        onClick: () => handleTogglePublish(announcement),
-                      },
-                      {
-                        label: lang === "ar" ? "حذف" : "Delete",
-                        onClick: () => handleDelete(announcement),
-                        variant: "destructive",
-                      },
-                    ]}
-                    actionsLabel={t.actions}
+                    description={announcement.published ? t.published : t.draft}
                     onClick={() => handleView(announcement.id)}
-                  >
-                    {(announcement.pinned || announcement.featured) && (
-                      <div className="mt-2 flex gap-2">
-                        {announcement.pinned && (
-                          <Badge variant="secondary" className="gap-1">
-                            <Pin className="h-3 w-3" />
-                            Pinned
-                          </Badge>
-                        )}
-                        {announcement.featured && (
-                          <Badge variant="default" className="gap-1">
-                            <Star className="h-3 w-3" />
-                            Featured
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </GridCard>
+                  />
                 )
               })}
             </GridContainer>
