@@ -161,29 +161,47 @@ export async function updateListing(
 }
 
 export async function getListing(id: string): Promise<ActionResponse> {
+  console.log("🧪 [GET LISTING] ULTRA MINIMAL TEST", { schoolId: id })
+
+  // STEP 1: Return hardcoded response to test if server action works at all
+  // If this fails, the issue is with the module bundling
+  // If this works, the issue is with Prisma/db
+
   try {
-    console.log("getListing called", { schoolId: id })
+    // Return hardcoded school data for testing
+    console.log("🧪 [GET LISTING] Returning hardcoded response...")
 
-    // TEMPORARILY: Bypass auth and fetch school directly to isolate issue
-    console.log("🧪 [GET LISTING] Bypassing auth temporarily...")
+    // UNCOMMENT BELOW TO TEST WITH DB ONCE HARDCODED WORKS:
+    // const school = await db.school.findUnique({ where: { id } })
+    // if (!school) return createActionResponse(undefined, { message: "School not found" })
+    // return createActionResponse(school)
 
-    const school = await db.school.findUnique({
-      where: { id },
-    })
-
-    if (!school) {
-      console.log("🧪 [GET LISTING] School not found:", id)
-      return createActionResponse(undefined, { message: "School not found" })
+    return {
+      success: true,
+      data: {
+        id: id,
+        name: "Test School",
+        domain: "test",
+        logoUrl: null,
+        address: null,
+        phoneNumber: null,
+        email: null,
+        website: null,
+        timezone: null,
+        planType: null,
+        maxStudents: null,
+        maxTeachers: null,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     }
-
-    console.log("🧪 [GET LISTING] School found:", {
-      id: school.id,
-      name: school.name,
-    })
-    return createActionResponse(school)
   } catch (error) {
-    console.error("Failed to get listing", error, { schoolId: id })
-    return createActionResponse(undefined, error)
+    console.error("🧪 [GET LISTING] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    }
   }
 }
 
