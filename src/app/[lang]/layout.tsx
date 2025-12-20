@@ -63,7 +63,17 @@ export default async function LocaleLayout({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params
-  const session = await auth()
+
+  // Wrap auth() in try-catch to prevent layout failures during SSR
+  // This can happen if cookies() or other Next.js context isn't available
+  let session = null
+  try {
+    session = await auth()
+  } catch (error) {
+    console.error("[LAYOUT] auth() failed:", error)
+    // Continue with null session - page may still work for public routes
+  }
+
   const config = localeConfig[lang as Locale]
   const isRTL = config.dir === "rtl"
 
