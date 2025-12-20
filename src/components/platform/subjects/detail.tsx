@@ -25,12 +25,8 @@ interface SubjectDetailResult {
   } | null
   classes?: {
     id: string
-    yearLevel: {
-      id: string
-      levelName: string
-      levelNameAr: string | null
-      levelOrder: number
-    } | null
+    name: string
+    nameAr: string | null
     lessons: {
       id: string
       title: string
@@ -74,44 +70,23 @@ export function SubjectDetailContent({
     )
   }
 
-  // Group lessons by year level
-  const lessonsByYear = useMemo(() => {
-    const grouped = new Map<
-      string,
-      {
-        level: {
-          id: string
-          levelName: string
-          levelNameAr: string | null
-          levelOrder: number
-        }
-        lessons: {
-          id: string
-          title: string
-          description: string | null
-          status: string
-        }[]
-      }
-    >()
-
-    data.classes?.forEach((cls) => {
-      if (cls.yearLevel && cls.lessons?.length) {
-        const key = cls.yearLevel.id
-        if (!grouped.has(key)) {
-          grouped.set(key, { level: cls.yearLevel, lessons: [] })
-        }
-        grouped.get(key)!.lessons.push(...cls.lessons)
-      }
-    })
-
-    return Array.from(grouped.values()).sort(
-      (a, b) => a.level.levelOrder - b.level.levelOrder
+  // Group lessons by class
+  const lessonsByClass = useMemo(() => {
+    return (
+      data.classes
+        ?.filter((cls) => cls.lessons?.length > 0)
+        .map((cls) => ({
+          id: cls.id,
+          name: cls.name,
+          nameAr: cls.nameAr,
+          lessons: cls.lessons,
+        })) ?? []
     )
   }, [data.classes])
 
   // Count total topics for hero
-  const totalTopics = lessonsByYear.reduce(
-    (sum, { lessons }) => sum + lessons.length,
+  const totalTopics = lessonsByClass.reduce(
+    (sum, cls) => sum + cls.lessons.length,
     0
   )
 
@@ -125,15 +100,15 @@ export function SubjectDetailContent({
         lang={lang}
       />
 
-      {/* Year Sections with Topics */}
-      {lessonsByYear.length > 0 ? (
+      {/* Class Sections with Topics */}
+      {lessonsByClass.length > 0 ? (
         <div className="space-y-8">
-          {lessonsByYear.map(({ level, lessons }) => (
+          {lessonsByClass.map((cls) => (
             <YearSection
-              key={level.id}
-              levelName={level.levelName}
-              levelNameAr={level.levelNameAr}
-              lessons={lessons}
+              key={cls.id}
+              levelName={cls.name}
+              levelNameAr={cls.nameAr}
+              lessons={cls.lessons}
               lang={lang}
               subjectName={data.subjectName}
             />
@@ -157,7 +132,7 @@ export function SubjectDetailLoading() {
       {/* Hero skeleton */}
       <SubjectHeroSkeleton />
 
-      {/* Year sections skeleton */}
+      {/* Class sections skeleton */}
       <div className="space-y-8">
         <YearSectionSkeleton />
         <YearSectionSkeleton />

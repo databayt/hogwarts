@@ -232,12 +232,8 @@ type SubjectSelectResult = {
   } | null
   classes: {
     id: string
-    yearLevel: {
-      id: string
-      levelName: string
-      levelNameAr: string | null
-      levelOrder: number
-    } | null
+    name: string
+    nameAr: string | null
     lessons: {
       id: string
       title: string
@@ -280,14 +276,8 @@ export async function getSubject(input: {
         classes: {
           select: {
             id: true,
-            yearLevel: {
-              select: {
-                id: true,
-                levelName: true,
-                levelNameAr: true,
-                levelOrder: true,
-              },
-            },
+            name: true,
+            nameAr: true,
             lessons: {
               select: {
                 id: true,
