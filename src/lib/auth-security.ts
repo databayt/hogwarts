@@ -80,7 +80,19 @@ export async function getAuthContext(): Promise<AuthContext> {
 
   // WHY: Call auth() once - it's async and shouldn't be called multiple times
   console.log("🔍 [DEBUG] Step 1: Calling auth() function...")
-  const session = await auth()
+
+  let session
+  try {
+    session = await auth()
+  } catch (authError) {
+    console.error("❌ [DEBUG] auth() call failed:", {
+      error: authError instanceof Error ? authError.message : String(authError),
+      errorType: authError?.constructor?.name,
+      stack: authError instanceof Error ? authError.stack : undefined,
+      timestamp: new Date().toISOString(),
+    })
+    throw new AuthError("Authentication service error", "AUTH_SERVICE_ERROR")
+  }
 
   console.log("📋 [DEBUG] Step 1 - Raw session data:", {
     hasSession: !!session,
