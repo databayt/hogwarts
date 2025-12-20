@@ -140,7 +140,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
 
     return (
       <Form {...form}>
-        <div className={`space-y-6 ${isRTL ? "rtl" : "ltr"}`}>
+        <div className="space-y-6">
           <FormField
             control={form.control}
             name="title"
@@ -153,15 +153,13 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
                       dict.schoolNamePlaceholder ||
                       "e.g., Al-Azhar International School"
                     }
-                    className={`border-input focus:border-ring h-[80px] w-full resize-none rounded-lg border p-4 text-sm transition-colors focus:outline-none sm:h-[100px] sm:p-6 sm:text-base ${isRTL ? "text-end" : "text-start"}`}
+                    className="border-input focus:border-ring h-[80px] w-full resize-none rounded-lg border p-4 text-start text-sm transition-colors focus:outline-none sm:h-[100px] sm:p-6 sm:text-base"
                     maxLength={maxLength}
                     disabled={isPending}
                     dir={isRTL ? "rtl" : "ltr"}
                   />
                 </FormControl>
-                <div
-                  className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                >
+                <div className="flex items-center justify-between rtl:flex-row-reverse">
                   <FormMessage />
                   <div className="text-muted-foreground text-xs sm:text-sm">
                     {titleValue.length}/{maxLength}
@@ -177,9 +175,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(
             name="subdomain"
             render={({ field }) => (
               <FormItem>
-                <FormLabel
-                  className={`text-muted-foreground text-sm ${isRTL ? "text-end" : "text-start"}`}
-                >
+                <FormLabel className="text-muted-foreground text-start text-sm">
                   {dict.schoolAvailableAt ||
                     "Your school will be available at:"}
                 </FormLabel>

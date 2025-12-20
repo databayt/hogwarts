@@ -44,11 +44,9 @@ export function CurriculumSection({
   return (
     <section className="mb-16 rounded-xl bg-[#6A9BCC] py-16">
       <div className="px-6 text-white">
-        <div
-          className={`flex flex-col items-start gap-12 md:flex-row ${isRTL ? "flex-row-reverse" : ""}`}
-        >
+        <div className="flex flex-col items-start gap-12 md:flex-row md:rtl:flex-row-reverse">
           {/* Title Section */}
-          <div className={`md:w-1/2 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className="text-start md:w-1/2">
             <h2 className="mb-4 text-4xl leading-tight font-bold">
               {dictionary?.curriculum?.title || "Expand curriculum"}
             </h2>
@@ -61,7 +59,7 @@ export function CurriculumSection({
           {/* Icons Grid 2x2 */}
           <div className="grid grid-cols-2 gap-10 md:w-1/2">
             {features.map((feature, index) => (
-              <div key={index} className={isRTL ? "text-right" : "text-left"}>
+              <div key={index} className="text-start">
                 {/* Icon */}
                 <div className="mb-4 flex h-14 items-end">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

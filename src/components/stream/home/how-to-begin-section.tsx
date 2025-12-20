@@ -87,19 +87,9 @@ export function HowToBeginSection({
       </div>
 
       {/* Content - Text left (40%), Image right (60%) */}
-      <div
-        className={cn(
-          "flex flex-col items-center gap-8 md:flex-row md:gap-16",
-          isRTL && "md:flex-row-reverse"
-        )}
-      >
+      <div className="flex flex-col items-center gap-8 md:flex-row md:gap-16 md:rtl:flex-row-reverse">
         {/* Text Content */}
-        <div
-          className={cn(
-            "space-y-4 md:w-[40%]",
-            isRTL ? "text-right" : "text-left"
-          )}
-        >
+        <div className="space-y-4 text-start md:w-[40%]">
           <p className="text-muted-foreground leading-relaxed">
             {dictionary?.howToBegin?.[`description${activeStep + 1}`] ||
               steps[activeStep].description}

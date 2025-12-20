@@ -12,17 +12,11 @@ interface LibraryHeroProps {
 }
 
 export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
-  const isRTL = lang === "ar"
-
   return (
     <section className="relative">
-      <div
-        className={`flex flex-col items-center gap-8 lg:flex-row lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}
-      >
+      <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16 lg:rtl:flex-row-reverse">
         {/* Text Content */}
-        <div
-          className={`flex flex-1 flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}
-        >
+        <div className="flex flex-1 flex-col items-start space-y-6 text-start lg:items-start lg:text-start">
           <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
             Revelio
             <br />
@@ -31,9 +25,7 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
             </span>
           </h1>
 
-          <div
-            className={`flex flex-col gap-4 sm:flex-row ${isRTL ? "sm:flex-row-reverse" : ""}`}
-          >
+          <div className="flex flex-col gap-4 sm:flex-row sm:rtl:flex-row-reverse">
             <Link
               className={buttonVariants({
                 size: "lg",

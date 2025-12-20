@@ -110,7 +110,7 @@ export default function TitleContent({ dictionary }: Props) {
   }
 
   return (
-    <div className={`w-full ${isRTL ? "rtl" : "ltr"}`}>
+    <div className="w-full">
       <FormLayout>
         <FormHeading
           title={dict.whatsYourSchoolName || "What's your school's name?"}

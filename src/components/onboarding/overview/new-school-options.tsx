@@ -51,9 +51,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
             <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10">
               <GraduationCap className="text-foreground h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div
-              className={`min-w-0 flex-1 ${isRTL ? "text-right" : "text-left"}`}
-            >
+            <div className="min-w-0 flex-1 text-start">
               <h5>{dict.createNewSchool || "Create a new school"}</h5>
               <p className="muted mt-0.5">
                 {dict.createNewSchoolDescription ||
@@ -74,9 +72,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
             <div className="bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10">
               <BookOpen className="text-foreground h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div
-              className={`min-w-0 flex-1 ${isRTL ? "text-right" : "text-left"}`}
-            >
+            <div className="min-w-0 flex-1 text-start">
               <h5>{dict.createFromTemplate || "Create from template"}</h5>
               <p className="muted mt-0.5">
                 {dict.createFromTemplateDescription ||

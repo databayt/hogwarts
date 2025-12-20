@@ -43,12 +43,7 @@ export default function SaasHeader() {
       <header className="mx-2 flex h-12 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center gap-2">
           {/* Desktop: Sidebar trigger */}
-          <SidebarTrigger
-            className={cn(
-              "hidden size-7 lg:flex",
-              isRTL ? "-mr-1.5" : "-ml-1.5"
-            )}
-          />
+          <SidebarTrigger className="-ms-1.5 hidden size-7 lg:flex" />
           {/* Mobile: Popover-based menu */}
           <MobileNav
             items={mobileNavItems}
@@ -59,9 +54,7 @@ export default function SaasHeader() {
           <div className="hidden items-center md:flex">
             {breadcrumbItems.length > 0 && (
               <Breadcrumb>
-                <BreadcrumbList
-                  className={`flex items-center ${isRTL ? "space-x-reverse" : ""} space-x-1`}
-                >
+                <BreadcrumbList className="flex items-center space-x-1 rtl:space-x-reverse">
                   {breadcrumbItems.map((item, index) => {
                     // Translate breadcrumb title
                     const titleKey = item.title.toLowerCase()
@@ -84,9 +77,7 @@ export default function SaasHeader() {
                           </BreadcrumbItem>
                         )}
                         {index < breadcrumbItems.length - 1 && (
-                          <BreadcrumbSeparator
-                            className={`hidden md:block ${isRTL ? "mr-2" : "ml-2"}`}
-                          />
+                          <BreadcrumbSeparator className="ms-2 hidden md:block" />
                         )}
                         {index === breadcrumbItems.length - 1 && (
                           <BreadcrumbPage className="flex items-center">
@@ -101,9 +92,7 @@ export default function SaasHeader() {
             )}
           </div>
         </div>
-        <div
-          className={`flex items-center gap-1.5 ${isRTL ? "mr-auto" : "ml-auto"}`}
-        >
+        <div className="ms-auto flex items-center gap-1.5">
           <GenericCommandMenu config={saasSearchConfig} variant="icon" />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />

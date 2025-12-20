@@ -62,13 +62,9 @@ export function ApplyHeader({
 
   return (
     <header className="w-full py-4">
-      <div
-        className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-      >
+      <div className="flex items-center justify-between rtl:flex-row-reverse">
         {/* Left side - Exit button and logo */}
-        <div
-          className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-        >
+        <div className="flex items-center gap-2 rtl:flex-row-reverse">
           <Button
             variant="ghost"
             size="icon"
@@ -92,14 +88,10 @@ export function ApplyHeader({
         </div>
 
         {/* Right side - Save status, Help and Save buttons */}
-        <div
-          className={`flex items-center gap-1 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-        >
+        <div className="flex items-center gap-1 rtl:flex-row-reverse">
           {/* Save status indicator */}
           {lastSaved && !isSaving && (
-            <div
-              className={`text-muted-foreground hidden items-center gap-1 text-xs sm:flex ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-            >
+            <div className="text-muted-foreground hidden items-center gap-1 text-xs sm:flex rtl:flex-row-reverse">
               <Check className="h-3 w-3 text-green-500" />
               <span>
                 {(

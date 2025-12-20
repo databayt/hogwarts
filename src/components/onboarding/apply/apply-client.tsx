@@ -68,15 +68,13 @@ const ApplyClient: React.FC<ApplyClientProps> = ({ dictionary, lang }) => {
   }
 
   return (
-    <div className={`flex h-full flex-col px-20 ${isRTL ? "rtl" : "ltr"}`}>
+    <div className="flex h-full flex-col px-20">
       <div className="flex flex-1 items-center">
         <div className="mx-auto w-full max-w-7xl">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
-              <h2
-                className={`text-4xl font-bold tracking-tight ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <h2 className="text-start text-4xl font-bold tracking-tight">
                 {dictionary.title.split("\n").map((line, index) => (
                   <React.Fragment key={index}>
                     {line}
@@ -84,9 +82,7 @@ const ApplyClient: React.FC<ApplyClientProps> = ({ dictionary, lang }) => {
                   </React.Fragment>
                 ))}
               </h2>
-              <p
-                className={`text-muted-foreground mt-4 ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <p className="text-muted-foreground mt-4 text-start">
                 {dictionary.subtitle}
               </p>
             </div>
@@ -98,21 +94,17 @@ const ApplyClient: React.FC<ApplyClientProps> = ({ dictionary, lang }) => {
                   key={option.id}
                   onClick={() => handleOptionClick(option.id)}
                   disabled={isCreating}
-                  className={`border-border hover:border-primary/50 hover:bg-accent/30 flex w-full items-start justify-between gap-6 rounded-lg border p-4 transition-all ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  className="border-border hover:border-primary/50 hover:bg-accent/30 flex w-full items-start justify-between gap-6 rounded-lg border p-4 transition-all rtl:flex-row-reverse"
                 >
-                  <div
-                    className={`flex flex-1 gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                  >
-                    <div className={isRTL ? "text-right" : "text-left"}>
+                  <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
+                    <div className="text-start">
                       <h4 className="mb-1 font-semibold">{option.title}</h4>
                       <p className="text-muted-foreground">
                         {option.description}
                       </p>
                     </div>
                   </div>
-                  <div
-                    className={`hidden flex-shrink-0 md:flex ${isRTL ? "justify-start" : "justify-end"}`}
-                  >
+                  <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
                     <div className="relative h-14 w-14 overflow-hidden">
                       <Image
                         src={option.illustration}
@@ -133,7 +125,7 @@ const ApplyClient: React.FC<ApplyClientProps> = ({ dictionary, lang }) => {
       {/* Bottom Section with HR and Button */}
       <div className="mx-auto w-full max-w-7xl">
         <Separator className="w-full" />
-        <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
+        <div className="flex justify-end py-4 rtl:justify-start">
           <Button
             variant="ghost"
             onClick={() => router.push(`/${lang}/onboarding`)}

@@ -702,6 +702,78 @@
         "readyToTakeNext": "Ready to take your business to the next level?",
         "collectGift": "Collect your gift"
       }
+    },
+    "site": {
+      "hero": {
+        "title": "Beautiful Mind,\nCurious. Wonder.",
+        "subtitle": "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school",
+        "scheduleVisit": "Schedule a Visit",
+        "learnMore": "Learn More",
+        "logoAlt": "Hogwarts Logo"
+      },
+      "academic": {
+        "hero": {
+          "title": "Academic\nExcellence",
+          "subtitle": "Discover your potential through rigorous academics and innovative learning. Our comprehensive programs are designed to unlock every student's capabilities.",
+          "explorePrograms": "Explore Programs",
+          "viewCurriculum": "View Curriculum"
+        },
+        "cta": {
+          "title": "Ready to Begin Your Academic Journey?",
+          "subtitle": "Explore our rigorous academic programs designed to prepare students for success in higher education and beyond.",
+          "scheduleVisit": "Schedule a Visit",
+          "contactAdmissions": "Contact Admissions"
+        },
+        "programs": {
+          "title": "Academic Programs",
+          "subtitle": "Comprehensive curriculum designed for excellence"
+        },
+        "stats": {
+          "title": "By the Numbers"
+        }
+      },
+      "admission": {
+        "hero": {
+          "title": "Hogwarts\nletter",
+          "subtitle": "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office.",
+          "startApplication": "Start application",
+          "learnMore": "Learn more"
+        }
+      },
+      "visit": {
+        "title": "Schedule a Visit",
+        "steps": {
+          "info": {
+            "title": "Visitor Information",
+            "fullName": "Full Name",
+            "fullNamePlaceholder": "Enter your full name",
+            "email": "Email",
+            "emailPlaceholder": "you@example.com",
+            "phone": "Phone (Optional)",
+            "phonePlaceholder": "+1 (555) 123-4567",
+            "purpose": "Purpose of Visit",
+            "purposePlaceholder": "Select purpose",
+            "visitors": "Number of Visitors",
+            "visitorsPlaceholder": "Select",
+            "notes": "Additional Notes (Optional)",
+            "notesPlaceholder": "Any special requirements or questions..."
+          }
+        }
+      },
+      "apply": {
+        "error": {
+          "title": "Something went wrong",
+          "description": "An error occurred while processing your application. Please try again or contact support if the problem persists.",
+          "tryAgain": "Try Again",
+          "refreshPage": "Refresh Page"
+        }
+      },
+      "contact": {
+        "emailPlaceholder": "Email address",
+        "messagePlaceholder": "Tell us about your educational needs or questions...",
+        "submit": "Submit",
+        "liveChat": "Live chat"
+      }
     }
   },
   "footer": {

@@ -159,10 +159,7 @@ export function StreamCourseDetailContent({
 
             {/* Title */}
             <h1
-              className={cn(
-                "text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl",
-                isRTL && "text-right"
-              )}
+              className="text-start text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl"
               style={{ color: colors.text }}
             >
               {course.title}
@@ -171,7 +168,7 @@ export function StreamCourseDetailContent({
             {/* Description */}
             {course.description && (
               <p
-                className={cn("text-lg leading-relaxed", isRTL && "text-right")}
+                className="text-start text-lg leading-relaxed"
                 style={{ color: colors.muted }}
               >
                 {course.description}
@@ -361,16 +358,13 @@ export function StreamCourseDetailContent({
           style={{ backgroundColor: colors.card }}
         >
           <h2
-            className={cn(
-              "text-2xl font-semibold sm:text-3xl",
-              isRTL && "text-right"
-            )}
+            className="text-start text-2xl font-semibold sm:text-3xl"
             style={{ color: colors.text }}
           >
             {isRTL ? "عن هذه الدورة" : "About this course"}
           </h2>
           <p
-            className={cn("mt-4 leading-relaxed", isRTL && "text-right")}
+            className="mt-4 text-start leading-relaxed"
             style={{ color: colors.text }}
           >
             {course.description ||
@@ -381,20 +375,17 @@ export function StreamCourseDetailContent({
 
           {/* Learning Objectives */}
           <h3
-            className={cn("mt-8 text-xl font-semibold", isRTL && "text-right")}
+            className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
             {isRTL ? "أهداف التعلم" : "Learning objectives"}
           </h3>
-          <p
-            className={cn("mt-2", isRTL && "text-right")}
-            style={{ color: colors.muted }}
-          >
+          <p className="mt-2 text-start" style={{ color: colors.muted }}>
             {isRTL
               ? "بنهاية هذه الدورة، ستكون قادرًا على:"
               : "By the end of this course, you'll be able to:"}
           </p>
-          <ul className={cn("mt-4 space-y-2", isRTL && "text-right")}>
+          <ul className="mt-4 space-y-2 text-start">
             {learningObjectives.map((item, index) => (
               <li
                 key={index}
@@ -411,12 +402,12 @@ export function StreamCourseDetailContent({
 
           {/* Prerequisites */}
           <h3
-            className={cn("mt-8 text-xl font-semibold", isRTL && "text-right")}
+            className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
             {isRTL ? "المتطلبات" : "Prerequisites"}
           </h3>
-          <ul className={cn("mt-4 space-y-2", isRTL && "text-right")}>
+          <ul className="mt-4 space-y-2 text-start">
             {prerequisites.map((item, index) => (
               <li
                 key={index}
@@ -433,15 +424,12 @@ export function StreamCourseDetailContent({
 
           {/* Who this course is for */}
           <h3
-            className={cn("mt-8 text-xl font-semibold", isRTL && "text-right")}
+            className="mt-8 text-start text-xl font-semibold"
             style={{ color: colors.text }}
           >
             {isRTL ? "لمن هذه الدورة" : "Who this course is for"}
           </h3>
-          <p
-            className={cn("mt-2", isRTL && "text-right")}
-            style={{ color: colors.text }}
-          >
+          <p className="mt-2 text-start" style={{ color: colors.text }}>
             {isRTL
               ? "المتعلمون الذين يرغبون في تسريع سير عملهم بمساعدة الذكاء الاصطناعي"
               : "Learners who want to accelerate their workflow with AI assistance"}
@@ -452,10 +440,7 @@ export function StreamCourseDetailContent({
       {/* Course Sections */}
       <section className="mx-auto max-w-6xl px-4 py-12">
         <h2
-          className={cn(
-            "text-2xl font-semibold sm:text-3xl",
-            isRTL && "text-right"
-          )}
+          className="text-start text-2xl font-semibold sm:text-3xl"
           style={{ color: colors.text }}
         >
           {isRTL ? "أقسام الدورة" : "Course sections"}
@@ -505,7 +490,7 @@ export function StreamCourseDetailContent({
                         style={{ color: colors.muted }}
                       />
                     )}
-                    <div className={isRTL ? "text-right" : "text-left"}>
+                    <div className="text-start">
                       <h3
                         className="text-lg font-semibold"
                         style={{ color: colors.text }}

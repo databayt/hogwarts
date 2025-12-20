@@ -182,17 +182,13 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
   }
 
   return (
-    <div
-      className={`mx-auto flex h-full w-full max-w-5xl flex-col ${isRTL ? "rtl" : "ltr"}`}
-    >
+    <div className="mx-auto flex h-full w-full max-w-5xl flex-col">
       <div className="flex flex-1 items-center">
         <div className="w-full">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
-              <h2
-                className={`text-4xl font-bold tracking-tight ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <h2 className="text-start text-4xl font-bold tracking-tight">
                 {dictionary.title.split("\n").map((line, index) => (
                   <React.Fragment key={index}>
                     {line}
@@ -207,22 +203,18 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
               {steps.map((step) => (
                 <div
                   key={step.number}
-                  className={`flex items-start justify-between gap-6 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  className="flex items-start justify-between gap-6 rtl:flex-row-reverse"
                 >
-                  <div
-                    className={`flex flex-1 gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                  >
+                  <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
                     <div className="flex-shrink-0">
                       <h4 className="text-foreground">{step.number}.</h4>
                     </div>
-                    <div className={isRTL ? "text-right" : "text-left"}>
+                    <div className="text-start">
                       <h4 className="mb-1 font-semibold">{step.title}</h4>
                       <p>{step.description}</p>
                     </div>
                   </div>
-                  <div
-                    className={`hidden flex-shrink-0 md:flex ${isRTL ? "justify-start" : "justify-end"}`}
-                  >
+                  <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
                     <div className="relative h-14 w-14 overflow-hidden">
                       <Image
                         src={step.illustration}
@@ -243,7 +235,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({
       {/* Bottom Section - respects general padding */}
       <div className="w-full">
         <Separator className="w-full" />
-        <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
+        <div className="flex justify-end py-4 rtl:justify-start">
           <Button onClick={handleGetStarted} disabled={isCreating}>
             {isCreating ? (
               <>

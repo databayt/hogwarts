@@ -70,7 +70,7 @@ const JoinContent = (props: Props) => {
               <button
                 key={option.id}
                 onClick={() => setSelectedOption(option.id)}
-                className={`w-full rounded-xl border px-4 py-4 transition-all duration-200 sm:px-8 sm:py-5 ${isRTL ? "text-right" : "text-left"} ${
+                className={`w-full rounded-xl border px-4 py-4 text-start transition-all duration-200 sm:px-8 sm:py-5 ${
                   selectedOption === option.id
                     ? "border-foreground bg-accent"
                     : "border-border hover:border-foreground/50"
@@ -78,9 +78,7 @@ const JoinContent = (props: Props) => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div
-                      className={`flex items-center ${isRTL ? "space-x-reverse" : ""} space-x-3`}
-                    >
+                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
                       <h5 className="text-sm font-medium sm:text-base">
                         {option.title}
                       </h5>
@@ -94,7 +92,7 @@ const JoinContent = (props: Props) => {
                       {option.description}
                     </p>
                   </div>
-                  <div className={`flex-shrink-0 ${isRTL ? "mr-3" : "ml-3"}`}>
+                  <div className="ms-3 flex-shrink-0">
                     {/* <option.icon size={20} className="sm:w-6 sm:h-6" /> */}
                   </div>
                 </div>

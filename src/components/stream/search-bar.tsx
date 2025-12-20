@@ -181,7 +181,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 "flex h-11 shrink-0 items-center gap-1 rounded-none px-4 transition-colors",
                 "hover:bg-muted bg-transparent",
                 isDropdownOpen && "bg-muted",
-                isRTL ? "order-last rounded-r-full" : "rounded-l-full"
+                isRTL ? "order-last rounded-e-full" : "rounded-s-full"
               )}
             >
               <motion.span layout className="text-sm font-medium">
@@ -221,7 +221,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 className={cn(
                   "h-11 w-full border-0 bg-transparent text-sm outline-none",
                   "placeholder:text-muted-foreground",
-                  isRTL ? "pr-4 pl-12 text-right" : "pr-12 pl-4"
+                  "ps-4 pe-12 text-start"
                 )}
                 aria-label={dictionary?.search?.ariaLabel || "Search courses"}
               />
@@ -231,10 +231,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 <button
                   type="button"
                   onClick={handleClear}
-                  className={cn(
-                    "hover:bg-muted absolute flex size-6 items-center justify-center rounded-full transition-colors",
-                    isRTL ? "left-12" : "right-12"
-                  )}
+                  className="hover:bg-muted absolute end-12 flex size-6 items-center justify-center rounded-full transition-colors"
                   aria-label={dictionary?.search?.clear || "Clear search"}
                 >
                   <X className="text-muted-foreground size-4" />
@@ -248,7 +245,7 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
               size="icon"
               className={cn(
                 "bg-primary hover:bg-primary/90 size-9 shrink-0 rounded-full",
-                isRTL ? "order-first ml-1" : "mr-1"
+                isRTL ? "order-first ms-1" : "me-1"
               )}
               aria-label={dictionary?.search?.submit || "Search"}
             >

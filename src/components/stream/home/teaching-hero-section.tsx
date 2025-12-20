@@ -37,7 +37,7 @@ export function TeachingHeroSection({
           </div>
 
           {/* Text Content */}
-          <div className={cn("space-y-3", isRTL ? "text-right" : "text-left")}>
+          <div className="space-y-3 text-start">
             <h2 className="text-4xl leading-tight font-bold md:text-5xl">
               {dictionary?.teachingHero?.title || "Come teach with us"}
             </h2>

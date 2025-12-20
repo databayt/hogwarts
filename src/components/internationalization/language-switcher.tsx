@@ -83,7 +83,7 @@ export function LanguageSwitcher({
                   : "bg-muted hover:bg-muted/80"
               )}
             >
-              <span className="mr-2 text-lg">{config.flag}</span>
+              <span className="me-2 text-lg">{config.flag}</span>
               <span className="text-sm">{config.nativeName}</span>
             </button>
           )
@@ -120,11 +120,7 @@ export function LanguageSwitcher({
             >
               <span className="text-lg">{config.flag}</span>
               <span>{config.nativeName}</span>
-              {isActive && (
-                <span className={`${isRTL ? "mr-auto" : "ml-auto"} text-xs`}>
-                  ✓
-                </span>
-              )}
+              {isActive && <span className="ms-auto text-xs">✓</span>}
             </DropdownMenuItem>
           )
         })}

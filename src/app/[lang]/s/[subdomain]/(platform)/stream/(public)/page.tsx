@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { auth } from "@/auth"
 
 import { getTenantContext } from "@/lib/tenant-context"
 import type { Locale } from "@/components/internationalization/config"
@@ -22,15 +23,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function StreamHomePage({ params }: Props) {
-  const { lang, subdomain } = await params
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
   const { schoolId } = await getTenantContext()
+  const session = await auth()
+
+  const isAdmin =
+    session?.user?.role === "ADMIN" ||
+    session?.user?.role === "TEACHER" ||
+    session?.user?.role === "DEVELOPER"
 
   return (
     <StreamHomeContent
       dictionary={dictionary.stream}
       lang={lang}
       schoolId={schoolId}
+      isAuthenticated={!!session?.user}
+      isAdmin={isAdmin}
     />
   )
 }

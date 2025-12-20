@@ -416,7 +416,9 @@
       "view": "عرض",
       "edit": "تعديل",
       "delete": "حذف",
-      "actions": "إجراءات"
+      "actions": "إجراءات",
+      "topics": "موضوعات",
+      "resources": "موارد"
     },
     "timetable": {
       "title": "الجدول الدراسي",

@@ -13,30 +13,28 @@ interface AcademicCTAProps {
   dictionary?: Dictionary
 }
 
-export function AcademicCTA({ lang }: AcademicCTAProps) {
-  const isRTL = lang === "ar"
+export function AcademicCTA({ lang, dictionary }: AcademicCTAProps) {
+  // Get translations with fallbacks
+  const t = dictionary?.marketing?.site?.academic?.cta
 
   return (
     <SectionContainer>
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-heading mb-6 text-3xl font-bold md:text-4xl">
-          {isRTL
-            ? "مستعد لبدء رحلتك الأكاديمية؟"
-            : "Ready to Begin Your Academic Journey?"}
+          {t?.title || "Ready to Begin Your Academic Journey?"}
         </h2>
         <p className="text-muted-foreground mb-8 text-lg md:text-xl">
-          {isRTL
-            ? "انضم إلى مجتمعنا من المتعلمين واكتشف كيف يمكن لبرامجنا الأكاديمية أن تحول مستقبلك."
-            : "Join our community of learners and discover how our academic programs can transform your future."}
+          {t?.subtitle ||
+            "Explore our rigorous academic programs designed to prepare students for success in higher education and beyond."}
         </p>
 
-        <div className="flex flex-col justify-center gap-4 sm:flex-row">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row rtl:sm:flex-row-reverse">
           <Link
             href={`/${lang}/apply`}
             className={cn(buttonVariants({ size: "lg" }), "gap-2")}
           >
-            {isRTL ? "حدد موعد زيارة" : "Schedule a Visit"}
-            <AnthropicIcons.ArrowRight className="h-4 w-4" />
+            {t?.scheduleVisit || "Schedule a Visit"}
+            <AnthropicIcons.ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
           <Link
             href={`/${lang}/inquiry`}
@@ -46,7 +44,7 @@ export function AcademicCTA({ lang }: AcademicCTAProps) {
             )}
           >
             <AnthropicIcons.Chat className="h-4 w-4" />
-            {isRTL ? "تواصل مع القبول" : "Contact Admissions"}
+            {t?.contactAdmissions || "Contact Admissions"}
           </Link>
         </div>
       </div>

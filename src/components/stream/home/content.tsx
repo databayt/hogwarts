@@ -153,11 +153,18 @@ const ProgressTrackingIcon = () => (
   </svg>
 )
 
+interface StreamHomeProps extends StreamContentProps {
+  isAuthenticated?: boolean
+  isAdmin?: boolean
+}
+
 export function StreamHomeContent({
   dictionary,
   lang,
   schoolId,
-}: StreamContentProps) {
+  isAuthenticated = false,
+  isAdmin = false,
+}: StreamHomeProps) {
   // Get features from dictionary or use defaults
   const features: Feature[] = dictionary?.home?.features || [
     {
@@ -192,13 +199,9 @@ export function StreamHomeContent({
     <>
       {/* Hero Section with Animation */}
       <section className="relative">
-        <div
-          className={`flex flex-col items-center gap-8 lg:flex-row lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}
-        >
+        <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-16 lg:rtl:flex-row-reverse">
           {/* Text Content */}
-          <div
-            className={`flex flex-1 flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}
-          >
+          <div className="flex flex-1 flex-col items-start space-y-6 text-start">
             <h1 className="text-5xl leading-none font-extrabold tracking-tighter md:text-6xl lg:text-7xl">
               {dictionary?.home?.title || "Lumos"}
               <br />
@@ -207,9 +210,7 @@ export function StreamHomeContent({
               </span>
             </h1>
 
-            <div
-              className={`flex flex-col gap-4 sm:flex-row ${isRTL ? "sm:flex-row-reverse" : ""}`}
-            >
+            <div className="flex flex-col gap-4 sm:flex-row sm:rtl:flex-row-reverse">
               <Link
                 className={buttonVariants({
                   size: "lg",
@@ -219,15 +220,29 @@ export function StreamHomeContent({
                 {dictionary?.home?.exploreCourses || "Explore Courses"}
               </Link>
 
-              <Link
-                className={buttonVariants({
-                  size: "lg",
-                  variant: "ghost",
-                })}
-                href={`/${lang}/login`}
-              >
-                {dictionary?.home?.signIn || "Sign in"}
-              </Link>
+              {isAuthenticated && (
+                <Link
+                  className={buttonVariants({
+                    size: "lg",
+                    variant: "outline",
+                  })}
+                  href={`/${lang}/stream/dashboard`}
+                >
+                  {isRTL ? "المفضلة" : "Favorite"}
+                </Link>
+              )}
+
+              {isAdmin && (
+                <Link
+                  className={buttonVariants({
+                    size: "lg",
+                    variant: "ghost",
+                  })}
+                  href={`/${lang}/stream/admin`}
+                >
+                  {isRTL ? "لوحة التحكم" : "Dashboard"}
+                </Link>
+              )}
             </div>
           </div>
 
@@ -245,9 +260,7 @@ export function StreamHomeContent({
             className="hover:border-foreground border shadow-none transition-colors"
           >
             <CardHeader>
-              <div
-                className={`mb-4 text-4xl ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <div className="mb-4 text-start text-4xl">
                 {feature.title === "Comprehensive Courses" ? (
                   <ComprehensiveCoursesIcon />
                 ) : feature.title === "Interactive Learning" ? (
@@ -260,14 +273,10 @@ export function StreamHomeContent({
                   feature.icon
                 )}
               </div>
-              <CardTitle className={isRTL ? "text-right" : "text-left"}>
-                {feature.title}
-              </CardTitle>
+              <CardTitle className="text-start">{feature.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p
-                className={`text-muted-foreground ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <p className="text-muted-foreground text-start">
                 {feature.description}
               </p>
             </CardContent>

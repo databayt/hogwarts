@@ -4,14 +4,23 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AnimatedButton } from "@/components/atom/animated-button"
 import type { Locale } from "@/components/internationalization/config"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface HeroProps {
   lang?: Locale
   subdomain?: string
+  dictionary?: Dictionary
 }
 
-export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
-  const isRTL = lang === "ar"
+export function Hero({ lang = "en", dictionary }: HeroProps) {
+  // Get translations with fallbacks
+  const t = dictionary?.marketing?.site?.hero
+
+  // Parse title to handle newlines
+  const titleParts = t?.title?.split("\n") || [
+    "Beautiful Mind,",
+    "Curious. Wonder.",
+  ]
 
   return (
     <section className="grid h-[calc(80vh-3.5rem)] max-h-[700px] w-full grid-cols-1 lg:grid-cols-2">
@@ -34,36 +43,25 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
             <div className="mb-6 flex items-center gap-2">
               <Image
                 src="/site/ball.png"
-                alt="Hogwarts Logo"
+                alt={t?.logoAlt || "Hogwarts Logo"}
                 width={100}
                 height={100}
                 className="h-14 w-14 dark:invert"
               />
             </div>
             <h1 className="font-heading py-4 text-4xl font-black tracking-tighter text-white sm:text-5xl">
-              {isRTL ? (
-                <>
-                  عقل جميل،
-                  <br />
-                  فضولي. عجيب.
-                </>
-              ) : (
-                <>
-                  Beautiful Mind,
-                  <br />
-                  Curious. Wonder.
-                </>
-              )}
+              {titleParts[0]}
+              <br />
+              {titleParts[1]}
             </h1>
             <p className="max-w-[80%] pb-6 text-white/80">
-              {isRTL
-                ? "الجزء الأكثر سحراً في كتب هاري بوتر، هو أنهم استخدموا في النهاية المهارات التي تعلموها في المدرسة"
-                : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
+              {t?.subtitle ||
+                "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row rtl:sm:flex-row-reverse">
               <Link href={`/${lang}/tour`}>
                 <AnimatedButton size="lg" className="w-full sm:w-auto">
-                  {isRTL ? "احجز زيارة" : "Schedule a Visit"}
+                  {t?.scheduleVisit || "Schedule a Visit"}
                 </AnimatedButton>
               </Link>
               <Link href={`/${lang}/admissions`}>
@@ -72,7 +70,7 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
                   size="lg"
                   className="w-full border-white bg-transparent text-white hover:bg-white/10 sm:w-auto"
                 >
-                  {isRTL ? "اعرف المزيد" : "Learn More"}
+                  {t?.learnMore || "Learn More"}
                 </Button>
               </Link>
             </div>
@@ -86,41 +84,30 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
           <div className="flex items-center gap-2">
             <Image
               src="/site/ball.png"
-              alt="Hogwarts Logo"
+              alt={t?.logoAlt || "Hogwarts Logo"}
               width={100}
               height={100}
               className="h-14 w-14 dark:invert"
             />
           </div>
           <h1 className="font-heading py-4 text-5xl font-black tracking-tighter lg:text-6xl xl:text-7xl">
-            {isRTL ? (
-              <>
-                عقل جميل،
-                <br />
-                فضولي. عجيب.
-              </>
-            ) : (
-              <>
-                Beautiful Mind,
-                <br />
-                Curious. Wonder.
-              </>
-            )}
+            {titleParts[0]}
+            <br />
+            {titleParts[1]}
           </h1>
           <p className="text-muted-foreground max-w-[80%] pb-6">
-            {isRTL
-              ? "الجزء الأكثر سحراً في كتب هاري بوتر، هو أنهم استخدموا في النهاية المهارات التي تعلموها في المدرسة"
-              : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
+            {t?.subtitle ||
+              "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
-          <div className="flex flex-row gap-4">
+          <div className="flex flex-row gap-4 rtl:flex-row-reverse">
             <Link href={`/${lang}/tour`}>
               <AnimatedButton size="lg">
-                {isRTL ? "احجز زيارة" : "Schedule a Visit"}
+                {t?.scheduleVisit || "Schedule a Visit"}
               </AnimatedButton>
             </Link>
             <Link href={`/${lang}/admissions`}>
               <Button variant="outline" size="lg">
-                {isRTL ? "اعرف المزيد" : "Learn More"}
+                {t?.learnMore || "Learn More"}
               </Button>
             </Link>
           </div>

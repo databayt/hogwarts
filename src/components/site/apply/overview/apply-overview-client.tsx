@@ -114,21 +114,17 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   }
 
   return (
-    <div className={`flex h-full flex-col px-20 ${isRTL ? "rtl" : "ltr"}`}>
+    <div className="flex h-full flex-col px-20">
       <div className="flex flex-1 items-center">
         <div className="mx-auto w-full max-w-7xl">
           <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
             {/* Left Side - Title */}
             <div>
-              <h2
-                className={`text-4xl font-bold tracking-tight ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <h2 className="text-start text-4xl font-bold tracking-tight">
                 {overviewDict.title ||
                   (isRTL ? "خطوات التقديم" : "Application Steps")}
               </h2>
-              <p
-                className={`text-muted-foreground mt-4 ${isRTL ? "text-right" : "text-left"}`}
-              >
+              <p className="text-muted-foreground mt-4 text-start">
                 {overviewDict.subtitle ||
                   (isRTL
                     ? "اتبع هذه الخطوات لإكمال طلب التقديم"
@@ -141,24 +137,20 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
               {steps.map((step) => (
                 <div
                   key={step.number}
-                  className={`flex items-start justify-between gap-6 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  className="flex items-start justify-between gap-6 rtl:flex-row-reverse"
                 >
-                  <div
-                    className={`flex flex-1 gap-3 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                  >
+                  <div className="flex flex-1 gap-3 rtl:flex-row-reverse">
                     <div className="flex-shrink-0">
                       <h4 className="text-foreground">{step.number}.</h4>
                     </div>
-                    <div className={isRTL ? "text-right" : "text-left"}>
+                    <div className="text-start">
                       <h4 className="mb-1 font-semibold">{step.title}</h4>
                       <p className="text-muted-foreground">
                         {step.description}
                       </p>
                     </div>
                   </div>
-                  <div
-                    className={`hidden flex-shrink-0 md:flex ${isRTL ? "justify-start" : "justify-end"}`}
-                  >
+                  <div className="hidden flex-shrink-0 justify-end md:flex rtl:justify-start">
                     <div className="relative h-14 w-14 overflow-hidden">
                       <Image
                         src={step.illustration}
@@ -179,10 +171,8 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
       {/* Bottom Section with HR and Buttons */}
       <div className="mx-auto w-full max-w-7xl">
         <Separator className="w-full" />
-        <div className={`flex py-4 ${isRTL ? "justify-start" : "justify-end"}`}>
-          <div
-            className={`flex gap-4 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-          >
+        <div className="flex justify-end py-4 rtl:justify-start">
+          <div className="flex gap-4 rtl:flex-row-reverse">
             <Button variant="ghost" onClick={handleBack}>
               {overviewDict.back || (isRTL ? "رجوع" : "Back")}
             </Button>

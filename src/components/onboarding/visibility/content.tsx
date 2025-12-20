@@ -59,15 +59,13 @@ const VisibilityContent = (props: Props) => {
               <button
                 key={option.id}
                 onClick={() => setSelectedOption(option.id)}
-                className={`w-full rounded-xl border p-4 transition-all duration-200 sm:p-5 ${isRTL ? "text-right" : "text-left"} ${
+                className={`w-full rounded-xl border p-4 text-start transition-all duration-200 sm:p-5 ${
                   selectedOption === option.id
                     ? "border-foreground bg-accent"
                     : "border-border hover:border-foreground/50"
                 }`}
               >
-                <div
-                  className={`flex items-start ${isRTL ? "space-x-reverse" : ""} space-x-3 sm:space-x-4`}
-                >
+                <div className="flex items-start space-x-3 sm:space-x-4 rtl:space-x-reverse">
                   {/* Radio button */}
                   <div className="mt-1 flex-shrink-0">
                     <div
@@ -84,9 +82,7 @@ const VisibilityContent = (props: Props) => {
                   </div>
 
                   <div className="flex-1">
-                    <div
-                      className={`flex items-center ${isRTL ? "space-x-reverse" : ""} space-x-3`}
-                    >
+                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
                       <h5 className="text-sm font-medium sm:text-base">
                         {option.title}
                       </h5>

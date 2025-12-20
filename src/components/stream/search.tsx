@@ -79,7 +79,7 @@ export function Search({
           }
           className={cn(
             "h-11 border-0 bg-transparent shadow-none focus-visible:ring-0",
-            isRTL ? "pr-4 pl-14" : "pr-14 pl-4",
+            "ps-4 pe-14",
             "rounded-full"
           )}
           aria-label={dictionary?.search?.ariaLabel || "Search courses"}
@@ -90,10 +90,7 @@ export function Search({
           <button
             type="button"
             onClick={handleClear}
-            className={cn(
-              "hover:bg-muted absolute flex size-6 items-center justify-center rounded-full transition-colors",
-              isRTL ? "left-14" : "right-14"
-            )}
+            className="hover:bg-muted absolute end-14 flex size-6 items-center justify-center rounded-full transition-colors"
             aria-label={dictionary?.search?.clear || "Clear search"}
           >
             <X className="text-muted-foreground size-4" />
@@ -104,10 +101,7 @@ export function Search({
         <Button
           type="submit"
           size="icon"
-          className={cn(
-            "bg-primary hover:bg-primary/90 absolute size-9 rounded-full",
-            isRTL ? "left-1" : "right-1"
-          )}
+          className="bg-primary hover:bg-primary/90 absolute end-1 size-9 rounded-full"
           aria-label={dictionary?.search?.submit || "Search"}
         >
           <SearchIcon className="size-4" />
