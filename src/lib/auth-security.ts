@@ -1,7 +1,13 @@
-import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
 import { canUserAccessSchool, ensureUserSchool } from "@/lib/school-access"
+
+// Dynamic import to avoid module-level initialization issues
+// The auth module has side effects (validateAuthConfig, NextAuth init) that run at import time
+async function getAuth() {
+  const { auth } = await import("@/auth")
+  return auth
+}
 
 /**
  * Authentication & Authorization Security Layer
@@ -83,6 +89,7 @@ export async function getAuthContext(): Promise<AuthContext> {
 
   let session
   try {
+    const auth = await getAuth()
     session = await auth()
   } catch (authError) {
     console.error("❌ [DEBUG] auth() call failed:", {

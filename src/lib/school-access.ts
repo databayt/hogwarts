@@ -8,7 +8,6 @@
  * - Prisma transaction guarantees for atomic operations
  */
 
-import { auth } from "@/auth"
 import { UserRole } from "@prisma/client"
 
 import { db } from "@/lib/db"
