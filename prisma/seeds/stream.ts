@@ -9,18 +9,56 @@
  * - Student enrollments and progress tracking
  * - Course reviews and ratings
  * - Certificates and achievements
- * - Bilingual content (Arabic/English)
+ * - Bilingual content (Arabic/English) - SEPARATE records per language
+ *
+ * BILINGUAL STRATEGY (Phase 2):
+ * - Each course exists as TWO separate database records
+ * - Same slug, different lang field ("ar" or "en")
+ * - Leverages @@unique([slug, schoolId, lang]) constraint
+ * - Frontend filters by lang param to show correct version
  */
 
 import { faker } from "@faker-js/faker"
 import { StreamCourseLevel } from "@prisma/client"
 
+import { CURRICULUM, SUBJECTS, YEAR_LEVELS } from "./constants"
 import type { SeedPrisma, StudentRef, TeacherRef } from "./types"
 
 // ============================================================================
-// COMPREHENSIVE COURSE DATA
+// BILINGUAL DATA TYPES
 // ============================================================================
 
+interface BilingualLessonData {
+  titleAr: string
+  titleEn: string
+  descriptionAr?: string
+  descriptionEn?: string
+  videoUrl?: string
+  duration?: number
+}
+
+interface BilingualChapterData {
+  titleAr: string
+  titleEn: string
+  descriptionAr: string
+  descriptionEn: string
+  lessons: BilingualLessonData[]
+}
+
+interface BilingualCourseData {
+  slug: string
+  titleAr: string
+  titleEn: string
+  descriptionAr: string
+  descriptionEn: string
+  price: number
+  categoryKey: string // Maps to BILINGUAL_CATEGORIES
+  level: StreamCourseLevel
+  imageUrl: string
+  chapters: BilingualChapterData[]
+}
+
+// Legacy types for backward compatibility during migration
 interface LessonData {
   title: string
   videoUrl?: string
@@ -44,6 +82,204 @@ interface CourseData {
   chapters: ChapterData[]
   level?: StreamCourseLevel
   imageUrl: string
+}
+
+// ============================================================================
+// BILINGUAL CATEGORY MAPPING
+// ============================================================================
+
+const BILINGUAL_CATEGORIES: Record<string, { ar: string; en: string }> = {
+  "Islamic Studies": { ar: "الدراسات الإسلامية", en: "Islamic Studies" },
+  Languages: { ar: "اللغات", en: "Languages" },
+  Mathematics: { ar: "الرياضيات", en: "Mathematics" },
+  Science: { ar: "العلوم", en: "Sciences" },
+  Sciences: { ar: "العلوم", en: "Sciences" },
+  Humanities: { ar: "العلوم الإنسانية", en: "Humanities" },
+  Religion: { ar: "الدين", en: "Religion" },
+  ICT: { ar: "تقنية المعلومات", en: "ICT" },
+  Programming: { ar: "البرمجة", en: "Programming" },
+  "Arts & PE": { ar: "الفنون والرياضة", en: "Arts & PE" },
+}
+
+// ============================================================================
+// BILINGUAL CATEGORY SEEDING
+// ============================================================================
+
+/**
+ * Seeds bilingual categories - one for AR and one for EN per category
+ * Returns a map of categoryKey -> { arId, enId }
+ */
+async function seedBilingualCategories(
+  prisma: SeedPrisma,
+  schoolId: string
+): Promise<Map<string, { arId: string; enId: string }>> {
+  const categoryMap = new Map<string, { arId: string; enId: string }>()
+
+  for (const [key, names] of Object.entries(BILINGUAL_CATEGORIES)) {
+    // Create or find Arabic category
+    let arCat = await prisma.streamCategory.findFirst({
+      where: { schoolId, name: names.ar },
+    })
+    if (!arCat) {
+      arCat = await prisma.streamCategory.create({
+        data: { name: names.ar, schoolId },
+      })
+    }
+
+    // Create or find English category
+    let enCat = await prisma.streamCategory.findFirst({
+      where: { schoolId, name: names.en },
+    })
+    if (!enCat) {
+      enCat = await prisma.streamCategory.create({
+        data: { name: names.en, schoolId },
+      })
+    }
+
+    categoryMap.set(key, { arId: arCat.id, enId: enCat.id })
+  }
+
+  return categoryMap
+}
+
+// ============================================================================
+// BILINGUAL COURSE CREATION HELPER
+// ============================================================================
+
+interface CreateBilingualCourseParams {
+  prisma: SeedPrisma
+  schoolId: string
+  course: BilingualCourseData
+  categoryMap: Map<string, { arId: string; enId: string }>
+  teacherId: string // Required: userId is required in StreamCourse model
+}
+
+/**
+ * Creates TWO course records - one Arabic, one English
+ * Same slug, different lang field
+ */
+async function createBilingualCourse({
+  prisma,
+  schoolId,
+  course,
+  categoryMap,
+  teacherId,
+}: CreateBilingualCourseParams): Promise<{
+  arCourse: { id: string }
+  enCourse: { id: string }
+}> {
+  const cats = categoryMap.get(course.categoryKey)
+  if (!cats) {
+    throw new Error(`Category not found: ${course.categoryKey}`)
+  }
+
+  // Create Arabic course
+  let arCourse = await prisma.streamCourse.findFirst({
+    where: { schoolId, slug: course.slug, lang: "ar" },
+  })
+
+  if (!arCourse) {
+    arCourse = await prisma.streamCourse.create({
+      data: {
+        slug: course.slug,
+        title: course.titleAr,
+        description: course.descriptionAr,
+        price: course.price,
+        level: course.level,
+        imageUrl: course.imageUrl,
+        isPublished: true,
+        lang: "ar",
+        schoolId,
+        userId: teacherId,
+        categoryId: cats.arId,
+      },
+    })
+
+    // Create Arabic chapters and lessons
+    for (let ci = 0; ci < course.chapters.length; ci++) {
+      const ch = course.chapters[ci]
+      const chapter = await prisma.streamChapter.create({
+        data: {
+          title: ch.titleAr,
+          description: ch.descriptionAr,
+          position: ci + 1,
+          isPublished: true,
+          courseId: arCourse.id,
+        },
+      })
+
+      for (let li = 0; li < ch.lessons.length; li++) {
+        const les = ch.lessons[li]
+        await prisma.streamLesson.create({
+          data: {
+            title: les.titleAr,
+            description: les.descriptionAr || `درس ${li + 1}`,
+            position: li + 1,
+            duration: les.duration || 30,
+            videoUrl: les.videoUrl,
+            isPublished: true,
+            isFree: li === 0,
+            chapterId: chapter.id,
+          },
+        })
+      }
+    }
+  }
+
+  // Create English course
+  let enCourse = await prisma.streamCourse.findFirst({
+    where: { schoolId, slug: course.slug, lang: "en" },
+  })
+
+  if (!enCourse) {
+    enCourse = await prisma.streamCourse.create({
+      data: {
+        slug: course.slug,
+        title: course.titleEn,
+        description: course.descriptionEn,
+        price: course.price,
+        level: course.level,
+        imageUrl: course.imageUrl,
+        isPublished: true,
+        lang: "en",
+        schoolId,
+        userId: teacherId,
+        categoryId: cats.enId,
+      },
+    })
+
+    // Create English chapters and lessons
+    for (let ci = 0; ci < course.chapters.length; ci++) {
+      const ch = course.chapters[ci]
+      const chapter = await prisma.streamChapter.create({
+        data: {
+          title: ch.titleEn,
+          description: ch.descriptionEn,
+          position: ci + 1,
+          isPublished: true,
+          courseId: enCourse.id,
+        },
+      })
+
+      for (let li = 0; li < ch.lessons.length; li++) {
+        const les = ch.lessons[li]
+        await prisma.streamLesson.create({
+          data: {
+            title: les.titleEn,
+            description: les.descriptionEn || `Lesson ${li + 1}`,
+            position: li + 1,
+            duration: les.duration || 30,
+            videoUrl: les.videoUrl,
+            isPublished: true,
+            isFree: li === 0,
+            chapterId: chapter.id,
+          },
+        })
+      }
+    }
+  }
+
+  return { arCourse: { id: arCourse.id }, enCourse: { id: enCourse.id } }
 }
 
 // Educational video URLs (sample/placeholder - using common educational platforms)
@@ -1059,6 +1295,997 @@ const COURSES_DATA: CourseData[] = [
 ]
 
 // ============================================================================
+// K-12 SUBJECT CHAPTER TEMPLATES
+// ============================================================================
+
+/**
+ * Generate chapter templates for K-12 subjects
+ * Returns 4-8 chapters based on subject complexity
+ */
+function getSubjectChapters(
+  subjectEn: string,
+  gradeLevel: string
+): BilingualChapterData[] {
+  const templates: Record<string, BilingualChapterData[]> = {
+    Arabic: [
+      {
+        titleAr: "مهارات القراءة",
+        titleEn: "Reading Skills",
+        descriptionAr: "تنمية مهارات القراءة والفهم",
+        descriptionEn: "Developing reading and comprehension skills",
+        lessons: [
+          {
+            titleAr: "قراءة النصوص",
+            titleEn: "Reading Texts",
+            duration: 30,
+          },
+          {
+            titleAr: "فهم المقروء",
+            titleEn: "Reading Comprehension",
+            duration: 35,
+          },
+          {
+            titleAr: "التحليل الأدبي",
+            titleEn: "Literary Analysis",
+            duration: 40,
+          },
+        ],
+      },
+      {
+        titleAr: "مهارات الكتابة",
+        titleEn: "Writing Skills",
+        descriptionAr: "تطوير مهارات الكتابة والتعبير",
+        descriptionEn: "Developing writing and expression skills",
+        lessons: [
+          { titleAr: "الإملاء", titleEn: "Spelling", duration: 25 },
+          {
+            titleAr: "التعبير الكتابي",
+            titleEn: "Written Expression",
+            duration: 35,
+          },
+          { titleAr: "كتابة المقال", titleEn: "Essay Writing", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "النحو والصرف",
+        titleEn: "Grammar",
+        descriptionAr: "قواعد اللغة العربية",
+        descriptionEn: "Arabic language rules",
+        lessons: [
+          {
+            titleAr: "الجملة الاسمية",
+            titleEn: "Nominal Sentence",
+            duration: 35,
+          },
+          {
+            titleAr: "الجملة الفعلية",
+            titleEn: "Verbal Sentence",
+            duration: 35,
+          },
+          { titleAr: "الإعراب", titleEn: "Parsing", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "الأدب والنصوص",
+        titleEn: "Literature",
+        descriptionAr: "دراسة النصوص الأدبية",
+        descriptionEn: "Study of literary texts",
+        lessons: [
+          { titleAr: "الشعر العربي", titleEn: "Arabic Poetry", duration: 40 },
+          { titleAr: "القصة القصيرة", titleEn: "Short Story", duration: 35 },
+          { titleAr: "المسرحية", titleEn: "Drama", duration: 35 },
+        ],
+      },
+    ],
+    English: [
+      {
+        titleAr: "مهارات القراءة",
+        titleEn: "Reading Skills",
+        descriptionAr: "تطوير مهارات القراءة الإنجليزية",
+        descriptionEn: "Developing English reading skills",
+        lessons: [
+          { titleAr: "قراءة النصوص", titleEn: "Reading Texts", duration: 30 },
+          { titleAr: "المفردات", titleEn: "Vocabulary", duration: 25 },
+          {
+            titleAr: "الفهم القرائي",
+            titleEn: "Reading Comprehension",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "القواعد",
+        titleEn: "Grammar",
+        descriptionAr: "قواعد اللغة الإنجليزية",
+        descriptionEn: "English grammar rules",
+        lessons: [
+          { titleAr: "الأزمنة", titleEn: "Tenses", duration: 40 },
+          { titleAr: "الجملة", titleEn: "Sentence Structure", duration: 35 },
+          { titleAr: "أدوات الربط", titleEn: "Conjunctions", duration: 30 },
+        ],
+      },
+      {
+        titleAr: "الكتابة",
+        titleEn: "Writing",
+        descriptionAr: "مهارات الكتابة الإنجليزية",
+        descriptionEn: "English writing skills",
+        lessons: [
+          {
+            titleAr: "كتابة الفقرة",
+            titleEn: "Paragraph Writing",
+            duration: 35,
+          },
+          { titleAr: "كتابة المقال", titleEn: "Essay Writing", duration: 40 },
+          {
+            titleAr: "الكتابة الإبداعية",
+            titleEn: "Creative Writing",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "المحادثة",
+        titleEn: "Speaking",
+        descriptionAr: "مهارات التحدث والاستماع",
+        descriptionEn: "Speaking and listening skills",
+        lessons: [
+          { titleAr: "النطق", titleEn: "Pronunciation", duration: 30 },
+          { titleAr: "المحادثة", titleEn: "Conversation", duration: 35 },
+          {
+            titleAr: "العروض التقديمية",
+            titleEn: "Presentations",
+            duration: 40,
+          },
+        ],
+      },
+    ],
+    Mathematics: [
+      {
+        titleAr: "الأعداد والعمليات",
+        titleEn: "Numbers and Operations",
+        descriptionAr: "الأعداد والعمليات الحسابية",
+        descriptionEn: "Numbers and arithmetic operations",
+        lessons: [
+          { titleAr: "الأعداد", titleEn: "Numbers", duration: 30 },
+          {
+            titleAr: "الجمع والطرح",
+            titleEn: "Addition and Subtraction",
+            duration: 35,
+          },
+          {
+            titleAr: "الضرب والقسمة",
+            titleEn: "Multiplication and Division",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "الجبر",
+        titleEn: "Algebra",
+        descriptionAr: "أساسيات الجبر والمعادلات",
+        descriptionEn: "Algebra basics and equations",
+        lessons: [
+          { titleAr: "المتغيرات", titleEn: "Variables", duration: 35 },
+          { titleAr: "المعادلات", titleEn: "Equations", duration: 40 },
+          { titleAr: "المتباينات", titleEn: "Inequalities", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "الهندسة",
+        titleEn: "Geometry",
+        descriptionAr: "الأشكال الهندسية والقياسات",
+        descriptionEn: "Geometric shapes and measurements",
+        lessons: [
+          {
+            titleAr: "الأشكال المستوية",
+            titleEn: "Plane Shapes",
+            duration: 35,
+          },
+          {
+            titleAr: "المساحة والمحيط",
+            titleEn: "Area and Perimeter",
+            duration: 40,
+          },
+          { titleAr: "الأشكال المجسمة", titleEn: "3D Shapes", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "الإحصاء",
+        titleEn: "Statistics",
+        descriptionAr: "جمع البيانات وتحليلها",
+        descriptionEn: "Data collection and analysis",
+        lessons: [
+          { titleAr: "جمع البيانات", titleEn: "Data Collection", duration: 30 },
+          { titleAr: "الرسوم البيانية", titleEn: "Graphs", duration: 35 },
+          { titleAr: "المتوسطات", titleEn: "Averages", duration: 35 },
+        ],
+      },
+    ],
+    Science: [
+      {
+        titleAr: "الكائنات الحية",
+        titleEn: "Living Things",
+        descriptionAr: "دراسة الكائنات الحية",
+        descriptionEn: "Study of living organisms",
+        lessons: [
+          { titleAr: "النباتات", titleEn: "Plants", duration: 35 },
+          { titleAr: "الحيوانات", titleEn: "Animals", duration: 35 },
+          { titleAr: "جسم الإنسان", titleEn: "Human Body", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "المادة والطاقة",
+        titleEn: "Matter and Energy",
+        descriptionAr: "خصائص المادة وأشكال الطاقة",
+        descriptionEn: "Properties of matter and forms of energy",
+        lessons: [
+          {
+            titleAr: "حالات المادة",
+            titleEn: "States of Matter",
+            duration: 35,
+          },
+          { titleAr: "الطاقة", titleEn: "Energy", duration: 35 },
+          { titleAr: "الحرارة", titleEn: "Heat", duration: 30 },
+        ],
+      },
+      {
+        titleAr: "الأرض والفضاء",
+        titleEn: "Earth and Space",
+        descriptionAr: "علوم الأرض والفضاء",
+        descriptionEn: "Earth and space sciences",
+        lessons: [
+          { titleAr: "طبقات الأرض", titleEn: "Earth's Layers", duration: 35 },
+          {
+            titleAr: "الطقس والمناخ",
+            titleEn: "Weather and Climate",
+            duration: 35,
+          },
+          { titleAr: "النظام الشمسي", titleEn: "Solar System", duration: 40 },
+        ],
+      },
+    ],
+    Physics: [
+      {
+        titleAr: "الميكانيكا",
+        titleEn: "Mechanics",
+        descriptionAr: "الحركة والقوى",
+        descriptionEn: "Motion and forces",
+        lessons: [
+          { titleAr: "الحركة", titleEn: "Motion", duration: 40 },
+          { titleAr: "القوى", titleEn: "Forces", duration: 40 },
+          { titleAr: "قوانين نيوتن", titleEn: "Newton's Laws", duration: 45 },
+        ],
+      },
+      {
+        titleAr: "الطاقة",
+        titleEn: "Energy",
+        descriptionAr: "أشكال الطاقة وتحولاتها",
+        descriptionEn: "Forms of energy and transformations",
+        lessons: [
+          {
+            titleAr: "الطاقة الحركية",
+            titleEn: "Kinetic Energy",
+            duration: 35,
+          },
+          {
+            titleAr: "الطاقة الكامنة",
+            titleEn: "Potential Energy",
+            duration: 35,
+          },
+          {
+            titleAr: "حفظ الطاقة",
+            titleEn: "Conservation of Energy",
+            duration: 40,
+          },
+        ],
+      },
+      {
+        titleAr: "الكهرباء",
+        titleEn: "Electricity",
+        descriptionAr: "الدوائر الكهربائية",
+        descriptionEn: "Electric circuits",
+        lessons: [
+          {
+            titleAr: "التيار الكهربائي",
+            titleEn: "Electric Current",
+            duration: 40,
+          },
+          { titleAr: "المقاومة", titleEn: "Resistance", duration: 35 },
+          { titleAr: "الدوائر", titleEn: "Circuits", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "الموجات",
+        titleEn: "Waves",
+        descriptionAr: "الموجات والصوت والضوء",
+        descriptionEn: "Waves, sound, and light",
+        lessons: [
+          {
+            titleAr: "خصائص الموجات",
+            titleEn: "Wave Properties",
+            duration: 35,
+          },
+          { titleAr: "الصوت", titleEn: "Sound", duration: 35 },
+          { titleAr: "الضوء", titleEn: "Light", duration: 40 },
+        ],
+      },
+    ],
+    Chemistry: [
+      {
+        titleAr: "بنية المادة",
+        titleEn: "Structure of Matter",
+        descriptionAr: "الذرات والجزيئات",
+        descriptionEn: "Atoms and molecules",
+        lessons: [
+          { titleAr: "الذرة", titleEn: "The Atom", duration: 40 },
+          { titleAr: "الجدول الدوري", titleEn: "Periodic Table", duration: 40 },
+          {
+            titleAr: "الروابط الكيميائية",
+            titleEn: "Chemical Bonds",
+            duration: 45,
+          },
+        ],
+      },
+      {
+        titleAr: "التفاعلات الكيميائية",
+        titleEn: "Chemical Reactions",
+        descriptionAr: "أنواع التفاعلات ومعادلاتها",
+        descriptionEn: "Types of reactions and equations",
+        lessons: [
+          {
+            titleAr: "أنواع التفاعلات",
+            titleEn: "Types of Reactions",
+            duration: 40,
+          },
+          {
+            titleAr: "موازنة المعادلات",
+            titleEn: "Balancing Equations",
+            duration: 35,
+          },
+          { titleAr: "سرعة التفاعل", titleEn: "Reaction Rate", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "الكيمياء العضوية",
+        titleEn: "Organic Chemistry",
+        descriptionAr: "مركبات الكربون",
+        descriptionEn: "Carbon compounds",
+        lessons: [
+          { titleAr: "الهيدروكربونات", titleEn: "Hydrocarbons", duration: 40 },
+          {
+            titleAr: "المجموعات الوظيفية",
+            titleEn: "Functional Groups",
+            duration: 40,
+          },
+          { titleAr: "البوليمرات", titleEn: "Polymers", duration: 35 },
+        ],
+      },
+    ],
+    Biology: [
+      {
+        titleAr: "الخلية",
+        titleEn: "The Cell",
+        descriptionAr: "تركيب الخلية ووظائفها",
+        descriptionEn: "Cell structure and functions",
+        lessons: [
+          { titleAr: "أنواع الخلايا", titleEn: "Types of Cells", duration: 35 },
+          { titleAr: "العضيات", titleEn: "Organelles", duration: 40 },
+          { titleAr: "انقسام الخلية", titleEn: "Cell Division", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "الوراثة",
+        titleEn: "Genetics",
+        descriptionAr: "الجينات والوراثة",
+        descriptionEn: "Genes and inheritance",
+        lessons: [
+          { titleAr: "DNA", titleEn: "DNA", duration: 40 },
+          { titleAr: "قوانين مندل", titleEn: "Mendel's Laws", duration: 35 },
+          { titleAr: "الطفرات", titleEn: "Mutations", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "البيئة",
+        titleEn: "Ecology",
+        descriptionAr: "الأنظمة البيئية",
+        descriptionEn: "Ecosystems",
+        lessons: [
+          { titleAr: "السلاسل الغذائية", titleEn: "Food Chains", duration: 35 },
+          {
+            titleAr: "التوازن البيئي",
+            titleEn: "Ecological Balance",
+            duration: 35,
+          },
+          { titleAr: "التنوع الحيوي", titleEn: "Biodiversity", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "جسم الإنسان",
+        titleEn: "Human Body",
+        descriptionAr: "أجهزة الجسم البشري",
+        descriptionEn: "Human body systems",
+        lessons: [
+          {
+            titleAr: "الجهاز الهضمي",
+            titleEn: "Digestive System",
+            duration: 40,
+          },
+          {
+            titleAr: "الجهاز الدوري",
+            titleEn: "Circulatory System",
+            duration: 40,
+          },
+          { titleAr: "الجهاز العصبي", titleEn: "Nervous System", duration: 40 },
+        ],
+      },
+    ],
+    "Islamic Studies": [
+      {
+        titleAr: "العقيدة",
+        titleEn: "Faith",
+        descriptionAr: "أركان الإيمان والتوحيد",
+        descriptionEn: "Pillars of faith and monotheism",
+        lessons: [
+          {
+            titleAr: "أركان الإيمان",
+            titleEn: "Pillars of Faith",
+            duration: 35,
+          },
+          { titleAr: "التوحيد", titleEn: "Monotheism", duration: 35 },
+          {
+            titleAr: "الإيمان بالملائكة",
+            titleEn: "Belief in Angels",
+            duration: 30,
+          },
+        ],
+      },
+      {
+        titleAr: "الفقه",
+        titleEn: "Jurisprudence",
+        descriptionAr: "الأحكام الشرعية العملية",
+        descriptionEn: "Practical Islamic rulings",
+        lessons: [
+          { titleAr: "الطهارة", titleEn: "Purification", duration: 35 },
+          { titleAr: "الصلاة", titleEn: "Prayer", duration: 40 },
+          { titleAr: "الصيام", titleEn: "Fasting", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "السيرة النبوية",
+        titleEn: "Prophet's Biography",
+        descriptionAr: "حياة النبي محمد ﷺ",
+        descriptionEn: "Life of Prophet Muhammad ﷺ",
+        lessons: [
+          {
+            titleAr: "الميلاد والنشأة",
+            titleEn: "Birth and Childhood",
+            duration: 40,
+          },
+          { titleAr: "البعثة", titleEn: "The Revelation", duration: 40 },
+          { titleAr: "الهجرة", titleEn: "The Migration", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "الأخلاق الإسلامية",
+        titleEn: "Islamic Ethics",
+        descriptionAr: "الآداب والأخلاق",
+        descriptionEn: "Manners and ethics",
+        lessons: [
+          { titleAr: "الصدق", titleEn: "Truthfulness", duration: 30 },
+          { titleAr: "الأمانة", titleEn: "Trustworthiness", duration: 30 },
+          { titleAr: "بر الوالدين", titleEn: "Honoring Parents", duration: 35 },
+        ],
+      },
+    ],
+    Quran: [
+      {
+        titleAr: "التجويد",
+        titleEn: "Tajweed",
+        descriptionAr: "أحكام تلاوة القرآن",
+        descriptionEn: "Rules of Quran recitation",
+        lessons: [
+          {
+            titleAr: "مخارج الحروف",
+            titleEn: "Articulation Points",
+            duration: 35,
+          },
+          {
+            titleAr: "أحكام النون الساكنة",
+            titleEn: "Noon Sakinah Rules",
+            duration: 40,
+          },
+          { titleAr: "المدود", titleEn: "Elongation Rules", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "الحفظ",
+        titleEn: "Memorization",
+        descriptionAr: "حفظ سور القرآن الكريم",
+        descriptionEn: "Quran memorization",
+        lessons: [
+          { titleAr: "جزء عم", titleEn: "Juz Amma", duration: 45 },
+          { titleAr: "السور القصيرة", titleEn: "Short Surahs", duration: 40 },
+          {
+            titleAr: "تقنيات الحفظ",
+            titleEn: "Memorization Techniques",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "التفسير",
+        titleEn: "Interpretation",
+        descriptionAr: "فهم معاني الآيات",
+        descriptionEn: "Understanding verse meanings",
+        lessons: [
+          {
+            titleAr: "أسباب النزول",
+            titleEn: "Reasons for Revelation",
+            duration: 40,
+          },
+          {
+            titleAr: "تفسير الآيات",
+            titleEn: "Verse Interpretation",
+            duration: 45,
+          },
+          {
+            titleAr: "الدروس المستفادة",
+            titleEn: "Lessons Learned",
+            duration: 35,
+          },
+        ],
+      },
+    ],
+    "Computer Science": [
+      {
+        titleAr: "أساسيات الحاسوب",
+        titleEn: "Computer Basics",
+        descriptionAr: "مكونات الحاسوب واستخدامه",
+        descriptionEn: "Computer components and usage",
+        lessons: [
+          {
+            titleAr: "مكونات الحاسوب",
+            titleEn: "Computer Components",
+            duration: 30,
+          },
+          {
+            titleAr: "نظام التشغيل",
+            titleEn: "Operating System",
+            duration: 35,
+          },
+          {
+            titleAr: "الملفات والمجلدات",
+            titleEn: "Files and Folders",
+            duration: 30,
+          },
+        ],
+      },
+      {
+        titleAr: "البرمجة",
+        titleEn: "Programming",
+        descriptionAr: "أساسيات البرمجة",
+        descriptionEn: "Programming basics",
+        lessons: [
+          {
+            titleAr: "مفهوم البرمجة",
+            titleEn: "Programming Concepts",
+            duration: 35,
+          },
+          { titleAr: "المتغيرات", titleEn: "Variables", duration: 35 },
+          { titleAr: "الحلقات", titleEn: "Loops", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "التطبيقات",
+        titleEn: "Applications",
+        descriptionAr: "برامج الحاسوب الأساسية",
+        descriptionEn: "Essential computer programs",
+        lessons: [
+          { titleAr: "معالج النصوص", titleEn: "Word Processing", duration: 35 },
+          { titleAr: "جداول البيانات", titleEn: "Spreadsheets", duration: 35 },
+          {
+            titleAr: "العروض التقديمية",
+            titleEn: "Presentations",
+            duration: 35,
+          },
+        ],
+      },
+    ],
+    Geography: [
+      {
+        titleAr: "الجغرافيا الطبيعية",
+        titleEn: "Physical Geography",
+        descriptionAr: "التضاريس والمناخ",
+        descriptionEn: "Landforms and climate",
+        lessons: [
+          { titleAr: "التضاريس", titleEn: "Landforms", duration: 35 },
+          { titleAr: "المناخ", titleEn: "Climate", duration: 35 },
+          {
+            titleAr: "الموارد الطبيعية",
+            titleEn: "Natural Resources",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "الجغرافيا البشرية",
+        titleEn: "Human Geography",
+        descriptionAr: "السكان والعمران",
+        descriptionEn: "Population and urbanization",
+        lessons: [
+          { titleAr: "السكان", titleEn: "Population", duration: 35 },
+          { titleAr: "الهجرة", titleEn: "Migration", duration: 30 },
+          { titleAr: "المدن", titleEn: "Cities", duration: 35 },
+        ],
+      },
+      {
+        titleAr: "جغرافية السودان",
+        titleEn: "Sudan Geography",
+        descriptionAr: "جغرافية السودان الطبيعية والبشرية",
+        descriptionEn: "Physical and human geography of Sudan",
+        lessons: [
+          {
+            titleAr: "الموقع والحدود",
+            titleEn: "Location and Borders",
+            duration: 35,
+          },
+          { titleAr: "النيل", titleEn: "The Nile", duration: 35 },
+          { titleAr: "الولايات", titleEn: "States", duration: 35 },
+        ],
+      },
+    ],
+    History: [
+      {
+        titleAr: "التاريخ القديم",
+        titleEn: "Ancient History",
+        descriptionAr: "الحضارات القديمة",
+        descriptionEn: "Ancient civilizations",
+        lessons: [
+          {
+            titleAr: "حضارات ما بين النهرين",
+            titleEn: "Mesopotamian Civilizations",
+            duration: 40,
+          },
+          {
+            titleAr: "الحضارة المصرية",
+            titleEn: "Egyptian Civilization",
+            duration: 40,
+          },
+          { titleAr: "مملكة كوش", titleEn: "Kingdom of Kush", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "التاريخ الإسلامي",
+        titleEn: "Islamic History",
+        descriptionAr: "تاريخ الدولة الإسلامية",
+        descriptionEn: "History of the Islamic state",
+        lessons: [
+          {
+            titleAr: "الخلفاء الراشدون",
+            titleEn: "Rightly Guided Caliphs",
+            duration: 45,
+          },
+          {
+            titleAr: "الدولة الأموية",
+            titleEn: "Umayyad Dynasty",
+            duration: 40,
+          },
+          {
+            titleAr: "الدولة العباسية",
+            titleEn: "Abbasid Dynasty",
+            duration: 40,
+          },
+        ],
+      },
+      {
+        titleAr: "تاريخ السودان",
+        titleEn: "Sudan History",
+        descriptionAr: "تاريخ السودان الحديث والمعاصر",
+        descriptionEn: "Modern and contemporary Sudan history",
+        lessons: [
+          { titleAr: "الدولة المهدية", titleEn: "Mahdist State", duration: 45 },
+          {
+            titleAr: "الحكم الثنائي",
+            titleEn: "Condominium Rule",
+            duration: 40,
+          },
+          { titleAr: "الاستقلال", titleEn: "Independence", duration: 40 },
+        ],
+      },
+    ],
+    Art: [
+      {
+        titleAr: "الرسم",
+        titleEn: "Drawing",
+        descriptionAr: "أساسيات الرسم والتلوين",
+        descriptionEn: "Drawing and coloring basics",
+        lessons: [
+          {
+            titleAr: "الخطوط والأشكال",
+            titleEn: "Lines and Shapes",
+            duration: 30,
+          },
+          { titleAr: "الظل والنور", titleEn: "Light and Shadow", duration: 35 },
+          { titleAr: "التلوين", titleEn: "Coloring", duration: 30 },
+        ],
+      },
+      {
+        titleAr: "الأشغال اليدوية",
+        titleEn: "Handicrafts",
+        descriptionAr: "الحرف اليدوية والإبداعية",
+        descriptionEn: "Creative handicrafts",
+        lessons: [
+          { titleAr: "الورق", titleEn: "Paper Crafts", duration: 35 },
+          { titleAr: "الصلصال", titleEn: "Clay Work", duration: 35 },
+          {
+            titleAr: "إعادة التدوير",
+            titleEn: "Recycling Crafts",
+            duration: 35,
+          },
+        ],
+      },
+      {
+        titleAr: "الفن السوداني",
+        titleEn: "Sudanese Art",
+        descriptionAr: "التراث الفني السوداني",
+        descriptionEn: "Sudanese artistic heritage",
+        lessons: [
+          {
+            titleAr: "الزخارف السودانية",
+            titleEn: "Sudanese Ornaments",
+            duration: 35,
+          },
+          { titleAr: "الحناء", titleEn: "Henna Art", duration: 30 },
+          {
+            titleAr: "النسيج التقليدي",
+            titleEn: "Traditional Weaving",
+            duration: 35,
+          },
+        ],
+      },
+    ],
+    "Physical Education": [
+      {
+        titleAr: "اللياقة البدنية",
+        titleEn: "Physical Fitness",
+        descriptionAr: "تمارين اللياقة البدنية",
+        descriptionEn: "Physical fitness exercises",
+        lessons: [
+          { titleAr: "الإحماء", titleEn: "Warm-up", duration: 25 },
+          {
+            titleAr: "تمارين القوة",
+            titleEn: "Strength Exercises",
+            duration: 35,
+          },
+          {
+            titleAr: "تمارين المرونة",
+            titleEn: "Flexibility Exercises",
+            duration: 30,
+          },
+        ],
+      },
+      {
+        titleAr: "الألعاب الجماعية",
+        titleEn: "Team Sports",
+        descriptionAr: "الرياضات الجماعية",
+        descriptionEn: "Team sports",
+        lessons: [
+          { titleAr: "كرة القدم", titleEn: "Football", duration: 40 },
+          { titleAr: "كرة السلة", titleEn: "Basketball", duration: 40 },
+          { titleAr: "الكرة الطائرة", titleEn: "Volleyball", duration: 40 },
+        ],
+      },
+      {
+        titleAr: "الصحة والسلامة",
+        titleEn: "Health and Safety",
+        descriptionAr: "التغذية السليمة والسلامة",
+        descriptionEn: "Proper nutrition and safety",
+        lessons: [
+          {
+            titleAr: "التغذية السليمة",
+            titleEn: "Proper Nutrition",
+            duration: 30,
+          },
+          {
+            titleAr: "النظافة الشخصية",
+            titleEn: "Personal Hygiene",
+            duration: 25,
+          },
+          { titleAr: "الإسعافات الأولية", titleEn: "First Aid", duration: 35 },
+        ],
+      },
+    ],
+  }
+
+  // Return chapters for the subject, or default generic chapters
+  return (
+    templates[subjectEn] || [
+      {
+        titleAr: "الوحدة الأولى",
+        titleEn: "Unit 1",
+        descriptionAr: "المفاهيم الأساسية",
+        descriptionEn: "Basic concepts",
+        lessons: [
+          { titleAr: "الدرس الأول", titleEn: "Lesson 1", duration: 30 },
+          { titleAr: "الدرس الثاني", titleEn: "Lesson 2", duration: 30 },
+          { titleAr: "الدرس الثالث", titleEn: "Lesson 3", duration: 30 },
+        ],
+      },
+      {
+        titleAr: "الوحدة الثانية",
+        titleEn: "Unit 2",
+        descriptionAr: "التطبيقات العملية",
+        descriptionEn: "Practical applications",
+        lessons: [
+          { titleAr: "الدرس الأول", titleEn: "Lesson 1", duration: 30 },
+          { titleAr: "الدرس الثاني", titleEn: "Lesson 2", duration: 30 },
+          { titleAr: "الدرس الثالث", titleEn: "Lesson 3", duration: 30 },
+        ],
+      },
+      {
+        titleAr: "الوحدة الثالثة",
+        titleEn: "Unit 3",
+        descriptionAr: "المراجعة والتقييم",
+        descriptionEn: "Review and assessment",
+        lessons: [
+          { titleAr: "الدرس الأول", titleEn: "Lesson 1", duration: 30 },
+          { titleAr: "الدرس الثاني", titleEn: "Lesson 2", duration: 30 },
+          { titleAr: "المراجعة", titleEn: "Review", duration: 35 },
+        ],
+      },
+    ]
+  )
+}
+
+/**
+ * Determine course level based on grade level
+ */
+function getLevelForGrade(gradeLevelEn: string): StreamCourseLevel {
+  if (
+    gradeLevelEn.includes("KG") ||
+    ["Grade 1", "Grade 2", "Grade 3"].includes(gradeLevelEn)
+  ) {
+    return StreamCourseLevel.BEGINNER
+  }
+  if (
+    ["Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8"].includes(
+      gradeLevelEn
+    )
+  ) {
+    return StreamCourseLevel.INTERMEDIATE
+  }
+  return StreamCourseLevel.ADVANCED
+}
+
+/**
+ * Get category key for a subject's department
+ */
+function getCategoryKeyForSubject(departmentEn: string): string {
+  const mapping: Record<string, string> = {
+    Languages: "Languages",
+    Sciences: "Sciences",
+    Humanities: "Humanities",
+    Religion: "Religion",
+    ICT: "ICT",
+    "Arts & PE": "Arts & PE",
+  }
+  return mapping[departmentEn] || "Sciences"
+}
+
+/**
+ * Generate image URL based on subject
+ */
+function getImageForSubject(subjectEn: string): string {
+  const images: Record<string, string> = {
+    Arabic:
+      "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=800&h=450&fit=crop",
+    English:
+      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=450&fit=crop",
+    Mathematics:
+      "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&h=450&fit=crop",
+    Science:
+      "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=450&fit=crop",
+    Physics:
+      "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800&h=450&fit=crop",
+    Chemistry:
+      "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=450&fit=crop",
+    Biology:
+      "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800&h=450&fit=crop",
+    "Islamic Studies":
+      "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=800&h=450&fit=crop",
+    Quran:
+      "https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=800&h=450&fit=crop",
+    "Computer Science":
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&h=450&fit=crop",
+    Geography:
+      "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&h=450&fit=crop",
+    History:
+      "https://images.unsplash.com/photo-1590845947670-c009801ffa74?w=800&h=450&fit=crop",
+    Art: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800&h=450&fit=crop",
+    "Physical Education":
+      "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&h=450&fit=crop",
+  }
+  return (
+    images[subjectEn] ||
+    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=450&fit=crop"
+  )
+}
+
+// ============================================================================
+// K-12 SUBJECT COURSES SEEDING
+// ============================================================================
+
+/**
+ * Seeds K-12 subject courses for all grade levels
+ * Creates ~324 courses (162 subjects × 2 languages)
+ */
+async function seedK12SubjectCourses(
+  prisma: SeedPrisma,
+  schoolId: string,
+  categoryMap: Map<string, { arId: string; enId: string }>,
+  teacherId: string // Required: userId is required in StreamCourse model
+): Promise<{
+  arCount: number
+  enCount: number
+  chapterCount: number
+  lessonCount: number
+}> {
+  let arCount = 0
+  let enCount = 0
+  let chapterCount = 0
+  let lessonCount = 0
+
+  // For each grade level, seed all subjects in its curriculum
+  for (const yearLevel of YEAR_LEVELS) {
+    const gradeSubjects = CURRICULUM[yearLevel.en]
+    if (!gradeSubjects) continue
+
+    for (const subjectEn of gradeSubjects) {
+      // Find subject data
+      const subject = SUBJECTS.find((s) => s.en === subjectEn)
+      if (!subject) continue
+
+      // Generate slug: subject-grade (e.g., "arabic-grade-7")
+      const gradeSlug = yearLevel.en.toLowerCase().replace(/\s+/g, "-")
+      const slug = `${subjectEn.toLowerCase().replace(/\s+/g, "-")}-${gradeSlug}`
+
+      // Get chapters for this subject
+      const chapters = getSubjectChapters(subjectEn, yearLevel.en)
+
+      const course: BilingualCourseData = {
+        slug,
+        titleAr: `${subject.ar} - ${yearLevel.ar}`,
+        titleEn: `${subject.en} - ${yearLevel.en}`,
+        descriptionAr: `${subject.descriptionAr} للصف ${yearLevel.ar}`,
+        descriptionEn: `${subject.descriptionEn} for ${yearLevel.en}`,
+        price: 0,
+        categoryKey: getCategoryKeyForSubject(subject.departmentEn),
+        level: getLevelForGrade(yearLevel.en),
+        imageUrl: getImageForSubject(subjectEn),
+        chapters,
+      }
+
+      // Create bilingual course
+      await createBilingualCourse({
+        prisma,
+        schoolId,
+        course,
+        categoryMap,
+        teacherId,
+      })
+
+      arCount++
+      enCount++
+      chapterCount += chapters.length * 2 // Both AR and EN
+      lessonCount +=
+        chapters.reduce((sum, ch) => sum + ch.lessons.length, 0) * 2
+    }
+  }
+
+  return { arCount, enCount, chapterCount, lessonCount }
+}
+
+// ============================================================================
 // SEED FUNCTION
 // ============================================================================
 
@@ -1068,10 +2295,50 @@ export async function seedStream(
   teachers: TeacherRef[],
   students?: StudentRef[]
 ): Promise<void> {
-  console.log("🎓 Creating comprehensive LMS platform...")
+  console.log("🎓 Creating comprehensive bilingual LMS platform...")
 
-  // Categories - Find or create all categories
-  const categoryNames = [
+  // Phase 1: Create bilingual categories
+  console.log("   📁 Creating bilingual categories...")
+  const categoryMap = await seedBilingualCategories(prisma, schoolId)
+  console.log(
+    `   ✅ Categories: ${categoryMap.size} bilingual category pairs created`
+  )
+
+  // Get a teacher for course assignment (required for course creation)
+  const teacherId = teachers[0]?.userId
+  if (!teacherId) {
+    console.log("   ⚠️  No teachers available - skipping K-12 course seeding")
+    console.log(
+      "   📊 Bilingual LMS Summary: No courses seeded (no teachers)\n"
+    )
+    return
+  }
+
+  // Phase 2: Seed K-12 subject courses (bilingual)
+  console.log("   📚 Seeding K-12 subject courses (bilingual)...")
+  const k12Stats = await seedK12SubjectCourses(
+    prisma,
+    schoolId,
+    categoryMap,
+    teacherId
+  )
+  console.log(
+    `   ✅ K-12 Courses: ${k12Stats.arCount} AR + ${k12Stats.enCount} EN = ${k12Stats.arCount + k12Stats.enCount} total`
+  )
+  console.log(`   ✅ K-12 Chapters: ${k12Stats.chapterCount}`)
+  console.log(`   ✅ K-12 Lessons: ${k12Stats.lessonCount}`)
+
+  // Phase 3: Keep legacy courses (backward compatibility, single-lang for now)
+  // These use the old combined format - can be migrated later
+  console.log("   📖 Seeding legacy courses...")
+  let legacyCourseCount = 0
+  let legacyChapterCount = 0
+  let legacyLessonCount = 0
+  const createdCourses: { id: string; title: string }[] = []
+
+  // Create legacy categories (for old courses that reference them)
+  const legacyCategories = new Map<string, string>()
+  const legacyCategoryNames = [
     "Islamic Studies",
     "Languages",
     "Mathematics",
@@ -1079,9 +2346,7 @@ export async function seedStream(
     "Programming",
     "Humanities",
   ]
-  const categories = new Map<string, string>()
-
-  for (const name of categoryNames) {
+  for (const name of legacyCategoryNames) {
     let cat = await prisma.streamCategory.findFirst({
       where: { schoolId, name },
     })
@@ -1090,44 +2355,36 @@ export async function seedStream(
         data: { name, schoolId },
       })
     }
-    categories.set(name, cat.id)
+    legacyCategories.set(name, cat.id)
   }
-  console.log(
-    `   ✅ Categories: ${categoryNames.length} course categories (existing + new)`
-  )
-
-  // Courses and content
-  let courseCount = 0
-  let chapterCount = 0
-  let lessonCount = 0
-  const createdCourses: { id: string; title: string }[] = []
 
   for (const courseData of COURSES_DATA) {
     const { chapters, categoryName, level, imageUrl, ...courseInfo } =
       courseData
 
-    // Check if course already exists
+    // Check if course already exists (any language)
     let course = await prisma.streamCourse.findFirst({
       where: { schoolId, slug: courseInfo.slug },
     })
 
     if (!course) {
-      // Assign random teacher from available teachers
-      const assignedTeacher = teachers[courseCount % teachers.length]
+      // Assign teacher
+      const assignedTeacher = teachers[legacyCourseCount % teachers.length]
 
       course = await prisma.streamCourse.create({
         data: {
           ...courseInfo,
           schoolId,
           userId: assignedTeacher?.userId,
-          categoryId: categories.get(categoryName),
+          categoryId: legacyCategories.get(categoryName),
           isPublished: true,
           imageUrl,
           level: level || StreamCourseLevel.BEGINNER,
+          lang: "en", // Default to English for legacy
         },
       })
 
-      // Chapters and lessons - only create for new courses
+      // Create chapters and lessons
       for (let ci = 0; ci < chapters.length; ci++) {
         const chapterData = chapters[ci]
         const chapter = await prisma.streamChapter.create({
@@ -1139,7 +2396,7 @@ export async function seedStream(
             courseId: course.id,
           },
         })
-        chapterCount++
+        legacyChapterCount++
 
         for (let li = 0; li < chapterData.lessons.length; li++) {
           const lessonData = chapterData.lessons[li]
@@ -1154,89 +2411,114 @@ export async function seedStream(
                 lessonData.duration || faker.number.int({ min: 20, max: 50 }),
               videoUrl: lessonData.videoUrl,
               isPublished: true,
-              isFree: li === 0, // First lesson of each chapter is free
+              isFree: li === 0,
               chapterId: chapter.id,
             },
           })
-          lessonCount++
+          legacyLessonCount++
         }
       }
     }
 
     createdCourses.push({ id: course.id, title: course.title })
-    courseCount++
+    legacyCourseCount++
   }
 
-  console.log(`   ✅ Created: ${courseCount} comprehensive courses`)
-  console.log(`   ✅ Created: ${chapterCount} chapters`)
-  console.log(`   ✅ Created: ${lessonCount} video lessons`)
+  console.log(`   ✅ Legacy courses: ${legacyCourseCount}`)
+  console.log(`   ✅ Legacy chapters: ${legacyChapterCount}`)
+  console.log(`   ✅ Legacy lessons: ${legacyLessonCount}`)
 
-  // Create student enrollments and progress if students are provided
+  // Phase 4: Create student enrollments (on all courses)
   if (students && students.length > 0) {
     let enrollmentCount = 0
     let progressCount = 0
 
-    // Enroll students in random courses (each student enrolled in 2-5 courses)
+    // Get all courses for enrollment
+    const allCourses = await prisma.streamCourse.findMany({
+      where: { schoolId },
+      select: { id: true, title: true },
+    })
+
+    // Enroll 50 students in 2-5 random courses each
     for (const student of students.slice(0, Math.min(50, students.length))) {
       const numCourses = faker.number.int({ min: 2, max: 5 })
       const selectedCourses = faker.helpers.arrayElements(
-        createdCourses,
+        allCourses,
         numCourses
       )
 
       for (const course of selectedCourses) {
-        // Create enrollment
-        await prisma.streamEnrollment.create({
-          data: {
-            schoolId,
-            userId: student.userId,
-            courseId: course.id,
-          },
-        })
-        enrollmentCount++
-
-        // Create progress for some lessons (30-80% completion)
-        const completionRate = faker.number.float({ min: 0.3, max: 0.8 })
-        const chapters = await prisma.streamChapter.findMany({
-          where: { courseId: course.id },
-          include: { lessons: true },
+        // Check if enrollment exists
+        const existingEnrollment = await prisma.streamEnrollment.findFirst({
+          where: { schoolId, userId: student.userId, courseId: course.id },
         })
 
-        for (const chapter of chapters) {
-          const lessonsToComplete = Math.floor(
-            chapter.lessons.length * completionRate
-          )
-          const completedLessons = chapter.lessons.slice(0, lessonsToComplete)
+        if (!existingEnrollment) {
+          await prisma.streamEnrollment.create({
+            data: {
+              schoolId,
+              userId: student.userId,
+              courseId: course.id,
+            },
+          })
+          enrollmentCount++
 
-          for (const lesson of completedLessons) {
-            await prisma.streamLessonProgress.create({
-              data: {
-                lessonId: lesson.id,
-                userId: student.userId,
-                isCompleted: true,
-              },
-            })
-            progressCount++
+          // Create progress for some lessons (30-80% completion)
+          const completionRate = faker.number.float({ min: 0.3, max: 0.8 })
+          const chapters = await prisma.streamChapter.findMany({
+            where: { courseId: course.id },
+            include: { lessons: true },
+          })
+
+          for (const chapter of chapters) {
+            const lessonsToComplete = Math.floor(
+              chapter.lessons.length * completionRate
+            )
+            const completedLessons = chapter.lessons.slice(0, lessonsToComplete)
+
+            for (const lesson of completedLessons) {
+              await prisma.streamLessonProgress.create({
+                data: {
+                  lessonId: lesson.id,
+                  userId: student.userId,
+                  isCompleted: true,
+                },
+              })
+              progressCount++
+            }
           }
         }
       }
     }
 
-    console.log(`   ✅ Created: ${enrollmentCount} student enrollments`)
-    console.log(`   ✅ Created: ${progressCount} progress records`)
+    console.log(`   ✅ Enrollments: ${enrollmentCount}`)
+    console.log(`   ✅ Progress records: ${progressCount}`)
   }
 
   // Summary
-  console.log(`   📚 LMS Summary:`)
-  console.log(`      - Islamic Studies: 3 courses`)
-  console.log(`      - Languages: 2 courses`)
-  console.log(`      - Mathematics: 2 courses`)
-  console.log(`      - Science: 3 courses`)
-  console.log(`      - Programming: 2 courses`)
-  console.log(`      - Humanities: 1 course`)
+  const totalCourses = k12Stats.arCount + k12Stats.enCount + legacyCourseCount
+  const totalChapters = k12Stats.chapterCount + legacyChapterCount
+  const totalLessons = k12Stats.lessonCount + legacyLessonCount
+
+  console.log(`\n   📊 Bilingual LMS Summary:`)
+  console.log(`      ┌─────────────────────────────────────────┐`)
   console.log(
-    `      - Total: ${courseCount} courses, ${chapterCount} chapters, ${lessonCount} lessons\n`
+    `      │ K-12 Subject Courses: ${String(k12Stats.arCount + k12Stats.enCount).padStart(4)} (${k12Stats.arCount} AR + ${k12Stats.enCount} EN) │`
   )
+  console.log(
+    `      │ Legacy Courses:       ${String(legacyCourseCount).padStart(4)}                    │`
+  )
+  console.log(`      ├─────────────────────────────────────────┤`)
+  console.log(
+    `      │ Total Courses:        ${String(totalCourses).padStart(4)}                    │`
+  )
+  console.log(
+    `      │ Total Chapters:       ${String(totalChapters).padStart(4)}                    │`
+  )
+  console.log(
+    `      │ Total Lessons:        ${String(totalLessons).padStart(4)}                    │`
+  )
+  console.log(`      └─────────────────────────────────────────┘\n`)
 }
 
 // ============================================================================

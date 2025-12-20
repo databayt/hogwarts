@@ -1,0 +1,81 @@
+// Profile Models - GitHub-style profile features
+
+// Activity types for contribution tracking
+enum UserActivityType {
+  ASSIGNMENT_SUBMITTED
+  ATTENDANCE_MARKED
+  ACHIEVEMENT_EARNED
+  EXAM_COMPLETED
+  COURSE_ENROLLED
+  COURSE_COMPLETED
+  LIBRARY_CHECKOUT
+  LIBRARY_RETURN
+  EVENT_ATTENDED
+  CLUB_JOINED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  GRADE_RECEIVED
+  CERTIFICATE_EARNED
+  PROFILE_UPDATED
+  OTHER
+}
+
+// User activity tracking for contribution graph and timeline
+model UserActivity {
+  id           String           @id @default(cuid())
+  schoolId     String
+  userId       String
+  activityType UserActivityType
+  title        String
+  description  String?
+  metadata     Json?            // Additional data (score, grade, etc.)
+  createdAt    DateTime         @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([userId])
+  @@index([schoolId, userId, createdAt])
+  @@index([createdAt])
+  @@map("user_activities")
+}
+
+// Pinned item types
+enum PinnedItemType {
+  COURSE
+  SUBJECT
+  PROJECT
+  ACHIEVEMENT
+  CERTIFICATE
+  CLASS
+  CHILD         // For parents
+  DEPARTMENT
+  PUBLICATION
+  TASK
+}
+
+// Pinned items (like GitHub's pinned repositories)
+model PinnedItem {
+  id          String         @id @default(cuid())
+  schoolId    String
+  userId      String
+  itemType    PinnedItemType
+  itemId      String         // Reference to the actual item
+  title       String
+  description String?
+  metadata    Json?          // Language, stats, icon, etc.
+  order       Int            @default(0)
+  isPublic    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId, itemType, itemId])
+  @@index([schoolId])
+  @@index([userId])
+  @@index([schoolId, userId, order])
+  @@map("pinned_items")
+}

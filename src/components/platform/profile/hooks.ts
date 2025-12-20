@@ -8,6 +8,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import useSWR, { mutate } from "swr"
 
+// ============================================================================
+// Server Action Based Hooks
+// ============================================================================
+
+import {
+  getContributionData,
+  getPinnedItems,
+  getRecentActivity,
+  getUserProfileWithGitHubFields,
+} from "./actions"
 import type {
   ActivityItem,
   BaseProfile,
@@ -685,4 +695,146 @@ export function useProfileNotifications(): UseProfileNotificationsReturn {
     deleteNotification,
     refresh,
   }
+}
+
+/**
+ * Hook to fetch contribution data using server actions
+ */
+export function useServerContributions(userId?: string, year?: number) {
+  const [data, setData] = useState<{
+    contributions: Array<{
+      date: string
+      count: number
+      level: 0 | 1 | 2 | 3 | 4
+      details: {
+        attendance?: number
+        assignments?: number
+        achievements?: number
+        activities?: number
+      }
+    }>
+    totalContributions: number
+    year: number
+  } | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await getContributionData(userId, year)
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error || "Failed to fetch contributions")
+      }
+    } catch (err) {
+      setError("An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId, year])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refresh: fetchData }
+}
+
+/**
+ * Hook to fetch pinned items using server actions
+ */
+export function useServerPinnedItems(userId?: string) {
+  const [data, setData] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await getPinnedItems(userId)
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error || "Failed to fetch pinned items")
+      }
+    } catch (err) {
+      setError("An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refresh: fetchData }
+}
+
+/**
+ * Hook to fetch recent activity using server actions
+ */
+export function useServerActivity(userId?: string, limit = 20) {
+  const [data, setData] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await getRecentActivity(userId, limit)
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error || "Failed to fetch activity")
+      }
+    } catch (err) {
+      setError("An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId, limit])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refresh: fetchData }
+}
+
+/**
+ * Hook to fetch user profile with GitHub fields using server actions
+ */
+export function useServerProfile(userId?: string) {
+  const [data, setData] = useState<any | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await getUserProfileWithGitHubFields(userId)
+      if (result.success && result.data) {
+        setData(result.data)
+      } else {
+        setError(result.error || "Failed to fetch profile")
+      }
+    } catch (err) {
+      setError("An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  return { data, isLoading, error, refresh: fetchData }
 }

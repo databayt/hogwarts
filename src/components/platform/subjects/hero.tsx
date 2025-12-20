@@ -48,14 +48,15 @@ export function SubjectHero({
   }
 
   return (
-    <div className="bg-muted relative h-32 overflow-hidden rounded-xl sm:h-40">
+    <div className="bg-muted relative h-48 overflow-hidden rounded-xl sm:h-56 md:h-64">
       <Image
         src={imageUrl}
         alt={displayName}
         fill
         className="object-cover"
         priority
-        sizes="100vw"
+        quality={90}
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
       />
 
       {/* Gradient overlay */}
@@ -88,5 +89,5 @@ export function SubjectHero({
  * Loading skeleton for SubjectHero
  */
 export function SubjectHeroSkeleton() {
-  return <Skeleton className="h-32 w-full rounded-xl sm:h-40" />
+  return <Skeleton className="h-48 w-full rounded-xl sm:h-56 md:h-64" />
 }

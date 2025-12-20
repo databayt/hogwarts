@@ -17,9 +17,13 @@ import {
   useProfile,
   useProfileActivity,
   useProfileContributions,
+  useServerActivity,
+  useServerContributions,
+  useServerPinnedItems,
 } from "../hooks"
 import { ActivityTimeline } from "../shared/activity-timeline"
 import { ContributionGraph } from "../shared/contribution-graph"
+import { PinnedItems } from "../shared/pinned-items"
 import { ProfileGitHubLayout } from "../shared/profile-github-layout"
 import { ProfileHeader } from "../shared/profile-header"
 import { ProfileHeaderCompact } from "../shared/profile-header-compact"
@@ -280,10 +284,20 @@ export function StaffProfileContent({
   const [activeTab, setActiveTab] = useState("overview")
   const { open: sidebarOpen } = useSidebar()
 
-  // Use mock data for now (replace with real API calls)
+  // Use mock data for profile structure (replace with real API calls)
   const profile = useMemo(() => generateMockStaffProfile(), [])
   const isLoading = false
   const error = null
+
+  // Real data hooks for GitHub-style features
+  const { data: contributionData } = useServerContributions(staffId)
+  const { data: pinnedItems } = useServerPinnedItems(staffId)
+  const { data: recentActivity } = useServerActivity(staffId, 10)
+
+  // Merge real data with profile if available
+  const profileWithRealData = useMemo(() => {
+    return profile
+  }, [profile])
 
   // Tab configuration
   const tabs: TabConfig[] = [

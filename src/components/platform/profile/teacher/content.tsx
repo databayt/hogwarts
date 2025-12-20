@@ -50,9 +50,13 @@ import {
   useProfile,
   useProfileActivity,
   useProfileContributions,
+  useServerActivity,
+  useServerContributions,
+  useServerPinnedItems,
 } from "../hooks"
 import { ActivityTimeline } from "../shared/activity-timeline"
 import { ContributionGraph } from "../shared/contribution-graph"
+import { PinnedItems } from "../shared/pinned-items"
 import { ProfileGitHubLayout } from "../shared/profile-github-layout"
 import { ProfileHeader } from "../shared/profile-header"
 import { ProfileHeaderCompact } from "../shared/profile-header-compact"
@@ -430,10 +434,30 @@ export function TeacherProfileContent({
   const [activeTab, setActiveTab] = useState("overview")
   const { open: sidebarOpen } = useSidebar()
 
-  // Use mock data for now (replace with real API calls)
+  // Use mock data for profile structure (replace with real API calls)
   const profile = useMemo(() => generateMockTeacherProfile(), [])
   const isLoading = false
   const error = null
+
+  // Real data hooks for GitHub-style features
+  const { data: contributionData } = useServerContributions(teacherId)
+  const { data: pinnedItems } = useServerPinnedItems(teacherId)
+  const { data: recentActivity } = useServerActivity(teacherId, 10)
+
+  // Merge real contribution data with profile if available
+  const profileWithRealData = useMemo(() => {
+    if (contributionData) {
+      return {
+        ...profile,
+        contributionData: {
+          ...profile.contributionData,
+          totalContributions: contributionData.totalContributions,
+          contributions: contributionData.contributions,
+        },
+      }
+    }
+    return profile
+  }, [profile, contributionData])
 
   // Tab configuration
   const tabs: TabConfig[] = [
@@ -517,17 +541,37 @@ export function TeacherProfileContent({
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
+        {/* GitHub-style pinned items */}
+        <PinnedItems
+          items={pinnedItems || []}
+          isOwner={isOwner}
+          onCustomize={() => console.log("Customize pins")}
+          dictionary={dictionary}
+          lang={lang}
+        />
+
         {/* GitHub-style contribution graph */}
         <ContributionGraph
-          data={profile.contributionData}
+          data={profileWithRealData.contributionData}
           dictionary={dictionary}
           lang={lang}
           onDayClick={(date) => console.log("Day clicked:", date)}
         />
 
-        {/* Recent Activity */}
+        {/* Recent Activity - use real data if available */}
         <ActivityTimeline
-          activities={profile.recentActivity}
+          activities={
+            recentActivity?.length
+              ? recentActivity.map((a) => ({
+                  id: a.id,
+                  type: a.activityType as any,
+                  title: a.title,
+                  description: a.description || undefined,
+                  timestamp: new Date(a.createdAt),
+                  metadata: a.metadata as Record<string, any> | undefined,
+                }))
+              : profileWithRealData.recentActivity
+          }
           dictionary={dictionary}
           lang={lang}
           onActivityClick={(activity) =>
@@ -537,20 +581,32 @@ export function TeacherProfileContent({
         />
 
         {/* Overview Tab Content */}
-        <OverviewTab profile={profile} dictionary={dictionary} lang={lang} />
+        <OverviewTab
+          profile={profileWithRealData}
+          dictionary={dictionary}
+          lang={lang}
+        />
       </TabsContent>
 
       <TabsContent value="classes">
-        <ClassesTab profile={profile} dictionary={dictionary} lang={lang} />
+        <ClassesTab
+          profile={profileWithRealData}
+          dictionary={dictionary}
+          lang={lang}
+        />
       </TabsContent>
 
       <TabsContent value="schedule">
-        <ScheduleTab profile={profile} dictionary={dictionary} lang={lang} />
+        <ScheduleTab
+          profile={profileWithRealData}
+          dictionary={dictionary}
+          lang={lang}
+        />
       </TabsContent>
 
       <TabsContent value="qualifications">
         <QualificationsTab
-          profile={profile}
+          profile={profileWithRealData}
           dictionary={dictionary}
           lang={lang}
         />
@@ -558,14 +614,18 @@ export function TeacherProfileContent({
 
       <TabsContent value="publications">
         <PublicationsTab
-          profile={profile}
+          profile={profileWithRealData}
           dictionary={dictionary}
           lang={lang}
         />
       </TabsContent>
 
       <TabsContent value="reviews">
-        <ReviewsTab profile={profile} dictionary={dictionary} lang={lang} />
+        <ReviewsTab
+          profile={profileWithRealData}
+          dictionary={dictionary}
+          lang={lang}
+        />
       </TabsContent>
     </Tabs>
   )
@@ -576,7 +636,7 @@ export function TeacherProfileContent({
       <div className={cn("space-y-0", className)}>
         {/* Compact Profile Header */}
         <ProfileHeaderCompact
-          profile={profile}
+          profile={profileWithRealData}
           dictionary={dictionary}
           lang={lang}
           isOwner={isOwner}
@@ -599,7 +659,7 @@ export function TeacherProfileContent({
   return (
     <div className={cn("", className)}>
       <ProfileGitHubLayout
-        profile={profile}
+        profile={profileWithRealData}
         dictionary={dictionary}
         lang={lang}
         isOwner={isOwner}

@@ -25,6 +25,7 @@ export default function AcademicContent({ school, dictionary, lang }: Props) {
       <AcademicStats lang={lang} dictionary={dictionary} />
       <AcademicCurriculum lang={lang} dictionary={dictionary} />
       <AcademicCTA lang={lang} dictionary={dictionary} />
+      <div className="pb-16 md:pb-24 lg:pb-32" />
       <Footer />
     </div>
   )

@@ -236,6 +236,10 @@ model School {
   leads          Lead[]
   leadActivities LeadActivity[]
 
+  // Profile relations (GitHub-style)
+  userActivities UserActivity[]
+  pinnedItems    PinnedItem[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

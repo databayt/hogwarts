@@ -19,6 +19,15 @@ model User {
   password      String?
   role          UserRole  @default(USER)
 
+  // GitHub-style profile fields
+  bio           String?   @db.Text  // User bio/README
+  website       String?             // Personal website
+  timezone      String?             // User timezone
+  statusEmoji   String?             // Status emoji (like GitHub)
+  statusMessage String?             // Status message
+  pronouns      String?             // Pronouns
+  socialLinks   Json?               // JSON object for social links
+
   // Multi-tenant fields
   schoolId String? // null for DEVELOPER
   school   School? @relation(fields: [schoolId], references: [id])
@@ -123,6 +132,10 @@ model User {
   // Sales Module relations
   assignedLeads         Lead[]         @relation("LeadAssignment")
   leadActivitiesCreated LeadActivity[] @relation("LeadActivityCreator")
+
+  // Profile relations (GitHub-style)
+  userActivities UserActivity[]
+  pinnedItems    PinnedItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

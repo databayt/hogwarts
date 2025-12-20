@@ -7,7 +7,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogIn,
-  Settings,
+  Star,
   User,
 } from "lucide-react"
 
@@ -66,16 +66,16 @@ export function StreamHeader({ lang, user }: Props) {
     },
     {
       href: `/${lang}/stream/dashboard`,
-      label: "My Learning",
-      labelAr: "تعلمي",
-      icon: <LayoutDashboard className="size-4" />,
+      label: "Favorite",
+      labelAr: "المفضلة",
+      icon: <Star className="size-4" />,
       requiresAuth: true,
     },
     {
       href: `/${lang}/stream/admin`,
-      label: "Admin",
-      labelAr: "الإدارة",
-      icon: <Settings className="size-4" />,
+      label: "Dashboard",
+      labelAr: "لوحة التحكم",
+      icon: <LayoutDashboard className="size-4" />,
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -100,10 +100,9 @@ export function StreamHeader({ lang, user }: Props) {
         {/* Logo */}
         <Link
           href={`/${lang}/stream`}
-          className="flex items-center gap-2 font-semibold"
+          className="flex items-center font-semibold"
         >
           <GraduationCap className="size-6" />
-          <span className="hidden sm:inline-block">Stream LMS</span>
         </Link>
 
         {/* Navigation */}
@@ -155,15 +154,15 @@ export function StreamHeader({ lang, user }: Props) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={`/${lang}/stream/dashboard`}>
-                    <LayoutDashboard className="mr-2 size-4" />
-                    {isRTL ? "لوحة التعلم" : "My Learning"}
+                    <Star className="mr-2 size-4" />
+                    {isRTL ? "المفضلة" : "Favorite"}
                   </Link>
                 </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link href={`/${lang}/stream/admin`}>
-                      <Settings className="mr-2 size-4" />
-                      {isRTL ? "لوحة الإدارة" : "Admin Dashboard"}
+                      <LayoutDashboard className="mr-2 size-4" />
+                      {isRTL ? "لوحة التحكم" : "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
                 )}

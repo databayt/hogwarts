@@ -5,6 +5,7 @@ interface FeatureCardProps {
   title: string
   description?: string
   className?: string
+  variant?: "border" | "muted"
   borderColor?: string
   strokeColor?: string
 }
@@ -14,14 +15,17 @@ export function FeatureCard({
   title,
   description,
   className,
+  variant = "border",
   borderColor = "border-purple-500",
   strokeColor = "#a855f7",
 }: FeatureCardProps) {
   return (
     <div
       className={cn(
-        "flex aspect-auto flex-col justify-center rounded-2xl border bg-transparent px-6 py-6",
-        borderColor,
+        "flex aspect-auto flex-col justify-center rounded-2xl p-6",
+        variant === "muted"
+          ? "bg-muted"
+          : cn("border bg-transparent", borderColor),
         className
       )}
     >

@@ -19,8 +19,6 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "منهج صارم في الرياضيات والعلوم والأدب والعلوم الإنسانية يبني معرفة أساسية قوية."
         : "Rigorous curriculum in Mathematics, Sciences, Literature, and Humanities that builds strong foundational knowledge.",
-      borderColor: "border-blue-500",
-      strokeColor: "#3b82f6",
     },
     {
       number: "02",
@@ -28,8 +26,6 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "برامج العلوم والتكنولوجيا والهندسة والفنون والرياضيات التي تعزز الإبداع ومهارات حل المشكلات."
         : "Science, Technology, Engineering, Arts, and Mathematics programs that foster creativity and problem-solving skills.",
-      borderColor: "border-purple-500",
-      strokeColor: "#a855f7",
     },
     {
       number: "03",
@@ -37,8 +33,6 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "وجهات نظر دولية وتعلم اللغات وبرامج التبادل الثقافي التي تعد الطلاب لعالم متصل."
         : "International perspectives, language learning, and cultural exchange programs that prepare students for a connected world.",
-      borderColor: "border-cyan-500",
-      strokeColor: "#06b6d4",
     },
     {
       number: "04",
@@ -46,8 +40,6 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "دورات على مستوى الكلية تتحدى الطلاب المتفوقين وتوفر فرص الحصول على رصيد جامعي."
         : "College-level courses that challenge high-achieving students and provide college credit opportunities.",
-      borderColor: "border-teal-500",
-      strokeColor: "#14b8a6",
     },
     {
       number: "05",
@@ -55,8 +47,6 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "تعليم فني شامل يشمل الموسيقى والفنون البصرية والدراما والكتابة الإبداعية لتنمية التعبير الفني."
         : "Comprehensive arts education including music, visual arts, drama, and creative writing to nurture artistic expression.",
-      borderColor: "border-rose-500",
-      strokeColor: "#f43f5e",
     },
     {
       number: "06",
@@ -64,13 +54,11 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
       description: isRTL
         ? "تعليم قائم على القيم يطور النزاهة والقيادة والمسؤولية الاجتماعية في كل طالب."
         : "Values-based learning that develops integrity, leadership, and social responsibility in every student.",
-      borderColor: "border-emerald-500",
-      strokeColor: "#10b981",
     },
   ]
 
   return (
-    <SectionContainer id="programs">
+    <SectionContainer id="programs" className="mt-16 md:mt-24">
       <h2 className="font-heading mb-8 text-3xl font-bold md:text-4xl">
         {isRTL ? "البرامج الأكاديمية" : "Academic Programs"}
       </h2>
@@ -87,8 +75,7 @@ export function AcademicPrograms({ lang }: AcademicProgramsProps) {
             number={program.number}
             title={program.title}
             description={program.description}
-            borderColor={program.borderColor}
-            strokeColor={program.strokeColor}
+            variant="muted"
           />
         ))}
       </div>

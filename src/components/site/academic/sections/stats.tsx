@@ -36,12 +36,12 @@ export function AcademicStats({ lang }: AcademicStatsProps) {
   ]
 
   return (
-    <SectionContainer id="stats" className="bg-primary text-primary-foreground">
+    <SectionContainer id="stats">
       <div className="mb-16 text-center">
         <h2 className="font-heading mb-4 text-3xl font-bold md:text-4xl">
           {isRTL ? "التميز الأكاديمي" : "Academic Excellence"}
         </h2>
-        <p className="mx-auto max-w-2xl text-lg opacity-90">
+        <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
           {isRTL
             ? "أرقام تعكس التزامنا بالتميز الأكاديمي وتأثير برامجنا التعليمية التحويلي."
             : "Numbers that reflect our commitment to academic excellence and the transformative impact of our educational programs."}
@@ -51,11 +51,11 @@ export function AcademicStats({ lang }: AcademicStatsProps) {
       <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
         {stats.map((stat, index) => (
           <div key={index} className="text-center">
-            <div className="bg-primary-foreground/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+            <div className="bg-muted mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
               <stat.icon className="h-6 w-6" />
             </div>
             <div className="text-3xl font-bold md:text-4xl">{stat.number}</div>
-            <div className="text-primary-foreground/80 text-sm font-medium">
+            <div className="text-muted-foreground text-sm font-medium">
               {stat.label}
             </div>
           </div>

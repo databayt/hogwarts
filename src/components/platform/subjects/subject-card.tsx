@@ -52,7 +52,7 @@ function SubjectCardInner({
     <Link
       href={`/${lang}/subjects/${id}`}
       className={cn(
-        "group hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-2 transition-colors",
+        "group hover:bg-muted/50 flex items-center gap-3 rounded-l-lg border transition-colors",
         isRTL && "flex-row-reverse",
         className
       )}
@@ -63,7 +63,7 @@ function SubjectCardInner({
           src={imageUrl}
           alt={displayName}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-110"
+          className="object-cover"
           sizes="48px"
         />
 
@@ -95,7 +95,7 @@ export const SubjectCard = React.memo(SubjectCardInner)
  */
 export function SubjectCardSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-lg border p-2">
+    <div className="flex items-center gap-3 rounded-l-lg border">
       <Skeleton className="h-12 w-12 flex-shrink-0 rounded-lg" />
       <Skeleton className="h-4 w-24" />
     </div>
