@@ -1,35 +1,12 @@
 "use server"
 
-// Force rebuild: 2025-12-20T19:05:00Z - Inline schema to avoid validation import
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
 import { db } from "@/lib/db"
 
-// Inline schema to avoid validation.ts import chain (has server-only import)
-const titleSchema = z.object({
-  title: z
-    .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(100, "Title must be at most 100 characters")
-    .trim(),
-  subdomain: z
-    .string()
-    .refine(
-      (val) => val === "" || (val.length >= 3 && val.length <= 63),
-      "Subdomain must be between 3 and 63 characters"
-    )
-    .refine(
-      (val) => val === "" || /^[a-z0-9-]+$/.test(val),
-      "Only letters, numbers, and hyphens allowed"
-    )
-    .refine(
-      (val) => val === "" || (!val.startsWith("-") && !val.endsWith("-")),
-      "Cannot start or end with hyphen"
-    )
-    .optional(),
-})
+import { titleSchema } from "./validation"
 
 // TEMPORARILY using local createActionResponse to bypass auth-security import
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
