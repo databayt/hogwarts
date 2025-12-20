@@ -52,8 +52,7 @@ function SubjectCardInner({
     <Link
       href={`/${lang}/subjects/${id}`}
       className={cn(
-        "group hover:bg-muted/50 flex items-center gap-3 rounded-lg border transition-colors",
-        isRTL && "flex-row-reverse",
+        "group hover:bg-muted/50 flex items-center gap-3 rounded-lg border transition-colors rtl:flex-row-reverse",
         className
       )}
     >

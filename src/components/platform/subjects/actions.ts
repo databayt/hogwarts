@@ -230,6 +230,21 @@ type SubjectSelectResult = {
     departmentName: string
     departmentNameAr: string | null
   } | null
+  classes: {
+    id: string
+    yearLevel: {
+      id: string
+      levelName: string
+      levelNameAr: string | null
+      levelOrder: number
+    } | null
+    lessons: {
+      id: string
+      title: string
+      description: string | null
+      status: string
+    }[]
+  }[]
   createdAt: Date
   updatedAt: Date
 }
@@ -260,6 +275,27 @@ export async function getSubject(input: {
             id: true,
             departmentName: true,
             departmentNameAr: true,
+          },
+        },
+        classes: {
+          select: {
+            id: true,
+            yearLevel: {
+              select: {
+                id: true,
+                levelName: true,
+                levelNameAr: true,
+                levelOrder: true,
+              },
+            },
+            lessons: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                status: true,
+              },
+            },
           },
         },
         createdAt: true,

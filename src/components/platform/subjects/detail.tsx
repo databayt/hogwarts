@@ -1,16 +1,15 @@
 "use client"
 
-import { BookOpen, Calendar, CircleAlert, Layers } from "lucide-react"
+import { useMemo } from "react"
+import { BookOpen, CircleAlert } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/components/internationalization/config"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 import { SubjectHero, SubjectHeroSkeleton } from "./hero"
+import { YearSection, YearSectionSkeleton } from "./year-section"
 
 // Type for subject detail - matches the select result from actions.ts
 interface SubjectDetailResult {
@@ -24,6 +23,21 @@ interface SubjectDetailResult {
     departmentName: string
     departmentNameAr?: string | null
   } | null
+  classes?: {
+    id: string
+    yearLevel: {
+      id: string
+      levelName: string
+      levelNameAr: string | null
+      levelOrder: number
+    } | null
+    lessons: {
+      id: string
+      title: string
+      description: string | null
+      status: string
+    }[]
+  }[]
   createdAt: Date
   updatedAt: Date
 }
@@ -44,15 +58,8 @@ export function SubjectDetailContent({
   const isRTL = lang === "ar"
 
   const t = {
-    details: isRTL ? "تفاصيل المادة" : "Subject Details",
-    subjectName: isRTL ? "اسم المادة" : "Subject Name",
-    department: isRTL ? "القسم" : "Department",
-    createdAt: isRTL ? "تاريخ الإنشاء" : "Created",
-    updatedAt: isRTL ? "آخر تحديث" : "Last Updated",
     errorTitle: isRTL ? "خطأ" : "Error",
     notFound: isRTL ? "المادة غير موجودة" : "Subject not found",
-    noDepartment: isRTL ? "غير محدد" : "Not assigned",
-    relatedTopics: isRTL ? "المواضيع المتعلقة" : "Related Topics",
     noTopics: isRTL ? "لا توجد مواضيع متاحة" : "No topics available",
   }
 
@@ -67,14 +74,46 @@ export function SubjectDetailContent({
     )
   }
 
-  // Get localized names
-  const displayName =
-    isRTL && data.subjectNameAr ? data.subjectNameAr : data.subjectName
-  const displayDepartment = data.department
-    ? isRTL && data.department.departmentNameAr
-      ? data.department.departmentNameAr
-      : data.department.departmentName
-    : t.noDepartment
+  // Group lessons by year level
+  const lessonsByYear = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        level: {
+          id: string
+          levelName: string
+          levelNameAr: string | null
+          levelOrder: number
+        }
+        lessons: {
+          id: string
+          title: string
+          description: string | null
+          status: string
+        }[]
+      }
+    >()
+
+    data.classes?.forEach((cls) => {
+      if (cls.yearLevel && cls.lessons?.length) {
+        const key = cls.yearLevel.id
+        if (!grouped.has(key)) {
+          grouped.set(key, { level: cls.yearLevel, lessons: [] })
+        }
+        grouped.get(key)!.lessons.push(...cls.lessons)
+      }
+    })
+
+    return Array.from(grouped.values()).sort(
+      (a, b) => a.level.levelOrder - b.level.levelOrder
+    )
+  }, [data.classes])
+
+  // Count total topics for hero
+  const totalTopics = lessonsByYear.reduce(
+    (sum, { lessons }) => sum + lessons.length,
+    0
+  )
 
   return (
     <div className="space-y-6">
@@ -82,102 +121,32 @@ export function SubjectDetailContent({
       <SubjectHero
         subjectName={data.subjectName}
         subjectNameAr={data.subjectNameAr}
+        topicsCount={totalTopics}
         lang={lang}
       />
 
-      {/* Content Section - Two column layout */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="space-y-4 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                {t.details}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                {/* Subject Name */}
-                <div className="space-y-1">
-                  <dt className="text-muted-foreground text-sm">
-                    {t.subjectName}
-                  </dt>
-                  <dd className="font-medium">{displayName}</dd>
-                </div>
-
-                {/* Department */}
-                <div className="space-y-1">
-                  <dt className="text-muted-foreground text-sm">
-                    {t.department}
-                  </dt>
-                  <dd>
-                    {data.department ? (
-                      <Badge variant="outline" className="font-normal">
-                        <Layers className="mr-1 h-3 w-3" />
-                        {displayDepartment}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        {t.noDepartment}
-                      </span>
-                    )}
-                  </dd>
-                </div>
-
-                {/* Created At */}
-                <div className="space-y-1">
-                  <dt className="text-muted-foreground text-sm">
-                    {t.createdAt}
-                  </dt>
-                  <dd className="flex items-center gap-1 text-sm">
-                    <Calendar className="text-muted-foreground h-3 w-3" />
-                    {new Date(data.createdAt).toLocaleDateString(
-                      isRTL ? "ar-SA" : "en-US",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
-                  </dd>
-                </div>
-
-                {/* Updated At */}
-                <div className="space-y-1">
-                  <dt className="text-muted-foreground text-sm">
-                    {t.updatedAt}
-                  </dt>
-                  <dd className="flex items-center gap-1 text-sm">
-                    <Calendar className="text-muted-foreground h-3 w-3" />
-                    {new Date(data.updatedAt).toLocaleDateString(
-                      isRTL ? "ar-SA" : "en-US",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
-                  </dd>
-                </div>
-              </dl>
-            </CardContent>
-          </Card>
+      {/* Year Sections with Topics */}
+      {lessonsByYear.length > 0 ? (
+        <div className="space-y-8">
+          {lessonsByYear.map(({ level, lessons }) => (
+            <YearSection
+              key={level.id}
+              levelName={level.levelName}
+              levelNameAr={level.levelNameAr}
+              lessons={lessons}
+              lang={lang}
+              subjectName={data.subjectName}
+            />
+          ))}
         </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4">
-          {/* Related Topics placeholder */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{t.relatedTopics}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-sm">{t.noTopics}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <BookOpen className="text-muted-foreground mx-auto h-12 w-12" />
+            <p className="text-muted-foreground mt-4">{t.noTopics}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
@@ -188,14 +157,10 @@ export function SubjectDetailLoading() {
       {/* Hero skeleton */}
       <SubjectHeroSkeleton />
 
-      {/* Content skeleton */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Skeleton className="h-64 w-full rounded-lg" />
-        </div>
-        <div>
-          <Skeleton className="h-32 w-full rounded-lg" />
-        </div>
+      {/* Year sections skeleton */}
+      <div className="space-y-8">
+        <YearSectionSkeleton />
+        <YearSectionSkeleton />
       </div>
     </div>
   )
