@@ -6,13 +6,18 @@ import {
   Calendar,
   ChevronRight,
   Clock,
+  Download,
+  FileText,
   GraduationCap,
+  Loader2,
+  Printer,
   TriangleAlert,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -20,12 +25,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { type Locale } from "@/components/internationalization/config"
 import { type Dictionary } from "@/components/internationalization/dictionaries"
 
-import { getTimetableByClass, getTodaySchedule } from "../actions"
+import { getTimetableByStudentGrade, getTodaySchedule } from "../actions"
+import { useTimetableExport } from "../export"
 import SimpleGrid from "./simple-grid"
 
 interface Props {
@@ -49,7 +62,7 @@ interface Props {
   }>
   lunchAfterPeriod: number | null
   isLoading?: boolean
-  classId?: string
+  classId?: string // Legacy prop - no longer needed
 }
 
 const DAY_NAMES = [
@@ -71,7 +84,6 @@ export default function StudentView({
   periods,
   lunchAfterPeriod,
   isLoading,
-  classId,
 }: Props) {
   const d = dictionary?.timetable
   const isRTL = lang === "ar"
@@ -79,10 +91,20 @@ export default function StudentView({
   const [viewTab, setViewTab] = useState<"today" | "week">("today")
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [schoolName, setSchoolName] = useState<string>("")
+
+  // PDF export hook
+  const { exportToPDF, isExporting } = useTimetableExport()
 
   // Weekly data
   const [slots, setSlots] = useState<any[]>([])
-  const [classInfo, setClassInfo] = useState<any>(null)
+  const [studentInfo, setStudentInfo] = useState<{
+    id: string
+    name: string
+    gradeName: string
+    gradeNameAr?: string | null
+  } | null>(null)
+  const [subjectCount, setSubjectCount] = useState(0)
 
   // Today's schedule
   const [todaySchedule, setTodaySchedule] = useState<any[]>([])
@@ -91,25 +113,22 @@ export default function StudentView({
   // Load data
   useEffect(() => {
     loadData()
-  }, [termId, classId])
+  }, [termId])
 
   const loadData = async () => {
-    if (!classId) {
-      setError("Class enrollment not found for your account")
-      return
-    }
-
     setIsLoadingData(true)
     setError(null)
 
     try {
       const [weeklyResult, todayResult] = await Promise.all([
-        getTimetableByClass({ termId, classId }),
+        getTimetableByStudentGrade({ termId }),
         getTodaySchedule(),
       ])
 
       setSlots(weeklyResult.slots)
-      setClassInfo(weeklyResult.classInfo)
+      setStudentInfo(weeklyResult.studentInfo)
+      setSubjectCount(weeklyResult.subjectCount)
+      setSchoolName(weeklyResult.schoolName || "")
       setTodaySchedule(todayResult.schedule)
       setCurrentDay(todayResult.dayOfWeek)
     } catch (err) {
@@ -117,6 +136,35 @@ export default function StudentView({
     } finally {
       setIsLoadingData(false)
     }
+  }
+
+  // Handle print
+  const handlePrint = () => {
+    window.print()
+  }
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!studentInfo || slots.length === 0) return
+
+    const gradeName = isRTL
+      ? studentInfo.gradeNameAr || studentInfo.gradeName
+      : studentInfo.gradeName
+
+    await exportToPDF(
+      {
+        title: isRTL ? "الجدول الدراسي" : "Class Schedule",
+        subtitle: `${studentInfo.name} - ${gradeName}`,
+        termLabel: termInfo.label,
+        schoolName: schoolName || "School",
+        slots,
+        periods,
+        workingDays,
+        lunchAfterPeriod,
+        isRTL,
+      },
+      `timetable-${studentInfo.name.replace(/\s+/g, "-")}.pdf`
+    )
   }
 
   const formatTime = (date: Date | string) => {
@@ -173,50 +221,90 @@ export default function StudentView({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 print:space-y-2">
       {/* Header Card */}
-      <Card>
-        <CardHeader>
+      <Card className="print:border-0 print:shadow-none">
+        <CardHeader className="print:pb-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5" />
+                <GraduationCap className="h-5 w-5 print:hidden" />
                 {d?.title || "My Class Schedule"}
               </CardTitle>
               <CardDescription>
-                {classInfo?.name || "Loading..."}
+                {studentInfo ? (
+                  <>
+                    <span className="font-medium">{studentInfo.name}</span>
+                    <span className="mx-2">•</span>
+                    <span>
+                      {isRTL
+                        ? studentInfo.gradeNameAr || studentInfo.gradeName
+                        : studentInfo.gradeName}
+                    </span>
+                  </>
+                ) : (
+                  "Loading..."
+                )}
               </CardDescription>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 print:hidden">
               <Badge variant="outline">{termInfo.label}</Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={isExporting}>
+                    {isExporting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    {isRTL ? "تحميل" : "Download"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={handleDownloadPDF}
+                    disabled={isExporting || slots.length === 0}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {isRTL ? "تحميل PDF" : "Download PDF"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    {isRTL ? "طباعة" : "Print"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
+        <CardContent className="print:pt-0">
+          <div className="flex flex-wrap gap-4 print:hidden">
             <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
               <BookOpen className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
-                <strong>{uniqueSubjects.size}</strong> subjects
+                <strong>{subjectCount || uniqueSubjects.size}</strong>{" "}
+                {isRTL ? "مواد" : "subjects"}
               </span>
             </div>
             <div className="bg-muted flex items-center gap-2 rounded-lg px-3 py-2">
               <Clock className="text-muted-foreground h-4 w-4" />
               <span className="text-sm">
-                <strong>{slots.length}</strong> periods/week
+                <strong>{slots.length}</strong>{" "}
+                {isRTL ? "حصص/أسبوع" : "periods/week"}
               </span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Current/Next Class Card */}
+      {/* Current/Next Class Card - Hide when printing */}
       {currentClassInfo && !isLoadingData && (
         <Card
           className={cn(
-            "border-2",
+            "border-2 print:hidden",
             currentClassInfo.type === "current"
               ? "border-green-500 bg-green-50 dark:bg-green-950/20"
               : "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
@@ -267,20 +355,21 @@ export default function StudentView({
       <Tabs
         value={viewTab}
         onValueChange={(v) => setViewTab(v as "today" | "week")}
+        className="print:block"
       >
-        <TabsList>
+        <TabsList className="print:hidden">
           <TabsTrigger value="today" className="gap-2">
             <Clock className="h-4 w-4" />
-            Today ({DAY_NAMES[currentDay]})
+            {isRTL ? "اليوم" : "Today"} ({DAY_NAMES[currentDay]})
           </TabsTrigger>
           <TabsTrigger value="week" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Week View
+            {isRTL ? "عرض الأسبوع" : "Week View"}
           </TabsTrigger>
         </TabsList>
 
-        {/* Today's Schedule */}
-        <TabsContent value="today" className="mt-4">
+        {/* Today's Schedule - Hide when printing */}
+        <TabsContent value="today" className="mt-4 print:hidden">
           {isLoadingData ? (
             <Skeleton className="h-64 w-full rounded-lg" />
           ) : todaySchedule.length === 0 ? (
@@ -335,12 +424,12 @@ export default function StudentView({
         </TabsContent>
 
         {/* Week View */}
-        <TabsContent value="week" className="mt-4">
+        <TabsContent value="week" className="mt-4 print:mt-2">
           {isLoadingData || isLoading ? (
-            <Skeleton className="h-96 w-full rounded-lg" />
+            <Skeleton className="h-96 w-full rounded-lg print:hidden" />
           ) : (
-            <Card>
-              <CardContent className="pt-4">
+            <Card className="print:border-0 print:shadow-none">
+              <CardContent className="pt-4 print:p-0">
                 <SimpleGrid
                   slots={slots}
                   workingDays={workingDays}
@@ -349,6 +438,7 @@ export default function StudentView({
                   isRTL={isRTL}
                   viewMode="class"
                   editable={false}
+                  highlightToday
                 />
               </CardContent>
             </Card>

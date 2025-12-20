@@ -132,6 +132,9 @@ model Student {
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
 
+  // Exam certificates
+  examCertificates ExamCertificate[]
+
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   StudentAnswer StudentAnswer[]

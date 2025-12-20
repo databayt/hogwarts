@@ -240,6 +240,13 @@ model School {
   userActivities UserActivity[]
   pinnedItems    PinnedItem[]
 
+  // Exam Paper & Certificate relations
+  examPaperConfigs      ExamPaperConfig[]
+  generatedPapers       GeneratedPaper[]
+  examAnswerKeys        ExamAnswerKey[]
+  examCertificateConfigs ExamCertificateConfig[]
+  examCertificates      ExamCertificate[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

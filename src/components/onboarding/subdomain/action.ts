@@ -2,22 +2,41 @@
 
 import { revalidatePath } from "next/cache"
 
-import {
-  createActionResponse,
-  requireSchoolOwnership,
-  type ActionResponse,
-} from "@/lib/auth-security"
 import { db } from "@/lib/db"
 
 import type { SubdomainFormData } from "./types"
 import { subdomainValidation } from "./validation"
+
+// TEMPORARILY: Local ActionResponse to bypass auth-security import chain
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ActionResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  code?: string
+}
+
+function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
+  if (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An error occurred"
+    return { success: false, error: errorMessage, code: "ERROR" }
+  }
+  return { success: true, data }
+}
+
+// Lazy auth import - only load when needed
+async function requireSchoolOwnershipLazy(schoolId: string) {
+  const { requireSchoolOwnership } = await import("@/lib/auth-security")
+  return requireSchoolOwnership(schoolId)
+}
 
 export async function updateSchoolSubdomain(
   schoolId: string,
   data: SubdomainFormData
 ): Promise<ActionResponse> {
   try {
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     // Validate input data
     const validatedData = subdomainValidation.parse(data)

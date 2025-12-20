@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Scanner } from "@yudiel/react-qr-scanner"
 import {
   Camera,
@@ -9,11 +9,14 @@ import {
   CircleCheck,
   LoaderCircle,
   MapPin,
+  Maximize2,
+  Minimize2,
   RefreshCw,
   Scan,
   Upload,
 } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,6 +42,58 @@ interface QRScannerProps {
   locale?: string
 }
 
+// Audio feedback utility
+const playSuccessBeep = () => {
+  try {
+    const audioContext = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    oscillator.frequency.value = 800 // Higher frequency for success
+    oscillator.type = "sine"
+    gainNode.gain.value = 0.3
+
+    oscillator.start()
+    oscillator.stop(audioContext.currentTime + 0.15)
+  } catch {
+    // Audio not available, silently fail
+  }
+}
+
+const playErrorBeep = () => {
+  try {
+    const audioContext = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    oscillator.frequency.value = 300 // Lower frequency for error
+    oscillator.type = "sine"
+    gainNode.gain.value = 0.3
+
+    oscillator.start()
+    oscillator.stop(audioContext.currentTime + 0.3)
+  } catch {
+    // Audio not available, silently fail
+  }
+}
+
+// Haptic feedback utility
+const triggerHaptic = (pattern: number | number[]) => {
+  if ("vibrate" in navigator) {
+    navigator.vibrate(pattern)
+  }
+}
+
 export function QRScanner({
   onScanSuccess,
   onScanError,
@@ -53,6 +108,8 @@ export function QRScanner({
     message: string
   } | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const scannerContainerRef = useRef<HTMLDivElement>(null)
 
   const { hasPermission, requestPermission } = useCamera()
   const { location, requestLocation } = useGeolocation({
@@ -60,6 +117,41 @@ export function QRScanner({
     timeout: 10000,
     maximumAge: 0,
   })
+
+  // Handle fullscreen mode
+  const toggleFullscreen = useCallback(async () => {
+    if (!scannerContainerRef.current) return
+
+    try {
+      if (!document.fullscreenElement) {
+        await scannerContainerRef.current.requestFullscreen()
+        setIsFullscreen(true)
+        // Lock orientation to portrait on mobile
+        if (screen.orientation?.lock) {
+          try {
+            await screen.orientation.lock("portrait")
+          } catch {
+            // Orientation lock not supported
+          }
+        }
+      } else {
+        await document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    } catch {
+      // Fullscreen not supported
+    }
+  }, [])
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
+  }, [])
 
   const handleScan = useCallback(
     async (result: any) => {
@@ -121,6 +213,10 @@ export function QRScanner({
           throw new Error(result.error || "Failed to process QR scan")
         }
 
+        // Success feedback: haptic + audio
+        triggerHaptic(200) // Short vibration
+        playSuccessBeep()
+
         setScanResult({
           success: true,
           message: "Attendance marked successfully!",
@@ -141,6 +237,10 @@ export function QRScanner({
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to process QR code"
+
+        // Error feedback: double vibration + low beep
+        triggerHaptic([100, 50, 100])
+        playErrorBeep()
 
         setScanResult({
           success: false,
@@ -205,26 +305,59 @@ export function QRScanner({
   return (
     <div className="space-y-4">
       {/* Scanner Card */}
-      <Card>
-        <CardHeader>
+      <Card
+        ref={scannerContainerRef}
+        className={cn(
+          "transition-all duration-300",
+          isFullscreen && "fixed inset-0 z-50 rounded-none border-0"
+        )}
+      >
+        <CardHeader className={cn(isFullscreen && "bg-background/90 py-3")}>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>QR Code Scanner</CardTitle>
-              <CardDescription>
-                Position the QR code within the camera frame
-              </CardDescription>
+              {!isFullscreen && (
+                <CardDescription>
+                  Position the QR code within the camera frame
+                </CardDescription>
+              )}
             </div>
-            {scanning && (
-              <Badge variant="secondary" className="animate-pulse">
-                <Scan className="mr-1 h-3 w-3" />
-                Scanning
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {scanning && (
+                <Badge variant="secondary" className="animate-pulse">
+                  <Scan className="mr-1 h-3 w-3" />
+                  Scanning
+                </Badge>
+              )}
+              {/* Fullscreen toggle for mobile */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleFullscreen}
+                className="h-8 w-8"
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Scanner View */}
-          <div className="bg-secondary relative mx-auto aspect-square max-w-md overflow-hidden rounded-lg">
+        <CardContent
+          className={cn("space-y-4", isFullscreen && "flex-1 px-2 py-2")}
+        >
+          {/* Scanner View - Mobile optimized with larger touch targets */}
+          <div
+            className={cn(
+              "bg-secondary relative mx-auto overflow-hidden rounded-lg",
+              isFullscreen
+                ? "aspect-auto h-[calc(100vh-180px)] w-full"
+                : "aspect-square max-w-md"
+            )}
+          >
             {scanning ? (
               <>
                 <Scanner
@@ -235,44 +368,56 @@ export function QRScanner({
                   }}
                   constraints={{
                     facingMode: "environment",
-                    aspectRatio: 1,
+                    aspectRatio: isFullscreen ? undefined : 1,
                   }}
                 />
 
-                {/* Scanning Overlay */}
+                {/* Scanning Overlay with animated scan line */}
                 <div className="pointer-events-none absolute inset-0">
+                  {/* Corner markers - larger for mobile visibility */}
                   <div className="border-primary absolute inset-8 rounded-lg border-2" />
-                  <div className="border-primary absolute top-8 left-8 h-8 w-8 border-t-4 border-l-4" />
-                  <div className="border-primary absolute top-8 right-8 h-8 w-8 border-t-4 border-r-4" />
-                  <div className="border-primary absolute bottom-8 left-8 h-8 w-8 border-b-4 border-l-4" />
-                  <div className="border-primary absolute right-8 bottom-8 h-8 w-8 border-r-4 border-b-4" />
+                  <div className="border-primary absolute top-8 left-8 h-10 w-10 border-t-4 border-l-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute top-8 right-8 h-10 w-10 border-t-4 border-r-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute bottom-8 left-8 h-10 w-10 border-b-4 border-l-4 sm:h-8 sm:w-8" />
+                  <div className="border-primary absolute right-8 bottom-8 h-10 w-10 border-r-4 border-b-4 sm:h-8 sm:w-8" />
+
+                  {/* Animated scan line */}
+                  <div
+                    className="bg-primary/50 absolute right-8 left-8 h-0.5 animate-pulse"
+                    style={{
+                      top: "50%",
+                      animation: "scan-line 2s ease-in-out infinite",
+                    }}
+                  />
                 </div>
 
                 {/* Processing Overlay */}
                 {processing && (
                   <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
-                    <div className="space-y-2 text-center">
-                      <LoaderCircle className="mx-auto h-8 w-8 animate-spin" />
-                      <p className="text-sm font-medium">Processing...</p>
+                    <div className="space-y-3 text-center">
+                      <LoaderCircle className="mx-auto h-12 w-12 animate-spin sm:h-8 sm:w-8" />
+                      <p className="text-base font-medium sm:text-sm">
+                        Processing...
+                      </p>
                     </div>
                   </div>
                 )}
 
-                {/* Result Overlay */}
+                {/* Result Overlay - Larger for mobile */}
                 {scanResult && (
-                  <div className="bg-background/90 absolute inset-0 flex items-center justify-center">
-                    <div className="space-y-3 p-8 text-center">
+                  <div className="bg-background/95 absolute inset-0 flex items-center justify-center">
+                    <div className="space-y-4 p-8 text-center sm:space-y-3">
                       {scanResult.success ? (
                         <>
-                          <CircleCheck className="mx-auto h-16 w-16 text-green-500" />
-                          <p className="text-lg font-semibold text-green-600">
+                          <CircleCheck className="mx-auto h-24 w-24 text-green-500 sm:h-16 sm:w-16" />
+                          <p className="text-xl font-semibold text-green-600 sm:text-lg">
                             {scanResult.message}
                           </p>
                         </>
                       ) : (
                         <>
-                          <CircleAlert className="mx-auto h-16 w-16 text-red-500" />
-                          <p className="text-lg font-semibold text-red-600">
+                          <CircleAlert className="mx-auto h-24 w-24 text-red-500 sm:h-16 sm:w-16" />
+                          <p className="text-xl font-semibold text-red-600 sm:text-lg">
                             {scanResult.message}
                           </p>
                         </>
@@ -283,12 +428,17 @@ export function QRScanner({
               </>
             ) : (
               <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-                <Camera className="text-muted-foreground mb-4 h-16 w-16" />
-                <p className="text-muted-foreground mb-4">
+                <Camera className="text-muted-foreground mb-4 h-20 w-20 sm:h-16 sm:w-16" />
+                <p className="text-muted-foreground mb-4 text-lg sm:text-base">
                   Camera is not active
                 </p>
-                <Button onClick={startScanning}>
-                  <Camera className="mr-2 h-4 w-4" />
+                {/* Large touch-friendly button for mobile */}
+                <Button
+                  onClick={startScanning}
+                  size="lg"
+                  className="h-14 px-8 text-lg sm:h-10 sm:px-4 sm:text-sm"
+                >
+                  <Camera className="mr-2 h-5 w-5" />
                   Start Camera
                 </Button>
               </div>
@@ -323,37 +473,65 @@ export function QRScanner({
             </Alert>
           )}
 
-          {/* Controls */}
-          <div className="flex justify-center gap-2">
+          {/* Controls - Mobile optimized with larger touch targets */}
+          <div
+            className={cn(
+              "flex flex-wrap justify-center gap-2",
+              isFullscreen && "fixed right-4 bottom-4 left-4 z-50"
+            )}
+          >
             {scanning ? (
-              <Button variant="destructive" onClick={stopScanning}>
-                <CameraOff className="mr-2 h-4 w-4" />
-                Stop Scanning
+              <Button
+                variant="destructive"
+                onClick={stopScanning}
+                size="lg"
+                className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
+              >
+                <CameraOff className="mr-2 h-5 w-5" />
+                Stop
               </Button>
             ) : (
-              <Button onClick={startScanning}>
-                <Camera className="mr-2 h-4 w-4" />
-                Start Scanning
+              <Button
+                onClick={startScanning}
+                size="lg"
+                className="h-12 flex-1 px-6 text-base sm:h-10 sm:flex-none sm:px-4 sm:text-sm"
+              >
+                <Camera className="mr-2 h-5 w-5" />
+                Scan
               </Button>
             )}
             <Button
               variant="outline"
+              size="lg"
+              className="h-12 px-6 text-base sm:h-10 sm:px-4 sm:text-sm"
               onClick={() => document.getElementById("qr-upload")?.click()}
             >
-              <Upload className="mr-2 h-4 w-4" />
-              Upload Image
+              <Upload className="mr-2 h-5 w-5" />
+              Upload
             </Button>
+            {isFullscreen && (
+              <Button
+                variant="secondary"
+                size="lg"
+                className="h-12 px-6 text-base sm:h-10 sm:px-4 sm:text-sm"
+                onClick={toggleFullscreen}
+              >
+                <Minimize2 className="mr-2 h-5 w-5" />
+                Exit
+              </Button>
+            )}
             <input
               id="qr-upload"
               type="file"
               accept="image/*"
+              capture="environment"
               className="hidden"
               onChange={handleFileUpload}
             />
           </div>
 
           {/* Location Status */}
-          {location && (
+          {location && !isFullscreen && (
             <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
               <MapPin className="h-3 w-3" />
               <span>
@@ -368,32 +546,34 @@ export function QRScanner({
         </CardContent>
       </Card>
 
-      {/* Instructions Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Scanning Instructions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-2 text-sm">
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-semibold">1.</span>
-              <span>Allow camera access when prompted</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-semibold">2.</span>
-              <span>Position the QR code within the camera frame</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-semibold">3.</span>
-              <span>Hold steady until the code is recognized</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary font-semibold">4.</span>
-              <span>Wait for confirmation that attendance is marked</span>
-            </li>
-          </ol>
-        </CardContent>
-      </Card>
+      {/* Instructions Card - Hidden in fullscreen */}
+      {!isFullscreen && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Scanning Instructions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ol className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-semibold">1.</span>
+                <span>Allow camera access when prompted</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-semibold">2.</span>
+                <span>Position the QR code within the camera frame</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-semibold">3.</span>
+                <span>Hold steady until the code is recognized</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-semibold">4.</span>
+                <span>Wait for confirmation that attendance is marked</span>
+              </li>
+            </ol>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

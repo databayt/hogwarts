@@ -249,6 +249,10 @@ model GeneratedExam {
   template  ExamTemplate?           @relation(fields: [templateId], references: [id], onDelete: SetNull)
   questions GeneratedExamQuestion[]
 
+  // Paper & Answer Key relations
+  paperConfig ExamPaperConfig? // Paper configuration (one-to-one)
+  answerKey   ExamAnswerKey? // Generated answer key (one-to-one)
+
   generatedBy String
   createdAt   DateTime @default(now())
 

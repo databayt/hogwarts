@@ -844,6 +844,314 @@ export async function getTimetableByClass(input: {
 }
 
 /**
+ * Get full weekly timetable for a student based on their grade level
+ * Returns all subjects scheduled for the student's homeroom (e.g., "Grade 10")
+ */
+export async function getTimetableByStudentGrade(input: {
+  termId: string
+  weekOffset?: 0 | 1
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) throw new Error("Not authenticated")
+
+  // Get student record
+  const student = await db.student.findFirst({
+    where: { userId, schoolId },
+    select: { id: true, givenName: true, surname: true },
+  })
+  if (!student) throw new Error("Student not found")
+
+  // Get student's current year level
+  const studentYearLevel = await db.studentYearLevel.findFirst({
+    where: { studentId: student.id, schoolId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      yearLevel: { select: { id: true, levelName: true, levelNameAr: true } },
+    },
+  })
+  if (!studentYearLevel?.yearLevel)
+    throw new Error("Student not enrolled in any grade level")
+
+  const gradeName = studentYearLevel.yearLevel.levelName // e.g., "Grade 10"
+
+  // Get all classes for this grade level (by name pattern match)
+  // Classes are named like "Mathematics - Grade 10", "Arabic - Grade 10"
+  const gradeClasses = await db.class.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      name: { endsWith: ` - ${gradeName}` },
+    },
+    select: {
+      id: true,
+      name: true,
+      subject: { select: { subjectName: true } },
+    },
+  })
+
+  const classIds = gradeClasses.map((c) => c.id)
+
+  // Get schedule config
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) throw new Error("Invalid term")
+
+  // Get school name for PDF export
+  const school = await db.school.findFirst({
+    where: { id: schoolId },
+    select: { name: true },
+  })
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
+  })
+
+  // Get all timetable slots for all classes in this grade
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      classId: { in: classIds },
+      weekOffset: input.weekOffset ?? 0,
+    },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
+  })
+
+  return {
+    studentInfo: {
+      id: student.id,
+      name: `${student.givenName} ${student.surname}`,
+      gradeName,
+      gradeNameAr: studentYearLevel.yearLevel.levelNameAr,
+    },
+    schoolName: school?.name || "",
+    subjectCount: gradeClasses.length,
+    workingDays: config.workingDays,
+    periods: periods.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      order: idx + 1,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      isBreak:
+        p.name.toLowerCase().includes("break") ||
+        p.name.toLowerCase().includes("lunch"),
+    })),
+    slots: slots.map((s) => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacherId: s.teacherId,
+      room: s.classroom?.roomName || "",
+      roomId: s.classroomId,
+      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      className: s.class?.name || "",
+      classId: s.classId,
+    })),
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
+  }
+}
+
+/**
+ * Get timetable for a specific grade level (for admin class view)
+ * Returns all subjects scheduled for a homeroom (e.g., "Grade 10")
+ */
+export async function getTimetableByGradeLevel(input: {
+  termId: string
+  gradeName: string // e.g., "Grade 10", "KG 1"
+  weekOffset?: 0 | 1
+}) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get all classes for this grade level
+  const gradeClasses = await db.class.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      name: { endsWith: ` - ${input.gradeName}` },
+    },
+    select: {
+      id: true,
+      name: true,
+      subject: { select: { subjectName: true } },
+    },
+  })
+
+  const classIds = gradeClasses.map((c) => c.id)
+
+  // Get schedule config
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true },
+  })
+  if (!term) throw new Error("Invalid term")
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: "asc" },
+    select: { id: true, name: true, startTime: true, endTime: true },
+  })
+
+  // Get all timetable slots for all classes in this grade
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      classId: { in: classIds },
+      weekOffset: input.weekOffset ?? 0,
+    },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true } },
+      class: {
+        select: {
+          id: true,
+          name: true,
+          subject: { select: { subjectName: true } },
+        },
+      },
+      period: {
+        select: { id: true, name: true, startTime: true, endTime: true },
+      },
+    },
+  })
+
+  // Get year level info for Arabic name
+  const yearLevel = await db.yearLevel.findFirst({
+    where: { schoolId, levelName: input.gradeName },
+    select: { levelNameAr: true },
+  })
+
+  return {
+    gradeInfo: {
+      name: input.gradeName,
+      nameAr: yearLevel?.levelNameAr || input.gradeName,
+    },
+    subjectCount: gradeClasses.length,
+    subjects: gradeClasses.map((c) => ({
+      id: c.id,
+      name: c.subject?.subjectName || c.name,
+    })),
+    workingDays: config.workingDays,
+    periods: periods.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      order: idx + 1,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      isBreak:
+        p.name.toLowerCase().includes("break") ||
+        p.name.toLowerCase().includes("lunch"),
+    })),
+    slots: slots.map((s) => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : "",
+      teacherId: s.teacherId,
+      room: s.classroom?.roomName || "",
+      roomId: s.classroomId,
+      subject: s.class?.subject?.subjectName || s.class?.name || "",
+      className: s.class?.name || "",
+      classId: s.classId,
+    })),
+    lunchAfterPeriod: config.defaultLunchAfterPeriod,
+  }
+}
+
+/**
+ * Get list of all grade levels for timetable selection dropdown
+ */
+export async function getGradeLevelsForSelection(input?: { termId?: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // Get year levels that have classes in the specified term
+  const yearLevels = await db.yearLevel.findMany({
+    where: { schoolId },
+    orderBy: { levelOrder: "asc" },
+    select: {
+      id: true,
+      levelName: true,
+      levelNameAr: true,
+      levelOrder: true,
+    },
+  })
+
+  // If termId provided, filter to only grades with classes in that term
+  if (input?.termId) {
+    const classesInTerm = await db.class.findMany({
+      where: { schoolId, termId: input.termId },
+      select: { name: true },
+    })
+
+    const gradesWithClasses = new Set<string>()
+    for (const c of classesInTerm) {
+      // Extract grade from class name like "Mathematics - Grade 10"
+      const match = c.name.match(/ - (.+)$/)
+      if (match) {
+        gradesWithClasses.add(match[1])
+      }
+    }
+
+    return {
+      gradeLevels: yearLevels
+        .filter((yl) => gradesWithClasses.has(yl.levelName))
+        .map((yl) => ({
+          id: yl.id,
+          name: yl.levelName,
+          nameAr: yl.levelNameAr,
+          order: yl.levelOrder,
+        })),
+    }
+  }
+
+  return {
+    gradeLevels: yearLevels.map((yl) => ({
+      id: yl.id,
+      name: yl.levelName,
+      nameAr: yl.levelNameAr,
+      order: yl.levelOrder,
+    })),
+  }
+}
+
+/**
  * Get timetable filtered by a specific teacher
  */
 export async function getTimetableByTeacher(input: {

@@ -3,9 +3,19 @@
  * Provides flexible auth checks during the onboarding flow
  */
 
-import { getAuthContext, TenantError } from "@/lib/auth-security"
 import { db } from "@/lib/db"
 import { logger } from "@/lib/logger"
+
+// Lazy auth imports to prevent module-level failures
+async function getAuthContextLazy() {
+  const { getAuthContext } = await import("@/lib/auth-security")
+  return getAuthContext()
+}
+
+async function getTenantErrorClass() {
+  const { TenantError } = await import("@/lib/auth-security")
+  return TenantError
+}
 
 /**
  * Check if a user has access to a school during onboarding
@@ -85,13 +95,7 @@ export async function checkOnboardingAccess(
  * Determines if an error is due to cross-tenant access denial
  */
 export function isCrossTenantError(error: unknown): boolean {
-  if (
-    error instanceof TenantError &&
-    error.code === "CROSS_TENANT_ACCESS_DENIED"
-  ) {
-    return true
-  }
-
+  // Check by error code property (works without importing TenantError)
   if (error && typeof error === "object" && "code" in error) {
     return (error as { code: string }).code === "CROSS_TENANT_ACCESS_DENIED"
   }
@@ -132,7 +136,7 @@ export async function getSchoolWithOnboardingFallback(
     })
 
     // Get auth context for fallback check
-    const authContext = await getAuthContext()
+    const authContext = await getAuthContextLazy()
 
     // Check if user has onboarding access
     const hasAccess = await checkOnboardingAccess(authContext.userId, schoolId)

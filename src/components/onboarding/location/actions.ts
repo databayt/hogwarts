@@ -5,14 +5,33 @@ import { redirect } from "next/navigation"
 import { Decimal } from "@prisma/client/runtime/library"
 import { z } from "zod"
 
-import {
-  createActionResponse,
-  requireSchoolOwnership,
-  type ActionResponse,
-} from "@/lib/auth-security"
 import { db } from "@/lib/db"
 
 import { locationSchema } from "./validation"
+
+// TEMPORARILY: Local ActionResponse to bypass auth-security import chain
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ActionResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  code?: string
+}
+
+function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
+  if (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An error occurred"
+    return { success: false, error: errorMessage, code: "ERROR" }
+  }
+  return { success: true, data }
+}
+
+// Lazy auth import - only load when needed
+async function requireSchoolOwnershipLazy(schoolId: string) {
+  const { requireSchoolOwnership } = await import("@/lib/auth-security")
+  return requireSchoolOwnership(schoolId)
+}
 
 export type LocationFormData = z.infer<typeof locationSchema>
 
@@ -22,7 +41,7 @@ export async function updateSchoolLocation(
 ): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     const validatedData = locationSchema.parse(data)
 
@@ -70,7 +89,7 @@ export async function getSchoolLocation(
 ): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -117,7 +136,7 @@ export async function getSchoolLocation(
 export async function proceedToCapacity(schoolId: string) {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     // Validate that location data exists
     const school = await db.school.findUnique({

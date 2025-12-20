@@ -4,14 +4,33 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
-import {
-  createActionResponse,
-  requireSchoolOwnership,
-  type ActionResponse,
-} from "@/lib/auth-security"
 import { db } from "@/lib/db"
 
 import { joinSchema } from "./validation"
+
+// TEMPORARILY: Local ActionResponse to bypass auth-security import chain
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ActionResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  code?: string
+}
+
+function createActionResponse<T>(data?: T, error?: unknown): ActionResponse<T> {
+  if (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An error occurred"
+    return { success: false, error: errorMessage, code: "ERROR" }
+  }
+  return { success: true, data }
+}
+
+// Lazy auth import - only load when needed
+async function requireSchoolOwnershipLazy(schoolId: string) {
+  const { requireSchoolOwnership } = await import("@/lib/auth-security")
+  return requireSchoolOwnership(schoolId)
+}
 
 export type JoinFormData = z.infer<typeof joinSchema>
 
@@ -21,7 +40,7 @@ export async function updateJoinSettings(
 ): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     const validatedData = joinSchema.parse(data)
 
@@ -57,7 +76,7 @@ export async function getJoinSettings(
 ): Promise<ActionResponse> {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     const school = await db.school.findUnique({
       where: { id: schoolId },
@@ -97,7 +116,7 @@ export async function getJoinSettings(
 export async function proceedToVisibility(schoolId: string) {
   try {
     // Validate user has ownership/access to this school
-    await requireSchoolOwnership(schoolId)
+    await requireSchoolOwnershipLazy(schoolId)
 
     revalidatePath(`/onboarding/${schoolId}`)
   } catch (error) {

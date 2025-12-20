@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { Clock, Sparkles } from "lucide-react"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -18,6 +20,7 @@ import {
   getAttendanceList,
   getAttendanceReportCsv,
   getClassesForSelection,
+  getCurrentPeriod,
   markAttendance,
 } from "@/components/platform/attendance/actions"
 
@@ -38,14 +41,28 @@ interface Props {
 }
 
 export function AttendanceContent({ dictionary }: Props) {
-  const [submitting, setSubmitting] = React.useState(false)
-  const [classId, setClassId] = React.useState("")
-  const [date, setDate] = React.useState(new Date().toISOString().slice(0, 10))
-  const [classes, setClasses] = React.useState<
-    Array<{ id: string; name: string }>
-  >([])
-  const [rows, setRows] = React.useState<AttendanceRow[]>([])
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [classId, setClassId] = useState("")
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>(
+    []
+  )
+  const [rows, setRows] = useState<AttendanceRow[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Smart class selection from timetable
+  const [currentPeriodInfo, setCurrentPeriodInfo] = useState<{
+    classId: string | null
+    periodName: string | null
+    subjectName: string | null
+    isAutoSelected: boolean
+  }>({
+    classId: null,
+    periodName: null,
+    subjectName: null,
+    isAutoSelected: false,
+  })
+
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -61,18 +78,44 @@ export function AttendanceContent({ dictionary }: Props) {
       setIsLoading(false)
     }
   }, [classId, date])
-  React.useEffect(() => {
+
+  useEffect(() => {
     void load()
   }, [load])
-  React.useEffect(() => {
+
+  // Load classes and auto-select based on current timetable period
+  useEffect(() => {
     ;(async () => {
-      const res = await getClassesForSelection()
-      if (!res.success || !res.data) return
-      setClasses(res.data.classes)
-      if (!classId && res.data.classes[0]) setClassId(res.data.classes[0].id)
+      const [classesRes, periodRes] = await Promise.all([
+        getClassesForSelection(),
+        getCurrentPeriod(),
+      ])
+
+      if (!classesRes.success || !classesRes.data) return
+      setClasses(classesRes.data.classes)
+
+      // Smart selection: Use current period's class if available
+      if (
+        periodRes.success &&
+        periodRes.data?.currentPeriod?.classId &&
+        classesRes.data.classes.some(
+          (c) => c.id === periodRes.data?.currentPeriod?.classId
+        )
+      ) {
+        setClassId(periodRes.data.currentPeriod.classId)
+        setCurrentPeriodInfo({
+          classId: periodRes.data.currentPeriod.classId,
+          periodName: periodRes.data.currentPeriod.periodName,
+          subjectName: periodRes.data.currentPeriod.subjectName,
+          isAutoSelected: true,
+        })
+      } else if (!classId && classesRes.data.classes[0]) {
+        // Fallback to first class if no current period
+        setClassId(classesRes.data.classes[0].id)
+      }
     })()
   }, [])
-  const [changed, setChanged] = React.useState<
+  const [changed, setChanged] = useState<
     Record<string, AttendanceRow["status"]>
   >({})
   const onSubmit = async () => {
@@ -157,22 +200,51 @@ export function AttendanceContent({ dictionary }: Props) {
               {dict.title}
             </div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Select
-                value={classId}
-                onValueChange={setClassId}
-                disabled={isLoading}
-              >
-                <SelectTrigger className="h-8 w-56">
-                  <SelectValue placeholder={dict.selectClass} />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={classId}
+                  onValueChange={(val) => {
+                    setClassId(val)
+                    // Clear auto-selected flag when user manually changes
+                    if (val !== currentPeriodInfo.classId) {
+                      setCurrentPeriodInfo((prev) => ({
+                        ...prev,
+                        isAutoSelected: false,
+                      }))
+                    }
+                  }}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="h-8 w-56">
+                    <SelectValue placeholder={dict.selectClass} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <span className="flex items-center gap-2">
+                          {c.name}
+                          {c.id === currentPeriodInfo.classId && (
+                            <Clock className="h-3 w-3 text-blue-500" />
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* Smart selection indicator */}
+                {currentPeriodInfo.isAutoSelected &&
+                  classId === currentPeriodInfo.classId && (
+                    <Badge
+                      variant="secondary"
+                      className="flex h-6 items-center gap-1 bg-blue-100 text-xs text-blue-700"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      {currentPeriodInfo.periodName}
+                      {currentPeriodInfo.subjectName &&
+                        ` • ${currentPeriodInfo.subjectName}`}
+                    </Badge>
+                  )}
+              </div>
               <Input
                 type="date"
                 className="h-8 w-44"

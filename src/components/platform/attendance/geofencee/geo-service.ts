@@ -302,7 +302,7 @@ export async function processGeofenceEvents(
                   studentId,
                   classId: studentClass.classId,
                   date: today,
-                  periodId: null, // Daily attendance (not period-specific)
+                  periodId: "", // Daily attendance (not period-specific)
                 },
               },
               create: {

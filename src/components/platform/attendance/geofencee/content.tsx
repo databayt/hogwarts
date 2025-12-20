@@ -12,6 +12,7 @@ import { getGeofences, getLiveStudentLocations } from "./actions"
 import { GeoLiveMap } from "./geo-live-map"
 import { GeoTracker } from "./geo-tracker"
 import { GeofenceForm } from "./geofence-form"
+import { GeofenceList } from "./geofence-list"
 
 export async function GeofenceContent() {
   const session = await auth()
@@ -101,58 +102,8 @@ export async function GeofenceContent() {
               <GeofenceForm />
             </div>
 
-            {/* Geofence List */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {initialGeofences.map((geofence) => (
-                <div
-                  key={geofence.id}
-                  className="space-y-2 rounded-lg border p-4"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium">{geofence.name}</h4>
-                      <p className="text-muted-foreground text-sm">
-                        {geofence.type.replace("_", " ")}
-                      </p>
-                    </div>
-                    <div
-                      className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: geofence.color || "#3b82f6" }}
-                    />
-                  </div>
-                  {geofence.centerLat &&
-                    geofence.centerLon &&
-                    geofence.radiusMeters && (
-                      <div className="text-muted-foreground space-y-1 text-xs">
-                        <p>
-                          Center: {geofence.centerLat.toFixed(4)},{" "}
-                          {geofence.centerLon.toFixed(4)}
-                        </p>
-                        <p>Radius: {geofence.radiusMeters}m</p>
-                      </div>
-                    )}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        geofence.isActive ? "bg-green-500" : "bg-gray-300"
-                      }`}
-                    />
-                    <span className="text-xs">
-                      {geofence.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              {initialGeofences.length === 0 && (
-                <div className="text-muted-foreground col-span-full py-12 text-center">
-                  <p>No geofences created yet</p>
-                  <p className="text-sm">
-                    Click "Create Geofence" to get started
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Geofence List with Management */}
+            <GeofenceList geofences={initialGeofences} />
           </TabsContent>
         </Tabs>
       )}
