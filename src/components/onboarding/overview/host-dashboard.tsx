@@ -40,7 +40,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
   const hasMoreSchools = totalSchools && totalSchools > schools.length
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-3 px-3 sm:space-y-4 sm:px-4">
+    <div className="mx-auto w-full max-w-2xl space-y-3 px-3 sm:space-y-4 sm:px-4">
       {/* Welcome Header */}
       <div>
         <h3 className="mb-3 text-lg sm:mb-4 sm:text-xl lg:text-2xl">

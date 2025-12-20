@@ -75,8 +75,8 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="mx-auto w-full max-w-xl space-y-3 px-3 sm:space-y-4 sm:px-4">
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <div className="mx-auto w-full max-w-2xl space-y-3 px-3 sm:space-y-4 sm:px-4">
           {/* Welcome Header skeleton */}
           <div>
             <Skeleton className="mb-3 h-8 w-64 sm:mb-4" />
@@ -114,7 +114,7 @@ export default function OnboardingContent({ dictionary, locale }: Props) {
 
   return (
     <ErrorBoundary>
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen w-full items-center justify-center">
         <SchoolOnboardingDashboard
           userName={user?.name || "Admin"}
           schools={schools.map((school) => ({
