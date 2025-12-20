@@ -34,6 +34,8 @@ interface Props {
   data: Record<string, unknown>
   dictionary?: Record<string, unknown>
   lang?: Locale
+  isOwner?: boolean
+  userId?: string
 }
 
 // Tab configurations per role
@@ -155,6 +157,8 @@ export default function ProfileContent({
   data,
   dictionary,
   lang,
+  isOwner = false,
+  userId,
 }: Props) {
   const { open, isMobile } = useSidebar()
   const [activeTab, setActiveTab] = useState("overview")
@@ -213,7 +217,7 @@ export default function ProfileContent({
 
           {/* Activity Graph */}
           <div className="border-border rounded-lg border p-6">
-            <ContributionGraph role={role} data={data} />
+            <ContributionGraph role={role} />
           </div>
 
           {/* Contribution Activity Timeline */}

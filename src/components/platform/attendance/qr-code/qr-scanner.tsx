@@ -127,9 +127,12 @@ export function QRScanner({
         await scannerContainerRef.current.requestFullscreen()
         setIsFullscreen(true)
         // Lock orientation to portrait on mobile
-        if (screen.orientation?.lock) {
+        const orientation = screen.orientation as ScreenOrientation & {
+          lock?: (orientation: string) => Promise<void>
+        }
+        if (orientation?.lock) {
           try {
-            await screen.orientation.lock("portrait")
+            await orientation.lock("portrait")
           } catch {
             // Orientation lock not supported
           }
